@@ -3,7 +3,7 @@ JavaFX editor for gpx files
 
 And why would anyone need a new gpx file editor?
 
-Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained and updated anymore. While its still doing all its things perfectly it lacks two features:
+Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained and updated anymore. While its still doing all its things perfectly it lacks three features:
 
 * batch mode to work on multiple files
 * UI mode to work on multiple tracks / tracksegments
