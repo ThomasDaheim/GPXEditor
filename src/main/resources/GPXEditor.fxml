@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+   <top>
+      <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+                  <MenuItem fx:id="addFileMenu" mnemonicParsing="false" text="Add">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="saveAllFilesMenu" mnemonicParsing="false" text="Save All">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="clearFileMenu" mnemonicParsing="false" text="Clear List">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="C" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="recentFileMenu" mnemonicParsing="false" text="RecentFile" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+              <MenuItem fx:id="exitFileMenu" mnemonicParsing="false" text="Exit">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="X" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+            </items>
+               <accelerator>
+                  <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+               </accelerator>
+          </Menu>
+          <Menu mnemonicParsing="false" text="GPX">
+            <items>
+                  <MenuItem fx:id="mergeFilesMenu" mnemonicParsing="false" text="Merge Files" />
+              <MenuItem fx:id="mergeTracksMenu" mnemonicParsing="false" text="Merge Tracks">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="deleteTracksMenu" mnemonicParsing="false" text="Delete Tracks" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="settingsMenu" mnemonicParsing="false" text="Algo-Settings" />
+                  <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
+                  <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Fix Tracks">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="reduceTracksMenu" mnemonicParsing="false" text="Reduce Tracks">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+            </items>
+               <accelerator>
+                  <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+               </accelerator>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+   <bottom>
+      <HBox fx:id="statusBox" alignment="CENTER_LEFT" depthTest="DISABLE" prefHeight="30.0" prefWidth="600.0" styleClass="statusBox" BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="statusLabel" styleClass="statusLabel" />
+            <ProgressBar fx:id="statusBar" prefWidth="200.0" progress="0.0" styleClass="statusBar" />
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+      </HBox>
+   </bottom>
+   <center>
+      <SplitPane fx:id="splitPane" dividerPositions="0.6153846153846154" prefHeight="345.0" prefWidth="1094.0" styleClass="splitPane" BorderPane.alignment="CENTER">
+        <items>
+          <AnchorPane fx:id="leftAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+               <children>
+                  <SplitPane fx:id="trackSplitPane" dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" styleClass="trackSplitPane">
+                    <items>
+                      <AnchorPane fx:id="topAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
+                           <children>
+                              <TreeTableView fx:id="gpxFileListXML" prefHeight="200.0" prefWidth="1006.0" styleClass="gpxFileList">
+                                <columns>
+                                  <TreeTableColumn fx:id="idGPXCol" prefWidth="60.0" styleClass="idCol" text="ID" />
+                                  <TreeTableColumn fx:id="nameGPXCol" prefWidth="250.0" styleClass="nameCol" text="Name" />
+                                    <TreeTableColumn fx:id="startGPXCol" prefWidth="160.0" styleClass="startCol" text="Start" />
+                                    <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration" />
+                                    <TreeTableColumn fx:id="lengthGPXCol" styleClass="lengthCol" text="Length [km]" />
+                                    <TreeTableColumn fx:id="speedGPXCol" styleClass="speedCol" text="Speed [km/h]" />
+                                    <TreeTableColumn fx:id="cumAccGPXCol" styleClass="cumAccCol" text="+dH [m]" />
+                                    <TreeTableColumn fx:id="cumDescGPXCol" styleClass="cumDescCol" text="-dH [m]" />
+                                    <TreeTableColumn fx:id="noItemsGPXCol" prefWidth="50.0" styleClass="noItemsCol" text="Items" />
+                                </columns>
+                              </TreeTableView>
+                           </children>
+                        </AnchorPane>
+                      <AnchorPane fx:id="bottomAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="210.0" prefWidth="158.0">
+                           <children>
+                              <TableView id="gpxTrackList" fx:id="gpxTrackXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList">
+                                <columns>
+                                  <TableColumn fx:id="idTrackCol" prefWidth="60.0" styleClass="idCol" text="ID" />
+                                  <TableColumn fx:id="posTrackCol" prefWidth="250.0" styleClass="posCol" text="Position" />
+                                    <TableColumn fx:id="dateTrackCol" prefWidth="160.0" styleClass="dateCol" text="Date" />
+                                    <TableColumn fx:id="durationTrackCol" styleClass="durationCol" text="Duration" />
+                                    <TableColumn fx:id="lengthTrackCol" styleClass="lengthCol" text="Length [m]" />
+                                    <TableColumn fx:id="speedTrackCol" styleClass="speedCol" text="Speed [km/h]" />
+                                    <TableColumn fx:id="heightTrackCol" styleClass="heightCol" text="H [m]" />
+                                    <TableColumn fx:id="heightDiffTrackCol" styleClass="heightDiffCol" text="dH [m]" />
+                                    <TableColumn fx:id="slopeTrackCol" styleClass="slopeCol" text="Slope [%]" />
+                                </columns>
+                              </TableView>
+                           </children>
+                        </AnchorPane>
+                    </items>
+                  </SplitPane>
+               </children>
+            </AnchorPane>
+          <AnchorPane fx:id="rightAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
+        </items>
+      </SplitPane>
+   </center>
+</BorderPane>

@@ -1,0 +1,85 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* 
+    Created on : Nov 9, 2016, 7:58:50 PM
+    Author     : Thomas
+*/
+
+/* http://stackoverflow.com/questions/21704598/how-to-show-grid-lines-for-rows-in-treetableview */
+.tree-table-row-cell {
+    -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background;
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em;
+    -fx-text-fill: -fx-text-inner-color;
+}
+.tree-table-row-cell:selected {
+    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-focus-color;
+    -fx-background-insets: 0, 1, 2;
+}
+.tree-table-row-cell:odd {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-5%);
+    -fx-background-insets: 0, 0 0 1 0;
+}
+.tree-table-row-cell:selected:odd {
+    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-focus-color;
+    -fx-background-insets: 0, 1, 2;
+}
+.gpxFileList .gpxFileRow .text {
+  -fx-font-weight: bold;
+}
+
+.gpxFileList .startCol,
+.gpxFileList .durationCol,
+.gpxTrackList .posCol, 
+.gpxTrackList .dateCol,
+.gpxTrackList .durationCol {
+  -fx-alignment: CENTER;
+}
+
+.gpxFileList .lengthCol,
+.gpxFileList .speedCol,
+.gpxFileList .cumAccCol,
+.gpxFileList .cumDescCol,
+.gpxFileList .noItemsCol,
+.gpxTrackList .lengthCol,
+.gpxTrackList .speedCol,
+.gpxTrackList .heightCol,
+.gpxTrackList .heightDiffCol,
+.gpxTrackList .slopeCol {
+  -fx-alignment: CENTER_RIGHT;
+}
+
+.hasUnsavedChanges {
+    -fx-font-style: italic;
+}
+
+.firstRow {
+    -fx-font-weight: bold;
+}
+
+.highlightedRow {
+    -fx-background-color: firebrick;
+}
