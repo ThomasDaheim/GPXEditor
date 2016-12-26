@@ -78,7 +78,7 @@ Should empty tracksegments, tracks, files be deleted?
 --deleteEmpty
 ```
 
-What count as empty?
+What counts as empty?
 ```
 --deleteCount=integer value to indicate up to how many items a tracksegment / track / file should be treated as "empty"
 ```
