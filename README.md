@@ -18,7 +18,6 @@ Following features are available via UI:
 File and track handling
 
 * add gpx files (single or mutliple) to list
-* clear file list
 * save changed files (current file will be backed up to "*.gpx.yyyyMMDD-HHmmss.bak")
 * remove all files from editor (without saving)
 * view tracks on OSM map
