@@ -28,8 +28,10 @@ package tf.gpx.edit.helper;
 import com.hs.gpxparser.modal.Track;
 import com.hs.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
@@ -53,12 +55,26 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         for (TrackSegment segment : myTrack.getTrackSegments()) {
-            myGPXTrackSegments.add(new GPXTrackSegment(gpxFile, this, segment));
+            myGPXTrackSegments.add(new GPXTrackSegment(this, segment, myGPXTrackSegments.size() + 1));
         }
+        assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
     }
 
     protected Track getTrack() {
         return myTrack;
+    }
+    
+    public Integer getNumber() {
+        return myTrack.getNumber();
+    }
+
+    public void setNumber(Integer number) {
+        myTrack.setNumber(number);
+        setHasUnsavedChanges();
+    }
+
+    public Comparator<GPXTrack> getComparator() {
+        return (GPXTrack a, GPXTrack b) -> a.getNumber() - b.getNumber();
     }
     
     @Override
@@ -67,9 +83,21 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public void setName(String myGPXFileName) {
-        myTrack.setName(myGPXFileName);
+    public void setName(final String name) {
+        myTrack.setName(name);
         setHasUnsavedChanges();
+    }
+
+    @Override
+    public GPXLineItem getParent() {
+        return myGPXFile;
+    }
+    
+    @Override
+    public void setParent(GPXLineItem parent) {
+        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        
+        myGPXFile = (GPXFile) parent;
     }
 
     @Override
@@ -79,20 +107,17 @@ public class GPXTrack extends GPXMeasurable {
     
     @Override
     public void setChildren(final List<GPXLineItem> children) {
-        final List<GPXTrackSegment> gpxTrackSegments = children.stream().
-                map((GPXLineItem child) -> {
-                    assert child instanceof  GPXTrackSegment;
-                    return (GPXTrackSegment) child;
-                }).collect(Collectors.toList());
-        
-        setGPXTrackSegments(gpxTrackSegments);
+        setGPXTrackSegments(castChildren(GPXTrackSegment.class, children));
     }
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
+        //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());
         myGPXTrackSegments = gpxTrackSegments;
         
+        AtomicInteger counter = new AtomicInteger(0);
         final List<TrackSegment> trackSegments = gpxTrackSegments.stream().
                 map((GPXTrackSegment child) -> {
+                    child.setNumber(counter.getAndIncrement());
                     return child.getTrackSegment();
                 }).collect(Collectors.toList());
         myTrack.setTrackSegments(new ArrayList<>(trackSegments));
@@ -113,6 +138,8 @@ public class GPXTrack extends GPXMeasurable {
     @Override
     public String getData(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
+            case Type:
+                return "Track";
             case Name:
                 return myTrack.getName();
             case Start:
@@ -154,7 +181,8 @@ public class GPXTrack extends GPXMeasurable {
 
     @Override
     public List<GPXTrackSegment> getGPXTrackSegments() {
-        return myGPXTrackSegments;
+        // return copy of list
+        return myGPXTrackSegments.stream().collect(Collectors.toList());
     }
 
     @Override
@@ -166,7 +194,7 @@ public class GPXTrack extends GPXMeasurable {
         }
         return result;
     }
-    
+
     @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXTrack(this);
