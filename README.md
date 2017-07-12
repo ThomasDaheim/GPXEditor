@@ -126,6 +126,7 @@ The tree will be in `build/install`.
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
+* add TestFX UI test cases
 * parse SRTM .hgt files and assign heights to waypoints
 * extend/replace waypoint viewer to enable zooming / changing of views
 * finding extrem points in tracks (distance, speed, acceleration) and options to remove / smooth
