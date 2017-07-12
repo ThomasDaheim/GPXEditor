@@ -3,6 +3,7 @@ package tf.gpx.edit.helper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import tf.gpx.edit.general.RecentFiles;
 import tf.gpx.edit.main.GPXEditorManager;
 
 public class GPXEditorPreferences {
@@ -11,13 +12,13 @@ public class GPXEditorPreferences {
     private final static GPXEditorPreferences INSTANCE = new GPXEditorPreferences();
 
     private final static Preferences MYPREFERENCES = Preferences.userNodeForPackage(GPXEditorManager.class);
-    public final static String RECENTFILENAME = "recentFileName";
-    public final static String RECENTFILEPATH = "recentFilePath";
     public final static String RECENTWINDOWWIDTH = "recentWindowWidth";
     public final static String RECENTWINDOWHEIGTH = "recentWindowHeigth";
     public final static String ALGORITHM = "algorithm";
     public final static String REDUCE_EPSILON = "epsilon";
     public final static String FIX_EPSILON = "fixDistance";
+
+    private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
     
     private GPXEditorPreferences() {
         // Exists only to defeat instantiation.
@@ -25,6 +26,10 @@ public class GPXEditorPreferences {
 
     public static GPXEditorPreferences getInstance() {
         return INSTANCE;
+    }
+    
+    public static RecentFiles getRecentFiles() {
+        return MYRECENTFILES;
     }
     
     public static String get(final String key, final String defaultValue) {

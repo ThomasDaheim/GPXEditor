@@ -25,7 +25,14 @@
  */
 package tf.gpx.edit.main;
 
+import com.gluonhq.charm.down.ServiceFactory;
+import com.gluonhq.charm.down.Services;
+import com.gluonhq.charm.down.plugins.StorageService;
+import com.sun.javafx.PlatformUtil;
+import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -54,6 +61,62 @@ public class GPXEditorManager extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        // get rid of INFO messages from gluon maps
+        // https://stackoverflow.com/questions/13760095/java-dynamically-change-logging-level
+        final Handler[] handlers = Logger.getLogger("").getHandlers();
+        for (Handler handler : handlers) {
+            handler.setLevel(Level.WARNING);
+        }
+        
+        // set cache for mapo tile to avoid error message java.io.IOException: Storage Service is not available
+        // https://github.com/gluonhq/maps/issues/8#issuecomment-310389905
+        if(PlatformUtil.isWindows() || PlatformUtil.isMac() || PlatformUtil.isUnix()) {
+            System.setProperty("javafx.platform" , "Desktop");
+        }
+
+        // define service for desktop
+        StorageService storageService = new StorageService() {
+            @Override
+            public Optional<File> getPrivateStorage() {
+                // user home app config location (linux: /home/[yourname]/.gluonmaps)
+                return Optional.of(new File(System.getProperty("user.home")));
+            }
+
+            @Override
+            public Optional<File> getPublicStorage(String subdirectory) {
+                // this should work on desktop systems because home path is public
+                return getPrivateStorage();
+            }
+
+            @Override
+            public boolean isExternalStorageWritable() {
+                //noinspection ConstantConditions
+                return getPrivateStorage().get().canWrite();
+            }
+
+            @Override
+            public boolean isExternalStorageReadable() {
+                //noinspection ConstantConditions
+                return getPrivateStorage().get().canRead();
+            }
+        };
+
+        // define service factory for desktop
+        ServiceFactory<StorageService> storageServiceFactory = new ServiceFactory<StorageService>() {
+            @Override
+            public Class<StorageService> getServiceType() {
+                return StorageService.class;
+            }
+
+            @Override
+            public Optional<StorageService> getInstance() {
+                return Optional.of(storageService);
+            }
+        };
+
+        // register service
+        Services.registerServiceFactory(storageServiceFactory);
+        
         launch(GPXEditorManager.class, args);
     }
     

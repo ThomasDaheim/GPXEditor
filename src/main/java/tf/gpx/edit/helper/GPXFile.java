@@ -31,10 +31,12 @@ import com.hs.gpxparser.modal.Track;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -69,6 +71,10 @@ public class GPXFile extends GPXMeasurable {
         for (Track track : myGPX.getTracks()) {
             myGPXTracks.add(new GPXTrack(this, track));
         }
+        assert (myGPXTracks.size() == myGPX.getTracks().size());
+
+        // TF, 20170606: add gpx track acording to number in case its set
+        Collections.sort(myGPXTracks, myGPXTracks.get(0).getComparator());
     }
     
     @Override
@@ -77,8 +83,8 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public void setName(String myGPXFileName) {
-        this.myGPXFileName = myGPXFileName;
+    public void setName(final String name) {
+        this.myGPXFileName = name;
         setHasUnsavedChanges();
     }
 
@@ -91,26 +97,34 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
+    public GPXLineItem getParent() {
+        // GPXFiles don't have a parent.
+        return null;
+    }
+
+    @Override
+    public void setParent(GPXLineItem parent) {
+        // GPXFiles don't have a parent.
+    }
+
+    @Override
     public List<GPXLineItem> getChildren() {
         return new ArrayList<>(myGPXTracks);
     }
     
     @Override
     public void setChildren(final List<GPXLineItem> children) {
-        final List<GPXTrack> gpxTracks = children.stream().
-                map((GPXLineItem child) -> {
-                    assert child instanceof  GPXTrack;
-                    return (GPXTrack) child;
-                }).collect(Collectors.toList());
-        
-        setGPXTracks(gpxTracks);
+        setGPXTracks(castChildren(GPXTrack.class, children));
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
         myGPXTracks = gpxTracks;
         
+        // TF, 20170627: fill number attribute for gpx track
+        AtomicInteger counter = new AtomicInteger(0);
         final Set<Track> tracks = gpxTracks.stream().
                 map((GPXTrack child) -> {
+                    child.setNumber(counter.getAndIncrement());
                     return child.getTrack();
                 }).collect(Collectors.toSet());
         myGPX.setTracks(new HashSet<>(tracks));
@@ -131,6 +145,8 @@ public class GPXFile extends GPXMeasurable {
     @Override
     public String getData(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
+            case Type:
+                return "File";
             case Name:
                 return myGPXFileName;
             case Start:
@@ -165,7 +181,8 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public List<GPXTrack> getGPXTracks() {
-        return myGPXTracks;
+        // return copy of list
+        return myGPXTracks.stream().collect(Collectors.toList());
     }
 
     @Override

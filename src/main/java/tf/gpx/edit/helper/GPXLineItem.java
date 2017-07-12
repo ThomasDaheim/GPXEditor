@@ -28,6 +28,7 @@ package tf.gpx.edit.helper;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
 /**
@@ -39,10 +40,23 @@ public abstract class GPXLineItem {
         GPXFile,
         GPXTrack,
         GPXTrackSegment,
-        GPXWaypoint
+        GPXWaypoint;
+        
+        public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
+            return parent.ordinal() == item.ordinal()-1;
+        }
+        
+        public static boolean isChildTypeOf(final GPXLineItemType child, final GPXLineItemType item) {
+            return child.ordinal() == item.ordinal()+1;
+        }
+        
+        public static boolean isSameTypeAs(final GPXLineItemType child, final GPXLineItemType item) {
+            return child.ordinal() == item.ordinal();
+        }
     }
     
     public static enum GPXLineItemData {
+        Type,
         Name,
         Start,
         Duration,
@@ -62,6 +76,7 @@ public abstract class GPXLineItem {
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss z"); 
     
     private boolean hasUnsavedChanges = false;
+    private int myNumber;
 
     public GPXLineItem() {
         super();
@@ -92,6 +107,15 @@ public abstract class GPXLineItem {
             child.resetHasUnsavedChanges();
         }
     }
+
+    public Integer getNumber() {
+        return myNumber;
+    }
+
+    public void setNumber(Integer number) {
+        myNumber = number;
+    }
+
     protected static String DURATION_FORMAT = "%1$02d:%2$02d:%3$02d"; 
     
     public abstract GPXLineItemType getType();
@@ -100,13 +124,27 @@ public abstract class GPXLineItem {
     public abstract String getData(final GPXLineItem.GPXLineItemData gpxLineItemData);
     public abstract Date getDate();
     
+    // get associated GPXLineItemType - could be children or parents
     public abstract GPXFile getGPXFile();
     public abstract List<GPXTrack> getGPXTracks();
     public abstract List<GPXTrackSegment> getGPXTrackSegments();
     public abstract List<GPXWaypoint> getGPXWaypoints();
 
+    public abstract GPXLineItem getParent();
+    public abstract void setParent(final GPXLineItem parent);
+
     public abstract List<GPXLineItem> getChildren();
     public abstract void setChildren(final List<GPXLineItem> children);
+    protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<GPXLineItem> children) {
+        final List<T> gpxChildren = children.stream().
+                map((GPXLineItem child) -> {
+                    assert child.getClass().isInstance(clazz);
+                    child.setParent(this);
+                    return (T) child;
+                }).collect(Collectors.toList());
+        
+        return gpxChildren;
+    }
     
     protected abstract long getDuration();
     

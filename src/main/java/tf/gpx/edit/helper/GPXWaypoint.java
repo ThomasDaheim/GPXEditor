@@ -36,8 +36,6 @@ import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
  * @author Thomas
  */
 public class GPXWaypoint extends GPXLineItem {
-    private GPXFile myGPXFile;
-    private GPXTrack myGPXTrack;
     private GPXTrackSegment myGPXTrackSegment;
     private Waypoint myWaypoint;
     private GPXWaypoint myPrevGPXWaypoint = null;
@@ -49,16 +47,14 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public GPXWaypoint(
-            final GPXFile gpxFile, 
-            final GPXTrack gpxTrack, 
             final GPXTrackSegment gpxTrackSegment, 
-            final Waypoint waypoint) {
+            final Waypoint waypoint,
+            final int number) {
         super();
         
-        myGPXFile = gpxFile;
-        myGPXTrack = gpxTrack;
         myGPXTrackSegment = gpxTrackSegment;
         myWaypoint = waypoint;
+        setNumber(number);
     }
 
     protected Waypoint getWaypoint() {
@@ -83,9 +79,21 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public void setName(String myGPXFileName) {
-        myWaypoint.setName(myGPXFileName);
+    public void setName(final String name) {
+        myWaypoint.setName(name);
         setHasUnsavedChanges();
+    }
+
+    @Override
+    public GPXLineItem getParent() {
+        return myGPXTrackSegment;
+    }
+
+    @Override
+    public void setParent(GPXLineItem parent) {
+        assert GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType());
+        
+        myGPXTrackSegment = (GPXTrackSegment) parent;
     }
 
     @Override
@@ -105,6 +113,8 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public String getData(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
+            case Type:
+                return "Waypt";
             case Name:
                 return myWaypoint.getName();
             case Position:
@@ -155,14 +165,12 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public GPXFile getGPXFile() {
-        return myGPXFile;
+        return getParent().getGPXFile();
     }
 
     @Override
     public List<GPXTrack> getGPXTracks() {
-        List<GPXTrack> result = new ArrayList<>();
-        result.add(myGPXTrack);
-        return result;
+        return getParent().getGPXTracks();
     }
 
     @Override

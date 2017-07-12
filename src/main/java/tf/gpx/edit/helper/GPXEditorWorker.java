@@ -60,6 +60,7 @@ public class GPXEditorWorker {
 
     private static final String MERGED_FILE_NAME = "Merged.gpx";
     private static final String MERGED_TRACK_NAME = "Merged Track";
+    private static final String MERGED_TRACKSEGMENT_NAME = "Merged Segment";
     
     public GPXEditorWorker() {
         super();
@@ -172,13 +173,21 @@ public class GPXEditorWorker {
         // 1. remove all tracks that we should merge from the track list
         gpxTracks.removeAll(gpxTracksToMerge);
 
-        // 2. merge all selected tracks into the first one
+        // 2. merge all selected tracksegments into the first track
         final GPXTrack mergedGPXTrack = gpxTracksToMerge.get(0);
         mergedGPXTrack.setName(MERGED_TRACK_NAME);
 
         final List<GPXTrackSegment> mergedGPXTrackegments = mergedGPXTrack.getGPXTrackSegments();
         for (GPXTrack gpxTrack : gpxTracksToMerge.subList(1, gpxTracksToMerge.size())) {
-            mergedGPXTrackegments.addAll(gpxTrack.getGPXTrackSegments());
+            final List<GPXTrackSegment> gpxGPXTrackSegments = gpxTrack.getGPXTrackSegments();
+
+            // add track segments to new list
+            mergedGPXTrackegments.addAll(gpxGPXTrackSegments);
+            
+            for (GPXTrackSegment gpxTrackSegment : gpxGPXTrackSegments) {
+                // set new parent
+                gpxTrackSegment.setParent(mergedGPXTrack);
+            }
         }
 
         mergedGPXTrack.setGPXTrackSegments(mergedGPXTrackegments);
@@ -187,5 +196,34 @@ public class GPXEditorWorker {
         gpxTracks.add(0, mergedGPXTrack);
         
         return gpxTracks;
+    }
+
+    public final List<GPXTrackSegment> mergeSelectedGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
+        System.out.println("mergeSelectedGPXTrackSegments");
+        // 1. remove all tracksegments that we should merge from the track list
+        gpxTrackSegments.removeAll(gpxTrackSegmentsToMerge);
+
+        // 2. merge all selected waypoints into the first segment
+        final GPXTrackSegment mergedGPXTrackSegment = gpxTrackSegmentsToMerge.get(0);
+        mergedGPXTrackSegment.setName(MERGED_TRACKSEGMENT_NAME);
+
+        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints();
+        for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
+            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getGPXWaypoints();
+
+            mergedGPXWaypoints.addAll(gpxGPXWaypoints);
+            
+            for (GPXWaypoint gpxGPXWaypoint : gpxGPXWaypoints) {
+                // set new parent
+                gpxGPXWaypoint.setParent(mergedGPXTrackSegment);
+            }
+        }
+        
+        mergedGPXTrackSegment.setGPXWaypoints(mergedGPXWaypoints);
+
+        // add merged track in front of remaing tracks
+        gpxTrackSegments.add(0, mergedGPXTrackSegment);
+        
+        return gpxTrackSegments;
     }
 }

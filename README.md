@@ -11,7 +11,7 @@ Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained a
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (V1.0)
+## Features (v1.1)
 
 Following features are available via UI:
 
@@ -26,6 +26,8 @@ File and track handling
 * merge selected tracks for multiple selections across different files: tracks selected from same file will be merged
 * delete selected tracks - also multiple selections across different files
 * delete selected tracks
+
+* Update v1.1: Added drag & drop for tracks and segments
 
 Track optimization
 
@@ -118,3 +120,14 @@ You can try to run and use this application by
 ```
 
 The tree will be in `build/install`.
+
+## Roadmap
+
+The following features are still on my todo-list - but I don't promise any timeline :-)
+
+* add TestFX UI test cases
+* parse SRTM .hgt files and assign heights to waypoints
+* extend/replace waypoint viewer to enable zooming / changing of views
+* finding extrem points in tracks (distance, speed, acceleration) and options to remove / smooth
+* ... any other features from GPS-Track-Analyse.NET that are useful for menu
+
