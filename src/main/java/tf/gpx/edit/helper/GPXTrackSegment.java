@@ -83,6 +83,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
         
         myGPXTrack = (GPXTrack) parent;
+        setHasUnsavedChanges();
     }
 
     @Override

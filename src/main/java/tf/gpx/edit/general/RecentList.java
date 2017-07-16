@@ -34,7 +34,7 @@ import java.util.Iterator;
  * @author Thomas, based on http://www.javaspecialists.eu/archive/Issue219.html
  * @param <E> type of thing to store in list
  */
-    class RecentList<E> implements Iterable<E> {
+class RecentList<E> implements Iterable<E> {
     private final ArrayList<E> myList = new ArrayList<>();
     private final int myMaxLength;
 

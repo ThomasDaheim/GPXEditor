@@ -40,6 +40,8 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu fx:id="recentFilesMenu" mnemonicParsing="false" text="Recent Files" />
                   <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem fx:id="exitFileMenu" mnemonicParsing="false" text="Exit">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="X" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -58,7 +60,6 @@
                      </accelerator></MenuItem>
                   <MenuItem fx:id="deleteTracksMenu" mnemonicParsing="false" text="Delete Tracks/Segments" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="settingsMenu" mnemonicParsing="false" text="Algo-Settings" />
                   <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
                   <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Fix Tracks">
                      <accelerator>
@@ -68,6 +69,8 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height values" />
             </items>
                <accelerator>
                   <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />

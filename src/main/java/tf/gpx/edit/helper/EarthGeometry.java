@@ -19,8 +19,7 @@ public class EarthGeometry {
     public static enum Algorithm {
         DouglasPeucker,
         VisvalingamWhyatt,
-        ReumannWitkam,
-        SingleTooFarAway
+        ReumannWitkam
     }
     
     // spherical earth
@@ -52,15 +51,8 @@ public class EarthGeometry {
      * @param parameter tolerance, in meters
      * @return the points of the simplified track
      */
-    public static boolean[] fixTrack(final List<GPXWaypoint> track, final EarthGeometry.Algorithm algorithm, final double parameter) {
-        switch (algorithm) {
-            case SingleTooFarAway:
-                return removeSingleTooFarAway(track, parameter);
-            default:
-                boolean[] keep = new boolean[track.size()];
-                Arrays.fill(keep, true);
-                return keep;
-        }
+    public static boolean[] fixTrack(final List<GPXWaypoint> track, final double parameter) {
+        return removeSingleTooFarAway(track, parameter);
     }
 
     private static boolean[] removeSingleTooFarAway(List<GPXWaypoint> track, double maxDistance) {

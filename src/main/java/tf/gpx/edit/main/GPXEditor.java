@@ -60,16 +60,12 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
@@ -78,13 +74,11 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
-import javafx.util.converter.DoubleStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -97,6 +91,8 @@ import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
 /**
  *
@@ -115,12 +111,10 @@ public class GPXEditor implements Initializable {
         DOWN
     }
 
-    private final GPXEditorWorker myWorker = new GPXEditorWorker();
+    private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
     
-    private EarthGeometry.Algorithm myAlgorithm = EarthGeometry.Algorithm.ReumannWitkam;
-    private double myReduceEpsilon = 50.0;
-    private double myFixEpsilon = 1000.0;
-
+    @FXML
+    private MenuItem assignSRTMheightsMenu;
     @FXML
     private Menu recentFilesMenu;
     @FXML
@@ -203,7 +197,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem checkTrackMenu;
     @FXML
-    private MenuItem settingsMenu;
+    private MenuItem preferencesMenu;
     @FXML
     private MenuItem saveAllFilesMenu;
     @FXML
@@ -215,23 +209,14 @@ public class GPXEditor implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // read algo and myReduceEpsilon value
-        myAlgorithm = EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
-        myReduceEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
-        myFixEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
-        
         initMenus();
         
         initTopPane();
         
         initBottomPane();
     }
-    
+
     public void stop() {
-        // store algo and myReduceEpsilon value
-        GPXEditorPreferences.put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
-        GPXEditorPreferences.put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
-        GPXEditorPreferences.put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
     }
 
     private void initMenus() {
@@ -259,6 +244,10 @@ public class GPXEditor implements Initializable {
 
         initRecentFilesMenu();
 
+        preferencesMenu.setOnAction((ActionEvent event) -> {
+            preferences(event);
+        });
+
         exitFileMenu.setOnAction((ActionEvent event) -> {
             // close checks for changes
             closeAllFiles();
@@ -282,9 +271,6 @@ public class GPXEditor implements Initializable {
         deleteTracksMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         
-        settingsMenu.setOnAction((ActionEvent event) -> {
-            settings(event);
-        });
         checkTrackMenu.setOnAction((ActionEvent event) -> {
             checkTrack(event);
         });
@@ -293,6 +279,10 @@ public class GPXEditor implements Initializable {
         });
         reduceTracksMenu.setOnAction((ActionEvent event) -> {
             reduceGPXFiles(event);
+        });
+        
+        assignSRTMheightsMenu.setOnAction((ActionEvent event) -> {
+            assignSRTMHeight(event);
         });
     }
     
@@ -970,93 +960,8 @@ public class GPXEditor implements Initializable {
         }
     }
 
-    private void settings(final ActionEvent event) {
-        // create new scene with list of algos & parameter
-        final Stage settingsStage = new Stage();
-        settingsStage.setTitle("Settings");
-        settingsStage.initModality(Modality.WINDOW_MODAL);
-        
-        final GridPane gridPane = new GridPane();
-
-        // 1st row: select fixTrack distanceGPXWaypoints
-        final Label fixLbl = new Label("Distance:");
-        gridPane.add(fixLbl, 0, 0, 1, 1);
-        
-        final TextField fixText = new TextField();
-        fixText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
-        fixText.setText(Double.toString(myFixEpsilon));
-        gridPane.add(fixText, 1, 0, 1, 1);
-        
-        // 2nd row: select reduce algorithm
-        final Label algoLbl = new Label("Algorithm:");
-        gridPane.add(algoLbl, 0, 1, 1, 1);
-
-        final ToggleGroup choiceGroup = new ToggleGroup();
-        RadioButton radioButton1 = new RadioButton("Douglas-Peucker");
-        RadioButton radioButton2 = new RadioButton("Visvalingam-Whyatt");
-        RadioButton radioButton3 = new RadioButton("Reumann-Witkam");
-        radioButton1.setToggleGroup(choiceGroup);
-        radioButton2.setToggleGroup(choiceGroup);
-        radioButton3.setToggleGroup(choiceGroup);
-        radioButton1.setSelected(EarthGeometry.Algorithm.DouglasPeucker.equals(myAlgorithm));
-        radioButton2.setSelected(EarthGeometry.Algorithm.VisvalingamWhyatt.equals(myAlgorithm));
-        radioButton3.setSelected(EarthGeometry.Algorithm.ReumannWitkam.equals(myAlgorithm));
-
-        final VBox algoChoiceBox = new VBox();
-        algoChoiceBox.setSpacing(10.0);
-        algoChoiceBox.getChildren().addAll(radioButton1, radioButton2, radioButton3);
-        gridPane.add(algoChoiceBox, 1, 1, 1, 1);
-
-        // 3rd row: select reduce epsilon
-        final Label epsilonLbl = new Label("Epsilon:");
-        gridPane.add(epsilonLbl, 0, 2, 1, 1);
-        
-        final TextField epsilonText = new TextField();
-        epsilonText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
-        epsilonText.setText(Double.toString(myReduceEpsilon));
-        gridPane.add(epsilonText, 1, 2, 1, 1);
-        
-        // 4th row: save / cancel buttons
-        Button saveBtn = new Button("Save");
-        saveBtn.setOnAction((ActionEvent arg0) -> {
-            settingsStage.setTitle("Save");
-            settingsStage.close();
-        });
-        gridPane.add(saveBtn, 0, 3, 1, 1);
-        
-        Button cancelBtn = new Button("Cancel");
-        cancelBtn.setOnAction((ActionEvent arg0) -> {
-            settingsStage.setTitle("Cancel");
-            settingsStage.close();
-        });
-        gridPane.add(cancelBtn, 1, 3, 1, 1);
-        
-        GridPane.setMargin(fixLbl, new Insets(10));
-        GridPane.setMargin(fixText, new Insets(10));
-        GridPane.setMargin(algoLbl, new Insets(10));
-        GridPane.setMargin(algoChoiceBox, new Insets(10));
-        GridPane.setMargin(epsilonLbl, new Insets(10));
-        GridPane.setMargin(epsilonText, new Insets(10));
-        GridPane.setMargin(saveBtn, new Insets(10));
-        GridPane.setMargin(cancelBtn, new Insets(10));
-
-        settingsStage.setScene(new Scene(gridPane));
-        settingsStage.showAndWait();
-        
-        if (saveBtn.getText().equals(settingsStage.getTitle())) {
-            // read values from stage
-            myFixEpsilon = Double.valueOf(fixText.getText());
-
-            if (radioButton1.isSelected()) {
-                myAlgorithm = EarthGeometry.Algorithm.DouglasPeucker;
-            } else if (radioButton2.isSelected()) {
-                myAlgorithm = EarthGeometry.Algorithm.VisvalingamWhyatt;
-            } else {
-                myAlgorithm = EarthGeometry.Algorithm.ReumannWitkam;
-            }
-
-            myReduceEpsilon = Double.valueOf(epsilonText.getText());
-        }
+    private void preferences(final ActionEvent event) {
+        GPXPreferencesDialogue.getInstance().showPreferencesDialogue();
     }
 
     private void checkTrack(final ActionEvent event) {
@@ -1067,8 +972,13 @@ public class GPXEditor implements Initializable {
             final List<GPXTrackSegment> gpxTrackSegments = uniqueGPXTrackSegmentListFromGPXWaypointList(gpxTrackXML.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getGPXWaypoints();
-                final boolean keep1[] = EarthGeometry.simplifyTrack(trackwaypoints, myAlgorithm, myReduceEpsilon);
-                final boolean keep2[] = EarthGeometry.fixTrack(trackwaypoints, EarthGeometry.Algorithm.SingleTooFarAway, myFixEpsilon);
+                final boolean keep1[] = EarthGeometry.simplifyTrack(
+                        trackwaypoints, 
+                        EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())), 
+                        Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
+                final boolean keep2[] = EarthGeometry.fixTrack(
+                        trackwaypoints, 
+                        Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
 
                 int index = 0;
                 for (GPXWaypoint gpxWaypoint : trackwaypoints) {
@@ -1097,7 +1007,8 @@ public class GPXEditor implements Initializable {
 
     private void fixGPXFiles(final ActionEvent event) {
         myWorker.fixGPXFiles(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()), myFixEpsilon);
+                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         gpxFileListXML.refresh();
         
         refreshWayoints();
@@ -1105,7 +1016,21 @@ public class GPXEditor implements Initializable {
 
     private void reduceGPXFiles(final ActionEvent event) {
         myWorker.reduceGPXFiles(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()), myAlgorithm, myFixEpsilon);
+                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
+                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
+        gpxFileListXML.refresh();
+        
+        refreshWayoints();
+    }
+
+    private void assignSRTMHeight(ActionEvent event) {
+        myWorker.assignSRTMHeight(
+                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
+        );
         gpxFileListXML.refresh();
         
         refreshWayoints();
@@ -1169,7 +1094,7 @@ public class GPXEditor implements Initializable {
     }
     
     // TF, 20160816: wrapper for alerts that stores the alert as long as its shown - needed for testing alerts with testfx
-    private Optional<ButtonType> showAlert(final Alert.AlertType alertType, final String title, final String headerText, final String contentText, final ButtonType ... buttons) {
+    public Optional<ButtonType> showAlert(final Alert.AlertType alertType, final String title, final String headerText, final String contentText, final ButtonType ... buttons) {
         Alert result;
         
         result = new Alert(alertType);

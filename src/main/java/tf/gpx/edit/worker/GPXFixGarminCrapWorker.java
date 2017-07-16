@@ -51,7 +51,7 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
         List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
         List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
 
-        final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, EarthGeometry.Algorithm.SingleTooFarAway, myParameter);
+        final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, myParameter);
         
         boolean hasChanged = false;
         int index = 0;

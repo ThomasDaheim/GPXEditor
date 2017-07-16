@@ -17,6 +17,9 @@ public class GPXEditorPreferences {
     public final static String ALGORITHM = "algorithm";
     public final static String REDUCE_EPSILON = "epsilon";
     public final static String FIX_EPSILON = "fixDistance";
+    public final static String SRTM_DATA_PATH = "SRTMDataPath";
+    public final static String SRTM_DATA_AVERAGE = "SRTMDataAverage";
+    public final static String HEIGHT_ASSIGN_MODE = "heightAssignMode";
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
     
