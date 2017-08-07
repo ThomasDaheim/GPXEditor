@@ -14,6 +14,9 @@ public class GPXEditorPreferences {
     private final static Preferences MYPREFERENCES = Preferences.userNodeForPackage(GPXEditorManager.class);
     public final static String RECENTWINDOWWIDTH = "recentWindowWidth";
     public final static String RECENTWINDOWHEIGTH = "recentWindowHeigth";
+    public final static String RECENTLEFTDIVIDERPOS = "recentLeftDividerPos";
+    public final static String RECENTRIGHTDIVIDERPOS = "recentRightDividerPos";
+    public final static String RECENTCENTRALDIVIDERPOS = "recentCentralDividerPos";
     public final static String ALGORITHM = "algorithm";
     public final static String REDUCE_EPSILON = "epsilon";
     public final static String FIX_EPSILON = "fixDistance";

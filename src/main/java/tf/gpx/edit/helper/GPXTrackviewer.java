@@ -35,6 +35,9 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -49,6 +52,7 @@ public class GPXTrackviewer {
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
     
     private final MapView myMapView;
+    private final AreaChart myAreaChart;
     private final GPXWaypointLayer myGPXWaypointLayer;
 
     private GPXTrackviewer() {
@@ -57,6 +61,12 @@ public class GPXTrackviewer {
         myGPXWaypointLayer = new GPXWaypointLayer();
         myMapView.addLayer(myGPXWaypointLayer);
         myMapView.setVisible(false);
+
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        myAreaChart = new AreaChart(xAxis, yAxis);
+        myAreaChart.setLegendVisible(false);
+        myAreaChart.setVisible(false);
     }
     
     public static GPXTrackviewer getInstance() {
@@ -65,6 +75,10 @@ public class GPXTrackviewer {
     
     public MapView getMapView() {
         return myMapView;
+    }
+    
+    public XYChart getChart() {
+        return myAreaChart;
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
@@ -76,6 +90,18 @@ public class GPXTrackviewer {
         myMapView.setZoom(myGPXWaypointLayer.getZoom());
         
         myMapView.setVisible(!gpxWaypoints.isEmpty());
+
+        myAreaChart.getData().clear();
+        double distance = 0d;
+        XYChart.Series series = new XYChart.Series();
+        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+            XYChart.Data data = new XYChart.Data(distance, gpxWaypoint.getElevation());
+
+            series.getData().add(data);
+            distance += gpxWaypoint.getDistance();
+        }
+        myAreaChart.getData().add(series);
+        myAreaChart.setVisible(!gpxWaypoints.isEmpty());
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
@@ -100,13 +126,11 @@ class GPXWaypointLayer extends MapLayer {
         
         // add new points with icon and determine new bounding box
         Node prevIcon = null;
-        double minX = Double.MAX_VALUE;
-        double maxX = -Double.MAX_VALUE;
-        double minY = Double.MAX_VALUE;
-        double maxY = -Double.MAX_VALUE;
+        double minLat = Double.MAX_VALUE;
+        double maxLat = -Double.MAX_VALUE;
+        double minLon = Double.MAX_VALUE;
+        double maxLon = -Double.MAX_VALUE;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            final MapPoint mapPoint = new MapPoint(gpxWaypoint.getWaypoint().getLatitude(), gpxWaypoint.getWaypoint().getLongitude());
-            
             final Circle icon = new Circle(3.5, Color.LIGHTGOLDENRODYELLOW);
             icon.setVisible(true);
             icon.setStroke(Color.RED);
@@ -136,16 +160,85 @@ class GPXWaypointLayer extends MapLayer {
             
             // keep track of bounding box
             // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
-            minX = Math.min(minX, mapPoint.getLatitude());
-            maxX = Math.max(maxX, mapPoint.getLatitude());
-            minY = Math.min(minY, mapPoint.getLongitude());
-            maxY = Math.max(maxY, mapPoint.getLongitude());
+            minLat = Math.min(minLat, gpxWaypoint.getWaypoint().getLatitude());
+            maxLat = Math.max(maxLat, gpxWaypoint.getWaypoint().getLatitude());
+            minLon = Math.min(minLon, gpxWaypoint.getWaypoint().getLongitude());
+            maxLon = Math.max(maxLon, gpxWaypoint.getWaypoint().getLongitude());
         }
+        
+        // TODO?: add lat / lon lines + lines for SRMT3 grids
+//        for (int i = (int) minLat; i <= (int) maxLat + 1; i++) {
+//            for (int j = 0; j < 1200; j++) {
+//                // starting point only has waypoint & icon
+//                GPXWaypoint wayPoint = new GPXWaypoint(null, new Waypoint(i + j / 1200d, -180), 1);
+//                final Circle start = blackDot();
+//                this.getChildren().add(start);
+//                myPoints.add(Triple.of(wayPoint, start, null));
+//
+//                // end point only has waypoint, icon & line
+//                wayPoint = new GPXWaypoint(null, new Waypoint(i + j / 1200d, 180), 1);
+//                final Circle end = blackDot();
+//                this.getChildren().add(end);
+//
+//                final Line line = new Line();
+//                line.setVisible(true);
+//                line.setStrokeWidth(0.1);
+//                line.setStroke(Color.BLACK);
+//
+//                // bind ends of line:
+//                line.startXProperty().bind(start.layoutXProperty().add(start.translateXProperty()));
+//                line.startYProperty().bind(start.layoutYProperty().add(start.translateYProperty()));
+//                line.endXProperty().bind(end.layoutXProperty().add(end.translateXProperty()));
+//                line.endYProperty().bind(end.layoutYProperty().add(end.translateYProperty()));
+//
+//                this.getChildren().add(line);
+//
+//                myPoints.add(Triple.of(wayPoint, start, null));
+//            }
+//        }
+//        for (long i = (int) minLon; i <= (int) maxLon + 1; i++) {
+//            for (int j = 0; j < 1200; j++) {
+//                // starting point only has waypoint & icon
+//                GPXWaypoint wayPoint = new GPXWaypoint(null, new Waypoint(-90, i + j / 1200d), 1);
+//                final Circle start = blackDot();
+//                this.getChildren().add(start);
+//                myPoints.add(Triple.of(wayPoint, start, null));
+//
+//                // end point only has waypoint, icon & line
+//                wayPoint = new GPXWaypoint(null, new Waypoint(90, i + j / 1200d), 1);
+//                final Circle end = blackDot();
+//                this.getChildren().add(end);
+//
+//                final Line line = new Line();
+//                line.setVisible(true);
+//                line.setStrokeWidth(0.1);
+//                line.setStroke(Color.BLACK);
+//
+//                // bind ends of line:
+//                line.startXProperty().bind(start.layoutXProperty().add(start.translateXProperty()));
+//                line.startYProperty().bind(start.layoutYProperty().add(start.translateYProperty()));
+//                line.endXProperty().bind(end.layoutXProperty().add(end.translateXProperty()));
+//                line.endYProperty().bind(end.layoutYProperty().add(end.translateYProperty()));
+//
+//                this.getChildren().add(line);
+//
+//                myPoints.add(Triple.of(wayPoint, start, null));
+//            }
+//        }
 
         // this is our new bounding box
-        myBoundingBox = new BoundingBox(minX, minY, maxX-minX, maxY-minY);
+        myBoundingBox = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
 
         this.markDirty();
+    }
+    
+    private Circle blackDot() {
+        final Circle blackDot = new Circle(0.1, Color.BLACK);
+        blackDot.setVisible(false);
+        blackDot.setStroke(Color.BLACK);
+        blackDot.setStrokeWidth(0.1);
+        
+        return blackDot;
     }
 
     void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
@@ -164,10 +257,10 @@ class GPXWaypointLayer extends MapLayer {
         int zoomLevel;
         
         final double maxDiff = (myBoundingBox.getWidth() > myBoundingBox.getHeight()) ? myBoundingBox.getWidth() : myBoundingBox.getHeight();
-        if (maxDiff < 360. / Math.pow(2, 20)) {
+        if (maxDiff < 360d / Math.pow(2, 20)) {
             zoomLevel = 21;
         } else {
-            zoomLevel = (int) (-1*( (Math.log(maxDiff)/Math.log(2)) - (Math.log(360)/Math.log(2))) + 1);
+            zoomLevel = (int) (-1d*( (Math.log(maxDiff)/Math.log(2d)) - (Math.log(360d)/Math.log(2d))) + 1d);
             if (zoomLevel < 1)
                 zoomLevel = 1;
         }

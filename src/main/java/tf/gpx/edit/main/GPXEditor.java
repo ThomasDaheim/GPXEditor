@@ -49,6 +49,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -86,8 +87,8 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.helper.GPXFile;
 import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXTrack;
+import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
@@ -206,9 +207,27 @@ public class GPXEditor implements Initializable {
     private TreeTableColumn<GPXLineItem, String> noItemsGPXCol;
     @FXML
     private MenuItem deleteTracksMenu;
+    @FXML
+    private SplitPane viewSplitPane;
+    @FXML
+    private AnchorPane mapAnchorPane;
+    @FXML
+    private AnchorPane profileAnchorPane;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // TF, 20170720: store and read divider positions of panes
+        final Double recentLeftDividerPos = Double.valueOf(
+                GPXEditorPreferences.get(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, "0.5"));
+        final Double recentRightDividerPos = Double.valueOf(
+                GPXEditorPreferences.get(GPXEditorPreferences.RECENTRIGHTDIVIDERPOS, "0.75"));
+        final Double recentCentralDividerPos = Double.valueOf(
+                GPXEditorPreferences.get(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, "0.58"));
+
+        trackSplitPane.setDividerPosition(0, recentLeftDividerPos);
+        viewSplitPane.setDividerPosition(0, recentRightDividerPos);
+        splitPane.setDividerPosition(0, recentCentralDividerPos);
+
         initMenus();
         
         initTopPane();
@@ -217,6 +236,10 @@ public class GPXEditor implements Initializable {
     }
 
     public void stop() {
+        // TF, 20170720: store and read divider positions of panes
+        GPXEditorPreferences.put(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, Double.toString(trackSplitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.put(GPXEditorPreferences.RECENTRIGHTDIVIDERPOS, Double.toString(viewSplitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.put(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, Double.toString(splitPane.getDividerPositions()[0]));
     }
 
     private void initMenus() {
@@ -316,21 +339,13 @@ public class GPXEditor implements Initializable {
     }
 
     private void initTopPane() {
-        // init overall splitpane: divider @ 52%, left/right pane not smaller than 25%
-        splitPane.setDividerPosition(0, 0.58);
+        // init overall splitpane: left/right pane not smaller than 25%
         leftAnchorPane.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
         rightAnchorPane.minWidthProperty().bind(splitPane.widthProperty().multiply(0.25));
 
         // left pane: resize with its anchor
         trackSplitPane.prefHeightProperty().bind(leftAnchorPane.heightProperty());
         trackSplitPane.prefWidthProperty().bind(leftAnchorPane.widthProperty());
-        
-        // right pane: resize with its anchor
-        rightAnchorPane.getChildren().clear();
-        final MapView mapView = GPXTrackviewer.getInstance().getMapView();
-        mapView.prefHeightProperty().bind(rightAnchorPane.heightProperty());
-        mapView.prefWidthProperty().bind(rightAnchorPane.widthProperty());
-        rightAnchorPane.getChildren().add(mapView);
         
         // left pane, top anchor: resize with its pane
         topAnchorPane.setMinHeight(0);
@@ -561,6 +576,32 @@ public class GPXEditor implements Initializable {
         slopeTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Slope)));
         slopeTrackCol.setEditable(false);
+        
+        // right pane: resize with its anchor
+        viewSplitPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
+        viewSplitPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
+        
+        // right pane, top anchor: resize with its anchor
+        mapAnchorPane.setMinHeight(0);
+        mapAnchorPane.setMinWidth(0);
+        mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
+
+        mapAnchorPane.getChildren().clear();
+        final MapView mapView = GPXTrackviewer.getInstance().getMapView();
+        mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
+        mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
+        mapAnchorPane.getChildren().add(mapView);
+        
+        // right pane, bottom anchor: resize with its anchor
+        profileAnchorPane.setMinHeight(0);
+        profileAnchorPane.setMinWidth(0);
+        profileAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
+
+        profileAnchorPane.getChildren().clear();
+        final XYChart chart = GPXTrackviewer.getInstance().getChart();
+        chart.prefHeightProperty().bind(profileAnchorPane.heightProperty());
+        chart.prefWidthProperty().bind(profileAnchorPane.widthProperty());
+        profileAnchorPane.getChildren().add(chart);
     }
 
     private void initBottomPane() {

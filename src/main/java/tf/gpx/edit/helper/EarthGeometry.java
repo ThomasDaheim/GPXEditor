@@ -323,10 +323,14 @@ public class EarthGeometry {
      * @return the distanceGPXWaypoints, in meters
      */
     public static double distanceGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         // delegate to waypoint function
         return distanceWaypoints(p1.getWaypoint(), p2.getWaypoint());
     }
     public static double distanceWaypoints(final Waypoint p1, final Waypoint p2) {
+        if (p2 == null) return 0;
+        
         final double lat1 = Math.toRadians(p1.getLatitude());
         final double lat2 = Math.toRadians(p2.getLatitude());
         final double lon1 = Math.toRadians(p1.getLongitude());
@@ -356,14 +360,20 @@ public class EarthGeometry {
      *     bearing(p1, p2) = 156.2°
      */
     public static double bearingGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         // delegate to waypoint function
         return bearingWaypoints(p1.getWaypoint(), p2.getWaypoint());
     }
     public static double bearingWaypoints(final Waypoint p1, final Waypoint p2) {
+        if (p2 == null) return 0;
+        
         // map angle on 0 ... 360
         return (angleBetweenWaypoints(p1, p2) + 360.0) % 360.0;
     }
     private static double angleBetweenWaypoints(final Waypoint p1, final Waypoint p2) {
+        if (p2 == null) return 0;
+        
         final double lat1 = Math.toRadians(p1.getLatitude());
         final double lat2 = Math.toRadians(p2.getLatitude());
         final double lon21 = Math.toRadians(p2.getLongitude() - p1.getLongitude());
@@ -517,6 +527,8 @@ public class EarthGeometry {
     }
     
     public static long duration(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         if (p1.getWaypoint().getTime() != null && p2.getWaypoint().getTime() != null) {
             return p1.getWaypoint().getTime().getTime() - p2.getWaypoint().getTime().getTime();
         } else {
@@ -525,16 +537,22 @@ public class EarthGeometry {
     }
     
     public static double speed(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         final double diffSeconds = duration(p1, p2) / 1000.0;
         final double diffMeters = distanceGPXWaypoints(p1, p2);
         return diffMeters / diffSeconds * 3.6;
     }
     
     public static double elevationDiff(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         return p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation();
     }
     
     public static double slope(final GPXWaypoint p1, final GPXWaypoint p2) {
+        if (p2 == null) return 0;
+        
         return (p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation()) /
                 distanceGPXWaypoints(p1, p2) * 100.0;
     }

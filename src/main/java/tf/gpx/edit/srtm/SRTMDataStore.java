@@ -40,6 +40,8 @@ public class SRTMDataStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
+    
+    private ISRTMDataReader mySRTMDataReader;
 
     public final static short NODATA = -32768; 
     public final static String HGT_EXT = ".hgt";
@@ -65,6 +67,8 @@ public class SRTMDataStore {
     private SRTMDataAverage myDataAverage = SRTMDataAverage.NEAREST_ONLY;
 
     private SRTMDataStore() {
+        mySRTMDataReader = SRTMDataReader.getInstance();
+        
         srtmStore = new HashMap<>();
     }
 
@@ -72,7 +76,15 @@ public class SRTMDataStore {
         return INSTANCE;
     }
     
-    public String getStorePath() {
+   public ISRTMDataReader getSRTMDataReader() {
+        return mySRTMDataReader;
+    }
+
+    public void setSRTMDataReader(ISRTMDataReader SRTMDataReader) {
+        mySRTMDataReader = SRTMDataReader;
+    }
+
+     public String getStorePath() {
         return myStorePath;
     }
     
@@ -105,7 +117,7 @@ public class SRTMDataStore {
         SRTMData data = null;
         if (dataEntries.isEmpty()) {
             // if not found: try to read file and add to store
-            data = SRTMDataReader.getInstance().readSRTMData(dataName, myStorePath);
+            data = mySRTMDataReader.readSRTMData(dataName, myStorePath);
             
             if (data != null) {
                 srtmStore.put(data.getKey(), data);
@@ -117,8 +129,7 @@ public class SRTMDataStore {
         
         // ask data for value
         if (data != null) {
-            // TODO: add logic for SRTMDataAverage
-            result = data.getValueForCoordinate(longitude, latitude);
+            result = data.getValueForCoordinate(longitude, latitude, myDataAverage);
         }
         
         return result;

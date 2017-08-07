@@ -83,3 +83,18 @@
 .highlightedRow {
     -fx-background-color: firebrick;
 }
+
+.chart-series-area-line {    
+    -fx-stroke-width: 1px;
+    -fx-effect: null;
+}
+.default-color0.chart-area-symbol {
+    -fx-background-color: red, lightgoldenrodyellow;
+}
+.default-color0.chart-series-area-line {
+    -fx-stroke: #000000; 
+}
+.default-color0.chart-series-area-fill {
+    /* http://blog.e-zest.com/gradients-in-javafx-2/ */
+    -fx-fill: linear-gradient(to top, #00AA00, #FFFFFF);
+}

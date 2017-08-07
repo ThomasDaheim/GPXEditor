@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.worker;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import tf.gpx.edit.helper.GPXFile;
 import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackSegment;

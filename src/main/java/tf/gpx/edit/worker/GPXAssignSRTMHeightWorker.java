@@ -101,7 +101,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
         } else {
             final double currentElevation = gpxWayPoint.getElevation();
             
-            if (currentElevation < GPXAssignSRTMHeightWorker.epsilon || AssignMode.ALWAYS.equals(myAssignMode)) {
+            if (Math.abs(currentElevation) < GPXAssignSRTMHeightWorker.epsilon || AssignMode.ALWAYS.equals(myAssignMode)) {
                 final double elevation = SRTMDataStore.getInstance().getValueForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude());
 
                 if (elevation != SRTMDataStore.NODATA) {

@@ -23,49 +23,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
-
-import java.util.ArrayList;
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+package tf.gpx.edit.srtm;
 
 /**
  *
  * @author Thomas
  */
-public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
-    private GPXFixGarminCrapWorker() {
-        super ();
-    }
-
-    public GPXFixGarminCrapWorker(final double parameter) {
-        super (parameter);
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
-        // AND distanceGPXWaypoints prev - next below epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
-
-        final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, myParameter);
-        
-        boolean hasChanged = false;
-        int index = 0;
-        for (GPXWaypoint waypoint : oldWaypoints) {
-            if (!keep[index]) {
-                newWaypoints.remove(waypoint);
-                //System.out.println("File "+ gpxTrackSegment.getGPXFile().getName() + ": Track " + gpxTrackSegment.getGPXTracks().get(0).getName() + ": removing Waypoint");
-                hasChanged = true;
-            }
-            index++;
-        }
-        
-        if (hasChanged) {
-            gpxTrackSegment.setGPXWaypoints(newWaypoints);
-        }
-    }
+public interface ISRTMDataReader {
+    public boolean checkSRTMDataFile(final String name, final String path);
+    public SRTMData readSRTMData(final String name, final String path);
 }

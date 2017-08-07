@@ -39,7 +39,7 @@ import tf.gpx.edit.srtm.SRTMData.SRTMDataType;
  *
  * @author Thomas
  */
-class SRTMDataReader {
+class SRTMDataReader implements ISRTMDataReader {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();
@@ -55,7 +55,8 @@ class SRTMDataReader {
         return INSTANCE;
     }
     
-    protected boolean checkSRTMDataFile(final String name, final String path) {
+    @Override
+    public boolean checkSRTMDataFile(final String name, final String path) {
         boolean result = false;
         
         // create filename & try to open
@@ -72,7 +73,8 @@ class SRTMDataReader {
         return result;
     }
     
-    protected SRTMData readSRTMData(final String name, final String path) {
+    @Override
+    public SRTMData readSRTMData(final String name, final String path) {
         assert name != null;
         
         SRTMData result = null;
@@ -90,19 +92,15 @@ class SRTMDataReader {
              or 1442401 cells. Each cell is 2 bytes.  
              */ 
             SRTMDataType srtmType; 
-            int rows = 0;
-            int cols = 0;
             if (fileLength == DATA_SIZE_SRTM1) { 
-                rows = 3601; 
-                cols = 3601; 
                 srtmType = SRTMDataType.SRTM1;
             } else if (fileLength == DATA_SIZE_SRTM3) { 
-                rows = 1201; 
-                cols = 1201; 
                 srtmType = SRTMDataType.SRTM3;
             } else { 
                 srtmType = SRTMDataType.INVALID;
             } 
+            final int rows = srtmType.getDataCount(); 
+            final int cols = srtmType.getDataCount(); 
 
             // loop through file and retrieve data
             if (!SRTMDataType.INVALID.equals(srtmType)) {
@@ -134,11 +132,9 @@ class SRTMDataReader {
                     byte[] ba = new byte[(int) fileLength]; 
                     buf.get(ba); 
                     short z; 
-                    int row = 0; 
-                    int col = 0; 
                     int pos = 0; 
-                    for (row = 0; row < rows; row++) { 
-                        for (col = 0; col < cols; col++) { 
+                    for (int row = 0; row < rows; row++) { 
+                        for (int col = 0; col < cols; col++) { 
                             z = buf.getShort(pos); 
                             //System.out.println("row: " + row + ", col: " + col + ", z: " + z);
                             result.setValue(row, col, z); 

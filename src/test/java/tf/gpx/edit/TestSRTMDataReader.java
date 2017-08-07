@@ -23,52 +23,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit;
 
-import java.util.ArrayList;
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.srtm.ISRTMDataReader;
+import tf.gpx.edit.srtm.SRTMData;
 
 /**
  *
  * @author Thomas
  */
-public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
+public class TestSRTMDataReader implements ISRTMDataReader {
 
-    private GPXReduceWorker() {
-        super ();
-    }
-
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
-        super (parameter);
-        
-        myAlgorithm = algorithm;
+    @Override
+    public boolean checkSRTMDataFile(String name, String path) {
+        return true;
     }
 
     @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // remove all waypoints using given algorithm an epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
+    public SRTMData readSRTMData(String name, String path) {
+        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
+        final SRTMData result = new SRTMData(name, name, dataType, dataType.getDataCount(), dataType.getDataCount());
+
+        for (int row = 0; row < dataType.getDataCount(); row++) { 
+            for (int col = 0; col < dataType.getDataCount(); col++) { 
+                result.setValue(row, col, (short) (row + col)); 
+            } 
+        } 
         
-        final boolean keep[] = EarthGeometry.simplifyTrack(oldWaypoints, myAlgorithm, myParameter);
-        
-        boolean hasChanged = false;
-        int index = 0;
-        for (GPXWaypoint waypoint : oldWaypoints) {
-            if (!keep[index]) {
-                newWaypoints.remove(waypoint);
-                //System.out.println("File "+ gpxTrackSegment.getGPXFile().getName() + ": Track " + gpxTrackSegment.getGPXTracks().get(0).getName() + ": removing Waypoint");
-                hasChanged = true;
-            }
-            index++;
-        }
-        
-        if (hasChanged) {
-            gpxTrackSegment.setGPXWaypoints(newWaypoints);
-        }
+        return result;
     }
+    
 }

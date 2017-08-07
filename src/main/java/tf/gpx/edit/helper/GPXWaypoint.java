@@ -197,6 +197,10 @@ public class GPXWaypoint extends GPXLineItem {
         return EarthGeometry.speed(this, myPrevGPXWaypoint);
     }
     
+    public double getDistance() {
+        return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+    }
+    
     public double getElevationDiff() {
         return EarthGeometry.elevationDiff(this, myPrevGPXWaypoint);
     }
