@@ -190,7 +190,7 @@ public class TestSRTM {
         
         // and now for point directly on the corner of 4 tiles...
 
-        // average should be done using those two tiles only (1199 + 1200 + 1201) / 3 = 1200
+        // average should be done using for tiles with same wweight (1199 + 1200 + 1200 + 1201) / 4 = 1200
         heightValue = SRTMDataStore.getInstance().getValueForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0);
         Assert.assertFalse(SRTMDataStore.NODATA == heightValue);
         Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));

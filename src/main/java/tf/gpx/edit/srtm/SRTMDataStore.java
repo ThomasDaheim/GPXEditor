@@ -44,7 +44,7 @@ public class SRTMDataStore {
     private ISRTMDataReader mySRTMDataReader;
 
     public final static short NODATA = -32768; 
-    public final static String HGT_EXT = ".hgt";
+    public final static String HGT_EXT = "hgt";
     
     public enum SRTMDataAverage {
         NEAREST_ONLY("Use only nearest data point"),
@@ -99,13 +99,10 @@ public class SRTMDataStore {
     public void setDataAverage(final SRTMDataAverage dataAverage) {
         myDataAverage = dataAverage;
     }
+    
+    public SRTMData getDataForName(final String dataName) {
+        SRTMData result = null;
 
-    public double getValueForCoordinate(final double longitude, final double latitude) {
-        double result = NODATA;
-        
-        // construct name from coordinates
-        final String dataName = getNameForCoordinate(longitude, latitude);
-        
         // check store for matching data
         final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
                 filter((SRTMDataKey key) -> {
@@ -114,18 +111,29 @@ public class SRTMDataStore {
                 sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
                 collect(Collectors.toList());
         
-        SRTMData data = null;
         if (dataEntries.isEmpty()) {
             // if not found: try to read file and add to store
-            data = mySRTMDataReader.readSRTMData(dataName, myStorePath);
+            result = mySRTMDataReader.readSRTMData(dataName, myStorePath);
             
-            if (data != null) {
-                srtmStore.put(data.getKey(), data);
+            if (result != null) {
+                srtmStore.put(result.getKey(), result);
             }
         } else {
             // sorted by type and therefore sorted by accuracy :-)
-            data = srtmStore.get(dataEntries.get(0));
+            result = srtmStore.get(dataEntries.get(0));
         }
+        
+        return result;
+    }
+
+    public double getValueForCoordinate(final double longitude, final double latitude) {
+        double result = NODATA;
+        
+        // construct name from coordinates
+        final String dataName = getNameForCoordinate(longitude, latitude);
+        
+        // check store for matching data
+        SRTMData data = getDataForName(dataName);
         
         // ask data for value
         if (data != null) {
@@ -141,7 +149,7 @@ public class SRTMDataStore {
         // check if files are there and are valid SRTM files
         for (String srtmname : srtmnames) {
             if (!SRTMDataReader.getInstance().checkSRTMDataFile(srtmname, myStorePath)) {
-                result.add(srtmname + HGT_EXT);
+                result.add(srtmname + "." + HGT_EXT);
             }
         }
         

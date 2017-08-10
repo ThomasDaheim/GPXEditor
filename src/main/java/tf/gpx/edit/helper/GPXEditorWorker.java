@@ -49,6 +49,7 @@ import javafx.stage.FileChooser;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataStore;
@@ -175,19 +176,15 @@ public class GPXEditorWorker {
         do {
             missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
             if (!missingDataFiles.isEmpty()) {
-                if (myEditor != null) {
-                    // show list of missing files
-                    final String filesList = missingDataFiles.stream()
-                            .collect(Collectors.joining(",\n"));
+                // show list of missing files
+                final String filesList = missingDataFiles.stream()
+                        .collect(Collectors.joining(",\n"));
 
-                    final ButtonType buttonRecheck = new ButtonType("Recheck", ButtonBar.ButtonData.OTHER);
-                    final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-                    Optional<ButtonType> doAction = myEditor.showAlert(Alert.AlertType.CONFIRMATION, "Missing SRTM data files", "The following SRTM files are missing:", filesList, buttonRecheck, buttonCancel);
+                final ButtonType buttonRecheck = new ButtonType("Recheck", ButtonBar.ButtonData.OTHER);
+                final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+                Optional<ButtonType> doAction = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Missing SRTM data files", "The following SRTM files are missing:", filesList, buttonRecheck, buttonCancel);
 
-                    if (!doAction.isPresent() || !doAction.get().equals(buttonRecheck)) {
-                        return;
-                    }
-                } else {
+                if (!doAction.isPresent() || !doAction.get().equals(buttonRecheck)) {
                     return;
                 }
             }

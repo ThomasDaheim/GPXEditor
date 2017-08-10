@@ -82,6 +82,7 @@ import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
@@ -93,6 +94,7 @@ import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
 /**
@@ -114,6 +116,8 @@ public class GPXEditor implements Initializable {
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
     
+    @FXML
+    private MenuItem showSRTMDataMenu;
     @FXML
     private MenuItem assignSRTMheightsMenu;
     @FXML
@@ -306,6 +310,10 @@ public class GPXEditor implements Initializable {
         
         assignSRTMheightsMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event);
+        });
+        
+        showSRTMDataMenu.setOnAction((ActionEvent event) -> {
+            showSRTMData(event);
         });
     }
     
@@ -828,7 +836,7 @@ public class GPXEditor implements Initializable {
 
         final ButtonType buttonMerge = new ButtonType("Merge", ButtonBar.ButtonData.OTHER);
         final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-        Optional<ButtonType> saveChanges = showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", "Do you want to merge the following files?", gpxFileNames, buttonMerge, buttonCancel);
+        Optional<ButtonType> saveChanges = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", "Do you want to merge the following files?", gpxFileNames, buttonMerge, buttonCancel);
 
         if (!saveChanges.isPresent() || !saveChanges.get().equals(buttonMerge)) {
             return;
@@ -874,7 +882,7 @@ public class GPXEditor implements Initializable {
         headerText += " the following items?";
         final ButtonType buttonMerge = new ButtonType(commandText.substring(0, 1).toUpperCase() + commandText.substring(1), ButtonBar.ButtonData.OTHER);
         final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-        Optional<ButtonType> doAction = showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", headerText, gpxItemNames, buttonMerge, buttonCancel);
+        Optional<ButtonType> doAction = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", headerText, gpxItemNames, buttonMerge, buttonCancel);
 
         if (!doAction.isPresent() || !doAction.get().equals(buttonMerge)) {
             return;
@@ -1077,6 +1085,10 @@ public class GPXEditor implements Initializable {
         refreshWayoints();
     }
     
+    private void showSRTMData(ActionEvent event) {
+        SRTMDataViewer.getInstance().showSRTMData();
+    }
+    
     private List<GPXFile> uniqueGPXFileListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
         // get selected files uniquely from selected items
         Set<GPXFile> fileSet = new HashSet<>();
@@ -1132,36 +1144,5 @@ public class GPXEditor implements Initializable {
         final int index = getIndexForGPXFile(gpxFile);
         gpxFileListXML.getRoot().getChildren().remove(index);
         gpxFileListXML.getRoot().getChildren().add(index, newTreeItem);
-    }
-    
-    // TF, 20160816: wrapper for alerts that stores the alert as long as its shown - needed for testing alerts with testfx
-    public Optional<ButtonType> showAlert(final Alert.AlertType alertType, final String title, final String headerText, final String contentText, final ButtonType ... buttons) {
-        Alert result;
-        
-        result = new Alert(alertType);
-        if (title != null) {
-            result.setTitle(title);
-        }
-        if (headerText != null) {
-            result.setHeaderText(headerText);
-        }
-        if (contentText != null) {
-            result.setContentText(contentText);
-        }
-        
-        // add optional buttons
-        if (buttons.length > 0) {
-            result.getButtonTypes().setAll(buttons);
-        }
-        
-        // add info for later lookup in testfx - doesn't work yet
-        result.getDialogPane().getStyleClass().add("alertDialog");
-        result.initOwner(borderPane.getScene().getWindow());
-
-        // get button pressed
-        Optional<ButtonType> buttonPressed = result.showAndWait();
-        result.close();
-        
-        return buttonPressed;
     }
 }

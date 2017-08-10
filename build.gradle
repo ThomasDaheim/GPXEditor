@@ -1,6 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
+// see https://github.com/kelemen/netbeans-gradle-project/issues/179
+apply plugin: 'idea'
+idea.module.downloadJavadoc = true
+
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 

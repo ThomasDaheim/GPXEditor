@@ -76,6 +76,11 @@
                   <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                </accelerator>
           </Menu>
+            <Menu mnemonicParsing="false" text="SRTM">
+              <items>
+                <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
+              </items>
+            </Menu>
         </menus>
       </MenuBar>
    </top>

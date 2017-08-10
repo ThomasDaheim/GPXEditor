@@ -60,7 +60,7 @@ class SRTMDataReader implements ISRTMDataReader {
         boolean result = false;
         
         // create filename & try to open
-        final File srtmFile = Paths.get(path, name + SRTMDataStore.HGT_EXT).toFile();
+        final File srtmFile = Paths.get(path, name + "." + SRTMDataStore.HGT_EXT).toFile();
         
         if (srtmFile.exists() && srtmFile.isFile() && srtmFile.canRead()) {
             // file can be read - now check for valid size
@@ -80,7 +80,7 @@ class SRTMDataReader implements ISRTMDataReader {
         SRTMData result = null;
         
         // create filename & try to open
-        final File srtmFile = Paths.get(path, name + SRTMDataStore.HGT_EXT).toFile();
+        final File srtmFile = Paths.get(path, name + "." + SRTMDataStore.HGT_EXT).toFile();
         
         if (srtmFile.exists() && srtmFile.isFile() && srtmFile.canRead()) {
             // determine data type & init srmtdata
