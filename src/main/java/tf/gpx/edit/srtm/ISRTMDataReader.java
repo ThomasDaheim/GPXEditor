@@ -23,51 +23,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.general;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
+package tf.gpx.edit.srtm;
 
 /**
  *
- * @author Thomas, based on http://www.javaspecialists.eu/archive/Issue219.html
- * @param <E> type of thing to store in list
+ * @author Thomas
  */
-class RecentList<E> implements Iterable<E> {
-    private final ArrayList<E> myList = new ArrayList<>();
-    private final int myMaxLength;
-
-    public RecentList(final int maxLength) {
-        myMaxLength = maxLength;
-    }
-
-    @Override
-    public Iterator<E> iterator() {
-        return Collections.unmodifiableCollection(myList).iterator();
-    }
-
-    public void add(final E element) {
-        myList.remove(element);
-        myList.add(0, element);
-        reduce();
-    }
-    
-    public int getMaxLength() {
-        return myMaxLength;
-    }
-    
-    public int getLength() {
-        return myList.size();
-    }
-
-    private void reduce() {
-        while (myList.size() > myMaxLength) {
-            myList.remove(myList.size() - 1);
-        }
-    }
-
-    public void clear() {
-        myList.clear();
-    }
+public interface ISRTMDataReader {
+    public boolean checkSRTMDataFile(final String name, final String path);
+    public SRTMData readSRTMData(final String name, final String path);
 }

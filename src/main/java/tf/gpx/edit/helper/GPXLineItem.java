@@ -151,8 +151,9 @@ public abstract class GPXLineItem {
     protected String getDurationAsString() {
         // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
         final long diff = getDuration();
-        final long diffSeconds = diff / 1000 % 60;
-        final long diffMinutes = diff / (60 * 1000) % 60;
+        // TFE, 20170716: negative differences are only shown for hours
+        final long diffSeconds = Math.abs(diff / 1000 % 60);
+        final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
         final long diffHours = diff / (60 * 60 * 1000);
         return String.format(DURATION_FORMAT, diffHours, diffMinutes, diffSeconds);
     }

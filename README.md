@@ -11,7 +11,7 @@ Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained a
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v1.1)
+## Features (v1.2)
 
 Following features are available via UI:
 
@@ -28,6 +28,14 @@ File and track handling
 * delete selected tracks
 
 * Update v1.1: Added drag & drop for tracks and segments
+
+Update v1.2
+* recent file list is available for last 5 files opened
+* besides the track also the height profile is shown
+* added support for reading heights from SRMT .hgt files and assigning them to waypoints
+  * added preferences to set path to SRTM files
+  * two options to determine height: a) directly from tile containing waypoint or b) averaging over neighbouring waypoints
+* added SRTM data file viewer that shows 3d model of heights
 
 Track optimization
 
@@ -126,8 +134,6 @@ The tree will be in `build/install`.
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
 * add TestFX UI test cases
-* parse SRTM .hgt files and assign heights to waypoints
 * extend/replace waypoint viewer to enable zooming / changing of views
 * finding extrem points in tracks (distance, speed, acceleration) and options to remove / smooth
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu
-

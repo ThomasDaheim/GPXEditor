@@ -94,6 +94,7 @@ public class GPXWaypoint extends GPXLineItem {
         assert GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType());
         
         myGPXTrackSegment = (GPXTrackSegment) parent;
+        setHasUnsavedChanges();
     }
 
     @Override
@@ -196,6 +197,10 @@ public class GPXWaypoint extends GPXLineItem {
         return EarthGeometry.speed(this, myPrevGPXWaypoint);
     }
     
+    public double getDistance() {
+        return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+    }
+    
     public double getElevationDiff() {
         return EarthGeometry.elevationDiff(this, myPrevGPXWaypoint);
     }
@@ -207,5 +212,23 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXWaypoint(this);
+    }
+    
+    // used for setting from SRTM data
+    public double getElevation() {
+        return myWaypoint.getElevation();
+    }
+    
+    public void setElevation(final double elevation) {
+        myWaypoint.setElevation(elevation);
+        setHasUnsavedChanges();
+    }
+    
+    public double getLatitude() {
+        return myWaypoint.getLatitude();
+    }
+
+    public double getLongitude() {
+        return myWaypoint.getLongitude();
     }
 }

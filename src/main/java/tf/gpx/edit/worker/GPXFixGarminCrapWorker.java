@@ -51,14 +51,14 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
         List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
         List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
 
-        final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, EarthGeometry.Algorithm.SingleTooFarAway, myParameter);
+        final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, myParameter);
         
         boolean hasChanged = false;
         int index = 0;
         for (GPXWaypoint waypoint : oldWaypoints) {
             if (!keep[index]) {
                 newWaypoints.remove(waypoint);
-                System.out.println("File "+ gpxTrackSegment.getGPXFile().getName() + ": Track " + gpxTrackSegment.getGPXTracks().get(0).getName() + ": removing Waypoint");
+                //System.out.println("File "+ gpxTrackSegment.getGPXFile().getName() + ": Track " + gpxTrackSegment.getGPXTracks().get(0).getName() + ": removing Waypoint");
                 hasChanged = true;
             }
             index++;

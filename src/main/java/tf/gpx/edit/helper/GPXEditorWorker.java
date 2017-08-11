@@ -38,13 +38,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
+import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
 import tf.gpx.edit.worker.GPXReduceWorker;
@@ -62,8 +71,16 @@ public class GPXEditorWorker {
     private static final String MERGED_TRACK_NAME = "Merged Track";
     private static final String MERGED_TRACKSEGMENT_NAME = "Merged Segment";
     
+    private GPXEditor myEditor;
+    
     public GPXEditorWorker() {
         super();
+    }
+    
+    public GPXEditorWorker(final GPXEditor editor) {
+        super();
+        
+        myEditor = editor;
     }
     
     public List<File> addFiles() {
@@ -146,6 +163,36 @@ public class GPXEditorWorker {
 
     public void deleteGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
         runVisitor(gpxFiles, new GPXDeleteEmptyLineItemsWorker(deleteCount));
+    }
+    
+    public void assignSRTMHeight(final List<GPXFile> gpxFiles, String dataPath, final SRTMDataStore.SRTMDataAverage averageMode, final GPXAssignSRTMHeightWorker.AssignMode assignMode) {
+        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(dataPath, averageMode, assignMode);
+        
+        // first check if all data files are available
+        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
+        runVisitor(gpxFiles, visitor);
+
+        List<String> missingDataFiles;
+        do {
+            missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
+            if (!missingDataFiles.isEmpty()) {
+                // show list of missing files
+                final String filesList = missingDataFiles.stream()
+                        .collect(Collectors.joining(",\n"));
+
+                final ButtonType buttonRecheck = new ButtonType("Recheck", ButtonBar.ButtonData.OTHER);
+                final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+                Optional<ButtonType> doAction = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Missing SRTM data files", "The following SRTM files are missing:", filesList, buttonRecheck, buttonCancel);
+
+                if (!doAction.isPresent() || !doAction.get().equals(buttonRecheck)) {
+                    return;
+                }
+            }
+        } while (!missingDataFiles.isEmpty());
+        
+        // if yes, do the work
+        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+        runVisitor(gpxFiles, visitor);
     }
     
     private void runVisitor(final List<GPXFile> gpxFiles, final IGPXLineItemVisitor visitor) {

@@ -1,6 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
+// see https://github.com/kelemen/netbeans-gradle-project/issues/179
+apply plugin: 'idea'
+idea.module.downloadJavadoc = true
+
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -22,6 +26,9 @@ repositories {
     // You may define additional repositories, or even remove "mavenCentral()".
     // Read more about repositories here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:repositories
+    maven {
+        url "http://maven.jzy3d.org/releases"
+    }
 }
 
 dependencies {
@@ -32,6 +39,8 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.5'
     compile 'gpx-parser:gpx-parser:1.0'
     compile 'com.gluonhq:maps:1.0.1'
+    compile 'org.jzy3d:jzy3d-api:1.0.0'
+    compile 'org.jzy3d:jzy3d-javafx:1.0.0'
 
     // You can read more about how to add dependency here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies

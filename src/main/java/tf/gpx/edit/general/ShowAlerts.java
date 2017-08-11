@@ -23,52 +23,53 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.general;
 
-import java.util.ArrayList;
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+import java.util.Optional;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
 /**
  *
  * @author Thomas
  */
-public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
+public class ShowAlerts {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private final static ShowAlerts INSTANCE = new ShowAlerts();
 
-    private GPXReduceWorker() {
-        super ();
+    private ShowAlerts() {
+        // Exists only to defeat instantiation.
     }
 
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
-        super (parameter);
-        
-        myAlgorithm = algorithm;
+    public static ShowAlerts getInstance() {
+        return INSTANCE;
     }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // remove all waypoints using given algorithm an epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
+    
+    // TF, 20160816: wrapper for alerts that stores the alert as long as its shown - needed for testing alerts with testfx
+    public Optional<ButtonType> showAlert(final Alert.AlertType alertType, final String title, final String headerText, final String contentText, final ButtonType ... buttons) {
+        Alert result;
         
-        final boolean keep[] = EarthGeometry.simplifyTrack(oldWaypoints, myAlgorithm, myParameter);
-        
-        boolean hasChanged = false;
-        int index = 0;
-        for (GPXWaypoint waypoint : oldWaypoints) {
-            if (!keep[index]) {
-                newWaypoints.remove(waypoint);
-                //System.out.println("File "+ gpxTrackSegment.getGPXFile().getName() + ": Track " + gpxTrackSegment.getGPXTracks().get(0).getName() + ": removing Waypoint");
-                hasChanged = true;
-            }
-            index++;
+        result = new Alert(alertType);
+        if (title != null) {
+            result.setTitle(title);
+        }
+        if (headerText != null) {
+            result.setHeaderText(headerText);
+        }
+        if (contentText != null) {
+            result.setContentText(contentText);
         }
         
-        if (hasChanged) {
-            gpxTrackSegment.setGPXWaypoints(newWaypoints);
+        // add optional buttons
+        if (buttons.length > 0) {
+            result.getButtonTypes().setAll(buttons);
         }
+        
+        // get button pressed
+        Optional<ButtonType> buttonPressed = result.showAndWait();
+        result.close();
+        
+        return buttonPressed;
     }
 }

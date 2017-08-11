@@ -83,6 +83,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
         
         myGPXTrack = (GPXTrack) parent;
+        setHasUnsavedChanges();
     }
 
     @Override
@@ -97,7 +98,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        System.out.println("setGPXWaypoints: " + getName() + ", " + gpxWaypoints.size());
+        //System.out.println("setGPXWaypoints: " + getName() + ", " + gpxWaypoints.size());
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxWaypoints);
         
