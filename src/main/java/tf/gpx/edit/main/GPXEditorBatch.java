@@ -123,7 +123,7 @@ public class GPXEditorBatch {
             
             // save updated files
             System.out.println("Saving " + gpxFileNames.size() + " files.");
-            gpxFiles.forEach((GPXFile gpxFile) -> myWorker.saveFile(gpxFile));
+            gpxFiles.forEach((GPXFile gpxFile) -> myWorker.saveFile(gpxFile, false));
         }
         
         return true;

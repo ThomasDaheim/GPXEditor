@@ -29,7 +29,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.binding.Bindings;
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -95,6 +97,7 @@ public class GPXTreeTableView {
                                 myTreeTableView.edit(getIndex(), nameGPXCol);
                             });
                             fileMenu.getItems().add(renameFile);
+
                             if (item.hasUnsavedChanges()) {
                                 final MenuItem saveFile = new MenuItem("Save");
                                 saveFile.setOnAction((ActionEvent event) -> {
@@ -106,6 +109,17 @@ public class GPXTreeTableView {
                                 });
                                 fileMenu.getItems().add(saveFile);
                             }
+
+                            final MenuItem saveAsFile = new MenuItem("Save As");
+                            saveAsFile.setOnAction((ActionEvent event) -> {
+                                if (myEditor.saveFileAs(item)) {
+                                    // reset hasSavedChanges for the whole GPXFile-Tree
+                                    item.resetHasUnsavedChanges();
+                                    myTreeTableView.refresh();
+                                }
+                            });
+                            fileMenu.getItems().add(saveAsFile);
+
                             final MenuItem closeFile = new MenuItem("Close");
                             closeFile.setOnAction((ActionEvent event) -> {
                                 myEditor.closeFile(item);
@@ -165,15 +179,31 @@ public class GPXTreeTableView {
             row.setOnDragDetected(event -> {
                 if (!row.isEmpty()) {
                     // check if we're trying to drag a GPXFile item and not a track in it
-                    Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+                    final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+                    final ClipboardContent cc = new ClipboardContent();
+
                     db.setDragView(row.snapshot(null, null));
-                    ClipboardContent cc = new ClipboardContent();
                     cc.put(SERIALIZED_MIME_TYPE, row.getIndex());
                     db.setContent(cc);
                     event.consume();
                 }
             });
            
+            // drag enters this row
+            row.setOnDragEntered(event -> {
+                Dragboard db = event.getDragboard();
+                if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
+                    if (acceptable(db, row)) {
+                        row.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target"), true);
+                    }
+                }
+            });
+
+            // drag exits this row
+            row.setOnDragExited(event -> {
+                row.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target"), false);
+            });
+
             // dragging something over the list
             row.setOnDragOver(event -> {
                 onDragOver(row, event);

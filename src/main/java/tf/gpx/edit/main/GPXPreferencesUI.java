@@ -55,16 +55,16 @@ import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
  *
  * @author Thomas
  */
-public class GPXPreferencesDialogue {
+public class GPXPreferencesUI {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static GPXPreferencesDialogue INSTANCE = new GPXPreferencesDialogue();
+    private final static GPXPreferencesUI INSTANCE = new GPXPreferencesUI();
 
-    private GPXPreferencesDialogue() {
+    private GPXPreferencesUI() {
         // Exists only to defeat instantiation.
     }
 
-    public static GPXPreferencesDialogue getInstance() {
+    public static GPXPreferencesUI getInstance() {
         return INSTANCE;
     }
     
