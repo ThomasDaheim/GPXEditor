@@ -92,6 +92,11 @@ public class GPXFile extends GPXMeasurable {
         return myGPXFilePath;
     }
 
+    public void setPath(final String path) {
+        this.myGPXFilePath = path;
+        setHasUnsavedChanges();
+    }
+
     public GPX getGPX() {
         return myGPX;
     }

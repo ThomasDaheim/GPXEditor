@@ -47,6 +47,10 @@
     -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-focus-color;
     -fx-background-insets: 0, 1, 2;
 }
+.tree-table-row-cell:drop-target {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+}
 .gpxFileList .gpxFileRow .text {
   -fx-font-weight: bold;
 }
@@ -97,4 +101,10 @@
 .default-color0.chart-series-area-fill {
     /* http://blog.e-zest.com/gradients-in-javafx-2/ */
     -fx-fill: linear-gradient(to top, #00AA00, #FFFFFF);
+}
+
+.track-popup {
+    -fx-font-size: 12;
+    -fx-font-weight: bold;
+    -fx-text-fill: black;
 }

@@ -114,16 +114,48 @@ public class GPXEditorWorker {
         
         return result;
     }
+    
+    public boolean saveFile(final GPXFile gpxFile, final boolean askFileName) {
+        boolean result = false;
+        
+        Path curFile;
+        if (askFileName) {
+            final List<String> extFilter = Arrays.asList("*." + GPX_EXT);
+            final List<String> extValues = Arrays.asList(GPX_EXT);
 
-    public boolean saveFile(final GPXFile gpxFile) {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Insert GPX-Files");
+            fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+            // das sollte auch in den Worker gehen...
+            fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("GPX-Files", extFilter));
+            File selectedFile = fileChooser.showSaveDialog(null);
+
+            if(selectedFile == null){
+                System.out.println("No File selected");
+            } else if (!GPX_EXT.equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
+                System.out.println("No ." + GPX_EXT + " File selected");
+            } else {
+                gpxFile.setName(selectedFile.getName());
+                gpxFile.setPath(selectedFile.getParent() + "\\");
+                result = doSaveFile(gpxFile);
+            }
+        } else {
+            result = doSaveFile(gpxFile);
+        }
+        
+        return result;
+    }
+    
+    private boolean doSaveFile(final GPXFile gpxFile) {
         boolean result = true;
         
+        final Path curFile = Paths.get(gpxFile.getPath() + gpxFile.getName());
         // if file already exists, move to *.TIMESTAMP.bak
-        Path curFile = Paths.get(gpxFile.getPath() + gpxFile.getName());
         if (Files.exists(curFile)) {
             try {
                 // add timestamp to name for multipe runs
-                Files.copy(curFile, Paths.get(gpxFile.getPath() + gpxFile.getName() + "." + DATE_FORMAT.format(new Date()) + BAK_EXT));
+                Files.copy(curFile, Paths.get(curFile + "." + DATE_FORMAT.format(new Date()) + BAK_EXT));
             } catch (IOException ex) {
                 Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
                 result = false;
@@ -136,7 +168,7 @@ public class GPXEditorWorker {
             if (!gpxFile.getGPXTracks().isEmpty()) {
                 final GPXWriter writer = new GPXWriter();
                 final FileOutputStream out;
-                out = new FileOutputStream(gpxFile.getPath() + gpxFile.getName());
+                out = new FileOutputStream(curFile.toFile());
                 writer.writeGPX(gpxFile.getGPX(), out);
                 out.close();        
             } else {

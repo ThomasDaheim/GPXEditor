@@ -729,16 +729,26 @@ public class GPXEditor implements Initializable {
     private void saveAllFilesAction(final ActionEvent event) {
         // iterate over all files and save them
         gpxFileListXML.getRoot().getChildren().stream().
-                filter((TreeItem<GPXLineItem> t) -> {
-                    return GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue()) && t.getValue().hasUnsavedChanges();
-                }).forEach((TreeItem<GPXLineItem> t) -> {
-                    saveFile(t.getValue());
-                });
+            filter((TreeItem<GPXLineItem> t) -> {
+                return GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue()) && t.getValue().hasUnsavedChanges();
+            }).forEach((TreeItem<GPXLineItem> t) -> {
+                saveFile(t.getValue());
+            });
         gpxFileListXML.refresh();
     }
 
     public Boolean saveFile(final GPXLineItem item) {
-        final boolean result = myWorker.saveFile(item.getGPXFile());
+        final boolean result = myWorker.saveFile(item.getGPXFile(), false);
+
+        if (result) {
+            item.resetHasUnsavedChanges();
+        }
+        
+        return result;
+    }
+
+    public Boolean saveFileAs(final GPXLineItem item) {
+        final boolean result = myWorker.saveFile(item.getGPXFile(), true);
 
         if (result) {
             item.resetHasUnsavedChanges();
@@ -1010,7 +1020,7 @@ public class GPXEditor implements Initializable {
     }
 
     private void preferences(final ActionEvent event) {
-        GPXPreferencesDialogue.getInstance().showPreferencesDialogue();
+        GPXPreferencesUI.getInstance().showPreferencesDialogue();
     }
 
     private void checkTrack(final ActionEvent event) {

@@ -30,8 +30,10 @@ File and track handling
 * Update v1.1: Added drag & drop for tracks and segments
 
 Update v1.2
-* recent file list is available for last 5 files opened
+* Recent File list is available for last 5 files opened
+* Save As support
 * besides the track also the height profile is shown
+* tooltip on track map and height profile
 * added support for reading heights from SRMT .hgt files and assigning them to waypoints
   * added preferences to set path to SRTM files
   * two options to determine height: a) directly from tile containing waypoint or b) averaging over neighbouring waypoints
