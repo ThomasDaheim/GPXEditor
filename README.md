@@ -50,6 +50,9 @@ Track optimization
 
 Following parameters are supported via command line:
 
+Update v1.2
+Only list of gpx files: all files will be opened in the editor
+
 Should all files be merged into one?
 ```
 --mergeFiles

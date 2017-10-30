@@ -27,7 +27,11 @@ package tf.gpx.edit.main;
 
 import com.gluonhq.maps.MapView;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -35,6 +39,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -84,6 +90,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.helper.GPXFile;
@@ -237,6 +244,34 @@ public class GPXEditor implements Initializable {
         initTopPane();
         
         initBottomPane();
+        
+        // TFE, 20171030: open files from command line parameters
+        final List<File> gpxFileNames = new ArrayList<>();
+        for (String gpxFile : GPXEditorParameters.getInstance().getGPXFiles()) {
+            // could be path + filename -> split first
+            final String gpxFileName = FilenameUtils.getName(gpxFile);
+            String gpxPathName = FilenameUtils.getFullPath(gpxFile);
+            if (gpxPathName.isEmpty()) {
+                gpxPathName = ".";
+            }
+            final Path gpxPath = new File(gpxPathName).toPath();
+            
+            // find all files that match that filename - might contain wildcards!!!
+            // http://stackoverflow.com/questions/794381/how-to-find-files-that-match-a-wildcard-string-in-java
+            try {
+                final DirectoryStream<Path> dirStream = Files.newDirectoryStream(gpxPath, gpxFileName);
+                dirStream.forEach(path -> {
+                    // if really a gpx, than add to file list
+                    if (GPXEditorWorker.GPX_EXT.equals(FilenameUtils.getExtension(path.getFileName().toString()).toLowerCase())) {
+                        gpxFileNames.add(path.toFile());
+                    }
+                });
+            } catch (IOException ex) {
+                Logger.getLogger(GPXEditorBatch.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        // System.out.println("Processing " + gpxFileNames.size() + " files.");
+        parseAndAddFiles(gpxFileNames);
     }
 
     public void stop() {

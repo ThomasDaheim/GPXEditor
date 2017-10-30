@@ -210,7 +210,7 @@ public class GPXEditorParameters {
                 gpxFiles = new ArrayList<>();
             }
             
-            // check consitency of parameters - not all combinations make sense
+            // check consistency of parameters - not all combinations make sense
             if (reduceTracks && (reduceAlgorithm == null || reduceEpsilon == Double.MIN_VALUE)) {
                 reduceTracks = false;
                 help(options);
@@ -226,6 +226,10 @@ public class GPXEditorParameters {
                 help(options);
             }
 
+            if (gpxFiles.isEmpty() && !ignoreParams) {
+                // in case no args passed use any other parameters from commandline as list of files
+                gpxFiles = argsList;
+            }
             if (gpxFiles.isEmpty() && !ignoreParams) {
                 mergeFiles = false;
                 mergeTracks = false;
