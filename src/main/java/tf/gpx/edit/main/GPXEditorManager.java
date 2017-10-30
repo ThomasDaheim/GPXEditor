@@ -51,9 +51,6 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
  * @author Thomas
  */
 public class GPXEditorManager extends Application {
-    private final static GPXEditorParameters myParameters = GPXEditorParameters.getInstance();
-    private final static GPXEditorPreferences myPreferences = GPXEditorPreferences.getInstance();
-    
     private GPXEditor controller;
     private Stage myStage;
     
@@ -136,12 +133,12 @@ public class GPXEditorManager extends Application {
         // let some one else deal with the command line parameters
         Parameters myParams = getParameters();
         if ((myParams != null) && (myParams.getRaw() != null) && !myParams.getRaw().isEmpty()) {
-            myParameters.init(myParams.getRaw().toArray(new String[0]));
+            GPXEditorParameters.getInstance().init(myParams.getRaw().toArray(new String[0]));
         } else {
-            myParameters.init(null);
+            GPXEditorParameters.getInstance().init(null);
         }
         
-        if (myParameters.doBatch()) {
+        if (GPXEditorParameters.getInstance().doBatch()) {
             // batch call! do things and then go home...
             GPXEditorBatch.getInstance().executeBatchProecssing();
             
