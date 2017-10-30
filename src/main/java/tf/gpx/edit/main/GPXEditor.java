@@ -730,7 +730,7 @@ public class GPXEditor implements Initializable {
         // iterate over all files and save them
         gpxFileListXML.getRoot().getChildren().stream().
             filter((TreeItem<GPXLineItem> t) -> {
-                return GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue()) && t.getValue().hasUnsavedChanges();
+                return (GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue().getType()) && t.getValue().hasUnsavedChanges());
             }).forEach((TreeItem<GPXLineItem> t) -> {
                 saveFile(t.getValue());
             });
@@ -801,13 +801,17 @@ public class GPXEditor implements Initializable {
         Label exitLabel = new Label("Unsaved changes for " + gpxFile.getName() + "! Save them now?");
         exitLabel.setAlignment(Pos.BASELINE_CENTER);
 
-        Button yesBtn = new Button("Yes");
+        Button yesBtn = new Button();
+        yesBtn.setMnemonicParsing(true);
+        yesBtn.setText("_Yes");
         yesBtn.setOnAction((ActionEvent arg0) -> {
             dialogStage.setTitle("Yes");
             dialogStage.close();
         });
         
-        Button noBtn = new Button("No");
+        Button noBtn = new Button();
+        noBtn.setMnemonicParsing(true);
+        noBtn.setText("_No");
         noBtn.setOnAction((ActionEvent arg0) -> {
             dialogStage.setTitle("No");
             dialogStage.close();
