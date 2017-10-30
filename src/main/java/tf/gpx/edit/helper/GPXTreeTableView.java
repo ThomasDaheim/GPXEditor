@@ -31,10 +31,10 @@ import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
@@ -157,6 +157,21 @@ public class GPXTreeTableView {
                                 Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                             fileMenu.getItems().add(deleteTracksContextMenu);
                         }
+                        
+                        fileMenu.getItems().add(new SeparatorMenuItem());
+                        // add context menu to expand/collapse all selected items
+                        final MenuItem expandContextMenu = new MenuItem("Expand");
+                        expandContextMenu.setOnAction((ActionEvent event) -> {
+                             getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                             t.setExpanded(true);});
+                        });
+                        fileMenu.getItems().add(expandContextMenu);
+                        final MenuItem collapseContextMenu = new MenuItem("Collapse");
+                        collapseContextMenu.setOnAction((ActionEvent event) -> {
+                             getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                             t.setExpanded(false);});
+                        });
+                        fileMenu.getItems().add(collapseContextMenu);
 
                         // Set context menu on row, but use a binding to make it only show for non-empty rows:
                         contextMenuProperty().bind(
