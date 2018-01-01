@@ -23,53 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
+import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
 
 /**
- *
- * @author Thomas
+ * Distribution class for binning GPXWaypoint data.
+ * Based on the GPXLineItemData the corresponding value is used for binning.
+ * 
+ * @author thomas
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
+public class GPXWaypointDistribution extends ValueDistribution<GPXWaypoint> {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private static final GPXWaypointDistribution INSTANCE = new GPXWaypointDistribution();
+    
+    private GPXLineItem.GPXLineItemData myData;
 
-    public GPXEmptyWorker() {
-        super ();
+    private GPXWaypointDistribution() {
     }
 
-    public GPXEmptyWorker(final double parameter) {
-        super ();
+    public static GPXWaypointDistribution getInstance() {
+        return INSTANCE;
+    }
+    
+    public GPXLineItem.GPXLineItemData getGPXLineItemData() {
+        return myData;
+    }
+    
+    public void setGPXLineItemData(final GPXLineItem.GPXLineItemData gpxLineItemData) {
+        myData = gpxLineItemData;
+    }
+
+    @Override
+    public double getValueAsDouble(GPXWaypoint value) {
+        assert myData != null;
         
-        myParameter = parameter;
-    }
-
-    @Override
-    public void visitGPXFile(GPXFile gpxFile) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrack(GPXTrack gpxTrack) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // nothing to do
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return true;
+        return value.getDataAsDouble(myData);
     }
 }

@@ -23,53 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
+import java.util.List;
 
 /**
- *
- * @author Thomas
+ * Abstract base for a list of values of type T and a method that returns a double value for each T.
+ * Used as generic input for BinValueDistribution.
+ * 
+ * @author thomas
+ * @param <T>
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
-
-    public GPXEmptyWorker() {
-        super ();
+public abstract class ValueDistribution<T> {
+    private List<T> myValues;
+    
+    public List<T> getValues() {
+        return myValues;
     }
-
-    public GPXEmptyWorker(final double parameter) {
-        super ();
-        
-        myParameter = parameter;
+    
+    public void setValues(final List<T> values) {
+        myValues = values;
     }
-
-    @Override
-    public void visitGPXFile(GPXFile gpxFile) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrack(GPXTrack gpxTrack) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // nothing to do
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return true;
-    }
+    
+    public abstract double getValueAsDouble(final T value);
 }

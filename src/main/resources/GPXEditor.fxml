@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -51,7 +51,7 @@
                   <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                </accelerator>
           </Menu>
-          <Menu mnemonicParsing="false" text="GPX">
+          <Menu mnemonicParsing="false" text="Structure">
             <items>
                   <MenuItem fx:id="mergeFilesMenu" mnemonicParsing="false" text="Merge Files" />
               <MenuItem fx:id="mergeTracksMenu" mnemonicParsing="false" text="Merge Tracks/Segments">
@@ -59,7 +59,19 @@
                         <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
                   <MenuItem fx:id="deleteTracksMenu" mnemonicParsing="false" text="Delete Tracks/Segments" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
+            </items>
+               <accelerator>
+                  <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+               </accelerator>
+          </Menu>
+            <Menu mnemonicParsing="false" text="Values">
+              <items>
+                <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
+                  <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
+              </items>
+            </Menu>
+            <Menu mnemonicParsing="false" text="Algorithms">
+              <items>
                   <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
                   <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Fix Tracks">
                      <accelerator>
@@ -69,15 +81,11 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height values" />
-            </items>
-               <accelerator>
-                  <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-               </accelerator>
-          </Menu>
+              </items>
+            </Menu>
             <Menu mnemonicParsing="false" text="SRTM">
               <items>
+                  <MenuItem fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height values" />
                 <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
               </items>
             </Menu>
@@ -107,12 +115,12 @@
                               <TreeTableView fx:id="gpxFileListXML" prefHeight="200.0" prefWidth="1006.0" styleClass="gpxFileList">
                                 <columns>
                                   <TreeTableColumn fx:id="idGPXCol" prefWidth="60.0" styleClass="idCol" text="ID" />
-                                    <TreeTableColumn fx:id="typeGPXCol" prefWidth="75.0" text="Type" />
-                                  <TreeTableColumn fx:id="nameGPXCol" prefWidth="250.0" styleClass="nameCol" text="Name" />
-                                    <TreeTableColumn fx:id="startGPXCol" prefWidth="160.0" styleClass="startCol" text="Start" />
+                                    <TreeTableColumn fx:id="typeGPXCol" prefWidth="54.000030517578125" text="Type" />
+                                  <TreeTableColumn fx:id="nameGPXCol" prefWidth="194.0" styleClass="nameCol" text="Name" />
+                                    <TreeTableColumn fx:id="startGPXCol" prefWidth="237.0" styleClass="startCol" text="Start" />
                                     <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration" />
-                                    <TreeTableColumn fx:id="lengthGPXCol" styleClass="lengthCol" text="Length [km]" />
-                                    <TreeTableColumn fx:id="speedGPXCol" styleClass="speedCol" text="Speed [km/h]" />
+                                    <TreeTableColumn fx:id="lengthGPXCol" styleClass="lengthCol" text="Length&#10;[km]" />
+                                    <TreeTableColumn fx:id="speedGPXCol" styleClass="speedCol" text="Speed&#10;[km/h]" />
                                     <TreeTableColumn fx:id="cumAccGPXCol" styleClass="cumAccCol" text="+dH [m]" />
                                     <TreeTableColumn fx:id="cumDescGPXCol" styleClass="cumDescCol" text="-dH [m]" />
                                     <TreeTableColumn fx:id="noItemsGPXCol" prefWidth="50.0" styleClass="noItemsCol" text="Items" />
@@ -128,8 +136,8 @@
                                   <TableColumn fx:id="posTrackCol" prefWidth="250.0" styleClass="posCol" text="Position" />
                                     <TableColumn fx:id="dateTrackCol" prefWidth="160.0" styleClass="dateCol" text="Date" />
                                     <TableColumn fx:id="durationTrackCol" styleClass="durationCol" text="Duration" />
-                                    <TableColumn fx:id="lengthTrackCol" styleClass="lengthCol" text="Length [m]" />
-                                    <TableColumn fx:id="speedTrackCol" styleClass="speedCol" text="Speed [km/h]" />
+                                    <TableColumn fx:id="lengthTrackCol" styleClass="lengthCol" text="Length&#10;[m]" />
+                                    <TableColumn fx:id="speedTrackCol" styleClass="speedCol" text="Speed&#10;[km/h]" />
                                     <TableColumn fx:id="heightTrackCol" styleClass="heightCol" text="H [m]" />
                                     <TableColumn fx:id="heightDiffTrackCol" styleClass="heightDiffCol" text="dH [m]" />
                                     <TableColumn fx:id="slopeTrackCol" styleClass="slopeCol" text="Slope [%]" />

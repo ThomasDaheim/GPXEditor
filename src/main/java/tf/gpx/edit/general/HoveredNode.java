@@ -23,53 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.general;
 
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
+import javafx.geometry.Pos;
+import javafx.scene.DepthTest;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 
 /**
- *
- * @author Thomas
+ * A node which displays a value on hover, but is otherwise empty
+ * 
+ * @author thomas
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
+public class HoveredNode extends StackPane {
+    public HoveredNode(final String value) {
+        setPrefSize(6, 6);
+        setAlignment(Pos.TOP_CENTER);
 
-    public GPXEmptyWorker() {
-        super ();
+        final Label label = createDataLabel(value);
+
+        setOnMouseEntered((MouseEvent mouseEvent) -> {
+            getChildren().setAll(label);
+            toFront();
+        });
+        setOnMouseExited((MouseEvent mouseEvent) -> {
+            getChildren().clear();
+        });
     }
 
-    public GPXEmptyWorker(final double parameter) {
-        super ();
+    private Label createDataLabel(final String value) {
+        final Label label = new Label(value);
+        label.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
+
+        label.setTextFill(Color.DARKGRAY);
+        label.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
         
-        myParameter = parameter;
-    }
-
-    @Override
-    public void visitGPXFile(GPXFile gpxFile) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrack(GPXTrack gpxTrack) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // nothing to do
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return true;
+        return label;
     }
 }

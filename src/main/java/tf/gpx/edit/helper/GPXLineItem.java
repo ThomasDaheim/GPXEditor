@@ -29,7 +29,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
 /**
  *
@@ -56,24 +55,55 @@ public abstract class GPXLineItem {
     }
     
     public static enum GPXLineItemData {
-        Type,
-        Name,
-        Start,
-        Duration,
-        Length,
-        Speed,
-        CumAscent,
-        CumDescent,
-        Position,
-        Date,
-        DistToPrev,
-        Elevation,
-        ElevationDiffToPrev,
-        Slope,
-        NoItems
+        Type(false, "Type"),
+        Name(false, "Name"),
+        Start(false, "Start"),
+        Duration(true, "Duration"),
+        Length(false, "Length"),
+        Speed(true, "Speed"),
+        CumulativeAscent(false, "Cumulative Ascent"),
+        CumulativeDescent(false, "Cumulative Descent"),
+        Position(false, "Position"),
+        Date(false, "Date"),
+        DistanceToPrevious(true, "Distance To Previous"),
+        Elevation(true, "Elevation"),
+        ElevationDifferenceToPrevious(true, "Elevation Difference To Previous"),
+        Slope(true, "Slope"),
+        NoItems(false, "NoItems");
+        
+        private final boolean hasDoubleValue;
+        private final String description;
+        
+        GPXLineItemData() {
+            hasDoubleValue = false;
+            description = "";
+        }
+        
+        GPXLineItemData(final boolean doubleValue, final String desc) {
+            hasDoubleValue = doubleValue;
+            description = desc;
+        }
+        
+        public boolean hasDoubleValue() {
+            return hasDoubleValue;
+        }
+        
+        public String getDescription() {
+            return description;
+        }
+
+        public static GPXLineItemData fromDescription(final String desc) {
+            for (GPXLineItemData b : GPXLineItemData.values()) {
+                if (b.description.equalsIgnoreCase(desc)) {
+                    return b;
+                }
+            }
+            return null;
+        }
     };
     
     public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss z"); 
+    public static double NO_VALUE = Double.MIN_VALUE; 
     
     private boolean hasUnsavedChanges = false;
     private int myNumber;
@@ -121,7 +151,7 @@ public abstract class GPXLineItem {
     public abstract GPXLineItemType getType();
     public abstract String getName();
     public abstract void setName(final String name);
-    public abstract String getData(final GPXLineItem.GPXLineItemData gpxLineItemData);
+    public abstract String getDataAsString(final GPXLineItem.GPXLineItemData gpxLineItemData);
     public abstract Date getDate();
     
     // get associated GPXLineItemType - could be children or parents

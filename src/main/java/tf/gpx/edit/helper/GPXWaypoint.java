@@ -29,7 +29,6 @@ import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
 /**
  *
@@ -112,7 +111,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public String getData(final GPXLineItemData gpxLineItemData) {
+    public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
                 return "Waypt";
@@ -128,7 +127,7 @@ public class GPXWaypoint extends GPXLineItem {
                 } else {
                     return "---";
                 }
-            case DistToPrev:
+            case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
                     return String.format("%1$.2f", EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
                 } else {
@@ -142,7 +141,7 @@ public class GPXWaypoint extends GPXLineItem {
                 }
             case Elevation:
                 return String.format("%1$.2f", myWaypoint.getElevation());
-            case ElevationDiffToPrev:
+            case ElevationDifferenceToPrevious:
                 if (myPrevGPXWaypoint != null) {
                     return String.format("%1$.2f", getElevationDiff());
                 } else {
@@ -156,6 +155,45 @@ public class GPXWaypoint extends GPXLineItem {
                 }
             default:
                 return "";
+        }
+    }
+    
+    public Double getDataAsDouble(final GPXLineItemData gpxLineItemData) {
+        switch (gpxLineItemData) {
+            case Duration:
+                if (myPrevGPXWaypoint != null) {
+                    return Double.valueOf(getDuration()) / 1000.0;
+                } else {
+                    return NO_VALUE;
+                }
+            case DistanceToPrevious:
+                if (myPrevGPXWaypoint != null) {
+                    return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+                } else {
+                    return NO_VALUE;
+                }
+            case Speed:
+                if (myPrevGPXWaypoint != null) {
+                    return getSpeed();
+                } else {
+                    return NO_VALUE;
+                }
+            case Elevation:
+                return myWaypoint.getElevation();
+            case ElevationDifferenceToPrevious:
+                if (myPrevGPXWaypoint != null) {
+                    return getElevationDiff();
+                } else {
+                    return NO_VALUE;
+                }
+            case Slope:
+                if (myPrevGPXWaypoint != null) {
+                    return getSlope();
+                } else {
+                    return NO_VALUE;
+                }
+            default:
+                return NO_VALUE;
         }
     }
     

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import static tf.gpx.edit.helper.GPXLineItem.DATE_FORMAT;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
 /**
  *
@@ -164,7 +163,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public String getData(final GPXLineItemData gpxLineItemData) {
+    public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
                 return "Sgmnt";
@@ -179,9 +178,9 @@ public class GPXTrackSegment extends GPXMeasurable {
                 return String.format("%1$.3f", getLength()/1000d);
             case Speed:
                 return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
-            case CumAscent:
+            case CumulativeAscent:
                 return String.format("%1$.2f", getCumulativeAscent());
-            case CumDescent:
+            case CumulativeDescent:
                 return String.format("-%1$.2f", getCumulativeDescent());
             case NoItems:
                 return String.format("%1$d", getGPXWaypoints().size());

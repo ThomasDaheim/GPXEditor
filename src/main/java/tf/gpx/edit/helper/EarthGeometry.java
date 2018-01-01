@@ -47,7 +47,6 @@ public class EarthGeometry {
     /**
      * Simplify a track by removing points, using the requested algorithm.
      * @param track points of the track
-     * @param algorithm What EarthGeometry.Algorithm to use
      * @param parameter tolerance, in meters
      * @return the points of the simplified track
      */

@@ -23,53 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 /**
- *
- * @author Thomas
+ * Holder for values of a BinValueDistribution.
+ * Besides the number of the bin and the count in it
+ * it also stores a list of objects in its bin.
+ * 
+ * @author thomas
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
-
-    public GPXEmptyWorker() {
-        super ();
+public class BinValue extends MutablePair<Double, Double> {
+    private final List<Object> binObjects = new ArrayList<>();
+    
+    public BinValue(Double key, Double value) {
+        super(key, value);
     }
-
-    public GPXEmptyWorker(final double parameter) {
-        super ();
-        
-        myParameter = parameter;
-    }
-
-    @Override
-    public void visitGPXFile(GPXFile gpxFile) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrack(GPXTrack gpxTrack) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
-    }
-
-    @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // nothing to do
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return true;
+    
+    public final List<Object> getBinObjects() {
+        return binObjects;
     }
 }

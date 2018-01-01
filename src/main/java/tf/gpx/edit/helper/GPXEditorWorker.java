@@ -50,7 +50,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
