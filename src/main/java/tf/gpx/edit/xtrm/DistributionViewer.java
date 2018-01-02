@@ -97,11 +97,14 @@ public class DistributionViewer {
     private List<BinValue> binValues;
     private double minYValue;
     private double maxYValue;
-    private int selectedValues;
+    private final List<GPXWaypoint> selectedGPXWaypoints = new ArrayList<>();
 
-    private List<GPXWaypoint> myGPXWayPoints;
+    private List<GPXWaypoint> myGPXWaypoints;
     
     private boolean hasDeleted = false;
+    // performance is bad when selecting various waypoints and checking them all...
+    // so we need enable / disable the listener during mass update
+    private ListChangeListener<GPXWaypoint> listenerCheckChanges;
 
     private DistributionViewer() {
         // Exists only to defeat instantiation.
@@ -120,7 +123,7 @@ public class DistributionViewer {
         
         hasDeleted = false;
         
-        myGPXWayPoints = gpxWayPoints;
+        myGPXWaypoints = gpxWayPoints;
         
         // create new scene
         final Stage distributionsStage = new Stage();
@@ -146,7 +149,7 @@ public class DistributionViewer {
                 dataBox.getItems().add(value.getDescription());
             }
         }
-        dataBox.setValue(GPXLineItemData.DistanceToPrevious.getDescription());
+        dataBox.setValue(GPXLineItemData.Duration.getDescription());
         dataBox.setTooltip(new Tooltip("Data value to use."));
         dataBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -218,7 +221,7 @@ public class DistributionViewer {
             @Override
             public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
                 // https://gist.github.com/jewelsea/5094893
-                updateBarColors();
+                setSelectedWaypoints();
                 setRangeLbl();
                 setCountLbl();
             }
@@ -232,7 +235,7 @@ public class DistributionViewer {
             @Override
             public void changed(ObservableValue<? extends Boolean> source, Boolean oldValue, Boolean newValue) {
                 // https://gist.github.com/jewelsea/5094893
-                updateBarColors();
+                setSelectedWaypoints();
                 setRangeLbl();
                 setCountLbl();
             }
@@ -244,7 +247,21 @@ public class DistributionViewer {
         // 5th row: select button
         final Button selectButton = new Button("Select points in marked area");
         selectButton.setOnAction((ActionEvent event) -> {
-            setSelectedWayPoints();
+            // disable listener for checked changes since it fires for each waypoint...
+            // TODO: use something fancy like LibFX ListenerHandle...
+            wayPointList.getCheckModel().getCheckedItems().removeListener(listenerCheckChanges);
+
+            // sort by waypoint number
+            wayPointList.getItems().clear();
+            wayPointList.getCheckModel().clearChecks();
+            wayPointList.getItems().addAll(selectedGPXWaypoints.stream().sorted(Comparator.comparing(GPXWaypoint::getNumber)).collect(Collectors.toList()));
+            wayPointList.getCheckModel().checkAll();
+            
+            // select waypoints without listener for checke changes
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems());
+
+            // re-enable listener for checked changes
+            wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         });
         gridPane.add(selectButton, 0, rowNum, 3, 1);
         GridPane.setHalignment(selectButton, HPos.CENTER);
@@ -274,12 +291,29 @@ public class DistributionViewer {
             };
             return cell;
         });        
-        wayPointList.getCheckModel().getCheckedItems().addListener(new ListChangeListener<GPXWaypoint>() {
-            @Override
-            public void onChanged(ListChangeListener.Change<? extends GPXWaypoint> c) {
-                myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems());
-            }
-        });
+        listenerCheckChanges = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems());
+//                System.out.println("CheckModel changed: " + listenCheckChanges + " " + wayPointList.getCheckModel().getCheckedItems().size());
+//                while(c.next()){
+//                    System.out.println("next: ");
+//                    if(c.wasAdded()){
+//                        System.out.println("- wasAdded");
+//                    }
+//                    if(c.wasPermutated()){
+//                        System.out.println("- wasPermutated");
+//                    }
+//                    if(c.wasRemoved()){
+//                        System.out.println("- wasRemoved");
+//                    }
+//                    if(c.wasReplaced()){
+//                        System.out.println("- wasReplaced");
+//                    }
+//                    if(c.wasUpdated()){
+//                        System.out.println("- wasUpdated");
+//                    }
+//                }
+        };     
+        wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         gridPane.add(wayPointList, 3, rowNum, 1, 3);
         GridPane.setMargin(wayPointList, insetTopBottom);
 
@@ -294,8 +328,7 @@ public class DistributionViewer {
         final Button deleteButton = new Button("Delete selected points");
         deleteButton.setOnAction((ActionEvent event) -> {
             if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
-                // TODO: support for multiple track segments - if necessary
-                final GPXTrackSegment gpxTrackSegment = myGPXWayPoints.get(0).getGPXTrackSegments().get(0);
+                final GPXTrackSegment gpxTrackSegment = myGPXWaypoints.get(0).getGPXTrackSegments().get(0);
                 final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
                 final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
 
@@ -325,7 +358,7 @@ public class DistributionViewer {
     
     private void initDistributionViewer(final GPXLineItemData dataType) {
         // calculate distribution to have inputs for nodes
-        GPXWaypointDistribution.getInstance().setValues(myGPXWayPoints);
+        GPXWaypointDistribution.getInstance().setValues(myGPXWaypoints);
         GPXWaypointDistribution.getInstance().setGPXLineItemData(dataType);
         BinValueDistribution.getInstance().calculateBinValues(GPXWaypointDistribution.getInstance());
         
@@ -335,7 +368,7 @@ public class DistributionViewer {
         binValues = BinValueDistribution.getInstance().getBinValues();
         minYValue = BinValueDistribution.getInstance().getMinYValue();
         maxYValue = BinValueDistribution.getInstance().getMaxYValue();
-        selectedValues = 0;
+        selectedGPXWaypoints.clear();
         
         // set barChart data
         yAxis.setLowerBound(minYValue);
@@ -357,10 +390,10 @@ public class DistributionViewer {
         minmaxSlider.setBlockIncrement(binSize);
         minmaxSlider.setMinorTickCount(10);
         minmaxSlider.setMajorTickUnit(10.0 * binSize);
-        minmaxSlider.setMin(minXValue);
-        minmaxSlider.setMax(maxXValue);
-        minmaxSlider.setLowValue(minXValue);
-        minmaxSlider.setHighValue(maxXValue);
+        minmaxSlider.setMin(minXValue - binSize / 10.0);
+        minmaxSlider.setMax(maxXValue + binSize / 10.0);
+        minmaxSlider.setLowValue(minXValue - binSize / 10.0);
+        minmaxSlider.setHighValue(maxXValue + binSize / 10.0);
         
         // set labels
         minLbl.setText(formater.format(minXValue));
@@ -374,12 +407,11 @@ public class DistributionViewer {
         wayPointList.getItems().clear();
     }
 
-    /** Change color of bar if value of i is <5 then red, if >5 then green if i>8 then blue */
-    private void updateBarColors() {
+    private void setSelectedWaypoints() {
         final Object objSeries = barChart.getData().get(0);
         final XYChart.Series series = (XYChart.Series) objSeries;
                 
-        selectedValues = 0;
+        selectedGPXWaypoints.clear();
         int i = 0;
         for (Object objData : series.getData()) {
             final XYChart.Data data = (XYChart.Data) objData;
@@ -388,7 +420,14 @@ public class DistributionViewer {
             final double dataValue = Double.valueOf((String) data.getXValue());
             if ( dataValue < minmaxSlider.getLowValue() || dataValue > minmaxSlider.getHighValue()) {
                 node.setStyle("-fx-bar-fill: red;");
-                selectedValues = selectedValues + binValues.get(i).getBinObjects().size();
+                final List<GPXWaypoint> wayPoints = 
+                        binValues.get(i).getBinObjects().stream().map(t -> {
+                            assert t instanceof GPXWaypoint;
+                            
+                            return (GPXWaypoint) t;
+                        }).collect(Collectors.toList());
+                
+                selectedGPXWaypoints.addAll(wayPoints);
             } else {
                 node.setStyle("-fx-bar-fill: darkblue;");
             }
@@ -402,39 +441,6 @@ public class DistributionViewer {
     }
     
     private void setCountLbl() {
-        countLbl.setText(selectedValues + " from " + myGPXWayPoints.size() + " points selected");
-    }
-    
-    private void setSelectedWayPoints() {
-        wayPointList.getItems().clear();
-
-        final Object objSeries = barChart.getData().get(0);
-        final XYChart.Series series = (XYChart.Series) objSeries;
-                
-        final List<GPXWaypoint> selectedWayPoints = new ArrayList<>();
-        int i = 0;
-        for (Object objData : series.getData()) {
-            final XYChart.Data data = (XYChart.Data) objData;
-            
-            final Node node = data.getNode();
-            final double dataValue = Double.valueOf((String) data.getXValue());
-            if ( dataValue < minmaxSlider.getLowValue() || dataValue > minmaxSlider.getHighValue()) {
-                // add waypoints of this bin to wayPointList
-                final List<GPXWaypoint> wayPoints = 
-                        binValues.get(i).getBinObjects().stream().map(t -> {
-                            assert t instanceof GPXWaypoint;
-                            
-                            return (GPXWaypoint) t;
-                        }).collect(Collectors.toList());
-                
-                selectedWayPoints.addAll(wayPoints);
-            }
-            
-            i++;
-        }
-        
-        // sort by waypoint number
-        wayPointList.getItems().addAll(selectedWayPoints.stream().sorted(Comparator.comparing(GPXWaypoint::getNumber)).collect(Collectors.toList()));
-        wayPointList.getCheckModel().checkAll();
+        countLbl.setText(selectedGPXWaypoints.size() + " from " + myGPXWaypoints.size() + " points selected");
     }
 }

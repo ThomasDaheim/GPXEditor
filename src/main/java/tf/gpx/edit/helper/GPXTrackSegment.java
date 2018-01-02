@@ -29,6 +29,7 @@ import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ import static tf.gpx.edit.helper.GPXLineItem.DATE_FORMAT;
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
-    private List<GPXWaypoint> myGPXWaypoints = new ArrayList<>();
+    private LinkedList<GPXWaypoint> myGPXWaypoints = new LinkedList<>();
     
     private Double myLength;
     private Double myCumulativeAscent;
@@ -65,7 +66,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         }
         assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
         
-        updatePrevGPXWaypoints();
+        updatePrevNextGPXWaypoints();
     }
 
     protected TrackSegment getTrackSegment() {
@@ -110,37 +111,22 @@ public class GPXTrackSegment extends GPXMeasurable {
         myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
         assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
         
-        updatePrevGPXWaypoints();
+        updatePrevNextGPXWaypoints();
         myLength = null;
         setHasUnsavedChanges();
     }
     
-    private void updatePrevGPXWaypoints() {
+    // doubly linked list for dummies :-)
+    private void updatePrevNextGPXWaypoints() {
         GPXWaypoint prevGPXWaypoint = null;
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if (prevGPXWaypoint != null) {
+                prevGPXWaypoint.setNextGPXWaypoint(gpxWaypoint);
+            }
             gpxWaypoint.setPrevGPXWaypoint(prevGPXWaypoint);
             prevGPXWaypoint = gpxWaypoint;
         }
-    }
-    
-    public GPXWaypoint getPrevGPXWaypoint(final GPXWaypoint waypoint) {
-        final int index = myGPXWaypoints.indexOf(waypoint);
-        if (index < 1) {
-            // not found or first => no prev
-            return null;
-        } else {
-            return myGPXWaypoints.get(index-1);
-        }
-    }
-    
-    public GPXWaypoint getNextGPXWaypoint(final GPXWaypoint waypoint) {
-        final int index = myGPXWaypoints.indexOf(waypoint);
-        if (index < 0 || index == myGPXWaypoints.size()-1) {
-            // not found or last => no next
-            return null;
-        } else {
-            return myGPXWaypoints.get(index+1);
-        }
+        myGPXWaypoints.getLast().setNextGPXWaypoint(null);
     }
     
     @Override

@@ -255,7 +255,6 @@ class GPXWaypointLayer extends MapLayer {
     }
 
     public double getZoom() {
-        // TODO: calculate zooom level
         // http://stackoverflow.com/questions/4266754/how-to-calculate-google-maps-zoom-level-for-a-bounding-box-in-java
         int zoomLevel;
         

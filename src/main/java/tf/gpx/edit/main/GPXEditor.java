@@ -350,8 +350,8 @@ public class GPXEditor implements Initializable {
         distributionsMenu.setOnAction((ActionEvent event) -> {
             showDistributions(event);
         });
-        distributionsMenu.disableProperty().bind(
-                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+        // enable / disable done in change listener of gpxFileListXML since only meaningful for single track segment
+        distributionsMenu.setDisable(true);
         specialValuesMenu.setOnAction((ActionEvent event) -> {
         });
         specialValuesMenu.disableProperty().bind(
@@ -451,8 +451,15 @@ public class GPXEditor implements Initializable {
             }
             if (newSelection != null) {
                 showWaypoints(newSelection.getValue());
+                
+                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
+                    distributionsMenu.setDisable(false);
+                } else {
+                    distributionsMenu.setDisable(true);
+                }
             } else {
                 showWaypoints(null);
+                distributionsMenu.setDisable(true);
             }
         });
 
@@ -1164,7 +1171,6 @@ public class GPXEditor implements Initializable {
     
     private void showDistributions(final ActionEvent event) {
         // works only for one track segment and its waypoints
-        // TODO: extend for multiple selections if possible
         List<GPXWaypoint> waypoints;
         GPXLineItem item = gpxFileList.getSelectionModel().getSelectedItem().getValue();
         

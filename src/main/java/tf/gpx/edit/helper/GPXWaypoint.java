@@ -38,6 +38,7 @@ public class GPXWaypoint extends GPXLineItem {
     private GPXTrackSegment myGPXTrackSegment;
     private Waypoint myWaypoint;
     private GPXWaypoint myPrevGPXWaypoint = null;
+    private GPXWaypoint myNextGPXWaypoint = null;
     
     private boolean myHighlight = false;
     
@@ -68,8 +69,20 @@ public class GPXWaypoint extends GPXLineItem {
         this.myHighlight = myHighlight;
     }
     
-    protected void setPrevGPXWaypoint(final GPXWaypoint prevGPXWaypoint) {
-        myPrevGPXWaypoint = prevGPXWaypoint;
+    public GPXWaypoint getPrevGPXWaypoint() {
+        return myPrevGPXWaypoint;
+    }
+    
+    protected void setPrevGPXWaypoint(final GPXWaypoint wayPoint) {
+        myPrevGPXWaypoint = wayPoint;
+    }
+    
+    public GPXWaypoint getNextGPXWaypoint() {
+        return myNextGPXWaypoint;
+    }
+    
+    protected void setNextGPXWaypoint(final GPXWaypoint wayPoint) {
+        myNextGPXWaypoint = wayPoint;
     }
     
     @Override
