@@ -128,6 +128,8 @@ public class GPXEditor implements Initializable {
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
     
+    private ListChangeListener<GPXWaypoint> listenerWaypointSelection;
+    
     @FXML
     private MenuItem showSRTMDataMenu;
     @FXML
@@ -613,10 +615,10 @@ public class GPXEditor implements Initializable {
             return row;
         });
         
-        gpxTrackXML.getSelectionModel().getSelectedItems().addListener((ListChangeListener.Change<? extends GPXWaypoint> change) -> {
-            // update map
+        listenerWaypointSelection = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
             GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
-        });
+        };
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenerWaypointSelection);
 
         // cell factories for tablecols
         idTrackCol.setCellValueFactory(
@@ -1275,10 +1277,19 @@ public class GPXEditor implements Initializable {
     // support callback functions for other classes
     // 
     public void selectGPXWaypoints(final List<GPXWaypoint> waypoints) {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenerWaypointSelection);
+            
         gpxTrackXML.getSelectionModel().clearSelection();
         
+        // use selectIndices to select all at once - otherwise its a performance nightmare...
         for (GPXWaypoint waypoint : waypoints) {
             gpxTrackXML.getSelectionModel().select(waypoint);
         }
+        
+        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenerWaypointSelection);
     }
 }

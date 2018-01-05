@@ -61,7 +61,7 @@ public class BinValueDistribution {
 
         // calc max & min values to determine bin size
         calculateMinMaxXValues(valueDistribution);
-        myBinSize = (myMaxXValue - myMinXValue) / (BIN_COUNT - 1.0);
+        myBinSize = Math.max((myMaxXValue - myMinXValue) / (BIN_COUNT - 1.0), 0.1);
 
         // init values
         myBinValues = new ArrayList<>();
@@ -75,8 +75,8 @@ public class BinValueDistribution {
         for (Object value : valueDistribution.getValues()) {
             checkValue = valueDistribution.getValueAsDouble(value);
             
-            // set only if real value > 0
-            if (Math.abs(checkValue) > Double.MIN_VALUE) {
+            // set only if real value (<> Double.MIN_VALUE)
+            if (checkValue != Double.MIN_VALUE) {
                 // calculate bin and increase
                 final int bin = (int) Math.round((checkValue - myMinXValue) / myBinSize);
                 final BinValue binValue = myBinValues.get(bin);
@@ -108,19 +108,29 @@ public class BinValueDistribution {
     
     private void calculateMinMaxXValues(final ValueDistribution valueDistribution) {
         myMinXValue = Double.MAX_VALUE;
-        myMaxXValue = Double.MIN_VALUE;
+        myMaxXValue = 0.0;
         
         // iterate over gpxwaypoints and check against min & max
         double checkValue;
         for (Object value : valueDistribution.getValues()) {
             checkValue = valueDistribution.getValueAsDouble(value);
-            // set only if real value > 0
-            if (checkValue < myMinXValue && Math.abs(checkValue) > Double.MIN_VALUE) {
-                myMinXValue = checkValue;
+            // set only if real value (<> Double.MIN_VALUE)
+            if (checkValue != Double.MIN_VALUE) {
+                if (checkValue < myMinXValue) {
+                    myMinXValue = checkValue;
+                }
+                if (checkValue > myMaxXValue) {
+                    myMaxXValue = checkValue;
+                }
             }
-            if (checkValue > myMaxXValue) {
-                myMaxXValue = checkValue;
-            }
+        }
+        
+        // take care of special cases without any valid data (e.g. all speeds invalid since no durations in data...
+        if (myMinXValue == Double.MAX_VALUE) {
+            myMinXValue = 0.0;
+        }
+        if (myMaxXValue == 0.0) {
+            myMaxXValue = 0.1;
         }
     }
     

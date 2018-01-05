@@ -161,7 +161,12 @@ public class GPXFile extends GPXMeasurable {
             case Length:
                 return String.format("%1$.3f", getLength()/1000d);
             case Speed:
-                return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
+                final double duration = getDuration();
+                if (duration > 0.0) {
+                    return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
+                } else {
+                    return "---";
+                }
             case CumulativeAscent:
                 return String.format("%1$.2f", getCumulativeAscent());
             case CumulativeDescent:

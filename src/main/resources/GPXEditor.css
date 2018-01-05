@@ -28,6 +28,9 @@
     Author     : Thomas
 */
 
+/*
+    treetableview for gpxfiles, tracks, tracksegments
+*/
 /* http://stackoverflow.com/questions/21704598/how-to-show-grid-lines-for-rows-in-treetableview */
 .tree-table-row-cell {
     -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background;
@@ -85,6 +88,9 @@
   -fx-alignment: CENTER_RIGHT;
 }
 
+/*
+    tableview for gpxwaypoints
+*/
 .table-view .table-cell {
     -fx-padding: 0 5 0 5;
 }
@@ -101,6 +107,9 @@
     -fx-background-color: firebrick;
 }
 
+/*
+    elevation chart
+*/
 .chart-vert-rect { 
     -fx-border-style: none dotted none none;
     -fx-border-width: 5px;
@@ -129,6 +138,9 @@
     -fx-text-fill: black;
 }
 
+/*
+    bin distribution chart
+*/
 .unpad-chart {
     -fx-padding: 0px;
 }
@@ -145,6 +157,9 @@
     -fx-stroke: white;
 }
 
+/*
+    bin distribution min / max slider
+*/
 /* https://stackoverflow.com/questions/28721542/javafx-controlsfx-css-for-rangeslider */
 .range-slider .low-thumb {
     -fx-shape: "M2.998-0.07L3-1.499l2.998,4L3,6.501l-0.002-1.43l1.976-2.57L2.998-0.07z";

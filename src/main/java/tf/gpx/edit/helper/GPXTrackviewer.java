@@ -39,6 +39,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
+import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
@@ -124,6 +125,8 @@ class GPXWaypointLayer extends MapLayer {
 
     public GPXWaypointLayer() {
         super();
+        setCache(true);
+        setCacheHint(CacheHint.SPEED);
     }
     
     // https://stackoverflow.com/a/42759066
@@ -304,6 +307,8 @@ class GPXWaypointLayer extends MapLayer {
 class GPXWaypointChart<X,Y> extends AreaChart {
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedGPXWaypoints;
+    
+    private boolean noLayout = false;
 
     public GPXWaypointChart() {
         super(new NumberAxis(), new NumberAxis());
@@ -313,6 +318,11 @@ class GPXWaypointChart<X,Y> extends AreaChart {
         ((NumberAxis) getXAxis()).setTickUnit(1);
         getXAxis().setAutoRanging(false);
         
+        setAnimated(false);
+        setCache(true);
+        setCacheShape(true);
+        setCacheHint(CacheHint.SPEED);
+
         selectedGPXWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
         selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
     }
@@ -323,8 +333,7 @@ class GPXWaypointChart<X,Y> extends AreaChart {
         getData().clear();
         
         double distance = 0d;
-        double count = 0d, i = 0d;
-        XYChart.Series series = new XYChart.Series();
+        final List<XYChart.Data> dataList = new ArrayList<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             distance += gpxWaypoint.getDistance();
             XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
@@ -333,20 +342,41 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             data.setNode(
                 new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()))
             );
-            series.getData().add(data);
+            dataList.add(data);
             myPoints.add(Pair.of(gpxWaypoint, distance));
         }
         
+        // calculate scaling for ticks so their number is smaller than 25
+        double tickUnit = 1.0;
+        if (distance / 1000.0 > 24.9) {
+            tickUnit = 2.0;
+        }
+        if (distance / 1000.0 > 49.9) {
+            tickUnit = 5.0;
+        }
+        if (distance / 1000.0 > 499.9) {
+            tickUnit = 50.0;
+        }
+        if (distance / 1000.0 > 4999.9) {
+            tickUnit = 500.0;
+        }
+        ((NumberAxis) getXAxis()).setTickUnit(tickUnit);
+        
+        XYChart.Series series = new XYChart.Series();
+        series.getData().addAll(dataList);
         getData().add(series);
         ((NumberAxis) getXAxis()).setUpperBound(distance / 1000.0);
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        noLayout = true;
+
         for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
             getPlotChildren().remove(waypoint.getRight());
         }
         selectedGPXWaypoints.clear();
         
+        final List<Rectangle> rectangles = new ArrayList<>();
         for (GPXWaypoint waypoint: gpxWaypoints) {
             // find matching point from myPoints
             final Pair<GPXWaypoint, Double> point = myPoints.stream()
@@ -357,13 +387,22 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             
             Rectangle rectangle = new Rectangle(0,0,0,0);
             rectangle.getStyleClass().add("chart-vert-rect");
-            getPlotChildren().add(rectangle);
+            rectangles.add(rectangle);
             selectedGPXWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
         }
+
+        if (rectangles.size() > 0) {
+            getPlotChildren().addAll(rectangles);
+        }
+
+        noLayout = false;
+        layoutPlotChildren();
     }
 
     @Override
     protected void layoutPlotChildren() {
+        if (noLayout) return;
+        
         super.layoutPlotChildren();
         
         Pair<GPXWaypoint, Double> prevPair = null;

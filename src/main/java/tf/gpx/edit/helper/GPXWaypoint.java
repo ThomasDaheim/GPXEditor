@@ -147,7 +147,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return "---";
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null) {
+                if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
                     return String.format("%1$.2f", getSpeed());
                 } else {
                     return "---";
@@ -186,7 +186,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_VALUE;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null) {
+                if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
                     return getSpeed();
                 } else {
                     return NO_VALUE;
