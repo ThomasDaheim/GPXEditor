@@ -81,11 +81,11 @@ public class SRTMData {
         return myDataValues;
     }
     
-    private double getValue(final int rowNum, final int colNum) {
+    private short getValue(final int rowNum, final int colNum) {
         assert rowNum > -1;
         assert colNum > -1;
 
-        double result = SRTMDataStore.NODATA;
+        short result = SRTMDataStore.NODATA;
         
         // check if in bounds
         if (rowNum < numberRows && colNum < numberCols) {
@@ -96,7 +96,6 @@ public class SRTMData {
         }
         
         return result;
-        
     }
     
     public void setValue(final int rowNum, final int colNum, final short value) {
@@ -164,6 +163,7 @@ public class SRTMData {
         
         // convert lon & lat to name & check against self
         if (SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
+            //System.out.println("SRTM data found: " + data.getKey().getKey());
             // convert lon & lat to col & row
             
             // get arcsecs from lat & lon - values are passed as double!
@@ -224,47 +224,67 @@ public class SRTMData {
                 final double lonFractional = lonarcsecs - (int) Math.round(lonarcsecs);
                 //System.out.println("latarcsecs: " + latarcsecs + ", latFractional: " + latFractional + ", lonarcsecs: " + lonarcsecs + ", lonFractional: " + lonFractional);
 
-                // first, the grid that contains the coordinates
-                double weight = 1d / distanceOnGrid(latFractional, lonFractional);
+                // weight of a grid point is calculated from distance to point
+                double weight = 0.0;
+                // sum of all weighted results from valid points
+                double weightedResult = 0.0;
+                // sum of all weights from valid points - used in the end to normalize result
+                double normalization = 0.0;
 
-                double weightedResult = result * weight;
-                double normalization = weight;
-                //System.out.println("Result1: " + result + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                // first, the grid that contains the coordinates
+                // height value might not be set
+                if (result != SRTMDataStore.NODATA) {
+                    weight = 1d / distanceOnGrid(latFractional, lonFractional);
+                    weightedResult = result * weight;
+                    normalization = weight;
+                    //System.out.println("Result1: " + result + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                }
                 
                 // what are the neighbouring cells? use them only if point is not too close to tile center
                 int nextRowNum = -1;
-                if (latFractional > epsilon * epsilon) {
+                if (Math.abs(latFractional) > epsilon * epsilon) {
                     nextRowNum = rowNum - (int) Math.signum(latFractional);
                 }
                 int nextColNum = -1;
-                if (lonFractional > epsilon * epsilon) {
+                if (Math.abs(lonFractional) > epsilon * epsilon) {
                     nextColNum = colNum + (int) Math.signum(lonFractional);
                 }
                 
-                if (nextRowNum > -1 && nextRowNum < data.getNumberRows()) {
-                    weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), lonFractional);
-                    weightedResult += data.getValue(nextRowNum, colNum) * weight;
-                    normalization += weight;
-                    //System.out.println("Result2: " + getValue(nextRowNum, colNum) + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                short neighbourValue; 
+                if (isInArray(nextRowNum, data.getNumberRows())) {
+                    neighbourValue = data.getValue(nextRowNum, colNum);
+                    // height value might not be set
+                    if (neighbourValue != SRTMDataStore.NODATA) {
+                        weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), lonFractional);
+                        weightedResult += neighbourValue * weight;
+                        normalization += weight;
+                        //System.out.println("Result2: " + neighbourValue + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                    }
                 }
-                if (nextColNum > -1 && nextColNum < data.getNumberColumns()) {
-                    weight = 1d / distanceOnGrid(latFractional, 1d - Math.abs(lonFractional));
-                    weightedResult += data.getValue(rowNum, nextColNum) * weight;
-                    normalization += weight;
-                    //System.out.println("Result3: " + getValue(rowNum, nextColNum) + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                if (isInArray(nextColNum, data.getNumberColumns())) {
+                    neighbourValue = data.getValue(rowNum, nextColNum);
+                    // height value might not be set
+                    if (neighbourValue != SRTMDataStore.NODATA) {
+                        weight = 1d / distanceOnGrid(latFractional, 1d - Math.abs(lonFractional));
+                        weightedResult += neighbourValue * weight;
+                        normalization += weight;
+                        //System.out.println("Result3: " + neighbourValue + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                    }
                 }
-                if ((nextRowNum > -1 && nextRowNum < data.getNumberRows()) && (nextColNum > -1 && nextColNum < data.getNumberColumns())) {
-                    weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), 1d - Math.abs(lonFractional));
-                    weightedResult += data.getValue(nextRowNum, nextColNum) * weight;
-                    normalization += weight;
-                    //System.out.println("Result4: " + getValue(nextRowNum, nextColNum) + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                if (isInArray(nextRowNum, data.getNumberRows()) && isInArray(nextColNum, data.getNumberColumns())) {
+                    neighbourValue = data.getValue(nextRowNum, nextColNum);
+                    // height value might not be set
+                    if (neighbourValue != SRTMDataStore.NODATA) {
+                        weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), 1d - Math.abs(lonFractional));
+                        weightedResult += neighbourValue * weight;
+                        normalization += weight;
+                        //System.out.println("Result4: " + neighbourValue + ", weight: " + weight + ", weightedResult: " + weightedResult + ", normalization: " + normalization);
+                    }
                 }
 
                 result = weightedResult / normalization;
                 //System.out.println("Result: " + result);
                 //System.out.println("");
-                
-                //System.out.println("Neighbours found");
             }
 
             //System.out.println("latitude: " + latitude + ", longitude: " + longitude + ", latarcsecs: " + latarcsecs + ", lonarcsecs: " + lonarcsecs + ", rowNum: " + rowNum + ", colNum: " + colNum + ", result: " + result + ", result2: " + result2);
@@ -275,5 +295,9 @@ public class SRTMData {
     
     private static double distanceOnGrid(final double latDist, final double lonDist) {
         return Math.max(latDist*latDist + lonDist*lonDist, epsilon*epsilon);
+    }
+    
+    private static boolean isInArray(final int check, final int arraySize) {
+        return (check > -1 && check < arraySize);
     }
 }

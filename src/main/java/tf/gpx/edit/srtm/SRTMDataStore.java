@@ -43,7 +43,7 @@ public class SRTMDataStore {
     
     private ISRTMDataReader mySRTMDataReader;
 
-    public final static short NODATA = -32768; 
+    public final static short NODATA = Short.MIN_VALUE; 
     public final static String HGT_EXT = "hgt";
     
     public enum SRTMDataAverage {
