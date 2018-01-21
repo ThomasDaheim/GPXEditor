@@ -277,7 +277,7 @@ public class GPXEditorWorker {
     }
 
     public final List<GPXTrackSegment> mergeSelectedGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
-        System.out.println("mergeSelectedGPXTrackSegments");
+        //System.out.println("mergeSelectedGPXTrackSegments");
         // 1. remove all tracksegments that we should merge from the track list
         gpxTrackSegments.removeAll(gpxTrackSegmentsToMerge);
 

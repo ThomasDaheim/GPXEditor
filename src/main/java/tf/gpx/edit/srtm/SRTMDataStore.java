@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import tf.gpx.edit.srtm.SRTMData.SRTMDataKey;
 
@@ -42,6 +44,8 @@ public class SRTMDataStore {
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
     
     private ISRTMDataReader mySRTMDataReader;
+    
+    private final Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
 
     public final static short NODATA = Short.MIN_VALUE; 
     public final static String HGT_EXT = "hgt";
@@ -101,17 +105,12 @@ public class SRTMDataStore {
     }
     
     public SRTMData getDataForName(final String dataName) {
-        SRTMData result = null;
+        SRTMData result;
 
         // check store for matching data
-        final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
-                filter((SRTMDataKey key) -> {
-                    return key.getKey().equals(dataName);
-                }).
-                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
-                collect(Collectors.toList());
+        SRTMDataKey dataKey = dataKeyForName(dataName);
         
-        if (dataEntries.isEmpty()) {
+        if (dataKey == null) {
             // if not found: try to read file and add to store
             result = mySRTMDataReader.readSRTMData(dataName, myStorePath);
             
@@ -119,8 +118,42 @@ public class SRTMDataStore {
                 srtmStore.put(result.getKey(), result);
             }
         } else {
+            result = srtmStore.get(dataKey);
+        }
+        
+        return result;
+    }
+    
+    public void addMissingDataToStore(final SRTMData newData) {
+        assert newData != null;
+        
+        // check validity of data
+        if (SRTMData.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
+            return;
+        }
+        
+        // check store for matching data
+        SRTMDataKey dataKey = dataKeyForName(newData.getKey().getKey());
+
+        // add if not already there
+        if (dataKey == null) {
+            srtmStore.put(newData.getKey(), newData);
+        }
+    }
+    
+    private SRTMDataKey dataKeyForName(final String dataName) {
+        SRTMDataKey result = null;
+        
+        final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
+                filter((SRTMDataKey key) -> {
+                    return key.getKey().equals(dataName);
+                }).
+                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
+                collect(Collectors.toList());
+        
+        if (!dataEntries.isEmpty()) {
             // sorted by type and therefore sorted by accuracy :-)
-            result = srtmStore.get(dataEntries.get(0));
+            result = dataEntries.get(0);
         }
         
         return result;
@@ -155,28 +188,66 @@ public class SRTMDataStore {
         
         return result;
     }
-            
-    public String getNameForCoordinate(final double latitude, final double longitude) {
+
+    public String getNameForCoordinate(double latitude, double longitude) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 //        To be more exact, these coordinates refer to the geometric center of the lower left pixel,
 //        which in the case of SRTM3 data will be about 90 meters in extent.        
         String result;
         
+        // TFE, 2018015
+        // N:  54.1 -> N54
+        // S: -54.1 -> S55 -> -1 to latitude!
         if (latitude > 0) {
             result = "N";
         } else {
             result = "S";
+            latitude = Math.abs(latitude) + 1;
         }
         result += String.format("%02d", (int) latitude);
         
+        // TFE, 2018015
+        // N:  65.9 -> N65
+        // W: -65.9 -> W66 -> -1 to longitude!
         if (longitude > 0) {
             result += "E";
         } else {
             result += "W";
+            longitude = Math.abs(longitude) + 1;
         }
         result += String.format("%03d", (int) longitude);
         
+        return result;
+    }
+    
+    public int getLatitudeForName(final String name) {
+        int result = Integer.MIN_VALUE;
+        
+        final Matcher matcher = namePattern.matcher(name);
+        
+        if (matcher.matches()) {
+            result = Integer.parseInt(matcher.group(2));
+            if ("S".equals(matcher.group(1))) {
+                result = -result;
+            }
+        }
+
+        return result;
+    }
+    
+    public int getLongitudeForName(final String name) {
+        int result = Integer.MIN_VALUE;
+        
+        final Matcher matcher = namePattern.matcher(name);
+        
+        if (matcher.matches()) {
+            result = Integer.parseInt(matcher.group(4));
+            if ("W".equals(matcher.group(3))) {
+                result = -result;
+            }
+        }
+
         return result;
     }
 }

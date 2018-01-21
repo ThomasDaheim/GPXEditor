@@ -43,6 +43,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
@@ -145,6 +146,11 @@ public class GPXEditorManager extends Application {
             stop();
             Platform.exit();
         } else {
+            // store for later reference
+            myStage = primaryStage;
+            // save host services for later use
+            myStage.getProperties().put("hostServices", this.getHostServices());
+
             FXMLLoader fxmlLoader = null;
             BorderPane pane = null;
             try {
@@ -162,14 +168,12 @@ public class GPXEditorManager extends Application {
             Double recentWindowWidth = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.RECENTWINDOWWIDTH, "1200"));
             Double recentWindowHeigth = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.RECENTWINDOWHEIGTH, "600"));
 
-            primaryStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
-            primaryStage.setTitle("GPX Editor"); 
-            primaryStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-            primaryStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-            primaryStage.show();
-
-            // store for later reference
-            myStage = primaryStage;
+            myStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
+            myStage.setTitle("GPX Editor"); 
+            myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
+            myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
+            myStage.initStyle(StageStyle.UNIFIED);
+            myStage.show();
         }
     }
     

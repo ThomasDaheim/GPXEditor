@@ -35,10 +35,10 @@ public class SRTMData {
     public  enum SRTMDataType{
         SRTM1(3601, 1),
         SRTM3(1201, 3),
-        INVALID(0, 0);
+        INVALID(1, 1);
         
-        int dataCount;
-        int gridSize;
+        private final int dataCount;
+        private final int gridSize;
         SRTMDataType(int count, int size) {
             dataCount = count;
             gridSize = size;
@@ -65,12 +65,12 @@ public class SRTMData {
     private final int numberRows;
     private final int numberCols;
 
-    public SRTMData(final String dataFile, final String name, final SRTMDataType type, final int numRows, final int numCols) {
+    public SRTMData(final String dataFile, final String name, final SRTMDataType type) {
         myDataFile = dataFile;
         myDataKey = new SRTMDataKey(name, type);
-        myDataValues = new short[numRows][];
-        numberRows = numRows;
-        numberCols = numCols;
+        myDataValues = new short[type.getDataCount()][];
+        numberRows = type.getDataCount();
+        numberCols = type.getDataCount();
     }
     
     public SRTMDataKey getKey() {
@@ -167,8 +167,8 @@ public class SRTMData {
             // convert lon & lat to col & row
             
             // get arcsecs from lat & lon - values are passed as double!
-            double latarcsecs = (latitude % 1) * 3600d;
-            double lonarcsecs = (longitude % 1) * 3600d;
+            double latarcsecs = (Math.abs(latitude) % 1) * 3600d;
+            double lonarcsecs = (Math.abs(longitude) % 1) * 3600d;
 
             // inacurate data has one value per 3 arcsecs
             latarcsecs /= data.getKey().getValue().getGridSize();
@@ -176,7 +176,15 @@ public class SRTMData {
 
             // data starts in north / east corner - naming is from south / east corner...
             final int rowNum = data.getKey().getValue().getDataCount() - 1 - (int) Math.round(latarcsecs);
-            final int colNum = (int) Math.round(lonarcsecs);
+            int colNum;
+            if (longitude > 0) {
+                colNum = (int) Math.round(lonarcsecs);
+            } else {
+                // for data points in west values are negative and more negative further west...
+                colNum = data.getKey().getValue().getDataCount() - 1 - (int) Math.round(lonarcsecs);
+            }
+            assert rowNum > -1;
+            assert colNum > -1;
             assert rowNum < data.getNumberRows();
             assert colNum < data.getNumberColumns();
 
@@ -218,6 +226,8 @@ public class SRTMData {
                 // 
                 // its center is 0/0, so it covers the region from -0.5/-0.5 to 0.5/0.5
                 // the distance of a point to the center of the tile is therefore caculated from the fractional of lat/lon of arcsecs
+                
+                // TODO: alterantively, do bilinear interpolation: http://supercomputingblog.com/graphics/coding-bilinear-interpolation/
                 
                 // distance to center of tile 
                 final double latFractional = latarcsecs - (int) Math.round(latarcsecs);

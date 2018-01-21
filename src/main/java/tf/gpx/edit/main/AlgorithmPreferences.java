@@ -25,46 +25,38 @@
  */
 package tf.gpx.edit.main;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
+import javafx.geometry.VPos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
+import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.srtm.SRTMDataStore;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
 /**
  *
  * @author Thomas
  */
-public class GPXPreferencesUI {
+public class AlgorithmPreferences {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static GPXPreferencesUI INSTANCE = new GPXPreferencesUI();
+    private final static AlgorithmPreferences INSTANCE = new AlgorithmPreferences();
 
-    private GPXPreferencesUI() {
+    private AlgorithmPreferences() {
         // Exists only to defeat instantiation.
     }
 
-    public static GPXPreferencesUI getInstance() {
+    public static AlgorithmPreferences getInstance() {
         return INSTANCE;
     }
     
@@ -75,12 +67,6 @@ public class GPXPreferencesUI {
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
         double myFixEpsilon = 
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
-        String mySRTMDataPath = 
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, "");
-        SRTMDataStore.SRTMDataAverage myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
-        GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
 
         // create new scene with list of algos & parameter
         final Stage settingsStage = new Stage();
@@ -107,9 +93,10 @@ public class GPXPreferencesUI {
         // 2nd row: select reduce algorithm
         final Label algoLbl = new Label("Reduction Algorithm:");
         gridPane.add(algoLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(algoLbl, VPos.TOP);
         GridPane.setMargin(algoLbl, new Insets(10));
 
-        final VBox reduceAlgoChoiceBox = enumChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
+        final VBox reduceAlgoChoiceBox = EnumHelper.getInstance().enumChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
         gridPane.add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, new Insets(10));
 
@@ -117,6 +104,7 @@ public class GPXPreferencesUI {
         // 3rd row: select reduce epsilon
         final Label epsilonLbl = new Label("Algorithm Epsilon:");
         gridPane.add(epsilonLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(epsilonLbl, VPos.TOP);
         GridPane.setMargin(epsilonLbl, new Insets(10));
         
         final TextField epsilonText = new TextField();
@@ -126,66 +114,6 @@ public class GPXPreferencesUI {
         epsilonText.setTooltip(new Tooltip("Minimum distance for track reduction algorithms."));
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, new Insets(10));
-        
-        // separator
-        
-        rowNum++;
-        // 4th row: path to srtm files
-        final Label srtmLbl = new Label("Path to SRTM files:");
-        gridPane.add(srtmLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(srtmLbl, new Insets(10));
-
-        final TextField srtmPathLbl = new TextField(mySRTMDataPath);
-        srtmPathLbl.setEditable(false);
-        srtmPathLbl.setMinWidth(400);
-        final Button srtmPathBtn = new Button("...");
-        // add action to the button - open a directory search dialogue...
-        srtmPathBtn.setOnAction((ActionEvent event) -> {
-            // open directory chooser dialog - starting from current path, if any
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Select SRTM data files directory");
-            if (!srtmPathLbl.getText().isEmpty()) {
-                final File ownFile = new File(srtmPathLbl.getText());
-                // TF, 20160820: directory might not exist anymore!
-                // in that case directoryChooser.showDialog throws an error and you can't change to an existing dir...
-                if (ownFile.exists() && ownFile.isDirectory() && ownFile.canRead()) {
-                    directoryChooser.setInitialDirectory(ownFile);
-                }
-            }
-            File selectedDirectory = directoryChooser.showDialog(srtmPathBtn.getScene().getWindow());
-
-            if(selectedDirectory == null){
-                //System.out.println("No Directory selected");
-            } else {
-                srtmPathLbl.setText(selectedDirectory.getAbsolutePath());
-            }
-        });
-
-        final HBox srtmPathBox = new HBox();
-        srtmPathBox.getChildren().addAll(srtmPathLbl, srtmPathBtn);
-
-        gridPane.add(srtmPathBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(srtmPathBox, new Insets(10));
-
-        rowNum++;
-        // 5th row: srtm averging mode
-        final Label srtmAvgLbl = new Label("SRTM averaging mode:");
-        gridPane.add(srtmAvgLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(srtmAvgLbl, new Insets(10));
-
-        final VBox avgModeChoiceBox = enumChoiceBox(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
-        gridPane.add(avgModeChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(avgModeChoiceBox, new Insets(10));
-        
-        rowNum++;
-        // 6th row: height asigning mode
-        final Label hghtAsgnLbl = new Label("Assign SRTM height:");
-        gridPane.add(hghtAsgnLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(hghtAsgnLbl, new Insets(10));
-        
-        final VBox asgnModeChoiceBox = enumChoiceBox(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
-        gridPane.add(asgnModeChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(asgnModeChoiceBox, new Insets(10));
         
         rowNum++;
         // last row: save / cancel buttons
@@ -211,59 +139,12 @@ public class GPXPreferencesUI {
         if (saveBtn.getText().equals(settingsStage.getTitle())) {
             // read values from stage
             myFixEpsilon = Double.valueOf(fixText.getText());
-            myAlgorithm = selectedEnum(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
+            myAlgorithm = EnumHelper.getInstance().selectedEnum(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
             myReduceEpsilon = Double.valueOf(epsilonText.getText());
-            mySRTMDataPath = srtmPathLbl.getText();
-            myAverageMode = selectedEnum(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
-            myAssignMode = selectedEnum(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
             GPXEditorPreferences.put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
             GPXEditorPreferences.put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
-            GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
-            GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
-            GPXEditorPreferences.put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
         }
-    }
-    
-    private <T extends Enum> VBox enumChoiceBox(final Class<T> enumClass, final Enum currentValue) {
-        final T[] values = enumClass.getEnumConstants();
-        
-        final List<RadioButton> buttons = new ArrayList<>();
-        final ToggleGroup toggleGroup = new ToggleGroup();
-        for (T value : values) {
-            final RadioButton button = new RadioButton(value.toString());
-            button.setToggleGroup(toggleGroup);
-            button.setSelected(value.equals(currentValue));
-            
-            buttons.add(button);
-        }
-
-        final VBox result = new VBox();
-        result.setSpacing(10.0);
-        result.getChildren().addAll(buttons);
-
-        return result;
-    }
-    
-    private <T extends Enum> T selectedEnum(final Class<T> enumClass, final VBox enumVBox) {
-        assert enumClass.getEnumConstants().length == enumVBox.getChildren().size();
-                
-        final T[] values = enumClass.getEnumConstants();
-        T result = values[0];
-        
-        int i = 0;
-        for (Node child : enumVBox.getChildren()) {
-            assert child instanceof  RadioButton;
-            
-            if (((RadioButton) child).isSelected()) {
-                result = values[i];
-                break;
-            }
-            
-            i++;
-        }
-
-        return result;
     }
 }

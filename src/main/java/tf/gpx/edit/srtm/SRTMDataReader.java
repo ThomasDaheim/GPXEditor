@@ -104,7 +104,7 @@ class SRTMDataReader implements ISRTMDataReader {
 
             // loop through file and retrieve data
             if (!SRTMDataType.INVALID.equals(srtmType)) {
-                result = new SRTMData(srtmFile.getAbsolutePath(), name, srtmType, cols, rows);
+                result = new SRTMData(srtmFile.getAbsolutePath(), name, srtmType);
                 
                 RandomAccessFile rIn = null; 
                 FileChannel inChannel = null; 

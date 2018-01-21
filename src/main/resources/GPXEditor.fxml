@@ -40,8 +40,6 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu fx:id="recentFilesMenu" mnemonicParsing="false" text="Recent Files" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
               <MenuItem fx:id="exitFileMenu" mnemonicParsing="false" text="Exit">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="X" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -81,6 +79,8 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="SRTM">

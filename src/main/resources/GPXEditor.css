@@ -129,7 +129,7 @@
 }
 .default-color0.chart-series-area-fill {
     /* http://blog.e-zest.com/gradients-in-javafx-2/ */
-    -fx-fill: linear-gradient(to top, #008800 0%, #FFFFFF 90%);
+    -fx-fill: linear-gradient(to top, #058243 0%, #B9DCCA 50%, #FFFFFF 80%);
 }
 
 .track-popup {
@@ -170,7 +170,7 @@
     -fx-translate-x: 5;
 }
 .range-slider .range-bar {
-    -fx-background-color: darkblue;
+    -fx-background-color: #000080;
 }
 
 .small-text {

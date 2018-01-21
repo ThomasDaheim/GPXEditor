@@ -42,10 +42,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -100,9 +103,8 @@ import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataViewer;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.xtrm.DistributionViewer;
 
 /**
@@ -128,7 +130,8 @@ public class GPXEditor implements Initializable {
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
     
-    private ListChangeListener<GPXWaypoint> listenerWaypointSelection;
+    private ListChangeListener<GPXWaypoint> listenergpxTrackXMLSelection;
+    private ChangeListener<TreeItem<GPXLineItem>> listenergpxFileListXMLSelection;
     
     @FXML
     private MenuItem showSRTMDataMenu;
@@ -316,10 +319,6 @@ public class GPXEditor implements Initializable {
 
         initRecentFilesMenu();
 
-        preferencesMenu.setOnAction((ActionEvent event) -> {
-            preferences(event);
-        });
-
         exitFileMenu.setOnAction((ActionEvent event) -> {
             // close checks for changes
             closeAllFiles();
@@ -378,6 +377,10 @@ public class GPXEditor implements Initializable {
         reduceTracksMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         
+        preferencesMenu.setOnAction((ActionEvent event) -> {
+            preferences(event);
+        });
+
         //
         // SRTM
         //
@@ -441,7 +444,7 @@ public class GPXEditor implements Initializable {
         gpxFileListXML.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         // selection change listener to populate the track table
-        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+        listenergpxFileListXMLSelection = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
             if (oldSelection != null) {
                 if (newSelection != null || !oldSelection.equals(newSelection)) {
                     // reset any highlights from checking
@@ -463,7 +466,8 @@ public class GPXEditor implements Initializable {
                 showWaypoints(null);
                 distributionsMenu.setDisable(true);
             }
-        });
+        };
+        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
 
         // cell factories for treetablecols
         idGPXCol.setCellValueFactory(
@@ -615,10 +619,10 @@ public class GPXEditor implements Initializable {
             return row;
         });
         
-        listenerWaypointSelection = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
+        listenergpxTrackXMLSelection = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
             GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
         };
-        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenerWaypointSelection);
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
         // cell factories for tablecols
         idTrackCol.setCellValueFactory(
@@ -743,6 +747,10 @@ public class GPXEditor implements Initializable {
     }
     
     private void showWaypoints(final GPXLineItem lineItem) {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+
         if (lineItem != null) {
             // collect all waypoints from all segments
             gpxTrackXML.setItems(FXCollections.observableList(lineItem.getGPXWaypoints()));
@@ -754,9 +762,11 @@ public class GPXEditor implements Initializable {
             gpxTrackXML.setUserData(null);
         }
         gpxTrackXML.getSelectionModel().clearSelection();
-        
+
         // show map
         GPXTrackviewer.getInstance().setGPXWaypoints(gpxTrackXML.getItems());
+        
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
     private void refreshWayoints() {
@@ -872,7 +882,13 @@ public class GPXEditor implements Initializable {
         
         // remove gpxfile from list
         gpxFileListXML.getRoot().getChildren().remove(getIndexForGPXFile(item.getGPXFile()));
+        
+        // TFE, 20180111: horrible performance for large gpx files if listener on selection is active
+        gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileListXML.getSelectionModel().clearSelection();
+        showWaypoints(null);
+        distributionsMenu.setDisable(true);
+        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
         gpxFileListXML.refresh();
         
         return true;
@@ -1108,7 +1124,7 @@ public class GPXEditor implements Initializable {
     }
 
     private void preferences(final ActionEvent event) {
-        GPXPreferencesUI.getInstance().showPreferencesDialogue();
+        AlgorithmPreferences.getInstance().showPreferencesDialogue();
     }
 
     private void checkTrack(final ActionEvent event) {
@@ -1201,15 +1217,20 @@ public class GPXEditor implements Initializable {
     }
 
     private void assignSRTMHeight(final ActionEvent event) {
-        myWorker.assignSRTMHeight(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
-        );
-        gpxFileListXML.refresh();
-        
-        refreshWayoints();
+//        myWorker.assignSRTMHeight(
+//                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+//                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
+//                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
+//                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
+//        );
+        // TODO: remove ugly hack to pass HostServices
+        if (AssignSRTMHeight.getInstance().assignSRTMHeight(
+                (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),
+                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
+            gpxFileListXML.refresh();
+
+            refreshWayoints();
+        }
     }
     
     private void showSRTMData(final ActionEvent event) {
@@ -1279,7 +1300,7 @@ public class GPXEditor implements Initializable {
     public void selectGPXWaypoints(final List<GPXWaypoint> waypoints) {
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
-        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenerWaypointSelection);
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
             
         gpxTrackXML.getSelectionModel().clearSelection();
         
@@ -1290,6 +1311,6 @@ public class GPXEditor implements Initializable {
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
 
-        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenerWaypointSelection);
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 }

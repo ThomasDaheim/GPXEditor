@@ -37,7 +37,6 @@ import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
@@ -425,7 +424,7 @@ public class DistributionViewer {
                 
                 selectedGPXWaypoints.addAll(wayPoints);
             } else {
-                node.setStyle("-fx-bar-fill: darkblue;");
+                node.setStyle("-fx-bar-fill: #000080;");
             }
             
             i++;

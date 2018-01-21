@@ -178,6 +178,7 @@ class GPXWaypointLayer extends MapLayer {
         
         // add new points with icon and determine new bounding box
         Node prevIcon = null;
+        GPXWaypoint prevWaypoint = null;
         double minLat = Double.MAX_VALUE;
         double maxLat = -Double.MAX_VALUE;
         double minLon = Double.MAX_VALUE;
@@ -201,9 +202,9 @@ class GPXWaypointLayer extends MapLayer {
                 this.getChildren().add(icon);
 
                 Line line = null;
-                // if its not the first point we also want a line
+                // check for segment changes - we don't want lines between different segments
                 // http://stackoverflow.com/questions/30879382/javafx-8-drawing-a-line-between-translated-nodes
-                if (prevIcon != null) {
+                if (prevIcon != null && prevWaypoint != null && prevWaypoint.getGPXTrackSegments().get(0).equals(gpxWaypoint.getGPXTrackSegments().get(0))) {
                     line = new Line();
                     line.setVisible(true);
                     line.setStrokeWidth(1.5);
@@ -220,6 +221,7 @@ class GPXWaypointLayer extends MapLayer {
 
                 myPoints.add(Triple.of(gpxWaypoint, icon, line));
                 prevIcon = icon;
+                prevWaypoint = gpxWaypoint;
 
                 // keep track of bounding box
                 // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
@@ -238,15 +240,6 @@ class GPXWaypointLayer extends MapLayer {
         this.markDirty();
     }
     
-    private Circle blackDot() {
-        final Circle blackDot = new Circle(0.1, Color.BLACK);
-        blackDot.setVisible(false);
-        blackDot.setStroke(Color.BLACK);
-        blackDot.setStrokeWidth(0.1);
-        
-        return blackDot;
-    }
-
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         selectedGPXWaypoints.clear();
         selectedGPXWaypoints.addAll(gpxWaypoints);

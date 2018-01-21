@@ -37,6 +37,7 @@ import tf.gpx.edit.srtm.SRTMDataStore;
  * @author Thomas
  */
 public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
+
     public enum WorkMode {
         CHECK_DATA_FILES,
         ASSIGN_ELEVATION_VALUES
@@ -62,7 +63,11 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
     
     private WorkMode myWorkMode = WorkMode.CHECK_DATA_FILES;
     private AssignMode myAssignMode = AssignMode.ALWAYS;
-    private Set<String> requiredDataFiles;
+    private Set<String> requiredDataFiles = new HashSet<>();
+    
+    private int assignedHeightCount = 0;
+    private int noHeightCount = 0;
+    private int alreadyHeightCount = 0;
             
     private GPXAssignSRTMHeightWorker() {
         super ();
@@ -74,7 +79,6 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
         SRTMDataStore.getInstance().setStorePath(path);
         SRTMDataStore.getInstance().setDataAverage(averageMode);
         myAssignMode = assignMode;
-        clearRequiredDataFiles();
     }
     
     public WorkMode getWorkMode() {
@@ -93,6 +97,18 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
         requiredDataFiles = new HashSet<>();
     }
 
+    public int getAssignedHeightCount() {
+        return assignedHeightCount;
+    }
+
+    public int getNoHeightCount() {
+        return noHeightCount;
+    }
+
+    public int getAlreadyHeightCount() {
+        return alreadyHeightCount;
+    }
+
     @Override
     public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
         if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
@@ -106,7 +122,12 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
 
                 if (elevation != SRTMDataStore.NODATA) {
                     gpxWayPoint.setElevation(elevation);
+                    assignedHeightCount++;
+                } else {
+                    noHeightCount++;
                 }
+            } else {
+                alreadyHeightCount++;
             }
         }
     }
