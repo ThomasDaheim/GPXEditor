@@ -87,6 +87,7 @@
               <items>
                   <MenuItem fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height values" />
                 <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
+                  <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>
             </Menu>
         </menus>

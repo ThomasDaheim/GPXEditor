@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.srtm.SRTMData.SRTMDataKey;
 
 /**
@@ -65,6 +67,8 @@ public class SRTMDataStore {
             return description;
         }
     }
+    
+    public final static String DOWNLOAD_LOCATION = "http://viewfinderpanoramas.org/dem3.html";
     
     private final Map<SRTMDataKey, SRTMData> srtmStore;
     private String myStorePath = "";
@@ -107,12 +111,17 @@ public class SRTMDataStore {
     public SRTMData getDataForName(final String dataName) {
         SRTMData result;
 
+        String name = dataName;
+        if (name.endsWith(HGT_EXT)) {
+            name = FilenameUtils.getBaseName(name);
+        }
+
         // check store for matching data
-        SRTMDataKey dataKey = dataKeyForName(dataName);
+        SRTMDataKey dataKey = dataKeyForName(name);
         
         if (dataKey == null) {
             // if not found: try to read file and add to store
-            result = mySRTMDataReader.readSRTMData(dataName, myStorePath);
+            result = mySRTMDataReader.readSRTMData(name, myStorePath);
             
             if (result != null) {
                 srtmStore.put(result.getKey(), result);

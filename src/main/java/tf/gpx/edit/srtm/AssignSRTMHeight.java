@@ -168,7 +168,7 @@ public class AssignSRTMHeight {
             // open links in the default browser
             // https://stackoverflow.com/questions/36842025/javafx-htmleditor-hyperlinks/36844879#36844879
             if (myHostServices != null) {
-                myHostServices.showDocument("http://viewfinderpanoramas.org/dem3.html");
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
             }
         });
         gridPane.add(download, 0, rowNum, 1, 1);

@@ -104,6 +104,7 @@ import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
+import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.xtrm.DistributionViewer;
 
@@ -113,10 +114,6 @@ import tf.gpx.edit.xtrm.DistributionViewer;
  */
 public class GPXEditor implements Initializable {
     static final Integer[] NO_INTS = new Integer[0];
-    @FXML
-    private MenuItem distributionsMenu;
-    @FXML
-    private MenuItem specialValuesMenu;
 
     public static enum MergeDeleteTracks {
         MERGE,
@@ -234,6 +231,12 @@ public class GPXEditor implements Initializable {
     private AnchorPane mapAnchorPane;
     @FXML
     private AnchorPane profileAnchorPane;
+    @FXML
+    private MenuItem distributionsMenu;
+    @FXML
+    private MenuItem specialValuesMenu;
+    @FXML
+    private MenuItem downloadSRTMDataMenu;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -391,6 +394,12 @@ public class GPXEditor implements Initializable {
                 Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         showSRTMDataMenu.setOnAction((ActionEvent event) -> {
             showSRTMData(event);
+        });
+        downloadSRTMDataMenu.setOnAction((ActionEvent event) -> {
+            final HostServices myHostServices = (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices");
+            if (myHostServices != null) {
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
+            }
         });
     }
     
