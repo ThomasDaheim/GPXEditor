@@ -3,7 +3,7 @@ JavaFX editor for gpx files
 
 And why would anyone need a new gpx file editor?
 
-Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained and updated anymore. While its still doing all its things perfectly it lacks three features:
+Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and updated anymore. While its still doing all its things perfectly it lacks three features:
 
 * batch mode to work on multiple files
 * UI mode to work on multiple tracks / tracksegments
@@ -11,7 +11,7 @@ Unfortunately, my current working horse GPS-Track-Analyse.NET isn't maintained a
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v1.2)
+## Features (v1.3)
 
 Following features are available via UI:
 
@@ -38,6 +38,12 @@ Update v1.2
   * added preferences to set path to SRTM files
   * two options to determine height: a) directly from tile containing waypoint or b) averaging over neighbouring waypoints
 * added SRTM data file viewer that shows 3d model of heights
+
+Update v1.3
+- new dialogue to show distribution of values, select extreme values, delete extreme values
+- show multiple SRTM files in one plot
+- show gpx file with all required & available SRTM files
+- various performance improvements
 
 Track optimization
 
@@ -138,7 +144,9 @@ The tree will be in `build/install`.
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
+* invert tracks
+* save as kml
 * add TestFX UI test cases
+* add task handling for long running activities
 * extend/replace waypoint viewer to enable zooming / changing of views
-* finding extrem points in tracks (distance, speed, acceleration) and options to remove / smooth
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu
