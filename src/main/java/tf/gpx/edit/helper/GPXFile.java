@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 
 /**
  *
@@ -148,7 +147,7 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public String getData(final GPXLineItemData gpxLineItemData) {
+    public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
                 return "File";
@@ -162,10 +161,15 @@ public class GPXFile extends GPXMeasurable {
             case Length:
                 return String.format("%1$.3f", getLength()/1000d);
             case Speed:
-                return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
-            case CumAscent:
+                final double duration = getDuration();
+                if (duration > 0.0) {
+                    return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
+                } else {
+                    return "---";
+                }
+            case CumulativeAscent:
                 return String.format("%1$.2f", getCumulativeAscent());
-            case CumDescent:
+            case CumulativeDescent:
                 return String.format("-%1$.2f", getCumulativeDescent());
             case NoItems:
                 return String.format("%1$d", getGPXTracks().size());

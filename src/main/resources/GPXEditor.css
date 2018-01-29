@@ -28,6 +28,9 @@
     Author     : Thomas
 */
 
+/*
+    treetableview for gpxfiles, tracks, tracksegments
+*/
 /* http://stackoverflow.com/questions/21704598/how-to-show-grid-lines-for-rows-in-treetableview */
 .tree-table-row-cell {
     -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background;
@@ -51,6 +54,15 @@
     -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
     -fx-background-insets: 0, 1, 2;
 }
+
+
+.tree-table-view .table-cell, .tree-table-view .column-header {
+    -fx-padding: 0 5 0 5;
+}
+.table-view .table-cell, .table-view .column-header {
+    -fx-padding: 0 5 0 5;
+}
+
 .gpxFileList .gpxFileRow .text {
   -fx-font-weight: bold;
 }
@@ -76,6 +88,13 @@
   -fx-alignment: CENTER_RIGHT;
 }
 
+/*
+    tableview for gpxwaypoints
+*/
+.table-view .table-cell {
+    -fx-padding: 0 5 0 5;
+}
+
 .hasUnsavedChanges {
     -fx-font-style: italic;
 }
@@ -88,23 +107,72 @@
     -fx-background-color: firebrick;
 }
 
+/*
+    elevation chart
+*/
+.chart-vert-rect { 
+    -fx-border-style: none dotted none none;
+    -fx-border-width: 5px;
+    -fx-border-color: red;    
+    -fx-fill: red;
+    -fx-opacity: 0.1;
+}
 .chart-series-area-line {    
-    -fx-stroke-width: 1px;
+    -fx-stroke-width: 0.5px;
     -fx-effect: null;
 }
 .default-color0.chart-area-symbol {
-    -fx-background-color: red, lightgoldenrodyellow;
+    -fx-background-color: red, red;
 }
 .default-color0.chart-series-area-line {
     -fx-stroke: #000000; 
 }
 .default-color0.chart-series-area-fill {
     /* http://blog.e-zest.com/gradients-in-javafx-2/ */
-    -fx-fill: linear-gradient(to top, #00AA00, #FFFFFF);
+    -fx-fill: linear-gradient(to top, #058243 0%, #B9DCCA 50%, #FFFFFF 80%);
 }
 
 .track-popup {
     -fx-font-size: 12;
     -fx-font-weight: bold;
     -fx-text-fill: black;
+}
+
+/*
+    bin distribution chart
+*/
+.unpad-chart {
+    -fx-padding: 0px;
+}
+.chart-content {
+    -fx-padding: 0px;
+}
+.chart-plot-background {
+    -fx-background-color: white;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: white;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: white;
+}
+
+/*
+    bin distribution min / max slider
+*/
+/* https://stackoverflow.com/questions/28721542/javafx-controlsfx-css-for-rangeslider */
+.range-slider .low-thumb {
+    -fx-shape: "M2.998-0.07L3-1.499l2.998,4L3,6.501l-0.002-1.43l1.976-2.57L2.998-0.07z";
+    -fx-translate-x: -5;
+}
+.range-slider .high-thumb {
+    -fx-shape: "M5.997,5.072L5.995,6.501l-2.998-4l2.998-4l0.002,1.43l-1.976,2.57L5.997,5.072z";
+    -fx-translate-x: 5;
+}
+.range-slider .range-bar {
+    -fx-background-color: #000080;
+}
+
+.small-text {
+    -fx-font-size: 1.0em;
 }

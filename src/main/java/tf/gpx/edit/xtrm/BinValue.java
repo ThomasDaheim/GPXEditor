@@ -23,34 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.srtm.ISRTMDataReader;
-import tf.gpx.edit.srtm.SRTMData;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 /**
- *
- * @author Thomas
+ * Holder for values of a BinValueDistribution.
+ * Besides the number of the bin and the count in it
+ * it also stores a list of objects in its bin.
+ * 
+ * @author thomas
  */
-public class TestSRTMDataReader implements ISRTMDataReader {
-
-    @Override
-    public boolean checkSRTMDataFile(String name, String path) {
-        return true;
-    }
-
-    @Override
-    public SRTMData readSRTMData(String name, String path) {
-        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-        final SRTMData result = new SRTMData(name, name, dataType);
-
-        for (int row = 0; row < dataType.getDataCount(); row++) { 
-            for (int col = 0; col < dataType.getDataCount(); col++) { 
-                result.setValue(row, col, (short) (row + col)); 
-            } 
-        } 
-        
-        return result;
+public class BinValue extends MutablePair<Double, Double> {
+    private final List<Object> binObjects = new ArrayList<>();
+    
+    public BinValue(Double key, Double value) {
+        super(key, value);
     }
     
+    public final List<Object> getBinObjects() {
+        return binObjects;
+    }
 }

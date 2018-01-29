@@ -23,34 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.srtm.ISRTMDataReader;
-import tf.gpx.edit.srtm.SRTMData;
+import java.util.List;
 
 /**
- *
- * @author Thomas
+ * Abstract base for a list of values of type T and a method that returns a double value for each T.
+ * Used as generic input for BinValueDistribution.
+ * 
+ * @author thomas
+ * @param <T>
  */
-public class TestSRTMDataReader implements ISRTMDataReader {
-
-    @Override
-    public boolean checkSRTMDataFile(String name, String path) {
-        return true;
-    }
-
-    @Override
-    public SRTMData readSRTMData(String name, String path) {
-        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-        final SRTMData result = new SRTMData(name, name, dataType);
-
-        for (int row = 0; row < dataType.getDataCount(); row++) { 
-            for (int col = 0; col < dataType.getDataCount(); col++) { 
-                result.setValue(row, col, (short) (row + col)); 
-            } 
-        } 
-        
-        return result;
+public abstract class ValueDistribution<T> {
+    private List<T> myValues;
+    
+    public List<T> getValues() {
+        return myValues;
     }
     
+    public void setValues(final List<T> values) {
+        myValues = values;
+    }
+    
+    public abstract double getValueAsDouble(final T value);
 }

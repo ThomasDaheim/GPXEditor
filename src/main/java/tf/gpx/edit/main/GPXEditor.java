@@ -42,10 +42,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -100,9 +103,10 @@ import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.gpx.edit.xtrm.DistributionViewer;
 
 /**
  *
@@ -122,6 +126,9 @@ public class GPXEditor implements Initializable {
     }
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
+    
+    private ListChangeListener<GPXWaypoint> listenergpxTrackXMLSelection;
+    private ChangeListener<TreeItem<GPXLineItem>> listenergpxFileListXMLSelection;
     
     @FXML
     private MenuItem showSRTMDataMenu;
@@ -224,6 +231,12 @@ public class GPXEditor implements Initializable {
     private AnchorPane mapAnchorPane;
     @FXML
     private AnchorPane profileAnchorPane;
+    @FXML
+    private MenuItem distributionsMenu;
+    @FXML
+    private MenuItem specialValuesMenu;
+    @FXML
+    private MenuItem downloadSRTMDataMenu;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -285,6 +298,9 @@ public class GPXEditor implements Initializable {
         // setup the menu
         menuBar.prefWidthProperty().bind(borderPane.widthProperty());
         
+        //
+        // File
+        //
         addFileMenu.setOnAction((ActionEvent event) -> {
             addFileAction(event);
         });
@@ -306,10 +322,6 @@ public class GPXEditor implements Initializable {
 
         initRecentFilesMenu();
 
-        preferencesMenu.setOnAction((ActionEvent event) -> {
-            preferences(event);
-        });
-
         exitFileMenu.setOnAction((ActionEvent event) -> {
             // close checks for changes
             closeAllFiles();
@@ -317,6 +329,9 @@ public class GPXEditor implements Initializable {
             Platform.exit();
         });
 
+        //
+        // Structure
+        //
         mergeFilesMenu.setOnAction((ActionEvent event) -> {
             mergeFiles(event);
         });
@@ -333,22 +348,58 @@ public class GPXEditor implements Initializable {
         deleteTracksMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         
+        //
+        // Values
+        //
+        distributionsMenu.setOnAction((ActionEvent event) -> {
+            showDistributions(event);
+        });
+        // enable / disable done in change listener of gpxFileListXML since only meaningful for single track segment
+        distributionsMenu.setDisable(true);
+        specialValuesMenu.setOnAction((ActionEvent event) -> {
+        });
+        specialValuesMenu.disableProperty().bind(
+                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+        
+        //
+        // Algorithms
+        //
         checkTrackMenu.setOnAction((ActionEvent event) -> {
             checkTrack(event);
         });
+        checkTrackMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         fixTracksMenu.setOnAction((ActionEvent event) -> {
             fixGPXFiles(event);
         });
+        fixTracksMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         reduceTracksMenu.setOnAction((ActionEvent event) -> {
             reduceGPXFiles(event);
         });
+        reduceTracksMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         
+        preferencesMenu.setOnAction((ActionEvent event) -> {
+            preferences(event);
+        });
+
+        //
+        // SRTM
+        //
         assignSRTMheightsMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event);
         });
-        
+        assignSRTMheightsMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         showSRTMDataMenu.setOnAction((ActionEvent event) -> {
             showSRTMData(event);
+        });
+        downloadSRTMDataMenu.setOnAction((ActionEvent event) -> {
+            final HostServices myHostServices = (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices");
+            if (myHostServices != null) {
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
+            }
         });
     }
     
@@ -402,7 +453,7 @@ public class GPXEditor implements Initializable {
         gpxFileListXML.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         // selection change listener to populate the track table
-        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+        listenergpxFileListXMLSelection = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
             if (oldSelection != null) {
                 if (newSelection != null || !oldSelection.equals(newSelection)) {
                     // reset any highlights from checking
@@ -414,10 +465,18 @@ public class GPXEditor implements Initializable {
             }
             if (newSelection != null) {
                 showWaypoints(newSelection.getValue());
+                
+                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
+                    distributionsMenu.setDisable(false);
+                } else {
+                    distributionsMenu.setDisable(true);
+                }
             } else {
                 showWaypoints(null);
+                distributionsMenu.setDisable(true);
             }
-        });
+        };
+        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
 
         // cell factories for treetablecols
         idGPXCol.setCellValueFactory(
@@ -425,11 +484,11 @@ public class GPXEditor implements Initializable {
         idGPXCol.setEditable(false);
         
         typeGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.Type)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
         typeGPXCol.setEditable(false);
         
         nameGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.Name)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Name)));
         // TF, 20170626: track segments don't have a name attribute
         nameGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
             @Override
@@ -475,27 +534,27 @@ public class GPXEditor implements Initializable {
         startGPXCol.setEditable(false);
         
         durationGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.Duration)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
         durationGPXCol.setEditable(false);
         
         lengthGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.Length)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
         lengthGPXCol.setEditable(false);
         
         speedGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.Speed)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
         speedGPXCol.setEditable(false);
         
         cumAccGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.CumAscent)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
         cumAccGPXCol.setEditable(false);
         
         cumDescGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.CumDescent)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
         cumDescGPXCol.setEditable(false);
         
         noItemsGPXCol.setCellValueFactory(
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getData(GPXLineItem.GPXLineItemData.NoItems)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
         noItemsGPXCol.setEditable(false);
         
         // left pane, bottom anchor
@@ -508,6 +567,8 @@ public class GPXEditor implements Initializable {
         
         gpxTrackXML.setPlaceholder(new Label(""));
         gpxTrackXML.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        // automatically adjust width of columns depending on their content
+        gpxTrackXML.setColumnResizePolicy((param) -> true );        
         
         gpxTrackXML.setRowFactory((TableView<GPXWaypoint> tableView) -> {
             final TableRow<GPXWaypoint> row = new TableRow<GPXWaypoint>() {
@@ -567,10 +628,10 @@ public class GPXEditor implements Initializable {
             return row;
         });
         
-        gpxTrackXML.getSelectionModel().getSelectedItems().addListener((ListChangeListener.Change<? extends GPXWaypoint> change) -> {
-            // update map
+        listenergpxTrackXMLSelection = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
             GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
-        });
+        };
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
         // cell factories for tablecols
         idTrackCol.setCellValueFactory(
@@ -578,7 +639,7 @@ public class GPXEditor implements Initializable {
         idTrackCol.setEditable(false);
         
         posTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Position)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Position)));
         posTrackCol.setEditable(false);
         
         dateTrackCol.setCellValueFactory(
@@ -597,27 +658,27 @@ public class GPXEditor implements Initializable {
         dateTrackCol.setEditable(false);
         
         durationTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Duration)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
         durationTrackCol.setEditable(false);
         
         lengthTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.DistToPrev)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious)));
         lengthTrackCol.setEditable(false);
         
         speedTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Speed)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
         speedTrackCol.setEditable(false);
         
         heightTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Elevation)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Elevation)));
         heightTrackCol.setEditable(false);
         
         heightDiffTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.ElevationDiffToPrev)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.ElevationDifferenceToPrevious)));
         heightDiffTrackCol.setEditable(false);
         
         slopeTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getData(GPXLineItem.GPXLineItemData.Slope)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Slope)));
         slopeTrackCol.setEditable(false);
         
         // right pane: resize with its anchor
@@ -695,6 +756,10 @@ public class GPXEditor implements Initializable {
     }
     
     private void showWaypoints(final GPXLineItem lineItem) {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+
         if (lineItem != null) {
             // collect all waypoints from all segments
             gpxTrackXML.setItems(FXCollections.observableList(lineItem.getGPXWaypoints()));
@@ -705,9 +770,12 @@ public class GPXEditor implements Initializable {
             gpxTrackXML.setItems(FXCollections.observableList(new ArrayList<>()));
             gpxTrackXML.setUserData(null);
         }
-        
+        gpxTrackXML.getSelectionModel().clearSelection();
+
         // show map
         GPXTrackviewer.getInstance().setGPXWaypoints(gpxTrackXML.getItems());
+        
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
     private void refreshWayoints() {
@@ -792,7 +860,7 @@ public class GPXEditor implements Initializable {
         return result;
     }
 
-    public Boolean closeAllFiles() {
+    private Boolean closeAllFiles() {
         Boolean result = true;
         
         // check fo changes that need saving by closing all files
@@ -823,7 +891,13 @@ public class GPXEditor implements Initializable {
         
         // remove gpxfile from list
         gpxFileListXML.getRoot().getChildren().remove(getIndexForGPXFile(item.getGPXFile()));
+        
+        // TFE, 20180111: horrible performance for large gpx files if listener on selection is active
+        gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileListXML.getSelectionModel().clearSelection();
+        showWaypoints(null);
+        distributionsMenu.setDisable(true);
+        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
         gpxFileListXML.refresh();
         
         return true;
@@ -1059,7 +1133,7 @@ public class GPXEditor implements Initializable {
     }
 
     private void preferences(final ActionEvent event) {
-        GPXPreferencesUI.getInstance().showPreferencesDialogue();
+        AlgorithmPreferences.getInstance().showPreferencesDialogue();
     }
 
     private void checkTrack(final ActionEvent event) {
@@ -1121,20 +1195,54 @@ public class GPXEditor implements Initializable {
         
         refreshWayoints();
     }
-
-    private void assignSRTMHeight(ActionEvent event) {
-        myWorker.assignSRTMHeight(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
-        );
-        gpxFileListXML.refresh();
+    
+    private void showDistributions(final ActionEvent event) {
+        // works only for one track segment and its waypoints
+        List<GPXWaypoint> waypoints;
+        GPXLineItem item = gpxFileList.getSelectionModel().getSelectedItem().getValue();
         
-        refreshWayoints();
+        switch (item.getType()) {
+            case GPXFile:
+                waypoints = item.getGPXTrackSegments().get(0).getGPXWaypoints();
+                break;
+            case GPXTrack:
+                waypoints = item.getGPXTrackSegments().get(0).getGPXWaypoints();
+                break;
+            case GPXTrackSegment:
+                waypoints = item.getGPXWaypoints();
+                break;
+            case GPXWaypoint:
+                waypoints = item.getGPXWaypoints();
+                break;
+            default:
+                waypoints = new ArrayList<>();
+                break;
+        }
+        
+        DistributionViewer.getInstance().setCallback(this);
+        if (DistributionViewer.getInstance().showDistributions(waypoints)) {
+            showWaypoints(item);
+        }
+    }
+
+    private void assignSRTMHeight(final ActionEvent event) {
+//        myWorker.assignSRTMHeight(
+//                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+//                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
+//                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
+//                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
+//        );
+        // TODO: remove ugly hack to pass HostServices
+        if (AssignSRTMHeight.getInstance().assignSRTMHeight(
+                (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),
+                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
+            gpxFileListXML.refresh();
+
+            refreshWayoints();
+        }
     }
     
-    private void showSRTMData(ActionEvent event) {
+    private void showSRTMData(final ActionEvent event) {
         SRTMDataViewer.getInstance().showSRTMData();
     }
     
@@ -1193,5 +1301,25 @@ public class GPXEditor implements Initializable {
         final int index = getIndexForGPXFile(gpxFile);
         gpxFileListXML.getRoot().getChildren().remove(index);
         gpxFileListXML.getRoot().getChildren().add(index, newTreeItem);
+    }
+    
+    //
+    // support callback functions for other classes
+    // 
+    public void selectGPXWaypoints(final List<GPXWaypoint> waypoints) {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+            
+        gpxTrackXML.getSelectionModel().clearSelection();
+        
+        // use selectIndices to select all at once - otherwise its a performance nightmare...
+        for (GPXWaypoint waypoint : waypoints) {
+            gpxTrackXML.getSelectionModel().select(waypoint);
+        }
+        
+        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 }

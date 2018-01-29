@@ -36,4 +36,8 @@
       <task-jvm-args/>
     </task>
   </common-tasks>
+  <license-header>
+    <name>default</name>
+    <property name="organization">Daheim</property>
+  </license-header>
 </gradle-project-properties>

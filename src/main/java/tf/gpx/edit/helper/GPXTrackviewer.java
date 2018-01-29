@@ -32,25 +32,29 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import tf.gpx.edit.general.HoveredNode;
+
 
 /**
  * Wrapper for gluon map to show selected waypoints
@@ -62,9 +66,9 @@ public class GPXTrackviewer {
     public final static double MAX_DATAPOINTS = 1000d;
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
-    
+
     private final MapView myMapView;
-    private final AreaChart myAreaChart;
+    private final GPXWaypointChart myGPXWaypointChart;
     private final GPXWaypointLayer myGPXWaypointLayer;
 
     private GPXTrackviewer() {
@@ -75,12 +79,10 @@ public class GPXTrackviewer {
         myMapView.setVisible(false);
         myMapView.setCursor(Cursor.CROSSHAIR);
 
-        final NumberAxis xAxis = new NumberAxis();
-        final NumberAxis yAxis = new NumberAxis();
-        myAreaChart = new AreaChart(xAxis, yAxis);
-        myAreaChart.setLegendVisible(false);
-        myAreaChart.setVisible(false);
-        myAreaChart.setCursor(Cursor.CROSSHAIR);
+        myGPXWaypointChart = new GPXWaypointChart();
+        myGPXWaypointChart.setLegendVisible(false);
+        myGPXWaypointChart.setVisible(false);
+        myGPXWaypointChart.setCursor(Cursor.CROSSHAIR);
     }
     
     public static GPXTrackviewer getInstance() {
@@ -92,47 +94,26 @@ public class GPXTrackviewer {
     }
     
     public XYChart getChart() {
-        return myAreaChart;
+        return myGPXWaypointChart;
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        final double ratio = GPXTrackviewer.MAX_DATAPOINTS / gpxWaypoints.size();
-                
         // show in gluon map
         myMapView.removeLayer(myGPXWaypointLayer);
         myGPXWaypointLayer.setGPXWaypoints(gpxWaypoints);
         myMapView.addLayer(myGPXWaypointLayer);
         myMapView.setCenter(myGPXWaypointLayer.getCenter());
         myMapView.setZoom(myGPXWaypointLayer.getZoom());
-        
         myMapView.setVisible(!gpxWaypoints.isEmpty());
 
-        myAreaChart.getData().clear();
-        double distance = 0d;
-        double count = 0d, i = 0d;
-        XYChart.Series series = new XYChart.Series();
-        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            i++;
-            if (i * ratio >= count) {
-                XYChart.Data data = new XYChart.Data(distance, gpxWaypoint.getElevation());
-                // show elevation data on hover
-                // https://gist.github.com/jewelsea/4681797
-                data.setNode(
-                    new HoveredNode(gpxWaypoint.getElevation())
-                );
-                series.getData().add(data);
-                
-                count++;
-            }
-
-            distance += gpxWaypoint.getDistance();
-        }
-        myAreaChart.getData().add(series);
-        myAreaChart.setVisible(!gpxWaypoints.isEmpty());
+        // show elevation chart
+        myGPXWaypointChart.setGPXWaypoints(gpxWaypoints);
+        myGPXWaypointChart.setVisible(!gpxWaypoints.isEmpty());
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         myGPXWaypointLayer.setSelectedGPXWaypoints(gpxWaypoints);
+        myGPXWaypointChart.setSelectedGPXWaypoints(gpxWaypoints);
     }
 }
 
@@ -144,6 +125,8 @@ class GPXWaypointLayer extends MapLayer {
 
     public GPXWaypointLayer() {
         super();
+        setCache(true);
+        setCacheHint(CacheHint.SPEED);
     }
     
     // https://stackoverflow.com/a/42759066
@@ -195,6 +178,7 @@ class GPXWaypointLayer extends MapLayer {
         
         // add new points with icon and determine new bounding box
         Node prevIcon = null;
+        GPXWaypoint prevWaypoint = null;
         double minLat = Double.MAX_VALUE;
         double maxLat = -Double.MAX_VALUE;
         double minLon = Double.MAX_VALUE;
@@ -204,12 +188,12 @@ class GPXWaypointLayer extends MapLayer {
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             i++;
             if (i * ratio >= count) {
-                final Circle icon = new Circle(3.5, Color.LIGHTGOLDENRODYELLOW);
+                final Circle icon = new Circle(3, Color.LIGHTGOLDENRODYELLOW);
                 icon.setVisible(true);
                 icon.setStroke(Color.RED);
-                icon.setStrokeWidth(1);
+                icon.setStrokeWidth(0.5);
                 
-                final Tooltip tooltip = new Tooltip(gpxWaypoint.getData(GPXLineItem.GPXLineItemData.Position));
+                final Tooltip tooltip = new Tooltip(gpxWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position));
                 tooltip.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
                 GPXWaypointLayer.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                 
@@ -218,13 +202,13 @@ class GPXWaypointLayer extends MapLayer {
                 this.getChildren().add(icon);
 
                 Line line = null;
-                // if its not the first point we also want a line
+                // check for segment changes - we don't want lines between different segments
                 // http://stackoverflow.com/questions/30879382/javafx-8-drawing-a-line-between-translated-nodes
-                if (prevIcon != null) {
+                if (prevIcon != null && prevWaypoint != null && prevWaypoint.getGPXTrackSegments().get(0).equals(gpxWaypoint.getGPXTrackSegments().get(0))) {
                     line = new Line();
                     line.setVisible(true);
-                    line.setStrokeWidth(2);
-                    line.setStroke(Color.BLUE);
+                    line.setStrokeWidth(1.5);
+                    line.setStroke(Color.DARKBLUE);
 
                     // bind ends of line:
                     line.startXProperty().bind(prevIcon.layoutXProperty().add(prevIcon.translateXProperty()));
@@ -237,6 +221,7 @@ class GPXWaypointLayer extends MapLayer {
 
                 myPoints.add(Triple.of(gpxWaypoint, icon, line));
                 prevIcon = icon;
+                prevWaypoint = gpxWaypoint;
 
                 // keep track of bounding box
                 // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
@@ -255,15 +240,6 @@ class GPXWaypointLayer extends MapLayer {
         this.markDirty();
     }
     
-    private Circle blackDot() {
-        final Circle blackDot = new Circle(0.1, Color.BLACK);
-        blackDot.setVisible(false);
-        blackDot.setStroke(Color.BLACK);
-        blackDot.setStrokeWidth(0.1);
-        
-        return blackDot;
-    }
-
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         selectedGPXWaypoints.clear();
         selectedGPXWaypoints.addAll(gpxWaypoints);
@@ -275,7 +251,6 @@ class GPXWaypointLayer extends MapLayer {
     }
 
     public double getZoom() {
-        // TODO: calculate zooom level
         // http://stackoverflow.com/questions/4266754/how-to-calculate-google-maps-zoom-level-for-a-bounding-box-in-java
         int zoomLevel;
         
@@ -304,10 +279,10 @@ class GPXWaypointLayer extends MapLayer {
             if (line != null) {
                 if (selected && prevSelected) {
                     // if selected AND previously selected => red line
-                    line.setStrokeWidth(3);
+                    line.setStrokeWidth(2);
                     line.setStroke(Color.RED);
                 } else {
-                    line.setStrokeWidth(2);
+                    line.setStrokeWidth(1);
                     line.setStroke(Color.BLUE);
                 }
             }
@@ -321,30 +296,131 @@ class GPXWaypointLayer extends MapLayer {
     }
 }
 
-/** a node which displays a value on hover, but is otherwise empty */
-class HoveredNode extends StackPane {
-    HoveredNode(final double value) {
-        setPrefSize(6, 6);
-        setAlignment(Pos.TOP_LEFT);
+// inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+class GPXWaypointChart<X,Y> extends AreaChart {
+    private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
+    private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedGPXWaypoints;
+    
+    private boolean noLayout = false;
 
-        final Label label = createDataLabel(value);
+    public GPXWaypointChart() {
+        super(new NumberAxis(), new NumberAxis());
+        
+        ((NumberAxis) getXAxis()).setLowerBound(0.0);
+        ((NumberAxis) getXAxis()).setMinorTickVisible(false);
+        ((NumberAxis) getXAxis()).setTickUnit(1);
+        getXAxis().setAutoRanging(false);
+        
+        setAnimated(false);
+        setCache(true);
+        setCacheShape(true);
+        setCacheHint(CacheHint.SPEED);
 
-        setOnMouseEntered((MouseEvent mouseEvent) -> {
-            getChildren().setAll(label);
-            toFront();
-        });
-        setOnMouseExited((MouseEvent mouseEvent) -> {
-            getChildren().clear();
-        });
+        selectedGPXWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
+        selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
+    }
+    
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        setVisible(false);
+        myPoints.clear();
+        getData().clear();
+        
+        double distance = 0d;
+        final List<XYChart.Data> dataList = new ArrayList<>();
+        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+            distance += gpxWaypoint.getDistance();
+            XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
+            // show elevation data on hover
+            // https://gist.github.com/jewelsea/4681797
+            data.setNode(
+                new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()))
+            );
+            dataList.add(data);
+            myPoints.add(Pair.of(gpxWaypoint, distance));
+        }
+        
+        // calculate scaling for ticks so their number is smaller than 25
+        double tickUnit = 1.0;
+        if (distance / 1000.0 > 24.9) {
+            tickUnit = 2.0;
+        }
+        if (distance / 1000.0 > 49.9) {
+            tickUnit = 5.0;
+        }
+        if (distance / 1000.0 > 499.9) {
+            tickUnit = 50.0;
+        }
+        if (distance / 1000.0 > 4999.9) {
+            tickUnit = 500.0;
+        }
+        ((NumberAxis) getXAxis()).setTickUnit(tickUnit);
+        
+        XYChart.Series series = new XYChart.Series();
+        series.getData().addAll(dataList);
+        getData().add(series);
+        ((NumberAxis) getXAxis()).setUpperBound(distance / 1000.0);
     }
 
-    private Label createDataLabel(final double value) {
-        final Label label = new Label(String.format( "%.2f", value ));
-        label.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        noLayout = true;
 
-        label.setTextFill(Color.DARKGRAY);
-        label.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
+        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
+            getPlotChildren().remove(waypoint.getRight());
+        }
+        selectedGPXWaypoints.clear();
         
-        return label;
+        final List<Rectangle> rectangles = new ArrayList<>();
+        for (GPXWaypoint waypoint: gpxWaypoints) {
+            // find matching point from myPoints
+            final Pair<GPXWaypoint, Double> point = myPoints.stream()
+                .filter(x -> x.getLeft().equals(waypoint))
+                .findFirst().orElse(null);
+            
+            assert point != null;
+            
+            Rectangle rectangle = new Rectangle(0,0,0,0);
+            rectangle.getStyleClass().add("chart-vert-rect");
+            rectangles.add(rectangle);
+            selectedGPXWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
+        }
+
+        if (rectangles.size() > 0) {
+            getPlotChildren().addAll(rectangles);
+        }
+
+        noLayout = false;
+        layoutPlotChildren();
+    }
+
+    @Override
+    protected void layoutPlotChildren() {
+        if (noLayout) return;
+        
+        super.layoutPlotChildren();
+        
+        Pair<GPXWaypoint, Double> prevPair = null;
+        boolean prevSelected = false;
+        for (Pair<GPXWaypoint, Double> pair : myPoints) {
+            final GPXWaypoint point = pair.getLeft();
+            
+            final Triple<GPXWaypoint, Double, Node> selectedPoint = selectedGPXWaypoints.stream()
+                    .filter(x -> x.getLeft().equals(point))
+                    .findFirst().orElse(null);
+            
+            if (selectedPoint != null) {
+                Rectangle rect = (Rectangle) selectedPoint.getRight();
+                if (prevPair != null) {
+                    rect.setWidth(getXAxis().getDisplayPosition(selectedPoint.getMiddle() / 1000.0) - getXAxis().getDisplayPosition(prevPair.getRight() / 1000.0));
+                } else {
+                    rect.setWidth(1);
+                }
+                rect.setX(getXAxis().getDisplayPosition(selectedPoint.getMiddle() / 1000.0) - rect.getWidth());
+                rect.setY(0d);
+                rect.setHeight(getBoundsInLocal().getHeight());
+            }
+            
+            prevSelected = (selectedPoint != null);
+            prevPair = pair;
+        }
     }
 }

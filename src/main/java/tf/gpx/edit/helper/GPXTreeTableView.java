@@ -46,6 +46,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.srtm.SRTMDataViewer;
 
 /**
  *
@@ -133,6 +134,15 @@ public class GPXTreeTableView {
                             mergeFilesContextMenu.disableProperty().bind(
                                 Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 2));
                             fileMenu.getItems().add(mergeFilesContextMenu);
+
+                            fileMenu.getItems().add(new SeparatorMenuItem());
+
+                            final MenuItem showFile = new MenuItem("Show with SRTM");
+                            showFile.setOnAction((ActionEvent event) -> {
+                                // show gpxfile with srtm data
+                                SRTMDataViewer.getInstance().showGPXFileWithSRTMData(item.getGPXFile());
+                            });
+                            fileMenu.getItems().add(showFile);
 
                             // Set context menu on row, but use a binding to make it only show for non-empty rows:
                             contextMenuProperty().bind(

@@ -47,7 +47,6 @@ public class EarthGeometry {
     /**
      * Simplify a track by removing points, using the requested algorithm.
      * @param track points of the track
-     * @param algorithm What EarthGeometry.Algorithm to use
      * @param parameter tolerance, in meters
      * @return the points of the simplified track
      */
@@ -323,13 +322,13 @@ public class EarthGeometry {
      * @return the distanceGPXWaypoints, in meters
      */
     public static double distanceGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         // delegate to waypoint function
         return distanceWaypoints(p1.getWaypoint(), p2.getWaypoint());
     }
     public static double distanceWaypoints(final Waypoint p1, final Waypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         final double lat1 = Math.toRadians(p1.getLatitude());
         final double lat2 = Math.toRadians(p2.getLatitude());
@@ -360,19 +359,19 @@ public class EarthGeometry {
      *     bearing(p1, p2) = 156.2°
      */
     public static double bearingGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         // delegate to waypoint function
         return bearingWaypoints(p1.getWaypoint(), p2.getWaypoint());
     }
     public static double bearingWaypoints(final Waypoint p1, final Waypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         // map angle on 0 ... 360
         return (angleBetweenWaypoints(p1, p2) + 360.0) % 360.0;
     }
     private static double angleBetweenWaypoints(final Waypoint p1, final Waypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         final double lat1 = Math.toRadians(p1.getLatitude());
         final double lat2 = Math.toRadians(p2.getLatitude());
@@ -413,6 +412,7 @@ public class EarthGeometry {
         final double distAB = distanceWaypoints(a, b);
         final double distPA = distanceWaypoints(p, a);
         final double distPB = distanceWaypoints(p, b);
+        if ((distAB == 0) || (distPA == 0) || (distPB == 0)) return 0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;
 
@@ -460,6 +460,8 @@ public class EarthGeometry {
         final double distAB = distanceWaypoints(a, b);
         final double distAC = distanceWaypoints(a, c);
         final double distBC = distanceWaypoints(b, c);
+        if ((distAB == 0) || (distAC == 0) || (distBC == 0)) return 0;
+
         final double s = (distAB + distAC + distBC) / 2.0;
         
         if (!useSphericalGeometry(distAB, distAC, distBC, accuracy)) {
@@ -527,7 +529,7 @@ public class EarthGeometry {
     }
     
     public static long duration(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         if (p1.getWaypoint().getTime() != null && p2.getWaypoint().getTime() != null) {
             return p1.getWaypoint().getTime().getTime() - p2.getWaypoint().getTime().getTime();
@@ -537,7 +539,7 @@ public class EarthGeometry {
     }
     
     public static double speed(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         final double diffSeconds = duration(p1, p2) / 1000.0;
         final double diffMeters = distanceGPXWaypoints(p1, p2);
@@ -545,13 +547,13 @@ public class EarthGeometry {
     }
     
     public static double elevationDiff(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         return p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation();
     }
     
     public static double slope(final GPXWaypoint p1, final GPXWaypoint p2) {
-        if (p2 == null) return 0;
+        if ((p1 == null) || (p2 == null)) return 0;
         
         return (p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation()) /
                 distanceGPXWaypoints(p1, p2) * 100.0;

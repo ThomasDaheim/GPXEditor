@@ -50,7 +50,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
@@ -278,7 +277,7 @@ public class GPXEditorWorker {
     }
 
     public final List<GPXTrackSegment> mergeSelectedGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
-        System.out.println("mergeSelectedGPXTrackSegments");
+        //System.out.println("mergeSelectedGPXTrackSegments");
         // 1. remove all tracksegments that we should merge from the track list
         gpxTrackSegments.removeAll(gpxTrackSegmentsToMerge);
 

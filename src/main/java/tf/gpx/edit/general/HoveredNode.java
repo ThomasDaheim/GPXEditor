@@ -23,34 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.general;
 
-import tf.gpx.edit.srtm.ISRTMDataReader;
-import tf.gpx.edit.srtm.SRTMData;
+import javafx.geometry.Pos;
+import javafx.scene.DepthTest;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 
 /**
- *
- * @author Thomas
+ * A node which displays a value on hover, but is otherwise empty
+ * 
+ * @author thomas
  */
-public class TestSRTMDataReader implements ISRTMDataReader {
+public class HoveredNode extends StackPane {
+    public HoveredNode(final String value) {
+        setPrefSize(6, 6);
+        setAlignment(Pos.TOP_CENTER);
 
-    @Override
-    public boolean checkSRTMDataFile(String name, String path) {
-        return true;
+        final Label label = createDataLabel(value);
+
+        setOnMouseEntered((MouseEvent mouseEvent) -> {
+            getChildren().setAll(label);
+            toFront();
+        });
+        setOnMouseExited((MouseEvent mouseEvent) -> {
+            getChildren().clear();
+        });
     }
 
-    @Override
-    public SRTMData readSRTMData(String name, String path) {
-        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-        final SRTMData result = new SRTMData(name, name, dataType);
+    private Label createDataLabel(final String value) {
+        final Label label = new Label(value);
+        label.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
 
-        for (int row = 0; row < dataType.getDataCount(); row++) { 
-            for (int col = 0; col < dataType.getDataCount(); col++) { 
-                result.setValue(row, col, (short) (row + col)); 
-            } 
-        } 
+        label.setTextFill(Color.DARKGRAY);
+        label.setMinSize(Label.USE_PREF_SIZE, Label.USE_PREF_SIZE);
         
-        return result;
+        return label;
     }
-    
 }

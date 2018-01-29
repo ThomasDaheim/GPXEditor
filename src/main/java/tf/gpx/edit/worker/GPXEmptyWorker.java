@@ -29,7 +29,7 @@ import tf.gpx.edit.helper.GPXFile;
 import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.interfaces.IGPXLineItemVisitor;
+import tf.gpx.edit.helper.IGPXLineItemVisitor;
 
 /**
  *

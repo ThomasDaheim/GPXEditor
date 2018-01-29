@@ -23,34 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.xtrm;
 
-import tf.gpx.edit.srtm.ISRTMDataReader;
-import tf.gpx.edit.srtm.SRTMData;
+import tf.gpx.edit.helper.GPXLineItem;
+import tf.gpx.edit.helper.GPXWaypoint;
 
 /**
- *
- * @author Thomas
+ * Distribution class for binning GPXWaypoint data.
+ * Based on the GPXLineItemData the corresponding value is used for binning.
+ * 
+ * @author thomas
  */
-public class TestSRTMDataReader implements ISRTMDataReader {
+public class GPXWaypointDistribution extends ValueDistribution<GPXWaypoint> {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private static final GPXWaypointDistribution INSTANCE = new GPXWaypointDistribution();
+    
+    private GPXLineItem.GPXLineItemData myData;
 
-    @Override
-    public boolean checkSRTMDataFile(String name, String path) {
-        return true;
+    private GPXWaypointDistribution() {
     }
 
-    @Override
-    public SRTMData readSRTMData(String name, String path) {
-        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-        final SRTMData result = new SRTMData(name, name, dataType);
-
-        for (int row = 0; row < dataType.getDataCount(); row++) { 
-            for (int col = 0; col < dataType.getDataCount(); col++) { 
-                result.setValue(row, col, (short) (row + col)); 
-            } 
-        } 
-        
-        return result;
+    public static GPXWaypointDistribution getInstance() {
+        return INSTANCE;
     }
     
+    public GPXLineItem.GPXLineItemData getGPXLineItemData() {
+        return myData;
+    }
+    
+    public void setGPXLineItemData(final GPXLineItem.GPXLineItemData gpxLineItemData) {
+        myData = gpxLineItemData;
+    }
+
+    @Override
+    public double getValueAsDouble(GPXWaypoint value) {
+        assert myData != null;
+        
+        return value.getDataAsDouble(myData);
+    }
 }
