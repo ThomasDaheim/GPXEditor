@@ -11,7 +11,7 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v1.3)
+## Features (v1.4)
 
 Following features are available via UI:
 
@@ -44,6 +44,11 @@ Update v1.3
 - show multiple SRTM files in one plot
 - show gpx file with all required & available SRTM files
 - various performance improvements
+
+Update v1.4
+- invert marked tracks
+- bugfixes to handle empty files, tracks, tracksegments
+- editor for <metadata> section in GPX 1.1
 
 Track optimization
 
@@ -144,7 +149,6 @@ The tree will be in `build/install`.
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
-* invert tracks
 * save as kml
 * add TestFX UI test cases
 * add task handling for long running activities

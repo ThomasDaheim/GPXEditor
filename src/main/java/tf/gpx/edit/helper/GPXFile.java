@@ -32,7 +32,6 @@ import com.hs.gpxparser.modal.Metadata;
 import com.hs.gpxparser.modal.Track;
 import java.io.File;
 import java.io.FileInputStream;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -95,7 +94,12 @@ public class GPXFile extends GPXMeasurable {
         final HashSet<Link> links = new HashSet<>();
         links.add(new Link("https://github.com/ThomasDaheim/GPXEditor"));
         
-        final Metadata metadata = new Metadata();
+        Metadata metadata;
+        if (myGPX.getMetadata() != null) {
+            metadata = myGPX.getMetadata();
+        } else {
+            metadata = new Metadata();
+        }
         metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
         metadata.setLinks(links);
         metadata.setBounds(getBounds());
