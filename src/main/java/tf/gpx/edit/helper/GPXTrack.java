@@ -53,10 +53,13 @@ public class GPXTrack extends GPXMeasurable {
         myGPXFile = gpxFile;
         myTrack = track;
         
-        for (TrackSegment segment : myTrack.getTrackSegments()) {
-            myGPXTrackSegments.add(new GPXTrackSegment(this, segment, myGPXTrackSegments.size() + 1));
+        // TFE, 20180203: track without tracksegments is valid!
+        if (myTrack.getTrackSegments() != null) {
+            for (TrackSegment segment : myTrack.getTrackSegments()) {
+                myGPXTrackSegments.add(new GPXTrackSegment(this, segment, myGPXTrackSegments.size() + 1));
+            }
+            assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
         }
-        assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
     }
 
     protected Track getTrack() {
@@ -144,7 +147,12 @@ public class GPXTrack extends GPXMeasurable {
                 return myTrack.getName();
             case Start:
                 // format dd.mm.yyyy hh:mm:ss
-                return DATE_FORMAT.format(getStartTime());
+                final Date start = getStartTime();
+                if (start != null) {
+                    return DATE_FORMAT.format(start);
+                } else {
+                    return "---";
+                }
             case Duration:
                 return getDurationAsString();
             case Length:

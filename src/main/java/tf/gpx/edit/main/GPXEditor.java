@@ -33,6 +33,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -93,6 +94,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.EditGPXMetadata;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
@@ -237,6 +239,10 @@ public class GPXEditor implements Initializable {
     private MenuItem specialValuesMenu;
     @FXML
     private MenuItem downloadSRTMDataMenu;
+    @FXML
+    private MenuItem invertTracksMenu;
+    @FXML
+    private MenuItem metadataMenu;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -332,6 +338,11 @@ public class GPXEditor implements Initializable {
         //
         // Structure
         //
+        invertTracksMenu.setOnAction((ActionEvent event) -> {
+            invertTracks(event);
+        });
+        invertTracksMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         mergeFilesMenu.setOnAction((ActionEvent event) -> {
             mergeFiles(event);
         });
@@ -351,6 +362,11 @@ public class GPXEditor implements Initializable {
         //
         // Values
         //
+        metadataMenu.setOnAction((ActionEvent event) -> {
+            editMetadata(event);
+        });
+        metadataMenu.disableProperty().bind(
+                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         distributionsMenu.setOnAction((ActionEvent event) -> {
             showDistributions(event);
         });
@@ -949,6 +965,42 @@ public class GPXEditor implements Initializable {
         gpxFileList.setRoot(null);
     }
 
+    public void invertTracks(final ActionEvent event) {
+        final List<GPXLineItem> selectedItems = 
+            gpxFileList.getSelectionModel().getSelectedItems().stream().
+                map((TreeItem<GPXLineItem> t) -> {
+                    return t.getValue();
+                }).collect(Collectors.toList());
+        
+        // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
+        // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
+        selectedItems.sort(Comparator.comparing(o -> o.getType()));
+        
+        // add all items that are not childs of previous items to list of items to invert
+        final List<GPXLineItem> invertItems = new ArrayList<>();
+        for (GPXLineItem selectedItem : selectedItems) {
+            boolean isChild = false;
+            
+            for (GPXLineItem invertItem : invertItems) {
+                if (selectedItem.isChildOf(invertItem)) {
+                    isChild = true;
+                    break;
+                }
+            }
+            if (!isChild) {
+                invertItems.add(selectedItem);
+            }
+        }
+        
+        // invert all root nodes
+        for (GPXLineItem invertItem : invertItems) {
+            invertItem.invert();
+        }
+
+        gpxFileListXML.getSelectionModel().clearSelection();
+        gpxFileListXML.refresh();
+    }
+    
     public void mergeFiles(final ActionEvent event) {
         final List<GPXFile> gpxFiles = uniqueGPXFileListFromGPXLineItemList(gpxFileListXML.getSelectionModel().getSelectedItems());
         
@@ -959,7 +1011,14 @@ public class GPXEditor implements Initializable {
 
         final ButtonType buttonMerge = new ButtonType("Merge", ButtonBar.ButtonData.OTHER);
         final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-        Optional<ButtonType> saveChanges = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", "Do you want to merge the following files?", gpxFileNames, buttonMerge, buttonCancel);
+        Optional<ButtonType> saveChanges = 
+                ShowAlerts.getInstance().showAlert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Confirmation",
+                        "Do you want to merge the following files?",
+                        gpxFileNames,
+                        buttonMerge,
+                        buttonCancel);
 
         if (!saveChanges.isPresent() || !saveChanges.get().equals(buttonMerge)) {
             return;
@@ -1005,7 +1064,14 @@ public class GPXEditor implements Initializable {
         headerText += " the following items?";
         final ButtonType buttonMerge = new ButtonType(commandText.substring(0, 1).toUpperCase() + commandText.substring(1), ButtonBar.ButtonData.OTHER);
         final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-        Optional<ButtonType> doAction = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Confirmation", headerText, gpxItemNames, buttonMerge, buttonCancel);
+        Optional<ButtonType> doAction = 
+                ShowAlerts.getInstance().showAlert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Confirmation",
+                        headerText,
+                        gpxItemNames,
+                        buttonMerge,
+                        buttonCancel);
 
         if (!doAction.isPresent() || !doAction.get().equals(buttonMerge)) {
             return;
@@ -1196,6 +1262,10 @@ public class GPXEditor implements Initializable {
         refreshWayoints();
     }
     
+    private void editMetadata(final ActionEvent event) {
+        EditGPXMetadata.getInstance().editMetadata(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
+    }
+    
     private void showDistributions(final ActionEvent event) {
         // works only for one track segment and its waypoints
         List<GPXWaypoint> waypoints;
@@ -1226,12 +1296,6 @@ public class GPXEditor implements Initializable {
     }
 
     private void assignSRTMHeight(final ActionEvent event) {
-//        myWorker.assignSRTMHeight(
-//                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
-//                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""),
-//                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())),
-//                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()))
-//        );
         // TODO: remove ugly hack to pass HostServices
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),

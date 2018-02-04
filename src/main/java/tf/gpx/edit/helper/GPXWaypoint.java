@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
@@ -133,7 +134,13 @@ public class GPXWaypoint extends GPXLineItem {
             case Position:
                 return EarthGeometry.latToString(this) + " " + EarthGeometry.lonToString(this);
             case Date:
-                return DATE_FORMAT.format(myWaypoint.getTime());
+                // format dd.mm.yyyy hh:mm:ss
+                final Date start = myWaypoint.getTime();
+                if (start != null) {
+                    return DATE_FORMAT.format(start);
+                } else {
+                    return "---";
+                }
             case Duration:
                 if (myPrevGPXWaypoint != null) {
                     return getDurationAsString();
@@ -242,6 +249,11 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public long getDuration() {
         return EarthGeometry.duration(this, myPrevGPXWaypoint);
+    }
+
+    @Override
+    public Bounds getBounds() {
+        return new Bounds(myWaypoint.getLatitude(), myWaypoint.getLatitude(), myWaypoint.getLongitude(), myWaypoint.getLongitude());
     }
     
     public double getSpeed() {

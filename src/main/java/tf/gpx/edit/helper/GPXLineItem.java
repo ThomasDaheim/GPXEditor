@@ -25,7 +25,9 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Bounds;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,6 +50,14 @@ public abstract class GPXLineItem {
         
         public static boolean isChildTypeOf(final GPXLineItemType child, final GPXLineItemType item) {
             return child.ordinal() == item.ordinal()+1;
+        }
+        
+        public static boolean isLowerTypeThan(final GPXLineItemType lower, final GPXLineItemType item) {
+            return lower.ordinal() > item.ordinal();
+        }
+        
+        public static boolean isUpperTypeThan(final GPXLineItemType upper, final GPXLineItemType item) {
+            return upper.ordinal() < item.ordinal();
         }
         
         public static boolean isSameTypeAs(final GPXLineItemType child, final GPXLineItemType item) {
@@ -128,6 +138,25 @@ public abstract class GPXLineItem {
         super();
     }
     
+    @Override
+    public String toString() {
+        final StringBuilder tostring = new StringBuilder();
+        
+        // iterate over all GPXLineItemData and append values to string
+        for (GPXLineItemData n : GPXLineItemData.values()) {
+            tostring.append(n.getDescription());
+            tostring.append(": ");
+            tostring.append(getDataAsString(n));
+            tostring.append(", ");
+        }
+        
+        final String result = tostring.toString();
+        
+        return result.substring(0, result.length()-2);
+    }
+    
+    
+    // helper functions for tracking of unsaved changes
     public boolean hasUnsavedChanges() {
         // do I or any of my children have unsaved changes?
         if (hasUnsavedChanges) {
@@ -154,16 +183,18 @@ public abstract class GPXLineItem {
         }
     }
 
+    // getter & setter for the number of this lineitem
     public Integer getNumber() {
         return myNumber;
     }
-
     public void setNumber(Integer number) {
         myNumber = number;
     }
 
+    // output format for durations
     protected static String DURATION_FORMAT = "%1$02d:%2$02d:%3$02d"; 
     
+    // required getter & setter 
     public abstract GPXLineItemType getType();
     public abstract String getName();
     public abstract void setName(final String name);
@@ -176,24 +207,81 @@ public abstract class GPXLineItem {
     public abstract List<GPXTrackSegment> getGPXTrackSegments();
     public abstract List<GPXWaypoint> getGPXWaypoints();
 
+    // getter & setter for my parent
     public abstract GPXLineItem getParent();
     public abstract void setParent(final GPXLineItem parent);
 
+    // helper functions for child relations
     public abstract List<GPXLineItem> getChildren();
     public abstract void setChildren(final List<GPXLineItem> children);
     protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<GPXLineItem> children) {
         final List<T> gpxChildren = children.stream().
                 map((GPXLineItem child) -> {
-                    assert child.getClass().isInstance(clazz);
+                    assert child.getClass().equals(clazz);
                     child.setParent(this);
                     return (T) child;
                 }).collect(Collectors.toList());
         
         return gpxChildren;
     }
+    public boolean isChildOf(final GPXLineItem lineitem) {
+        boolean result = false;
+        
+        // can't be child of a waypoint
+        if (GPXLineItemType.GPXWaypoint.equals(lineitem.getType())) {
+            return result;
+        }
+        
+        // can't be child if same or upper type...
+        if (GPXLineItemType.isSameTypeAs(this.getType(), lineitem.getType()) || GPXLineItemType.isUpperTypeThan(this.getType(), lineitem.getType())) {
+            return result;
+        }
+        
+        // first check if it a direct child
+        if (isDirectChildOf(lineitem)) {
+            result = true;
+        } else {
+            // if not, check the children
+            for (GPXLineItem child : lineitem.getChildren()) {
+                if (isChildOf(child)) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        
+        return result;
+    }
+    public boolean isDirectChildOf(final GPXLineItem lineitem) {
+        boolean result = false;
+        
+        if (GPXLineItemType.isChildTypeOf(this.getType(), lineitem.getType())) {
+            result = lineitem.getChildren().contains(this);
+        }
+        
+        return result;
+    }
+    public void invert() {
+        //System.out.println("inverting " + toString());
+        // nothing to invert for waypoints...
+        if (!GPXLineItemType.GPXWaypoint.equals(getType())) {
+            // invert order of children
+            List<GPXLineItem> children = getChildren();
+            Collections.reverse(children);
+            setChildren(children);
+
+            // invert all childrens
+            // nothing to invert for tracksegments - they have waypoints as children...
+            if (!GPXLineItemType.GPXTrackSegment.equals(getType())) {
+                for (GPXLineItem child : children) {
+                    child.invert();
+                }
+            }
+        }
+    }
     
+    // getter functions
     protected abstract long getDuration();
-    
     protected String getDurationAsString() {
         // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
         final long diff = getDuration();
@@ -203,7 +291,9 @@ public abstract class GPXLineItem {
         final long diffHours = diff / (60 * 60 * 1000);
         return String.format(DURATION_FORMAT, diffHours, diffMinutes, diffSeconds);
     }
-    
+    protected abstract Bounds getBounds();
+
+    // visitor support
     public void acceptVisitor(final IGPXLineItemVisitor visitor) {
         if (visitor.deepthFirst()) {
             visitChildren(visitor);

@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Bounds;
 import java.util.Date;
 import java.util.List;
 
@@ -47,9 +48,8 @@ public abstract class GPXMeasurable extends GPXLineItem {
     protected double getLength() {
         double length = 0.0;
 
-        final List<GPXMeasurable> gpxMeasurables = getGPXMeasurables();
-        for (int i = 0; i < gpxMeasurables.size(); i++) {			
-            length += gpxMeasurables.get(i).getLength();
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
+            length += measurable.getLength();
         }
 
         return length;
@@ -69,9 +69,8 @@ public abstract class GPXMeasurable extends GPXLineItem {
     protected double getCumulativeAscent() {
         double ascent = 0.0;
 
-        final List<GPXMeasurable> gpxMeasurables = getGPXMeasurables();
-        for (int i = 0; i < gpxMeasurables.size(); i++) {
-            ascent += gpxMeasurables.get(i).getCumulativeAscent();
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
+            ascent += measurable.getCumulativeAscent();
         }
 
         return ascent;
@@ -91,9 +90,8 @@ public abstract class GPXMeasurable extends GPXLineItem {
     protected double getCumulativeDescent() {
         double descent = 0.0;
 
-        final List<GPXMeasurable> gpxMeasurables = getGPXMeasurables();
-        for (int i = 0; i < gpxMeasurables.size(); i++) {
-            descent += gpxMeasurables.get(i).getCumulativeDescent();
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
+            descent += measurable.getCumulativeDescent();
         }
 
         return descent;
@@ -111,9 +109,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
     protected Date getStartTime() {
         Date result = null;
 
-        final List<GPXMeasurable> gpxMeasurables = getGPXMeasurables();
-        for (int i = 0; i < gpxMeasurables.size(); i++) {
-            GPXMeasurable measurable = gpxMeasurables.get(i);
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
             Date startingTime = measurable.getStartTime();
 
             if (startingTime != null) {
@@ -138,9 +134,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
     protected Date getEndTime() {
         Date result = null;
 
-        final List<GPXMeasurable> gpxMeasurables = getGPXMeasurables();
-        for (int i = 0; i < gpxMeasurables.size(); i++) {
-            GPXMeasurable measurable = gpxMeasurables.get(i);
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
             Date endTime = measurable.getEndTime();
 
             if (endTime != null) {
@@ -163,5 +157,19 @@ public abstract class GPXMeasurable extends GPXLineItem {
         } else {
             return 0;
         }
+    }
+    
+    /**
+     * @return the bounds to include all waypoints
+     */
+    @Override
+    public Bounds getBounds() {
+        final Bounds result = new Bounds(Double.MAX_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MIN_VALUE);
+        
+        for (GPXLineItem child : getChildren()) {
+            result.extendBounds(child.getBounds());
+        }
+        
+        return result;
     }
 }

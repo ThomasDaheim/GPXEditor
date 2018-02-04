@@ -27,9 +27,14 @@ package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.GPXParser;
 import com.hs.gpxparser.modal.GPX;
+import com.hs.gpxparser.modal.Link;
+import com.hs.gpxparser.modal.Metadata;
 import com.hs.gpxparser.modal.Track;
 import java.io.File;
 import java.io.FileInputStream;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -67,13 +72,35 @@ public class GPXFile extends GPXMeasurable {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        for (Track track : myGPX.getTracks()) {
-            myGPXTracks.add(new GPXTrack(this, track));
+        // TFE, 20180203: gpx without tracks is valid!
+        if (myGPX.getTracks() != null) {
+            for (Track track : myGPX.getTracks()) {
+                myGPXTracks.add(new GPXTrack(this, track));
+            }
+            assert (myGPXTracks.size() == myGPX.getTracks().size());
         }
-        assert (myGPXTracks.size() == myGPX.getTracks().size());
 
         // TF, 20170606: add gpx track acording to number in case its set
         Collections.sort(myGPXTracks, myGPXTracks.get(0).getComparator());
+
+        // TFE, 20180201: update header data & meta data
+        setHeaderAndMeta();
+    }
+    
+    public final void setHeaderAndMeta() {
+        myGPX.setCreator("GPXEditor");
+        myGPX.setVersion("1.3");
+        myGPX.setXmlns("http://www.topografix.com/GPX/1/1");
+        
+        final HashSet<Link> links = new HashSet<>();
+        links.add(new Link("https://github.com/ThomasDaheim/GPXEditor"));
+        
+        final Metadata metadata = new Metadata();
+        metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+        metadata.setLinks(links);
+        metadata.setBounds(getBounds());
+        
+        myGPX.setMetadata(metadata);
     }
     
     @Override
@@ -155,7 +182,12 @@ public class GPXFile extends GPXMeasurable {
                 return myGPXFileName;
             case Start:
                 // format dd.mm.yyyy hh:mm:ss
-                return DATE_FORMAT.format(getStartTime());
+                final Date start = getStartTime();
+                if (start != null) {
+                    return DATE_FORMAT.format(start);
+                } else {
+                    return "---";
+                }
             case Duration:
                 return getDurationAsString();
             case Length:

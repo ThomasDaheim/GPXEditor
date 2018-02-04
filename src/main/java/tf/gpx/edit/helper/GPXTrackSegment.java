@@ -61,12 +61,15 @@ public class GPXTrackSegment extends GPXMeasurable {
         myTrackSegment = trackSegment;
         setNumber(number);
         
-        for (Waypoint waypoint : myTrackSegment.getWaypoints()) {
-            myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
+        // TFE, 20180203: tracksegment without wayoints is valid!
+        if (myTrackSegment.getWaypoints() != null) {
+            for (Waypoint waypoint : myTrackSegment.getWaypoints()) {
+                myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
+            }
+            assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
+
+            updatePrevNextGPXWaypoints();
         }
-        assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
-        
-        updatePrevNextGPXWaypoints();
     }
 
     protected TrackSegment getTrackSegment() {
@@ -88,7 +91,6 @@ public class GPXTrackSegment extends GPXMeasurable {
 
     @Override
     public List<GPXLineItem> getChildren() {
-        assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
         return new ArrayList<>(myGPXWaypoints);
     }
     
@@ -110,23 +112,26 @@ public class GPXTrackSegment extends GPXMeasurable {
                 }).collect(Collectors.toList());
         myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
         assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
-        
+
         updatePrevNextGPXWaypoints();
+
         myLength = null;
         setHasUnsavedChanges();
     }
     
     // doubly linked list for dummies :-)
     private void updatePrevNextGPXWaypoints() {
-        GPXWaypoint prevGPXWaypoint = null;
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            if (prevGPXWaypoint != null) {
-                prevGPXWaypoint.setNextGPXWaypoint(gpxWaypoint);
+        if (!myGPXWaypoints.isEmpty()) {
+            GPXWaypoint prevGPXWaypoint = null;
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                if (prevGPXWaypoint != null) {
+                    prevGPXWaypoint.setNextGPXWaypoint(gpxWaypoint);
+                }
+                gpxWaypoint.setPrevGPXWaypoint(prevGPXWaypoint);
+                prevGPXWaypoint = gpxWaypoint;
             }
-            gpxWaypoint.setPrevGPXWaypoint(prevGPXWaypoint);
-            prevGPXWaypoint = gpxWaypoint;
+            myGPXWaypoints.getLast().setNextGPXWaypoint(null);
         }
-        myGPXWaypoints.getLast().setNextGPXWaypoint(null);
     }
     
     @Override
@@ -157,7 +162,12 @@ public class GPXTrackSegment extends GPXMeasurable {
                 return "";
             case Start:
                 // format dd.mm.yyyy hh:mm:ss
-                return DATE_FORMAT.format(getStartTime());
+                final Date start = getStartTime();
+                if (start != null) {
+                    return DATE_FORMAT.format(start);
+                } else {
+                    return "---";
+                }
             case Duration:
                 return getDurationAsString();
             case Length:

@@ -165,6 +165,8 @@ public class GPXEditorWorker {
         // Only write files that have tracks in them! otherwise, the GPX isn't valid
         try {
             if (!gpxFile.getGPXTracks().isEmpty()) {
+                // update bounds
+                gpxFile.setHeaderAndMeta();
                 final GPXWriter writer = new GPXWriter();
                 final FileOutputStream out;
                 out = new FileOutputStream(curFile.toFile());

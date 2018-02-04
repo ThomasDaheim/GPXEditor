@@ -51,6 +51,8 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Structure">
             <items>
+                  <MenuItem fx:id="invertTracksMenu" mnemonicParsing="false" text="Invert Tracks/Segments" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="mergeFilesMenu" mnemonicParsing="false" text="Merge Files" />
               <MenuItem fx:id="mergeTracksMenu" mnemonicParsing="false" text="Merge Tracks/Segments">
                      <accelerator>
@@ -64,6 +66,7 @@
           </Menu>
             <Menu mnemonicParsing="false" text="Values">
               <items>
+                  <MenuItem fx:id="metadataMenu" mnemonicParsing="false" text="Metadata" />
                 <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
                   <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
               </items>

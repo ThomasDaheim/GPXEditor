@@ -336,6 +336,7 @@ public class DistributionViewer {
     
     public boolean showDistributions(final List<GPXWaypoint> gpxWayPoints) {
         assert myGPXEditor != null;
+        assert gpxWayPoints != null;
         
         hasDeleted = false;
         
