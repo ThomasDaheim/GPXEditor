@@ -116,6 +116,8 @@ import tf.gpx.edit.xtrm.DistributionViewer;
  */
 public class GPXEditor implements Initializable {
     static final Integer[] NO_INTS = new Integer[0];
+    @FXML
+    private MenuItem statisticsMenu;
 
     public static enum MergeDeleteTracks {
         MERGE,
@@ -375,6 +377,10 @@ public class GPXEditor implements Initializable {
         specialValuesMenu.setOnAction((ActionEvent event) -> {
         });
         specialValuesMenu.disableProperty().bind(
+                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+        statisticsMenu.setOnAction((ActionEvent event) -> {
+        });
+        statisticsMenu.disableProperty().bind(
                 Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
         
         //
@@ -874,6 +880,10 @@ public class GPXEditor implements Initializable {
         }
         
         return result;
+    }
+
+    public Boolean exportFile(final GPXLineItem item) {
+        return myWorker.exportFile(item.getGPXFile());
     }
 
     private Boolean closeAllFiles() {

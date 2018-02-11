@@ -109,6 +109,9 @@ public class GPXTrackviewer {
         // show elevation chart
         myGPXWaypointChart.setGPXWaypoints(gpxWaypoints);
         myGPXWaypointChart.setVisible(!gpxWaypoints.isEmpty());
+
+        myGPXWaypointLayer.clearSelectedGPXWaypoints();
+        myGPXWaypointChart.clearSelectedGPXWaypoints();
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
@@ -243,6 +246,11 @@ class GPXWaypointLayer extends MapLayer {
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         selectedGPXWaypoints.clear();
         selectedGPXWaypoints.addAll(gpxWaypoints);
+        this.markDirty();
+    }
+
+    public void clearSelectedGPXWaypoints() {
+        selectedGPXWaypoints.clear();
         this.markDirty();
     }
 
@@ -388,6 +396,18 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             getPlotChildren().addAll(rectangles);
         }
 
+        noLayout = false;
+        layoutPlotChildren();
+    }
+    
+    public void clearSelectedGPXWaypoints() {
+        noLayout = true;
+        
+        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
+            getPlotChildren().remove(waypoint.getRight());
+        }
+        selectedGPXWaypoints.clear();
+        
         noLayout = false;
         layoutPlotChildren();
     }

@@ -50,6 +50,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
+import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
@@ -63,6 +64,7 @@ import tf.gpx.edit.worker.GPXReduceWorker;
  */
 public class GPXEditorWorker {
     public static final String GPX_EXT = "gpx";
+    public static final String KML_EXT = "kml";
     public static final String BAK_EXT = ".bak";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
@@ -117,13 +119,12 @@ public class GPXEditorWorker {
     public boolean saveFile(final GPXFile gpxFile, final boolean askFileName) {
         boolean result = false;
         
-        Path curFile;
         if (askFileName) {
             final List<String> extFilter = Arrays.asList("*." + GPX_EXT);
             final List<String> extValues = Arrays.asList(GPX_EXT);
 
             FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Insert GPX-Files");
+            fileChooser.setTitle("Save GPX-File");
             fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
             // das sollte auch in den Worker gehen...
             fileChooser.getExtensionFilters().addAll(
@@ -186,6 +187,42 @@ public class GPXEditorWorker {
         return result;
     }
 
+    public boolean exportFile(final GPXFile gpxFile) {
+        boolean result = false;
+        
+        final List<String> extFilter = Arrays.asList("*." + KML_EXT);
+        final List<String> extValues = Arrays.asList(KML_EXT);
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save KML-File");
+        fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+        // das sollte auch in den Worker gehen...
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("KML-Files", extFilter));
+        File selectedFile = fileChooser.showSaveDialog(null);
+
+        if(selectedFile == null){
+            System.out.println("No File selected");
+        } else if (!KML_EXT.equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
+            System.out.println("No ." + KML_EXT + " File selected");
+        } else {
+            result = doExportFile(gpxFile, selectedFile);
+        }
+
+        return result;
+    }
+    
+    private boolean doExportFile(final GPXFile gpxFile, final File selectedFile) {
+        boolean result = false;
+        
+        final KMLWriter kmlWriter = new KMLWriter();
+        
+        kmlWriter.addPath(gpxFile.getGPXWaypoints(), gpxFile.getName());
+        result = kmlWriter.writeFile(selectedFile);
+        
+        return result;
+    }
+    
     public void fixGPXFiles(final List<GPXFile> gpxFiles, final double distance) {
         runVisitor(gpxFiles, new GPXFixGarminCrapWorker(distance));
     }

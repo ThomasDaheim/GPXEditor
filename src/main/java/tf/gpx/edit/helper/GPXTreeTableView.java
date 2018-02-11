@@ -121,6 +121,14 @@ public class GPXTreeTableView {
                             });
                             fileMenu.getItems().add(saveAsFile);
 
+                            final MenuItem exportFile = new MenuItem("Export");
+                            exportFile.setOnAction((ActionEvent event) -> {
+                                if (myEditor.exportFile(item)) {
+                                    myTreeTableView.refresh();
+                                }
+                            });
+                            fileMenu.getItems().add(exportFile);
+
                             final MenuItem closeFile = new MenuItem("Close");
                             closeFile.setOnAction((ActionEvent event) -> {
                                 myEditor.closeFile(item);

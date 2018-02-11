@@ -69,6 +69,8 @@
                   <MenuItem fx:id="metadataMenu" mnemonicParsing="false" text="Metadata" />
                 <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
                   <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="statisticsMenu" mnemonicParsing="false" text="Statistics" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
