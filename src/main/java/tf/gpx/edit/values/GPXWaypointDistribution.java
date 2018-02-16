@@ -23,27 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.xtrm;
+package tf.gpx.edit.values;
 
-import java.util.List;
+import tf.gpx.edit.helper.GPXLineItem;
+import tf.gpx.edit.helper.GPXWaypoint;
 
 /**
- * Abstract base for a list of values of type T and a method that returns a double value for each T.
- * Used as generic input for BinValueDistribution.
+ * Distribution class for binning GPXWaypoint data.
+ * Based on the GPXLineItemData the corresponding value is used for binning.
  * 
  * @author thomas
- * @param <T>
  */
-public abstract class ValueDistribution<T> {
-    private List<T> myValues;
+public class GPXWaypointDistribution extends ValueDistribution<GPXWaypoint> {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private static final GPXWaypointDistribution INSTANCE = new GPXWaypointDistribution();
     
-    public List<T> getValues() {
-        return myValues;
+    private GPXLineItem.GPXLineItemData myData;
+
+    private GPXWaypointDistribution() {
+    }
+
+    public static GPXWaypointDistribution getInstance() {
+        return INSTANCE;
     }
     
-    public void setValues(final List<T> values) {
-        myValues = values;
+    public GPXLineItem.GPXLineItemData getGPXLineItemData() {
+        return myData;
     }
     
-    public abstract double getValueAsDouble(final T value);
+    public void setGPXLineItemData(final GPXLineItem.GPXLineItemData gpxLineItemData) {
+        myData = gpxLineItemData;
+    }
+
+    @Override
+    public double getValueAsDouble(GPXWaypoint value) {
+        assert myData != null;
+        
+        return value.getDataAsDouble(myData);
+    }
 }

@@ -28,6 +28,7 @@ package tf.gpx.edit.worker;
 import java.util.ArrayList;
 import java.util.List;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
 
@@ -48,8 +49,8 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
         // AND distanceGPXWaypoints prev - next below epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
+        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
         final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, myParameter);
         

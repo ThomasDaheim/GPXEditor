@@ -44,11 +44,11 @@ public class GPXTrack extends GPXMeasurable {
     private List<GPXTrackSegment> myGPXTrackSegments = new ArrayList<>();
     
     private GPXTrack() {
-        super();
+        super(GPXLineItemType.GPXTrack);
     }
     
     public GPXTrack(final GPXFile gpxFile, final Track track) {
-        super();
+        super(GPXLineItemType.GPXTrack);
         
         myGPXFile = gpxFile;
         myTrack = track;
@@ -66,10 +66,12 @@ public class GPXTrack extends GPXMeasurable {
         return myTrack;
     }
     
+    @Override
     public Integer getNumber() {
         return myTrack.getNumber();
     }
 
+    @Override
     public void setNumber(Integer number) {
         myTrack.setNumber(number);
         setHasUnsavedChanges();
@@ -96,7 +98,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public void setParent(GPXLineItem parent) {
+    public void setParent(final GPXLineItem parent) {
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
@@ -139,43 +141,6 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public String getDataAsString(final GPXLineItemData gpxLineItemData) {
-        switch (gpxLineItemData) {
-            case Type:
-                return "Track";
-            case Name:
-                return myTrack.getName();
-            case Start:
-                // format dd.mm.yyyy hh:mm:ss
-                final Date start = getStartTime();
-                if (start != null) {
-                    return DATE_FORMAT.format(start);
-                } else {
-                    return "---";
-                }
-            case Duration:
-                return getDurationAsString();
-            case Length:
-                return String.format("%1$.3f", getLength()/1000d);
-            case Speed:
-                final double duration = getDuration();
-                if (duration > 0.0) {
-                    return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
-                } else {
-                    return "---";
-                }
-            case CumulativeAscent:
-                return String.format("%1$.2f", getCumulativeAscent());
-            case CumulativeDescent:
-                return String.format("-%1$.2f", getCumulativeDescent());
-            case NoItems:
-                return String.format("%1$d", getGPXWaypoints().size());
-            default:
-                return "";
-        }
-    }
-    
-    @Override
     public Date getDate() {
         return getStartTime();
     }
@@ -199,12 +164,20 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints() {
+    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
         // iterate over my segments
         List<GPXWaypoint> result = new ArrayList<>();
-        for (GPXTrackSegment trackSegment : myGPXTrackSegments) {
-            result.addAll(trackSegment.getGPXWaypoints());
+        if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
+            for (GPXTrackSegment trackSegment : myGPXTrackSegments) {
+                result.addAll(trackSegment.getGPXWaypoints(itemType));
+            }
         }
+        return result;
+    }
+
+    @Override
+    public List<GPXRoute> getGPXRoutes() {
+        List<GPXRoute> result = new ArrayList<>();
         return result;
     }
 

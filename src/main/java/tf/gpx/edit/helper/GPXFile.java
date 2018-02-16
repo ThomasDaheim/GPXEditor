@@ -29,7 +29,9 @@ import com.hs.gpxparser.GPXParser;
 import com.hs.gpxparser.modal.GPX;
 import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.modal.Metadata;
+import com.hs.gpxparser.modal.Route;
 import com.hs.gpxparser.modal.Track;
+import com.hs.gpxparser.modal.Waypoint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.time.LocalDateTime;
@@ -53,14 +55,16 @@ public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
+    private List<GPXRoute> myGPXRoutes = new ArrayList<>();
     private List<GPXTrack> myGPXTracks = new ArrayList<>();
+    private List<GPXWaypoint> myGPXWaypoints = new ArrayList<>();
     
     private GPXFile() {
-        super();
+        super(GPXLineItemType.GPXFile);
     }
 
     public GPXFile(final File gpxFile) {
-        super();
+        super(GPXLineItemType.GPXFile);
         
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
@@ -77,6 +81,19 @@ public class GPXFile extends GPXMeasurable {
                 myGPXTracks.add(new GPXTrack(this, track));
             }
             assert (myGPXTracks.size() == myGPX.getTracks().size());
+        }
+        // TFE, 20180214: gpx can have routes and waypoints too
+        if (myGPX.getRoutes()!= null) {
+            for (Route route : myGPX.getRoutes()) {
+                myGPXRoutes.add(new GPXRoute(this, route));
+            }
+            assert (myGPXRoutes.size() == myGPX.getRoutes().size());
+        }
+        if (myGPX.getWaypoints()!= null) {
+            for (Waypoint waypoint : myGPX.getWaypoints()) {
+                myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
+            }
+            assert (myGPXWaypoints.size() == myGPX.getWaypoints().size());
         }
 
         // TF, 20170606: add gpx track acording to number in case its set
@@ -138,18 +155,42 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public void setParent(GPXLineItem parent) {
+    public void setParent(final GPXLineItem parent) {
         // GPXFiles don't have a parent.
     }
 
     @Override
     public List<GPXLineItem> getChildren() {
-        return new ArrayList<>(myGPXTracks);
+        final List<GPXLineItem> result = new ArrayList<>();
+
+        result.addAll(myGPXWaypoints);
+        result.addAll(myGPXTracks);
+        result.addAll(myGPXRoutes);
+        
+        return result;
     }
     
     @Override
     public void setChildren(final List<GPXLineItem> children) {
+        // children can be any of waypoints, tracks, routes...
+        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
         setGPXTracks(castChildren(GPXTrack.class, children));
+        setGPXRoutes(castChildren(GPXRoute.class, children));
+    }
+
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints) {
+        myGPXWaypoints = gpxGPXWaypoints;
+        
+        // TF, 20170627: fill number attribute for gpx routes
+        AtomicInteger counter = new AtomicInteger(0);
+        final Set<Waypoint> waypoints = myGPXWaypoints.stream().
+                map((GPXWaypoint child) -> {
+                    child.setNumber(counter.getAndIncrement());
+                    return child.getWaypoint();
+                }).collect(Collectors.toSet());
+        myGPX.setWaypoints(new HashSet<>(waypoints));
+
+        setHasUnsavedChanges();
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
@@ -167,6 +208,21 @@ public class GPXFile extends GPXMeasurable {
         setHasUnsavedChanges();
     }
 
+    public void setGPXRoutes(final List<GPXRoute> gpxGPXRoutes) {
+        myGPXRoutes = gpxGPXRoutes;
+        
+        // TF, 20170627: fill number attribute for gpx routes
+        AtomicInteger counter = new AtomicInteger(0);
+        final Set<Route> routes = gpxGPXRoutes.stream().
+                map((GPXRoute child) -> {
+                    child.setNumber(counter.getAndIncrement());
+                    return child.getRoute();
+                }).collect(Collectors.toSet());
+        myGPX.setRoutes(new HashSet<>(routes));
+
+        setHasUnsavedChanges();
+    }
+
     @Override
     public GPXLineItemType getType() {
         return GPXLineItemType.GPXFile;
@@ -177,43 +233,6 @@ public class GPXFile extends GPXMeasurable {
         return new ArrayList<>(myGPXTracks);
     }
 
-    @Override
-    public String getDataAsString(final GPXLineItemData gpxLineItemData) {
-        switch (gpxLineItemData) {
-            case Type:
-                return "File";
-            case Name:
-                return myGPXFileName;
-            case Start:
-                // format dd.mm.yyyy hh:mm:ss
-                final Date start = getStartTime();
-                if (start != null) {
-                    return DATE_FORMAT.format(start);
-                } else {
-                    return "---";
-                }
-            case Duration:
-                return getDurationAsString();
-            case Length:
-                return String.format("%1$.3f", getLength()/1000d);
-            case Speed:
-                final double duration = getDuration();
-                if (duration > 0.0) {
-                    return String.format("%1$.3f", getLength()/getDuration()*1000d*3.6d);
-                } else {
-                    return "---";
-                }
-            case CumulativeAscent:
-                return String.format("%1$.2f", getCumulativeAscent());
-            case CumulativeDescent:
-                return String.format("-%1$.2f", getCumulativeDescent());
-            case NoItems:
-                return String.format("%1$d", getGPXTracks().size());
-            default:
-                return "";
-        }
-    }
-    
     @Override
     public Date getDate() {
         return getStartTime();
@@ -233,7 +252,7 @@ public class GPXFile extends GPXMeasurable {
     @Override
     public List<GPXTrackSegment> getGPXTrackSegments() {
         // iterate over my segments
-        List<GPXTrackSegment> result = new ArrayList<>();
+        final List<GPXTrackSegment> result = new ArrayList<>();
         for (GPXTrack track : myGPXTracks) {
             result.addAll(track.getGPXTrackSegments());
         }
@@ -241,13 +260,32 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints() {
+    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
         // iterate over my segments
-        List<GPXWaypoint> result = new ArrayList<>();
-        for (GPXTrack track : myGPXTracks) {
-            result.addAll(track.getGPXWaypoints());
+        final List<GPXWaypoint> result = new ArrayList<>();
+        
+        if (itemType == null || itemType.equals(GPXLineItemType.GPXFile)) {
+            for (GPXRoute route : myGPXRoutes) {
+                result.addAll(myGPXWaypoints);
+            }
+        }
+        if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
+            for (GPXTrack track : myGPXTracks) {
+                result.addAll(track.getGPXWaypoints(itemType));
+            }
+        }
+        if (itemType == null || itemType.equals(GPXLineItemType.GPXRoute)) {
+            for (GPXRoute route : myGPXRoutes) {
+                result.addAll(route.getGPXWaypoints(itemType));
+            }
         }
         return result;
+    }
+
+    @Override
+    public List<GPXRoute> getGPXRoutes() {
+        // return copy of list
+        return myGPXRoutes.stream().collect(Collectors.toList());
     }
 
     /**

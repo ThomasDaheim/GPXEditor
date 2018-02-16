@@ -49,6 +49,8 @@ Update v1.4
 - invert marked tracks
 - bugfixes to handle empty files, tracks, tracksegments
 - editor for <metadata> section in GPX 1.1
+- export as KML
+- show some track statistics
 
 Track optimization
 
@@ -149,7 +151,6 @@ The tree will be in `build/install`.
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
-* save as kml
 * add TestFX UI test cases
 * add task handling for long running activities
 * extend/replace waypoint viewer to enable zooming / changing of views

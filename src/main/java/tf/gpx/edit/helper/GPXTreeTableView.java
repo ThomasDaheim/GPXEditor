@@ -318,13 +318,15 @@ public class GPXTreeTableView {
                     targetList.add(childIndex, draggedLineItem);
                     targetLineItem.getParent().setChildren(targetList);
                 } else {
-                    // droppped on parent type - always add in front
-                    targetItem.getChildren().add(0, draggedItem);
-                    
-                    // update GPXLineItem as well
+                    // update GPXLineItem first to find the correct index to insert the treeitem
                     targetList = targetLineItem.getChildren();
                     targetList.add(0, draggedLineItem);
                     targetLineItem.setChildren(targetList);
+
+                    // droppped on parent type - always add in front
+                    // TFE, 20180215: with tracks and routes we need to be a bit more careful - "in front" might not be index 0...
+                    final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
+                    targetItem.getChildren().add(insertIndex, draggedItem);
                 }
 
                 event.setDropCompleted(true);
@@ -367,6 +369,13 @@ public class GPXTreeTableView {
                 // don't create loops and only insert on same level or drop on direct parent type
                 result = !isParent(item, target) && 
                         (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
+                
+//                System.out.println("row.getIndex(): " + row.getIndex());
+//                System.out.println("targetType, itemType: " + targetType + ", " + itemType);
+//                System.out.println("isParent(item, target): " + isParent(item, target));
+//                System.out.println("isSameTypeAs(targetType, itemType): " + GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType));
+//                System.out.println("isParentTypeOf(targetType, itemType): " + GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
+//                System.out.println("");
             }
         }
         return result;

@@ -46,14 +46,18 @@ import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.util.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
+import tf.gpx.edit.main.GPXEditorManager;
 
 
 /**
@@ -66,7 +70,7 @@ public class GPXTrackviewer {
     public final static double MAX_DATAPOINTS = 1000d;
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
-
+    
     private final MapView myMapView;
     private final GPXWaypointChart myGPXWaypointChart;
     private final GPXWaypointLayer myGPXWaypointLayer;
@@ -121,6 +125,9 @@ public class GPXTrackviewer {
 }
 
 class GPXWaypointLayer extends MapLayer {
+    private final ImagePattern fileWaypointImage = 
+            new ImagePattern(new Image(GPXWaypointLayer.class.getResource("/placemark_square.png").toExternalForm()));
+
     private final ObservableList<Triple<GPXWaypoint, Node, Line>> myPoints = FXCollections.observableArrayList();
     private final List<GPXWaypoint> selectedGPXWaypoints = new ArrayList<>();
     
@@ -191,10 +198,26 @@ class GPXWaypointLayer extends MapLayer {
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             i++;
             if (i * ratio >= count) {
-                final Circle icon = new Circle(3, Color.LIGHTGOLDENRODYELLOW);
-                icon.setVisible(true);
-                icon.setStroke(Color.RED);
-                icon.setStrokeWidth(0.5);
+                Shape icon;
+                
+                if (gpxWaypoint.isGPXFileWaypoint()) {
+                    icon = new Rectangle(32, 32, Color.WHITE);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.BLACK);
+                    icon.setStrokeWidth(0);
+                    // TODO: figure out way to stretch pattern to rectangle size
+                    icon.setFill(fileWaypointImage);
+                } else if (gpxWaypoint.isGPXRouteWaypoint()) {
+                    icon = new Rectangle(6, 6, Color.DARKRED);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.DARKBLUE);
+                    icon.setStrokeWidth(0.5);
+                } else {
+                    icon = new Circle(3, Color.LIGHTGOLDENRODYELLOW);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.DARKRED);
+                    icon.setStrokeWidth(0.5);
+                }
                 
                 final Tooltip tooltip = new Tooltip(gpxWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position));
                 tooltip.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
@@ -205,13 +228,17 @@ class GPXWaypointLayer extends MapLayer {
                 this.getChildren().add(icon);
 
                 Line line = null;
-                // check for segment changes - we don't want lines between different segments
+                // check for segment changes - we don't want lines between different segments or different routes and not for GPXFile waypoints
                 // http://stackoverflow.com/questions/30879382/javafx-8-drawing-a-line-between-translated-nodes
-                if (prevIcon != null && prevWaypoint != null && prevWaypoint.getGPXTrackSegments().get(0).equals(gpxWaypoint.getGPXTrackSegments().get(0))) {
+                if (prevWaypoint != null && prevWaypoint.getParent().equals(gpxWaypoint.getParent()) && !gpxWaypoint.isGPXFileWaypoint()) {
                     line = new Line();
                     line.setVisible(true);
                     line.setStrokeWidth(1.5);
-                    line.setStroke(Color.DARKBLUE);
+                    if (gpxWaypoint.isGPXRouteWaypoint()) {
+                        line.setStroke(Color.DARKRED);
+                    } else {
+                        line.setStroke(Color.DARKBLUE);
+                    }
 
                     // bind ends of line:
                     line.startXProperty().bind(prevIcon.layoutXProperty().add(prevIcon.translateXProperty()));

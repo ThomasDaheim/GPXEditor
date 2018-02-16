@@ -120,16 +120,16 @@
                            <children>
                               <TreeTableView fx:id="gpxFileListXML" prefHeight="200.0" prefWidth="1006.0" styleClass="gpxFileList">
                                 <columns>
-                                  <TreeTableColumn fx:id="idGPXCol" prefWidth="60.0" styleClass="idCol" text="ID" />
-                                    <TreeTableColumn fx:id="typeGPXCol" prefWidth="54.000030517578125" text="Type" />
-                                  <TreeTableColumn fx:id="nameGPXCol" prefWidth="194.0" styleClass="nameCol" text="Name" />
-                                    <TreeTableColumn fx:id="startGPXCol" prefWidth="237.0" styleClass="startCol" text="Start" />
+                                  <TreeTableColumn fx:id="idGPXCol" prefWidth="70.0" styleClass="idCol" text="ID" />
+                                    <TreeTableColumn fx:id="typeGPXCol" prefWidth="55.0" text="Type" />
+                                  <TreeTableColumn fx:id="nameGPXCol" prefWidth="240.0" styleClass="nameCol" text="Name" />
+                                    <TreeTableColumn fx:id="startGPXCol" prefWidth="220.0" styleClass="startCol" text="Start" />
                                     <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration" />
-                                    <TreeTableColumn fx:id="lengthGPXCol" styleClass="lengthCol" text="Length&#10;[km]" />
-                                    <TreeTableColumn fx:id="speedGPXCol" styleClass="speedCol" text="Speed&#10;[km/h]" />
-                                    <TreeTableColumn fx:id="cumAccGPXCol" styleClass="cumAccCol" text="+dH [m]" />
-                                    <TreeTableColumn fx:id="cumDescGPXCol" styleClass="cumDescCol" text="-dH [m]" />
-                                    <TreeTableColumn fx:id="noItemsGPXCol" prefWidth="50.0" styleClass="noItemsCol" text="Items" />
+                                    <TreeTableColumn fx:id="lengthGPXCol" prefWidth="70.0" styleClass="lengthCol" text="Length&#10;[km]" />
+                                    <TreeTableColumn fx:id="speedGPXCol" prefWidth="70.0" styleClass="speedCol" text="Speed&#10;[km/h]" />
+                                    <TreeTableColumn fx:id="cumAccGPXCol" prefWidth="70.0" styleClass="cumAccCol" text="+dH [m]" />
+                                    <TreeTableColumn fx:id="cumDescGPXCol" prefWidth="70.0" styleClass="cumDescCol" text="-dH [m]" />
+                                    <TreeTableColumn fx:id="noItemsGPXCol" prefWidth="70.0" styleClass="noItemsCol" text="Items" />
                                 </columns>
                               </TreeTableView>
                            </children>
@@ -138,15 +138,16 @@
                            <children>
                               <TableView id="gpxTrackList" fx:id="gpxTrackXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList">
                                 <columns>
-                                  <TableColumn fx:id="idTrackCol" prefWidth="60.0" styleClass="idCol" text="ID" />
-                                  <TableColumn fx:id="posTrackCol" prefWidth="250.0" styleClass="posCol" text="Position" />
-                                    <TableColumn fx:id="dateTrackCol" prefWidth="160.0" styleClass="dateCol" text="Date" />
+                                  <TableColumn fx:id="idTrackCol" prefWidth="70.0" styleClass="idCol" text="ID" />
+                                    <TableColumn fx:id="typeTrackCol" prefWidth="57.0" text="Type" />
+                                  <TableColumn fx:id="posTrackCol" prefWidth="240.0" styleClass="posCol" text="Position" />
+                                    <TableColumn fx:id="dateTrackCol" prefWidth="220.0" styleClass="dateCol" text="Date" />
                                     <TableColumn fx:id="durationTrackCol" styleClass="durationCol" text="Duration" />
-                                    <TableColumn fx:id="lengthTrackCol" styleClass="lengthCol" text="Length&#10;[m]" />
-                                    <TableColumn fx:id="speedTrackCol" styleClass="speedCol" text="Speed&#10;[km/h]" />
-                                    <TableColumn fx:id="heightTrackCol" styleClass="heightCol" text="H [m]" />
-                                    <TableColumn fx:id="heightDiffTrackCol" styleClass="heightDiffCol" text="dH [m]" />
-                                    <TableColumn fx:id="slopeTrackCol" styleClass="slopeCol" text="Slope [%]" />
+                                    <TableColumn fx:id="lengthTrackCol" prefWidth="70.0" styleClass="lengthCol" text="Length&#10;[m]" />
+                                    <TableColumn fx:id="speedTrackCol" prefWidth="70.0" styleClass="speedCol" text="Speed&#10;[km/h]" />
+                                    <TableColumn fx:id="heightTrackCol" prefWidth="70.0" styleClass="heightCol" text="H [m]" />
+                                    <TableColumn fx:id="heightDiffTrackCol" prefWidth="70.0" styleClass="heightDiffCol" text="dH [m]" />
+                                    <TableColumn fx:id="slopeTrackCol" prefWidth="70.0" styleClass="slopeCol" text="Slope [%]" />
                                 </columns>
                               </TableView>
                            </children>

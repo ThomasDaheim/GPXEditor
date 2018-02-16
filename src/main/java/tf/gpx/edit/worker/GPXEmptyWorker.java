@@ -26,6 +26,7 @@
 package tf.gpx.edit.worker;
 
 import tf.gpx.edit.helper.GPXFile;
+import tf.gpx.edit.helper.GPXRoute;
 import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
@@ -49,22 +50,27 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     }
 
     @Override
-    public void visitGPXFile(GPXFile gpxFile) {
+    public void visitGPXFile(final GPXFile gpxFile) {
         // nothing to do
     }
 
     @Override
-    public void visitGPXTrack(GPXTrack gpxTrack) {
+    public void visitGPXTrack(final GPXTrack gpxTrack) {
         // nothing to do
     }
 
     @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
+    public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
         // nothing to do
     }
 
     @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
+    public void visitGPXWaypoint(final GPXWaypoint gpxWayPoint) {
+        // nothing to do
+    }
+
+    @Override
+    public void visitGPXRoute(final GPXRoute gpxRoute) {
         // nothing to do
     }
 

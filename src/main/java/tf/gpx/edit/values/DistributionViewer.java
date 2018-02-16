@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.xtrm;
+package tf.gpx.edit.values;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -57,6 +57,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
+import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXLineItem.GPXLineItemData;
 import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
@@ -308,8 +309,8 @@ public class DistributionViewer {
         deleteButton.setOnAction((ActionEvent event) -> {
             if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
                 final GPXTrackSegment gpxTrackSegment = myGPXWaypoints.get(0).getGPXTrackSegments().get(0);
-                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints());
-                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints();
+                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
                 newWaypoints.removeAll(wayPointList.getCheckModel().getCheckedItems());
                 gpxTrackSegment.setGPXWaypoints(newWaypoints);
@@ -337,6 +338,10 @@ public class DistributionViewer {
     public boolean showDistributions(final List<GPXWaypoint> gpxWayPoints) {
         assert myGPXEditor != null;
         assert gpxWayPoints != null;
+        
+        if (distributionsStage.isShowing()) {
+            distributionsStage.close();
+        }
         
         hasDeleted = false;
         

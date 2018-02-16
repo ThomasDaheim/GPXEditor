@@ -25,9 +25,11 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Route;
 import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,9 +40,9 @@ import java.util.stream.Collectors;
  *
  * @author Thomas
  */
-public class GPXTrackSegment extends GPXMeasurable {
-    private GPXTrack myGPXTrack;
-    private TrackSegment myTrackSegment;
+public class GPXRoute extends GPXMeasurable {
+    private GPXFile myGPXFile;
+    private Route myRoute;
     private LinkedList<GPXWaypoint> myGPXWaypoints = new LinkedList<>();
     
     private Double myLength;
@@ -48,45 +50,42 @@ public class GPXTrackSegment extends GPXMeasurable {
     private Double myCumulativeDescent;
     private Double myMinHeight;
     private Double myMaxHeight;
-    private Date myStartingTime;
-    private Date myEndTime;
     
-    private GPXTrackSegment() {
-        super(GPXLineItemType.GPXTrackSegment);
+    private GPXRoute() {
+        super(GPXLineItemType.GPXRoute);
     }
     
-    public GPXTrackSegment(final GPXTrack gpxTrack, final TrackSegment trackSegment, final int number) {
-        super(GPXLineItemType.GPXTrackSegment);
+    public GPXRoute(final GPXFile gpxFile, final Route route) {
+        super(GPXLineItemType.GPXRoute);
         
-        myGPXTrack = gpxTrack;
-        myTrackSegment = trackSegment;
-        setNumber(number);
+        myGPXFile = gpxFile;
+        myRoute = route;
         
         // TFE, 20180203: tracksegment without wayoints is valid!
-        if (myTrackSegment.getWaypoints() != null) {
-            for (Waypoint waypoint : myTrackSegment.getWaypoints()) {
+        if (myRoute.getRoutePoints() != null) {
+            for (Waypoint waypoint : myRoute.getRoutePoints()) {
                 myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
             }
-            assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
+            assert (myGPXWaypoints.size() == myRoute.getRoutePoints().size());
 
             updatePrevNextGPXWaypoints();
         }
     }
 
-    protected TrackSegment getTrackSegment() {
-        return myTrackSegment;
+    protected Route getRoute() {
+        return myRoute;
     }
     
     @Override
     public GPXLineItem getParent() {
-        return myGPXTrack;
+        return myGPXFile;
     }
 
     @Override
-    public void setParent(GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
+    public void setParent(final GPXLineItem parent) {
+        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
-        myGPXTrack = (GPXTrack) parent;
+        myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
     }
 
@@ -111,8 +110,8 @@ public class GPXTrackSegment extends GPXMeasurable {
                     child.setNumber(counter.getAndIncrement());
                     return child.getWaypoint();
                 }).collect(Collectors.toList());
-        myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
-        assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
+        myRoute.setRoutePoints(new ArrayList<>(waypoints));
+        assert (myGPXWaypoints.size() == myRoute.getRoutePoints().size());
 
         updatePrevNextGPXWaypoints();
 
@@ -120,8 +119,6 @@ public class GPXTrackSegment extends GPXMeasurable {
         myLength = null;
         myCumulativeAscent = null;
         myCumulativeDescent = null;
-        myStartingTime = null;
-        myEndTime = null;
         
         setHasUnsavedChanges();
     }
@@ -142,17 +139,33 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
+    public Integer getNumber() {
+        return myRoute.getNumber();
+    }
+
+    @Override
+    public void setNumber(Integer number) {
+        myRoute.setNumber(number);
+        setHasUnsavedChanges();
+    }
+
+    public Comparator<GPXRoute> getComparator() {
+        return (GPXRoute a, GPXRoute b) -> a.getNumber() - b.getNumber();
+    }
+    
+    @Override
     public String getName() {
-        return myGPXTrack.getName() + " - Segment " + getNumber();
+        return myRoute.getName();
     }
 
     @Override
     public void setName(final String name) {
+        myRoute.setName(name);
     }
 
     @Override
     public GPXLineItemType getType() {
-        return GPXLineItemType.GPXTrackSegment;
+        return GPXLineItemType.GPXRoute;
     }
     
     @Override
@@ -162,24 +175,29 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public Date getDate() {
-        return getStartTime();
+        return null;
     }
 
     @Override
     public GPXFile getGPXFile() {
-        return getParent().getGPXFile();
+        return myGPXFile;
     }
 
     @Override
     public List<GPXTrack> getGPXTracks() {
         List<GPXTrack> result = new ArrayList<>();
-        result.add(myGPXTrack);
         return result;
     }
 
     @Override
     public List<GPXTrackSegment> getGPXTrackSegments() {
         List<GPXTrackSegment> result = new ArrayList<>();
+        return result;
+    }
+
+    @Override
+    public List<GPXRoute> getGPXRoutes() {
+        List<GPXRoute> result = new ArrayList<>();
         result.add(this);
         return result;
     }
@@ -188,22 +206,16 @@ public class GPXTrackSegment extends GPXMeasurable {
     public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
         // return copy of list
         List<GPXWaypoint> result = new ArrayList<>();
-        if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
+        if (itemType == null || itemType.equals(GPXLineItemType.GPXRoute)) {
             result = myGPXWaypoints.stream().collect(Collectors.toList());
         }
-        return result;
-    }
-
-    @Override
-    public List<GPXRoute> getGPXRoutes() {
-        List<GPXRoute> result = new ArrayList<>();
         return result;
     }
 
     /**
      * Calculates the getLength of the track segment
      * 
-     * @return the segment's getLength in meters
+     * @return the route's getLength in meters
      */
     @Override
     public double getLength() {
@@ -233,12 +245,12 @@ public class GPXTrackSegment extends GPXMeasurable {
      * Calculates the total ascent in the segment.
      * 
      * <p>The total ascent of the segment is calculated by comparing each
-     * of the segment's way point with their predecessors. If the
+     * of the route's way point with their predecessors. If the
      * elevation of a way point is higher than the elevation of the
      * predecessor, the total ascent is increased accordingly.</p>
      * 
      * @see TrackSegment#cumulativeDescent()
-     * @return the segment's total ascent in meters
+     * @return the route's total ascent in meters
      */
     @Override
     public double getCumulativeAscent() {
@@ -265,11 +277,11 @@ public class GPXTrackSegment extends GPXMeasurable {
      * Calculates the total descent in the segment.
      * 
      * <p>The total descent of the segment is calculated by comparing each
-     * of the segment's way point with their predecessors. If the
+     * of the route's way point with their predecessors. If the
      * elevation of a way point is lower than the elevation of the
      * predecessor, the total descent is increased accordingly.</p>
      * 
-     * @return the segment's total descent in meters
+     * @return the route's total descent in meters
      * 
      * @see TrackSegment#cumulativeAscent()
      */
@@ -296,69 +308,27 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     /**
-     * Returns the point in time when the segment was entered
+     * Returns null since route waypoints have no time
      * 
-     * <p>Usually this is the time stamp of the way point that was added
-     * first to the segment.</p>
-     * 
-     * @see TrackSegment#endTime
-     * @return the point in time when the segment was entered 
+     * @return null 
      */
     @Override
     protected Date getStartTime() {
-        if (myStartingTime != null) {
-            return myStartingTime;
-        }
-
-        Date result = null;
-
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            Date time = myGPXWaypoints.get(i).getWaypoint().getTime();
-
-            if (time != null) {
-                if (result == null || time.before(result)) {
-                    result = time;
-                }
-            }
-        }
-
-        myStartingTime = result;
-        return result;
+        return null;
     }
 
     /**
-     * Returns the point in time when the segment was left
+     * Returns null since route waypoints have no time
      * 
-     * <p>Usually this is the time stamp of the way point that was added
-     * last to the segment.</p>
-     *
-     * @see TrackSegment#endTime
-     * @return the point in time when the segment was left
+     * @return null 
      */
     @Override
     protected Date getEndTime() {
-        if (myEndTime != null) {
-            return myEndTime;
-        }
-
-        Date result = null;
-
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            Date time = myGPXWaypoints.get(i).getWaypoint().getTime();
-
-            if (time != null) {
-                if (result == null || time.after(result)) {
-                    result = time;
-                }
-            }
-        }
-
-        myEndTime = result;
-        return result;
+        return null;
     }
     
     /**
-     * @return the minimum height of the track
+     * @return the minimum height of the route
      */
     @Override
     public double getMinHeight() {
@@ -379,7 +349,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     /**
-     * @return the maximum height of the track
+     * @return the maximum height of the route
      */
     @Override
     public double getMaxHeight() {
@@ -401,6 +371,6 @@ public class GPXTrackSegment extends GPXMeasurable {
 
     @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
-        visitor.visitGPXTrackSegment(this);
+        visitor.visitGPXRoute(this);
     }
 }

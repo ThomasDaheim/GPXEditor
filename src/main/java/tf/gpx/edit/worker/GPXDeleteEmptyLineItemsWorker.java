@@ -28,6 +28,7 @@ package tf.gpx.edit.worker;
 import java.util.ArrayList;
 import java.util.List;
 import tf.gpx.edit.helper.GPXFile;
+import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
@@ -63,7 +64,7 @@ public class GPXDeleteEmptyLineItemsWorker extends GPXEmptyWorker {
         // remove all segments with less than 3 waypoints
         final List<GPXTrackSegment> gpxTrackSegments = new ArrayList<>(gpxTrack.getGPXTrackSegments());
         for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-            if (gpxTrackSegment.getGPXWaypoints().size() <= myParameter) {
+            if (gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).size() <= myParameter) {
                 gpxTrackSegments.remove(gpxTrackSegment);
                 System.out.println("File "+ gpxTrack.getGPXFile().getName() + ": Track " + gpxTrack.getName() + ": removing TrackSegment");
             }

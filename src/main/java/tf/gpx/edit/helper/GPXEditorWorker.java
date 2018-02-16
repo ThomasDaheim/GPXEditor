@@ -217,7 +217,7 @@ public class GPXEditorWorker {
         
         final KMLWriter kmlWriter = new KMLWriter();
         
-        kmlWriter.addPath(gpxFile.getGPXWaypoints(), gpxFile.getName());
+        kmlWriter.addPath(gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), gpxFile.getName());
         result = kmlWriter.writeFile(selectedFile);
         
         return result;
@@ -324,9 +324,9 @@ public class GPXEditorWorker {
         final GPXTrackSegment mergedGPXTrackSegment = gpxTrackSegmentsToMerge.get(0);
         mergedGPXTrackSegment.setName(MERGED_TRACKSEGMENT_NAME);
 
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints();
+        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
-            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getGPXWaypoints();
+            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
             mergedGPXWaypoints.addAll(gpxGPXWaypoints);
             

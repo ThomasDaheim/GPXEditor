@@ -34,5 +34,6 @@ public interface IGPXLineItemVisitor {
     public abstract void visitGPXTrack(final GPXTrack gpxTrack);
     public abstract void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment);
     public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
+    public abstract void visitGPXRoute(final GPXRoute gpxRoute);
     public abstract boolean deepthFirst();
 }

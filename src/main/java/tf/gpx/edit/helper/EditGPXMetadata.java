@@ -281,6 +281,10 @@ public class EditGPXMetadata {
     public boolean editMetadata(final GPXFile gpxFile) {
         assert gpxFile != null;
 
+        if (editMetadataStage.isShowing()) {
+            editMetadataStage.close();
+        }
+        
         hasChanged = false;
         
         myGPXFile = gpxFile;

@@ -34,9 +34,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -45,7 +43,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -61,11 +58,9 @@ import org.jzy3d.colors.colormaps.ColorMapRainbow;
 import org.jzy3d.javafx.JavaFXChartFactory;
 import org.jzy3d.javafx.JavaFXRenderer3d;
 import org.jzy3d.javafx.controllers.mouse.JavaFXCameraMouseController;
-import org.jzy3d.maths.BoundingBox3d;
 import org.jzy3d.maths.Coord2d;
 import org.jzy3d.maths.Coord3d;
 import org.jzy3d.maths.Range;
-import org.jzy3d.maths.Scale;
 import org.jzy3d.maths.algorithms.interpolation.IInterpolator;
 import org.jzy3d.maths.algorithms.interpolation.algorithms.BernsteinInterpolator;
 import org.jzy3d.plot3d.builder.Builder;
@@ -75,11 +70,11 @@ import org.jzy3d.plot3d.primitives.LineStripInterpolated;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
-import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFile;
+import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
@@ -368,7 +363,7 @@ public class SRTMDataViewer {
         if (gpxFile != null) {
             final IInterpolator line = new BernsteinInterpolator();
             final List<Coord3d> points = new ArrayList<>();
-            for (GPXWaypoint waypoint : gpxFile.getGPXWaypoints()) {
+            for (GPXWaypoint waypoint : gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
                 if (latMin > 0) {
                     // we need to trick jzy3d by changing signs for N in range AND in the mapper function AND in the grid tick
                     points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
