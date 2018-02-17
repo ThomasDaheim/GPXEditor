@@ -23,18 +23,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.parser;
+
+import com.hs.gpxparser.extension.IExtensionParser;
+import com.hs.gpxparser.modal.Extension;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 /**
- *
- * @author Thomas
+ * Default abstract parser for gpx files
+ * 
+ * Implements the general writeExtensions method
+ * 
+ * @author thomas
  */
-public interface IGPXLineItemVisitor {
-    public abstract void visitGPXFile(final GPXFile gpxFile);
-    public abstract void visitGPXMetadata(final GPXMetadata gpxMetadata);
-    public abstract void visitGPXTrack(final GPXTrack gpxTrack);
-    public abstract void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment);
-    public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
-    public abstract void visitGPXRoute(final GPXRoute gpxRoute);
-    public abstract boolean deepthFirst();
+public abstract class DefaultParser implements IExtensionParser {
+    @Override
+    public void writeExtensions(Extension e, Node node, Document doc) {
+        if(e.getExtensionData(getId()) != null) {
+            // add all nodes from DummyExtensionHolder to the document
+            final DefaultExtensionHolder holder = (DefaultExtensionHolder) e.getExtensionData(getId());
+            
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+            final Node extNode = holder.getNode();
+            final Node copyNode = doc.importNode(extNode, true);
+            node.appendChild(copyNode);
+        }
+    }
 }

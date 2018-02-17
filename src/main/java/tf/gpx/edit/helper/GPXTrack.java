@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.Track;
 import com.hs.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
@@ -129,11 +130,6 @@ public class GPXTrack extends GPXMeasurable {
         
         setHasUnsavedChanges();
     }
-
-    @Override
-    public GPXLineItemType getType() {
-        return GPXLineItemType.GPXTrack;
-    }
     
     @Override
     public List<GPXMeasurable> getGPXMeasurables() {
@@ -179,6 +175,11 @@ public class GPXTrack extends GPXMeasurable {
     public List<GPXRoute> getGPXRoutes() {
         List<GPXRoute> result = new ArrayList<>();
         return result;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myTrack;
     }
 
     @Override

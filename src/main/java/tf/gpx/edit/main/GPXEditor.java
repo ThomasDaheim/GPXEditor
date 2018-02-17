@@ -26,6 +26,8 @@
 package tf.gpx.edit.main;
 
 import com.gluonhq.maps.MapView;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -35,8 +37,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -46,6 +50,7 @@ import java.util.stream.Collectors;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -87,12 +92,14 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.general.ShowAlerts;
+import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.EditGPXMetadata;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -106,6 +113,7 @@ import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.parser.DefaultExtensionHolder;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
@@ -253,6 +261,10 @@ public class GPXEditor implements Initializable {
     private MenuItem metadataMenu;
     @FXML
     private MenuItem statisticsMenu;
+    @FXML
+    private TreeTableColumn<GPXLineItem, Boolean> extGPXCol;
+    @FXML
+    private TableColumn<GPXWaypoint, Boolean> extTrackCol;
 
 
     @Override
@@ -600,6 +612,58 @@ public class GPXEditor implements Initializable {
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
         noItemsGPXCol.setEditable(false);
         noItemsGPXCol.setPrefWidth(NORMAL_WIDTH);
+
+        extGPXCol.setCellValueFactory(
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, Boolean> p) -> new SimpleBooleanProperty(
+                                (p.getValue().getValue().getContent().getExtensionData() != null) &&
+                                !p.getValue().getValue().getContent().getExtensionData().isEmpty()));
+        extGPXCol.setCellFactory(col -> new TreeTableCell<GPXLineItem, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(null);
+
+                    if (item) {
+                        // set the background image
+                        // https://gist.github.com/jewelsea/1446612, FontAwesomeIcon.CUBES
+                        final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
+                        
+                        if (getTreeTableRow().getItem() != null &&
+                            getTreeTableRow().getItem().getContent() != null &&
+                            getTreeTableRow().getItem().getContent().getExtensionData() != null) {
+                            // add the tooltext that contains the extension data we have parsed
+                            final StringBuilder tooltext = new StringBuilder();
+                            final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getContent().getExtensionData();
+                            for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
+                                if (entry.getValue() instanceof DefaultExtensionHolder) {
+                                    if (tooltext.length() > 0) {
+                                        tooltext.append(System.lineSeparator());
+                                    }
+                                    tooltext.append(entry.getKey());
+                                    tooltext.append(System.lineSeparator());
+                                    tooltext.append(((DefaultExtensionHolder) entry.getValue()).toString());
+                                }
+                            }
+                            if (tooltext.length() > 0) {
+                                final Tooltip t = new Tooltip(tooltext.toString());
+                                t.getStyleClass().addAll("extension-popup");
+                                TooltipHelper.updateTooltipBehavior(t, 0, 10000, 0, true);
+                                
+                                Tooltip.install(fontAwesomeIcon, t);
+                            }
+                        }
+
+                        setGraphic(fontAwesomeIcon);
+                    }
+                }
+            }
+        });
+        extGPXCol.setEditable(false);
+        extGPXCol.setPrefWidth(SMALL_WIDTH);
         
         // left pane, bottom anchor
         bottomAnchorPane.setMinHeight(0);
@@ -739,6 +803,58 @@ public class GPXEditor implements Initializable {
         slopeTrackCol.setEditable(false);
         slopeTrackCol.setPrefWidth(NORMAL_WIDTH);
         
+        extTrackCol.setCellValueFactory(
+                (TableColumn.CellDataFeatures<GPXWaypoint, Boolean> p) -> new SimpleBooleanProperty(
+                                (p.getValue().getContent().getExtensionData() != null) &&
+                                !p.getValue().getContent().getExtensionData().isEmpty()));
+        extTrackCol.setCellFactory(col -> new TableCell<GPXWaypoint, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(null);
+
+                    if (item) {
+                        // set the background image
+                        // https://gist.github.com/jewelsea/1446612, FontAwesomeIcon.CUBES
+                        final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
+                        
+                        if (getTableRow().getItem() != null &&
+                            ((GPXWaypoint) getTableRow().getItem()).getContent() != null &&
+                            ((GPXWaypoint) getTableRow().getItem()).getContent().getExtensionData() != null) {
+                            // add the tooltext that contains the extension data we have parsed
+                            final StringBuilder tooltext = new StringBuilder();
+                            final HashMap<String, Object> extensionData = ((GPXWaypoint) getTableRow().getItem()).getContent().getExtensionData();
+                            for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
+                                if (entry.getValue() instanceof DefaultExtensionHolder) {
+                                    if (tooltext.length() > 0) {
+                                        tooltext.append(System.lineSeparator());
+                                    }
+                                    tooltext.append(entry.getKey());
+                                    tooltext.append(System.lineSeparator());
+                                    tooltext.append(((DefaultExtensionHolder) entry.getValue()).toString());
+                                }
+                            }
+                            if (tooltext.length() > 0) {
+                                final Tooltip t = new Tooltip(tooltext.toString());
+                                t.getStyleClass().addAll("extension-popup");
+                                TooltipHelper.updateTooltipBehavior(t, 0, 10000, 0, true);
+                                
+                                Tooltip.install(fontAwesomeIcon, t);
+                            }
+                        }
+
+                        setGraphic(fontAwesomeIcon);
+                    }
+                }
+            }
+        });
+        extTrackCol.setEditable(false);
+        extTrackCol.setPrefWidth(SMALL_WIDTH);
+        
         // right pane: resize with its anchor
         viewSplitPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
         viewSplitPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
@@ -801,6 +917,11 @@ public class GPXEditor implements Initializable {
     }
     private TreeItem<GPXLineItem> createTreeItemForGPXFile(final GPXFile gpxFile) {
         final TreeItem<GPXLineItem> gpxFileItem = new TreeItem<>(gpxFile);
+        
+        if (gpxFile.getGPXMetadata() != null) {
+            final TreeItem<GPXLineItem> gpxMetadataItem = new TreeItem<>(gpxFile.getGPXMetadata());
+            gpxFileItem.getChildren().add(gpxMetadataItem);
+        }
         
         for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
             final TreeItem<GPXLineItem> gpxTrackItem = new TreeItem<>(gpxTrack);

@@ -26,6 +26,7 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Bounds;
+import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
@@ -130,11 +131,6 @@ public class GPXWaypoint extends GPXLineItem {
     
     @Override
     public void setChildren(final List<GPXLineItem> children) {
-    }
-
-    @Override
-    public GPXLineItemType getType() {
-        return GPXLineItemType.GPXWaypoint;
     }
     
     @Override
@@ -270,6 +266,11 @@ public class GPXWaypoint extends GPXLineItem {
             result.add((GPXRoute) myGPXParent);
         }
         return result;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myWaypoint;
     }
 
     @Override

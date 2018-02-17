@@ -57,6 +57,7 @@ import javafx.util.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
+import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.main.GPXEditorManager;
 
 
@@ -139,46 +140,6 @@ class GPXWaypointLayer extends MapLayer {
         setCacheHint(CacheHint.SPEED);
     }
     
-    // https://stackoverflow.com/a/42759066
-    /**
-     * Hack allowing to modify the default behavior of the tooltips.
-     * @param openDelay The open delay, knowing that by default it is set to 1000.
-     * @param visibleDuration The visible duration, knowing that by default it is set to 5000.
-     * @param closeDelay The close delay, knowing that by default it is set to 200.
-     * @param hideOnExit Indicates whether the tooltip should be hide on exit, 
-     * knowing that by default it is set to false.
-     */
-    private static void updateTooltipBehavior(
-            final Tooltip tooltip,
-            final double openDelay,
-            final double visibleDuration,
-            final double closeDelay,
-            final boolean hideOnExit) {
-        try {
-            // Get the non public field "BEHAVIOR"
-            Field fieldBehavior = tooltip.getClass().getDeclaredField("BEHAVIOR");
-            // Make the field accessible to be able to get and set its value
-            fieldBehavior.setAccessible(true);
-            // Get the value of the static field
-            Object objBehavior = fieldBehavior.get(null);
-            // Get the constructor of the private static inner class TooltipBehavior
-            Constructor<?> constructor = objBehavior.getClass().getDeclaredConstructor(
-                Duration.class, Duration.class, Duration.class, boolean.class
-            );
-            // Make the constructor accessible to be able to invoke it
-            constructor.setAccessible(true);
-            // Create a new instance of the private static inner class TooltipBehavior
-            Object tooltipBehavior = constructor.newInstance(
-                new Duration(openDelay), new Duration(visibleDuration),
-                new Duration(closeDelay), hideOnExit
-            );
-            // Set the new instance of TooltipBehavior
-            fieldBehavior.set(null, tooltipBehavior);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }    
-    
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         final double ratio = GPXTrackviewer.MAX_DATAPOINTS / gpxWaypoints.size();
 
@@ -221,7 +182,7 @@ class GPXWaypointLayer extends MapLayer {
                 
                 final Tooltip tooltip = new Tooltip(gpxWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position));
                 tooltip.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
-                GPXWaypointLayer.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                 
                 Tooltip.install(icon, tooltip);
                 

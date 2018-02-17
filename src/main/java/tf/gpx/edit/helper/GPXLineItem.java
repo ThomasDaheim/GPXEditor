@@ -26,6 +26,7 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Bounds;
+import com.hs.gpxparser.modal.Extension;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -52,6 +53,7 @@ public abstract class GPXLineItem {
     // What am I?
     public static enum GPXLineItemType {
         GPXFile("File"),
+        GPXMetadata("Meta"),
         GPXTrack("Track"),
         GPXTrackSegment("Sgmnt"),
         GPXWaypoint("Waypt"),
@@ -60,6 +62,7 @@ public abstract class GPXLineItem {
         // TODO: extend for complex case of waypoints under files and routes with waypoints...
         public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
             // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)
+            // metadata is parent of no one
             // track is parent of segment
             // segment is parent of waypoint
             // route is parent of waypoint
@@ -67,11 +70,13 @@ public abstract class GPXLineItem {
             switch (parent) {
                 case GPXFile:
                     return (!GPXFile.equals(item) && !GPXTrackSegment.equals(item));
+                case GPXWaypoint:
+                    return false;
                 case GPXTrack:
                     return (GPXTrackSegment.equals(item));
                 case GPXTrackSegment:
                     return (GPXWaypoint.equals(item));
-                case GPXWaypoint:
+                case GPXMetadata:
                     return false;
                 case GPXRoute:
                     return (GPXWaypoint.equals(item));
@@ -82,6 +87,7 @@ public abstract class GPXLineItem {
         
         public static boolean isChildTypeOf(final GPXLineItemType child, final GPXLineItemType item) {
             // file is child of no one
+            // metadata is child of file
             // track is child of file
             // segment is child of track
             // route is child of file
@@ -89,6 +95,8 @@ public abstract class GPXLineItem {
             switch (child) {
                 case GPXFile:
                     return false;
+                case GPXMetadata:
+                    return (GPXFile.equals(item));
                 case GPXTrack:
                     return (GPXFile.equals(item));
                 case GPXTrackSegment:
@@ -104,6 +112,7 @@ public abstract class GPXLineItem {
         
         public static boolean isLowerTypeThan(final GPXLineItemType lower, final GPXLineItemType item) {
             // file is lower nothing
+            // metadata is lower file
             // track is lower file
             // segment is lower file & track
             // route is lower file
@@ -111,6 +120,8 @@ public abstract class GPXLineItem {
             switch (lower) {
                 case GPXFile:
                     return false;
+                case GPXMetadata:
+                    return (GPXFile.equals(item));
                 case GPXTrack:
                     return (GPXFile.equals(item));
                 case GPXTrackSegment:
@@ -126,6 +137,7 @@ public abstract class GPXLineItem {
         
         public static boolean isUpperTypeThan(final GPXLineItemType upper, final GPXLineItemType item) {
             // file is upper everything BUT not itself
+            // metadata is upper nothing
             // track is upper segment & waypoint
             // segment is upper waypoint
             // route is upper waypoint
@@ -133,6 +145,8 @@ public abstract class GPXLineItem {
             switch (upper) {
                 case GPXFile:
                     return (!GPXFile.equals(item));
+                case GPXMetadata:
+                    return false;
                 case GPXTrack:
                     return (GPXTrackSegment.equals(item) || GPXWaypoint.equals(item));
                 case GPXTrackSegment:
@@ -296,7 +310,9 @@ public abstract class GPXLineItem {
     }
 
     // required getter & setter 
-    public abstract GPXLineItemType getType();
+    public GPXLineItemType getType() {
+        return myItemType;
+    }
     public abstract String getName();
     public abstract void setName(final String name);
     public abstract String getDataAsString(final GPXLineItem.GPXLineItemData gpxLineItemData);
@@ -304,6 +320,10 @@ public abstract class GPXLineItem {
     
     // get associated GPXLineItemType - could be children or parents
     public abstract GPXFile getGPXFile();
+    public GPXMetadata getGPXMetadata() {
+        // default implementation is that I don't have no metadata
+        return null;
+    }
     public abstract List<GPXTrack> getGPXTracks();
     public abstract List<GPXTrackSegment> getGPXTrackSegments();
     // TFE, 20180214: wayopints can be below tracksegments, routes and file
@@ -311,6 +331,7 @@ public abstract class GPXLineItem {
     // either for a specific itemtype or for all (itemType = null)
     public abstract List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType);
     public abstract List<GPXRoute> getGPXRoutes();
+    public abstract Extension getContent();
 
     // getter & setter for my parent
     public abstract GPXLineItem getParent();

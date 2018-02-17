@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.parser.PixAndMoreParser;
 import com.hs.gpxparser.GPXWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,6 +53,7 @@ import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.parser.GarminParser;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
@@ -169,6 +171,9 @@ public class GPXEditorWorker {
                 // update bounds
                 gpxFile.setHeaderAndMeta();
                 final GPXWriter writer = new GPXWriter();
+                writer.addExtensionParser(PixAndMoreParser.getInstance());
+                writer.addExtensionParser(GarminParser.getInstance());
+                
                 final FileOutputStream out;
                 out = new FileOutputStream(curFile.toFile());
                 writer.writeGPX(gpxFile.getGPX(), out);

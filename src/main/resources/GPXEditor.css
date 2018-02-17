@@ -55,7 +55,6 @@
     -fx-background-insets: 0, 1, 2;
 }
 
-
 .tree-table-view .table-cell, .tree-table-view .column-header {
     -fx-padding: 0 5 0 5;
 }
@@ -69,9 +68,11 @@
 
 .gpxFileList .startCol,
 .gpxFileList .durationCol,
+.gpxFileList .extCol,
 .gpxTrackList .posCol, 
 .gpxTrackList .dateCol,
-.gpxTrackList .durationCol {
+.gpxTrackList .durationCol,
+.gpxTrackList .extCol {
   -fx-alignment: CENTER;
 }
 
@@ -86,6 +87,11 @@
 .gpxTrackList .heightDiffCol,
 .gpxTrackList .slopeCol {
   -fx-alignment: CENTER_RIGHT;
+}
+
+.extension-popup {
+    -fx-font-weight: bold;
+    -fx-font-size: 1em;
 }
 
 /*

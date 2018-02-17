@@ -130,6 +130,7 @@
                                     <TreeTableColumn fx:id="cumAccGPXCol" prefWidth="70.0" styleClass="cumAccCol" text="+dH [m]" />
                                     <TreeTableColumn fx:id="cumDescGPXCol" prefWidth="70.0" styleClass="cumDescCol" text="-dH [m]" />
                                     <TreeTableColumn fx:id="noItemsGPXCol" prefWidth="70.0" styleClass="noItemsCol" text="Items" />
+                                    <TreeTableColumn fx:id="extGPXCol" prefWidth="55.0" styleClass="extCol" text="Ext." />
                                 </columns>
                               </TreeTableView>
                            </children>
@@ -148,6 +149,7 @@
                                     <TableColumn fx:id="heightTrackCol" prefWidth="70.0" styleClass="heightCol" text="H [m]" />
                                     <TableColumn fx:id="heightDiffTrackCol" prefWidth="70.0" styleClass="heightDiffCol" text="dH [m]" />
                                     <TableColumn fx:id="slopeTrackCol" prefWidth="70.0" styleClass="slopeCol" text="Slope [%]" />
+                                    <TableColumn fx:id="extTrackCol" prefWidth="55.0" styleClass="extCol" text="Ext." />
                                 </columns>
                               </TableView>
                            </children>

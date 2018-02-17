@@ -25,7 +25,9 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.parser.PixAndMoreParser;
 import com.hs.gpxparser.GPXParser;
+import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.GPX;
 import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.modal.Metadata;
@@ -46,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import tf.gpx.edit.parser.GarminParser;
 
 /**
  *
@@ -55,6 +58,7 @@ public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
+    private GPXMetadata myGPXMetadata;
     private List<GPXRoute> myGPXRoutes = new ArrayList<>();
     private List<GPXTrack> myGPXTracks = new ArrayList<>();
     private List<GPXWaypoint> myGPXWaypoints = new ArrayList<>();
@@ -69,10 +73,17 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         final GPXParser parser = new GPXParser();
+        parser.addExtensionParser(PixAndMoreParser.getInstance());
+        parser.addExtensionParser(GarminParser.getInstance());
+        
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
         } catch (Exception ex) {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        if (myGPX.getMetadata() != null) {
+            myGPXMetadata = new GPXMetadata(this, myGPX.getMetadata());
         }
 
         // TFE, 20180203: gpx without tracks is valid!
@@ -106,7 +117,7 @@ public class GPXFile extends GPXMeasurable {
     public final void setHeaderAndMeta() {
         myGPX.setCreator("GPXEditor");
         myGPX.setVersion("1.3");
-        myGPX.setXmlns("http://www.topografix.com/GPX/1/1");
+        myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
         
         final HashSet<Link> links = new HashSet<>();
         links.add(new Link("https://github.com/ThomasDaheim/GPXEditor"));
@@ -163,6 +174,9 @@ public class GPXFile extends GPXMeasurable {
     public List<GPXLineItem> getChildren() {
         final List<GPXLineItem> result = new ArrayList<>();
 
+        if (myGPXMetadata != null) {
+            result.add(myGPXMetadata);
+        }
         result.addAll(myGPXWaypoints);
         result.addAll(myGPXTracks);
         result.addAll(myGPXRoutes);
@@ -172,7 +186,14 @@ public class GPXFile extends GPXMeasurable {
     
     @Override
     public void setChildren(final List<GPXLineItem> children) {
-        // children can be any of waypoints, tracks, routes...
+        // children can be any of waypoints, tracks, routes, metadata...
+        final List<GPXMetadata> metaList = castChildren(GPXMetadata.class, children);
+        if (metaList.isEmpty()) {
+            myGPXMetadata = null;
+        } else {
+            myGPXMetadata = metaList.get(0);
+        }
+
         setGPXWaypoints(castChildren(GPXWaypoint.class, children));
         setGPXTracks(castChildren(GPXTrack.class, children));
         setGPXRoutes(castChildren(GPXRoute.class, children));
@@ -222,11 +243,6 @@ public class GPXFile extends GPXMeasurable {
 
         setHasUnsavedChanges();
     }
-
-    @Override
-    public GPXLineItemType getType() {
-        return GPXLineItemType.GPXFile;
-    }
     
     @Override
     public List<GPXMeasurable> getGPXMeasurables() {
@@ -241,6 +257,11 @@ public class GPXFile extends GPXMeasurable {
     @Override
     public GPXFile getGPXFile() {
         return this;
+    }
+
+    @Override
+    public GPXMetadata getGPXMetadata() {
+        return myGPXMetadata;
     }
 
     @Override
@@ -286,6 +307,11 @@ public class GPXFile extends GPXMeasurable {
     public List<GPXRoute> getGPXRoutes() {
         // return copy of list
         return myGPXRoutes.stream().collect(Collectors.toList());
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myGPX;
     }
 
     /**
