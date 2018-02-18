@@ -91,6 +91,7 @@ import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -101,7 +102,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.EditGPXMetadata;
+import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
@@ -507,7 +508,7 @@ public class GPXEditor implements Initializable {
                 }
             }
             if (newSelection != null) {
-                showWaypoints(newSelection.getValue());
+                showDetails(newSelection.getValue());
                 
                 if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
                     distributionsMenu.setDisable(false);
@@ -517,7 +518,7 @@ public class GPXEditor implements Initializable {
                     specialValuesMenu.setDisable(true);
                 }
             } else {
-                showWaypoints(null);
+                showDetails(null);
                 distributionsMenu.setDisable(true);
                 specialValuesMenu.setDisable(true);
             }
@@ -624,6 +625,7 @@ public class GPXEditor implements Initializable {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    setGraphic(null);
                 } else {
                     setText(null);
 
@@ -658,6 +660,8 @@ public class GPXEditor implements Initializable {
                         }
 
                         setGraphic(fontAwesomeIcon);
+                    } else {
+                        setGraphic(null);
                     }
                 }
             }
@@ -726,7 +730,7 @@ public class GPXEditor implements Initializable {
                     trackSegment.setGPXWaypoints(waypoints);
                 }
                 // show the new segment
-                showWaypoints(track);
+                showDetails(track);
                 // force repaint of gpxFileList to show unsaved items
                 gpxFileListXML.refresh();
             });
@@ -814,6 +818,7 @@ public class GPXEditor implements Initializable {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    setGraphic(null);
                 } else {
                     setText(null);
 
@@ -848,6 +853,8 @@ public class GPXEditor implements Initializable {
                         }
 
                         setGraphic(fontAwesomeIcon);
+                    } else {
+                        setGraphic(null);
                     }
                 }
             }
@@ -868,7 +875,14 @@ public class GPXEditor implements Initializable {
         final MapView mapView = GPXTrackviewer.getInstance().getMapView();
         mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
         mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
-        mapAnchorPane.getChildren().add(mapView);
+        mapView.setVisible(false);
+        final Pane metaPane = EditGPXMetadata.getInstance().getPane();
+        metaPane.prefHeightProperty().bind(mapAnchorPane.heightProperty());
+        metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
+        metaPane.setVisible(false);
+        mapAnchorPane.getChildren().addAll(mapView, metaPane);
+        
+        // TODO: add pane from metadata viewer as well and switch visibility based on selection
         
         // right pane, bottom anchor: resize with its anchor
         profileAnchorPane.setMinHeight(0);
@@ -941,7 +955,7 @@ public class GPXEditor implements Initializable {
         return gpxFileItem;
     }
     
-    private void showWaypoints(final GPXLineItem lineItem) {
+    private void showDetails(final GPXLineItem lineItem) {
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
@@ -959,8 +973,20 @@ public class GPXEditor implements Initializable {
         }
         gpxTrackXML.getSelectionModel().clearSelection();
 
-        // show map
         GPXTrackviewer.getInstance().setGPXWaypoints(gpxTrackXML.getItems());
+        if (lineItem != null) {
+            if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getGPXLineItemType())) {
+                // show map if not metadata
+                GPXTrackviewer.getInstance().getMapView().setVisible(true);
+                EditGPXMetadata.getInstance().getPane().setVisible(false);
+            } else {
+                // show metadata viewer
+                GPXTrackviewer.getInstance().getMapView().setVisible(false);
+                EditGPXMetadata.getInstance().getPane().setVisible(true);
+                
+                EditGPXMetadata.getInstance().editMetadata(lineItem.getGPXFile());
+            }
+        }
         
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
@@ -989,7 +1015,7 @@ public class GPXEditor implements Initializable {
             if (gpxFiles.size() == 1) {
                 // 2) if currently a file is shown, show it again
                 if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-                    showWaypoints(gpxFiles.get(0));
+                    showDetails(gpxFiles.get(0));
                 } else {
                     // else, find and show track
                     final List<GPXTrack> gpxTracks = 
@@ -1005,10 +1031,10 @@ public class GPXEditor implements Initializable {
                         collect(Collectors.toList());
                     
                     if (gpxTracks.size() == 1) {
-                        showWaypoints(gpxTracks.get(0));
+                        showDetails(gpxTracks.get(0));
                     } else {
                         // nothing found!!! probably somthing wrong... so better clear list
-                        showWaypoints(null);
+                        showDetails(null);
                     }
                 }
                 
@@ -1086,7 +1112,7 @@ public class GPXEditor implements Initializable {
         // TFE, 20180111: horrible performance for large gpx files if listener on selection is active
         gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileListXML.getSelectionModel().clearSelection();
-        showWaypoints(null);
+        showDetails(null);
         distributionsMenu.setDisable(true);
         gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
         gpxFileListXML.refresh();
@@ -1466,7 +1492,7 @@ public class GPXEditor implements Initializable {
         
         DistributionViewer.getInstance().setCallback(this);
         if (DistributionViewer.getInstance().showDistributions(waypoints)) {
-            showWaypoints(item);
+            showDetails(item);
         }
     }
     

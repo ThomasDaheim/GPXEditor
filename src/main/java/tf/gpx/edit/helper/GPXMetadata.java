@@ -127,6 +127,10 @@ public class GPXMetadata extends GPXMeasurable {
         return myMetadata;
     }
 
+    public Metadata getMetadata() {
+        return myMetadata;
+    }
+
     @Override
     public GPXLineItem getParent() {
         return myGPXFile;

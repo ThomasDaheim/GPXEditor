@@ -32,6 +32,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 
 /**
@@ -68,12 +70,20 @@ public class DefaultExtensionHolder {
             StringWriter sw = new StringWriter();
             Transformer t = TransformerFactory.newInstance().newTransformer();
             t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            t.setOutputProperty(OutputKeys.INDENT, "yes");
-            t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+//            t.setOutputProperty(OutputKeys.INDENT, "yes");
+//            t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
             t.transform(new DOMSource(myNode), new StreamResult(sw));
+            result = sw.toString();
             
             // remove unnecessary multiple tabs and final newline
-            result = sw.toString().replace("\t\t\t", "");
+            final String lastValue = myNode.getLastChild().getNodeValue();
+            // count number of tabs and remove that number in the whole output string
+            final int lastIndex = lastValue.lastIndexOf("\t");
+            if (lastIndex != ArrayUtils.INDEX_NOT_FOUND) {
+                final String tabsString = StringUtils.repeat("\t", lastIndex);
+                result = sw.toString().replace(tabsString, "");
+            }
+            
             result = result.substring(0, result.length() - 2);
         } catch (TransformerException te) {
             System.out.println("nodeToString Transformer Exception");

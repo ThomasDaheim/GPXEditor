@@ -55,6 +55,8 @@ import tf.gpx.edit.parser.GarminParser;
  * @author Thomas
  */
 public class GPXFile extends GPXMeasurable {
+    private final static String HOME_LINK = "https://github.com/ThomasDaheim/GPXEditor";
+            
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
@@ -119,9 +121,6 @@ public class GPXFile extends GPXMeasurable {
         myGPX.setVersion("1.3");
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
         
-        final HashSet<Link> links = new HashSet<>();
-        links.add(new Link("https://github.com/ThomasDaheim/GPXEditor"));
-        
         Metadata metadata;
         if (myGPX.getMetadata() != null) {
             metadata = myGPX.getMetadata();
@@ -129,8 +128,17 @@ public class GPXFile extends GPXMeasurable {
             metadata = new Metadata();
         }
         metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-        metadata.setLinks(links);
         metadata.setBounds(getBounds());
+
+        // add link to me if not already present
+        HashSet<Link> links = metadata.getLinks();
+        if (links == null) {
+            links = new HashSet<>();
+        }
+        if (!links.stream().anyMatch(link -> (link!=null && HOME_LINK.equals(link.getHref())))) {
+            links.add(new Link(HOME_LINK));
+        }
+        metadata.setLinks(links);
         
         myGPX.setMetadata(metadata);
     }
@@ -210,6 +218,13 @@ public class GPXFile extends GPXMeasurable {
                     return child.getWaypoint();
                 }).collect(Collectors.toSet());
         myGPX.setWaypoints(new HashSet<>(waypoints));
+
+        setHasUnsavedChanges();
+    }
+    
+    public void setGPXMetadata(final GPXMetadata gpxMetadata) {
+        myGPXMetadata = gpxMetadata;
+        myGPX.setMetadata(gpxMetadata.getMetadata());
 
         setHasUnsavedChanges();
     }

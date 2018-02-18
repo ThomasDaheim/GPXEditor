@@ -28,8 +28,6 @@ package tf.gpx.edit.helper;
 import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
 import com.gluonhq.maps.MapView;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.beans.InvalidationListener;
@@ -53,12 +51,10 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import javafx.util.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
 import tf.gpx.edit.general.TooltipHelper;
-import tf.gpx.edit.main.GPXEditorManager;
 
 
 /**
