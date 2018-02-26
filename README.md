@@ -49,8 +49,10 @@ Update v1.4
 - invert marked tracks
 - bugfixes to handle empty files, tracks, tracksegments
 - editor for <metadata> section in GPX 1.1
+- add support for routes and waypoints on file level
 - export as KML
 - show some track statistics
+- show extensions on all elements
 
 Track optimization
 
@@ -146,6 +148,23 @@ You can try to run and use this application by
 ```
 
 The tree will be in `build/install`.
+
+## Dependencies
+
+Of course, such a project depends on the results of many others! I've tried to add comments with links to stackoverflow, ... wherever I have re-used the ideas and code of others. In case I have forgotten someone: that was only by accident/incompetency but never intentionally. I'm grateful for anyone that provides his/her results for public use.
+
+Explicit dependencies:
+
+* 'org.slf4j:slf4j-api:1.7.12'
+* 'commons-cli:commons-cli:1.3.1'
+* 'commons-io:commons-io:2.4'
+* 'org.apache.commons:commons-lang3:3.5'
+* 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
+* 'com.gluonhq:maps:1.0.1'
+* 'org.jzy3d:jzy3d-api:1.0.0'
+* 'org.jzy3d:jzy3d-javafx:1.0.0'
+* 'org.controlsfx:controlsfx:8.40.14'
+* 'de.jensd:fontawesomefx:8.9'
 
 ## Roadmap
 
