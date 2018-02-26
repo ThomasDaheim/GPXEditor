@@ -37,12 +37,13 @@ dependencies {
     compile 'commons-cli:commons-cli:1.3.1'
     compile 'commons-io:commons-io:2.4'
     compile 'org.apache.commons:commons-lang3:3.5'
-    compile 'gpx-parser:gpx-parser:1.0'
+    compile 'gpx-parser:gpx-parser:1.2'
     compile 'com.gluonhq:maps:1.0.1'
     compile 'org.jzy3d:jzy3d-api:1.0.0'
     compile 'org.jzy3d:jzy3d-javafx:1.0.0'
     compile 'org.controlsfx:controlsfx:8.40.14'
-
+    compile 'de.jensd:fontawesomefx:8.9'
+    
     // You can read more about how to add dependency here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
     testCompile group: 'junit', name: 'junit', version: '4.12'

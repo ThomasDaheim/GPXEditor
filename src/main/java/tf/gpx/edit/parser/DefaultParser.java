@@ -23,43 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.xtrm;
+package tf.gpx.edit.parser;
 
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import com.hs.gpxparser.GPXConstants;
+import com.hs.gpxparser.extension.DummyExtensionParser;
+import org.w3c.dom.Node;
 
 /**
- * Distribution class for binning GPXWaypoint data.
- * Based on the GPXLineItemData the corresponding value is used for binning.
+ * Default abstract parser for gpx files
+ * 
+ * Implements the general writeExtensions method
  * 
  * @author thomas
  */
-public class GPXWaypointDistribution extends ValueDistribution<GPXWaypoint> {
-    // this is a singleton for everyones use
-    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private static final GPXWaypointDistribution INSTANCE = new GPXWaypointDistribution();
-    
-    private GPXLineItem.GPXLineItemData myData;
+public class DefaultParser extends DummyExtensionParser {
+    private final static DefaultParser INSTANCE = new DefaultParser();
 
-    private GPXWaypointDistribution() {
+    public final static String PARSER_ID = "DefaultParser";    
+    
+    private DefaultParser() {
     }
 
-    public static GPXWaypointDistribution getInstance() {
+    public static DefaultParser getInstance() {
         return INSTANCE;
-    }
-    
-    public GPXLineItem.GPXLineItemData getGPXLineItemData() {
-        return myData;
-    }
-    
-    public void setGPXLineItemData(final GPXLineItem.GPXLineItemData gpxLineItemData) {
-        myData = gpxLineItemData;
     }
 
     @Override
-    public double getValueAsDouble(GPXWaypoint value) {
-        assert myData != null;
-        
-        return value.getDataAsDouble(myData);
+    public String getId() {
+        return PARSER_ID;
+    }
+
+    @Override
+    public Object parseExtensions(Node node) {
+        // store all nodes under extension in DummyExtensionHolder - if any
+        if (GPXConstants.NODE_EXTENSIONS.equals(node.getNodeName()) && (node.getChildNodes().getLength() > 0)) {
+            return new DefaultExtensionHolder(node.getChildNodes());
+        } else {
+            return null;
+        }
     }
 }

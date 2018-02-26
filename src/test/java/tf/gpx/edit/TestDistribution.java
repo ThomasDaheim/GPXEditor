@@ -35,9 +35,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.xtrm.BinValue;
-import tf.gpx.edit.xtrm.BinValueDistribution;
-import tf.gpx.edit.xtrm.ValueDistribution;
+import tf.gpx.edit.values.BinValue;
+import tf.gpx.edit.values.BinValueDistribution;
+import tf.gpx.edit.values.ValueDistribution;
 
 /**
  *

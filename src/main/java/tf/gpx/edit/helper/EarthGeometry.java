@@ -581,6 +581,6 @@ public class EarthGeometry {
         final int degrees = (int) Math.floor(latlon);
         final double minutes = (latlon - degrees) * 60.0;
         final double seconds = (minutes - (int) Math.floor(minutes)) * 60.0;
-        return String.format("%s %2d° %2d' %4.2f\"", direction, degrees, (int) Math.floor(minutes), seconds);
+        return String.format("%s %2d°%2d'%4.2f\"", direction, degrees, (int) Math.floor(minutes), seconds);
     }
 }

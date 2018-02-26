@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Bounds;
+import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,7 +37,8 @@ import java.util.List;
  * @author Thomas
  */
 public class GPXWaypoint extends GPXLineItem {
-    private GPXTrackSegment myGPXTrackSegment;
+    // TFE, 20180214: waypoints can be in segments, routes and files
+    private GPXLineItem myGPXParent;
     private Waypoint myWaypoint;
     private GPXWaypoint myPrevGPXWaypoint = null;
     private GPXWaypoint myNextGPXWaypoint = null;
@@ -43,16 +46,16 @@ public class GPXWaypoint extends GPXLineItem {
     private boolean myHighlight = false;
     
     private GPXWaypoint() {
-        super();
+        super(GPXLineItemType.GPXWaypoint);
     }
     
     public GPXWaypoint(
-            final GPXTrackSegment gpxTrackSegment, 
+            final GPXLineItem gpxParent, 
             final Waypoint waypoint,
             final int number) {
-        super();
+        super(GPXLineItemType.GPXWaypoint);
         
-        myGPXTrackSegment = gpxTrackSegment;
+        myGPXParent = gpxParent;
         myWaypoint = waypoint;
         setNumber(number);
     }
@@ -85,6 +88,18 @@ public class GPXWaypoint extends GPXLineItem {
         myNextGPXWaypoint = wayPoint;
     }
     
+    public boolean isGPXFileWaypoint() {
+        return GPXLineItemType.GPXFile.equals(myGPXParent.getGPXLineItemType());
+    }
+    
+    public boolean isGPXRouteWaypoint() {
+        return GPXLineItemType.GPXRoute.equals(myGPXParent.getGPXLineItemType());
+    }
+    
+    public boolean isGPXTrackWaypoint() {
+        return GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getGPXLineItemType());
+    }
+    
     @Override
     public String getName() {
         return myWaypoint.getName();
@@ -98,14 +113,14 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public GPXLineItem getParent() {
-        return myGPXTrackSegment;
+        return myGPXParent;
     }
 
     @Override
     public void setParent(GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType());
+        assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getGPXLineItemType());
         
-        myGPXTrackSegment = (GPXTrackSegment) parent;
+        myGPXParent = parent;
         setHasUnsavedChanges();
     }
 
@@ -117,23 +132,24 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public void setChildren(final List<GPXLineItem> children) {
     }
-
-    @Override
-    public GPXLineItemType getType() {
-        return GPXLineItemType.GPXWaypoint;
-    }
     
     @Override
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
-                return "Waypt";
+                return getGPXLineItemType().getDescription();
             case Name:
-                return myWaypoint.getName();
+                return getName();
             case Position:
                 return EarthGeometry.latToString(this) + " " + EarthGeometry.lonToString(this);
             case Date:
-                return DATE_FORMAT.format(myWaypoint.getTime());
+                // format dd.mm.yyyy hh:mm:ss
+                final Date start = myWaypoint.getTime();
+                if (start != null) {
+                    return gpxLineItemData.getFormat().format(start);
+                } else {
+                    return "---";
+                }
             case Duration:
                 if (myPrevGPXWaypoint != null) {
                     return getDurationAsString();
@@ -142,27 +158,27 @@ public class GPXWaypoint extends GPXLineItem {
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return String.format("%1$.2f", EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
+                    return gpxLineItemData.getFormat().format(EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
                 } else {
                     return "---";
                 }
             case Speed:
                 if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
-                    return String.format("%1$.2f", getSpeed());
+                    return gpxLineItemData.getFormat().format(getSpeed());
                 } else {
                     return "---";
                 }
             case Elevation:
-                return String.format("%1$.2f", myWaypoint.getElevation());
+                return DOUBLE_FORMAT_2.format(myWaypoint.getElevation());
             case ElevationDifferenceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return String.format("%1$.2f", getElevationDiff());
+                    return gpxLineItemData.getFormat().format(getElevationDiff());
                 } else {
                     return "---";
                 }
             case Slope:
                 if (myPrevGPXWaypoint != null) {
-                    return String.format("%1$.1f", getSlope());
+                    return gpxLineItemData.getFormat().format(getSlope());
                 } else {
                     return "---";
                 }
@@ -228,20 +244,43 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public List<GPXTrackSegment> getGPXTrackSegments() {
         List<GPXTrackSegment> result = new ArrayList<>();
-        result.add(myGPXTrackSegment);
+        if (GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getGPXLineItemType())) {
+            result.add((GPXTrackSegment) myGPXParent);
+        }
         return result;
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints() {
+    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
         List<GPXWaypoint> result = new ArrayList<>();
-        result.add(this);
+        if (itemType == null || itemType.equals(myGPXParent.getGPXLineItemType())) {
+            result.add(this);
+        }
         return result;
+    }
+
+    @Override
+    public List<GPXRoute> getGPXRoutes() {
+        List<GPXRoute> result = new ArrayList<>();
+        if (GPXLineItemType.GPXRoute.equals(myGPXParent.getGPXLineItemType())) {
+            result.add((GPXRoute) myGPXParent);
+        }
+        return result;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myWaypoint;
     }
 
     @Override
     public long getDuration() {
         return EarthGeometry.duration(this, myPrevGPXWaypoint);
+    }
+
+    @Override
+    public Bounds getBounds() {
+        return new Bounds(myWaypoint.getLatitude(), myWaypoint.getLatitude(), myWaypoint.getLongitude(), myWaypoint.getLongitude());
     }
     
     public double getSpeed() {

@@ -28,15 +28,15 @@ package tf.gpx.edit.helper;
 import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
 import com.gluonhq.maps.MapView;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
@@ -46,14 +46,19 @@ import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
+import javafx.scene.shape.Shape;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
+import tf.gpx.edit.general.TooltipHelper;
+import tf.gpx.edit.main.GPXEditor;
 
 
 /**
@@ -67,6 +72,8 @@ public class GPXTrackviewer {
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
 
+    private GPXEditor myGPXEditor;
+    
     private final MapView myMapView;
     private final GPXWaypointChart myGPXWaypointChart;
     private final GPXWaypointLayer myGPXWaypointLayer;
@@ -93,11 +100,22 @@ public class GPXTrackviewer {
         return myMapView;
     }
     
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+        
+        // pass it on!
+        myGPXWaypointLayer.setCallback(gpxEditor);
+        myGPXWaypointChart.setCallback(gpxEditor);
+    }
+    
     public XYChart getChart() {
         return myGPXWaypointChart;
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        assert myGPXEditor != null;
+        assert gpxWaypoints != null;
+
         // show in gluon map
         myMapView.removeLayer(myGPXWaypointLayer);
         myGPXWaypointLayer.setGPXWaypoints(gpxWaypoints);
@@ -109,15 +127,26 @@ public class GPXTrackviewer {
         // show elevation chart
         myGPXWaypointChart.setGPXWaypoints(gpxWaypoints);
         myGPXWaypointChart.setVisible(!gpxWaypoints.isEmpty());
+
+        myGPXWaypointLayer.clearSelectedGPXWaypoints();
+        myGPXWaypointChart.clearSelectedGPXWaypoints();
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        assert myGPXEditor != null;
+        assert gpxWaypoints != null;
+
         myGPXWaypointLayer.setSelectedGPXWaypoints(gpxWaypoints);
         myGPXWaypointChart.setSelectedGPXWaypoints(gpxWaypoints);
     }
 }
 
 class GPXWaypointLayer extends MapLayer {
+    private GPXEditor myGPXEditor;
+
+    private final ImagePattern fileWaypointImage = 
+            new ImagePattern(new Image(GPXWaypointLayer.class.getResource("/placemark_square.png").toExternalForm()));
+
     private final ObservableList<Triple<GPXWaypoint, Node, Line>> myPoints = FXCollections.observableArrayList();
     private final List<GPXWaypoint> selectedGPXWaypoints = new ArrayList<>();
     
@@ -129,45 +158,9 @@ class GPXWaypointLayer extends MapLayer {
         setCacheHint(CacheHint.SPEED);
     }
     
-    // https://stackoverflow.com/a/42759066
-    /**
-     * Hack allowing to modify the default behavior of the tooltips.
-     * @param openDelay The open delay, knowing that by default it is set to 1000.
-     * @param visibleDuration The visible duration, knowing that by default it is set to 5000.
-     * @param closeDelay The close delay, knowing that by default it is set to 200.
-     * @param hideOnExit Indicates whether the tooltip should be hide on exit, 
-     * knowing that by default it is set to false.
-     */
-    private static void updateTooltipBehavior(
-            final Tooltip tooltip,
-            final double openDelay,
-            final double visibleDuration,
-            final double closeDelay,
-            final boolean hideOnExit) {
-        try {
-            // Get the non public field "BEHAVIOR"
-            Field fieldBehavior = tooltip.getClass().getDeclaredField("BEHAVIOR");
-            // Make the field accessible to be able to get and set its value
-            fieldBehavior.setAccessible(true);
-            // Get the value of the static field
-            Object objBehavior = fieldBehavior.get(null);
-            // Get the constructor of the private static inner class TooltipBehavior
-            Constructor<?> constructor = objBehavior.getClass().getDeclaredConstructor(
-                Duration.class, Duration.class, Duration.class, boolean.class
-            );
-            // Make the constructor accessible to be able to invoke it
-            constructor.setAccessible(true);
-            // Create a new instance of the private static inner class TooltipBehavior
-            Object tooltipBehavior = constructor.newInstance(
-                new Duration(openDelay), new Duration(visibleDuration),
-                new Duration(closeDelay), hideOnExit
-            );
-            // Set the new instance of TooltipBehavior
-            fieldBehavior.set(null, tooltipBehavior);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }    
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         final double ratio = GPXTrackviewer.MAX_DATAPOINTS / gpxWaypoints.size();
@@ -188,27 +181,53 @@ class GPXWaypointLayer extends MapLayer {
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             i++;
             if (i * ratio >= count) {
-                final Circle icon = new Circle(3, Color.LIGHTGOLDENRODYELLOW);
-                icon.setVisible(true);
-                icon.setStroke(Color.RED);
-                icon.setStrokeWidth(0.5);
+                Shape icon;
+                
+                if (gpxWaypoint.isGPXFileWaypoint()) {
+                    icon = new Rectangle(32, 32, Color.WHITE);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.BLACK);
+                    icon.setStrokeWidth(0);
+                    // TODO: figure out way to stretch pattern to rectangle size
+                    icon.setFill(fileWaypointImage);
+                } else if (gpxWaypoint.isGPXRouteWaypoint()) {
+                    icon = new Rectangle(6, 6, Color.DARKRED);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.DARKBLUE);
+                    icon.setStrokeWidth(0.5);
+                } else {
+                    icon = new Circle(3, Color.LIGHTGOLDENRODYELLOW);
+                    icon.setVisible(true);
+                    icon.setStroke(Color.DARKRED);
+                    icon.setStrokeWidth(0.5);
+                }
+                
+                // click handler for icon to mark waypoint via callback to gpxeditor
+                icon.setUserData(gpxWaypoint);
+                icon.setOnMouseClicked((MouseEvent event) -> {
+                    myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) icon.getUserData()));
+                });
                 
                 final Tooltip tooltip = new Tooltip(gpxWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position));
                 tooltip.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
-                GPXWaypointLayer.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                 
                 Tooltip.install(icon, tooltip);
                 
                 this.getChildren().add(icon);
 
                 Line line = null;
-                // check for segment changes - we don't want lines between different segments
+                // check for segment changes - we don't want lines between different segments or different routes and not for GPXFile waypoints
                 // http://stackoverflow.com/questions/30879382/javafx-8-drawing-a-line-between-translated-nodes
-                if (prevIcon != null && prevWaypoint != null && prevWaypoint.getGPXTrackSegments().get(0).equals(gpxWaypoint.getGPXTrackSegments().get(0))) {
+                if (prevWaypoint != null && prevWaypoint.getParent().equals(gpxWaypoint.getParent()) && !gpxWaypoint.isGPXFileWaypoint()) {
                     line = new Line();
                     line.setVisible(true);
                     line.setStrokeWidth(1.5);
-                    line.setStroke(Color.DARKBLUE);
+                    if (gpxWaypoint.isGPXRouteWaypoint()) {
+                        line.setStroke(Color.DARKRED);
+                    } else {
+                        line.setStroke(Color.DARKBLUE);
+                    }
 
                     // bind ends of line:
                     line.startXProperty().bind(prevIcon.layoutXProperty().add(prevIcon.translateXProperty()));
@@ -243,6 +262,11 @@ class GPXWaypointLayer extends MapLayer {
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         selectedGPXWaypoints.clear();
         selectedGPXWaypoints.addAll(gpxWaypoints);
+        this.markDirty();
+    }
+
+    public void clearSelectedGPXWaypoints() {
+        selectedGPXWaypoints.clear();
         this.markDirty();
     }
 
@@ -298,6 +322,8 @@ class GPXWaypointLayer extends MapLayer {
 
 // inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
 class GPXWaypointChart<X,Y> extends AreaChart {
+    private GPXEditor myGPXEditor;
+
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedGPXWaypoints;
     
@@ -320,6 +346,10 @@ class GPXWaypointChart<X,Y> extends AreaChart {
         selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
     }
     
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
+    
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         setVisible(false);
         myPoints.clear();
@@ -332,9 +362,15 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
             // show elevation data on hover
             // https://gist.github.com/jewelsea/4681797
-            data.setNode(
-                new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()))
-            );
+
+            // click handler for icon to mark waypoint via callback to gpxeditor
+            final Node node = new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()));
+            node.setUserData(gpxWaypoint);
+            node.setOnMouseClicked((MouseEvent event) -> {
+                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
+            });
+            data.setNode(node);
+            
             dataList.add(data);
             myPoints.add(Pair.of(gpxWaypoint, distance));
         }
@@ -388,6 +424,18 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             getPlotChildren().addAll(rectangles);
         }
 
+        noLayout = false;
+        layoutPlotChildren();
+    }
+    
+    public void clearSelectedGPXWaypoints() {
+        noLayout = true;
+        
+        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
+            getPlotChildren().remove(waypoint.getRight());
+        }
+        selectedGPXWaypoints.clear();
+        
         noLayout = false;
         layoutPlotChildren();
     }

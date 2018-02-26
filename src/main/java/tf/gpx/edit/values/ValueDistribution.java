@@ -23,18 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.values;
+
+import java.util.List;
 
 /**
- *
- * @author Thomas
+ * Abstract base for a list of values of type T and a method that returns a double value for each T.
+ * Used as generic input for BinValueDistribution.
+ * 
+ * @author thomas
+ * @param <T>
  */
-public interface IGPXLineItemVisitor {
-    public abstract void visitGPXFile(final GPXFile gpxFile);
-    public abstract void visitGPXMetadata(final GPXMetadata gpxMetadata);
-    public abstract void visitGPXTrack(final GPXTrack gpxTrack);
-    public abstract void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment);
-    public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
-    public abstract void visitGPXRoute(final GPXRoute gpxRoute);
-    public abstract boolean deepthFirst();
+public abstract class ValueDistribution<T> {
+    private List<T> myValues;
+    
+    public List<T> getValues() {
+        return myValues;
+    }
+    
+    public void setValues(final List<T> values) {
+        myValues = values;
+    }
+    
+    public abstract double getValueAsDouble(final T value);
 }

@@ -55,7 +55,6 @@
     -fx-background-insets: 0, 1, 2;
 }
 
-
 .tree-table-view .table-cell, .tree-table-view .column-header {
     -fx-padding: 0 5 0 5;
 }
@@ -69,9 +68,11 @@
 
 .gpxFileList .startCol,
 .gpxFileList .durationCol,
+.gpxFileList .extCol,
 .gpxTrackList .posCol, 
 .gpxTrackList .dateCol,
-.gpxTrackList .durationCol {
+.gpxTrackList .durationCol,
+.gpxTrackList .extCol {
   -fx-alignment: CENTER;
 }
 
@@ -86,6 +87,11 @@
 .gpxTrackList .heightDiffCol,
 .gpxTrackList .slopeCol {
   -fx-alignment: CENTER_RIGHT;
+}
+
+.extension-popup {
+    -fx-font-weight: bold;
+    -fx-font-size: 0.9em;
 }
 
 /*
@@ -105,6 +111,13 @@
 
 .highlightedRow {
     -fx-background-color: firebrick;
+}
+
+
+/*
+    map chart
+*/
+.file-waypoint {
 }
 
 /*
@@ -175,4 +188,31 @@
 
 .small-text {
     -fx-font-size: 1.0em;
+}
+
+/*
+    no empty rows in statistics table
+*/
+.table-row-cell:empty {
+    -fx-background-color: white;
+    -fx-border-color: white;
+} 
+.table-row-cell:empty .table-cell {
+    -fx-border-width: 0px;
+}
+.stat-table *.scroll-bar:vertical *.increment-button,
+.stat-table *.scroll-bar:vertical *.decrement-button {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.stat-table *.scroll-bar:vertical *.increment-arrow, 
+.stat-table *.scroll-bar:vertical *.decrement-arrow {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-shape: null;
 }
