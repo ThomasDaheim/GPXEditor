@@ -27,6 +27,7 @@ package tf.gpx.edit.helper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.css.PseudoClass;
@@ -210,13 +211,15 @@ public class GPXTreeTableView {
             // drag is started inside the list
             // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html
             row.setOnDragDetected(event -> {
-                if (!row.isEmpty()) {
+                if (!row.isEmpty() && !GPXLineItem.GPXLineItemType.GPXMetadata.equals(row.getItem().getGPXLineItemType())) {
                     // check if we're trying to drag a GPXFile item and not a track in it
                     final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
                     final ClipboardContent cc = new ClipboardContent();
 
                     db.setDragView(row.snapshot(null, null));
-                    cc.put(SERIALIZED_MIME_TYPE, row.getIndex());
+                    final ArrayList<Integer> selection = new ArrayList<>();
+                    selection.addAll(myTreeTableView.getSelectionModel().getSelectedIndices());
+                    cc.put(SERIALIZED_MIME_TYPE, selection);
                     db.setContent(cc);
                     event.consume();
                 }
@@ -290,48 +293,61 @@ public class GPXTreeTableView {
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
             if (acceptable(db, row)) {
                 // get dragged item and item drop on to
-                final int draggedIndex = (Integer) db.getContent(SERIALIZED_MIME_TYPE);
+                // TODO: add support for multiple selections!
+                // and that means working on a copy of treeitems since otherwise everything gets messed up...
+                final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+
                 final int targetIndex = row.getIndex();
 
-                final TreeItem<GPXLineItem> draggedItem = myTreeTableView.getTreeItem(draggedIndex);
-                final TreeItem<GPXLineItem> targetItem = myTreeTableView.getTreeItem(targetIndex);
-
-                final GPXLineItem draggedLineItem = draggedItem.getValue();
-                final GPXLineItem targetLineItem = targetItem.getValue();
-
-                final GPXLineItem.GPXLineItemType draggedType = draggedLineItem.getType();
-                final GPXLineItem.GPXLineItemType targetType = targetLineItem.getType();
-                
-                draggedItem.getParent().getChildren().remove(draggedItem);
-                final List<GPXLineItem> draggedList = draggedLineItem.getParent().getChildren();
-                draggedList.remove(draggedLineItem);
-                draggedLineItem.getParent().setChildren(draggedList);
-                
-                List<GPXLineItem> targetList;
-                if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, draggedType)) {
-                    // index of dropped item under its parent - thats where we want to place the dragged item before
-                    final int childIndex = targetItem.getParent().getChildren().indexOf(targetItem);
-                    targetItem.getParent().getChildren().add(childIndex, draggedItem);
+                TreeItem<GPXLineItem> draggedItem = null;
+                Collections.reverse(selection);
+                for (int draggedIndex : selection) {
+                    // iterate backwards to not screw up indices when removing
+                    // add images infront of the list - reverse reverse logic :-)
                     
-                    // update GPXLineItem as well
-                    targetList = targetLineItem.getParent().getChildren();
-                    targetList.add(childIndex, draggedLineItem);
-                    targetLineItem.getParent().setChildren(targetList);
-                } else {
-                    // update GPXLineItem first to find the correct index to insert the treeitem
-                    targetList = targetLineItem.getChildren();
-                    targetList.add(0, draggedLineItem);
-                    targetLineItem.setChildren(targetList);
+                    draggedItem = myTreeTableView.getTreeItem(draggedIndex);
+                    final TreeItem<GPXLineItem> targetItem = myTreeTableView.getTreeItem(targetIndex);
 
-                    // droppped on parent type - always add in front
-                    // TFE, 20180215: with tracks and routes we need to be a bit more careful - "in front" might not be index 0...
-                    final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
-                    targetItem.getChildren().add(insertIndex, draggedItem);
+                    final GPXLineItem draggedLineItem = draggedItem.getValue();
+                    final GPXLineItem targetLineItem = targetItem.getValue();
+
+                    final GPXLineItem.GPXLineItemType draggedType = draggedLineItem.getType();
+                    final GPXLineItem.GPXLineItemType targetType = targetLineItem.getType();
+
+                    // remove dragged item from treeitem and gpdlineitem
+                    draggedItem.getParent().getChildren().remove(draggedItem);
+                    final List<GPXLineItem> draggedList = draggedLineItem.getParent().getChildren();
+                    draggedList.remove(draggedLineItem);
+                    draggedLineItem.getParent().setChildren(draggedList);
+
+                    List<GPXLineItem> targetList;
+                    if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, draggedType)) {
+                        // index of dropped item under its parent - thats where we want to place the dragged item before
+                        final int childIndex = targetItem.getParent().getChildren().indexOf(targetItem);
+                        targetItem.getParent().getChildren().add(childIndex, draggedItem);
+
+                        // update GPXLineItem as well
+                        targetList = targetLineItem.getParent().getChildren();
+                        targetList.add(childIndex, draggedLineItem);
+                        targetLineItem.getParent().setChildren(targetList);
+                    } else {
+                        // update GPXLineItem first to find the correct index to insert the treeitem
+                        targetList = targetLineItem.getChildren();
+                        targetList.add(0, draggedLineItem);
+                        targetLineItem.setChildren(targetList);
+
+                        // droppped on parent type - always add in front
+                        // TFE, 20180215: with tracks and routes we need to be a bit more careful - "in front" might not be index 0...
+                        final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
+                        targetItem.getChildren().add(insertIndex, draggedItem);
+                    }
                 }
 
                 event.setDropCompleted(true);
                 myTreeTableView.getSelectionModel().clearSelection();
-                myTreeTableView.getSelectionModel().select(draggedItem);
+                if (draggedItem != null) {
+                    myTreeTableView.getSelectionModel().select(draggedItem);
+                }
                 myTreeTableView.refresh();
                 event.consume();
             }           
@@ -357,25 +373,31 @@ public class GPXTreeTableView {
     private boolean acceptable(final Dragboard db, final TreeTableRow<GPXLineItem> row) {
         boolean result = false;
         if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-            final int index = (Integer) db.getContent(SERIALIZED_MIME_TYPE);
-            //System.out.println("index: " + index + ", row index:" + row.getIndex());
-            if (!row.isEmpty() && (row.getIndex() != index)) {
-                final TreeItem<GPXLineItem> target = row.getTreeItem();
-                final GPXLineItem.GPXLineItemType targetType = target.getValue().getType();
-                
-                final TreeItem<GPXLineItem> item = myTreeTableView.getTreeItem(index);
-                final GPXLineItem.GPXLineItemType itemType = item.getValue().getType();
-                
-                // don't create loops and only insert on same level or drop on direct parent type
-                result = !isParent(item, target) && 
-                        (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
-                
-//                System.out.println("row.getIndex(): " + row.getIndex());
-//                System.out.println("targetType, itemType: " + targetType + ", " + itemType);
-//                System.out.println("isParent(item, target): " + isParent(item, target));
-//                System.out.println("isSameTypeAs(targetType, itemType): " + GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType));
-//                System.out.println("isParentTypeOf(targetType, itemType): " + GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
-//                System.out.println("");
+            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+            for (int index : selection) {
+                //System.out.println("index: " + index + ", row index:" + row.getIndex());
+                if (!row.isEmpty() && (row.getIndex() != index)) {
+                    final TreeItem<GPXLineItem> target = row.getTreeItem();
+                    final GPXLineItem.GPXLineItemType targetType = target.getValue().getType();
+
+                    final TreeItem<GPXLineItem> item = myTreeTableView.getTreeItem(index);
+                    final GPXLineItem.GPXLineItemType itemType = item.getValue().getType();
+
+                    // don't create loops and only insert on same level or drop on direct parent type
+                    result = !isParent(item, target) && 
+                            (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
+                    if (!result) {
+                        // one line is enough
+                        break;
+                    }
+
+    //                System.out.println("row.getIndex(): " + row.getIndex());
+    //                System.out.println("targetType, itemType: " + targetType + ", " + itemType);
+    //                System.out.println("isParent(item, target): " + isParent(item, target));
+    //                System.out.println("isSameTypeAs(targetType, itemType): " + GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType));
+    //                System.out.println("isParentTypeOf(targetType, itemType): " + GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
+    //                System.out.println("");
+                }
             }
         }
         return result;

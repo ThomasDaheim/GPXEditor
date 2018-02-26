@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.parser.PixAndMoreParser;
 import com.hs.gpxparser.GPXParser;
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.GPX;
@@ -48,15 +47,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import tf.gpx.edit.parser.GarminParser;
+import tf.gpx.edit.parser.DefaultParser;
 
 /**
  *
  * @author Thomas
  */
 public class GPXFile extends GPXMeasurable {
-    private final static String HOME_LINK = "https://github.com/ThomasDaheim/GPXEditor";
-            
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
@@ -75,8 +72,7 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         final GPXParser parser = new GPXParser();
-        parser.addExtensionParser(PixAndMoreParser.getInstance());
-        parser.addExtensionParser(GarminParser.getInstance());
+        parser.addExtensionParser(DefaultParser.getInstance());
         
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
@@ -118,29 +114,29 @@ public class GPXFile extends GPXMeasurable {
     
     public final void setHeaderAndMeta() {
         myGPX.setCreator("GPXEditor");
-        myGPX.setVersion("1.3");
+        myGPX.setVersion("1.1");
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
         
-        Metadata metadata;
         if (myGPX.getMetadata() != null) {
-            metadata = myGPX.getMetadata();
-        } else {
-            metadata = new Metadata();
-        }
-        metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-        metadata.setBounds(getBounds());
+            final Metadata metadata = myGPX.getMetadata();
 
-        // add link to me if not already present
-        HashSet<Link> links = metadata.getLinks();
-        if (links == null) {
-            links = new HashSet<>();
+            metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            metadata.setBounds(getBounds());
+
+            // add link to me if not already present
+            HashSet<Link> links = metadata.getLinks();
+            if (links == null) {
+                links = new HashSet<>();
+            }
+            if (!links.stream().anyMatch(link -> (link!=null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
+                links.add(new Link(GPXMetadata.HOME_LINK));
+            }
+            metadata.setLinks(links);
+
+            setGPXMetadata(new GPXMetadata(this, metadata));
+            
+            resetHasUnsavedChanges();
         }
-        if (!links.stream().anyMatch(link -> (link!=null && HOME_LINK.equals(link.getHref())))) {
-            links.add(new Link(HOME_LINK));
-        }
-        metadata.setLinks(links);
-        
-        myGPX.setMetadata(metadata);
     }
     
     @Override

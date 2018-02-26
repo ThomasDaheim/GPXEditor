@@ -36,6 +36,8 @@ import java.util.List;
  * @author thomas
  */
 public class GPXMetadata extends GPXMeasurable {
+    public final static String HOME_LINK = "https://github.com/ThomasDaheim/GPXEditor";
+            
     private GPXFile myGPXFile;
     private Metadata myMetadata;
 

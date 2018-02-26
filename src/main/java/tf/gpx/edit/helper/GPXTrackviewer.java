@@ -29,12 +29,14 @@ import com.gluonhq.maps.MapLayer;
 import com.gluonhq.maps.MapPoint;
 import com.gluonhq.maps.MapView;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
@@ -45,6 +47,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
@@ -55,6 +58,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
 import tf.gpx.edit.general.TooltipHelper;
+import tf.gpx.edit.main.GPXEditor;
 
 
 /**
@@ -67,6 +71,8 @@ public class GPXTrackviewer {
     public final static double MAX_DATAPOINTS = 1000d;
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
+
+    private GPXEditor myGPXEditor;
     
     private final MapView myMapView;
     private final GPXWaypointChart myGPXWaypointChart;
@@ -94,11 +100,22 @@ public class GPXTrackviewer {
         return myMapView;
     }
     
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+        
+        // pass it on!
+        myGPXWaypointLayer.setCallback(gpxEditor);
+        myGPXWaypointChart.setCallback(gpxEditor);
+    }
+    
     public XYChart getChart() {
         return myGPXWaypointChart;
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        assert myGPXEditor != null;
+        assert gpxWaypoints != null;
+
         // show in gluon map
         myMapView.removeLayer(myGPXWaypointLayer);
         myGPXWaypointLayer.setGPXWaypoints(gpxWaypoints);
@@ -116,12 +133,17 @@ public class GPXTrackviewer {
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        assert myGPXEditor != null;
+        assert gpxWaypoints != null;
+
         myGPXWaypointLayer.setSelectedGPXWaypoints(gpxWaypoints);
         myGPXWaypointChart.setSelectedGPXWaypoints(gpxWaypoints);
     }
 }
 
 class GPXWaypointLayer extends MapLayer {
+    private GPXEditor myGPXEditor;
+
     private final ImagePattern fileWaypointImage = 
             new ImagePattern(new Image(GPXWaypointLayer.class.getResource("/placemark_square.png").toExternalForm()));
 
@@ -134,6 +156,10 @@ class GPXWaypointLayer extends MapLayer {
         super();
         setCache(true);
         setCacheHint(CacheHint.SPEED);
+    }
+    
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
@@ -175,6 +201,12 @@ class GPXWaypointLayer extends MapLayer {
                     icon.setStroke(Color.DARKRED);
                     icon.setStrokeWidth(0.5);
                 }
+                
+                // click handler for icon to mark waypoint via callback to gpxeditor
+                icon.setUserData(gpxWaypoint);
+                icon.setOnMouseClicked((MouseEvent event) -> {
+                    myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) icon.getUserData()));
+                });
                 
                 final Tooltip tooltip = new Tooltip(gpxWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position));
                 tooltip.getStyleClass().addAll("chart-line-symbol", "chart-series-line", "track-popup");
@@ -290,6 +322,8 @@ class GPXWaypointLayer extends MapLayer {
 
 // inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
 class GPXWaypointChart<X,Y> extends AreaChart {
+    private GPXEditor myGPXEditor;
+
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedGPXWaypoints;
     
@@ -312,6 +346,10 @@ class GPXWaypointChart<X,Y> extends AreaChart {
         selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
     }
     
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
+    
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         setVisible(false);
         myPoints.clear();
@@ -324,9 +362,15 @@ class GPXWaypointChart<X,Y> extends AreaChart {
             XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
             // show elevation data on hover
             // https://gist.github.com/jewelsea/4681797
-            data.setNode(
-                new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()))
-            );
+
+            // click handler for icon to mark waypoint via callback to gpxeditor
+            final Node node = new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()));
+            node.setUserData(gpxWaypoint);
+            node.setOnMouseClicked((MouseEvent event) -> {
+                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
+            });
+            data.setNode(node);
+            
             dataList.add(data);
             myPoints.add(Pair.of(gpxWaypoint, distance));
         }

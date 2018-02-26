@@ -288,6 +288,11 @@ public class GPXEditor implements Initializable {
         
         initBottomPane();
         
+        // they all need to be able to do something in the editor
+        GPXTrackviewer.getInstance().setCallback(this);
+        DistributionViewer.getInstance().setCallback(this);
+        EditGPXMetadata.getInstance().setCallback(this);
+
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
         for (String gpxFile : GPXEditorParameters.getInstance().getGPXFiles()) {
@@ -562,7 +567,7 @@ public class GPXEditor implements Initializable {
                 item.setName(t.getNewValue());
                 item.setHasUnsavedChanges();
                 // force refresh to show unsaved changes
-                gpxFileListXML.refresh();
+                refreshGPXFileList();
             }
         });
         nameGPXCol.setEditable(true);
@@ -645,8 +650,6 @@ public class GPXEditor implements Initializable {
                                     if (tooltext.length() > 0) {
                                         tooltext.append(System.lineSeparator());
                                     }
-                                    tooltext.append(entry.getKey());
-                                    tooltext.append(System.lineSeparator());
                                     tooltext.append(((DefaultExtensionHolder) entry.getValue()).toString());
                                 }
                             }
@@ -732,7 +735,7 @@ public class GPXEditor implements Initializable {
                 // show the new segment
                 showDetails(track);
                 // force repaint of gpxFileList to show unsaved items
-                gpxFileListXML.refresh();
+                refreshGPXFileList();
             });
             trackMenu.getItems().add(deleteTracks);
             row.setContextMenu(trackMenu);
@@ -838,8 +841,6 @@ public class GPXEditor implements Initializable {
                                     if (tooltext.length() > 0) {
                                         tooltext.append(System.lineSeparator());
                                     }
-                                    tooltext.append(entry.getKey());
-                                    tooltext.append(System.lineSeparator());
                                     tooltext.append(((DefaultExtensionHolder) entry.getValue()).toString());
                                 }
                             }
@@ -881,8 +882,6 @@ public class GPXEditor implements Initializable {
         metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
         metaPane.setVisible(false);
         mapAnchorPane.getChildren().addAll(mapView, metaPane);
-        
-        // TODO: add pane from metadata viewer as well and switch visibility based on selection
         
         // right pane, bottom anchor: resize with its anchor
         profileAnchorPane.setMinHeight(0);
@@ -1050,7 +1049,7 @@ public class GPXEditor implements Initializable {
             }).forEach((TreeItem<GPXLineItem> t) -> {
                 saveFile(t.getValue());
             });
-        gpxFileListXML.refresh();
+        refreshGPXFileList();
     }
 
     public Boolean saveFile(final GPXLineItem item) {
@@ -1115,7 +1114,7 @@ public class GPXEditor implements Initializable {
         showDetails(null);
         distributionsMenu.setDisable(true);
         gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
-        gpxFileListXML.refresh();
+        refreshGPXFileList();
         
         return true;
     }
@@ -1165,6 +1164,10 @@ public class GPXEditor implements Initializable {
         
         gpxFileList.setRoot(null);
     }
+    
+    public void refreshGPXFileList() {
+        gpxFileListXML.refresh();
+    }
 
     public void invertTracks(final ActionEvent event) {
         final List<GPXLineItem> selectedItems = 
@@ -1199,7 +1202,7 @@ public class GPXEditor implements Initializable {
         }
 
         gpxFileListXML.getSelectionModel().clearSelection();
-        gpxFileListXML.refresh();
+        refreshGPXFileList();
     }
     
     public void mergeFiles(final ActionEvent event) {
@@ -1237,7 +1240,7 @@ public class GPXEditor implements Initializable {
             replaceGPXFile(mergedGPXFile);
 
             gpxFileListXML.getSelectionModel().clearSelection();
-            gpxFileListXML.refresh();
+            refreshGPXFileList();
         }
     }
 
@@ -1354,7 +1357,7 @@ public class GPXEditor implements Initializable {
             }
             
             gpxFileListXML.getSelectionModel().clearSelection();
-            gpxFileListXML.refresh();
+            refreshGPXFileList();
         }
     }
 
@@ -1394,7 +1397,7 @@ public class GPXEditor implements Initializable {
                 replaceGPXFile(selectedItem.getGPXFile());
 
                 gpxFileListXML.getSelectionModel().clearSelection();
-                gpxFileListXML.refresh();
+                refreshGPXFileList();
             }
         }
     }
@@ -1448,7 +1451,7 @@ public class GPXEditor implements Initializable {
         myWorker.fixGPXFiles(
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
-        gpxFileListXML.refresh();
+        refreshGPXFileList();
         
         refreshWayoints();
     }
@@ -1458,12 +1461,16 @@ public class GPXEditor implements Initializable {
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
-        gpxFileListXML.refresh();
+        refreshGPXFileList();
         
         refreshWayoints();
     }
     
     private void editMetadata(final ActionEvent event) {
+        // show metadata viewer
+        GPXTrackviewer.getInstance().getMapView().setVisible(false);
+        EditGPXMetadata.getInstance().getPane().setVisible(true);
+
         EditGPXMetadata.getInstance().editMetadata(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
     }
     
@@ -1490,7 +1497,6 @@ public class GPXEditor implements Initializable {
                 break;
         }
         
-        DistributionViewer.getInstance().setCallback(this);
         if (DistributionViewer.getInstance().showDistributions(waypoints)) {
             showDetails(item);
         }
@@ -1505,8 +1511,7 @@ public class GPXEditor implements Initializable {
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
-            gpxFileListXML.refresh();
-
+            refreshGPXFileList();
             refreshWayoints();
         }
     }

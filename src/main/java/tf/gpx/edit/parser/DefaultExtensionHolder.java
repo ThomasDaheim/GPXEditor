@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.parser;
 
+import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -35,30 +36,78 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
- * Simple holder for one node element
+ * Simple holder for nodelist that can test for type of extension present, see also
  * 
- * Is used by the default GoogleEarthParser and GarminParser to hold the node.
+ * https://github.com/pcolby/bipolar/wiki/GPX
+ * https://developers.strava.com/docs/uploads/
+ * https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd - <TrackExtension>, <TrackPointExtension>
+ * https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd, <AccelerationExtension>
+ * http://gpsbabel.2324879.n4.nabble.com/PATCH-Humminbird-extensions-in-gpx-files-td7330.html - <h:*>
+ * https://help.routeyou.com/en/topic/view/262/gpxm-file - <gpxmedia>
  * 
+ * pix and more google earth extensions extensions are part of metadata and look like this:
+ * 
+<pmx:GoogleEarth>
+    <pmx:LastOutput>C:\WUTemp\Test.kml</pmx:LastOutput>
+    <pmx:FormattedOutput>True</pmx:FormattedOutput>
+    <pmx:WayPoints>
+        <pmx:Visible>False</pmx:Visible>
+        <pmx:Symbol>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</pmx:Symbol>
+    </pmx:WayPoints>
+    <pmx:Routes>
+        <pmx:Visible>False</pmx:Visible>
+        <pmx:Symbol>http://maps.google.com/mapfiles/kml/paddle/pink-blank.png</pmx:Symbol>
+        <pmx:LineColor>FF00FF</pmx:LineColor>
+        <pmx:LineWidth>6</pmx:LineWidth>
+    </pmx:Routes>
+    <pmx:Tracks>
+        <pmx:Visible>False</pmx:Visible>
+        <pmx:SegmentMarker>False</pmx:SegmentMarker>
+        <pmx:PauseMarker>False</pmx:PauseMarker>
+        <pmx:PauseTime>15</pmx:PauseTime>
+        <pmx:ShowHeight>False</pmx:ShowHeight>
+        <pmx:LineColor>0000FF</pmx:LineColor>
+        <pmx:LineWidth>6</pmx:LineWidth>
+    </pmx:Tracks>
+</pmx:GoogleEarth>
  * @author thomas
  */
-public class DefaultExtensionHolder {
-    private Node myNode ;
-
-    DefaultExtensionHolder() {
+public class DefaultExtensionHolder extends DummyExtensionHolder {
+    public enum ExtensionType {
+        GarminGPX("gpxx:", "GarminGPX"),
+        GarminTrkpt("gpxtpx:", "GarminTrkpt"),
+        GarminAccl("gpxacc:", "GarminAccl"),
+        PixAndMore("pmx:GoogleEarth", "PixAndMore"),
+        Humminbird("h:", "Humminbird"),
+        GPXM("gpxmedia", "GPXM"),
+        ClueTrust("gpxdata:", "ClueTrust");
+        
+        private String myStartsWith;
+        private String myName;
+        
+        ExtensionType(final String startsWith, final String name) {
+            myStartsWith = startsWith;
+            myName = name;
+        }
+        
+        public String getStartsWith() {
+            return myStartsWith;
+        }
+        
+        public String getName() {
+            return myName;
+        }
     }
 
-    DefaultExtensionHolder(final Node node) {
-        myNode = node;
-    }
-    
-    public Node getNode() {
-        return myNode;
+    public DefaultExtensionHolder() {
+        super();
     }
 
-    public void setNode(final Node node) {
-        myNode = node;
+    public DefaultExtensionHolder(final NodeList childNodes) {
+        super(childNodes);
     }
     
     // https://stackoverflow.com/questions/4412848/xml-node-to-string-in-java
@@ -66,29 +115,65 @@ public class DefaultExtensionHolder {
     public String toString() {
         String result = "";
 
-        try {
-            StringWriter sw = new StringWriter();
-            Transformer t = TransformerFactory.newInstance().newTransformer();
-            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-//            t.setOutputProperty(OutputKeys.INDENT, "yes");
-//            t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-            t.transform(new DOMSource(myNode), new StreamResult(sw));
-            result = sw.toString();
-            
-            // remove unnecessary multiple tabs and final newline
-            final String lastValue = myNode.getLastChild().getNodeValue();
-            // count number of tabs and remove that number in the whole output string
-            final int lastIndex = lastValue.lastIndexOf("\t");
-            if (lastIndex != ArrayUtils.INDEX_NOT_FOUND) {
-                final String tabsString = StringUtils.repeat("\t", lastIndex);
-                result = sw.toString().replace(tabsString, "");
+        final NodeList myNodeList = getNodeList();
+        if (myNodeList != null) {
+            try {
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+                for (int i = 0; i < myNodeList.getLength(); i++) {
+                    final Node myNode = myNodeList.item(i);
+                    
+                    myNode.getNodeName();
+                    
+                    // skip empty notes...
+                    if (!"#text".equals(myNode.getNodeName())) {
+                        StringWriter sw = new StringWriter();
+                        Transformer t = TransformerFactory.newInstance().newTransformer();
+                        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+                        t.setOutputProperty(OutputKeys.INDENT, "yes");
+                        t.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+                        t.transform(new DOMSource(myNode), new StreamResult(sw));
+
+                        String nodeString = sw.toString();
+                        if (myNode.getLastChild() != null && myNode.getLastChild().getNodeValue() != null) {
+                            // remove unnecessary multiple tabs and final newline
+                            final String lastValue = myNode.getLastChild().getNodeValue();
+                            // count number of tabs and remove that number in the whole output string
+                            final int lastIndex = lastValue.lastIndexOf("\t");
+                            if (lastIndex != ArrayUtils.INDEX_NOT_FOUND) {
+                                final String tabsString = StringUtils.repeat("\t", lastIndex);
+                                nodeString = sw.toString().replace(tabsString, "");
+                            }
+                        }
+                        nodeString = nodeString.substring(0, nodeString.length() - 2);
+
+                        result += nodeString;
+                    }
+                }
+            } catch (TransformerException te) {
+                System.out.println("nodeToString Transformer Exception");
             }
-            
-            result = result.substring(0, result.length() - 2);
-        } catch (TransformerException te) {
-            System.out.println("nodeToString Transformer Exception");
         }
 
+        return result;
+    }
+    
+    public boolean holdsExtensionType(final ExtensionType type) {
+        boolean result = false;
+        
+        // check all nodes in list for startswith
+        final NodeList myNodeList = getNodeList();
+        if (myNodeList != null) {
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+            for (int i = 0; i < myNodeList.getLength(); i++) {
+                final Node myNode = myNodeList.item(i);
+                
+                if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getStartsWith())) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        
         return result;
     }
 }

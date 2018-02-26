@@ -25,9 +25,8 @@
  */
 package tf.gpx.edit.parser;
 
-import com.hs.gpxparser.extension.IExtensionParser;
-import com.hs.gpxparser.modal.Extension;
-import org.w3c.dom.Document;
+import com.hs.gpxparser.GPXConstants;
+import com.hs.gpxparser.extension.DummyExtensionParser;
 import org.w3c.dom.Node;
 
 /**
@@ -37,17 +36,30 @@ import org.w3c.dom.Node;
  * 
  * @author thomas
  */
-public abstract class DefaultParser implements IExtensionParser {
+public class DefaultParser extends DummyExtensionParser {
+    private final static DefaultParser INSTANCE = new DefaultParser();
+
+    public final static String PARSER_ID = "DefaultParser";    
+    
+    private DefaultParser() {
+    }
+
+    public static DefaultParser getInstance() {
+        return INSTANCE;
+    }
+
     @Override
-    public void writeExtensions(Extension e, Node node, Document doc) {
-        if(e.getExtensionData(getId()) != null) {
-            // add all nodes from DummyExtensionHolder to the document
-            final DefaultExtensionHolder holder = (DefaultExtensionHolder) e.getExtensionData(getId());
-            
-            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
-            final Node extNode = holder.getNode();
-            final Node copyNode = doc.importNode(extNode, true);
-            node.appendChild(copyNode);
+    public String getId() {
+        return PARSER_ID;
+    }
+
+    @Override
+    public Object parseExtensions(Node node) {
+        // store all nodes under extension in DummyExtensionHolder - if any
+        if (GPXConstants.NODE_EXTENSIONS.equals(node.getNodeName()) && (node.getChildNodes().getLength() > 0)) {
+            return new DefaultExtensionHolder(node.getChildNodes());
+        } else {
+            return null;
         }
     }
 }

@@ -32,24 +32,24 @@ import com.hs.gpxparser.modal.Email;
 import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.modal.Metadata;
 import com.hs.gpxparser.modal.Person;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.stream.Collectors;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import tf.gpx.edit.helper.GPXFile;
 import tf.gpx.edit.helper.GPXMetadata;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  *
@@ -59,6 +59,8 @@ public class EditGPXMetadata {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXMetadata INSTANCE = new EditGPXMetadata();
+
+    private GPXEditor myGPXEditor;
     
     // UI elements used in various methods need to be class-wide
     private final GridPane editMetadataPane = new GridPane();
@@ -89,8 +91,6 @@ public class EditGPXMetadata {
     private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
     
     private GPXFile myGPXFile;
-    
-    boolean hasChanged = false;
     
     private EditGPXMetadata() {
         // Exists only to defeat instantiation.
@@ -276,7 +276,7 @@ public class EditGPXMetadata {
         saveButton.setOnAction((ActionEvent event) -> {
             setMetadata();
             
-            hasChanged = true;
+            myGPXEditor.refreshGPXFileList();
         });
         editMetadataPane.add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
@@ -287,20 +287,37 @@ public class EditGPXMetadata {
         return editMetadataPane;
     }
     
-    public boolean editMetadata(final GPXFile gpxFile) {
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
+    
+    public void editMetadata(final GPXFile gpxFile) {
+        assert myGPXEditor != null;
         assert gpxFile != null;
-
-        hasChanged = false;
         
         myGPXFile = gpxFile;
         
         initMetadata();
-        
-        return hasChanged;
     }
     
     private void initMetadata() {
-        final Metadata metadata = myGPXFile.getGPX().getMetadata();
+        Metadata metadata = myGPXFile.getGPX().getMetadata();
+        if (metadata == null) {
+            metadata = new Metadata();
+            
+            metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            metadata.setBounds(myGPXFile.getBounds());
+
+            // add link to me if not already present
+            HashSet<Link> links = metadata.getLinks();
+            if (links == null) {
+                links = new HashSet<>();
+            }
+            if (!links.stream().anyMatch(link -> (link!=null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
+                links.add(new Link(GPXMetadata.HOME_LINK));
+            }
+            metadata.setLinks(links);
+        }
         
         metaNameTxt.setText(metadata.getName());
         metaDescTxt.setText(metadata.getDesc());
@@ -355,7 +372,10 @@ public class EditGPXMetadata {
     
     private void setMetadata() {
         // save previous values
-        final Metadata metadata = myGPXFile.getGPXMetadata().getMetadata();
+        Metadata metadata = myGPXFile.getGPX().getMetadata();
+        if (metadata == null) {
+            metadata = new Metadata();
+        }
         
         metadata.setName(setEmptyToNull(metaNameTxt.getText()));
         metadata.setDesc(setEmptyToNull(metaDescTxt.getText()));
