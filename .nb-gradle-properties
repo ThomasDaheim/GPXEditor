@@ -14,17 +14,6 @@
       <task-jvm-args/>
     </task>
     <task>
-      <display-name>runWithFile</display-name>
-      <non-blocking>no</non-blocking>
-      <task-names>
-        <name must-exist="yes">${project}:run</name>
-      </task-names>
-      <task-args>
-        <arg>-PcmdLineArgs="C:\\WUTemp\\TestCopy\\*.gpx"</arg>
-      </task-args>
-      <task-jvm-args/>
-    </task>
-    <task>
       <display-name>runWithArgs</display-name>
       <non-blocking>no</non-blocking>
       <task-names>
@@ -32,6 +21,17 @@
       </task-names>
       <task-args>
         <arg>-PcmdLineArgs=-fixTracks -fixDistance=1000.0 -reduceTracks -reduceAlgorithm=DouglasPeucker -reduceEpsilon=50.0 -deleteEmpty -deleteCount=3 -gpxFiles="C:\WUTemp\TestCopy\*.gpx"</arg>
+      </task-args>
+      <task-jvm-args/>
+    </task>
+    <task>
+      <display-name>runWithFile</display-name>
+      <non-blocking>no</non-blocking>
+      <task-names>
+        <name must-exist="yes">${project}:run</name>
+      </task-names>
+      <task-args>
+        <arg>-PcmdLineArgs="C:\\WUTemp\\TestCopy\\*.gpx"</arg>
       </task-args>
       <task-jvm-args/>
     </task>

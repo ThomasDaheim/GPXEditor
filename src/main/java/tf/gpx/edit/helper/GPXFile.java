@@ -106,7 +106,12 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // TF, 20170606: add gpx track acording to number in case its set
-        Collections.sort(myGPXTracks, myGPXTracks.get(0).getComparator());
+        if (!myGPXTracks.isEmpty()) {
+            Collections.sort(myGPXTracks, myGPXTracks.get(0).getComparator());
+        }
+        if (!myGPXRoutes.isEmpty()) {
+            Collections.sort(myGPXRoutes, myGPXRoutes.get(0).getComparator());
+        }
 
         // TFE, 20180201: update header data & meta data
         setHeaderAndMeta();
@@ -297,9 +302,7 @@ public class GPXFile extends GPXMeasurable {
         final List<GPXWaypoint> result = new ArrayList<>();
         
         if (itemType == null || itemType.equals(GPXLineItemType.GPXFile)) {
-            for (GPXRoute route : myGPXRoutes) {
-                result.addAll(myGPXWaypoints);
-            }
+            result.addAll(myGPXWaypoints);
         }
         if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
             for (GPXTrack track : myGPXTracks) {

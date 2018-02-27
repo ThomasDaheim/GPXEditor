@@ -36,7 +36,6 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
@@ -163,7 +162,11 @@ class GPXWaypointLayer extends MapLayer {
     }
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        final double ratio = GPXTrackviewer.MAX_DATAPOINTS / gpxWaypoints.size();
+        // file waypoints don't count into MAX_DATAPOINTS
+        final long fileWaypoints = gpxWaypoints.stream().filter((t) -> {
+                return t.isGPXFileWaypoint();
+            }).count();
+        final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypoints) / (gpxWaypoints.size() - fileWaypoints);
 
         // get rid of old points
         myPoints.clear();
@@ -177,10 +180,15 @@ class GPXWaypointLayer extends MapLayer {
         double minLon = Double.MAX_VALUE;
         double maxLon = -Double.MAX_VALUE;
 
+        // TODO: add file waypoints in the end so that they're on top of the rest
         double count = 0d, i = 0d;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            i++;
-            if (i * ratio >= count) {
+            // don't count file waypoints and show them allways
+            final boolean isFileWaypoint = gpxWaypoint.isGPXFileWaypoint();
+            if (!isFileWaypoint) {
+                i++;    
+            }
+            if (i * ratio >= count || isFileWaypoint) {
                 Shape icon;
                 
                 if (gpxWaypoint.isGPXFileWaypoint()) {
@@ -213,7 +221,7 @@ class GPXWaypointLayer extends MapLayer {
                 TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                 
                 Tooltip.install(icon, tooltip);
-                
+
                 this.getChildren().add(icon);
 
                 Line line = null;
@@ -249,7 +257,10 @@ class GPXWaypointLayer extends MapLayer {
                 minLon = Math.min(minLon, gpxWaypoint.getWaypoint().getLongitude());
                 maxLon = Math.max(maxLon, gpxWaypoint.getWaypoint().getLongitude());
                 
-                count++;
+                // don't count file waypoints and show them allways
+                if (!isFileWaypoint) {
+                    count++;
+                }
             }
         }
         

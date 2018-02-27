@@ -221,7 +221,13 @@ public class GPXEditorWorker {
         
         final KMLWriter kmlWriter = new KMLWriter();
         
+        // export all waypoints, tracks and routes
+        final List<GPXWaypoint> fileWaypoints = gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
+        for (GPXWaypoint waypoint : fileWaypoints) {
+            kmlWriter.addMark(waypoint);
+        }
         kmlWriter.addPath(gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), gpxFile.getName());
+        kmlWriter.addPath(gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), gpxFile.getName());
         result = kmlWriter.writeFile(selectedFile);
         
         return result;

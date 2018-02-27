@@ -2,6 +2,7 @@
 <gpx xmlns="http://www.topografix.com/GPX/1/1" creator="GPS-Track-Analyse.NET 6.0.0.4" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:gpxx="http://www.gps-freeware.de/xmlschema/TrackPointExtension/v1">
 <trk>
 <name>Test 2.1</name>
+<number>1</number>
 <trkseg>
 <trkpt lat="-0.272320314426107" lon="0.301956697976571"> </trkpt>
 </trkseg>
