@@ -226,8 +226,12 @@ public class GPXEditorWorker {
         for (GPXWaypoint waypoint : fileWaypoints) {
             kmlWriter.addMark(waypoint);
         }
-        kmlWriter.addPath(gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), gpxFile.getName());
-        kmlWriter.addPath(gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), gpxFile.getName());
+        for (GPXTrack track : gpxFile.getGPXTracks()) {
+            kmlWriter.addTrack(track.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), track.getName());
+        }
+        for (GPXRoute route : gpxFile.getGPXRoutes()) {
+            kmlWriter.addRoute(route.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), route.getName());
+        }
         result = kmlWriter.writeFile(selectedFile);
         
         return result;

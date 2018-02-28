@@ -49,10 +49,18 @@ import tf.gpx.edit.helper.GPXWaypoint;
  * @author thomas
  */
 public class KMLWriter {
+    private enum PathType {
+        Track,
+        Route
+    }
+    
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 
     private Document doc;
     private Element root;
+    private Element waypoints;
+    private Element tracks;
+    private Element routes;
 
     /**
      * Create a KML object.
@@ -72,11 +80,11 @@ public class KMLWriter {
             // add some style, please!
 //            <Style id="tracksLineStyle">
 //                <LineStyle>
-//                    <width>4</width>
-//                    <color>FFFD7569</color>
+//                    <width>6</width>
+//                    <color>ffFF0000</color>
 //                </LineStyle>
 //                <PolyStyle>
-//                    <color>FFFD7569</color>
+//                    <color>ffFF0000</color>
 //                </PolyStyle>
 //            </Style>
             Element style = doc.createElement("Style");
@@ -88,7 +96,7 @@ public class KMLWriter {
             Element width = doc.createElement("width");
             width.appendChild(doc.createTextNode("6"));
 
-            final Element lineStyle = doc.createElement("LineStyle");
+            Element lineStyle = doc.createElement("LineStyle");
             lineStyle.appendChild(color);
             lineStyle.appendChild(width);
             style.appendChild(lineStyle);
@@ -98,7 +106,40 @@ public class KMLWriter {
             width = doc.createElement("width");
             width.appendChild(doc.createTextNode("6"));
 
-            final Element polyStyle = doc.createElement("PolyStyle");
+            Element polyStyle = doc.createElement("PolyStyle");
+            polyStyle.appendChild(color);
+            polyStyle.appendChild(width);
+            style.appendChild(polyStyle);
+
+//            <Style id="routesLineStyle">
+//                <LineStyle>
+//                    <width>6</width>
+//                    <color>ffFF00FF</color>
+//                </LineStyle>
+//                <PolyStyle>
+//                    <color>ffFF00FF</color>
+//                </PolyStyle>
+//            </Style>
+            style = doc.createElement("Style");
+            root.appendChild(style);
+            style.setAttribute("id", "routesLineStyle");
+
+            color = doc.createElement("color");
+            color.appendChild(doc.createTextNode("ffFF00FF"));
+            width = doc.createElement("width");
+            width.appendChild(doc.createTextNode("6"));
+
+            lineStyle = doc.createElement("LineStyle");
+            lineStyle.appendChild(color);
+            lineStyle.appendChild(width);
+            style.appendChild(lineStyle);
+            
+            color = doc.createElement("color");
+            color.appendChild(doc.createTextNode("ffFF00FF"));
+            width = doc.createElement("width");
+            width.appendChild(doc.createTextNode("6"));
+
+            polyStyle = doc.createElement("PolyStyle");
             polyStyle.appendChild(color);
             polyStyle.appendChild(width);
             style.appendChild(polyStyle);
@@ -126,14 +167,34 @@ public class KMLWriter {
         } catch (ParserConfigurationException | DOMException e) {
         }
     }
+    
+    /**
+     * Create a folder element with given name.
+     * @param foldername
+     */
+    private Element createFolder(final String foldername) {
+        final Element result = doc.createElement("Folder");
+
+        final Element name = doc.createElement("name");
+        name.appendChild(doc.createTextNode(foldername));
+        result.appendChild(name);
+        
+        return result;
+    }
 
     /**
      * Add a placemark to this KML object.
      * @param mark
      */
-    public void addMark(GPXWaypoint mark) {
+    public void addMark(final GPXWaypoint mark) {
+        if (waypoints == null) {
+            waypoints = createFolder("Waypoints");
+
+            root.appendChild(waypoints);
+        }
+        
         final Element placemark = doc.createElement("Placemark");
-        root.appendChild(placemark);
+        waypoints.appendChild(placemark);
 
         final Element name = doc.createElement("name");
         name.appendChild(doc.createTextNode(mark.getName()));
@@ -164,13 +225,47 @@ public class KMLWriter {
     }
 
     /**
+     * Add a track to this KML object.
+     * @param track
+     * @param trackName
+     */
+    public void addTrack(final List<GPXWaypoint> track, final String trackName) {
+        if (tracks == null) {
+            tracks = createFolder("Tracks");
+
+            root.appendChild(tracks);
+        }
+        
+        addPath(track, trackName, PathType.Track);
+    }
+
+    /**
+     * Add a route to this KML object.
+     * @param route
+     * @param routeName
+     */
+    public void addRoute(final List<GPXWaypoint> route, final String routeName) {
+        if (routes == null) {
+            routes = createFolder("Routes");
+
+            root.appendChild(routes);
+        }
+        
+        addPath(route, routeName, PathType.Route);
+    }
+        
+    /**
      * Add a path to this KML object.
      * @param path
      * @param pathName
      */
-    public void addPath(List<GPXWaypoint> path, String pathName) {
+    private void addPath(final List<GPXWaypoint> path, final String pathName, final PathType type) {
         final Element placemark = doc.createElement("Placemark");
-        root.appendChild(placemark);
+        if (PathType.Track.equals(type)) {
+            tracks.appendChild(placemark);
+        } else {
+            routes.appendChild(placemark);
+        }
 
         if(pathName != null) {
             final Element name = doc.createElement("name");
@@ -179,7 +274,11 @@ public class KMLWriter {
         }
 
         final Element styleUrl = doc.createElement("styleUrl");
-        styleUrl.appendChild(doc.createTextNode("#tracksLineStyle"));
+        if (PathType.Track.equals(type)) {
+            styleUrl.appendChild(doc.createTextNode("#tracksLineStyle"));
+        } else {
+            styleUrl.appendChild(doc.createTextNode("#routesLineStyle"));
+        }
         placemark.appendChild(styleUrl);
 
         final Element lineString = doc.createElement("LineString");
