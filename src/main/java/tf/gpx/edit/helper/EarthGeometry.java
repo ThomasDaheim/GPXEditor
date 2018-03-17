@@ -33,13 +33,6 @@ public class EarthGeometry {
     // we only need to start with spherical geometry once distances get bigger than 0.01% of the earth radius
     private static final double MinDistanceForSphericalGeometry = EarthAverageRadius / 10000.0;
     
-    private static enum Directions {
-        N,
-        S,
-        E,
-        W
-    }
-
     private EarthGeometry() {
         throw new UnsupportedOperationException("Instantiation not allowed");
     }
@@ -557,30 +550,5 @@ public class EarthGeometry {
         
         return (p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation()) /
                 distanceGPXWaypoints(p1, p2) * 100.0;
-    }
-    
-    public static String latToString(final GPXWaypoint p1) {
-        final double lat = p1.getWaypoint().getLatitude();
-        if (lat >= 0) {
-            return latlonToString(lat, Directions.N.toString());
-        } else {
-            return latlonToString(-lat, Directions.S.toString());
-        }
-    }
-    
-    public static String lonToString(final GPXWaypoint p1) {
-        final double lon = p1.getWaypoint().getLongitude();
-        if (lon >= 0) {
-            return latlonToString(lon, Directions.E.toString());
-        } else {
-            return latlonToString(-lon, Directions.W.toString());
-        }
-    }
-    
-    private static String latlonToString(final double latlon, final String direction) {
-        final int degrees = (int) Math.floor(latlon);
-        final double minutes = (latlon - degrees) * 60.0;
-        final double seconds = (minutes - (int) Math.floor(minutes)) * 60.0;
-        return String.format("%s %2d°%2d'%4.2f\"", direction, degrees, (int) Math.floor(minutes), seconds);
     }
 }

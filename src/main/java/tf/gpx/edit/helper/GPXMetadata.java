@@ -30,6 +30,7 @@ import com.hs.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javafx.geometry.BoundingBox;
 
 /**
  *
@@ -116,6 +117,11 @@ public class GPXMetadata extends GPXMeasurable {
 
     @Override
     public List<GPXWaypoint> getGPXWaypoints(GPXLineItemType itemType) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
         return new ArrayList<>();
     }
 

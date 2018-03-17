@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.geometry.BoundingBox;
 import tf.gpx.edit.parser.DefaultParser;
 
 /**
@@ -314,6 +315,22 @@ public class GPXFile extends GPXMeasurable {
                 result.addAll(route.getGPXWaypoints(itemType));
             }
         }
+        return result;
+    }
+
+    @Override
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        // iterate over my segments
+        final List<GPXWaypoint> result = new ArrayList<>();
+        
+        result.addAll(filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox));
+        for (GPXTrack track : myGPXTracks) {
+            result.addAll(track.getGPXWaypointsInBoundingBox(boundingBox));
+        }
+        for (GPXRoute route : myGPXRoutes) {
+            result.addAll(route.getGPXWaypointsInBoundingBox(boundingBox));
+        }
+
         return result;
     }
 
