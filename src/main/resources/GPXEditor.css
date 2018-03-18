@@ -119,6 +119,16 @@
 */
 .file-waypoint {
 }
+.canvasPane {
+    -fx-fill: transparent;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
+}
+.selectRect {
+    -fx-fill: transparent;
+    -fx-stroke: black;
+    -fx-stroke-width: 2;
+}
 
 /*
     elevation chart

@@ -58,5 +58,6 @@ myMap.on('mouseup', setTwoCorner);
 
 function getMapBounds() {
     var bounds = myMap.getBounds();
-    return [bounds.getNorthEast().lat, bounds.getNorthEast().lng, bounds.getSouthWest().lat, bounds.getSouthWest().lng];
+    // return lower left and upper right corners
+    return [bounds.getSouthWest().lat, bounds.getSouthWest().lng, bounds.getNorthEast().lat, bounds.getNorthEast().lng];
 }

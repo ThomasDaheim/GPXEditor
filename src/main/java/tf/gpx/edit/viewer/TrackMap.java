@@ -44,12 +44,17 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.io.IOUtils;
@@ -85,10 +90,19 @@ public class TrackMap extends LeafletMapView {
         }   
     }
     
+    // ugly hack for coding in netbeans
+    // netbeans doesn't recognize that the kotline base class LeafletMapView extend stackpane :-(
+    // so all automcomplete, ... doesn't work on this if you want to access stackpane functions
+    private StackPane meAsPane =(StackPane) this;
     // webview holds the leaflet map
     private WebView myWebView = null;
     // bounds of the map as currently shown
     private BoundingBox mapBounds = null;
+    // pane on top of LeafletMapView to draw selection rectangle
+    private Pane myPane;
+    // rectangle to select waypoints
+    private Rectangle selectRect = null;
+    private Point2D startPoint;
 
     private GPXEditor myGPXEditor;
 
@@ -169,10 +183,16 @@ public class TrackMap extends LeafletMapView {
 
             // TODO: add support for different colors on tracks
 
-            // ugly hack for coding in netbeans
-            // netbeans doesn't recognize that the kotline base class LeafletMapView extend stackpane :-(
-            // so all automcomplete, ... doesn't work on this if you want to access stackpane functions
-            for (Node node : ((StackPane) this).getChildren()) {
+            // add pane on top of me with same width & height
+            // getParent returns Parent - which doesn't have any decent methods :-(
+            final Pane parentPane = (Pane) meAsPane.getParent();
+            myPane = new Pane();
+            myPane.getStyleClass().add("canvasPane");
+            myPane.setPrefSize(0, 0);
+            parentPane.getChildren().add(myPane);
+            myPane.toFront();
+
+            for (Node node : meAsPane.getChildren()) {
                 // get webview from my children
                 if (node instanceof WebView) {
                     myWebView = (WebView) node;
@@ -180,9 +200,17 @@ public class TrackMap extends LeafletMapView {
                 }
             }
             assert myWebView != null;
-            myWebView.setOnMouseMoved((MouseEvent event) -> {
+            // support drawing rectangle with mouse + cntrl
+            // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
+            myWebView.setOnMousePressed((MouseEvent event) -> {
                 if(event.isControlDown()) {
-                    handleMouseCntrlMoved(event);
+                    handleMouseCntrlPressed(event);
+                    event.consume();
+                }
+            });
+            myWebView.setOnMouseDragged((MouseEvent event) -> {
+                if(event.isControlDown()) {
+                    handleMouseCntrlDragged(event);
                     event.consume();
                 }
             });
@@ -249,7 +277,8 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
-    private void handleMouseCntrlMoved(final MouseEvent event) {
+    private void handleMouseCntrlPressed(final MouseEvent event) {
+        // if coords of map & rectangle: reset all and select waypoints
         // if coords of map not know: call javascript to get them
         if (mapBounds == null) {
             // TODO: learn how to do that more clever...
@@ -265,19 +294,92 @@ public class TrackMap extends LeafletMapView {
             final double minLon = Math.min(double1, double3);
             final double maxLon = Math.max(double1, double3);
 
+            // we store in map lat/lon coordinates and not javafx x/y
+            // lat -> x
+            // lon -> y
+            // but this way also width & height invert their meanings!
             mapBounds = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
-            System.out.println(mapBounds);
+//            System.out.println("");
+//            System.out.println("Lat/Lon: " + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon);
+//            System.out.println("mapBounds: " + mapBounds);
         }
         
-        // if no starting point for move: store starting point
-        // else: if no rectanlge drawn: create & draw
-        //       else: extend it
+        if (selectRect != null) {
+            myPane.getChildren().remove(selectRect);
+            selectRect = null;
+        }
+        startPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
+        selectRect = new Rectangle(startPoint.getX(), startPoint.getY(), 0.01, 0.01);
+        selectRect.getStyleClass().add("selectRect");
+        myPane.getChildren().add(selectRect);
     }
-    
+    private void handleMouseCntrlDragged(final MouseEvent event) {
+        resizeSelectRectangle(event);
+    }
     private void handleMouseCntrlReleased(final MouseEvent event) {
+        resizeSelectRectangle(event);
+
         // if coords of map & rectangle: reset all and select waypoints
+        if (selectRect != null) {
+//            System.out.println("selectRect: " + selectRect);
+            //System.out.println("meAsPane: " + meAsPane.getWidth() + ", " + meAsPane.getHeight());
+
+            // use percentages of width & height to rescale
+            // upper left of select rectangle if percentage of pane size
+            final double startXPerc = selectRect.getX() / meAsPane.getWidth();
+            final double startYPerc = selectRect.getY() / meAsPane.getHeight();
+            // percentage of width & height of pane covered by select rectangle
+            final double widthPerc = selectRect.getWidth() / meAsPane.getWidth();
+            final double heightPerc = selectRect.getHeight() / meAsPane.getHeight();
+//            System.out.println("percentages: " + startXPerc + ", " + startYPerc + ", " + widthPerc + ", " + heightPerc);
+            
+            // calculate bounding box in map coordinates from rectangle
+            // mapBounds is in map lat/lon AND NOT in javafx x/y
+            // tricky - in javafx 0,0 is upper left corner VS in map minLat,minLon is lower left (on north hemisphere)
+            // and counting for lat is upward VS counting y is downward...
+            // whereas coordinates always use lat, lon
+            // => invert between x/y required for select box values
+            // => width and height change their meaning as well!
+            // => minimum lat is calculated from maximum y
+            final BoundingBox selectBox = new BoundingBox(
+                    mapBounds.getMaxX() - mapBounds.getWidth() * (startYPerc + heightPerc), 
+                    mapBounds.getMinY() + mapBounds.getHeight() * startXPerc, 
+                    mapBounds.getWidth() * heightPerc, 
+                    mapBounds.getHeight() * widthPerc);
+//            System.out.println("selectBox: " + selectBox);
+            
+            selectGPXWaypointsInBoundingBox(selectBox);
+        }
+        
+        mapBounds = null;
+        if (selectRect != null) {
+            myPane.getChildren().remove(selectRect);
+            selectRect = null;
+        }
     }
-    
+    private void resizeSelectRectangle(final MouseEvent event) {
+        if (selectRect != null) {
+            // move & extend rectangle
+            final Point2D curPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
+            selectRect.setX(startPoint.getX());
+            selectRect.setY(startPoint.getY());
+            selectRect.setWidth(curPoint.getX() - startPoint.getX()) ;
+            selectRect.setHeight(curPoint.getY() - startPoint.getY()) ;
+
+            if ( selectRect.getWidth() < 0 )
+            {
+                selectRect.setWidth( - selectRect.getWidth() ) ;
+                selectRect.setX( startPoint.getX() - selectRect.getWidth() ) ;
+            }
+
+            if ( selectRect.getHeight() < 0 )
+            {
+                selectRect.setHeight( - selectRect.getHeight() ) ;
+                selectRect.setY( startPoint.getY() - selectRect.getHeight() ) ;
+            }
+        }
+    }
+   
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
@@ -507,8 +609,8 @@ public class TrackMap extends LeafletMapView {
             final double maxLon = Math.max(oneCornerLon, twoCornerLon);
             
             final BoundingBox boundingBox = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
-            //System.out.println(boundingBox);
-            myTrackMap.selectGPXWaypointsInBoundingBox(boundingBox);
+//            System.out.println("boundingBox: " + boundingBox);
+//            myTrackMap.selectGPXWaypointsInBoundingBox(boundingBox);
         }
     }
 }
