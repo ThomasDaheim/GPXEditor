@@ -44,11 +44,11 @@ public class LatLongHelper {
     }
 
     public static String GPXWaypointToString(final GPXWaypoint waypoint) {
-        return latToString(waypoint.getWaypoint().getLatitude()) + " " + lonToString(waypoint.getWaypoint().getLatitude());
+        return latToString(waypoint.getWaypoint().getLatitude()) + " " + lonToString(waypoint.getWaypoint().getLongitude());
     }
             
     public static String LatLongToString(final LatLong waypoint) {
-        return latToString(waypoint.getLatitude()) + " " + lonToString(waypoint.getLatitude());
+        return latToString(waypoint.getLatitude()) + " " + lonToString(waypoint.getLongitude());
     }
             
     private static String latToString(final double lat) {
