@@ -36,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javafx.geometry.BoundingBox;
+import static tf.gpx.edit.helper.GPXLineItem.filterGPXWaypointsInBoundingBox;
 
 /**
  *
@@ -210,6 +212,13 @@ public class GPXRoute extends GPXMeasurable {
         if (itemType == null || itemType.equals(GPXLineItemType.GPXRoute)) {
             result = myGPXWaypoints.stream().collect(Collectors.toList());
         }
+        return result;
+    }
+
+    @Override
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        List<GPXWaypoint> result = new ArrayList<>();
+        result = filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
         return result;
     }
 

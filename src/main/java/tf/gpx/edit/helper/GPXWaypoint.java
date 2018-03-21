@@ -31,6 +31,7 @@ import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javafx.geometry.BoundingBox;
 
 /**
  *
@@ -141,7 +142,7 @@ public class GPXWaypoint extends GPXLineItem {
             case Name:
                 return getName();
             case Position:
-                return EarthGeometry.latToString(this) + " " + EarthGeometry.lonToString(this);
+                return LatLongHelper.GPXWaypointToString(this);
             case Date:
                 // format dd.mm.yyyy hh:mm:ss
                 final Date start = myWaypoint.getTime();
@@ -254,6 +255,15 @@ public class GPXWaypoint extends GPXLineItem {
     public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
         List<GPXWaypoint> result = new ArrayList<>();
         if (itemType == null || itemType.equals(myGPXParent.getGPXLineItemType())) {
+            result.add(this);
+        }
+        return result;
+    }
+
+    @Override
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        List<GPXWaypoint> result = new ArrayList<>();
+        if (boundingBox.contains(this.getLatitude(), this.getLongitude())) {
             result.add(this);
         }
         return result;

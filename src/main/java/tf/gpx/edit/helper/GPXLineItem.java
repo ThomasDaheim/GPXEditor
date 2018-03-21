@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.geometry.BoundingBox;
 
 /**
  *
@@ -332,7 +333,15 @@ public abstract class GPXLineItem {
     public abstract List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType);
     public abstract List<GPXRoute> getGPXRoutes();
     public abstract Extension getContent();
-
+    
+    // find points in a given bounding box
+    public abstract List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox);
+    protected static List<GPXWaypoint> filterGPXWaypointsInBoundingBox(final List<GPXWaypoint> gpxWaypoints, final BoundingBox boundingBox) {
+        return gpxWaypoints.stream().filter((t) -> {
+                        return boundingBox.contains(t.getLatitude(), t.getLongitude());
+                    }).collect(Collectors.toList());
+    }
+ 
     // getter & setter for my parent
     public abstract GPXLineItem getParent();
     public abstract void setParent(final GPXLineItem parent);

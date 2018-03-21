@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.main;
 
-import com.gluonhq.maps.MapView;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
@@ -91,7 +90,7 @@ import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -111,7 +110,7 @@ import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXRoute;
 import tf.gpx.edit.helper.GPXTrack;
 import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXTrackviewer;
+import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.parser.DefaultExtensionHolder;
@@ -710,10 +709,16 @@ public class GPXEditor implements Initializable {
             final ContextMenu trackMenu = new ContextMenu();
             final MenuItem selectTracks = new MenuItem("Select highlighted");
             selectTracks.setOnAction((ActionEvent event) -> {
-                // loop through all entries and find the ones with highlight
-                selectHighlightedWaypoints(gpxTrackXML.getItems());
+                selectHighlightedWaypoints();
             });
             trackMenu.getItems().add(selectTracks);
+
+            final MenuItem invertSelection = new MenuItem("Invert Selection");
+            invertSelection.setOnAction((ActionEvent event) -> {
+                invertSelectedWaypoints();
+            });
+            trackMenu.getItems().add(invertSelection);
+            
             final MenuItem deleteTracks = new MenuItem("Delete selected");
             deleteTracks.setOnAction((ActionEvent event) -> {
                 // this is a bit tricky! 
@@ -873,11 +878,11 @@ public class GPXEditor implements Initializable {
         mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
 
         mapAnchorPane.getChildren().clear();
-        final MapView mapView = GPXTrackviewer.getInstance().getMapView();
+        final Region mapView = GPXTrackviewer.getInstance().getMapView();
         mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
         mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
         mapView.setVisible(false);
-        final Pane metaPane = EditGPXMetadata.getInstance().getPane();
+        final Region metaPane = EditGPXMetadata.getInstance().getPane();
         metaPane.prefHeightProperty().bind(mapAnchorPane.heightProperty());
         metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
         metaPane.setVisible(false);
@@ -972,7 +977,7 @@ public class GPXEditor implements Initializable {
         }
         gpxTrackXML.getSelectionModel().clearSelection();
 
-        GPXTrackviewer.getInstance().setGPXWaypoints(gpxTrackXML.getItems());
+        GPXTrackviewer.getInstance().setGPXWaypoints(lineItem);
         if (lineItem != null) {
             if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getGPXLineItemType())) {
                 // show map if not metadata
@@ -1433,18 +1438,48 @@ public class GPXEditor implements Initializable {
             gpxTrackXML.refresh();
         }
     }
-    private void selectHighlightedWaypoints(final ObservableList<GPXWaypoint> waypoints) {
+    
+    private void selectHighlightedWaypoints() {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+
         gpxTrackXML.getSelectionModel().clearSelection();
 
         int index = 0;
         final List<Integer> selectedList = new ArrayList<>();
-        for (GPXWaypoint waypoint : waypoints){
+        for (GPXWaypoint waypoint : gpxTrackXML.getItems()){
             if (waypoint.isHighlight()) {
                 selectedList.add(index);
             }
             index++;
         }
         gpxTrackXML.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
+        
+        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+    }
+    
+    private void invertSelectedWaypoints() {
+        // disable listener for checked changes since it fires for each waypoint...
+        // TODO: use something fancy like LibFX ListenerHandle...
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+
+        final List<GPXWaypoint> selectedGPXWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems().stream().collect(Collectors.toList());
+        gpxTrackXML.getSelectionModel().clearSelection();
+
+        int index = 0;
+        final List<Integer> selectedList = new ArrayList<>();
+        for (GPXWaypoint waypoint : gpxTrackXML.getItems()){
+            if (!selectedGPXWaypoints.contains(waypoint)) {
+                selectedList.add(index);
+            }
+            index++;
+        }
+        gpxTrackXML.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
+        
+        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
     private void fixGPXFiles(final ActionEvent event) {
@@ -1593,7 +1628,6 @@ public class GPXEditor implements Initializable {
         }
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
-
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 }

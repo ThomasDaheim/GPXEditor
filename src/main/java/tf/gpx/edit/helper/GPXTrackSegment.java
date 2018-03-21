@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javafx.geometry.BoundingBox;
 
 /**
  *
@@ -187,6 +188,13 @@ public class GPXTrackSegment extends GPXMeasurable {
         if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
             result = myGPXWaypoints.stream().collect(Collectors.toList());
         }
+        return result;
+    }
+
+    @Override
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        List<GPXWaypoint> result = new ArrayList<>();
+        result = filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
         return result;
     }
 

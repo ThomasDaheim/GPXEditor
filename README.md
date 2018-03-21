@@ -11,12 +11,50 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v1.4)
+## Features (v2.0)
 
 Following features are available via UI:
 
 File and track handling
 
+# Update v2.0
+
+Major update! With switching to leaflet.js a whole universe of add. functionality has been made available for later releases. E.g. adding / moving marker, draw routes, routing between waypoints, ... Basically anything that exists as leaflet.js extension is now also in my reach :-) Thats deserves a new major version.
+
+* switched from gloun maps to leaflet.js (via ssaring/sportstracker)
+* added select marker & waypoints features in map using selection rectangle via cntrl+mouse or clicking on markers
+* shift+cntrl+mouse or shift+click extends selection
+* "Invert Selection" as context menu on waypoints
+
+# Update v1.4
+* invert marked tracks
+* bugfixes to handle empty files, tracks, tracksegments
+* editor for <metadata> section in GPX 1.1
+* add support for routes and waypoints on file level
+* export as KML
+* show some track statistics
+* show extensions on all elements
+
+# Update v1.3
+* new dialogue to show distribution of values, select extreme values, delete extreme values
+* show multiple SRTM files in one plot
+* show gpx file with all required & available SRTM files
+* various performance improvements
+
+# Update v1.2
+* Recent File list is available for last 5 files opened
+* Save As support
+* besides the track also the height profile is shown
+* tooltip on track map and height profile
+* added support for reading heights from SRMT .hgt files and assigning them to waypoints
+  * added preferences to set path to SRTM files
+  * two options to determine height: a) directly from tile containing waypoint or b) averaging over neighbouring waypoints
+* added SRTM data file viewer that shows 3d model of heights
+
+# Update v1.1
+* Added drag & drop for tracks and segments
+
+# Initial release
 * add gpx files (single or mutliple) to list
 * save changed files (current file will be backed up to "*.gpx.yyyyMMDD-HHmmss.bak")
 * remove all files from editor (without saving)
@@ -27,34 +65,7 @@ File and track handling
 * delete selected tracks - also multiple selections across different files
 * delete selected tracks
 
-* Update v1.1: Added drag & drop for tracks and segments
-
-Update v1.2
-* Recent File list is available for last 5 files opened
-* Save As support
-* besides the track also the height profile is shown
-* tooltip on track map and height profile
-* added support for reading heights from SRMT .hgt files and assigning them to waypoints
-  * added preferences to set path to SRTM files
-  * two options to determine height: a) directly from tile containing waypoint or b) averaging over neighbouring waypoints
-* added SRTM data file viewer that shows 3d model of heights
-
-Update v1.3
-- new dialogue to show distribution of values, select extreme values, delete extreme values
-- show multiple SRTM files in one plot
-- show gpx file with all required & available SRTM files
-- various performance improvements
-
-Update v1.4
-- invert marked tracks
-- bugfixes to handle empty files, tracks, tracksegments
-- editor for <metadata> section in GPX 1.1
-- add support for routes and waypoints on file level
-- export as KML
-- show some track statistics
-- show extensions on all elements
-
-Track optimization
+# Track optimization
 
 * select a reduction algorithm (Douglas-Peucker, Visvalingam-Whyatt, Reumann-Witkam) and a parameter
 * set parameter for fixing of Garmin Montana 600 "feature" (algorithm used is simply to eliminate points that are "too far away" from prev and next)
@@ -63,7 +74,7 @@ Track optimization
 * run fixing algorithm an delete points on all selected tracks (also support multiple selection of track in different files)
 * run selected reduction algorithm an delete points (also support multiple selection of track in different files)
 
-Following parameters are supported via command line:
+# Following parameters are supported via command line:
 
 Update v1.2
 Only list of gpx files: all files will be opened in the editor
@@ -160,11 +171,11 @@ Explicit dependencies:
 * 'commons-io:commons-io:2.4'
 * 'org.apache.commons:commons-lang3:3.5'
 * 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
-* 'com.gluonhq:maps:1.0.1'
 * 'org.jzy3d:jzy3d-api:1.0.0'
 * 'org.jzy3d:jzy3d-javafx:1.0.0'
 * 'org.controlsfx:controlsfx:8.40.14'
 * 'de.jensd:fontawesomefx:8.9'
+* 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 
 ## Roadmap
 
@@ -172,5 +183,4 @@ The following features are still on my todo-list - but I don't promise any timel
 
 * add TestFX UI test cases
 * add task handling for long running activities
-* extend/replace waypoint viewer to enable zooming / changing of views
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu
