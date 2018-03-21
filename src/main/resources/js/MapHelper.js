@@ -40,3 +40,15 @@ function getMapBounds() {
 function addClickToLayer(layer, lat, lon) {
     window[layer].on('click', function(e) { callback.selectMarker(layer, lat, lon, e.originalEvent.shiftKey); });
 }
+
+/*
+ * convert pixel coordinates into latlng
+ */
+function getLatLngForPoint(x, y) {
+    var point = L.point(x, y);
+    var latlng = myMap.layerPointToLatLng(point);
+    return [latlng.lat, latlng.lng];
+}
+function getLatLngForRect(startx, starty, endx, endy) {
+    return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
+}

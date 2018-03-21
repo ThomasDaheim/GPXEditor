@@ -38,7 +38,6 @@ dependencies {
     compile 'commons-io:commons-io:2.4'
     compile 'org.apache.commons:commons-lang3:3.5'
     compile 'gpx-parser:gpx-parser:1.2'
-    compile 'com.gluonhq:maps:1.0.1'
     compile 'org.jzy3d:jzy3d-api:1.0.0'
     compile 'org.jzy3d:jzy3d-javafx:1.0.0'
     compile 'org.controlsfx:controlsfx:8.40.14'
