@@ -47,11 +47,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -97,8 +102,6 @@ public class TrackMap extends LeafletMapView {
     private StackPane meAsPane =(StackPane) this;
     // webview holds the leaflet map
     private WebView myWebView = null;
-    // bounds of the map as currently shown
-    private BoundingBox mapBounds = null;
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myPane;
     // rectangle to select waypoints
@@ -214,6 +217,10 @@ public class TrackMap extends LeafletMapView {
                     event.consume();
                 }
             });
+            
+            // we want our own context menu!
+            myWebView.setContextMenuEnabled(false);
+            createContextMenu();
 
             isInitialized = true;
         }
@@ -272,42 +279,15 @@ public class TrackMap extends LeafletMapView {
     }
     
     private void handleMouseCntrlPressed(final MouseEvent event) {
-        // if coords of map & rectangle: reset all and select waypoints
-        // if coords of map not know: call javascript to get them
-        if (mapBounds == null) {
-            // TODO: learn how to do that more clever...
-            final JSObject bounds = (JSObject) execScript("getMapBounds();");
-            
-            final Double double0 = (Double) bounds.getSlot(0);
-            final Double double1 = (Double) bounds.getSlot(1);
-            final Double double2 = (Double) bounds.getSlot(2);
-            final Double double3 = (Double) bounds.getSlot(3);
-            
-            final double minLat = Math.min(double0, double2);
-            final double maxLat = Math.max(double0, double2);
-            final double minLon = Math.min(double1, double3);
-            final double maxLon = Math.max(double1, double3);
-
-            // we store in map lat/lon coordinates and not javafx x/y
-            // lat -> x
-            // lon -> y
-            // but this way also width & height invert their meanings!
-            mapBounds = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
-//            System.out.println("");
-//            System.out.println("Lat/Lon: " + minLat + ", " + maxLat + ", " + minLon + ", " + maxLon);
-//            System.out.println("mapBounds: " + mapBounds);
-        }
-        
+        // if coords of rectangle: reset all and select waypoints
         if (selectRect != null) {
             myPane.getChildren().remove(selectRect);
             selectRect = null;
         }
-        startPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
-        selectRect = new Rectangle(startPoint.getX(), startPoint.getY(), 0.01, 0.01);
-        selectRect.getStyleClass().add("selectRect");
-        myPane.getChildren().add(selectRect);
+        initSelectRectangle(event);
     }
     private void handleMouseCntrlDragged(final MouseEvent event) {
+        initSelectRectangle(event);
         resizeSelectRectangle(event);
     }
     private void handleMouseCntrlReleased(final MouseEvent event) {
@@ -315,40 +295,41 @@ public class TrackMap extends LeafletMapView {
 
         // if coords of map & rectangle: reset all and select waypoints
         if (selectRect != null) {
-//            System.out.println("selectRect: " + selectRect);
+            //System.out.println("selectRect: " + selectRect);
             //System.out.println("meAsPane: " + meAsPane.getWidth() + ", " + meAsPane.getHeight());
 
-            // use percentages of width & height to rescale
-            // upper left of select rectangle if percentage of pane size
-            final double startXPerc = selectRect.getX() / meAsPane.getWidth();
-            final double startYPerc = selectRect.getY() / meAsPane.getHeight();
-            // percentage of width & height of pane covered by select rectangle
-            final double widthPerc = selectRect.getWidth() / meAsPane.getWidth();
-            final double heightPerc = selectRect.getHeight() / meAsPane.getHeight();
-//            System.out.println("percentages: " + startXPerc + ", " + startYPerc + ", " + widthPerc + ", " + heightPerc);
+            final JSObject rectangle = (JSObject) execScript("getLatLngForRect(" + 
+                            Math.round(selectRect.getX()) + ", " + 
+                            Math.round(selectRect.getY()) + ", " + 
+                            Math.round(selectRect.getX() + selectRect.getWidth()) + ", " + 
+                            Math.round(selectRect.getY() + selectRect.getHeight()) + ");");
+            final Double startlat = (Double) rectangle.getSlot(0);
+            final Double startlng = (Double) rectangle.getSlot(1);
+            final Double endlat = (Double) rectangle.getSlot(2);
+            final Double endlng = (Double) rectangle.getSlot(3);
             
-            // calculate bounding box in map coordinates from rectangle
-            // mapBounds is in map lat/lon AND NOT in javafx x/y
-            // tricky - in javafx 0,0 is upper left corner VS in map minLat,minLon is lower left (on north hemisphere)
-            // and counting for lat is upward VS counting y is downward...
-            // whereas coordinates always use lat, lon
-            // => invert between x/y required for select box values
-            // => width and height change their meaning as well!
-            // => minimum lat is calculated from maximum y
-            final BoundingBox selectBox = new BoundingBox(
-                    mapBounds.getMaxX() - mapBounds.getWidth() * (startYPerc + heightPerc), 
-                    mapBounds.getMinY() + mapBounds.getHeight() * startXPerc, 
-                    mapBounds.getWidth() * heightPerc, 
-                    mapBounds.getHeight() * widthPerc);
-//            System.out.println("selectBox: " + selectBox);
+            final double minLat = Math.min(startlat, endlat);
+            final double maxLat = Math.max(startlat, endlat);
+            final double minLon = Math.min(startlng, endlng);
+            final double maxLon = Math.max(startlng, endlng);
+            
+            final BoundingBox selectBox = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
+            //System.out.println("selectBox2: " + selectBox);
             
             selectGPXWaypointsInBoundingBox(selectBox, event.isShiftDown());
         }
         
-        mapBounds = null;
         if (selectRect != null) {
             myPane.getChildren().remove(selectRect);
             selectRect = null;
+        }
+    }
+    private void initSelectRectangle(final MouseEvent event) {
+        if (selectRect == null) {
+            startPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
+            selectRect = new Rectangle(startPoint.getX(), startPoint.getY(), 0.01, 0.01);
+            selectRect.getStyleClass().add("selectRect");
+            myPane.getChildren().add(selectRect);
         }
     }
     private void resizeSelectRectangle(final MouseEvent event) {
@@ -373,7 +354,54 @@ public class TrackMap extends LeafletMapView {
             }
         }
     }
-   
+
+    private void createContextMenu() {
+        // https://stackoverflow.com/questions/27047447/customized-context-menu-on-javafx-webview-webengine
+        final ContextMenu contextMenu = new ContextMenu();
+
+        // only a placeholder :-) text will be overwritten, when context menu is shown
+        final MenuItem showCord = new MenuItem("Show coordinate");
+        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
+        contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+            if (newValue != null) {
+                showCord.setText(LatLongHelper.LatLongToString(pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY())));
+            }
+        });
+        contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+            if (newValue != null) {
+                showCord.setText(LatLongHelper.LatLongToString(pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue())));
+            }
+        });
+        
+        final MenuItem addWaypoint = new MenuItem("Add waypoint");
+        addWaypoint.setOnAction((event) -> {
+            final LatLong point = pointToLatLong(contextMenu.getAnchorX(), contextMenu.getAnchorY());
+            
+            // TODO: add marker to lineitem
+        });
+
+        //contextMenu.getItems().addAll(showCord, addWaypoint);
+        contextMenu.getItems().addAll(showCord);
+
+        myWebView.setOnMousePressed(e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                contextMenu.show(myWebView, e.getScreenX(), e.getScreenY());
+            } else {
+                contextMenu.hide();
+            }
+        });
+    }
+    private LatLong pointToLatLong(double x, double y) {
+        final Point2D point = myPane.screenToLocal(x, y);
+        final JSObject latlng = (JSObject) execScript("getLatLngForPoint(" +
+                Math.round(point.getX()) + ", " +
+                Math.round(point.getY()) + ");");
+        final Double pointlat = (Double) latlng.getSlot(0);
+        final Double pointlng = (Double) latlng.getSlot(1);
+        
+        return new LatLong(pointlat, pointlng);
+    }
+    
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
@@ -509,6 +537,7 @@ public class TrackMap extends LeafletMapView {
         if (addToSelection) {
             newSelection.addAll(selectedGPXWaypoint);
         }
+        // TODO: if selected point is already in list, take it out
         newSelection.addAll(myGPXLineItem.getGPXWaypointsInBoundingBox(boundingBox));
         myGPXEditor.selectGPXWaypoints(newSelection.stream().collect(Collectors.toList()));
     }
