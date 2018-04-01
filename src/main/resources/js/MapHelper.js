@@ -35,10 +35,44 @@ function getMapBounds() {
 }
 
 /*
+ * 
+ */
+function updateMarkerIcon(layer, icon) {
+    window[layer].setIcon(window[icon]);
+}
+function updateMarkerColor(layer, color) {
+    window[layer].setStyle({
+        color: color
+    });
+}
+
+/*
  * add click handler to layer to send back lat/lon
  */
-function addClickToLayer(layer, lat, lon) {
-    window[layer].on('click', function(e) { callback.selectMarker(layer, lat, lon, e.originalEvent.shiftKey); });
+function addClickToLayer(layer, lat, lng) {
+    window[layer].on('click', function(e) { callback.selectMarker(layer, lat, lng, e.originalEvent.shiftKey); });
+}
+
+/*
+ * support for draggable markers including callback at dragend
+ */
+function makeDraggable(layer, lat, lng) {
+    var marker = window[layer];
+    
+    marker.dragging.enable();
+    marker.on('dragend', function(e) {
+        var newPos = marker.getLatLng();
+        callback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
+    });
+}
+function setTitle(layer, title) {
+    var marker = window[layer];
+            
+    if (marker._icon) {
+        marker._icon.title = title;
+    } else {
+        marker.options.title = title;
+    } 
 }
 
 /*
@@ -46,9 +80,11 @@ function addClickToLayer(layer, lat, lon) {
  */
 function getLatLngForPoint(x, y) {
     var point = L.point(x, y);
-    var latlng = myMap.layerPointToLatLng(point);
+    // take pane & zoom into account when transforming - therefore containerPointToLatLng and not layerPointToLatLng
+    var latlng = myMap.containerPointToLatLng(point);
     return [latlng.lat, latlng.lng];
 }
 function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
+

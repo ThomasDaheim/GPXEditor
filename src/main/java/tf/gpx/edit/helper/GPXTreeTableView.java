@@ -211,7 +211,7 @@ public class GPXTreeTableView {
             // drag is started inside the list
             // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html
             row.setOnDragDetected(event -> {
-                if (!row.isEmpty() && !GPXLineItem.GPXLineItemType.GPXMetadata.equals(row.getItem().getGPXLineItemType())) {
+                if (!row.isEmpty() && !GPXLineItem.GPXLineItemType.GPXMetadata.equals(row.getItem().getType())) {
                     // check if we're trying to drag a GPXFile item and not a track in it
                     final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
                     final ClipboardContent cc = new ClipboardContent();
@@ -293,7 +293,6 @@ public class GPXTreeTableView {
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
             if (acceptable(db, row)) {
                 // get dragged item and item drop on to
-                // TODO: add support for multiple selections!
                 // and that means working on a copy of treeitems since otherwise everything gets messed up...
                 final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
 

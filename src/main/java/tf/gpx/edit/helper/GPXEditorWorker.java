@@ -222,15 +222,15 @@ public class GPXEditorWorker {
         final KMLWriter kmlWriter = new KMLWriter();
         
         // export all waypoints, tracks and routes
-        final List<GPXWaypoint> fileWaypoints = gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
+        final List<GPXWaypoint> fileWaypoints = gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
         for (GPXWaypoint waypoint : fileWaypoints) {
             kmlWriter.addMark(waypoint);
         }
         for (GPXTrack track : gpxFile.getGPXTracks()) {
-            kmlWriter.addTrack(track.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), track.getName());
+            kmlWriter.addTrack(track.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), track.getName());
         }
         for (GPXRoute route : gpxFile.getGPXRoutes()) {
-            kmlWriter.addRoute(route.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), route.getName());
+            kmlWriter.addRoute(route.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), route.getName());
         }
         result = kmlWriter.writeFile(selectedFile);
         
@@ -338,9 +338,9 @@ public class GPXEditorWorker {
         final GPXTrackSegment mergedGPXTrackSegment = gpxTrackSegmentsToMerge.get(0);
         mergedGPXTrackSegment.setName(MERGED_TRACKSEGMENT_NAME);
 
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
-            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
             mergedGPXWaypoints.addAll(gpxGPXWaypoints);
             

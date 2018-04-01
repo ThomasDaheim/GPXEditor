@@ -119,6 +119,8 @@ import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.values.DistributionViewer;
+import tf.gpx.edit.viewer.HeightChart;
+import tf.gpx.edit.viewer.TrackMap;
 
 /**
  *
@@ -505,14 +507,14 @@ public class GPXEditor implements Initializable {
             if (oldSelection != null) {
                 if (newSelection != null || !oldSelection.equals(newSelection)) {
                     // reset any highlights from checking
-                    final List<GPXWaypoint> waypoints = oldSelection.getValue().getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                    final List<GPXWaypoint> waypoints = oldSelection.getValue().getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                     for (GPXWaypoint waypoint : waypoints) {
                         waypoint.setHighlight(false);
                     }
                 }
             }
             if (newSelection != null) {
-                showDetails(newSelection.getValue());
+                showGPXWaypoints(newSelection.getValue());
                 
                 if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
                     distributionsMenu.setDisable(false);
@@ -522,7 +524,7 @@ public class GPXEditor implements Initializable {
                     specialValuesMenu.setDisable(true);
                 }
             } else {
-                showDetails(null);
+                showGPXWaypoints(null);
                 distributionsMenu.setDisable(true);
                 specialValuesMenu.setDisable(true);
             }
@@ -719,30 +721,25 @@ public class GPXEditor implements Initializable {
             });
             trackMenu.getItems().add(invertSelection);
             
-            final MenuItem deleteTracks = new MenuItem("Delete selected");
-            deleteTracks.setOnAction((ActionEvent event) -> {
-                // this is a bit tricky! 
-                // track -> List<TrackSegments> -> List<Waypoints>
-                // all waypoints of all tracks are shown together
-                // but in order to remove we need to know from which segment we need to remove the waypoints...
+            final MenuItem deleteWaypoints = new MenuItem("Delete selected");
+            deleteWaypoints.setOnAction((ActionEvent event) -> {
+                // all waypoints to remove - as copy since otherwise observablelist get messed up by deletes
+                final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems());
                 
-                // all waypoints to remove
-                final List<GPXWaypoint> selectedWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems();
-                
-                // now loop through all the tracksegments of the track and try to remove them
-                // TODO can be multiple tracks from multiple files...
-                final GPXTrack track = selectedWaypoints.get(0).getGPXTracks().get(0);
-                for (GPXTrackSegment trackSegment : track.getGPXTrackSegments()) {
-                    final List<GPXWaypoint> waypoints = trackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                    waypoints.removeAll(selectedWaypoints);
-                    trackSegment.setGPXWaypoints(waypoints);
+                gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+                // now loop through all the waypoints and try to remove them
+                // can be waypoints from file, track, route
+                for (GPXWaypoint waypoint : selectedWaypoints) {
+                    waypoint.getParent().getGPXWaypoints().remove(waypoint);
                 }
-                // show the new segment
-                showDetails(track);
+                gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+
+                // show remaining waypoints
+                showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData());
                 // force repaint of gpxFileList to show unsaved items
                 refreshGPXFileList();
             });
-            trackMenu.getItems().add(deleteTracks);
+            trackMenu.getItems().add(deleteWaypoints);
             row.setContextMenu(trackMenu);
 
             return row;
@@ -878,7 +875,7 @@ public class GPXEditor implements Initializable {
         mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
 
         mapAnchorPane.getChildren().clear();
-        final Region mapView = GPXTrackviewer.getInstance().getMapView();
+        final Region mapView = TrackMap.getInstance();
         mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
         mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
         mapView.setVisible(false);
@@ -894,7 +891,7 @@ public class GPXEditor implements Initializable {
         profileAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
 
         profileAnchorPane.getChildren().clear();
-        final XYChart chart = GPXTrackviewer.getInstance().getChart();
+        final XYChart chart = HeightChart.getInstance();
         chart.prefHeightProperty().bind(profileAnchorPane.heightProperty());
         chart.prefWidthProperty().bind(profileAnchorPane.widthProperty());
         profileAnchorPane.getChildren().add(chart);
@@ -959,15 +956,14 @@ public class GPXEditor implements Initializable {
         return gpxFileItem;
     }
     
-    private void showDetails(final GPXLineItem lineItem) {
+    private void showGPXWaypoints(final GPXLineItem lineItem) {
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
 
         if (lineItem != null) {
             // collect all waypoints from all segments
-            ObservableList<GPXWaypoint> itemList = FXCollections.observableList(lineItem.getGPXWaypoints(null));
-            gpxTrackXML.setItems(itemList);
+            gpxTrackXML.setItems(lineItem.getCombinedGPXWaypoints(null));
             gpxTrackXML.setUserData(lineItem);
             // show beginning of list
             gpxTrackXML.scrollTo(0);
@@ -979,13 +975,13 @@ public class GPXEditor implements Initializable {
 
         GPXTrackviewer.getInstance().setGPXWaypoints(lineItem);
         if (lineItem != null) {
-            if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getGPXLineItemType())) {
+            if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getType())) {
                 // show map if not metadata
-                GPXTrackviewer.getInstance().getMapView().setVisible(true);
+                TrackMap.getInstance().setVisible(true);
                 EditGPXMetadata.getInstance().getPane().setVisible(false);
             } else {
                 // show metadata viewer
-                GPXTrackviewer.getInstance().getMapView().setVisible(false);
+                TrackMap.getInstance().setVisible(false);
                 EditGPXMetadata.getInstance().getPane().setVisible(true);
                 
                 EditGPXMetadata.getInstance().editMetadata(lineItem.getGPXFile());
@@ -995,7 +991,7 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
-    private void refreshWayoints() {
+    private void refillGPXWayointList() {
         final GPXLineItem lineItem = (GPXLineItem) gpxTrackXML.getUserData();
         if (lineItem != null) {
             // find the lineItem in the gpxFileList 
@@ -1019,7 +1015,7 @@ public class GPXEditor implements Initializable {
             if (gpxFiles.size() == 1) {
                 // 2) if currently a file is shown, show it again
                 if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-                    showDetails(gpxFiles.get(0));
+                    showGPXWaypoints(gpxFiles.get(0));
                 } else {
                     // else, find and show track
                     final List<GPXTrack> gpxTracks = 
@@ -1035,10 +1031,10 @@ public class GPXEditor implements Initializable {
                         collect(Collectors.toList());
                     
                     if (gpxTracks.size() == 1) {
-                        showDetails(gpxTracks.get(0));
+                        showGPXWaypoints(gpxTracks.get(0));
                     } else {
                         // nothing found!!! probably somthing wrong... so better clear list
-                        showDetails(null);
+                        showGPXWaypoints(null);
                     }
                 }
                 
@@ -1116,7 +1112,7 @@ public class GPXEditor implements Initializable {
         // TFE, 20180111: horrible performance for large gpx files if listener on selection is active
         gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileListXML.getSelectionModel().clearSelection();
-        showDetails(null);
+        showGPXWaypoints(null);
         distributionsMenu.setDisable(true);
         gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
         refreshGPXFileList();
@@ -1170,8 +1166,21 @@ public class GPXEditor implements Initializable {
         gpxFileList.setRoot(null);
     }
     
-    public void refreshGPXFileList() {
+    private void refreshGPXFileList() {
+        gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileListXML.refresh();
+        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
+    }
+
+    private void refreshGPXWaypointList() {
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+        gpxTrackXML.refresh();
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+    }
+    
+    public void refresh() {
+        refreshGPXFileList();
+        refreshGPXWaypointList();
     }
 
     public void invertTracks(final ActionEvent event) {
@@ -1418,7 +1427,7 @@ public class GPXEditor implements Initializable {
             // waypoints can be from different tracksegments!
             final List<GPXTrackSegment> gpxTrackSegments = uniqueGPXTrackSegmentListFromGPXWaypointList(gpxTrackXML.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
-                final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 final boolean keep1[] = EarthGeometry.simplifyTrack(
                         trackwaypoints, 
                         EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())), 
@@ -1488,7 +1497,7 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         refreshGPXFileList();
         
-        refreshWayoints();
+        refillGPXWayointList();
     }
 
     private void reduceGPXFiles(final ActionEvent event) {
@@ -1498,12 +1507,12 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
         refreshGPXFileList();
         
-        refreshWayoints();
+        refillGPXWayointList();
     }
     
     private void editMetadata(final ActionEvent event) {
         // show metadata viewer
-        GPXTrackviewer.getInstance().getMapView().setVisible(false);
+        TrackMap.getInstance().setVisible(false);
         EditGPXMetadata.getInstance().getPane().setVisible(true);
 
         EditGPXMetadata.getInstance().editMetadata(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
@@ -1516,16 +1525,16 @@ public class GPXEditor implements Initializable {
         
         switch (item.getType()) {
             case GPXFile:
-                waypoints = item.getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                waypoints = item.getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 break;
             case GPXTrack:
-                waypoints = item.getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                waypoints = item.getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 break;
             case GPXTrackSegment:
-                waypoints = item.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                waypoints = item.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 break;
             case GPXWaypoint:
-                waypoints = item.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                waypoints = item.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 break;
             default:
                 waypoints = new ArrayList<>();
@@ -1533,7 +1542,7 @@ public class GPXEditor implements Initializable {
         }
         
         if (DistributionViewer.getInstance().showDistributions(waypoints)) {
-            showDetails(item);
+            showGPXWaypoints(item);
         }
     }
     
@@ -1547,7 +1556,7 @@ public class GPXEditor implements Initializable {
                 (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
             refreshGPXFileList();
-            refreshWayoints();
+            refreshGPXWaypointList();
         }
     }
     

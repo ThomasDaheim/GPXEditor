@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 
 /**
@@ -60,7 +61,6 @@ public abstract class GPXLineItem {
         GPXWaypoint("Waypt"),
         GPXRoute("Route");
 
-        // TODO: extend for complex case of waypoints under files and routes with waypoints...
         public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
             // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)
             // metadata is parent of no one
@@ -299,9 +299,6 @@ public abstract class GPXLineItem {
         }
     }
 
-    public GPXLineItemType getGPXLineItemType() {
-        return myItemType;
-    }
     // getter & setter for the number of this lineitem
     public Integer getNumber() {
         return myNumber;
@@ -319,20 +316,22 @@ public abstract class GPXLineItem {
     public abstract String getDataAsString(final GPXLineItem.GPXLineItemData gpxLineItemData);
     public abstract Date getDate();
     
-    // get associated GPXLineItemType - could be children or parents
+    // get children of the diffferent types - but only direct children and not hierarchically!
     public abstract GPXFile getGPXFile();
     public GPXMetadata getGPXMetadata() {
         // default implementation is that I don't have no metadata
         return null;
     }
-    public abstract List<GPXTrack> getGPXTracks();
-    public abstract List<GPXTrackSegment> getGPXTrackSegments();
+    public abstract ObservableList<GPXTrack> getGPXTracks();
+    public abstract ObservableList<GPXTrackSegment> getGPXTrackSegments();
+    public abstract ObservableList<GPXRoute> getGPXRoutes();
+    public abstract ObservableList<GPXWaypoint> getGPXWaypoints();
+    // get the actual content of com.hs.gpxparser.* type
+    public abstract Extension getContent();
     // TFE, 20180214: wayopints can be below tracksegments, routes and file
     // therefore we need a new parameter to indicate what sort of waypoints we want
     // either for a specific itemtype or for all (itemType = null)
-    public abstract List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType);
-    public abstract List<GPXRoute> getGPXRoutes();
-    public abstract Extension getContent();
+    public abstract ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType);
     
     // find points in a given bounding box
     public abstract List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox);

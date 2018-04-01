@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import com.hs.gpxparser.modal.Waypoint;
 import de.saring.leafletmap.ColorMarker;
 import de.saring.leafletmap.ControlPosition;
 import de.saring.leafletmap.LatLong;
@@ -47,7 +48,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
@@ -63,6 +63,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXLineItem;
@@ -77,6 +79,8 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 public class TrackMap extends LeafletMapView {
+    private final static TrackMap INSTANCE = new TrackMap();
+
     // definition of markers for leafletview - needs to match names given in js file
     // https://image.online-convert.com/convert-to-svg
     private enum TrackMarker implements Marker {
@@ -112,9 +116,10 @@ public class TrackMap extends LeafletMapView {
 
     private GPXLineItem myGPXLineItem;
 
-    private final List<GPXWaypoint> selectedGPXWaypoint = new ArrayList<>();
-    // list of markers - one for each selected waypoint
-    private final List<String> selectedMarkers = new ArrayList<>();
+    // store gpxlineitem waypoints and markers as apache bidirectional map
+    private final BidiMap<String,GPXWaypoint> waypoints = new DualHashBidiMap<>();
+    // store selected waypoints and markers as apache bidirectional map
+    private final BidiMap<String,GPXWaypoint> selectedWaypoints = new DualHashBidiMap<>();
 
     private BoundingBox myBoundingBox;
     private JSObject window;
@@ -126,7 +131,7 @@ public class TrackMap extends LeafletMapView {
     private boolean isLoaded = false;
     private boolean isInitialized = false;
 
-    public TrackMap() {
+    private TrackMap() {
         super();
         
         setVisible(false);
@@ -147,6 +152,10 @@ public class TrackMap extends LeafletMapView {
         
     }
     
+    public static TrackMap getInstance() {
+        return INSTANCE;
+    }
+    
     /**
      * Enables Firebug Lite for debugging a webEngine.
      * @param engine the webEngine for which debugging is to be enabled.
@@ -164,6 +173,11 @@ public class TrackMap extends LeafletMapView {
             window.setMember("callback", callback);
             //execScript("callback.selectGPXWaypoints(\"Test\");");
 
+            // TODO: add support drawing of routes
+            // https://github.com/Leaflet/Leaflet.Editable
+            addScriptFromPath("/js/Leaflet.Editable.min.js");
+            addScriptFromPath("/js/EditRoutes.js");
+
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
             addScriptFromPath("/js/TrackMarker.js");
@@ -171,14 +185,10 @@ public class TrackMap extends LeafletMapView {
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/js/MapHelper.js");
 
-            // TODO: add support to select waypoints with draw rectangle
-
             // add support for lat / lon lines
             // https://github.com/cloudybay/leaflet.latlng-graticule
             addScriptFromPath("/js/leaflet.latlng-graticule.min.js");
             addScriptFromPath("/js/ShowLatLan.js");
-
-            // TODO: add support for different colors on tracks
 
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -316,7 +326,7 @@ public class TrackMap extends LeafletMapView {
             final BoundingBox selectBox = new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon);
             //System.out.println("selectBox2: " + selectBox);
             
-            selectGPXWaypointsInBoundingBox(selectBox, event.isShiftDown());
+            selectGPXWaypointsInBoundingBox("", selectBox, event.isShiftDown());
         }
         
         if (selectRect != null) {
@@ -361,27 +371,56 @@ public class TrackMap extends LeafletMapView {
 
         // only a placeholder :-) text will be overwritten, when context menu is shown
         final MenuItem showCord = new MenuItem("Show coordinate");
+        
+        final MenuItem addWaypoint = new MenuItem("Add waypoint");
+        addWaypoint.setOnAction((event) -> {
+            assert (addWaypoint.getUserData() != null) && (addWaypoint.getUserData() instanceof LatLong);
+            final LatLong latLong = (LatLong) addWaypoint.getUserData();
+            
+            // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
+            final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
+            
+            final Waypoint newWaypoint = new Waypoint(latLong.getLatitude(), latLong.getLongitude());
+            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), newWaypoint, curGPXWaypoints.size());
+            
+            curGPXWaypoints.add(newGPXWaypoint);
+            
+            final String waypoint = addMarkerAndCallback(latLong, TrackMarker.PlaceMarkIcon, 0, true);
+            waypoints.put(waypoint, newGPXWaypoint);
+            
+            // refresh waypoints list without refreshing map...
+            myGPXEditor.refresh();
+            
+            // redraw height chart
+            HeightChart.getInstance().setGPXWaypoints(myGPXLineItem);
+        });
+
+        final MenuItem addRoute = new MenuItem("Add route");
+        addRoute.setOnAction((event) -> {
+            execScript("myMap.editTools.startPolyline();");
+        });
+                
         // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             if (newValue != null) {
-                showCord.setText(LatLongHelper.LatLongToString(pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY())));
+                final LatLong latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
+                showCord.setText(LatLongHelper.LatLongToString(latLong));
+                addWaypoint.setUserData(latLong);
+                addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
+                addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
             }
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             if (newValue != null) {
-                showCord.setText(LatLongHelper.LatLongToString(pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue())));
+                final LatLong latLong = pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue());
+                showCord.setText(LatLongHelper.LatLongToString(latLong));
+                addWaypoint.setUserData(latLong);
+                addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
+                addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
             }
         });
-        
-        final MenuItem addWaypoint = new MenuItem("Add waypoint");
-        addWaypoint.setOnAction((event) -> {
-            final LatLong point = pointToLatLong(contextMenu.getAnchorX(), contextMenu.getAnchorY());
-            
-            // TODO: add marker to lineitem
-        });
 
-        //contextMenu.getItems().addAll(showCord, addWaypoint);
-        contextMenu.getItems().addAll(showCord);
+        contextMenu.getItems().addAll(showCord, addWaypoint, addRoute);
 
         myWebView.setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
@@ -409,15 +448,24 @@ public class TrackMap extends LeafletMapView {
     public void setGPXWaypoints(final GPXLineItem lineItem) {
         myGPXLineItem = lineItem;
 
-        // file waypoints don't count into MAX_DATAPOINTS
-        final long fileWaypoints = lineItem.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
-        final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypoints) / (lineItem.getGPXWaypoints(null).size() - fileWaypoints);
-
+        // forget the past...
+        waypoints.clear();
+        selectedWaypoints.clear();
         if (!isLoaded) {
             System.out.println("Mama, we need task handling!");
             return;
         }
+        setVisible(false);
         clearMarkersAndTracks();
+
+        if (lineItem == null) {
+            // nothing more todo...
+            return;
+        }
+        
+        // file waypoints don't count into MAX_DATAPOINTS
+        final long fileWaypoints = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
+        final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypoints) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypoints);
 
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
@@ -427,20 +475,21 @@ public class TrackMap extends LeafletMapView {
         double maxLon = -Double.MAX_VALUE;
         
         boolean hasData = false;
-        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile)) {
+        for (GPXWaypoint gpxWaypoint : lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile)) {
             final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
             minLat = Math.min(minLat, latLong.getLatitude());
             maxLat = Math.max(maxLat, latLong.getLatitude());
             minLon = Math.min(minLon, latLong.getLongitude());
             maxLon = Math.max(maxLon, latLong.getLongitude());
         
-            addMarkerAndCallback(latLong, TrackMarker.PlaceMarkIcon, 0);
+            final String waypoint = addMarkerAndCallback(latLong, TrackMarker.PlaceMarkIcon, 0, true);
+            waypoints.put(waypoint, gpxWaypoint);
             hasData = true;
         }
         double count = 0d, i = 0d;
         for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
             final List<LatLong> waypoints = new ArrayList<>();
-            for (GPXWaypoint gpxWaypoint : gpxTrack.getGPXWaypoints(null)) {
+            for (GPXWaypoint gpxWaypoint : gpxTrack.getCombinedGPXWaypoints(null)) {
                 final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
                 minLat = Math.min(minLat, latLong.getLatitude());
                 maxLat = Math.max(maxLat, latLong.getLatitude());
@@ -455,16 +504,16 @@ public class TrackMap extends LeafletMapView {
             }
             if (!waypoints.isEmpty()) {
                 LatLong point = waypoints.get(0);
-                addMarkerAndCallback(point, ColorMarker.GREEN_MARKER, 1000);
+                addMarkerAndCallback(point, ColorMarker.GREEN_MARKER, 1000, false);
                 point = waypoints.get(waypoints.size()-1);
-                addMarkerAndCallback(point, ColorMarker.RED_MARKER, 2000);
+                addMarkerAndCallback(point, ColorMarker.RED_MARKER, 2000, false);
                 addTrackAndCallback(waypoints);
                 hasData = true;
             }
         }
         for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
             final List<LatLong> waypoints = new ArrayList<>();
-            for (GPXWaypoint gpxWaypoint : gpxRoute.getGPXWaypoints(null)) {
+            for (GPXWaypoint gpxWaypoint : gpxRoute.getCombinedGPXWaypoints(null)) {
                 final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
                 minLat = Math.min(minLat, latLong.getLatitude());
                 maxLat = Math.max(maxLat, latLong.getLatitude());
@@ -479,10 +528,12 @@ public class TrackMap extends LeafletMapView {
             }
             if (!waypoints.isEmpty()) {
                 LatLong point = waypoints.get(0);
-                addMarkerAndCallback(point, ColorMarker.GREEN_MARKER, 1000);
+                addMarkerAndCallback(point, ColorMarker.GREEN_MARKER, 1000, false);
                 point = waypoints.get(waypoints.size()-1);
-                addMarkerAndCallback(point, ColorMarker.RED_MARKER, 2000);
-                addTrackAndCallback(waypoints);
+                addMarkerAndCallback(point, ColorMarker.RED_MARKER, 2000, false);
+                final String route = addTrackAndCallback(waypoints);
+                // change color for routes to blue
+                execScript("updateMarkerColor(\"" + route + "\", \"blue\");");
                 hasData = true;
             }
         }
@@ -499,7 +550,6 @@ public class TrackMap extends LeafletMapView {
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         clearSelectedGPXWaypoints();
         
-        selectedGPXWaypoint.addAll(gpxWaypoints);
         if (!gpxWaypoints.isEmpty()) {
             final double ratio = GPXTrackviewer.MAX_DATAPOINTS / 10.0 / gpxWaypoints.size();
             double count = 0d, i = 0d;
@@ -513,33 +563,71 @@ public class TrackMap extends LeafletMapView {
                 }
                 if (i * ratio >= count || isFileWaypoint) {
                     final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
+                    String waypoint;
                     if (isFileWaypoint) {
-                        selectedMarkers.add(addMarkerAndCallback(latLong, TrackMarker.PlaceMarkSelectedIcon, 0));
+                        // updated current marker instead of adding new one on top of the old
+                        waypoint = waypoints.getKey(gpxWaypoint);
+                        execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + TrackMarker.PlaceMarkSelectedIcon.getIconName() + "\");");
                     } else {
-                        selectedMarkers.add(addMarkerAndCallback(latLong, TrackMarker.TrackPointIcon, 0));
+                        waypoint = addMarkerAndCallback(latLong, TrackMarker.TrackPointIcon, 0, false);
                         count++;
                     }
+                    selectedWaypoints.put(waypoint, gpxWaypoint);
                 }
             }
         }
     }
 
     public void clearSelectedGPXWaypoints() {
-        selectedGPXWaypoint.clear();
-        for (String marker : selectedMarkers) {
-            removeMarker(marker);
+        for (String waypoint : selectedWaypoints.keySet()) {
+            final GPXWaypoint gpxWaypoint = selectedWaypoints.get(waypoint);
+            if (gpxWaypoint.isGPXFileWaypoint()) {
+                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + TrackMarker.PlaceMarkIcon.getIconName() + "\");");
+            } else {
+                removeMarker(waypoint);
+            }
         }
-        selectedMarkers.clear();
+        selectedWaypoints.clear();
     }
     
-    public void selectGPXWaypointsInBoundingBox(final BoundingBox boundingBox, final Boolean addToSelection) {
+    public void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
+        addGPXWaypointsToSelection(myGPXLineItem.getGPXWaypointsInBoundingBox(boundingBox), addToSelection);
+    }
+    
+    public void selectGPXWaypointFromMarker(final String marker, final LatLong newLatLong, final Boolean addToSelection) {
+        final GPXWaypoint waypoint = waypoints.get(marker);
+        assert (waypoint != null);
+        
+        //System.out.println("waypoint: " + waypoint);
+        addGPXWaypointsToSelection(Arrays.asList(waypoint), addToSelection);
+    }
+    
+    private void addGPXWaypointsToSelection(final List<GPXWaypoint> waypoints, final Boolean addToSelection) {
         final Set<GPXWaypoint> newSelection = new HashSet<>();
         if (addToSelection) {
-            newSelection.addAll(selectedGPXWaypoint);
+            newSelection.addAll(selectedWaypoints.values());
         }
-        // TODO: if selected point is already in list, take it out
-        newSelection.addAll(myGPXLineItem.getGPXWaypointsInBoundingBox(boundingBox));
+        for (GPXWaypoint waypoint : waypoints) {
+            // if selected point is already in list, take it out
+            if (newSelection.contains(waypoint)) {
+                newSelection.remove(waypoint);
+            } else {
+                newSelection.add(waypoint);
+            }
+        }
         myGPXEditor.selectGPXWaypoints(newSelection.stream().collect(Collectors.toList()));
+    }
+            
+    public void moveGPXWaypoint(final String marker, final LatLong newLatLong) {
+        final GPXWaypoint waypoint = waypoints.get(marker);
+        assert (waypoint != null);
+        
+        waypoint.setLatitude(newLatLong.getLatitude());
+        waypoint.setLongitude(newLatLong.getLongitude());
+        
+        execScript("setTitle(\"" + marker + "\", \"" + StringEscapeUtils.escapeEcmaScript(LatLongHelper.LatLongToString(newLatLong)) + "\");");
+        //refresh waypoints list without refreshing map...
+        myGPXEditor.refresh();
     }
     
     private LatLong getCenter() {
@@ -562,9 +650,12 @@ public class TrackMap extends LeafletMapView {
         return zoomLevel;
     }
 
-    private String addMarkerAndCallback(final LatLong point, final Marker marker, final int zIndex) {
+    private String addMarkerAndCallback(final LatLong point, final Marker marker, final int zIndex, final boolean interactive) {
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(LatLongHelper.LatLongToString(point)), marker, zIndex);
-        execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
+        if (interactive) {
+            execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
+            execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
+        }
         return layer;
     }
 
@@ -588,8 +679,17 @@ public class TrackMap extends LeafletMapView {
         }
         
         public void selectMarker(final String marker, final Double lat, final Double lon, final Boolean shiftPressed) {
-            //System.out.println("Marker: " + marker + ", " + lat + ", " + lon);
-            myTrackMap.selectGPXWaypointsInBoundingBox(new BoundingBox(lat - 0.01, lon - 0.01, 0.02, 0.02), shiftPressed);
+            //System.out.println("Marker selected: " + marker + ", " + lat + ", " + lon);
+            myTrackMap.selectGPXWaypointFromMarker(marker, new LatLong(lat, lon), shiftPressed);
+        }
+        
+        public void moveMarker(final String marker, final Double startlat, final Double startlon, final Double endlat, final Double endlon) {
+            //System.out.println("Marker moved: " + marker + ", " + startlat + ", " + startlon + ", " + endlat + ", " + endlon);
+            myTrackMap.moveGPXWaypoint(marker, new LatLong(endlat, endlon));
+        }
+        
+        public void log(final String output) {
+            System.out.println(output);
         }
     }
 }

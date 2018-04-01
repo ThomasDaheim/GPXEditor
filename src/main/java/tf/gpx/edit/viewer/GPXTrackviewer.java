@@ -27,7 +27,6 @@ package tf.gpx.edit.viewer;
 
 import java.util.List;
 import javafx.scene.chart.XYChart;
-import javafx.scene.layout.Region;
 import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -45,35 +44,21 @@ public class GPXTrackviewer {
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
 
     private GPXEditor myGPXEditor;
-    
-    // https://www.sogehtsoftware.de/blog/post/leafletmap-a-map-component-for-javafx
-    private final HeightChart myHeightChart;
-    private final TrackMap myTrackMap;
 
     private GPXTrackviewer() {
-        myTrackMap = new TrackMap();
-        
-        myHeightChart = new HeightChart();
+        super();
     }
     
     public static GPXTrackviewer getInstance() {
         return INSTANCE;
     }
     
-    public Region getMapView() {
-        return myTrackMap;
-    }
-    
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
         
         // pass it on!
-        myTrackMap.setCallback(gpxEditor);
-        myHeightChart.setCallback(gpxEditor);
-    }
-    
-    public XYChart getChart() {
-        return myHeightChart;
+        TrackMap.getInstance().setCallback(gpxEditor);
+        HeightChart.getInstance().setCallback(gpxEditor);
     }
     
     public void setGPXWaypoints(final GPXLineItem lineItem) {
@@ -81,20 +66,19 @@ public class GPXTrackviewer {
         assert lineItem != null;
 
         // show in LeafletMapView map
-        myTrackMap.setGPXWaypoints(lineItem);
+        TrackMap.getInstance().setGPXWaypoints(lineItem);
+        TrackMap.getInstance().clearSelectedGPXWaypoints();
 
         // show elevation chart
-        myHeightChart.setGPXWaypoints(lineItem);
-
-        myTrackMap.clearSelectedGPXWaypoints();
-        myHeightChart.clearSelectedGPXWaypoints();
+        HeightChart.getInstance().setGPXWaypoints(lineItem);
+        HeightChart.getInstance().clearSelectedGPXWaypoints();
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;
 
-        myTrackMap.setSelectedGPXWaypoints(gpxWaypoints);
-        myHeightChart.setSelectedGPXWaypoints(gpxWaypoints);
+        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
+        HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
     }
 }

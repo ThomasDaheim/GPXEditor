@@ -30,6 +30,8 @@ import com.hs.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 
 /**
@@ -57,7 +59,7 @@ public class GPXMetadata extends GPXMeasurable {
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
-                return getGPXLineItemType().getDescription();
+                return getType().getDescription();
             case Name:
                 return getName();
             case Start:
@@ -106,33 +108,38 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXTrack> getGPXTracks() {
-        return new ArrayList<>();
+    public ObservableList<GPXTrack> getGPXTracks() {
+        return FXCollections.observableArrayList();
     }
 
     @Override
-    public List<GPXTrackSegment> getGPXTrackSegments() {
-        return new ArrayList<>();
+    public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        return FXCollections.observableArrayList();
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints(GPXLineItemType itemType) {
-        return new ArrayList<>();
+    public ObservableList<GPXRoute> getGPXRoutes() {
+        return FXCollections.observableArrayList();
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public List<GPXRoute> getGPXRoutes() {
-        return new ArrayList<>();
+    public ObservableList<GPXWaypoint> getGPXWaypoints() {
+        return FXCollections.observableArrayList();
     }
 
     @Override
     public Extension getContent() {
         return myMetadata;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(GPXLineItemType itemType) {
+        return FXCollections.observableArrayList();
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        return FXCollections.observableArrayList();
     }
 
     public Metadata getMetadata() {

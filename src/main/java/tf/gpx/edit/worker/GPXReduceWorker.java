@@ -52,8 +52,8 @@ public class GPXReduceWorker extends GPXEmptyWorker  {
     @Override
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // remove all waypoints using given algorithm an epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         final boolean keep[] = EarthGeometry.simplifyTrack(oldWaypoints, myAlgorithm, myParameter);
         

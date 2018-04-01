@@ -49,8 +49,8 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
         // AND distanceGPXWaypoints prev - next below epsilon
-        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+        List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
         final boolean keep[] = EarthGeometry.fixTrack(oldWaypoints, myParameter);
         

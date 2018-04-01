@@ -31,6 +31,8 @@ import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 
 /**
@@ -90,15 +92,15 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public boolean isGPXFileWaypoint() {
-        return GPXLineItemType.GPXFile.equals(myGPXParent.getGPXLineItemType());
+        return GPXLineItemType.GPXFile.equals(myGPXParent.getType());
     }
     
     public boolean isGPXRouteWaypoint() {
-        return GPXLineItemType.GPXRoute.equals(myGPXParent.getGPXLineItemType());
+        return GPXLineItemType.GPXRoute.equals(myGPXParent.getType());
     }
     
     public boolean isGPXTrackWaypoint() {
-        return GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getGPXLineItemType());
+        return GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getType());
     }
     
     @Override
@@ -119,7 +121,7 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public void setParent(GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getGPXLineItemType());
+        assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
         
         myGPXParent = parent;
         setHasUnsavedChanges();
@@ -138,7 +140,7 @@ public class GPXWaypoint extends GPXLineItem {
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
-                return getGPXLineItemType().getDescription();
+                return getType().getDescription();
             case Name:
                 return getName();
             case Position:
@@ -238,23 +240,39 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public List<GPXTrack> getGPXTracks() {
-        return getParent().getGPXTracks();
-    }
-
-    @Override
-    public List<GPXTrackSegment> getGPXTrackSegments() {
-        List<GPXTrackSegment> result = new ArrayList<>();
-        if (GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getGPXLineItemType())) {
-            result.add((GPXTrackSegment) myGPXParent);
-        }
+    public ObservableList<GPXTrack> getGPXTracks() {
+        ObservableList<GPXTrack> result = FXCollections.observableArrayList();
         return result;
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
-        List<GPXWaypoint> result = new ArrayList<>();
-        if (itemType == null || itemType.equals(myGPXParent.getGPXLineItemType())) {
+    public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        ObservableList<GPXTrackSegment> result = FXCollections.observableArrayList();
+        return result;
+    }
+
+    @Override
+    public ObservableList<GPXRoute> getGPXRoutes() {
+        ObservableList<GPXRoute> result = FXCollections.observableArrayList();
+        return result;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getGPXWaypoints() {
+        ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
+        result.add(this);
+        return result;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myWaypoint;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
+        ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
+        if (itemType == null || itemType.equals(myGPXParent.getType())) {
             result.add(this);
         }
         return result;
@@ -267,20 +285,6 @@ public class GPXWaypoint extends GPXLineItem {
             result.add(this);
         }
         return result;
-    }
-
-    @Override
-    public List<GPXRoute> getGPXRoutes() {
-        List<GPXRoute> result = new ArrayList<>();
-        if (GPXLineItemType.GPXRoute.equals(myGPXParent.getGPXLineItemType())) {
-            result.add((GPXRoute) myGPXParent);
-        }
-        return result;
-    }
-    
-    @Override
-    public Extension getContent() {
-        return myWaypoint;
     }
 
     @Override
@@ -330,5 +334,18 @@ public class GPXWaypoint extends GPXLineItem {
 
     public double getLongitude() {
         return myWaypoint.getLongitude();
+    }
+
+    /*
+    * TFE, 20180322: support for move markers in mapview
+    */
+    public void setLatitude(final double latitude) {
+        myWaypoint.setLatitude(latitude);
+        setHasUnsavedChanges();
+    }
+    
+    public void setLongitude(final double longitude) {
+        myWaypoint.setLongitude(longitude);
+        setHasUnsavedChanges();
     }
 }

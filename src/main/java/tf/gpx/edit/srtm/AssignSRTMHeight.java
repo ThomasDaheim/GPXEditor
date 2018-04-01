@@ -273,11 +273,32 @@ public class AssignSRTMHeight {
         final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
         
+        // creates various warnings on second usage!
+        // Mar 31, 2018 8:49:31 PM javafx.scene.CssStyleHelper calculateValue
+        // WARNING: Could not resolve '-fx-text-background-color' while resolving lookups for '-fx-text-fill' from rule '*.check-box' in stylesheet jar:file:/C:/Program%20Files/Java/jdk1.8.0_161/jre/lib/ext/jfxrt.jar!/com/sun/javafx/scene/control/skin/modena/modena.bss        
+        // workaroud https://stackoverflow.com/a/5936614 to suppress warning output NOT WORKING
+//        final PrintStream out = new PrintStream(System.out);
+//        System.setOut(new PrintStream(new OutputStream() {
+//            @Override
+//            public void write(int b) {
+//            }
+//        }));
+//        final PrintStream err = new PrintStream(System.err);
+//        System.setErr(new PrintStream(new OutputStream() {
+//            @Override
+//            public void write(int b) {
+//            }
+//        }));
+
         fileList.getItems().addAll(dataFiles.stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList()));
         fileList.getCheckModel().checkAll();
         for (String missingFile : missingDataFiles) {
             fileList.getCheckModel().clearCheck(missingFile);
         }
+
+//        System.setOut(out);
+//        System.setErr(err);
+        
     }
 
     private void runVisitor(final List<GPXFile> gpxFiles, final IGPXLineItemVisitor visitor) {

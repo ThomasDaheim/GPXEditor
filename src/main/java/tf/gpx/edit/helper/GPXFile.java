@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import tf.gpx.edit.parser.DefaultParser;
 
@@ -59,9 +61,9 @@ public class GPXFile extends GPXMeasurable {
     private String myGPXFileName;
     private GPX myGPX;
     private GPXMetadata myGPXMetadata;
-    private List<GPXRoute> myGPXRoutes = new ArrayList<>();
-    private List<GPXTrack> myGPXTracks = new ArrayList<>();
-    private List<GPXWaypoint> myGPXWaypoints = new ArrayList<>();
+    private ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
+    private ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
+    private ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
     
     private GPXFile() {
         super(GPXLineItemType.GPXFile);
@@ -210,9 +212,10 @@ public class GPXFile extends GPXMeasurable {
     }
 
     public void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints) {
-        myGPXWaypoints = gpxGPXWaypoints;
+        myGPXWaypoints.clear();
+        myGPXWaypoints.addAll(gpxGPXWaypoints);
         
-        // TF, 20170627: fill number attribute for gpx routes
+        // TF, 20170627: fill number attribute for gpx waypoints
         AtomicInteger counter = new AtomicInteger(0);
         final Set<Waypoint> waypoints = myGPXWaypoints.stream().
                 map((GPXWaypoint child) -> {
@@ -232,11 +235,12 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
-        myGPXTracks = gpxTracks;
+        myGPXTracks.clear();
+        myGPXTracks.addAll(gpxTracks);
         
         // TF, 20170627: fill number attribute for gpx track
         AtomicInteger counter = new AtomicInteger(0);
-        final Set<Track> tracks = gpxTracks.stream().
+        final Set<Track> tracks = myGPXTracks.stream().
                 map((GPXTrack child) -> {
                     child.setNumber(counter.getAndIncrement());
                     return child.getTrack();
@@ -247,11 +251,12 @@ public class GPXFile extends GPXMeasurable {
     }
 
     public void setGPXRoutes(final List<GPXRoute> gpxGPXRoutes) {
-        myGPXRoutes = gpxGPXRoutes;
+        myGPXRoutes.clear();
+        myGPXRoutes.addAll(gpxGPXRoutes);
         
         // TF, 20170627: fill number attribute for gpx routes
         AtomicInteger counter = new AtomicInteger(0);
-        final Set<Route> routes = gpxGPXRoutes.stream().
+        final Set<Route> routes = myGPXRoutes.stream().
                 map((GPXRoute child) -> {
                     child.setNumber(counter.getAndIncrement());
                     return child.getRoute();
@@ -282,40 +287,44 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXTrack> getGPXTracks() {
-        // return copy of list
-        return myGPXTracks.stream().collect(Collectors.toList());
+    public ObservableList<GPXTrack> getGPXTracks() {
+        return myGPXTracks;
     }
 
     @Override
-    public List<GPXTrackSegment> getGPXTrackSegments() {
-        // iterate over my segments
-        final List<GPXTrackSegment> result = new ArrayList<>();
-        for (GPXTrack track : myGPXTracks) {
-            result.addAll(track.getGPXTrackSegments());
-        }
+    public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        ObservableList<GPXTrackSegment> result = FXCollections.observableArrayList();
         return result;
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
+    public ObservableList<GPXRoute> getGPXRoutes() {
+        return myGPXRoutes;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getGPXWaypoints() {
+        return myGPXWaypoints;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
         // iterate over my segments
-        final List<GPXWaypoint> result = new ArrayList<>();
-        
+        List<ObservableList<GPXWaypoint>> waypoints = new ArrayList<>();
         if (itemType == null || itemType.equals(GPXLineItemType.GPXFile)) {
-            result.addAll(myGPXWaypoints);
+            waypoints.add(myGPXWaypoints);
         }
         if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
             for (GPXTrack track : myGPXTracks) {
-                result.addAll(track.getGPXWaypoints(itemType));
+                waypoints.add(track.getCombinedGPXWaypoints(itemType));
             }
         }
         if (itemType == null || itemType.equals(GPXLineItemType.GPXRoute)) {
             for (GPXRoute route : myGPXRoutes) {
-                result.addAll(route.getGPXWaypoints(itemType));
+                waypoints.add(route.getCombinedGPXWaypoints(itemType));
             }
         }
-        return result;
+        return GPXWaypointListHelper.concat(FXCollections.observableArrayList(), waypoints);
     }
 
     @Override
@@ -332,12 +341,6 @@ public class GPXFile extends GPXMeasurable {
         }
 
         return result;
-    }
-
-    @Override
-    public List<GPXRoute> getGPXRoutes() {
-        // return copy of list
-        return myGPXRoutes.stream().collect(Collectors.toList());
     }
     
     @Override
