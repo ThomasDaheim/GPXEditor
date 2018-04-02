@@ -45,7 +45,7 @@ import javafx.geometry.BoundingBox;
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
-    private ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
     
     private Double myLength;
     private Double myCumulativeAscent;
@@ -75,6 +75,8 @@ public class GPXTrackSegment extends GPXMeasurable {
 
             updatePrevNextGPXWaypoints();
         }
+        
+        myGPXWaypoints.addListener(getListChangeListener());
     }
 
     protected TrackSegment getTrackSegment() {

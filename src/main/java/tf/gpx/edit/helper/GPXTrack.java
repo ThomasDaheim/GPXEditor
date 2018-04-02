@@ -45,7 +45,7 @@ import javafx.geometry.BoundingBox;
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
-    private ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
+    private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
@@ -64,6 +64,8 @@ public class GPXTrack extends GPXMeasurable {
             }
             assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
         }
+
+        myGPXTrackSegments.addListener(getListChangeListener());
     }
 
     protected Track getTrack() {

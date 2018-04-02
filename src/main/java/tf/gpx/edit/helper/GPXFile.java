@@ -61,9 +61,9 @@ public class GPXFile extends GPXMeasurable {
     private String myGPXFileName;
     private GPX myGPX;
     private GPXMetadata myGPXMetadata;
-    private ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
-    private ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
-    private ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
+    private final ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
+    private final ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
     
     private GPXFile() {
         super(GPXLineItemType.GPXFile);
@@ -118,6 +118,10 @@ public class GPXFile extends GPXMeasurable {
 
         // TFE, 20180201: update header data & meta data
         setHeaderAndMeta();
+        
+        myGPXTracks.addListener(getListChangeListener());
+        myGPXRoutes.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(getListChangeListener());
     }
     
     public final void setHeaderAndMeta() {

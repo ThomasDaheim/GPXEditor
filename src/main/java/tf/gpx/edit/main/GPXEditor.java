@@ -931,6 +931,8 @@ public class GPXEditor implements Initializable {
         }
     }
     private TreeItem<GPXLineItem> createTreeItemForGPXFile(final GPXFile gpxFile) {
+        // TODO: change to data model with automatic update
+        // https://github.com/lestard/structured-list
         final TreeItem<GPXLineItem> gpxFileItem = new TreeItem<>(gpxFile);
         
         if (gpxFile.getGPXMetadata() != null) {

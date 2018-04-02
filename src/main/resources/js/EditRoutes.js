@@ -1,37 +1,38 @@
 // add editable as option to the map
 myMap.editTools = new L.Editable(myMap, {editable: true});
 
-//L.EditControl = L.Control.extend({
-//    options: {
-//        position: 'topleft',
-//        callback: null,
-//        kind: '',
-//        html: ''
-//    },
-//
-//    onAdd: function (map) {
-//        var container = L.DomUtil.create('div', 'leaflet-control leaflet-bar'),
-//            link = L.DomUtil.create('a', '', container);
-//
-//        link.href = '#';
-//        link.title = 'Create a new ' + this.options.kind;
-//        link.innerHTML = this.options.html;
-//        L.DomEvent.on(link, 'click', L.DomEvent.stop)
-//                  .on(link, 'click', function () {
-//                    window.LAYER = this.options.callback.call(map.editTools);
-//                  }, this);
-//
-//        return container;
-//    }
-//});
-//
-//L.NewLineControl = L.EditControl.extend({
-//    options: {
-//        position: 'topleft',
-//        callback: myMap.editTools.startPolyline,
-//        kind: 'line',
-//        html: '\\/\\'
-//    }
-//});
-//
-//myMap.addControl(new L.NewLineControl());
+/*
+ * JSON.stringify doesn't work on LatLngs...
+ */
+function coordsToString(coords) {
+    var coordsString = "";
+    
+    var arrayLength = coords.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var latlan = coords[i];
+        
+        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+        
+        if (i < arrayLength-1) {
+            coordsString = coordsString + " - "
+        }
+    }
+    return coordsString;
+}
+
+/*
+ * Enable editing on marker and add callbacks for editing ends
+ */
+function makeEditable(layer) {
+    var marker = window[layer];
+    marker.enableEdit();
+    
+    marker.on('editable:drawing:end', function(e) {
+        var coords = marker.getLatLngs();
+        callback.updateRoute("editable:drawing:end", layer, coordsToString(coords));
+    });
+    marker.on('editable:vertex:dragend', function(e) {
+        var coords = marker.getLatLngs();
+        callback.updateRoute("editable:vertex:dragend", layer, coordsToString(coords));
+    });
+}

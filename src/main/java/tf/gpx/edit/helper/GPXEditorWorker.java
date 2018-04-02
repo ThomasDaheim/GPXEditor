@@ -290,12 +290,18 @@ public class GPXEditorWorker {
         final GPXFile mergedGPXFile = gpxFiles.get(0);
         mergedGPXFile.setName(MERGED_FILE_NAME);
 
-        final List<GPXTrack> mergedGpxTracks = mergedGPXFile.getGPXTracks();
+        final List<GPXTrack> mergedGPXTracks = mergedGPXFile.getGPXTracks();
+        // add routes and waypoints as well!
+        final List<GPXRoute> mergedGPXRoutes = mergedGPXFile.getGPXRoutes();
+        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXFile.getGPXWaypoints();
         for (GPXFile gpxFile : gpxFiles.subList(1, gpxFiles.size())) {
-            mergedGpxTracks.addAll(gpxFile.getGPXTracks());
+            mergedGPXTracks.addAll(gpxFile.getGPXTracks());
+            mergedGPXRoutes.addAll(gpxFile.getGPXRoutes());
+            mergedGPXWaypoints.addAll(gpxFile.getGPXWaypoints());
         }
-
-        mergedGPXFile.setGPXTracks(mergedGpxTracks);
+        mergedGPXFile.setGPXTracks(mergedGPXTracks);
+        mergedGPXFile.setGPXRoutes(mergedGPXRoutes);
+        mergedGPXFile.setGPXWaypoints(mergedGPXWaypoints);
         
         return mergedGPXFile;
     }

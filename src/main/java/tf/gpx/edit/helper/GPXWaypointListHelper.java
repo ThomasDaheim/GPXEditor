@@ -26,6 +26,7 @@
 package tf.gpx.edit.helper;
 
 import java.util.List;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 /**
@@ -40,7 +41,7 @@ public class GPXWaypointListHelper {
         final ObservableList<GPXWaypoint> list = into;
         for (ObservableList<GPXWaypoint> l : lists) {
             list.addAll(l);
-            l.addListener((javafx.collections.ListChangeListener.Change<? extends GPXWaypoint> c) -> {
+            l.addListener((ListChangeListener.Change<? extends GPXWaypoint> c) -> {
                 while (c.next()) {
                     if (c.wasAdded()) {
                         // find index where to add - last index of that type

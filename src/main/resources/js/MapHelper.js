@@ -42,8 +42,14 @@ function updateMarkerIcon(layer, icon) {
 }
 function updateMarkerColor(layer, color) {
     window[layer].setStyle({
-        color: color
+        color: color,
+        weight: 2
     });
+}
+function updateMarkerLocation(layer, lat, lng) {
+    var marker = window[layer];
+    var newLatLng = new L.LatLng(lat, lng);
+    marker.setLatLng(newLatLng); 
 }
 
 /*

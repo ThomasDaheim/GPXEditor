@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.worker;
 
+import java.util.List;
 import tf.gpx.edit.helper.GPXFile;
 import tf.gpx.edit.helper.GPXMetadata;
 import tf.gpx.edit.helper.GPXRoute;
@@ -83,5 +84,19 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     @Override
     public boolean deepthFirst() {
         return true;
+    }
+    
+    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+        assert gpxWayPoints.size() == keep.length;
+        
+        // go through keep[] backwards and remove the waypoints with FALSE
+        final int size = keep.length;
+        for (int i = size - 1; i >= 0; i--) {
+            if (!keep[i]) {
+                gpxWayPoints.remove(i);
+            }
+        }
+        
+        return gpxWayPoints;
     }
 }

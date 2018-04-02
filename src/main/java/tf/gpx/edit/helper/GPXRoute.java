@@ -48,7 +48,7 @@ import static tf.gpx.edit.helper.GPXLineItem.filterGPXWaypointsInBoundingBox;
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
-    private ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
     
     private Double myLength;
     private Double myCumulativeAscent;
@@ -75,6 +75,8 @@ public class GPXRoute extends GPXMeasurable {
 
             updatePrevNextGPXWaypoints();
         }
+        
+        myGPXWaypoints.addListener(getListChangeListener());
     }
 
     protected Route getRoute() {
@@ -115,6 +117,7 @@ public class GPXRoute extends GPXMeasurable {
                     child.setNumber(counter.getAndIncrement());
                     return child.getWaypoint();
                 }).collect(Collectors.toList());
+        // why use copy here?
         myRoute.setRoutePoints(new ArrayList<>(waypoints));
         assert (myGPXWaypoints.size() == myRoute.getRoutePoints().size());
 

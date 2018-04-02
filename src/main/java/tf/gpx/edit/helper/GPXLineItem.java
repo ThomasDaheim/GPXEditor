@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 
@@ -450,5 +451,12 @@ public abstract class GPXLineItem {
         for (GPXLineItem child : getChildren()) {
             child.acceptVisitor(visitor);
         }
+    }
+    
+    // listener for observablelist to set hasUnsavedChanges
+    final protected ListChangeListener getListChangeListener() {
+        return (ListChangeListener) (ListChangeListener.Change c) -> {
+            hasUnsavedChanges = true;
+        };
     }
 }
