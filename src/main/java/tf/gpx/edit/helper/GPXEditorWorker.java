@@ -25,10 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
-import com.hs.gpxparser.GPXWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,13 +43,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.parser.DefaultParser;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
@@ -166,22 +160,11 @@ public class GPXEditorWorker {
         
         // Only write files that have tracks in them! otherwise, the GPX isn't valid
         try {
-            if (!gpxFile.getGPXTracks().isEmpty()) {
-                // update bounds
-                gpxFile.setHeaderAndMeta();
-                final GPXWriter writer = new GPXWriter();
-                writer.addExtensionParser(DefaultParser.getInstance());
-                
-                final FileOutputStream out;
-                out = new FileOutputStream(curFile.toFile());
-                writer.writeGPX(gpxFile.getGPX(), out);
-                out.close();        
+            if (!gpxFile.getGPXTracks().isEmpty() || !gpxFile.getGPXRoutes().isEmpty() || !gpxFile.getGPXWaypoints().isEmpty() || !(gpxFile.getGPXMetadata() == null)) {
+                result = gpxFile.writeToFile(curFile.toFile());
             } else {
                 Files.deleteIfExists(curFile);
             }
-        } catch (FileNotFoundException | ParserConfigurationException | TransformerException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
-            result = false;
         } catch (IOException ex) {
             Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
@@ -335,6 +318,34 @@ public class GPXEditorWorker {
         return gpxTracks;
     }
 
+    public final List<GPXRoute> mergeSelectedGPXRoutes(final List<GPXRoute> gpxRoutes, final List<GPXRoute> gpxRoutesToMerge) {
+        // 1. remove all tracks that we should merge from the track list
+        gpxRoutes.removeAll(gpxRoutesToMerge);
+
+        // 2. merge all selected tracksegments into the first track
+        final GPXRoute mergedGPXRoute = gpxRoutesToMerge.get(0);
+        mergedGPXRoute.setName(MERGED_TRACK_NAME);
+
+        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXRoute.getGPXWaypoints();
+        for (GPXRoute gpxGPXRoute : gpxRoutesToMerge.subList(1, gpxRoutesToMerge.size())) {
+            final List<GPXWaypoint> gpxWaypoints = gpxGPXRoute.getGPXWaypoints();
+
+            mergedGPXWaypoints.addAll(gpxWaypoints);
+            
+            for (GPXWaypoint gpxGPXWaypoint : gpxWaypoints) {
+                // set new parent
+                gpxGPXWaypoint.setParent(mergedGPXRoute);
+            }
+        }
+        
+        mergedGPXRoute.setGPXWaypoints(mergedGPXWaypoints);
+
+        // add merged track in front of remaing tracks
+        gpxRoutes.add(0, mergedGPXRoute);
+        
+        return gpxRoutes;
+    }
+
     public final List<GPXTrackSegment> mergeSelectedGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
         //System.out.println("mergeSelectedGPXTrackSegments");
         // 1. remove all tracksegments that we should merge from the track list
@@ -346,11 +357,11 @@ public class GPXEditorWorker {
 
         final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
-            final List<GPXWaypoint> gpxGPXWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+            final List<GPXWaypoint> gpxWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
-            mergedGPXWaypoints.addAll(gpxGPXWaypoints);
+            mergedGPXWaypoints.addAll(gpxWaypoints);
             
-            for (GPXWaypoint gpxGPXWaypoint : gpxGPXWaypoints) {
+            for (GPXWaypoint gpxGPXWaypoint : gpxWaypoints) {
                 // set new parent
                 gpxGPXWaypoint.setParent(mergedGPXTrackSegment);
             }

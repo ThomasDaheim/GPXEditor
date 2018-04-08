@@ -25,34 +25,41 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 /**
  * Concatenate into observable list that keeps track of changes of sublists.
- * Add new wayoints at the end of the "same" section.
+ * Add new items at the end of the "same" section.
  * 
  * @author thomas
  */
-public class GPXWaypointListHelper {
+public class GPXListHelper {
+    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, ObservableList<T> list) {
+        return concat(into, Arrays.asList(list));
+    }
+
     // https://stackoverflow.com/a/27646247
-    public static ObservableList<GPXWaypoint> concat(ObservableList<GPXWaypoint> into, List<ObservableList<GPXWaypoint>> lists) {
-        final ObservableList<GPXWaypoint> list = into;
-        for (ObservableList<GPXWaypoint> l : lists) {
+    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, List<ObservableList<T>> lists) {
+        final ObservableList<T> list = into;
+        for (ObservableList<T> l : lists) {
             list.addAll(l);
-            l.addListener((ListChangeListener.Change<? extends GPXWaypoint> c) -> {
+            l.addListener((ListChangeListener.Change<? extends T> c) -> {
                 while (c.next()) {
                     if (c.wasAdded()) {
                         // find index where to add - last index of that type
-                        for (GPXWaypoint waypoint : c.getAddedSubList()) {
-                            final GPXWaypoint lastGPXWaypoint = 
+                        for (T waypoint : c.getAddedSubList()) {
+                            final T lastT = 
                                     list.stream().filter((t) -> {
                                         return waypoint.getParent().getType().equals(t.getParent().getType());
                                     }).reduce((a, b) -> b).orElse(null);
                             int addIndex;
-                            if (lastGPXWaypoint != null) {
-                                addIndex = list.indexOf(lastGPXWaypoint) + 1;
+                            if (lastT != null) {
+                                addIndex = list.indexOf(lastT) + 1;
                             } else {
                                 // if that type isn't there yet add in front of all
                                 addIndex = 0;
@@ -68,5 +75,25 @@ public class GPXWaypointListHelper {
         }
 
         return list;
+    }
+    
+    // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
+    public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemList(ObservableList<T> input) {
+        final ObservableList<GPXLineItem> result = input.stream().
+                map(t -> { return (GPXLineItem) t; }).
+                collect(Collectors.toCollection(FXCollections::observableArrayList));
+        
+        input.addListener((ListChangeListener.Change<? extends T> c) -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    result.addAll(c.getFrom(), c.getAddedSubList());
+                }
+                if (c.wasRemoved()) {
+                    result.removeAll(c.getRemoved());
+                }
+            }
+        });
+        
+        return result;
     }
 }

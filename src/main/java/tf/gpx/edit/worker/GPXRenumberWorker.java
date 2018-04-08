@@ -1,0 +1,107 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package tf.gpx.edit.worker;
+
+import java.util.List;
+import tf.gpx.edit.helper.GPXFile;
+import tf.gpx.edit.helper.GPXMetadata;
+import tf.gpx.edit.helper.GPXRoute;
+import tf.gpx.edit.helper.GPXTrack;
+import tf.gpx.edit.helper.GPXTrackSegment;
+import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.helper.IGPXLineItemVisitor;
+
+/**
+ *
+ * @author Thomas
+ */
+public class GPXRenumberWorker implements IGPXLineItemVisitor {
+    protected double myParameter = Double.MIN_VALUE;
+
+    public GPXRenumberWorker() {
+        super ();
+    }
+
+    public GPXRenumberWorker(final double parameter) {
+        super ();
+        
+        myParameter = parameter;
+    }
+
+    @Override
+    public void visitGPXFile(final GPXFile gpxFile) {
+        // tracks and routes
+        gpxFile.updateListNumbering(gpxFile.getGPXTracks());
+        gpxFile.updateListNumbering(gpxFile.getGPXRoutes());
+    }
+
+    @Override
+    public void visitGPXMetadata(final GPXMetadata gpxMetadata) {
+        // nothing to do
+    }
+
+    @Override
+    public void visitGPXTrack(final GPXTrack gpxTrack) {
+        // tracksegments
+        gpxTrack.updateListNumbering(gpxTrack.getGPXTrackSegments());
+    }
+
+    @Override
+    public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
+        // waypoints
+        gpxTrackSegment.updateListNumbering(gpxTrackSegment.getGPXWaypoints());
+    }
+
+    @Override
+    public void visitGPXWaypoint(final GPXWaypoint gpxWayPoint) {
+        // nothing to do
+    }
+
+    @Override
+    public void visitGPXRoute(final GPXRoute gpxRoute) {
+        // waypoints
+        gpxRoute.updateListNumbering(gpxRoute.getGPXWaypoints());
+    }
+
+    @Override
+    public boolean deepthFirst() {
+        return true;
+    }
+    
+    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+        assert gpxWayPoints.size() == keep.length;
+        
+        // go through keep[] backwards and remove the waypoints with FALSE
+        final int size = keep.length;
+        for (int i = size - 1; i >= 0; i--) {
+            if (!keep[i]) {
+                gpxWayPoints.remove(i);
+            }
+        }
+        
+        return gpxWayPoints;
+    }
+}

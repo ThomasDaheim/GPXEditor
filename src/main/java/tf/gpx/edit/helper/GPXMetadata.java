@@ -160,8 +160,8 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXLineItem> getChildren() {
-        return new ArrayList<>();
+    public ObservableList<GPXLineItem> getChildren() {
+        return FXCollections.observableArrayList();
     }
 
     @Override
@@ -172,5 +172,9 @@ public class GPXMetadata extends GPXMeasurable {
     protected void visitMe(IGPXLineItemVisitor visitor) {
         visitor.visitGPXMetadata(this);
     }
-    
+
+    @Override
+    public void updateListNumbering(ObservableList list) {
+        // nothing to do for metadata
+    }
 }

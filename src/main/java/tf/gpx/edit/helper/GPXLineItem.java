@@ -33,6 +33,8 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -347,7 +349,7 @@ public abstract class GPXLineItem {
     public abstract void setParent(final GPXLineItem parent);
 
     // helper functions for child relations
-    public abstract List<GPXLineItem> getChildren();
+    public abstract <T extends GPXLineItem> ObservableList<T> getChildren();
     public abstract void setChildren(final List<GPXLineItem> children);
     protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<GPXLineItem> children) {
         // TFE, 20180215: don't assert that child.getClass().equals(clazz)
@@ -420,6 +422,14 @@ public abstract class GPXLineItem {
             }
         }
     }
+    protected <T extends Extension, U extends GPXLineItem> Set<T> numberExtensions(final List<U> children) {
+        AtomicInteger counter = new AtomicInteger(1);
+        return children.stream().
+                map((U child) -> {
+                    child.setNumber(counter.getAndIncrement());
+                    return (T) child.getContent();
+                }).collect(Collectors.toSet());
+    }
     
     // getter functions
     protected abstract long getDuration();
@@ -457,6 +467,10 @@ public abstract class GPXLineItem {
     final protected ListChangeListener getListChangeListener() {
         return (ListChangeListener) (ListChangeListener.Change c) -> {
             hasUnsavedChanges = true;
+            
+            updateListNumbering(c.getList());
         };
     }
+    // update numbering for changed list
+    public abstract void updateListNumbering(final ObservableList list);
 }

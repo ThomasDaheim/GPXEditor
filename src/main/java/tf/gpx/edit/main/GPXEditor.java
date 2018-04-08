@@ -133,7 +133,7 @@ public class GPXEditor implements Initializable {
     private final static double NORMAL_WIDTH = 70.0;
     private final static double LARGE_WIDTH = 230.0;
 
-    public static enum MergeDeleteTracks {
+    public static enum MergeDeleteItems {
         MERGE,
         DELETE
     }
@@ -283,11 +283,11 @@ public class GPXEditor implements Initializable {
         viewSplitPane.setDividerPosition(0, recentRightDividerPos);
         splitPane.setDividerPosition(0, recentCentralDividerPos);
 
-        initMenus();
-        
         initTopPane();
         
         initBottomPane();
+        
+        initMenus();
         
         // they all need to be able to do something in the editor
         GPXTrackviewer.getInstance().setCallback(this);
@@ -344,17 +344,17 @@ public class GPXEditor implements Initializable {
             saveAllFilesAction(event);
         });
         closeFileMenu.disableProperty().bind(
-                Bindings.isNull(gpxFileListXML.rootProperty()));
+                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
         saveAllFilesMenu.setOnAction((ActionEvent event) -> {
             saveAllFilesAction(event);
         });
         saveAllFilesMenu.disableProperty().bind(
-                Bindings.isNull(gpxFileListXML.rootProperty()));
+                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
         clearFileMenu.setOnAction((ActionEvent event) -> {
             clearFileAction(event);
         });
         clearFileMenu.disableProperty().bind(
-                Bindings.isNull(gpxFileListXML.rootProperty()));
+                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
 
         initRecentFilesMenu();
 
@@ -372,22 +372,22 @@ public class GPXEditor implements Initializable {
             invertTracks(event);
         });
         invertTracksMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         mergeFilesMenu.setOnAction((ActionEvent event) -> {
             mergeFiles(event);
         });
         mergeFilesMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 2));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 2));
         mergeTracksMenu.setOnAction((ActionEvent event) -> {
-            mergeDeleteTracks(event, MergeDeleteTracks.MERGE);
+            mergeDeleteItems(event, MergeDeleteItems.MERGE);
         });
         mergeTracksMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 2));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 2));
         deleteTracksMenu.setOnAction((ActionEvent event) -> {
-            mergeDeleteTracks(event, MergeDeleteTracks.DELETE);
+            mergeDeleteItems(event, MergeDeleteItems.DELETE);
         });
         deleteTracksMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         //
         // Values
@@ -396,7 +396,7 @@ public class GPXEditor implements Initializable {
             editMetadata(event);
         });
         metadataMenu.disableProperty().bind(
-                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         distributionsMenu.setOnAction((ActionEvent event) -> {
             showDistributions(event);
         });
@@ -409,7 +409,7 @@ public class GPXEditor implements Initializable {
             showStatistics(event);
         });
         statisticsMenu.disableProperty().bind(
-                Bindings.notEqual(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         //
         // Algorithms
@@ -418,17 +418,17 @@ public class GPXEditor implements Initializable {
             checkTrack(event);
         });
         checkTrackMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         fixTracksMenu.setOnAction((ActionEvent event) -> {
             fixGPXFiles(event);
         });
         fixTracksMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         reduceTracksMenu.setOnAction((ActionEvent event) -> {
             reduceGPXFiles(event);
         });
         reduceTracksMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         preferencesMenu.setOnAction((ActionEvent event) -> {
             preferences(event);
@@ -441,12 +441,12 @@ public class GPXEditor implements Initializable {
             assignSRTMHeight(event);
         });
         assignSRTMheightsMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileListXML.getSelectionModel().getSelectedItems()), 1));
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         showSRTMDataMenu.setOnAction((ActionEvent event) -> {
             showSRTMData(event);
         });
         downloadSRTMDataMenu.setOnAction((ActionEvent event) -> {
-            final HostServices myHostServices = (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices");
+            final HostServices myHostServices = (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices");
             if (myHostServices != null) {
                 myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
             }
@@ -497,10 +497,10 @@ public class GPXEditor implements Initializable {
         topAnchorPane.prefWidthProperty().bind(trackSplitPane.widthProperty());
 
         gpxFileList = new GPXTreeTableView(gpxFileListXML, this);
-        gpxFileListXML.prefHeightProperty().bind(topAnchorPane.heightProperty());
-        gpxFileListXML.prefWidthProperty().bind(topAnchorPane.widthProperty());
-        gpxFileListXML.setEditable(true);
-        gpxFileListXML.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        gpxFileList.prefHeightProperty().bind(topAnchorPane.heightProperty());
+        gpxFileList.prefWidthProperty().bind(topAnchorPane.widthProperty());
+        gpxFileList.setEditable(true);
+        gpxFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         
         // selection change listener to populate the track table
         listenergpxFileListXMLSelection = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
@@ -514,7 +514,7 @@ public class GPXEditor implements Initializable {
                 }
             }
             if (newSelection != null) {
-                showGPXWaypoints(newSelection.getValue());
+                showGPXWaypoints(newSelection.getValue(), true);
                 
                 if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
                     distributionsMenu.setDisable(false);
@@ -524,12 +524,12 @@ public class GPXEditor implements Initializable {
                     specialValuesMenu.setDisable(true);
                 }
             } else {
-                showGPXWaypoints(null);
+                showGPXWaypoints(null, true);
                 distributionsMenu.setDisable(true);
                 specialValuesMenu.setDisable(true);
             }
         };
-        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
+        gpxFileList.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
 
         // cell factories for treetablecols
         idGPXCol.setCellValueFactory(
@@ -735,7 +735,7 @@ public class GPXEditor implements Initializable {
                 gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
                 // show remaining waypoints
-                showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData());
+                showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
                 // force repaint of gpxFileList to show unsaved items
                 refreshGPXFileList();
             });
@@ -910,15 +910,9 @@ public class GPXEditor implements Initializable {
     }
     public void parseAndAddFiles(final List<File> files) {
         if (!files.isEmpty()) {
-            // where to start?
-            TreeItem<GPXLineItem> root = gpxFileList.getRoot();
-            if (root == null) {
-                root = new TreeItem<>();
-            }
-
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
-                    root.getChildren().add(createTreeItemForGPXFile(new GPXFile(file)));
+                    gpxFileList.addGPXFile(new GPXFile(file));
 
                     // store last filename
                     GPXEditorPreferences.getRecentFiles().addRecentFile(file.getAbsolutePath());
@@ -926,39 +920,10 @@ public class GPXEditor implements Initializable {
                     initRecentFilesMenu();
                 }
             }
-
-            gpxFileList.setRoot(root);
         }
-    }
-    private TreeItem<GPXLineItem> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        // TODO: change to data model with automatic update
-        // https://github.com/lestard/structured-list
-        final TreeItem<GPXLineItem> gpxFileItem = new TreeItem<>(gpxFile);
-        
-        if (gpxFile.getGPXMetadata() != null) {
-            final TreeItem<GPXLineItem> gpxMetadataItem = new TreeItem<>(gpxFile.getGPXMetadata());
-            gpxFileItem.getChildren().add(gpxMetadataItem);
-        }
-        
-        for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
-            final TreeItem<GPXLineItem> gpxTrackItem = new TreeItem<>(gpxTrack);
-            for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                gpxTrackItem.getChildren().add(new TreeItem<>(gpxTrackSegment));
-            }
-            gpxFileItem.getChildren().add(gpxTrackItem);
-        }
-
-        // TFE, 20180214: files can have routes and waypoints too
-        for (GPXRoute gpxRoute : gpxFile.getGPXRoutes()) {
-            final TreeItem<GPXLineItem> gpxRouteItem = new TreeItem<>(gpxRoute);
-            gpxFileItem.getChildren().add(gpxRouteItem);
-        }
-        // TODO: how to handle wayopints???
-        
-        return gpxFileItem;
     }
     
-    private void showGPXWaypoints(final GPXLineItem lineItem) {
+    private void showGPXWaypoints(final GPXLineItem lineItem, final boolean updateViewer) {
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
@@ -975,7 +940,9 @@ public class GPXEditor implements Initializable {
         }
         gpxTrackXML.getSelectionModel().clearSelection();
 
-        GPXTrackviewer.getInstance().setGPXWaypoints(lineItem);
+        if (updateViewer) {
+            GPXTrackviewer.getInstance().setGPXWaypoints(lineItem);
+        }
         if (lineItem != null) {
             if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getType())) {
                 // show map if not metadata
@@ -993,7 +960,7 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
-    private void refillGPXWayointList() {
+    public void refillGPXWayointList(final boolean updateViewer) {
         final GPXLineItem lineItem = (GPXLineItem) gpxTrackXML.getUserData();
         if (lineItem != null) {
             // find the lineItem in the gpxFileList 
@@ -1015,38 +982,58 @@ public class GPXEditor implements Initializable {
                     }).collect(Collectors.toList());
             
             if (gpxFiles.size() == 1) {
-                // 2) if currently a file is shown, show it again
-                if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-                    showGPXWaypoints(gpxFiles.get(0));
-                } else {
-                    // else, find and show track
-                    final List<GPXTrack> gpxTracks = 
-                    gpxFiles.get(0).getGPXTracks().stream().
-                        filter((GPXTrack t) -> {
-                            // so we need to search for all tracks from selection for each file
-                            if (lineItem.equals(t)) {
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        }).
-                        collect(Collectors.toList());
-                    
-                    if (gpxTracks.size() == 1) {
-                        showGPXWaypoints(gpxTracks.get(0));
-                    } else {
+                GPXLineItem showItem = null;
+                switch (lineItem.getType()) {
+                    case GPXFile:
+                        // 2) if currently a file is shown, show it again
+                        showItem = gpxFiles.get(0);
+                        break;
+                    case GPXTrack:
+                        // else, find and show track or route
+                        final List<GPXTrack> gpxTracks =
+                                gpxFiles.get(0).getGPXTracks().stream().
+                                        filter((GPXTrack t) -> {
+                                            // so we need to search for all tracks from selection for each file
+                                            if (lineItem.equals(t)) {
+                                                return true;
+                                            } else {
+                                                return false;
+                                            }
+                                        }).
+                                        collect(Collectors.toList());
+                        if (gpxTracks.size() == 1) {
+                            showItem = gpxTracks.get(0);
+                        }
+                        break;
+                    case GPXRoute:
+                        // else, find and show track or route
+                        final List<GPXRoute> gpxGPXRoutes =
+                                gpxFiles.get(0).getGPXRoutes().stream().
+                                        filter((GPXRoute t) -> {
+                                            // so we need to search for all tracks from selection for each file
+                                            if (lineItem.equals(t)) {
+                                                return true;
+                                            } else {
+                                                return false;
+                                            }
+                                        }).
+                                        collect(Collectors.toList());
+                        if (gpxGPXRoutes.size() == 1) {
+                            showItem = gpxGPXRoutes.get(0);
+                        }
+                        break;
+                    default:
                         // nothing found!!! probably somthing wrong... so better clear list
-                        showGPXWaypoints(null);
-                    }
+                        break;
                 }
-                
+                showGPXWaypoints(showItem, updateViewer);
             }
         }
     }
 
     private void saveAllFilesAction(final ActionEvent event) {
         // iterate over all files and save them
-        gpxFileListXML.getRoot().getChildren().stream().
+        gpxFileList.getRoot().getChildren().stream().
             filter((TreeItem<GPXLineItem> t) -> {
                 return (GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue().getType()) && t.getValue().hasUnsavedChanges());
             }).forEach((TreeItem<GPXLineItem> t) -> {
@@ -1083,9 +1070,9 @@ public class GPXEditor implements Initializable {
         Boolean result = true;
         
         // check fo changes that need saving by closing all files
-        if (gpxFileListXML.getRoot() != null) {
+        if (gpxFileList.getRoot() != null) {
             // work on a copy since closeFile removes it from the gpxFileListXML
-            final List<TreeItem<GPXLineItem>> gpxFiles = new ArrayList<>(gpxFileListXML.getRoot().getChildren());
+            final List<TreeItem<GPXLineItem>> gpxFiles = new ArrayList<>(gpxFileList.getRoot().getChildren());
             for (TreeItem<GPXLineItem> treeitem : gpxFiles) {
                 assert GPXLineItem.GPXLineItemType.GPXFile.equals(treeitem.getValue().getType());
 
@@ -1097,7 +1084,7 @@ public class GPXEditor implements Initializable {
     }
 
     public Boolean closeFileAction(final ActionEvent event) {
-        return closeFile(gpxFileListXML.getSelectionModel().getSelectedItem().getValue());
+        return closeFile(gpxFileList.getSelectionModel().getSelectedItem().getValue());
     }
 
     public Boolean closeFile(final GPXLineItem item) {
@@ -1109,14 +1096,14 @@ public class GPXEditor implements Initializable {
         }
         
         // remove gpxfile from list
-        gpxFileListXML.getRoot().getChildren().remove(getIndexForGPXFile(item.getGPXFile()));
+        gpxFileList.removeGPXFile(item.getGPXFile());
         
         // TFE, 20180111: horrible performance for large gpx files if listener on selection is active
-        gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
-        gpxFileListXML.getSelectionModel().clearSelection();
-        showGPXWaypoints(null);
+        gpxFileList.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
+        gpxFileList.getSelectionModel().clearSelection();
+        showGPXWaypoints(null, true);
         distributionsMenu.setDisable(true);
-        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
+        gpxFileList.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
         refreshGPXFileList();
         
         return true;
@@ -1165,13 +1152,13 @@ public class GPXEditor implements Initializable {
         // close checks for changes
         closeAllFiles();
         
-        gpxFileList.setRoot(null);
+        gpxFileList.clear();
     }
     
     private void refreshGPXFileList() {
-        gpxFileListXML.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
-        gpxFileListXML.refresh();
-        gpxFileListXML.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
+        gpxFileList.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
+        gpxFileList.refresh();
+        gpxFileList.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
     }
 
     private void refreshGPXWaypointList() {
@@ -1217,12 +1204,12 @@ public class GPXEditor implements Initializable {
             invertItem.invert();
         }
 
-        gpxFileListXML.getSelectionModel().clearSelection();
+        gpxFileList.getSelectionModel().clearSelection();
         refreshGPXFileList();
     }
     
     public void mergeFiles(final ActionEvent event) {
-        final List<GPXFile> gpxFiles = uniqueGPXFileListFromGPXLineItemList(gpxFileListXML.getSelectionModel().getSelectedItems());
+        final List<GPXFile> gpxFiles = uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
         
         // confirmation dialogue
         final String gpxFileNames = gpxFiles.stream()
@@ -1249,18 +1236,18 @@ public class GPXEditor implements Initializable {
 
             // remove all the others from the list
             for (GPXFile gpxFile : gpxFiles.subList(1, gpxFiles.size())) {
-                gpxFileListXML.getRoot().getChildren().remove(getIndexForGPXFile(gpxFile));
+                gpxFileList.removeGPXFile(gpxFile);
             }
 
             // refresh remaining item
-            replaceGPXFile(mergedGPXFile);
+            gpxFileList.replaceGPXFile(mergedGPXFile);
 
-            gpxFileListXML.getSelectionModel().clearSelection();
+            gpxFileList.getSelectionModel().clearSelection();
             refreshGPXFileList();
         }
     }
 
-    public void mergeDeleteTracks(final ActionEvent event, final MergeDeleteTracks mergeOrDelete) {
+    public void mergeDeleteItems(final ActionEvent event, final MergeDeleteItems mergeOrDelete) {
         final List<GPXLineItem> selectedItems = 
             gpxFileList.getSelectionModel().getSelectedItems().stream().
                 map((TreeItem<GPXLineItem> t) -> {
@@ -1275,7 +1262,7 @@ public class GPXEditor implements Initializable {
 
         String headerText = "Do you want to ";
         String commandText;
-        if (MergeDeleteTracks.DELETE.equals(mergeOrDelete)) {
+        if (MergeDeleteItems.DELETE.equals(mergeOrDelete)) {
             commandText = "delete";
         } else {
             commandText = "merge";
@@ -1306,17 +1293,13 @@ public class GPXEditor implements Initializable {
                 final List<GPXTrackSegment> gpxTrackSegments = selectedItems.stream().
                     filter((GPXLineItem t) -> {
                         // so we need to search for all tracks from selection for each file
-                        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(t.getType()) && gpxFile.equals(t.getGPXFile()) && gpxTrack.equals(t.getGPXTracks().get(0))) {
-                            return true;
-                        } else {
-                            return false;
-                        }
+                        return GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(t.getType()) && gpxFile.equals(t.getGPXFile()) && gpxTrack.equals(t.getGPXTracks().get(0));
                     }).
                     map((GPXLineItem t) -> {
                         return (GPXTrackSegment) t;
                     }).collect(Collectors.toList());
 
-                if (MergeDeleteTracks.MERGE.equals(mergeOrDelete)) {
+                if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
                     if (gpxTrackSegments.size() > 1) {
                         gpxTrack.setGPXTrackSegments(myWorker.mergeSelectedGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments));
                         
@@ -1334,33 +1317,40 @@ public class GPXEditor implements Initializable {
                 }
             }
 
-            // we only merge tracks from the same file but not across files
+            // we only merge tracks & routes from the same file but not across files
             gpxTracks = selectedItems.stream().
                 filter((GPXLineItem t) -> {
                     // so we need to search for all tracks from selection for each file
-                    if (GPXLineItem.GPXLineItemType.GPXTrack.equals(t.getType()) && gpxFile.equals(t.getGPXFile())) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    return GPXLineItem.GPXLineItemType.GPXTrack.equals(t.getType()) && gpxFile.equals(t.getGPXFile());
                 }).
                 map((GPXLineItem t) -> {
                     return (GPXTrack) t;
                 }).collect(Collectors.toList());
             
-            if (MergeDeleteTracks.MERGE.equals(mergeOrDelete)) {
+            final List<GPXRoute> gpxRoutes = selectedItems.stream().
+                filter((GPXLineItem t) -> {
+                    // so we need to search for all tracks from selection for each file
+                    return GPXLineItem.GPXLineItemType.GPXRoute.equals(t.getType()) && gpxFile.equals(t.getGPXFile());
+                }).
+                map((GPXLineItem t) -> {
+                    return (GPXRoute) t;
+                }).collect(Collectors.toList());
+
+            if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
                 if (gpxTracks.size() > 1) {
                     gpxFile.setGPXTracks(myWorker.mergeSelectedGPXTracks(gpxFile.getGPXTracks(), gpxTracks));
-
+                }
+                if (gpxRoutes.size() > 1) {
+                    gpxFile.setGPXRoutes(myWorker.mergeSelectedGPXRoutes(gpxFile.getGPXRoutes(), gpxRoutes));
+                }
+                if (gpxTracks.size() > 1 || gpxRoutes.size() > 1) {
                     changedGPXFiles.add(gpxFile);
                 }
             } else {
-                if (!gpxTracks.isEmpty()) {
-                    final List<GPXTrack> newGPXTracks = gpxFile.getGPXTracks();
-                    newGPXTracks.removeAll(gpxTracks);
+                gpxFile.getGPXTracks().removeAll(gpxTracks);
+                gpxFile.getGPXRoutes().removeAll(gpxRoutes);
 
-                    gpxFile.setGPXTracks(newGPXTracks);
-
+                if (!gpxTracks.isEmpty() || !gpxRoutes.isEmpty()) {
                     changedGPXFiles.add(gpxFile);
                 }
             }
@@ -1369,18 +1359,18 @@ public class GPXEditor implements Initializable {
         if (!changedGPXFiles.isEmpty()) {
             // now replace changed gpxfiles in the file list and refresh
             for (GPXFile gpxFile : changedGPXFiles) {
-                replaceGPXFile(gpxFile);
+                gpxFileList.replaceGPXFile(gpxFile);
             }
             
-            gpxFileListXML.getSelectionModel().clearSelection();
+            gpxFileList.getSelectionModel().clearSelection();
             refreshGPXFileList();
         }
     }
 
     public void moveItem(final ActionEvent event, final MoveUpDown moveUpDown) {
-        assert (gpxFileListXML.getSelectionModel().getSelectedItems().size() == 1);
+        assert (gpxFileList.getSelectionModel().getSelectedItems().size() == 1);
         
-        final GPXLineItem selectedItem = gpxFileListXML.getSelectionModel().getSelectedItems().get(0).getValue();
+        final GPXLineItem selectedItem = gpxFileList.getSelectionModel().getSelectedItems().get(0).getValue();
         
         // check if it has treeSiblings
         if ((selectedItem.getParent() != null) && (selectedItem.getParent().getChildren().size() > 1)) {
@@ -1410,9 +1400,9 @@ public class GPXEditor implements Initializable {
                 parent.setChildren(siblings);
                 parent.setHasUnsavedChanges();
                 
-                replaceGPXFile(selectedItem.getGPXFile());
+                gpxFileList.replaceGPXFile(selectedItem.getGPXFile());
 
-                gpxFileListXML.getSelectionModel().clearSelection();
+                gpxFileList.getSelectionModel().clearSelection();
                 refreshGPXFileList();
             }
         }
@@ -1499,7 +1489,7 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         refreshGPXFileList();
         
-        refillGPXWayointList();
+        refillGPXWayointList(true);
     }
 
     private void reduceGPXFiles(final ActionEvent event) {
@@ -1509,7 +1499,7 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
         refreshGPXFileList();
         
-        refillGPXWayointList();
+        refillGPXWayointList(true);
     }
     
     private void editMetadata(final ActionEvent event) {
@@ -1544,7 +1534,7 @@ public class GPXEditor implements Initializable {
         }
         
         if (DistributionViewer.getInstance().showDistributions(waypoints)) {
-            showGPXWaypoints(item);
+            showGPXWaypoints(item, true);
         }
     }
     
@@ -1555,7 +1545,7 @@ public class GPXEditor implements Initializable {
     private void assignSRTMHeight(final ActionEvent event) {
         // TODO: remove ugly hack to pass HostServices
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
-                (HostServices) gpxFileListXML.getScene().getWindow().getProperties().get("hostServices"),
+                (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
             refreshGPXFileList();
             refreshGPXWaypointList();
@@ -1568,28 +1558,29 @@ public class GPXEditor implements Initializable {
     
     private List<GPXFile> uniqueGPXFileListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
         // get selected files uniquely from selected items
-        Set<GPXFile> fileSet = new HashSet<>();
-        for (TreeItem<GPXLineItem> item : selectedItems) {
-            fileSet.add(item.getValue().getGPXFile());
-        }
-        
-        return fileSet.stream().collect(Collectors.toList());
+        return selectedItems.stream().map((item) -> {
+            return item.getValue().getGPXFile();
+        }).distinct().collect(Collectors.toList());
     }
 
     private List<GPXTrack> uniqueGPXTrackListFromGPXLineItemList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
         // get selected tracks uniquely from selected items for a specific file
-        Set<GPXTrack> fileSet = new HashSet<>();
-        for (TreeItem<GPXLineItem> item : selectedItems) {
-            // only add if file is right
-            if (gpxFile.equals(item.getValue().getGPXFile())) {
-                fileSet.add(item.getValue().getGPXTracks().get(0));
-            }
-        }
-        
-        return fileSet.stream().collect(Collectors.toList());
+        return selectedItems.stream().filter((item) -> {
+            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getValue().getType());
+        }).map((item) -> {
+            return item.getValue().getGPXTracks().get(0);
+        }).distinct().collect(Collectors.toList());
     }
 
-    
+    private List<GPXRoute> uniqueGPXRouteListFromGPXLineItemList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
+        // get selected tracks uniquely from selected items for a specific file
+        return selectedItems.stream().filter((item) -> {
+            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getValue().getType());
+        }).map((item) -> {
+            return item.getValue().getGPXRoutes().get(0);
+        }).distinct().collect(Collectors.toList());
+    }
+
     private List<GPXTrackSegment> uniqueGPXTrackSegmentListFromGPXWaypointList(final List<GPXWaypoint> gpxWaypoints) {
         // get selected files uniquely from selected items
         Set<GPXTrackSegment> trackSet = new HashSet<>();
@@ -1598,29 +1589,6 @@ public class GPXEditor implements Initializable {
         }
         
         return trackSet.stream().collect(Collectors.toList());
-    }
-    
-    private int getIndexForGPXFile(final GPXFile gpxFile) {
-        int result = -1;
-        
-        final List<TreeItem<GPXLineItem>> gpxFileItems = gpxFileListXML.getRoot().getChildren();
-        int index = 0;
-        for (TreeItem<GPXLineItem> gpxFileItem : gpxFileItems) {
-            if (gpxFileItem.getValue().equals(gpxFile)) {
-                result = index;
-                break;
-            }
-            index++;
-        }
-        
-        return result;
-    }
-    
-    private void replaceGPXFile(final GPXFile gpxFile) {
-        final TreeItem<GPXLineItem> newTreeItem = createTreeItemForGPXFile(gpxFile);
-        final int index = getIndexForGPXFile(gpxFile);
-        gpxFileListXML.getRoot().getChildren().remove(index);
-        gpxFileListXML.getRoot().getChildren().add(index, newTreeItem);
     }
     
     //

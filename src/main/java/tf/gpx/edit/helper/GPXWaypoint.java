@@ -27,6 +27,9 @@ package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
+import com.hs.gpxparser.modal.GPX;
+import com.hs.gpxparser.modal.Route;
+import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,9 +55,35 @@ public class GPXWaypoint extends GPXLineItem {
         super(GPXLineItemType.GPXWaypoint);
     }
     
+    // constructor for "manually created waypoints"
     public GPXWaypoint(
             final GPXLineItem gpxParent, 
-            final Waypoint waypoint,
+            final double lat, 
+            final double lon) {
+        super(GPXLineItemType.GPXWaypoint);
+
+        myGPXParent = gpxParent;
+        
+        // create waypoint from coordinates
+        myWaypoint = new Waypoint(lat, lon);
+        
+        // if possible add waypoint to parent class
+        Extension content = gpxParent.getContent();
+        if (content instanceof GPX) {
+            ((GPX) content).addWaypoint(myWaypoint);
+        }
+        if (content instanceof TrackSegment) {
+            ((TrackSegment) content).addWaypoint(myWaypoint);
+        }
+        if (content instanceof Route) {
+            ((Route) content).addRoutePoint(myWaypoint);
+        }
+    }
+    
+    // constructor for waypoints from gpx parser
+    public GPXWaypoint(
+            final GPXLineItem gpxParent, 
+            final Waypoint waypoint, 
             final int number) {
         super(GPXLineItemType.GPXWaypoint);
         
@@ -128,8 +157,8 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public List<GPXLineItem> getChildren() {
-        return new ArrayList<>();
+    public ObservableList<GPXLineItem> getChildren() {
+        return FXCollections.observableArrayList();
     }
     
     @Override
@@ -316,6 +345,11 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXWaypoint(this);
+    }
+
+    @Override
+    public void updateListNumbering(ObservableList list) {
+        // nothing to do for waypoints
     }
     
     // used for setting from SRTM data

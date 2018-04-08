@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.viewer;
 
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.Waypoint;
 import de.saring.leafletmap.ColorMarker;
 import de.saring.leafletmap.ControlPosition;
 import de.saring.leafletmap.LatLong;
@@ -96,15 +94,12 @@ public class TrackMap extends LeafletMapView {
             iconName = name;
         }
 
+        @Override
         public String getIconName() {
             return iconName;
         }   
     }
     
-    // ugly hack for coding in netbeans
-    // netbeans doesn't recognize that the kotline base class LeafletMapView extend stackpane :-(
-    // so all automcomplete, ... doesn't work on this if you want to access stackpane functions
-    private StackPane meAsPane =(StackPane) this;
     // webview holds the leaflet map
     private WebView myWebView = null;
     // pane on top of LeafletMapView to draw selection rectangle
@@ -178,7 +173,6 @@ public class TrackMap extends LeafletMapView {
             window.setMember("callback", callback);
             //execScript("callback.selectGPXWaypoints(\"Test\");");
 
-            // TODO: add support drawing of routes
             // https://github.com/Leaflet/Leaflet.Editable
             addScriptFromPath("/js/Leaflet.Editable.min.js");
             addScriptFromPath("/js/EditRoutes.js");
@@ -197,14 +191,14 @@ public class TrackMap extends LeafletMapView {
 
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
-            final Pane parentPane = (Pane) meAsPane.getParent();
+            final Pane parentPane = (Pane) getParent();
             myPane = new Pane();
             myPane.getStyleClass().add("canvasPane");
             myPane.setPrefSize(0, 0);
             parentPane.getChildren().add(myPane);
             myPane.toFront();
 
-            for (Node node : meAsPane.getChildren()) {
+            for (Node node : getChildren()) {
                 // get webview from my children
                 if (node instanceof WebView) {
                     myWebView = (WebView) node;
@@ -385,10 +379,9 @@ public class TrackMap extends LeafletMapView {
             // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
             final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
             
-            final Waypoint newWaypoint = new Waypoint(latlong.getLatitude(), latlong.getLongitude());
-            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), newWaypoint, curGPXWaypoints.size());
-            
-            myGPXLineItem.getGPXFile().getGPX().addWaypoint(newWaypoint);
+            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+            newGPXWaypoint.setNumber(curGPXWaypoints.size());
+                    
             curGPXWaypoints.add(newGPXWaypoint);
             
             final String waypoint = addMarkerAndCallback(latlong, TrackMarker.PlaceMarkIcon, 0, true);
@@ -405,11 +398,9 @@ public class TrackMap extends LeafletMapView {
         addRoute.setOnAction((event) -> {
             final String routeName = "route" + (routes.size() + 1);
 
-            final Route route = new Route();
-            route.setName("New " + routeName);
-            final GPXRoute gpxRoute = new GPXRoute(myGPXLineItem.getGPXFile(), route);
+            final GPXRoute gpxRoute = new GPXRoute(myGPXLineItem.getGPXFile());
+            gpxRoute.setName("New " + routeName);
             
-            myGPXLineItem.getGPXFile().getGPX().addRoute(route);
             myGPXLineItem.getGPXFile().getGPXRoutes().add(gpxRoute);
 
             execScript("var " + routeName + " = myMap.editTools.startPolyline();");
@@ -703,8 +694,8 @@ public class TrackMap extends LeafletMapView {
         final List<GPXWaypoint> newGPXWaypoints = new ArrayList<>();
         int i = 1;
         for (LatLong latlong : latlongs) {
-            final Waypoint newWaypoint = new Waypoint(latlong.getLatitude(), latlong.getLongitude());
-            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), newWaypoint, i);
+            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(route, latlong.getLatitude(), latlong.getLongitude());
+            newGPXWaypoint.setNumber(i);
             newGPXWaypoints.add(newGPXWaypoint);
             i++;
         }
@@ -737,7 +728,7 @@ public class TrackMap extends LeafletMapView {
         }
 
         //refresh waypoints list without refreshing map...
-        myGPXEditor.refresh();
+        myGPXEditor.refillGPXWayointList(false);
     }
     
     private LatLong getCenter() {
