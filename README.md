@@ -17,6 +17,12 @@ Following features are available via UI:
 
 ## File and track handling
 
+### Update v2.1
+
+* added support for Leaflet.Editable: now routes can be added and modified on the fly
+* switched to using ObsevableLists everywhere, removal of unused code to keep track of changes
+* added test cases for add/delete and merge
+
 ### Update v2.0
 
 Major update! With switching to leaflet.js a whole universe of add. functionality has been made available for later releases. E.g. adding / moving marker, draw routes, routing between waypoints, ... Basically anything that exists as leaflet.js extension is now also in my reach :-) Thats deserves a new major version.
