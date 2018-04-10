@@ -187,7 +187,6 @@ Explicit dependencies:
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
-* add more fancy stuff from leaflet.js extensions
 * add TestFX UI test cases
 * add task handling for long running activities
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu
