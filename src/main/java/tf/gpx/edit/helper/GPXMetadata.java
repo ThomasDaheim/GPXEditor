@@ -174,7 +174,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public void updateListNumbering(ObservableList list) {
+    public void updateListValues(ObservableList list) {
         // nothing to do for metadata
     }
 }

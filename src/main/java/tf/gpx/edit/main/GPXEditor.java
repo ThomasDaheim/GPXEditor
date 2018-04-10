@@ -1284,7 +1284,6 @@ public class GPXEditor implements Initializable {
             return;
         }
         
-        final Set<GPXFile> changedGPXFiles = new HashSet<>();
         for (GPXFile gpxFile : gpxFiles) {
             // merge / delete track segments first
             // segments might be selected without their tracks
@@ -1301,19 +1300,10 @@ public class GPXEditor implements Initializable {
 
                 if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
                     if (gpxTrackSegments.size() > 1) {
-                        gpxTrack.setGPXTrackSegments(myWorker.mergeSelectedGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments));
-                        
-                        changedGPXFiles.add(gpxFile);
+                        myWorker.mergeGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments);
                     }
                 } else {
-                    if (!gpxTrackSegments.isEmpty()) {
-                        final List<GPXTrackSegment> newGPXTrackSegments = gpxTrack.getGPXTrackSegments();
-                        newGPXTrackSegments.removeAll(gpxTrackSegments);
-
-                        gpxTrack.setGPXTrackSegments(newGPXTrackSegments);
-                        
-                        changedGPXFiles.add(gpxFile);
-                    }
+                    gpxTrack.getGPXTrackSegments().removeAll(gpxTrackSegments);
                 }
             }
 
@@ -1338,32 +1328,15 @@ public class GPXEditor implements Initializable {
 
             if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
                 if (gpxTracks.size() > 1) {
-                    gpxFile.setGPXTracks(myWorker.mergeSelectedGPXTracks(gpxFile.getGPXTracks(), gpxTracks));
+                    myWorker.mergeGPXTracks(gpxFile.getGPXTracks(), gpxTracks);
                 }
                 if (gpxRoutes.size() > 1) {
-                    gpxFile.setGPXRoutes(myWorker.mergeSelectedGPXRoutes(gpxFile.getGPXRoutes(), gpxRoutes));
-                }
-                if (gpxTracks.size() > 1 || gpxRoutes.size() > 1) {
-                    changedGPXFiles.add(gpxFile);
+                    myWorker.mergeGPXRoutes(gpxFile.getGPXRoutes(), gpxRoutes);
                 }
             } else {
                 gpxFile.getGPXTracks().removeAll(gpxTracks);
                 gpxFile.getGPXRoutes().removeAll(gpxRoutes);
-
-                if (!gpxTracks.isEmpty() || !gpxRoutes.isEmpty()) {
-                    changedGPXFiles.add(gpxFile);
-                }
             }
-        }
-        
-        if (!changedGPXFiles.isEmpty()) {
-            // now replace changed gpxfiles in the file list and refresh
-            for (GPXFile gpxFile : changedGPXFiles) {
-                gpxFileList.replaceGPXFile(gpxFile);
-            }
-            
-            gpxFileList.getSelectionModel().clearSelection();
-            refreshGPXFileList();
         }
     }
 
@@ -1566,7 +1539,7 @@ public class GPXEditor implements Initializable {
     private List<GPXTrack> uniqueGPXTrackListFromGPXLineItemList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
         // get selected tracks uniquely from selected items for a specific file
         return selectedItems.stream().filter((item) -> {
-            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getValue().getType());
+            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getValue().getType());
         }).map((item) -> {
             return item.getValue().getGPXTracks().get(0);
         }).distinct().collect(Collectors.toList());

@@ -32,6 +32,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -428,7 +429,8 @@ public abstract class GPXLineItem {
                 map((U child) -> {
                     child.setNumber(counter.getAndIncrement());
                     return (T) child.getContent();
-                }).collect(Collectors.toSet());
+                // need to collect into a set that contains the order
+                }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
     
     // getter functions
@@ -468,9 +470,9 @@ public abstract class GPXLineItem {
         return (ListChangeListener) (ListChangeListener.Change c) -> {
             hasUnsavedChanges = true;
             
-            updateListNumbering(c.getList());
+            updateListValues(c.getList());
         };
     }
     // update numbering for changed list
-    public abstract void updateListNumbering(final ObservableList list);
+    public abstract void updateListValues(final ObservableList list);
 }

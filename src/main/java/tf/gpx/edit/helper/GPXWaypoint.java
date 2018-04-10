@@ -348,7 +348,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public void updateListNumbering(ObservableList list) {
+    public void updateListValues(ObservableList list) {
         // nothing to do for waypoints
     }
     

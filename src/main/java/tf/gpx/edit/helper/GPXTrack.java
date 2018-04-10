@@ -217,8 +217,12 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public void updateListNumbering(ObservableList list) {
+    public void updateListValues(ObservableList list) {
         if (myGPXTrackSegments.equals(list)) {
+            myGPXTrackSegments.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
             final Set<TrackSegment> trackSegments = numberExtensions(myGPXTrackSegments);
             myTrack.setTrackSegments(new ArrayList<>(trackSegments));
         }

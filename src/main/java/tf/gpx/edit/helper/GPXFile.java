@@ -386,16 +386,28 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public void updateListNumbering(ObservableList list) {
+    public void updateListValues(ObservableList list) {
         if (myGPXWaypoints.equals(list)) {
+            myGPXWaypoints.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
             final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
             myGPX.setWaypoints(new HashSet<>(waypoints));
         }
         if (myGPXRoutes.equals(list)) {
+            myGPXRoutes.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
             final Set<Route> routes = numberExtensions(myGPXRoutes);
             myGPX.setRoutes(new HashSet<>(routes));
         }
         if (myGPXTracks.equals(list)) {
+            myGPXTracks.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
             final Set<Track> tracks = numberExtensions(myGPXTracks);
             myGPX.setTracks(new HashSet<>(tracks));
         }

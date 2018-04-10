@@ -54,8 +54,8 @@ public class GPXRenumberWorker implements IGPXLineItemVisitor {
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
         // tracks and routes
-        gpxFile.updateListNumbering(gpxFile.getGPXTracks());
-        gpxFile.updateListNumbering(gpxFile.getGPXRoutes());
+        gpxFile.updateListValues(gpxFile.getGPXTracks());
+        gpxFile.updateListValues(gpxFile.getGPXRoutes());
     }
 
     @Override
@@ -66,13 +66,13 @@ public class GPXRenumberWorker implements IGPXLineItemVisitor {
     @Override
     public void visitGPXTrack(final GPXTrack gpxTrack) {
         // tracksegments
-        gpxTrack.updateListNumbering(gpxTrack.getGPXTrackSegments());
+        gpxTrack.updateListValues(gpxTrack.getGPXTrackSegments());
     }
 
     @Override
     public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
         // waypoints
-        gpxTrackSegment.updateListNumbering(gpxTrackSegment.getGPXWaypoints());
+        gpxTrackSegment.updateListValues(gpxTrackSegment.getGPXWaypoints());
     }
 
     @Override
@@ -83,25 +83,11 @@ public class GPXRenumberWorker implements IGPXLineItemVisitor {
     @Override
     public void visitGPXRoute(final GPXRoute gpxRoute) {
         // waypoints
-        gpxRoute.updateListNumbering(gpxRoute.getGPXWaypoints());
+        gpxRoute.updateListValues(gpxRoute.getGPXWaypoints());
     }
 
     @Override
     public boolean deepthFirst() {
         return true;
-    }
-    
-    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
-        assert gpxWayPoints.size() == keep.length;
-        
-        // go through keep[] backwards and remove the waypoints with FALSE
-        final int size = keep.length;
-        for (int i = size - 1; i >= 0; i--) {
-            if (!keep[i]) {
-                gpxWayPoints.remove(i);
-            }
-        }
-        
-        return gpxWayPoints;
     }
 }

@@ -397,8 +397,12 @@ public class GPXRoute extends GPXMeasurable {
     }
 
     @Override
-    public void updateListNumbering(ObservableList list) {
+    public void updateListValues(ObservableList list) {
         if (myGPXWaypoints.equals(list)) {
+            myGPXWaypoints.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
             final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
             myRoute.setRoutePoints(new ArrayList<>(waypoints));
 
