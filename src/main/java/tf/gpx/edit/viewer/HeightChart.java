@@ -54,6 +54,8 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 public class HeightChart<X,Y> extends AreaChart {
+    private final static HeightChart INSTANCE = new HeightChart();
+
     private GPXEditor myGPXEditor;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
@@ -61,7 +63,7 @@ public class HeightChart<X,Y> extends AreaChart {
     
     private boolean noLayout = false;
 
-    public HeightChart() {
+    private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
         ((NumberAxis) getXAxis()).setLowerBound(0.0);
@@ -81,6 +83,10 @@ public class HeightChart<X,Y> extends AreaChart {
         selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
     }
     
+    public static HeightChart getInstance() {
+        return INSTANCE;
+    }
+    
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
@@ -90,9 +96,14 @@ public class HeightChart<X,Y> extends AreaChart {
         myPoints.clear();
         getData().clear();
         
+        if (lineItem == null) {
+            // nothing more todo...
+            return;
+        }
+        
         double distance = 0d;
         final List<XYChart.Data> dataList = new ArrayList<>();
-        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints(null)) {
+        for (GPXWaypoint gpxWaypoint : lineItem.getCombinedGPXWaypoints(null)) {
             distance += gpxWaypoint.getDistance();
             XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
             // show elevation data on hover

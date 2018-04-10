@@ -363,7 +363,7 @@ public class SRTMDataViewer {
         if (gpxFile != null) {
             final IInterpolator line = new BernsteinInterpolator();
             final List<Coord3d> points = new ArrayList<>();
-            for (GPXWaypoint waypoint : gpxFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
+            for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
                 if (latMin > 0) {
                     // we need to trick jzy3d by changing signs for N in range AND in the mapper function AND in the grid tick
                     points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));

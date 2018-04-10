@@ -38,14 +38,14 @@ import tf.gpx.edit.helper.IGPXLineItemVisitor;
  *
  * @author Thomas
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
+public class GPXRenumberWorker implements IGPXLineItemVisitor {
     protected double myParameter = Double.MIN_VALUE;
 
-    public GPXEmptyWorker() {
+    public GPXRenumberWorker() {
         super ();
     }
 
-    public GPXEmptyWorker(final double parameter) {
+    public GPXRenumberWorker(final double parameter) {
         super ();
         
         myParameter = parameter;
@@ -53,7 +53,9 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
 
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
-        // nothing to do
+        // tracks and routes
+        gpxFile.updateListValues(gpxFile.getGPXTracks());
+        gpxFile.updateListValues(gpxFile.getGPXRoutes());
     }
 
     @Override
@@ -63,12 +65,14 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
 
     @Override
     public void visitGPXTrack(final GPXTrack gpxTrack) {
-        // nothing to do
+        // tracksegments
+        gpxTrack.updateListValues(gpxTrack.getGPXTrackSegments());
     }
 
     @Override
     public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
+        // waypoints
+        gpxTrackSegment.updateListValues(gpxTrackSegment.getGPXWaypoints());
     }
 
     @Override
@@ -78,25 +82,12 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
 
     @Override
     public void visitGPXRoute(final GPXRoute gpxRoute) {
-        // nothing to do
+        // waypoints
+        gpxRoute.updateListValues(gpxRoute.getGPXWaypoints());
     }
 
     @Override
     public boolean deepthFirst() {
         return true;
-    }
-    
-    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
-        assert gpxWayPoints.size() == keep.length;
-        
-        // go through keep[] backwards and remove the waypoints with FALSE
-        final int size = keep.length;
-        for (int i = size - 1; i >= 0; i--) {
-            if (!keep[i]) {
-                gpxWayPoints.remove(i);
-            }
-        }
-        
-        return gpxWayPoints;
     }
 }

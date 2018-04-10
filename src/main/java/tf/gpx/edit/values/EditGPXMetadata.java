@@ -276,7 +276,7 @@ public class EditGPXMetadata {
         saveButton.setOnAction((ActionEvent event) -> {
             setMetadata();
             
-            myGPXEditor.refreshGPXFileList();
+            myGPXEditor.refresh();
         });
         editMetadataPane.add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);

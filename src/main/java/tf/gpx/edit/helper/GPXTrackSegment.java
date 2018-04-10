@@ -26,14 +26,16 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Extension;
+import com.hs.gpxparser.modal.Track;
 import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 
 /**
@@ -43,7 +45,7 @@ import javafx.geometry.BoundingBox;
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
-    private LinkedList<GPXWaypoint> myGPXWaypoints = new LinkedList<>();
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
     
     private Double myLength;
     private Double myCumulativeAscent;
@@ -57,7 +59,27 @@ public class GPXTrackSegment extends GPXMeasurable {
         super(GPXLineItemType.GPXTrackSegment);
     }
     
-    public GPXTrackSegment(final GPXTrack gpxTrack, final TrackSegment trackSegment, final int number) {
+    // constructor for "manually created tracksegments"
+    public GPXTrackSegment(final GPXTrack gpxTrack) {
+        super(GPXLineItemType.GPXTrackSegment);
+
+        myGPXTrack = gpxTrack;
+
+        // create tracksegment
+        myTrackSegment = new TrackSegment();
+        
+        // if possible add waypoint to parent class
+        Extension content = gpxTrack.getContent();
+        if (content instanceof Track) {
+            ((Track) content).addTrackSegment(myTrackSegment);
+        }
+    }
+    
+    // constructor for tracksegments from gpx parser
+    public GPXTrackSegment(
+            final GPXTrack gpxTrack, 
+            final TrackSegment trackSegment, 
+            final int number) {
         super(GPXLineItemType.GPXTrackSegment);
         
         myGPXTrack = gpxTrack;
@@ -73,6 +95,8 @@ public class GPXTrackSegment extends GPXMeasurable {
 
             updatePrevNextGPXWaypoints();
         }
+        
+        myGPXWaypoints.addListener(getListChangeListener());
     }
 
     protected TrackSegment getTrackSegment() {
@@ -93,8 +117,8 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXLineItem> getChildren() {
-        return new ArrayList<>(myGPXWaypoints);
+    public ObservableList<GPXWaypoint> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
@@ -107,17 +131,6 @@ public class GPXTrackSegment extends GPXMeasurable {
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxWaypoints);
         
-        AtomicInteger counter = new AtomicInteger(0);
-        final List<Waypoint> waypoints = gpxWaypoints.stream().
-                map((GPXWaypoint child) -> {
-                    child.setNumber(counter.getAndIncrement());
-                    return child.getWaypoint();
-                }).collect(Collectors.toList());
-        myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
-        assert (myGPXWaypoints.size() == myTrackSegment.getWaypoints().size());
-
-        updatePrevNextGPXWaypoints();
-
         // reset cached values
         myLength = null;
         myCumulativeAscent = null;
@@ -139,7 +152,7 @@ public class GPXTrackSegment extends GPXMeasurable {
                 gpxWaypoint.setPrevGPXWaypoint(prevGPXWaypoint);
                 prevGPXWaypoint = gpxWaypoint;
             }
-            myGPXWaypoints.getLast().setNextGPXWaypoint(null);
+            myGPXWaypoints.get(myGPXWaypoints.size()-1).setNextGPXWaypoint(null);
         }
     }
     
@@ -168,45 +181,47 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXTrack> getGPXTracks() {
-        List<GPXTrack> result = new ArrayList<>();
+    public ObservableList<GPXTrack> getGPXTracks() {
+        ObservableList<GPXTrack> result = FXCollections.observableArrayList();
         result.add(myGPXTrack);
         return result;
     }
 
     @Override
-    public List<GPXTrackSegment> getGPXTrackSegments() {
-        List<GPXTrackSegment> result = new ArrayList<>();
+    public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        ObservableList<GPXTrackSegment> result = FXCollections.observableArrayList();
         result.add(this);
         return result;
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
-        // return copy of list
-        List<GPXWaypoint> result = new ArrayList<>();
+    public ObservableList<GPXRoute> getGPXRoutes() {
+        ObservableList<GPXRoute> result = FXCollections.observableArrayList();
+        return result;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getGPXWaypoints() {
+        return myGPXWaypoints;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myTrackSegment;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
+        ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
         if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
-            result = myGPXWaypoints.stream().collect(Collectors.toList());
+            result = myGPXWaypoints;
         }
         return result;
     }
 
     @Override
     public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        List<GPXWaypoint> result = new ArrayList<>();
-        result = filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
-        return result;
-    }
-
-    @Override
-    public List<GPXRoute> getGPXRoutes() {
-        List<GPXRoute> result = new ArrayList<>();
-        return result;
-    }
-    
-    @Override
-    public Extension getContent() {
-        return myTrackSegment;
+        return filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
     }
 
     /**
@@ -411,5 +426,19 @@ public class GPXTrackSegment extends GPXMeasurable {
     @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXTrackSegment(this);
+    }
+
+    @Override
+    public void updateListValues(ObservableList list) {
+        if (myGPXWaypoints.equals(list)) {
+            myGPXWaypoints.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
+            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
+            myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
+
+            updatePrevNextGPXWaypoints();
+        }
     }
 }

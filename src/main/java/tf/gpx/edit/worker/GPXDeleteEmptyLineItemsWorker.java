@@ -53,7 +53,7 @@ public class GPXDeleteEmptyLineItemsWorker extends GPXEmptyWorker {
         for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
             if (gpxTrack.getGPXTrackSegments().isEmpty()) {
                 gpxTracks.remove(gpxTrack);
-                System.out.println("File "+ gpxFile.getName() + ": removing Track " + gpxTrack.getName());
+                //System.out.println("File "+ gpxFile.getName() + ": removing Track " + gpxTrack.getName());
             }
         }
         gpxFile.setGPXTracks(gpxTracks);
@@ -64,9 +64,9 @@ public class GPXDeleteEmptyLineItemsWorker extends GPXEmptyWorker {
         // remove all segments with less than 3 waypoints
         final List<GPXTrackSegment> gpxTrackSegments = new ArrayList<>(gpxTrack.getGPXTrackSegments());
         for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-            if (gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).size() <= myParameter) {
+            if (gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).size() <= myParameter) {
                 gpxTrackSegments.remove(gpxTrackSegment);
-                System.out.println("File "+ gpxTrack.getGPXFile().getName() + ": Track " + gpxTrack.getName() + ": removing TrackSegment");
+                //System.out.println("File "+ gpxTrack.getGPXFile().getName() + ": Track " + gpxTrack.getName() + ": removing TrackSegment");
             }
         }
         gpxTrack.setGPXTrackSegments(gpxTrackSegments);

@@ -309,8 +309,8 @@ public class DistributionViewer {
         deleteButton.setOnAction((ActionEvent event) -> {
             if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
                 final GPXTrackSegment gpxTrackSegment = myGPXWaypoints.get(0).getGPXTrackSegments().get(0);
-                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
                 newWaypoints.removeAll(wayPointList.getCheckModel().getCheckedItems());
                 gpxTrackSegment.setGPXWaypoints(newWaypoints);

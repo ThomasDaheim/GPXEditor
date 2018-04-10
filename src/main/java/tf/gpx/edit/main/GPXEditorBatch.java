@@ -105,7 +105,7 @@ public class GPXEditorBatch {
                 if(GPXEditorParameters.CmdOps.mergeTracks.toString().equals(arg) && myParameters.doMergeTracks()) {
                     System.out.println("Merging Tracks");
                     // here we merge all tracks, so both parameters are identical
-                    gpxFiles.forEach((GPXFile gpxFile) -> gpxFile.setGPXTracks(myWorker.mergeSelectedGPXTracks(gpxFile.getGPXTracks(), gpxFile.getGPXTracks())));
+                    gpxFiles.forEach((GPXFile gpxFile) -> myWorker.mergeGPXTracks(gpxFile.getGPXTracks(), gpxFile.getGPXTracks()));
                 }
                 if(GPXEditorParameters.CmdOps.reduceTracks.toString().equals(arg) && myParameters.doReduceTracks()) {
                     System.out.println("Reducing Tracks in Files");

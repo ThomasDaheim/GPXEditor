@@ -274,34 +274,34 @@ public class TestLineItem {
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).isDirectChildOf(gpxfile2));
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isChildOf(gpxfile2));
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isDirectChildOf(gpxfile2));
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile2));
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile2));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile2));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile2));
 
         // relations to own gpxfile
         Assert.assertTrue(gpxfile1.getGPXTracks().get(0).isChildOf(gpxfile1));
         Assert.assertTrue(gpxfile1.getGPXTracks().get(0).isDirectChildOf(gpxfile1));
         Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isChildOf(gpxfile1));
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isDirectChildOf(gpxfile1));
-        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1));
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1));
+        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1));
         
         // relations to own gpxtrack
         Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isChildOf(gpxfile1.getGPXTracks().get(0)));
         Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(0)));
-        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(0)));
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(0)));
+        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(0)));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(0)));
 
         // relations to own gpxtracksegment
-        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0)));
-        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0)));
+        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0)));
+        Assert.assertTrue(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0)));
 
         // relations to other gpxtrack
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isChildOf(gpxfile1.getGPXTracks().get(1)));
         Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(1)));
 
         // relations to other gpxtracksegment
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(1)));
-        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(1)));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isChildOf(gpxfile1.getGPXTracks().get(1)));
+        Assert.assertFalse(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0).isDirectChildOf(gpxfile1.getGPXTracks().get(1)));
 
         System.out.println("Done.");
         System.out.println("");

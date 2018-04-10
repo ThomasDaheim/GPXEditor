@@ -118,7 +118,7 @@
                     <items>
                       <AnchorPane fx:id="topAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0">
                            <children>
-                              <TreeTableView fx:id="gpxFileListXML" prefHeight="200.0" prefWidth="1006.0" styleClass="gpxFileList">
+                              <TreeTableView fx:id="gpxFileListXML" prefHeight="200.0" prefWidth="1006.0" styleClass="gpxFileList" tableMenuButtonVisible="true">
                                 <columns>
                                   <TreeTableColumn fx:id="idGPXCol" prefWidth="70.0" styleClass="idCol" text="ID" />
                                     <TreeTableColumn fx:id="typeGPXCol" prefWidth="55.0" text="Type" />
@@ -137,7 +137,7 @@
                         </AnchorPane>
                       <AnchorPane fx:id="bottomAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="210.0" prefWidth="158.0">
                            <children>
-                              <TableView id="gpxTrackList" fx:id="gpxTrackXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList">
+                              <TableView id="gpxTrackList" fx:id="gpxTrackXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList" tableMenuButtonVisible="true">
                                 <columns>
                                   <TableColumn fx:id="idTrackCol" prefWidth="70.0" styleClass="idCol" text="ID" />
                                     <TableColumn fx:id="typeTrackCol" prefWidth="57.0" text="Type" />

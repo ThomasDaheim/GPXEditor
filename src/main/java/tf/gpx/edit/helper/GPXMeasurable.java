@@ -48,7 +48,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:
-                return getGPXLineItemType().getDescription();
+                return getType().getDescription();
             case Name:
                 return getName();
             case Start:

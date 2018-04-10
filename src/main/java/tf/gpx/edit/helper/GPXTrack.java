@@ -26,16 +26,17 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Extension;
+import com.hs.gpxparser.modal.GPX;
 import com.hs.gpxparser.modal.Track;
 import com.hs.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
-import static tf.gpx.edit.helper.GPXLineItem.filterGPXWaypointsInBoundingBox;
 
 /**
  *
@@ -44,12 +45,29 @@ import static tf.gpx.edit.helper.GPXLineItem.filterGPXWaypointsInBoundingBox;
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
-    private List<GPXTrackSegment> myGPXTrackSegments = new ArrayList<>();
+    private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
     }
     
+    // constructor for "manually created tracks"
+    public GPXTrack(final GPXFile gpxFile) {
+        super(GPXLineItemType.GPXTrack);
+
+        myGPXFile = gpxFile;
+
+        // create empty track
+        myTrack = new Track();
+        
+        // if possible add track to parent class
+        Extension content = gpxFile.getContent();
+        if (content instanceof GPX) {
+            ((GPX) content).addTrack(myTrack);
+        }
+    }
+    
+    // constructor for tracks from gpx parser
     public GPXTrack(final GPXFile gpxFile, final Track track) {
         super(GPXLineItemType.GPXTrack);
         
@@ -63,6 +81,8 @@ public class GPXTrack extends GPXMeasurable {
             }
             assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
         }
+
+        myGPXTrackSegments.addListener(getListChangeListener());
     }
 
     protected Track getTrack() {
@@ -109,8 +129,8 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXLineItem> getChildren() {
-        return new ArrayList<>(myGPXTrackSegments);
+    public ObservableList<GPXTrackSegment> getChildren() {
+        return myGPXTrackSegments;
     }
     
     @Override
@@ -120,15 +140,8 @@ public class GPXTrack extends GPXMeasurable {
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
         //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());
-        myGPXTrackSegments = gpxTrackSegments;
-        
-        AtomicInteger counter = new AtomicInteger(0);
-        final List<TrackSegment> trackSegments = gpxTrackSegments.stream().
-                map((GPXTrackSegment child) -> {
-                    child.setNumber(counter.getAndIncrement());
-                    return child.getTrackSegment();
-                }).collect(Collectors.toList());
-        myTrack.setTrackSegments(new ArrayList<>(trackSegments));
+        myGPXTrackSegments.clear();
+        myGPXTrackSegments.addAll(gpxTrackSegments);
         
         setHasUnsavedChanges();
     }
@@ -149,28 +162,44 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXTrack> getGPXTracks() {
-        List<GPXTrack> result = new ArrayList<>();
+    public ObservableList<GPXTrack> getGPXTracks() {
+        ObservableList<GPXTrack> result = FXCollections.observableArrayList();
         result.add(this);
         return result;
     }
 
     @Override
-    public List<GPXTrackSegment> getGPXTrackSegments() {
-        // return copy of list
-        return myGPXTrackSegments.stream().collect(Collectors.toList());
+    public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        return myGPXTrackSegments;
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypoints(final GPXLineItemType itemType) {
+    public ObservableList<GPXWaypoint> getGPXWaypoints() {
+        ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
+        return result;
+    }
+
+    @Override
+    public ObservableList<GPXRoute> getGPXRoutes() {
+        ObservableList<GPXRoute> result = FXCollections.observableArrayList();
+        return result;
+    }
+    
+    @Override
+    public Extension getContent() {
+        return myTrack;
+    }
+
+    @Override
+    public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
         // iterate over my segments
-        List<GPXWaypoint> result = new ArrayList<>();
+        List<ObservableList<GPXWaypoint>> waypoints = new ArrayList<>();
         if (itemType == null || itemType.equals(GPXLineItemType.GPXTrack) || itemType.equals(GPXLineItemType.GPXTrackSegment)) {
             for (GPXTrackSegment trackSegment : myGPXTrackSegments) {
-                result.addAll(trackSegment.getGPXWaypoints(itemType));
+                waypoints.add(trackSegment.getCombinedGPXWaypoints(itemType));
             }
         }
-        return result;
+        return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
     }
 
     @Override
@@ -183,18 +212,19 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXRoute> getGPXRoutes() {
-        List<GPXRoute> result = new ArrayList<>();
-        return result;
-    }
-    
-    @Override
-    public Extension getContent() {
-        return myTrack;
+    protected void visitMe(final IGPXLineItemVisitor visitor) {
+        visitor.visitGPXTrack(this);
     }
 
     @Override
-    protected void visitMe(final IGPXLineItemVisitor visitor) {
-        visitor.visitGPXTrack(this);
+    public void updateListValues(ObservableList list) {
+        if (myGPXTrackSegments.equals(list)) {
+            myGPXTrackSegments.stream().forEach((t) -> {
+                t.setParent(this);
+            });
+            
+            final Set<TrackSegment> trackSegments = numberExtensions(myGPXTrackSegments);
+            myTrack.setTrackSegments(new ArrayList<>(trackSegments));
+        }
     }
 }

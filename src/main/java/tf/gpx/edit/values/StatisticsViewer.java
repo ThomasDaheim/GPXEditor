@@ -230,7 +230,7 @@ public class StatisticsViewer {
         statisticsList.get(StatisticData.Break3.ordinal()).setValue("");
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
-        final List<GPXWaypoint> gpxWaypoints = myGPXFile.getGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        final List<GPXWaypoint> gpxWaypoints = myGPXFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         // set values that don't need calculation
         statisticsList.get(StatisticData.Start.ordinal()).setValue(gpxWaypoints.get(0).getDate());
