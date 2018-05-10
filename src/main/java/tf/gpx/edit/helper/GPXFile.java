@@ -75,6 +75,10 @@ public class GPXFile extends GPXMeasurable {
 
         // create empty gpx
         myGPX = new GPX();
+        
+        myGPXTracks.addListener(getListChangeListener());
+        myGPXRoutes.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(getListChangeListener());
     }
 
     // constructor for gpx from file

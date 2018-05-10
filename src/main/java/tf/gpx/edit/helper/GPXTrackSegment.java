@@ -73,6 +73,8 @@ public class GPXTrackSegment extends GPXMeasurable {
         if (content instanceof Track) {
             ((Track) content).addTrackSegment(myTrackSegment);
         }
+        
+        myGPXWaypoints.addListener(getListChangeListener());
     }
     
     // constructor for tracksegments from gpx parser
@@ -439,6 +441,13 @@ public class GPXTrackSegment extends GPXMeasurable {
             myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
 
             updatePrevNextGPXWaypoints();
+
+            // reset cached values
+            myLength = null;
+            myCumulativeAscent = null;
+            myCumulativeDescent = null;
+            myStartingTime = null;
+            myEndTime = null;
         }
     }
 }

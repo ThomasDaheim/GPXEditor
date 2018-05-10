@@ -76,6 +76,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -708,18 +709,18 @@ public class GPXEditor implements Initializable {
                 }
             };
         
-            final ContextMenu trackMenu = new ContextMenu();
-            final MenuItem selectTracks = new MenuItem("Select highlighted");
-            selectTracks.setOnAction((ActionEvent event) -> {
+            final ContextMenu waypointMenu = new ContextMenu();
+            final MenuItem selectWaypoints = new MenuItem("Select highlighted");
+            selectWaypoints.setOnAction((ActionEvent event) -> {
                 selectHighlightedWaypoints();
             });
-            trackMenu.getItems().add(selectTracks);
+            waypointMenu.getItems().add(selectWaypoints);
 
             final MenuItem invertSelection = new MenuItem("Invert Selection");
             invertSelection.setOnAction((ActionEvent event) -> {
                 invertSelectedWaypoints();
             });
-            trackMenu.getItems().add(invertSelection);
+            waypointMenu.getItems().add(invertSelection);
             
             final MenuItem deleteWaypoints = new MenuItem("Delete selected");
             deleteWaypoints.setOnAction((ActionEvent event) -> {
@@ -739,8 +740,57 @@ public class GPXEditor implements Initializable {
                 // force repaint of gpxFileList to show unsaved items
                 refreshGPXFileList();
             });
-            trackMenu.getItems().add(deleteWaypoints);
-            row.setContextMenu(trackMenu);
+            waypointMenu.getItems().add(deleteWaypoints);
+            
+            waypointMenu.getItems().add(new SeparatorMenuItem());
+
+            final MenuItem splitWaypoints = new MenuItem("Split below");
+            splitWaypoints.setOnAction((ActionEvent event) -> {
+                // we split after first selected item
+                final GPXWaypoint waypoint = row.getItem();
+                
+                // TODO: not working when called twice
+                if (waypoint.isGPXFileWaypoint()) {
+                    // split only track segments and routes
+                    return;
+                } else if(waypoint.isGPXTrackWaypoint()) {
+                    final GPXTrackSegment tracksegment = (GPXTrackSegment) waypoint.getParent();
+                    final GPXTrack track = (GPXTrack) tracksegment.getParent();
+                    
+                    // create new track segment and add all following waypoints
+                    final GPXTrackSegment newtracksegment = new GPXTrackSegment(track);
+                    track.getGPXTrackSegments().add(newtracksegment);
+                    
+                    final List<GPXWaypoint> waypoints = tracksegment.getGPXWaypoints();
+                    final List<GPXWaypoint> newwaypoints = newtracksegment.getGPXWaypoints();
+                    // remove backwards...
+                    for (int i = waypoints.size()-1; i > waypoints.indexOf(waypoint); i--) {
+                        // insert before...
+                        newwaypoints.add(0, waypoints.remove(i));
+                    }
+                } else if(waypoint.isGPXRouteWaypoint()) {
+                    final GPXRoute route = (GPXRoute) waypoint.getParent();
+                    final GPXFile file = route.getGPXFile();
+                    
+                    // create new route segment and add all following waypoints
+                    final GPXRoute newroute = new GPXRoute(file);
+                    file.getGPXRoutes().add(newroute);
+                    
+                    final List<GPXWaypoint> waypoints = route.getGPXWaypoints();
+                    final List<GPXWaypoint> newwaypoints = newroute.getGPXWaypoints();
+                    // remove backwards...
+                    for (int i = waypoints.size()-1; i > waypoints.indexOf(waypoint); i--) {
+                        // insert before...
+                        newwaypoints.add(0, waypoints.remove(i));
+                    }
+                }
+                
+                // TODO: refresh gpxFileList (length, ... per track)
+            });
+            splitWaypoints.disableProperty().bind(row.emptyProperty());
+            waypointMenu.getItems().add(splitWaypoints);
+
+            row.setContextMenu(waypointMenu);
 
             return row;
         });
