@@ -11,11 +11,16 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.0)
+## Features (v2.2)
 
 Following features are available via UI:
 
 ## File and track handling
+
+### Update v2.1
+
+* split track segment or route via context menu
+* bug fix when showing track segments only on map
 
 ### Update v2.1
 

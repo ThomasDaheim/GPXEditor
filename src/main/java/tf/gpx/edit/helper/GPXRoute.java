@@ -74,6 +74,8 @@ public class GPXRoute extends GPXMeasurable {
         if (content instanceof GPX) {
             ((GPX) content).addRoute(myRoute);
         }
+        
+        myGPXWaypoints.addListener(getListChangeListener());
     }
     
     // constructor for routes from gpx parser
@@ -407,6 +409,11 @@ public class GPXRoute extends GPXMeasurable {
             myRoute.setRoutePoints(new ArrayList<>(waypoints));
 
             updatePrevNextGPXWaypoints();
+
+            // reset cached values
+            myLength = null;
+            myCumulativeAscent = null;
+            myCumulativeDescent = null;
         }
     }
 }

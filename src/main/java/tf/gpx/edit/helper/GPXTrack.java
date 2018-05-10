@@ -65,6 +65,8 @@ public class GPXTrack extends GPXMeasurable {
         if (content instanceof GPX) {
             ((GPX) content).addTrack(myTrack);
         }
+
+        myGPXTrackSegments.addListener(getListChangeListener());
     }
     
     // constructor for tracks from gpx parser
