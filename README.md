@@ -17,7 +17,7 @@ Following features are available via UI:
 
 ## File and track handling
 
-### Update v2.1
+### Update v2.2
 
 * split track segment or route via context menu
 * bug fix when showing track segments only on map
