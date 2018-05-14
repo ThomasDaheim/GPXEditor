@@ -94,3 +94,25 @@ function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
 
+/*
+ * search and add results to marker layer
+ * inspired by https://jsfiddle.net/chk1/b5wgds4n/
+ */
+// use separate layer for search results for easy removal
+var searchResults = L.layerGroup().addTo(myMap);
+function showSearchResults(result) {
+    var data = JSON.parse(result);
+    
+    if(data.hasOwnProperty("elements")){
+        if(data.elements.length > 0) {
+            for(var i in data.elements){
+                var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: restaurantIcon}).addTo(searchResults);
+                
+                // TODO: add title from add. information
+            }
+        }
+    }
+}
+function clearSearchResults() {
+    searchResults.clearLayers();
+}
