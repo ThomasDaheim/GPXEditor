@@ -62,6 +62,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
@@ -95,7 +96,9 @@ public class TrackMap extends LeafletMapView {
         RectIcon("rectIcon"),
         TrackPointIcon("trackpointIcon"),
         PlaceMarkIcon("placemarkIcon"),
-        PlaceMarkSelectedIcon("placemarkSelectedIcon");
+        PlaceMarkSelectedIcon("placemarkSelectedIcon"),
+        HotelIcon("hotelIcon"),
+        RestaurantIcon("restaurantIcon");
         
         private final String iconName;
 
@@ -427,49 +430,27 @@ public class TrackMap extends LeafletMapView {
         
         final MenuItem separator = new SeparatorMenuItem();
         
-        final MenuItem searchPoints = new MenuItem("Search");
-        searchPoints.setOnAction((event) -> {
+        final Menu searchPoints = new Menu("Search...");
+        
+        final MenuItem searchRestaurants = new MenuItem("Restaurants");
+        searchRestaurants.setOnAction((event) -> {
+            assert (searchPoints.getUserData() != null) && (searchPoints.getUserData() instanceof LatLong);
+            final LatLong latlong = (LatLong) searchPoints.getUserData();
+            
+            searchItems("[\"amenity\"=\"restaurant\"]", latlong, TrackMarker.RestaurantIcon);
+        });
+        
+        final MenuItem searchHotels = new MenuItem("Hotels");
+        searchHotels.setOnAction((event) -> {
             assert (searchPoints.getUserData() != null) && (searchPoints.getUserData() instanceof LatLong);
             final LatLong latlong = (LatLong) searchPoints.getUserData();
                        
-            try {
-                final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")[\"amenity\"=\"restaurant\"];out;", "UTF-8");
-                
-                final URL url = new URL("https://overpass-api.de/api/interpreter");
-                final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setDoOutput(true);
-                urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-                urlConnection.connect();
-
-                final OutputStream outputStream = urlConnection.getOutputStream();
-                outputStream.write(("data=" + searchParam).getBytes("UTF-8"));
-                outputStream.flush();
-
-                switch (urlConnection.getResponseCode()) {
-                    case 200:
-                    case 201:
-                        final BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                        StringBuilder response = new StringBuilder();
-                        String inputLine;
-                        while ((inputLine = in.readLine()) != null) 
-                            response.append(inputLine).append("\n");
-                        in.close();
-                        
-                        System.out.println(response.toString());
-                        
-                        execScript("showSearchResults(\"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\");");
-                }
-
-            } catch (MalformedURLException ex) {
-                Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            searchItems("[\"tourism\"=\"hotel\"]", latlong, TrackMarker.HotelIcon);
         });
+        searchPoints.getItems().addAll(searchRestaurants, searchHotels);
 
         contextMenu.getItems().addAll(showCord, addWaypoint, addRoute, separator, searchPoints);
 
-                
         // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             if (newValue != null) {
@@ -499,6 +480,41 @@ public class TrackMap extends LeafletMapView {
                 contextMenu.hide();
             }
         });
+    }
+    private void searchItems(final String searchString, final LatLong latlong, final TrackMarker marker) {
+        try {
+            final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")" + searchString + ";out;", "UTF-8");
+
+            final URL url = new URL("https://overpass-api.de/api/interpreter");
+            final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            urlConnection.connect();
+
+            final OutputStream outputStream = urlConnection.getOutputStream();
+            outputStream.write(("data=" + searchParam).getBytes("UTF-8"));
+            outputStream.flush();
+
+            switch (urlConnection.getResponseCode()) {
+                case 200:
+                case 201:
+                    final BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) 
+                        response.append(inputLine).append("\n");
+                    in.close();
+
+                    //System.out.println(response.toString());
+
+                    execScript("showSearchResults(\"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + marker.getIconName() + "\");");
+            }
+
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     private LatLong pointToLatLong(double x, double y) {
         final Point2D point = myPane.screenToLocal(x, y);

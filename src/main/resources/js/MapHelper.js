@@ -100,13 +100,14 @@ function getLatLngForRect(startx, starty, endx, endy) {
  */
 // use separate layer for search results for easy removal
 var searchResults = L.layerGroup().addTo(myMap);
-function showSearchResults(result) {
+function showSearchResults(result, iconName) {
     var data = JSON.parse(result);
+    var icon = window[iconName];
     
     if(data.hasOwnProperty("elements")){
         if(data.elements.length > 0) {
             for(var i in data.elements){
-                var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: restaurantIcon}).addTo(searchResults);
+                var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: icon}).addTo(searchResults);
                 
                 // TODO: add title from add. information
             }
