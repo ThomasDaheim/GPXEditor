@@ -104,15 +104,53 @@ function showSearchResults(result, iconName) {
     var data = JSON.parse(result);
     var icon = window[iconName];
     
-    if(data.hasOwnProperty("elements")){
+    if(data.hasOwnProperty("elements")) {
         if(data.elements.length > 0) {
-            for(var i in data.elements){
+            for(var i in data.elements) {
                 var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: icon}).addTo(searchResults);
                 
-                // TODO: add title from add. information
+                var title = getTitleFromTags(point, data.elements[i]);
+        
+                if (title.length > 0) {
+                    if (point._icon) {
+                        point._icon.title = title;
+                    } else {
+                        point.options.title = title;
+                    }
+                }
             }
         }
     }
+}
+/*
+ * Scan data for tags and build title from existing values:
+ * name
+ * cuisine
+ * phone
+ * email
+ * website
+ */
+function getTitleFromTags(point, data) {
+    var title = "";
+    if(data.hasOwnProperty("tags")) {
+        if(data.tags.hasOwnProperty("name")) {
+            title = data.tags.name;
+        }
+        if(data.tags.hasOwnProperty("cuisine")) {
+            title = title +  "\n"  + data.tags.cuisine;
+        }
+        if(data.tags.hasOwnProperty("phone")) {
+            title = title +  "\n"  + data.tags.phone;
+        }
+        if(data.tags.hasOwnProperty("email")) {
+            title = title +  "\n"  + data.tags.email;
+        }
+        if(data.tags.hasOwnProperty("website")) {
+            title = title +  "\n"  + data.tags.website;
+        }
+    }
+    
+    return title;
 }
 function clearSearchResults() {
     searchResults.clearLayers();

@@ -42,7 +42,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -396,6 +395,8 @@ public class TrackMap extends LeafletMapView {
             
             final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
             newGPXWaypoint.setNumber(curGPXWaypoints.size());
+            
+            // TODO: set name / description / comment from search result marker (if any)
                     
             curGPXWaypoints.add(newGPXWaypoint);
             
@@ -460,6 +461,7 @@ public class TrackMap extends LeafletMapView {
                 addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
                 addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
                 searchPoints.setUserData(latLong);
+                // TODO: check for search results near position and update addWaypoint title
             }
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -470,6 +472,7 @@ public class TrackMap extends LeafletMapView {
                 addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
                 addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
                 searchPoints.setUserData(latLong);
+                // TODO: check for search results near position and update addWaypoint title
             }
         });
 
@@ -554,9 +557,11 @@ public class TrackMap extends LeafletMapView {
             return;
         }
         
+        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no tracks get shown if already enough waypoints...
         // file fileWaypointsCount don't count into MAX_DATAPOINTS
-        final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
-        final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
+        //final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        final double ratio = GPXTrackviewer.MAX_DATAPOINTS / lineItem.getCombinedGPXWaypoints(null).size();
 
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
 

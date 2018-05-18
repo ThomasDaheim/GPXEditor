@@ -147,13 +147,13 @@ public class GPXTreeTableView {
                                 });
                                 fileMenu.getItems().add(closeFile);
 
-                                final MenuItem mergeFilesContextMenu = new MenuItem("Merge Files");
-                                mergeFilesContextMenu.setOnAction((ActionEvent event) -> {
+                                final MenuItem mergeFiles = new MenuItem("Merge Files");
+                                mergeFiles.setOnAction((ActionEvent event) -> {
                                     myEditor.mergeFiles(event);
                                 });
-                                mergeFilesContextMenu.disableProperty().bind(
+                                mergeFiles.disableProperty().bind(
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 2));
-                                fileMenu.getItems().add(mergeFilesContextMenu);
+                                fileMenu.getItems().add(mergeFiles);
 
                                 fileMenu.getItems().add(new SeparatorMenuItem());
 
@@ -168,49 +168,66 @@ public class GPXTreeTableView {
                             case GPXTrack:
                             case GPXTrackSegment:
                             case GPXRoute:
-                                final MenuItem mergeItemsContextMenu = new MenuItem("Merge Items");
-                                mergeItemsContextMenu.setOnAction((ActionEvent event) -> {
+                                final MenuItem mergeItems = new MenuItem("Merge Items");
+                                mergeItems.setOnAction((ActionEvent event) -> {
                                      myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.MERGE);
                                 });
-                                mergeItemsContextMenu.disableProperty().bind(
+                                mergeItems.disableProperty().bind(
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 2));
-                                fileMenu.getItems().add(mergeItemsContextMenu);
+                                fileMenu.getItems().add(mergeItems);
 
-                                final MenuItem deleteItemsContextMenu = new MenuItem("Delete Items");
-                                deleteItemsContextMenu.setOnAction((ActionEvent event) -> {
+                                final MenuItem deleteItems = new MenuItem("Delete Items");
+                                deleteItems.setOnAction((ActionEvent event) -> {
                                      myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
                                 });
-                                deleteItemsContextMenu.disableProperty().bind(
+                                deleteItems.disableProperty().bind(
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
-                                fileMenu.getItems().add(deleteItemsContextMenu);
+                                fileMenu.getItems().add(deleteItems);
 
+                                fileMenu.getItems().add(new SeparatorMenuItem());
+                                
+                                final MenuItem convertItem = new MenuItem("Convert");
+                                if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
+                                    convertItem.setText("Convert to Track");
+                                } else {
+                                    convertItem.setText("Convert to Route");
+                                }
+                                convertItem.setOnAction((ActionEvent event) -> {
+                                    myEditor.convertItem(event, item);
+                                });
+                                convertItem.disableProperty().bind(
+                                    Bindings.greaterThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                fileMenu.getItems().add(convertItem);
+                                
                                 break;
                             case GPXMetadata:
                             default:
                                 break;
                         }
                         
-                        fileMenu.getItems().add(new SeparatorMenuItem());
-                        // add context menu to expand/collapse all selected items
-                        final MenuItem expandContextMenu = new MenuItem("Expand");
-                        expandContextMenu.setOnAction((ActionEvent event) -> {
-                             myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
-                             t.setExpanded(true);});
-                        });
-                        fileMenu.getItems().add(expandContextMenu);
-                        final MenuItem collapseContextMenu = new MenuItem("Collapse");
-                        collapseContextMenu.setOnAction((ActionEvent event) -> {
-                             myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
-                             t.setExpanded(false);});
-                        });
-                        fileMenu.getItems().add(collapseContextMenu);
+                        if (!item.getType().equals(GPXLineItem.GPXLineItemType.GPXMetadata)) {
+                            fileMenu.getItems().add(new SeparatorMenuItem());
+                            // add context menu to expand/collapse all selected items
+                            final MenuItem expandContextMenu = new MenuItem("Expand");
+                            expandContextMenu.setOnAction((ActionEvent event) -> {
+                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                                 t.setExpanded(true);});
+                            });
+                            fileMenu.getItems().add(expandContextMenu);
+                            final MenuItem collapseContextMenu = new MenuItem("Collapse");
+                            collapseContextMenu.setOnAction((ActionEvent event) -> {
+                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                                 t.setExpanded(false);});
+                            });
+                            fileMenu.getItems().add(collapseContextMenu);
 
-                        // Set context menu on row, but use a binding to make it only show for non-empty rows:
-                        contextMenuProperty().bind(
-                            Bindings.when(emptyProperty())
-                                .then((ContextMenu) null)
-                                .otherwise(fileMenu)
-                        );
+                            // Set context menu on row, but use a binding to make it only show for non-empty rows:
+                            contextMenuProperty().bind(
+                                Bindings.when(emptyProperty())
+                                    .then((ContextMenu) null)
+                                    .otherwise(fileMenu)
+                            );
+                        }
 
                         if (item.hasUnsavedChanges()) {
                             getStyleClass().add("hasUnsavedChanges");

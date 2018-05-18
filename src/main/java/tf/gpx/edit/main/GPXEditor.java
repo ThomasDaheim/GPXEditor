@@ -147,7 +147,7 @@ public class GPXEditor implements Initializable {
     }
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
-    
+
     private ListChangeListener<GPXWaypoint> listenergpxTrackXMLSelection;
     private ChangeListener<TreeItem<GPXLineItem>> listenergpxFileListXMLSelection;
     
@@ -272,8 +272,7 @@ public class GPXEditor implements Initializable {
     private TreeTableColumn<GPXLineItem, Boolean> extGPXCol;
     @FXML
     private TableColumn<GPXWaypoint, Boolean> extTrackCol;
-
-
+    
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // TF, 20170720: store and read divider positions of panes
@@ -500,7 +499,48 @@ public class GPXEditor implements Initializable {
         topAnchorPane.setMinHeight(0);
         topAnchorPane.setMinWidth(0);
         topAnchorPane.prefWidthProperty().bind(trackSplitPane.widthProperty());
+        
+        initGPXFileList();
 
+        // left pane, bottom anchor
+        bottomAnchorPane.setMinHeight(0);
+        bottomAnchorPane.setMinWidth(0);
+        bottomAnchorPane.prefWidthProperty().bind(trackSplitPane.widthProperty());
+        
+        initGPXWaypointList();
+
+        // right pane: resize with its anchor
+        viewSplitPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
+        viewSplitPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
+        
+        // right pane, top anchor: resize with its anchor
+        mapAnchorPane.setMinHeight(0);
+        mapAnchorPane.setMinWidth(0);
+        mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
+
+        mapAnchorPane.getChildren().clear();
+        final Region mapView = TrackMap.getInstance();
+        mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
+        mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
+        mapView.setVisible(false);
+        final Region metaPane = EditGPXMetadata.getInstance().getPane();
+        metaPane.prefHeightProperty().bind(mapAnchorPane.heightProperty());
+        metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
+        metaPane.setVisible(false);
+        mapAnchorPane.getChildren().addAll(mapView, metaPane);
+        
+        // right pane, bottom anchor: resize with its anchor
+        profileAnchorPane.setMinHeight(0);
+        profileAnchorPane.setMinWidth(0);
+        profileAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
+
+        profileAnchorPane.getChildren().clear();
+        final XYChart chart = HeightChart.getInstance();
+        chart.prefHeightProperty().bind(profileAnchorPane.heightProperty());
+        chart.prefWidthProperty().bind(profileAnchorPane.widthProperty());
+        profileAnchorPane.getChildren().add(chart);
+    }
+    void initGPXFileList () {
         gpxFileList = new GPXTreeTableView(gpxFileListXML, this);
         gpxFileList.prefHeightProperty().bind(topAnchorPane.heightProperty());
         gpxFileList.prefWidthProperty().bind(topAnchorPane.widthProperty());
@@ -676,12 +716,8 @@ public class GPXEditor implements Initializable {
         });
         extGPXCol.setEditable(false);
         extGPXCol.setPrefWidth(TINY_WIDTH);
-        
-        // left pane, bottom anchor
-        bottomAnchorPane.setMinHeight(0);
-        bottomAnchorPane.setMinWidth(0);
-        bottomAnchorPane.prefWidthProperty().bind(trackSplitPane.widthProperty());
-
+    }
+    void initGPXWaypointList() {
         gpxTrackXML.prefHeightProperty().bind(bottomAnchorPane.heightProperty());
         gpxTrackXML.prefWidthProperty().bind(bottomAnchorPane.widthProperty());
         
@@ -707,8 +743,17 @@ public class GPXEditor implements Initializable {
                         } else {
                             getStyleClass().removeAll("firstRow");
                         }
+                        
+                        // TFE, 20180517: use tooltip to show name / description / comment / link
+                        if (!waypoint.getTooltip().isEmpty()) {
+                            final Tooltip tooltip = new Tooltip();
+                            tooltip.setText(waypoint.getTooltip());
+                            TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                            setTooltip(tooltip);
+                        }
                     } else {
                         getStyleClass().removeAll("highlightedRow", "firstRow");
+                        setTooltip(null);
                     }
                 }
             };
@@ -940,37 +985,6 @@ public class GPXEditor implements Initializable {
         });
         extTrackCol.setEditable(false);
         extTrackCol.setPrefWidth(TINY_WIDTH);
-        
-        // right pane: resize with its anchor
-        viewSplitPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
-        viewSplitPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
-        
-        // right pane, top anchor: resize with its anchor
-        mapAnchorPane.setMinHeight(0);
-        mapAnchorPane.setMinWidth(0);
-        mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
-
-        mapAnchorPane.getChildren().clear();
-        final Region mapView = TrackMap.getInstance();
-        mapView.prefHeightProperty().bind(mapAnchorPane.heightProperty());
-        mapView.prefWidthProperty().bind(mapAnchorPane.widthProperty());
-        mapView.setVisible(false);
-        final Region metaPane = EditGPXMetadata.getInstance().getPane();
-        metaPane.prefHeightProperty().bind(mapAnchorPane.heightProperty());
-        metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
-        metaPane.setVisible(false);
-        mapAnchorPane.getChildren().addAll(mapView, metaPane);
-        
-        // right pane, bottom anchor: resize with its anchor
-        profileAnchorPane.setMinHeight(0);
-        profileAnchorPane.setMinWidth(0);
-        profileAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
-
-        profileAnchorPane.getChildren().clear();
-        final XYChart chart = HeightChart.getInstance();
-        chart.prefHeightProperty().bind(profileAnchorPane.heightProperty());
-        chart.prefWidthProperty().bind(profileAnchorPane.widthProperty());
-        profileAnchorPane.getChildren().add(chart);
     }
 
     private void initBottomPane() {
@@ -1657,5 +1671,49 @@ public class GPXEditor implements Initializable {
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+    }
+    
+    public void convertItem(final ActionEvent event, final GPXLineItem item) {
+        assert item != null;
+        
+        if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
+            // new track & segment
+            final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
+            final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
+            gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
+            
+            gpxTrack.setName(item.getName());
+            gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
+            
+            // move waypoints
+            gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
+            item.getGPXWaypoints().clear();
+            
+            // replace route with track
+            item.getGPXFile().getGPXTracks().add(gpxTrack);
+            item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
+        } else if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType()) || GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {
+            // new route
+            final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
+            
+            gpxRoute.setName(item.getName());
+            gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
+
+            // move waypoints
+            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
+            } else {
+                gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
+            }
+            item.getGPXWaypoints().clear();
+            
+            // replace track with route
+            item.getGPXFile().getGPXRoutes().add(gpxRoute);
+            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
+            } else {
+                item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
+            }
+        }
     }
 }

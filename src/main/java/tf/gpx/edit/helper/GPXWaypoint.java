@@ -28,11 +28,13 @@ package tf.gpx.edit.helper;
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.GPX;
+import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.modal.Route;
 import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -140,6 +142,33 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public void setName(final String name) {
         myWaypoint.setName(name);
+        setHasUnsavedChanges();
+    }
+
+    public String getDescription() {
+        return myWaypoint.getDescription();
+    }
+
+    public void setDescription(final String description) {
+        myWaypoint.setDescription(description);
+        setHasUnsavedChanges();
+    }
+
+    public String getComment() {
+        return myWaypoint.getComment();
+    }
+
+    public void setComment(final String comment) {
+        myWaypoint.setComment(comment);
+        setHasUnsavedChanges();
+    }
+
+    public HashSet<Link> getLinks() {
+        return myWaypoint.getLinks();
+    }
+
+    public void setLinks(final HashSet<Link> links) {
+        myWaypoint.setLinks(links);
         setHasUnsavedChanges();
     }
 
@@ -324,6 +353,29 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public Bounds getBounds() {
         return new Bounds(myWaypoint.getLatitude(), myWaypoint.getLatitude(), myWaypoint.getLongitude(), myWaypoint.getLongitude());
+    }
+    
+    @Override
+    public String getTooltip() {
+        String result = "";
+        
+        if ((getName() != null) && !getName().isEmpty()) {
+            result += getName();
+        }
+        if ((getDescription() != null) && !getDescription().isEmpty()) {
+            result += "\n";
+            result += getDescription();
+        }
+        if ((getComment() != null) && !getComment().isEmpty() && !getComment().equals(getDescription())) {
+            result += "\n";
+            result += getComment();
+        }
+        if ((getLinks() != null) && !getLinks().isEmpty()) {
+            result += "\n";
+            result += getLinks().iterator().next().getHref();
+        }
+        
+        return result;
     }
     
     public double getSpeed() {

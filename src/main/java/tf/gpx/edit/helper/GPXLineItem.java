@@ -447,6 +447,11 @@ public abstract class GPXLineItem {
         return DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
     }
     protected abstract Bounds getBounds();
+    
+    // TFE, 20180517: you know how your tooltip should look like
+    public String getTooltip() {
+        return getName();
+    }
 
     // visitor support
     public void acceptVisitor(final IGPXLineItemVisitor visitor) {
