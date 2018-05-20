@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import de.saring.leafletmap.ColorMarker;
 import de.saring.leafletmap.ControlPosition;
 import de.saring.leafletmap.LatLong;
@@ -47,8 +48,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -81,6 +84,7 @@ import tf.gpx.edit.helper.GPXTrackSegment;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.main.GPXEditor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -89,28 +93,64 @@ import tf.gpx.edit.main.GPXEditor;
 public class TrackMap extends LeafletMapView {
     private final static TrackMap INSTANCE = new TrackMap();
 
-    // definition of markers for leafletview - needs to match names given in js file
-    // https://image.online-convert.com/convert-to-svg
-    private enum TrackMarker implements Marker {
-        RectIcon("rectIcon"),
-        TrackPointIcon("trackpointIcon"),
-        PlaceMarkIcon("placemarkIcon"),
-        PlaceMarkSelectedIcon("placemarkSelectedIcon"),
-        HotelIcon("hotelIcon"),
-        RestaurantIcon("restaurantIcon");
+    // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
+    private enum SearchItem {
+        Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.TrackMarker.HotelSearchIcon),
+        Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.TrackMarker.RestaurantSearchIcon),
+        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.RestaurantSearchIcon),
+        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.RestaurantSearchIcon);
         
-        private final String iconName;
-
-        TrackMarker(final String name) {
-            iconName = name;
+        private final String searchString;
+        private final Marker resultMarker;
+        
+        SearchItem(final String search, final Marker marker) {
+            searchString = search;
+            resultMarker = marker;
         }
 
-        @Override
-        public String getIconName() {
-            return iconName;
+        public String getSearchString() {
+            return searchString;
+        }   
+
+        public Marker getResultMarker() {
+            return resultMarker;
         }   
     }
     
+    // options attached to a marker rom a search
+    private enum MapMarkerOptions {
+        Searchname,
+        Name,
+        Cousine,
+        Phone,
+        Email,
+        Website;
+    }
+    // marker currently under mouse - if any
+    private class MapMarker {
+        private final SearchItem searchItem;
+        private final int markerCount;
+        private LatLong latlong;
+        private Map<String, String> markerOptions;
+        
+        public MapMarker(final HashMap<String, String> options, final LatLong position) {
+            assert options.get("SearchItem") != null;
+            
+            // searchitem is returned as just another option of the marker - we want this as separate attribute
+            searchItem = SearchItem.valueOf(options.get("SearchItem"));
+            options.remove("SearchItem");
+            
+            // markerCount is returned as just another option of the marker - we want this as separate attribute
+            markerCount = Integer.parseInt(options.get("MarkerCount"));
+            options.remove("MarkerCount");
+            
+            markerOptions = options;
+            
+            latlong = position;
+        }
+    }
+    private MapMarker mapMarker;
+
     private final static String NOT_SHOWN = "Not shown";
     
     // webview holds the leaflet map
@@ -163,7 +203,6 @@ public class TrackMap extends LeafletMapView {
 
             initialize();
         });
-        
     }
     
     public static TrackMap getInstance() {
@@ -180,6 +219,15 @@ public class TrackMap extends LeafletMapView {
 
     private void initialize() {
         if (!isInitialized) {
+            for (Node node : getChildren()) {
+                // get webview from my children
+                if (node instanceof WebView) {
+                    myWebView = (WebView) node;
+                    break;
+                }
+            }
+            assert myWebView != null;
+
             //enableFirebug();
             
             window = (JSObject) execScript("window"); 
@@ -190,7 +238,7 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/Leaflet/Leaflet.Editable
             addScriptFromPath("/js/Leaflet.Editable.min.js");
             addScriptFromPath("/js/EditRoutes.js");
-
+            
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
             addScriptFromPath("/js/TrackMarker.js");
@@ -212,14 +260,6 @@ public class TrackMap extends LeafletMapView {
             parentPane.getChildren().add(myPane);
             myPane.toFront();
 
-            for (Node node : getChildren()) {
-                // get webview from my children
-                if (node instanceof WebView) {
-                    myWebView = (WebView) node;
-                    break;
-                }
-            }
-            assert myWebView != null;
             // support drawing rectangle with mouse + cntrl
             // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
             myWebView.setOnMousePressed((MouseEvent event) -> {
@@ -294,6 +334,12 @@ public class TrackMap extends LeafletMapView {
         try { 
             final InputStream css = TrackMap.class.getResourceAsStream(stylepath);
             final String style = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(css, Charset.defaultCharset()));
+            
+            // TODO: not yet working
+            // replace url paths with correct values
+            // since the html page we use is in another packe all path values used in url('') statements in css point to wrong locations
+            // this needs to be fixed manually since javafx doesn't resolve it properly
+            final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
             addStyle(style);
         } catch (IOException ex) {
@@ -387,20 +433,63 @@ public class TrackMap extends LeafletMapView {
         
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
-            assert (addWaypoint.getUserData() != null) && (addWaypoint.getUserData() instanceof LatLong);
-            final LatLong latlong = (LatLong) addWaypoint.getUserData();
+            assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+            LatLong latlong = (LatLong) contextMenu.getUserData();
             
             // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
             final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
+
+            // check if a marker exists on leaflet - if yes, use its values
+            MapMarker addMarker = null;
+            if (addWaypoint.getUserData() != null) {
+                addMarker = (MapMarker) addWaypoint.getUserData();
+                latlong = addMarker.latlong;
+            }
             
             final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
             newGPXWaypoint.setNumber(curGPXWaypoints.size());
             
-            // TODO: set name / description / comment from search result marker (if any)
+            if (addMarker != null) {
+                // set name / description / comment from search result marker options (if any)
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Name.name())) {
+                    newGPXWaypoint.setName(addMarker.markerOptions.get(MapMarkerOptions.Name.name()));
+                }
+                
+                String description = "";
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Cousine.name())) {
+                    description = description + "Cousine: " + addMarker.markerOptions.get(MapMarkerOptions.Cousine.name());
+                }
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Phone.name())) {
+                    if (!description.isEmpty()) {
+                        description += "; ";
+                    }
+                    description = description + "Phone: " + addMarker.markerOptions.get(MapMarkerOptions.Phone.name());
+                }
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Email.name())) {
+                    if (!description.isEmpty()) {
+                        description += "; ";
+                    }
+                    description = description + "Email: " + addMarker.markerOptions.get(MapMarkerOptions.Email.name());
+                }
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Website.name())) {
+                    if (!description.isEmpty()) {
+                        description += "; ";
+                    }
+                    description = description + "Website: " + addMarker.markerOptions.get(MapMarkerOptions.Website.name());
+                }
+                if (!description.isEmpty()) {
+                    newGPXWaypoint.setDescription(description);
+                }
+                
+                newGPXWaypoint.setSym(addMarker.searchItem.name());
+                
+                // remove marker from leaflet search results to avoid double markers
+                execScript("removeSearchResult(\"" + addMarker.markerCount + "\");");
+            }
                     
             curGPXWaypoints.add(newGPXWaypoint);
             
-            final String waypoint = addMarkerAndCallback(latlong, "", TrackMarker.PlaceMarkIcon, 0, true);
+            final String waypoint = addMarkerAndCallback(latlong, "", MarkerManager.TrackMarker.PlaceMarkIcon, 0, true);
             fileWaypoints.put(waypoint, newGPXWaypoint);
             
             // refresh fileWaypointsCount list without refreshing map...
@@ -432,23 +521,18 @@ public class TrackMap extends LeafletMapView {
         final MenuItem separator = new SeparatorMenuItem();
         
         final Menu searchPoints = new Menu("Search...");
-        
-        final MenuItem searchRestaurants = new MenuItem("Restaurants");
-        searchRestaurants.setOnAction((event) -> {
-            assert (searchPoints.getUserData() != null) && (searchPoints.getUserData() instanceof LatLong);
-            final LatLong latlong = (LatLong) searchPoints.getUserData();
-            
-            searchItems("[\"amenity\"=\"restaurant\"]", latlong, TrackMarker.RestaurantIcon);
-        });
-        
-        final MenuItem searchHotels = new MenuItem("Hotels");
-        searchHotels.setOnAction((event) -> {
-            assert (searchPoints.getUserData() != null) && (searchPoints.getUserData() instanceof LatLong);
-            final LatLong latlong = (LatLong) searchPoints.getUserData();
-                       
-            searchItems("[\"tourism\"=\"hotel\"]", latlong, TrackMarker.HotelIcon);
-        });
-        searchPoints.getItems().addAll(searchRestaurants, searchHotels);
+        // iterate over all search items and add submenu to search
+        for (SearchItem item : SearchItem.values()) {
+            final MenuItem search = new MenuItem(item.name());
+            search.setOnAction((event) -> {
+                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+                final LatLong latlong = (LatLong) contextMenu.getUserData();
+
+                searchItems(item, latlong);
+            });
+
+            searchPoints.getItems().add(search);
+        }
 
         contextMenu.getItems().addAll(showCord, addWaypoint, addRoute, separator, searchPoints);
 
@@ -456,23 +540,37 @@ public class TrackMap extends LeafletMapView {
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             if (newValue != null) {
                 final LatLong latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
+                contextMenu.setUserData(latLong);
+
                 showCord.setText(LatLongHelper.LatLongToString(latLong));
-                addWaypoint.setUserData(latLong);
+
+                if (mapMarker != null) {
+                    addWaypoint.setText("Add Waypoint from " + mapMarker.searchItem.name());
+                } else {
+                    addWaypoint.setText("Add Waypoint");
+                }
+                addWaypoint.setUserData(mapMarker);
                 addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
+
                 addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
-                searchPoints.setUserData(latLong);
-                // TODO: check for search results near position and update addWaypoint title
             }
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             if (newValue != null) {
                 final LatLong latLong = pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue());
+                contextMenu.setUserData(latLong);
+
                 showCord.setText(LatLongHelper.LatLongToString(latLong));
-                addWaypoint.setUserData(latLong);
+
+                if (mapMarker != null) {
+                    addWaypoint.setText("Add Waypoint from " + mapMarker.searchItem.name());
+                } else {
+                    addWaypoint.setText("Add Waypoint");
+                }
+                addWaypoint.setUserData(mapMarker);
                 addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
+
                 addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
-                searchPoints.setUserData(latLong);
-                // TODO: check for search results near position and update addWaypoint title
             }
         });
 
@@ -484,9 +582,9 @@ public class TrackMap extends LeafletMapView {
             }
         });
     }
-    private void searchItems(final String searchString, final LatLong latlong, final TrackMarker marker) {
+    private void searchItems(final SearchItem searchItem, final LatLong latlong) {
         try {
-            final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")" + searchString + ";out;", "UTF-8");
+            final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")" + searchItem.getSearchString() + ";out;", "UTF-8");
 
             final URL url = new URL("https://overpass-api.de/api/interpreter");
             final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -510,7 +608,7 @@ public class TrackMap extends LeafletMapView {
 
                     //System.out.println(response.toString());
 
-                    execScript("showSearchResults(\"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + marker.getIconName() + "\");");
+                    execScript("showSearchResults(\"" + searchItem.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + searchItem.getResultMarker().getIconName() + "\");");
             }
 
         } catch (MalformedURLException ex) {
@@ -529,7 +627,19 @@ public class TrackMap extends LeafletMapView {
         
         return new LatLong(pointlat, pointlng);
     }
+
+    public void setMapMarker(final String options, final Double lat, final Double lng) {
+        try {
+            mapMarker = new MapMarker(new ObjectMapper().readValue(options, new TypeReference<Map<String,String>>(){}), new LatLong(lat, lng));
+        } catch (IOException ex) {
+            mapMarker = null;
+        }
+    }
     
+    public void removeMapMarker() {
+        mapMarker = null;
+    }
+
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
@@ -620,7 +730,9 @@ public class TrackMap extends LeafletMapView {
 
                 if (gpxWaypoint.isGPXFileWaypoint()) {
                     // we show all file waypoints
-                    final String waypoint = addMarkerAndCallback(latLong, gpxWaypoint.getName(), TrackMarker.PlaceMarkIcon, 0, true);
+                    // TFE, 20180520 - with their correct marker!
+                    // and description - if any
+                    final String waypoint = addMarkerAndCallback(latLong, gpxWaypoint.getTooltip(), MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 0, true);
                     fileWaypoints.put(waypoint, gpxWaypoint);
                     
                     bounds[4] = 1d;
@@ -709,10 +821,11 @@ public class TrackMap extends LeafletMapView {
             if (gpxWaypoint.isGPXFileWaypoint()) {
                 // updated current marker instead of adding new one on top of the old
                 waypoint = fileWaypoints.getKey(gpxWaypoint);
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + TrackMarker.PlaceMarkSelectedIcon.getIconName() + "\");");
+                // TODO: use selected version of icon in all cases
+                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getSelectedIconName() + "\");");
             } else if (trackWaypoints.contains(gpxWaypoint) || routeWaypoints.contains(gpxWaypoint)) {
                 // only show selected waypoint if already shown
-                waypoint = addMarkerAndCallback(latLong, "", TrackMarker.TrackPointIcon, 0, false);
+                waypoint = addMarkerAndCallback(latLong, "", MarkerManager.TrackMarker.TrackPointIcon, 0, false);
             } else {
                 notShownCount++;
                 waypoint = NOT_SHOWN + notShownCount;
@@ -726,7 +839,7 @@ public class TrackMap extends LeafletMapView {
         for (String waypoint : selectedWaypoints.keySet()) {
             final GPXWaypoint gpxWaypoint = selectedWaypoints.get(waypoint);
             if (gpxWaypoint.isGPXFileWaypoint()) {
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + TrackMarker.PlaceMarkIcon.getIconName() + "\");");
+                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getIconName() + "\");");
             } else {
                 // TFE, 20180409: only remove waypoints that have actually been added
                 if (!waypoint.startsWith(NOT_SHOWN)) {
@@ -898,6 +1011,16 @@ public class TrackMap extends LeafletMapView {
         
         public void log(final String output) {
             System.out.println(output);
+        }
+        
+        public void registerMarker(final String marker, final Double lat, final Double lon) {
+            myTrackMap.setMapMarker(marker, lat, lon);
+            //System.out.println("Marker registered: " + marker + ", " + lat + ", " + lon);
+        }
+
+        public void deregisterMarker(final String marker, final Double lat, final Double lon) {
+            myTrackMap.removeMapMarker();
+            //System.out.println("Marker deregistered: " + marker + ", " + lat + ", " + lon);
         }
     }
 }

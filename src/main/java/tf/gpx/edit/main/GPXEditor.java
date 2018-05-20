@@ -152,6 +152,8 @@ public class GPXEditor implements Initializable {
     private ChangeListener<TreeItem<GPXLineItem>> listenergpxFileListXMLSelection;
     
     @FXML
+    private MenuItem newFileMenu;
+    @FXML
     private MenuItem showSRTMDataMenu;
     @FXML
     private MenuItem assignSRTMheightsMenu;
@@ -341,6 +343,9 @@ public class GPXEditor implements Initializable {
         //
         // File
         //
+        newFileMenu.setOnAction((ActionEvent event) -> {
+            newFileAction(event);
+        });
         addFileMenu.setOnAction((ActionEvent event) -> {
             addFileAction(event);
         });
@@ -994,6 +999,13 @@ public class GPXEditor implements Initializable {
         statusBar.setVisible(false);
     }
 
+    private void newFileAction(final ActionEvent event) {
+        final GPXFile newFile = new GPXFile();
+        newFile.setName("NewGPX.gpx");
+        newFile.setPath(System.getProperty("user.home"));
+        gpxFileList.addGPXFile(newFile);
+        
+    }
     private void addFileAction(final ActionEvent event) {
         parseAndAddFiles(myWorker.addFiles());
         

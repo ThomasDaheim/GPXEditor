@@ -163,6 +163,24 @@ public class GPXWaypoint extends GPXLineItem {
         setHasUnsavedChanges();
     }
 
+    public String getSrc() {
+        return myWaypoint.getSrc();
+    }
+
+    public void setSrc(final String src) {
+        myWaypoint.setSrc(src);
+        setHasUnsavedChanges();
+    }
+
+    public String getSym() {
+        return myWaypoint.getSym();
+    }
+
+    public void setSym(final String sym) {
+        myWaypoint.setSym(sym);
+        setHasUnsavedChanges();
+    }
+
     public HashSet<Link> getLinks() {
         return myWaypoint.getLinks();
     }

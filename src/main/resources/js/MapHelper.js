@@ -99,15 +99,48 @@ function getLatLngForRect(startx, starty, endx, endy) {
  * inspired by https://jsfiddle.net/chk1/b5wgds4n/
  */
 // use separate layer for search results for easy removal
-var searchResults = L.layerGroup().addTo(myMap);
-function showSearchResults(result, iconName) {
+// register / deregister marker under mouse
+function registerMarker(e) {
+    var marker = e.target;
+    var markerPos = marker.getLatLng();
+    callback.registerMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
+} 
+function deregisterMarker(e) {
+    var marker = e.target;
+    var markerPos = marker.getLatLng();
+    callback.deregisterMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
+} 
+
+// keep track of the markers for later communication with java
+var searchResultsLayer = L.layerGroup().addTo(myMap);
+var searchResults;
+var searchCount;
+
+function clearSearchResults() {
+    searchResultsLayer.clearLayers();
+    searchResults = [];
+    searchCount = 0;
+}
+clearSearchResults();
+
+function removeSearchResult(markerCount) {
+    if (markerCount in searchResults) {
+        searchResultsLayer.removeLayer(searchResults[markerCount]);
+    }
+}
+
+function showSearchResults(searchItem, result, iconName) {
     var data = JSON.parse(result);
     var icon = window[iconName];
     
     if(data.hasOwnProperty("elements")) {
         if(data.elements.length > 0) {
             for(var i in data.elements) {
-                var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: icon}).addTo(searchResults);
+                var point = new L.marker([data.elements[i].lat, data.elements[i].lon], {icon: icon}).addTo(searchResultsLayer);
+                point.properties = {};
+                point.properties.SearchItem = searchItem;
+                point.on('mouseover', registerMarker);
+                point.on('mouseout', deregisterMarker);
                 
                 var title = getTitleFromTags(point, data.elements[i]);
         
@@ -118,6 +151,11 @@ function showSearchResults(result, iconName) {
                         point.options.title = title;
                     }
                 }
+                
+                // add result to the big list...
+                point.properties.MarkerCount = searchCount;
+                searchResults.push(point);
+                searchCount++;
             }
         }
     }
@@ -135,23 +173,37 @@ function getTitleFromTags(point, data) {
     if(data.hasOwnProperty("tags")) {
         if(data.tags.hasOwnProperty("name")) {
             title = data.tags.name;
+            point.properties.Name = data.tags.name;
         }
         if(data.tags.hasOwnProperty("cuisine")) {
-            title = title +  "\n"  + data.tags.cuisine;
+            if (title.length > 0) {
+                title = title + "\n";
+            }
+            title = title + data.tags.cuisine;
+            point.properties.Cuisine = data.tags.cuisine;
         }
         if(data.tags.hasOwnProperty("phone")) {
-            title = title +  "\n"  + data.tags.phone;
+            if (title.length > 0) {
+                title = title + "\n";
+            }
+            title = title + data.tags.phone;
+            point.properties.Phone = data.tags.phone;
         }
         if(data.tags.hasOwnProperty("email")) {
-            title = title +  "\n"  + data.tags.email;
+            if (title.length > 0) {
+                title = title + "\n";
+            }
+            title = title + data.tags.email;
+            point.properties.Email = data.tags.email;
         }
         if(data.tags.hasOwnProperty("website")) {
-            title = title +  "\n"  + data.tags.website;
+            if (title.length > 0) {
+                title = title + "\n";
+            }
+            title = title + data.tags.website;
+            point.properties.Website = data.tags.website;
         }
     }
     
     return title;
-}
-function clearSearchResults() {
-    searchResults.clearLayers();
 }
