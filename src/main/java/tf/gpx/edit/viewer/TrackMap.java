@@ -250,6 +250,12 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/cloudybay/leaflet.latlng-graticule
             addScriptFromPath("/js/leaflet.latlng-graticule.min.js");
             addScriptFromPath("/js/ShowLatLan.js");
+            
+            // https://github.com/smeijer/leaflet-geosearch
+            // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
+            addStyleFromPath("/css/leaflet-search.src.css");
+            addScriptFromPath("/js/leaflet-search.min.js");
+            addScriptFromPath("/js/GeoSearch.js");
 
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
