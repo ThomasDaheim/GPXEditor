@@ -48,10 +48,11 @@ public class MarkerManager {
         TrackPointIcon("trackpointIcon", "trackpointIcon"),
         PlaceMarkIcon("placemarkIcon", "placemarkSelectedIcon"),
         PlaceMarkSelectedIcon("placemarkSelectedIcon", "placemarkSelectedIcon"),
-        HotelIcon("hotelSearchIcon", "hotelSearchSelectedIcon"),
-        HotelSearchIcon("hotelSearchIcon", "hotelSearchSelectedIcon"),
-        RestaurantIcon("restaurantSearchIcon", "restaurantSearchSelectedIcon"),
-        RestaurantSearchIcon("restaurantSearchIcon", "restaurantSearchSelectedIcon");
+        HotelIcon("hotelIcon", "hotelSelectedIcon"),
+        HotelSearchIcon("hotelSearchIcon", "hotelSearchIcon"),
+        RestaurantIcon("restaurantIcon", "restaurantSelectedIcon"),
+        RestaurantSearchIcon("restaurantSearchIcon", "restaurantSearchIcon"),
+        SearchResultIcon("searchResultIcon", "searchResultIcon");
         
         private final String iconName;
         // icon to be used if selected

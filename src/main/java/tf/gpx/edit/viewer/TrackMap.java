@@ -95,17 +95,20 @@ public class TrackMap extends LeafletMapView {
 
     // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
     private enum SearchItem {
-        Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.TrackMarker.HotelSearchIcon),
-        Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.TrackMarker.RestaurantSearchIcon),
-        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.RestaurantSearchIcon),
-        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.RestaurantSearchIcon);
+        Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.TrackMarker.HotelSearchIcon, true),
+        Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
+        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
+        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
+        SearchResult("", MarkerManager.TrackMarker.SearchResultIcon, false);
         
         private final String searchString;
         private final Marker resultMarker;
+        private final boolean showInContextMenu;
         
-        SearchItem(final String search, final Marker marker) {
+        SearchItem(final String search, final Marker marker, final boolean showItem) {
             searchString = search;
             resultMarker = marker;
+            showInContextMenu = showItem;
         }
 
         public String getSearchString() {
@@ -115,6 +118,10 @@ public class TrackMap extends LeafletMapView {
         public Marker getResultMarker() {
             return resultMarker;
         }   
+        
+        public boolean showInContextMenu() {
+            return showInContextMenu;
+        }
     }
     
     // options attached to a marker rom a search
@@ -124,7 +131,8 @@ public class TrackMap extends LeafletMapView {
         Cousine,
         Phone,
         Email,
-        Website;
+        Website,
+        Description;
     }
     // marker currently under mouse - if any
     private class MapMarker {
@@ -254,7 +262,7 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/smeijer/leaflet-geosearch
             // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
             addStyleFromPath("/css/leaflet-search.src.css");
-            addScriptFromPath("/js/leaflet-search.min.js");
+            addScriptFromPath("/js/leaflet-search.src.js");
             addScriptFromPath("/js/GeoSearch.js");
 
             // add pane on top of me with same width & height
@@ -462,26 +470,31 @@ public class TrackMap extends LeafletMapView {
                 }
                 
                 String description = "";
-                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Cousine.name())) {
-                    description = description + "Cousine: " + addMarker.markerOptions.get(MapMarkerOptions.Cousine.name());
-                }
-                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Phone.name())) {
-                    if (!description.isEmpty()) {
-                        description += "; ";
+                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Description.name())) {
+                    description = description + addMarker.markerOptions.get(MapMarkerOptions.Description.name());
+                } else {
+                    // lets see if we have other values from the marker in leaflet...
+                    if (addMarker.markerOptions.containsKey(MapMarkerOptions.Cousine.name())) {
+                        description = description + "Cousine: " + addMarker.markerOptions.get(MapMarkerOptions.Cousine.name());
                     }
-                    description = description + "Phone: " + addMarker.markerOptions.get(MapMarkerOptions.Phone.name());
-                }
-                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Email.name())) {
-                    if (!description.isEmpty()) {
-                        description += "; ";
+                    if (addMarker.markerOptions.containsKey(MapMarkerOptions.Phone.name())) {
+                        if (!description.isEmpty()) {
+                            description += "; ";
+                        }
+                        description = description + "Phone: " + addMarker.markerOptions.get(MapMarkerOptions.Phone.name());
                     }
-                    description = description + "Email: " + addMarker.markerOptions.get(MapMarkerOptions.Email.name());
-                }
-                if (addMarker.markerOptions.containsKey(MapMarkerOptions.Website.name())) {
-                    if (!description.isEmpty()) {
-                        description += "; ";
+                    if (addMarker.markerOptions.containsKey(MapMarkerOptions.Email.name())) {
+                        if (!description.isEmpty()) {
+                            description += "; ";
+                        }
+                        description = description + "Email: " + addMarker.markerOptions.get(MapMarkerOptions.Email.name());
                     }
-                    description = description + "Website: " + addMarker.markerOptions.get(MapMarkerOptions.Website.name());
+                    if (addMarker.markerOptions.containsKey(MapMarkerOptions.Website.name())) {
+                        if (!description.isEmpty()) {
+                            description += "; ";
+                        }
+                        description = description + "Website: " + addMarker.markerOptions.get(MapMarkerOptions.Website.name());
+                    }
                 }
                 if (!description.isEmpty()) {
                     newGPXWaypoint.setDescription(description);
@@ -529,15 +542,17 @@ public class TrackMap extends LeafletMapView {
         final Menu searchPoints = new Menu("Search...");
         // iterate over all search items and add submenu to search
         for (SearchItem item : SearchItem.values()) {
-            final MenuItem search = new MenuItem(item.name());
-            search.setOnAction((event) -> {
-                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
-                final LatLong latlong = (LatLong) contextMenu.getUserData();
+            if (item.showInContextMenu) {
+                final MenuItem search = new MenuItem(item.name());
+                search.setOnAction((event) -> {
+                    assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+                    final LatLong latlong = (LatLong) contextMenu.getUserData();
 
-                searchItems(item, latlong);
-            });
+                    searchItems(item, latlong);
+                });
 
-            searchPoints.getItems().add(search);
+                searchPoints.getItems().add(search);
+            }
         }
 
         contextMenu.getItems().addAll(showCord, addWaypoint, addRoute, separator, searchPoints);

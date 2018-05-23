@@ -130,6 +130,7 @@ function removeSearchResult(markerCount) {
 }
 
 function showSearchResults(searchItem, result, iconName) {
+    //callback.log("result: " + result);
     var data = JSON.parse(result);
     var icon = window[iconName];
     
@@ -202,6 +203,13 @@ function getTitleFromTags(point, data) {
             }
             title = title + data.tags.website;
             point.properties.Website = data.tags.website;
+        }
+        if(data.tags.hasOwnProperty("description")) {
+            if (title.length > 0) {
+                title = title + "\n";
+            }
+            title = title + data.tags.description;
+            point.properties.Description = data.tags.description;
         }
     }
     
