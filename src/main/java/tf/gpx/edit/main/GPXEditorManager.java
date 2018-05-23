@@ -26,9 +26,7 @@
 package tf.gpx.edit.main;
 
 import com.sun.javafx.PlatformUtil;
-import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +61,7 @@ public class GPXEditorManager extends Application {
             handler.setLevel(Level.WARNING);
         }
         
-        // set cache for mapo tile to avoid error message java.io.IOException: Storage Service is not available
+        // set cache for map tile to avoid error message java.io.IOException: Storage Service is not available
         // https://github.com/gluonhq/maps/issues/8#issuecomment-310389905
         if(PlatformUtil.isWindows() || PlatformUtil.isMac() || PlatformUtil.isUnix()) {
             System.setProperty("javafx.platform" , "Desktop");

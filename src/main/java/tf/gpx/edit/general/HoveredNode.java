@@ -26,7 +26,6 @@
 package tf.gpx.edit.general;
 
 import javafx.geometry.Pos;
-import javafx.scene.DepthTest;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;

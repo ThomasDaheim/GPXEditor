@@ -11,11 +11,19 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.2)
+## Features (v2.3)
 
 Following features are available via UI:
 
 ## File and track handling
+
+### Update v2.3
+
+* create new GPX from menu
+* convert tracks to routes and vice versa
+* added search via input field (freetext search via OSM nominatim)
+* added search via context menu (fixed types via OSM overpass)
+* create waypoints from search results
 
 ### Update v2.2
 
@@ -173,7 +181,7 @@ The tree will be in `build/install`.
 
 ## Dependencies
 
-Of course, such a project depends on the results of many others! I've tried to add comments with links to stackoverflow, ... wherever I have re-used the ideas and code of others. In case I have forgotten someone: that was only by accident/incompetency but never intentionally. I'm grateful for anyone that provides his/her results for public use.
+Of course, such a project depends on the results of many others! I've tried to add comments with links to stackoverflow, ... wherever I have re-used the ideas and code of others. In case I have forgotten someone: that was only by accident/incompetency but never intentionally. I'm grateful for anyone that provides his/her results for public use!
 
 Explicit dependencies:
 
@@ -187,6 +195,19 @@ Explicit dependencies:
 * 'org.controlsfx:controlsfx:8.40.14'
 * 'de.jensd:fontawesomefx:8.9'
 * 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
+* 'com.fasterxml.jackson.core:jackson-core:2.9.5'
+* 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+
+Other things used:
+
+* leaflet: https://leafletjs.com/
+* Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
+
+* search-plus icon: https://fontawesome.com/license
+* Sleeping Bed Silhouette icon: Icon made by https://www.flaticon.com/authors/scott-de-jonge from www.flaticon.com 
+* Restaurant icon: Icon made by https://www.flaticon.com/authors/freepik from www.flaticon.com 
 
 ## Roadmap
 

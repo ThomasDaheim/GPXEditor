@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="MapSource 6.16.3" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+
+  <metadata>
+    <link href="http://www.garmin.com">
+      <text>Garmin International</text>
+    </link>
+    <time>2018-05-20T10:40:18Z</time>
+    <bounds maxlat="53.103247806429863" maxlon="10.50926280207932" minlat="53.103247806429863" minlon="10.50926280207932"/>
+  </metadata>
+
+  <wpt lat="53.103247806429863" lon="10.50926280207932">
+    <time>2018-05-20T10:37:33Z</time>
+    <name>land</name>
+    <cmt>land</cmt>
+    <desc>land</desc>
+    <sym>Restaurant</sym>
+    <extensions>
+      <gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
+        <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>
+      </gpxx:WaypointExtension>
+    </extensions>
+  </wpt>
+
+  <wpt lat="53.103247806429863" lon="10.50926280207932">
+    <time>2018-05-20T10:37:51Z</time>
+    <name>land1</name>
+    <cmt>land</cmt>
+    <desc>land</desc>
+    <sym>Bar</sym>
+    <extensions>
+      <gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
+        <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>
+      </gpxx:WaypointExtension>
+    </extensions>
+  </wpt>
+
+  <wpt lat="53.103247806429863" lon="10.50926280207932">
+    <time>2018-05-20T10:37:58Z</time>
+    <name>land2</name>
+    <cmt>land</cmt>
+    <desc>land</desc>
+    <sym>Winery</sym>
+    <extensions>
+      <gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
+        <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>
+      </gpxx:WaypointExtension>
+    </extensions>
+  </wpt>
+
+  <wpt lat="53.103247806429863" lon="10.50926280207932">
+    <time>2018-05-20T10:38:07Z</time>
+    <name>land3</name>
+    <cmt>land</cmt>
+    <desc>land</desc>
+    <sym>Fast Food</sym>
+    <extensions>
+      <gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
+        <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>
+      </gpxx:WaypointExtension>
+    </extensions>
+  </wpt>
+
+  <wpt lat="53.103247806429863" lon="10.50926280207932">
+    <time>2018-05-20T10:38:22Z</time>
+    <name>land4</name>
+    <cmt>land</cmt>
+    <desc>land</desc>
+    <sym>Pizza</sym>
+    <extensions>
+      <gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3">
+        <gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>
+      </gpxx:WaypointExtension>
+    </extensions>
+  </wpt>
+
+</gpx>
