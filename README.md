@@ -20,6 +20,7 @@ Following features are available via UI:
 ### Update v2.3
 
 * create new GPX from menu
+* convert tracks to routes and vice versa
 * added search via input field (freetext search via OSM nominatim)
 * added search via context menu (fixed types via OSM overpass)
 * create waypoints from search results
