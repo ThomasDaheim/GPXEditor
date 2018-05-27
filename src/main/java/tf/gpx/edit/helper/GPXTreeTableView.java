@@ -37,6 +37,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
@@ -98,11 +99,51 @@ public class GPXTreeTableView {
                         getStyleClass().removeAll("hasUnsavedChanges");
                     } else {
                         final ContextMenu fileMenu = new ContextMenu();
+                        
+                        // TFE, 20180525: support "New" based on current GPXLineItemType
+                        switch (item.getType()) {
+                            case GPXFile:
+                                final Menu newItem = new Menu("New...");
+
+                                final MenuItem newTrack = new MenuItem("New Track");
+                                newTrack.setOnAction((ActionEvent event) -> {
+                                    final GPXTrack newStuff = new GPXTrack((GPXFile) item);
+                                    newStuff.setName("New Track");
+                                    ((GPXFile) item).getGPXTracks().add(newStuff);
+                                });
+                                newItem.getItems().add(newTrack);
+
+                                final MenuItem newRoute = new MenuItem("New Route");
+                                newRoute.setOnAction((ActionEvent event) -> {
+                                    final GPXRoute newStuff = new GPXRoute((GPXFile) item);
+                                    newStuff.setName("New Route");
+                                    ((GPXFile) item).getGPXRoutes().add(newStuff);
+                                });
+                                newItem.getItems().add(newRoute);
+
+                                fileMenu.getItems().add(newItem);
+                                fileMenu.getItems().add(new SeparatorMenuItem());
+                                
+                                break;
+                            case GPXTrack:
+                                final MenuItem newTrackSegment = new MenuItem("New Tracksegment");
+                                newTrackSegment.setOnAction((ActionEvent event) -> {
+                                    final GPXTrackSegment newStuff = new GPXTrackSegment((GPXTrack) item);
+                                    newStuff.setName("New Track");
+                                    ((GPXTrack) item).getGPXTrackSegments().add(newStuff);
+                                });
+                                fileMenu.getItems().add(newTrackSegment);
+                                fileMenu.getItems().add(new SeparatorMenuItem());
+
+                                break;
+                            default:
+                                break;
+                        }
 
                         switch (item.getType()) {
                             case GPXFile:
                                 getStyleClass().add("gpxFileRow");
-
+                                
                                 final MenuItem renameFile = new MenuItem("Rename");
                                 renameFile.setOnAction((ActionEvent event) -> {
                                     // start editing file name col cell
@@ -343,32 +384,26 @@ public class GPXTreeTableView {
                     final GPXLineItem.GPXLineItemType draggedType = draggedLineItem.getType();
                     final GPXLineItem.GPXLineItemType targetType = targetLineItem.getType();
 
-                    // remove dragged item from treeitem and gpdlineitem
+                    // remove dragged item from treeitem and gpxlineitem
                     draggedItem.getParent().getChildren().remove(draggedItem);
-                    final List<GPXLineItem> draggedList = draggedLineItem.getParent().getChildren();
-                    draggedList.remove(draggedLineItem);
-                    draggedLineItem.getParent().setChildren(draggedList);
+                    draggedLineItem.getParent().getChildren().remove(draggedLineItem);
 
-                    List<GPXLineItem> targetList;
                     if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, draggedType)) {
                         // index of dropped item under its parent - thats where we want to place the dragged item before
                         final int childIndex = targetItem.getParent().getChildren().indexOf(targetItem);
                         targetItem.getParent().getChildren().add(childIndex, draggedItem);
 
-                        // update GPXLineItem as well
-                        targetList = targetLineItem.getParent().getChildren();
-                        targetList.add(childIndex, draggedLineItem);
-                        targetLineItem.getParent().setChildren(targetList);
+                        // update GPXLineItem as well - no longer necessary due to cleever observables and RecursiveTreeItem
+//                        targetLineItem.getParent().getChildren().add(childIndex, draggedLineItem);
                     } else {
                         // update GPXLineItem first to find the correct index to insert the treeitem
-                        targetList = targetLineItem.getChildren();
-                        targetList.add(0, draggedLineItem);
-                        targetLineItem.setChildren(targetList);
+                        targetLineItem.getChildren().add(0, draggedLineItem);
 
                         // droppped on parent type - always add in front
                         // TFE, 20180215: with tracks and routes we need to be a bit more careful - "in front" might not be index 0...
-                        final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
-                        targetItem.getChildren().add(insertIndex, draggedItem);
+                        // TFE, 20180525: no longer necessary due to clever observables and RecursiveTreeItem
+//                        final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
+//                        targetItem.getChildren().add(insertIndex, draggedItem);
                     }
                 }
 
