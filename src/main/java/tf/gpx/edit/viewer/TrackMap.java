@@ -571,9 +571,6 @@ public class TrackMap extends LeafletMapView {
                     addWaypoint.setText("Add Waypoint");
                 }
                 addWaypoint.setUserData(mapMarker);
-                addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
-
-                addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
             }
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -589,9 +586,6 @@ public class TrackMap extends LeafletMapView {
                     addWaypoint.setText("Add Waypoint");
                 }
                 addWaypoint.setUserData(mapMarker);
-                addWaypoint.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
-
-                addRoute.setDisable(!GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()));
             }
         });
 
