@@ -20,10 +20,12 @@ Following features are available via UI:
 ### Update v2.3
 
 * create new GPX from menu
+* create new GPXTrack / GPXTrackSegment / GPXRoute from context menu
 * convert tracks to routes and vice versa
 * added search via input field (freetext search via OSM nominatim)
 * added search via context menu (fixed types via OSM overpass)
 * create waypoints from search results
+* support copy & paste for waypoints (via Control+C/V/X, Delete, Shift+Delete, Insert Keys)
 
 ### Update v2.2
 
@@ -213,6 +215,7 @@ Other things used:
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
+* Edit Waypoint properties in popup dialogue
 * add TestFX UI test cases
 * add task handling for long running activities
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu
