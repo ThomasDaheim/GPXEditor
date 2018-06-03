@@ -26,12 +26,22 @@
 package tf.gpx.edit.helper;
 
 import de.saring.leafletmap.LatLong;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author thomas
  */
 public class LatLongHelper {
+    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.][0-9]{0,2})\")|([NS][ ]?90°0{0,2}'0{0,2}[.]0{0,2}\")";
+    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.][0-9]{0,2})\")|([EW][ ]?180°0{0,2}'0{0,2}[.]0{0,2}\")";
+    
+    public final static String INVALID_LATITUDE = "INVALID LATITUDE";
+    public final static String INVALID_LONGITUDE = "INVALID LONGITUDE";
+    
+    private final static Pattern latPattern = Pattern.compile(LAT_REGEXP);
+    private final static Pattern lonPattern = Pattern.compile(LON_REGEXP);
+
     private static enum Directions {
         N,
         S,
@@ -51,7 +61,10 @@ public class LatLongHelper {
         return latToString(waypoint.getLatitude()) + " " + lonToString(waypoint.getLongitude());
     }
             
-    private static String latToString(final double lat) {
+    public static String latToString(final double lat) {
+        if (Math.abs(lat) > 90) {
+            return INVALID_LATITUDE;
+        }
         if (lat >= 0) {
             return doubleToString(lat, Directions.N.toString());
         } else {
@@ -59,7 +72,10 @@ public class LatLongHelper {
         }
     }
     
-    private static String lonToString(final double lon) {
+    public static String lonToString(final double lon) {
+        if (Math.abs(lon) > 180) {
+            return INVALID_LONGITUDE;
+        }
         if (lon >= 0) {
             return doubleToString(lon, Directions.E.toString());
         } else {
@@ -70,7 +86,85 @@ public class LatLongHelper {
     private static String doubleToString(final double latlon, final String direction) {
         final int degrees = (int) Math.floor(latlon);
         final double minutes = (latlon - degrees) * 60.0;
-        final double seconds = (minutes - (int) Math.floor(minutes)) * 60.0;
-        return String.format("%s %2d°%2d'%4.2f\"", direction, degrees, (int) Math.floor(minutes), seconds);
+        double seconds = (minutes - (int) Math.floor(minutes)) * 60.0;
+        // TFE, 20180601: no 60 seconds, please
+        if (seconds > 59.99) {
+            seconds = 59.99;
+        }
+        
+        String result = String.format("%2d°%2d'%4.2f\"", degrees, (int) Math.floor(minutes), seconds);
+        // TFE, 20180601: remove spaces between numbers...
+        result = result.replaceAll(" ", "");
+        return direction + " " + result;
+    }
+    
+    public static double latFromString(final String lat) {
+        double result = 0;
+        
+        try {
+            // 1) check against pattern
+            if (!latPattern.matcher(lat).matches()) {
+                return result;
+            }
+
+            // 2) determine sign from N/S
+            final String dir = lat.substring(0, 1);
+            final int sign = "N".equals(dir) ? 1 : -1;
+
+            // 3) determine double from rest of string
+            result = doubleFromString(lat.substring(1).trim());
+
+            // 4) add sign
+            result *= sign;
+        } catch (Exception ex){
+            // what should be a good default? lets stick with 0...
+        }
+        
+        return result;
+    }
+    
+    public static double lonFromString(final String lon) {
+        double result = 0;
+        
+        try {
+            // 1) check against pattern
+            if (!lonPattern.matcher(lon).matches()) {
+                return result;
+            }
+
+            // 2) determine sign from N/S
+            final String dir = lon.substring(0, 1);
+            final int sign = "E".equals(dir) ? 1 : -1;
+
+            // 3) determine double from rest of string
+            result = doubleFromString(lon.substring(1).trim());
+
+            // 4) add sign
+            result *= sign;
+        } catch (Exception ex){
+            // what should be a good default? lets stick with 0...
+        }
+        
+        return result;
+    }
+    
+    private static double doubleFromString(final String latlon) {
+        double result = 0;
+        String temp = latlon;
+        
+        // latlon looks like %2d°%2d'%4.2f\"
+        
+        // 1) split @ ° and convert to int
+        result = Integer.parseInt(temp.split("°")[0]);
+        temp = temp.split("°")[1];
+        
+        // 2) split rest @ ' and convert to double / 60
+        result += Double.parseDouble(temp.split("'")[0]) / 60.0;
+        temp = temp.split("'")[1];
+        
+        // 3) split rest @ \" and convert to double / 3600
+        result += Double.parseDouble(temp.split("\"")[0]) / 3600.0;
+        
+        return result;
     }
 }

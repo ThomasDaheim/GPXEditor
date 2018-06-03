@@ -76,13 +76,10 @@ public class EditGPXMetadata {
     private final TextField metaCopyAuthTxt = new TextField();
     private final TextField metaCopyYearTxt = new TextField();
     private final TextField metaCopyLicenseTxt = new TextField();
-    private final TextField metaLinkHrefTxt = new TextField();
-    private final TextField metaLinkTextTxt = new TextField();
-    private final TextField metaLinkTypeTxt = new TextField();
     private final Label metaTimeLbl = new Label();
     private final TextField metaKeywordsTxt = new TextField();
     private final Label metaBoundsLbl = new Label();
-    private MetadataLinkTable linkTable;
+    private LinkTable metaLinkTable;
     
     private final Insets insetNone = new Insets(0, 0, 0, 0);
     private final Insets insetSmall = new Insets(0, 10, 0, 10);
@@ -257,9 +254,9 @@ public class EditGPXMetadata {
         GridPane.setMargin(linksLbl, insetTop);
 
         rowNum++;
-        linkTable = new MetadataLinkTable();
-        editMetadataPane.add(linkTable, 0, rowNum, 2, 1);
-        GridPane.setMargin(linkTable, insetSmall);
+        metaLinkTable = new LinkTable();
+        editMetadataPane.add(metaLinkTable, 0, rowNum, 2, 1);
+        GridPane.setMargin(metaLinkTable, insetSmall);
         
         rowNum++;
         // 15th row: bounds
@@ -366,8 +363,8 @@ public class EditGPXMetadata {
                 " maxLon=" + metadata.getBounds().getMaxLon();
         metaBoundsLbl.setText(bounds);
         
-        linkTable.getItems().clear();
-        linkTable.getItems().addAll(metadata.getLinks());
+        metaLinkTable.getItems().clear();
+        metaLinkTable.getItems().addAll(metadata.getLinks());
     }
     
     private void setMetadata() {
@@ -424,7 +421,7 @@ public class EditGPXMetadata {
         metadata.setKeywords(setEmptyToNull(metaKeywordsTxt.getText()));
         
         // set links from tableview
-        metadata.setLinks(linkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
+        metadata.setLinks(metaLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
         
         myGPXFile.setGPXMetadata(new GPXMetadata(myGPXFile, metadata));
     }

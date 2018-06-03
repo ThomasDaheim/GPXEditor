@@ -42,10 +42,10 @@ import javafx.scene.control.cell.TextFieldTableCell;
  *
  * @author thomas
  */
-public class MetadataLinkTable extends TableView<Link> {
+public class LinkTable extends TableView<Link> {
     public final String YOUR_HREF = "YOUR_HREF";
     
-    public MetadataLinkTable() {
+    public LinkTable() {
         initTableView();
     }
     

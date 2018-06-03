@@ -883,12 +883,12 @@ public class GPXEditor implements Initializable {
             waypointMenu.getItems().add(new SeparatorMenuItem());
 
             // TODO: fill with life
-//            final MenuItem editWaypoints = new MenuItem("Edit properties");
-//            editWaypoints.setOnAction((ActionEvent event) -> {
-//                editWaypoints(event);
-//            });
-//            editWaypoints.disableProperty().bind(row.emptyProperty());
-//            waypointMenu.getItems().add(editWaypoints);
+            final MenuItem editWaypoints = new MenuItem("Edit properties");
+            editWaypoints.setOnAction((ActionEvent event) -> {
+                editWaypoints(event);
+            });
+            editWaypoints.disableProperty().bind(row.emptyProperty());
+            waypointMenu.getItems().add(editWaypoints);
 
             row.setContextMenu(waypointMenu);
 
@@ -1681,7 +1681,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void editWaypoints(final ActionEvent event) {
-        EditGPXWaypoint.getInstance().editWaypoint(gpxTrackXML.getSelectionModel().getSelectedItem());
+        EditGPXWaypoint.getInstance().editWaypoint(gpxTrackXML.getSelectionModel().getSelectedItems());
     }
 
     private void assignSRTMHeight(final ActionEvent event) {
