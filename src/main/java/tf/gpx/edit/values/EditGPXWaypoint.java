@@ -165,7 +165,7 @@ public class EditGPXWaypoint {
 
         waypointSymTxt.setEditable(true);
         waypointSymTxt.setVisibleRowCount(10);
-        waypointSymTxt.getItems().addAll("", "Default", "Hotel", "Lodging", "Restaurant", "Restaurant", "Bar", "Winery", "Fast Food", "Pizza");
+        waypointSymTxt.getItems().addAll("", "Default", "Hotel", "Lodging", "Restaurant", "Bar", "Winery", "Fast Food", "Pizza");
         waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getGarminSymbols());
         editWaypointPane.add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, insetTop);
