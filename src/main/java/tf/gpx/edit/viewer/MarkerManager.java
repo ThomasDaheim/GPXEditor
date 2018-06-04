@@ -47,6 +47,7 @@ public class MarkerManager {
     
     // definition of markers for leafletview - needs to match names given in js file
     // https://image.online-convert.com/convert-to-svg
+    // http://kml4earth.appspot.com/icons.html for more pngs
     public enum TrackMarker implements Marker {
         TrackPointIcon("trackpointIcon", "trackpointIcon"),
         PlaceMarkIcon("placemarkIcon", "placemarkSelectedIcon"),

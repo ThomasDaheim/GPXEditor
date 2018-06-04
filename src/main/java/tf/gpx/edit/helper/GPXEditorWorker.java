@@ -95,7 +95,7 @@ public class GPXEditorWorker {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myEditor.getWindow());
 
         if(selectedFiles != null && !selectedFiles.isEmpty()){
             for (File selectedFile : selectedFiles) {
@@ -125,7 +125,7 @@ public class GPXEditorWorker {
             // das sollte auch in den Worker gehen...
             fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-            File selectedFile = fileChooser.showSaveDialog(null);
+            File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
 
             if(selectedFile == null){
                 System.out.println("No File selected");
@@ -187,7 +187,7 @@ public class GPXEditorWorker {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("KML-Files", extFilter));
-        File selectedFile = fileChooser.showSaveDialog(null);
+        File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
 
         if(selectedFile == null){
             System.out.println("No File selected");
