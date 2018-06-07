@@ -27,7 +27,11 @@ package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -59,7 +63,7 @@ public class HeightChart<X,Y> extends AreaChart {
     private GPXEditor myGPXEditor;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
-    private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedGPXWaypoints;
+    private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
     
     private boolean noLayout = false;
 
@@ -79,8 +83,8 @@ public class HeightChart<X,Y> extends AreaChart {
         setCursor(Cursor.CROSSHAIR);
         setLegendVisible(false);
 
-        selectedGPXWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
-        selectedGPXWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
+        selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
+        selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
     }
     
     public static HeightChart getInstance() {
@@ -91,7 +95,16 @@ public class HeightChart<X,Y> extends AreaChart {
         myGPXEditor = gpxEditor;
     }
     
+    public void setEnable(final boolean enabled) {
+        setDisable(!enabled);
+        setVisible(enabled);
+    }
+    
     public void setGPXWaypoints(final GPXLineItem lineItem) {
+        if (isDisabled()) {
+            return;
+        }
+        
         setVisible(false);
         myPoints.clear();
         getData().clear();
@@ -146,15 +159,48 @@ public class HeightChart<X,Y> extends AreaChart {
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        if (isDisabled()) {
+            return;
+        }
+
         noLayout = true;
 
-        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
+        // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
+//        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
+//            getPlotChildren().remove(waypoint.getRight());
+//        }
+//        selectedWaypoints.clear();
+        
+        // hashset over arraylist for improved performance
+        final Set<GPXWaypoint> waypointSet = new HashSet<>(gpxWaypoints);
+        
+        // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
+        final List<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new ArrayList<>();
+        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
+            if (!waypointSet.contains(waypoint.getLeft())) {
+                waypointsToUnselect.add(waypoint);
+            }
+        }
+        for (Triple<GPXWaypoint, Double, Node> waypoint : waypointsToUnselect) {
+            selectedWaypoints.remove(waypoint);
             getPlotChildren().remove(waypoint.getRight());
         }
-        selectedGPXWaypoints.clear();
-        
+
+        // now figure out which ones to add
+        final Set<GPXWaypoint> selectedWaypointsSet = new HashSet<>(selectedWaypoints.stream().map((t) -> {
+            return t.getLeft();
+        }).collect(Collectors.toList()));
+                
+        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
+        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+            if (!selectedWaypointsSet.contains(gpxWaypoint)) {
+                waypointsToSelect.add(gpxWaypoint);
+            }
+        }
+
+        // now add only the new ones
         final List<Rectangle> rectangles = new ArrayList<>();
-        for (GPXWaypoint waypoint: gpxWaypoints) {
+        for (GPXWaypoint waypoint: waypointsToSelect) {
             // find matching point from myPoints
             final Pair<GPXWaypoint, Double> point = myPoints.stream()
                 .filter(x -> x.getLeft().equals(waypoint))
@@ -165,7 +211,7 @@ public class HeightChart<X,Y> extends AreaChart {
             Rectangle rectangle = new Rectangle(0,0,0,0);
             rectangle.getStyleClass().add("chart-vert-rect");
             rectangles.add(rectangle);
-            selectedGPXWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
+            selectedWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
         }
 
         if (rectangles.size() > 0) {
@@ -177,12 +223,16 @@ public class HeightChart<X,Y> extends AreaChart {
     }
     
     public void clearSelectedGPXWaypoints() {
+        if (isDisabled()) {
+            return;
+        }
+
         noLayout = true;
         
-        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedGPXWaypoints) {
+        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
             getPlotChildren().remove(waypoint.getRight());
         }
-        selectedGPXWaypoints.clear();
+        selectedWaypoints.clear();
         
         noLayout = false;
         layoutPlotChildren();
@@ -194,14 +244,28 @@ public class HeightChart<X,Y> extends AreaChart {
         
         super.layoutPlotChildren();
         
+        // helper lists to speed things up - a SET for fast contains() a LIST for fast indexOf()
+        final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
+            return t.getLeft();
+        }).collect(Collectors.toList()));
+        final List<GPXWaypoint> selectedWaypointsList = new ArrayList<>(selectedWaypointsSet);
+
         Pair<GPXWaypoint, Double> prevPair = null;
         boolean prevSelected = false;
         for (Pair<GPXWaypoint, Double> pair : myPoints) {
             final GPXWaypoint point = pair.getLeft();
             
-            final Triple<GPXWaypoint, Double, Node> selectedPoint = selectedGPXWaypoints.stream()
-                    .filter(x -> x.getLeft().equals(point))
-                    .findFirst().orElse(null);
+            // find selected waypoint triple, if any (the fast way)
+//            Triple<GPXWaypoint, Double, Node> selectedPoint = selectedWaypoints.stream()
+//                    .filter(x -> x.getLeft().equals(point))
+//                    .findFirst().orElse(null);
+            Triple<GPXWaypoint, Double, Node> selectedPoint;
+            // now try using LinkedHashSet instead of stream - to improve performance
+            if (selectedWaypointsSet.contains(point)) {
+                selectedPoint = selectedWaypoints.get(selectedWaypointsList.indexOf(point));
+            } else {
+                selectedPoint = null;
+            }
             
             if (selectedPoint != null) {
                 Rectangle rect = (Rectangle) selectedPoint.getRight();

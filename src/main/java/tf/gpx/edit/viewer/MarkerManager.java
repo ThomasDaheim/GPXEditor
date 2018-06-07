@@ -26,7 +26,10 @@
 package tf.gpx.edit.viewer;
 
 import de.saring.leafletmap.Marker;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import tf.gpx.edit.helper.GPXWaypoint;
 
@@ -44,6 +47,7 @@ public class MarkerManager {
     
     // definition of markers for leafletview - needs to match names given in js file
     // https://image.online-convert.com/convert-to-svg
+    // http://kml4earth.appspot.com/icons.html for more pngs
     public enum TrackMarker implements Marker {
         TrackPointIcon("trackpointIcon", "trackpointIcon"),
         PlaceMarkIcon("placemarkIcon", "placemarkSelectedIcon"),
@@ -75,6 +79,8 @@ public class MarkerManager {
     
     private Map<String, TrackMarker> symbolMarkerMapping = new HashMap<>();
     
+    private List<String> garminSymbols = new ArrayList<>();
+    
     private MarkerManager() {
         super();
         
@@ -96,16 +102,56 @@ public class MarkerManager {
         symbolMarkerMapping.put("Winery", TrackMarker.RestaurantIcon);
         symbolMarkerMapping.put("Fast Food", TrackMarker.RestaurantIcon);
         symbolMarkerMapping.put("Pizza", TrackMarker.RestaurantIcon);
+        
+        initGarminSymbols();
+    }
+    
+    private void initGarminSymbols() {
+        // there is an endless list of possible values, e.g. https://gist.github.com/tonymorris/8778137 for garmin
+
+        //### Markers
+        garminSymbols.addAll(Arrays.asList("Flag, Blue", "Flag, Green", "Flag, Red", "Civil", "Pin, Blue", "Pin, Green", "Pin, Red", "Golf Course", "Block, Blue", "Block, Green", "Block, Red", "Stadium", "Navaid, Blue", "Navaid, Green", "Navaid, Red", "Navaid, White", "Navaid, Amber", "Navaid, Black", "Navaid, Orange", "Navaid, Violet", "City (Small)", "City (Medium)", "City (Large)", "Crossing", "Residence", "Fishing Hot Spot Facility", "Lodge", "Museum"));
+
+        //### Points of Interest 
+        garminSymbols.addAll(Arrays.asList("Gas Station", "Convenience Store", "Bank", "Bar", "Department Store", "Movie Theater", "Fast Food", "Pizza", "Restaurant", "Lodging", "Shopping Center", "Airport", "Fitness Center", "Live Theater", "Medical Facility", "Pharmacy", "Post Office", "Museum", "Golf Course", "Ball Park", "Bowling", "Amusement Park", "Stadium", "Zoo"));
+        
+        //### Signs 
+        garminSymbols.addAll(Arrays.asList("Shopping Center", "Picnic Area", "Telephone", "Airport", "Restroom", "Information", "Restaurant", "Lodging", "Shower", "Boat Ramp", "Skiing Area", "Swimming Area", "Fitness Center", "Ice Skating", "Medical Facility", "Pharmacy", "Parking Area", "Crossing", "Trail Head", "Bike Trail", "Skull and Crossbones", "Ski Resort", "Bridge", "Dam"));
+
+        //### Outdoors 
+        garminSymbols.addAll(Arrays.asList("Campground", "Trail Head", "Park", "Forest", "Summit", "Fishing Area", "Geocache", "Geocache Found", "Picnic Area", "Restroom", "Shower", "Beach", "RV Park", "Scenic Area", "Ski Resort", "Swimming Area", "Skiing Area", "Golf Course", "Bike Trail", "Drinking Water", "Tunnel", "Parachute Area", "Glider Area", "Ultralight Area"));
+
+        //### Hunting 
+        garminSymbols.addAll(Arrays.asList("Upland Game", "Waterfowl", "Furbearer", "Big Game", "Small Game", "Covey", "Cover", "Treed Quarry", "Water Source", "Food Source", "Animal Tracks", "Blood Trail", "Truck", "ATV", "Lodge", "Campground", "Blind", "Tree Stand"));
+
+        //### Marine 
+        garminSymbols.addAll(Arrays.asList("Anchor", "Fishing Area", "Man Overboard", "Diver Down Flag 1", "Diver Down Flag 2", "Beach", "Skull and Crossbones", "Light", "Buoy, White", "Shipwreck", "Radio Beacon", "Horn", "Controlled Area", "Restricted Area", "Danger Area", "Restaurant", "Bridge", "Dam", "Swimming Area", "Boat Ramp", "Skiing Area", "Restroom", "Gas Station", "Campground"));
+
+        //### Civil 
+        garminSymbols.addAll(Arrays.asList("Residence", "Fishing Hot Spot Facility", "Building", "Church", "Cemetery", "Horn", "Tall Tower", "Short Tower", "Radio Beacon", "Oil Field", "Mine", "Drinking Water", "School", "Crossing", "Civil", "Bridge", "Police Station", "Bell"));
+
+        //### Transportation 
+        garminSymbols.addAll(Arrays.asList("Car", "Car Rental", "Car Repair", "Gas Station", "Convenience Store", "Scales", "Airport", "School", "Truck Stop", "Wrecker", "Tunnel", "Toll Booth", "Restroom", "Restaurant", "Lodging", "Crossing", "Bridge", "Parking Area"));
+
+        //### Navaids 
+        garminSymbols.addAll(Arrays.asList("Navaid, Amber", "Navaid, Black", "Navaid, Blue", "Navaid, Green/White", "Navaid, Green", "Navaid, Green/Red", "Navaid, Orange", "Navaid, Red/Green", "Navaid, Red/White", "Navaid, Red", "Navaid, Violet", "Navaid, White", "Navaid, White/Green", "Navaid, White/Red", "Buoy, White", "Radio Beacon", "Horn", "Light"));
     }
     
     public static MarkerManager getInstance() {
         return INSTANCE;
     }
     
+    public List<String> getGarminSymbols() {
+        return garminSymbols;
+    }
+    
     // wade through the mess of possible waypoint sym values and convert to an available icon
     public TrackMarker getMarkerForWaypoint(final GPXWaypoint gpxWaypoint) {
-        final String symbol = gpxWaypoint.getSym();
-        
+        return getMarkerForSymbol(gpxWaypoint.getSym());
+    }
+    
+    // wade through the mess of possible waypoint sym values and convert to an available icon
+    public TrackMarker getMarkerForSymbol(final String symbol) {
         if (symbolMarkerMapping.containsKey(symbol)) {
             return symbolMarkerMapping.get(symbol);
         } else {

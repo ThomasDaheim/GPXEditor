@@ -32,6 +32,7 @@ import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.modal.Route;
 import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
+import com.hs.gpxparser.type.Fix;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -190,6 +191,96 @@ public class GPXWaypoint extends GPXLineItem {
         setHasUnsavedChanges();
     }
 
+    public String getWaypointType() {
+        return myWaypoint.getType();
+    }
+
+    public void setWaypointType(final String waypointType) {
+        myWaypoint.setType(waypointType);
+        setHasUnsavedChanges();
+    }
+
+    public double getGeoIdHeight() {
+        return myWaypoint.getGeoIdHeight();
+    }
+
+    public void setGeoIdHeight(final double geoIdHeight) {
+        myWaypoint.setGeoIdHeight(geoIdHeight);
+        setHasUnsavedChanges();
+    }
+
+    public double getHdop() {
+        return myWaypoint.getHdop();
+    }
+
+    public void setHdop(final double hdop) {
+        myWaypoint.setHdop(hdop);
+        setHasUnsavedChanges();
+    }
+
+    public double getVdop() {
+        return myWaypoint.getVdop();
+    }
+
+    public void setVdop(final double vdop) {
+        myWaypoint.setVdop(vdop);
+        setHasUnsavedChanges();
+    }
+
+    public double getPdop() {
+        return myWaypoint.getPdop();
+    }
+
+    public void setPdop(final double pdop) {
+        myWaypoint.setPdop(pdop);
+        setHasUnsavedChanges();
+    }
+
+    public int getSat() {
+        return myWaypoint.getSat();
+    }
+
+    public void setSat(final int sat) {
+        myWaypoint.setSat(sat);
+        setHasUnsavedChanges();
+    }
+
+    public Fix getFix() {
+        return myWaypoint.getFix();
+    }
+
+    public void setFix(final Fix fix) {
+        myWaypoint.setFix(fix);
+        setHasUnsavedChanges();
+    }
+
+    public double getMagneticVariation() {
+        return myWaypoint.getMagneticVariation();
+    }
+
+    public void setMagneticVariation(final double magvar) {
+        myWaypoint.setMagneticVariation(magvar);
+        setHasUnsavedChanges();
+    }
+
+    public double getAgeOfGPSData() {
+        return myWaypoint.getAgeOfGPSData();
+    }
+
+    public void setAgeOfGPSData(final double agegpsdata) {
+        myWaypoint.setAgeOfGPSData(agegpsdata);
+        setHasUnsavedChanges();
+    }
+
+    public int getdGpsStationId() {
+        return myWaypoint.getdGpsStationId();
+    }
+
+    public void setdGpsStationId(final int stationid) {
+        myWaypoint.setdGpsStationId(stationid);
+        setHasUnsavedChanges();
+    }
+
     @Override
     public GPXLineItem getParent() {
         return myGPXParent;
@@ -308,6 +399,11 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public Date getDate() {
         return myWaypoint.getTime();
+    }
+
+    public void setDate(final Date date) {
+        myWaypoint.setTime(date);
+        setHasUnsavedChanges();
     }
 
     @Override

@@ -26,7 +26,6 @@
 package tf.gpx.edit.viewer;
 
 import java.util.List;
-import javafx.scene.chart.XYChart;
 import tf.gpx.edit.helper.GPXLineItem;
 import tf.gpx.edit.helper.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -59,6 +58,11 @@ public class GPXTrackviewer {
         // pass it on!
         TrackMap.getInstance().setCallback(gpxEditor);
         HeightChart.getInstance().setCallback(gpxEditor);
+    }
+    
+    public void setEnable(final boolean enabled) {
+        TrackMap.getInstance().setEnable(enabled);
+        HeightChart.getInstance().setEnable(enabled);
     }
     
     public void setGPXWaypoints(final GPXLineItem lineItem) {

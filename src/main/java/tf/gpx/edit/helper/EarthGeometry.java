@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javafx.util.Pair;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * Based on:
@@ -331,10 +332,11 @@ public class EarthGeometry {
         final double lat21 = lat2 - lat1;
         final double lon21 = lon2 - lon1;
         final double a =
-                Math.sin(lat21/2.0) * Math.sin(lat21/2.0)
-                + Math.cos(lat1) * Math.cos(lat2)
-                * Math.sin(lon21/2.0) * Math.sin(lon21/2.0);
-        return 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
+                FastMath.sin(lat21/2.0) * FastMath.sin(lat21/2.0)
+                + FastMath.cos(lat1) * FastMath.cos(lat2)
+                * FastMath.sin(lon21/2.0) * FastMath.sin(lon21/2.0);
+        //return 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
+        return 2.0 * FastMath.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
     }
     
     /**
@@ -366,14 +368,14 @@ public class EarthGeometry {
     private static double angleBetweenWaypoints(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
-        final double lat1 = Math.toRadians(p1.getLatitude());
-        final double lat2 = Math.toRadians(p2.getLatitude());
-        final double lon21 = Math.toRadians(p2.getLongitude() - p1.getLongitude());
+        final double lat1 = FastMath.toRadians(p1.getLatitude());
+        final double lat2 = FastMath.toRadians(p2.getLatitude());
+        final double lon21 = FastMath.toRadians(p2.getLongitude() - p1.getLongitude());
         
-        double y = Math.sin(lon21) * Math.cos(lat2);
-        double x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon21);
+        double y = FastMath.sin(lon21) * FastMath.cos(lat2);
+        double x = FastMath.cos(lat1) * FastMath.sin(lat2) - FastMath.sin(lat1)*FastMath.cos(lat2)*FastMath.cos(lon21);
         
-        double angle = Math.toDegrees(Math.atan2(y, x));
+        double angle = FastMath.toDegrees(FastMath.atan2(y, x));
         
         return angle;
     }
@@ -411,8 +413,8 @@ public class EarthGeometry {
 
         // https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
         final double d13 = distPA / effectiveRadius;
-        final double t13 = Math.toRadians(bearingWaypoints(a, p));
-        final double t12 = Math.toRadians(bearingWaypoints(a, b));
+        final double t13 = FastMath.toRadians(bearingWaypoints(a, p));
+        final double t12 = FastMath.toRadians(bearingWaypoints(a, b));
         
         /*
         System.out.println("------------------------------------");
@@ -422,7 +424,7 @@ public class EarthGeometry {
         */
 
         // distances are positive!
-        return Math.abs(Math.asin(Math.sin(d13) * Math.sin(t13-t12))) * effectiveRadius;
+        return FastMath.abs(FastMath.asin(FastMath.sin(d13) * FastMath.sin(t13-t12))) * effectiveRadius;
     }
     
     /**
@@ -459,28 +461,28 @@ public class EarthGeometry {
         
         if (!useSphericalGeometry(distAB, distAC, distBC, accuracy)) {
             // heron's formula is good enough :-)
-            return Math.sqrt(s*(s-distAB)*(s-distAC)*(s-distBC));
+            return FastMath.sqrt(s*(s-distAB)*(s-distAC)*(s-distBC));
         }
 
         final double bearingAB = bearingWaypoints(a, b);
         final double bearingAC = bearingWaypoints(a, c);
-        double angleCAB = Math.abs(bearingAB - bearingAC);
+        double angleCAB = FastMath.abs(bearingAB - bearingAC);
         // if > 180 use complement
         if (angleCAB > 180.0) angleCAB = 360.0 - angleCAB;
         
         final double bearingBC = bearingWaypoints(b, c);
         final double bearingBA = bearingWaypoints(b, a);
-        double angleABC = Math.abs(bearingBC - bearingBA);
+        double angleABC = FastMath.abs(bearingBC - bearingBA);
         // if > 180 use complement
         if (angleABC > 180.0) angleABC = 360.0 - angleABC;
         
         final double bearingCA = bearingWaypoints(c, a);
         final double bearingCB = bearingWaypoints(c, b);
-        double angleBCA = Math.abs(bearingCA - bearingCB);
+        double angleBCA = FastMath.abs(bearingCA - bearingCB);
         // if > 180 use complement
         if (angleBCA > 180.0) angleBCA = 360.0 - angleBCA;
         
-        final double E1 = Math.toRadians(angleCAB+angleABC+angleBCA) - Math.PI;       
+        final double E1 = FastMath.toRadians(angleCAB+angleABC+angleBCA) - Math.PI;       
         double result1 = EarthAverageRadius2*E1;
 
         /*

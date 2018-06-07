@@ -11,11 +11,17 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.3)
+## Features (v2.4)
 
 Following features are available via UI:
 
 ## File and track handling
+
+### Update v2.4
+
+* edit waypoint properties in separate dialoge (all for single waypoint, selected for multiple waypoints)
+* bugfix kml export to support different Icons
+* performance optimizations when drawing maps and selecting waypoints (tested with > 10.000 waypoints in track)
 
 ### Update v2.3
 
@@ -199,8 +205,11 @@ Explicit dependencies:
 * 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 * 'com.fasterxml.jackson.core:jackson-core:2.9.5'
 * 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+* org.jfxtras:jfxtras-controls:8.0-r6'
+* org.jfxtras:jfxtras-labs:8.0-r6'
+' org.apache.commons:commons-math3:3.6.1'
 
-Other things used:
+Other things used internally:
 
 * leaflet: https://leafletjs.com/
 * Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
@@ -215,7 +224,6 @@ Other things used:
 
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
-* Edit Waypoint properties in popup dialogue
 * add TestFX UI test cases
 * add task handling for long running activities
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu

@@ -28,6 +28,8 @@ package tf.gpx.edit.kml;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -41,6 +43,7 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.viewer.MarkerManager;
 
 /**
  * Writer for KML Files
@@ -151,17 +154,46 @@ public class KMLWriter {
 //                </Icon>
 //              </IconStyle>
 //            </Style>
+            // add all icons that we know in the application
             style = doc.createElement("Style");
             root.appendChild(style);
-            style.setAttribute("id", "wptSymbol");
+            style.setAttribute("id", "placemarkIcon");
 
-            final Element iconStyle = doc.createElement("IconStyle");
+            Element iconStyle = doc.createElement("IconStyle");
             style.appendChild(iconStyle);
 
             Element href = doc.createElement("href");
             href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/placemark_square.png"));
 
-            final Element icon = doc.createElement("Icon");
+            Element icon = doc.createElement("Icon");
+            icon.appendChild(href);
+            iconStyle.appendChild(icon);
+
+            style = doc.createElement("Style");
+            root.appendChild(style);
+            style.setAttribute("id", "hotelIcon");
+
+            iconStyle = doc.createElement("IconStyle");
+            style.appendChild(iconStyle);
+
+            href = doc.createElement("href");
+            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/lodging.png"));
+
+            icon = doc.createElement("Icon");
+            icon.appendChild(href);
+            iconStyle.appendChild(icon);
+
+            style = doc.createElement("Style");
+            root.appendChild(style);
+            style.setAttribute("id", "restaurantIcon");
+
+            iconStyle = doc.createElement("IconStyle");
+            style.appendChild(iconStyle);
+
+            href = doc.createElement("href");
+            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/dining.png"));
+
+            icon = doc.createElement("Icon");
             icon.appendChild(href);
             iconStyle.appendChild(icon);
         } catch (ParserConfigurationException | DOMException e) {
@@ -196,14 +228,26 @@ public class KMLWriter {
         final Element placemark = doc.createElement("Placemark");
         waypoints.appendChild(placemark);
 
-        final Element name = doc.createElement("name");
-        name.appendChild(doc.createTextNode(mark.getName()));
-        placemark.appendChild(name);
+        if(mark.getName() != null) {
+            final Element name = doc.createElement("name");
+            name.appendChild(doc.createTextNode(mark.getName()));
+            placemark.appendChild(name);
+        }
+
+        final Element styleUrl = doc.createElement("styleUrl");
+        styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getMarkerForSymbol(mark.getSym()).getIconName()));
+        placemark.appendChild(styleUrl);
 
         final Element desc = doc.createElement("description");
-        desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() + "\n" +
-                        "Altitude: " + mark.getElevation() + " meters\n" +
-                        "Time: " + sdf.format(mark.getDate())));
+        if (mark.getDate() != null) {
+            desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
+                            " Altitude: " + mark.getElevation() + " meters" +
+                            " Time: " + sdf.format(mark.getDate())));
+        } else {
+            desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
+                            " Altitude: " + mark.getElevation() + " meters" +
+                            " Time: ---"));
+        }
         placemark.appendChild(desc);
 
         final Element point = doc.createElement("Point");
@@ -214,10 +258,6 @@ public class KMLWriter {
             altitudeMode.appendChild(doc.createTextNode("clampToGround"));
             point.appendChild(altitudeMode);
         }
-
-        final Element styleUrl = doc.createElement("styleUrl");
-        styleUrl.appendChild(doc.createTextNode("#wptSymbol"));
-        point.appendChild(styleUrl);
 
         final Element coords = doc.createElement("coordinates");
         coords.appendChild(doc.createTextNode(mark.getLongitude() + ", " + mark.getLatitude() + ", " + mark.getElevation()));
@@ -319,7 +359,8 @@ public class KMLWriter {
             final DOMSource src = new DOMSource(doc);
             final StreamResult out = new StreamResult(file);
             transformer.transform(src, out);
-        } catch(IllegalArgumentException | TransformerException e) {
+        } catch(IllegalArgumentException | TransformerException ex) {
+            Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
         return true;

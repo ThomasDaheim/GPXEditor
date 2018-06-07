@@ -315,7 +315,6 @@ public class DistributionViewer {
                 newWaypoints.removeAll(wayPointList.getCheckModel().getCheckedItems());
                 gpxTrackSegment.setGPXWaypoints(newWaypoints);
                 
-                
                 // done, lets get out of here...
                 distributionsStage.close();
                 
