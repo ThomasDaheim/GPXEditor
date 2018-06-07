@@ -243,9 +243,10 @@ public class TestGeometry {
         System.out.println("Test: distanceWaypoints()");
         for (TestPointPair pair : testPointPairs) {
             System.out.println("  Pair: " + pair.description);
-            //System.out.println("Distance: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2) + " - " + pair.distanceRef);
+            System.out.println("Distance: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2) + " - " + pair.distanceRef);
             Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p1, pair.p2), pair.distanceRef, DELTA_DISTANCE);
             // should be same for other way around
+            System.out.println("Distance: " + EarthGeometry.distanceWaypoints(pair.p2, pair.p1) + " - " + pair.distanceRef);
             Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p2, pair.p1), pair.distanceRef, DELTA_DISTANCE);
         }
         System.out.println("Done.");
@@ -257,10 +258,10 @@ public class TestGeometry {
         System.out.println("Test: distanceToGreatCircleWaypoints()");
         for (TestPointTriple triple : testPointTriples) {
             System.out.println("  Triple: " + triple.description);
-            //System.out.println("Distance: " + EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.distanceToGreatCircleRef);
-            //System.out.println("Distance: " + EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
+            System.out.println("Distance: " + EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.distanceToGreatCircleRef);
             Assert.assertEquals(EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p2, triple.p3, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
             // should be same for other way around
+            //System.out.println("Distance: " + EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
             Assert.assertEquals(EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p3, triple.p2, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
         }
         System.out.println("Done.");

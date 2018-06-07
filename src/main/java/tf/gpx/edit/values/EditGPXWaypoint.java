@@ -561,7 +561,7 @@ public class EditGPXWaypoint {
         if (!MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
             setMultipleStringValues(setEmptyToNullString(waypointNameTxt.getText()), GPXWaypoint::setName);
         }
-        if (!waypoint.getSym().equals(waypointSymTxt.getValue())) {
+        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(waypointSymTxt.getValue())) {
             setMultipleStringValues(setEmptyToNullString(waypointSymTxt.getValue()), GPXWaypoint::setSym);
         }
         if (!MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {

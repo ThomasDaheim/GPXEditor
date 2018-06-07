@@ -239,16 +239,15 @@ public class GPXTrackSegment extends GPXMeasurable {
         
         double length = 0.0;
 
-        GPXWaypoint currentWaypoint;
-        GPXWaypoint previousWaypoint;
-
+        GPXWaypoint previousWaypoint = null;
         /* Only attempt to calculate the distanceGPXWaypoints if we are not
          * on the first way point of the segment. */
-        for (int z = 1; z < myGPXWaypoints.size(); z++) {
-            currentWaypoint = myGPXWaypoints.get(z);
-            previousWaypoint = myGPXWaypoints.get(z - 1);
-
-            length += EarthGeometry.distanceGPXWaypoints(currentWaypoint, previousWaypoint);
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if (previousWaypoint != null) {
+                length += EarthGeometry.distanceGPXWaypoints(gpxWaypoint, previousWaypoint);
+            }
+            
+            previousWaypoint = gpxWaypoint;
         }
 
         myLength = length;
@@ -273,14 +272,15 @@ public class GPXTrackSegment extends GPXMeasurable {
         }
         double ascent = 0.0;
 
-        if (myGPXWaypoints.size() <= 1) {
-            return 0.0;
-        }
-
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            if (i > 0 && myGPXWaypoints.get(i - 1).getWaypoint().getElevation() < myGPXWaypoints.get(i).getWaypoint().getElevation()) {
-                ascent += myGPXWaypoints.get(i).getWaypoint().getElevation() - myGPXWaypoints.get(i - 1).getWaypoint().getElevation();
+        GPXWaypoint previousWaypoint = null;
+        /* Only attempt to calculate the distanceGPXWaypoints if we are not
+         * on the first way point of the segment. */
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if ((previousWaypoint != null) && (previousWaypoint.getWaypoint().getElevation() < gpxWaypoint.getWaypoint().getElevation())) {
+                ascent += gpxWaypoint.getWaypoint().getElevation() - previousWaypoint.getWaypoint().getElevation();
             }
+            
+            previousWaypoint = gpxWaypoint;
         }
 
         myCumulativeAscent = ascent;
@@ -307,14 +307,15 @@ public class GPXTrackSegment extends GPXMeasurable {
 
         double descent = 0.0;
 
-        if (myGPXWaypoints.size() <= 1) {
-            return 0.0;
-        }
-
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            if (i > 1 && myGPXWaypoints.get(i).getWaypoint().getElevation() < myGPXWaypoints.get(i - 1).getWaypoint().getElevation()) {
-                descent += myGPXWaypoints.get(i - 1).getWaypoint().getElevation() - myGPXWaypoints.get(i).getWaypoint().getElevation();
+        GPXWaypoint previousWaypoint = null;
+        /* Only attempt to calculate the distanceGPXWaypoints if we are not
+         * on the first way point of the segment. */
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if ((previousWaypoint != null) && (gpxWaypoint.getWaypoint().getElevation() < previousWaypoint.getWaypoint().getElevation())) {
+                descent += previousWaypoint.getWaypoint().getElevation() - gpxWaypoint.getWaypoint().getElevation();
             }
+            
+            previousWaypoint = gpxWaypoint;
         }
 
         myCumulativeDescent = descent;
@@ -338,8 +339,8 @@ public class GPXTrackSegment extends GPXMeasurable {
 
         Date result = null;
 
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            Date time = myGPXWaypoints.get(i).getWaypoint().getTime();
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            Date time = gpxWaypoint.getWaypoint().getTime();
 
             if (time != null) {
                 if (result == null || time.before(result)) {
@@ -369,8 +370,8 @@ public class GPXTrackSegment extends GPXMeasurable {
 
         Date result = null;
 
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            Date time = myGPXWaypoints.get(i).getWaypoint().getTime();
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            Date time = gpxWaypoint.getWaypoint().getTime();
 
             if (time != null) {
                 if (result == null || time.after(result)) {
@@ -394,9 +395,9 @@ public class GPXTrackSegment extends GPXMeasurable {
 
         double result = Double.MAX_VALUE;
 
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            if (myGPXWaypoints.get(i).getWaypoint().getElevation() < result) {
-                result = myGPXWaypoints.get(i).getWaypoint().getElevation();
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if (gpxWaypoint.getWaypoint().getElevation() < result) {
+                result = gpxWaypoint.getWaypoint().getElevation();
             }
         }
 
@@ -415,9 +416,9 @@ public class GPXTrackSegment extends GPXMeasurable {
 
         double result = Double.MIN_VALUE;
 
-        for (int i = 0; i < myGPXWaypoints.size(); i++) {
-            if (myGPXWaypoints.get(i).getWaypoint().getElevation() > result) {
-                result = myGPXWaypoints.get(i).getWaypoint().getElevation();
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            if (gpxWaypoint.getWaypoint().getElevation() > result) {
+                result = gpxWaypoint.getWaypoint().getElevation();
             }
         }
 

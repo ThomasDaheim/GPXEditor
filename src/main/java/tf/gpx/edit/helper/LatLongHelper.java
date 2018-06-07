@@ -33,8 +33,8 @@ import java.util.regex.Pattern;
  * @author thomas
  */
 public class LatLongHelper {
-    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.][0-9]{0,2})\")|([NS][ ]?90°0{0,2}'0{0,2}[.]0{0,2}\")";
-    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.][0-9]{0,2})\")|([EW][ ]?180°0{0,2}'0{0,2}[.]0{0,2}\")";
+    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([NS][ ]?90°0{0,2}'0{0,2}[.,]0{0,2}\")";
+    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([EW][ ]?180°0{0,2}'0{0,2}[.,]0{0,2}\")";
     
     public final static String INVALID_LATITUDE = "INVALID LATITUDE";
     public final static String INVALID_LONGITUDE = "INVALID LONGITUDE";

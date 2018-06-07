@@ -199,7 +199,7 @@ public class TrackMap extends LeafletMapView {
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
-        List<MapLayer> mapLayer = Arrays.asList(MapLayer.values());
+        List<MapLayer> mapLayer = Arrays.asList(MapLayer.OPENSTREETMAP, MapLayer.HIKE_BIKE_MAP, MapLayer.MTB_MAP, MapLayer.MAPBOX);
         Collections.reverse(mapLayer);
         final MapConfig myMapConfig = new MapConfig(mapLayer, 
                         new ZoomControlConfig(true, ControlPosition.BOTTOM_LEFT), 
@@ -215,6 +215,14 @@ public class TrackMap extends LeafletMapView {
     
     public static TrackMap getInstance() {
         return INSTANCE;
+    }
+    
+    public void setEnable(final boolean enabled) {
+        setDisable(!enabled);
+        setVisible(enabled);
+        
+        myWebView.setDisable(!enabled);
+        myWebView.setVisible(enabled);
     }
     
     /**
@@ -660,6 +668,10 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void setGPXWaypoints(final GPXLineItem lineItem) {
+        if (isDisabled()) {
+            return;
+        }
+
         myGPXLineItem = lineItem;
 
         // forget the past...
@@ -826,10 +838,49 @@ public class TrackMap extends LeafletMapView {
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        clearSelectedGPXWaypoints();
+        if (isDisabled()) {
+            return;
+        }
+
+        // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
+        //clearSelectedGPXWaypoints();
         
-        int notShownCount = 0;
+        // hashset over arraylist for improved performance
+        final Set<GPXWaypoint> waypointSet = new HashSet<>(gpxWaypoints);
+
+        // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
+        final BidiMap<String, GPXWaypoint> waypointsToUnselect = new DualHashBidiMap<>();
+        for (String waypoint : selectedWaypoints.keySet()) {
+            final GPXWaypoint gpxWaypoint = selectedWaypoints.get(waypoint);
+            if (!waypointSet.contains(gpxWaypoint)) {
+                waypointsToUnselect.put(waypoint, gpxWaypoint);
+            }
+        }
+        for (String waypoint : waypointsToUnselect.keySet()) {
+            selectedWaypoints.remove(waypoint);
+        }
+        clearSomeSelectedGPXWaypoints(waypointsToUnselect);
+        
+        // now figure out which ones to add
+        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+            if (!selectedWaypoints.containsValue(gpxWaypoint)) {
+                waypointsToSelect.add(gpxWaypoint);
+            }
+        }
+
+        // now add only the new ones
+        // TFE, 20180606: since list is not empty anymore, we need to find biggest notShownCount
+        // int notShownCount = 0;
+        int notShownCount = selectedWaypoints.keySet().stream().mapToInt((value) -> {
+            if (value.startsWith(NOT_SHOWN)) {
+                return Integer.parseInt(value.substring(NOT_SHOWN.length()));
+            } else {
+                return 0;
+            }
+        }).max().orElse(0);
+        
+        for (GPXWaypoint gpxWaypoint : waypointsToSelect) {
             final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
             String waypoint;
 
@@ -847,12 +898,20 @@ public class TrackMap extends LeafletMapView {
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
+        
         assert gpxWaypoints.size() == selectedWaypoints.size();
     }
 
     public void clearSelectedGPXWaypoints() {
-        for (String waypoint : selectedWaypoints.keySet()) {
-            final GPXWaypoint gpxWaypoint = selectedWaypoints.get(waypoint);
+        if (isDisabled()) {
+            return;
+        }
+        
+        clearSomeSelectedGPXWaypoints(selectedWaypoints);
+    }
+    private void clearSomeSelectedGPXWaypoints(final BidiMap<String, GPXWaypoint> waypoints) {
+        for (String waypoint : waypoints.keySet()) {
+            final GPXWaypoint gpxWaypoint = waypoints.get(waypoint);
             if (gpxWaypoint.isGPXFileWaypoint()) {
                 execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getIconName() + "\");");
             } else {
@@ -862,7 +921,7 @@ public class TrackMap extends LeafletMapView {
                 }
             }
         }
-        selectedWaypoints.clear();
+        waypoints.clear();
     }
     
     public void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {

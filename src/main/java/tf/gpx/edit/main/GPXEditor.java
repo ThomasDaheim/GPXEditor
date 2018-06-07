@@ -154,13 +154,16 @@ public class GPXEditor implements Initializable {
         DOWN
     }
     
+    // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
     private final static KeyCodeCombination controlCKey = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
     private final static KeyCodeCombination controlVKey = new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_ANY);
     private final static KeyCodeCombination controlXKey = new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_ANY);
-    private final static KeyCodeCombination shiftDeleteKey = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_ANY);
+    private final static KeyCodeCombination shiftDeleteKey = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
     private final static KeyCodeCombination deleteKey = new KeyCodeCombination(KeyCode.DELETE);
     private final static KeyCodeCombination insertKey = new KeyCodeCombination(KeyCode.INSERT);
     private final List<GPXWaypoint> clipboardWayPoints = new ArrayList<>();
+    // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
+    private boolean onlyShiftPressed = false;
 
     private final GPXEditorWorker myWorker = new GPXEditorWorker(this);
 
@@ -203,6 +206,8 @@ public class GPXEditor implements Initializable {
     private ProgressBar statusBar;
     @FXML
     private MenuItem clearFileMenu;
+    @FXML
+    private MenuItem switchMapMenu;
     @FXML
     private TreeTableView<GPXLineItem> gpxFileListXML;
     private GPXTreeTableView gpxFileList = null;
@@ -479,6 +484,25 @@ public class GPXEditor implements Initializable {
             final HostServices myHostServices = (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices");
             if (myHostServices != null) {
                 myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
+            }
+        });
+
+        //
+        // Views
+        //
+        switchMapMenu.setUserData("TRUE");
+        switchMapMenu.setText("Disable Map");
+        switchMapMenu.setOnAction((ActionEvent event) -> {
+            final String enabled = (String) switchMapMenu.getUserData();
+            
+            if ("TRUE".equals(enabled)) {
+                switchMapMenu.setUserData("FALSE");
+                switchMapMenu.setText("Enable Map");
+                GPXTrackviewer.getInstance().setEnable(false);
+            } else {
+                switchMapMenu.setUserData("TRUE");
+                switchMapMenu.setText("Disable Map");
+                GPXTrackviewer.getInstance().setEnable(true);
             }
         });
     }
@@ -776,7 +800,7 @@ public class GPXEditor implements Initializable {
                     
                     if(!clipboardWayPoints.isEmpty()) {
                         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
-                        gpxTrackXML.getItems().addAll(gpxTrackXML.getSelectionModel().getSelectedIndex(), clipboardWayPoints);
+                        gpxTrackXML.getItems().addAll(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()), clipboardWayPoints);
                         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
                         // show remaining waypoints
@@ -785,6 +809,9 @@ public class GPXEditor implements Initializable {
                         refreshGPXFileList();
                     }
                 } 
+                
+                // track SHIFT key pressed - without CNTRL or ALT
+                onlyShiftPressed = event.isShiftDown() && !event.isAltDown() && !event.isControlDown() && !event.isMetaDown();
             };
         });
         
@@ -901,6 +928,15 @@ public class GPXEditor implements Initializable {
         });
         
         listenergpxTrackXMLSelection = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
+            // TFE, 20180606: in case ONLY "SHIFT" modifier is pressed we can get called twice:
+            // #1: with no selected items
+            // #2: with new list of selected items
+            // => in this case ignore the call #1
+            // this needs an extra listener on the keys pressed to check for SHIFT pressed only
+            if (onlyShiftPressed && gpxTrackXML.getSelectionModel().getSelectedItems().isEmpty()) {
+                return;
+            }
+            
             GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
         };
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
