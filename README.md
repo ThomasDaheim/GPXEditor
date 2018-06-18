@@ -13,6 +13,11 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Features (v2.4)
 
+UNFORTUNATELY some bugs have crept into the new features from the latest commit :-( Will get them fixed once I'm back online...
+* cop & paste: delete works, paste doesn't
+* drag & drop track segments sometimes doesn't work
+* editing waypoints under windows with other locale as US doesn't work
+
 Following features are available via UI:
 
 ## File and track handling
