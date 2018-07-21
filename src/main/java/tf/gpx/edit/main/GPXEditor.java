@@ -787,10 +787,14 @@ public class GPXEditor implements Initializable {
                     //System.out.println("Control+C Control+V or pressed");
                     
                     if (!gpxTrackXML.getSelectionModel().getSelectedItems().isEmpty()) {
-                        clipboardWayPoints.clear();
-                        clipboardWayPoints.addAll(new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems()));
+                        // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                        if (controlCKey.match(event) || controlXKey.match(event) || shiftDeleteKey.match(event)) {
+                            clipboardWayPoints.clear();
+                            clipboardWayPoints.addAll(new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems()));
+                        }
 
-                        if (controlXKey.match(event) || shiftDeleteKey.match(event)) {
+                        // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
+                        if (controlXKey.match(event) || shiftDeleteKey.match(event) || deleteKey.match(event)) {
                             deleteSelectedWaypoints();
                         }
                     }
@@ -799,9 +803,7 @@ public class GPXEditor implements Initializable {
                     //System.out.println("Control+V pressed");
                     
                     if(!clipboardWayPoints.isEmpty()) {
-                        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
-                        gpxTrackXML.getItems().addAll(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()), clipboardWayPoints);
-                        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+                        insertClipboardWaypoints();
 
                         // show remaining waypoints
                         showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
@@ -1094,6 +1096,11 @@ public class GPXEditor implements Initializable {
         showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
         // force repaint of gpxFileList to show unsaved items
         refreshGPXFileList();
+    }
+    private void insertClipboardWaypoints() {
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+        gpxTrackXML.getItems().addAll(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()), clipboardWayPoints);
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
     private void initBottomPane() {
