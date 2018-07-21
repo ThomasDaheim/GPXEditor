@@ -390,20 +390,20 @@ public class GPXTreeTableView {
 
                     if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, draggedType)) {
                         // index of dropped item under its parent - thats where we want to place the dragged item before
-                        final int childIndex = targetItem.getParent().getChildren().indexOf(targetItem);
-                        targetItem.getParent().getChildren().add(childIndex, draggedItem);
+                        final int childIndex = Math.max(targetItem.getParent().getChildren().indexOf(targetItem), 0);
+//                        targetItem.getParent().getChildren().add(childIndex, draggedItem);
 
                         // update GPXLineItem as well - no longer necessary due to cleever observables and RecursiveTreeItem
-//                        targetLineItem.getParent().getChildren().add(childIndex, draggedLineItem);
+                        targetLineItem.getParent().getChildren().add(childIndex, draggedLineItem);
                     } else {
                         // update GPXLineItem first to find the correct index to insert the treeitem
-                        targetLineItem.getChildren().add(0, draggedLineItem);
+                        // TFE, 20180525: no longer necessary due to clever observables and RecursiveTreeItem
+//                        targetLineItem.getChildren().add(0, draggedLineItem);
 
                         // droppped on parent type - always add in front
                         // TFE, 20180215: with tracks and routes we need to be a bit more careful - "in front" might not be index 0...
-                        // TFE, 20180525: no longer necessary due to clever observables and RecursiveTreeItem
-//                        final int insertIndex = targetLineItem.getChildren().lastIndexOf(draggedLineItem);
-//                        targetItem.getChildren().add(insertIndex, draggedItem);
+                        final int insertIndex = Math.max(targetLineItem.getChildren().lastIndexOf(draggedLineItem), 0);
+                        targetItem.getChildren().add(insertIndex, draggedItem);
                     }
                 }
 
