@@ -348,6 +348,7 @@ public class DistributionViewer {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
+        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         distributionsStage.showAndWait();
                 
         return hasDeleted;

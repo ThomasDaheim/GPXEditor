@@ -50,11 +50,11 @@ public class GPXRoute extends GPXMeasurable {
     private Route myRoute;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
     
-    private Double myLength;
-    private Double myCumulativeAscent;
-    private Double myCumulativeDescent;
-    private Double myMinHeight;
-    private Double myMaxHeight;
+    private Double myLength = null;
+    private Double myCumulativeAscent = null;
+    private Double myCumulativeDescent = null;
+    private Double myMinHeight = null;
+    private Double myMaxHeight = null;
     
     private GPXRoute() {
         super(GPXLineItemType.GPXRoute);
@@ -96,6 +96,27 @@ public class GPXRoute extends GPXMeasurable {
         }
         
         myGPXWaypoints.addListener(getListChangeListener());
+    }
+    
+    @Override
+    public GPXRoute cloneMeWithChildren() {
+        final GPXRoute myClone = new GPXRoute();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
+        
+        // clone all my children
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+        }
+
+        myClone.myGPXWaypoints.addListener(getListChangeListener());
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
     }
 
     protected Route getRoute() {

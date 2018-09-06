@@ -94,6 +94,20 @@ public class GPXWaypoint extends GPXLineItem {
         myWaypoint = waypoint;
         setNumber(number);
     }
+    
+    @Override
+    public GPXWaypoint cloneMeWithChildren() {
+        final GPXWaypoint myClone = new GPXWaypoint();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXParent = myGPXParent;
+        
+        // set waypoint via cloner
+        myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
+    }
 
     protected Waypoint getWaypoint() {
         return myWaypoint;

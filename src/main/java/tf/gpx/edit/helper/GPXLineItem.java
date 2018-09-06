@@ -27,6 +27,7 @@ package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
+import com.rits.cloning.Cloner;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
@@ -258,6 +260,10 @@ public abstract class GPXLineItem {
         myItemType = itemType;
     }
     
+    // cloning for extended class hierarchies
+    // https://dzone.com/articles/java-cloning-even-copy-constructors-are-not-suffic
+    public abstract <T extends GPXLineItem> T cloneMeWithChildren();
+    
     @Override
     public String toString() {
         final StringBuilder tostring = new StringBuilder();
@@ -335,7 +341,7 @@ public abstract class GPXLineItem {
     // TFE, 20180214: wayopints can be below tracksegments, routes and file
     // therefore we need a new parameter to indicate what sort of waypoints we want
     // either for a specific itemtype or for all (itemType = null)
-    public abstract ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType);
+    public abstract ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItem.GPXLineItemType itemType);
     
     // find points in a given bounding box
     public abstract List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox);
@@ -351,6 +357,24 @@ public abstract class GPXLineItem {
 
     // helper functions for child relations
     public abstract <T extends GPXLineItem> ObservableList<T> getChildren();
+    public ObservableList<? extends GPXLineItem> getChildrenOfType(final GPXLineItem.GPXLineItemType itemType) {
+        switch (itemType) {
+            case GPXFile:
+                return FXCollections.observableArrayList(getGPXFile());
+            case GPXMetadata:
+                return FXCollections.observableArrayList(getGPXMetadata());
+            case GPXTrack:
+                return getGPXTracks();
+            case GPXTrackSegment:
+                return getGPXTrackSegments();
+            case GPXRoute:
+                return getGPXRoutes();
+            case GPXWaypoint:
+                return getGPXWaypoints();
+            default:
+                return FXCollections.observableArrayList();
+        }
+    }
     public abstract void setChildren(final List<GPXLineItem> children);
     protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<GPXLineItem> children) {
         // TFE, 20180215: don't assert that child.getClass().equals(clazz)

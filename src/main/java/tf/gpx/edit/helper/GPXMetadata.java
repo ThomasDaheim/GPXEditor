@@ -56,6 +56,20 @@ public class GPXMetadata extends GPXMeasurable {
     }
     
     @Override
+    public GPXMetadata cloneMeWithChildren() {
+        final GPXMetadata myClone = new GPXMetadata();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        myClone.myMetadata = GPXCloner.getInstance().deepClone(myMetadata);
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
+    }
+    
+    @Override
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
             case Type:

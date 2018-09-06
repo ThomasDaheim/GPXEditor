@@ -86,6 +86,27 @@ public class GPXTrack extends GPXMeasurable {
 
         myGPXTrackSegments.addListener(getListChangeListener());
     }
+    
+    @Override
+    public GPXTrack cloneMeWithChildren() {
+        final GPXTrack myClone = new GPXTrack();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
+        
+        // clone all my children
+        for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
+            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren());
+        }
+
+        myClone.myGPXTrackSegments.addListener(getListChangeListener());
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
+    }
 
     protected Track getTrack() {
         return myTrack;

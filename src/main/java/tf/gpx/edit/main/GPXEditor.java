@@ -58,6 +58,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -90,10 +91,6 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -107,6 +104,7 @@ import javafx.stage.Window;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -155,12 +153,6 @@ public class GPXEditor implements Initializable {
     }
     
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
-    private final static KeyCodeCombination controlCKey = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
-    private final static KeyCodeCombination controlVKey = new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_ANY);
-    private final static KeyCodeCombination controlXKey = new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_ANY);
-    private final static KeyCodeCombination shiftDeleteKey = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
-    private final static KeyCodeCombination deleteKey = new KeyCodeCombination(KeyCode.DELETE);
-    private final static KeyCodeCombination insertKey = new KeyCodeCombination(KeyCode.INSERT);
     private final List<GPXWaypoint> clipboardWayPoints = new ArrayList<>();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
     private boolean onlyShiftPressed = false;
@@ -287,8 +279,6 @@ public class GPXEditor implements Initializable {
     private MenuItem downloadSRTMDataMenu;
     @FXML
     private MenuItem invertTracksMenu;
-    @FXML
-    private MenuItem metadataMenu;
     @FXML
     private MenuItem statisticsMenu;
     @FXML
@@ -427,14 +417,6 @@ public class GPXEditor implements Initializable {
         //
         // Values
         //
-        metadataMenu.setOnAction((ActionEvent event) -> {
-            editMetadata(event);
-        });
-        metadataMenu.disableProperty().bind(
-                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
-        distributionsMenu.setOnAction((ActionEvent event) -> {
-            showDistributions(event);
-        });
         // enable / disable done in change listener of gpxFileListXML since only meaningful for single track segment
         distributionsMenu.setDisable(true);
         specialValuesMenu.setOnAction((ActionEvent event) -> {
@@ -779,36 +761,39 @@ public class GPXEditor implements Initializable {
         
         // TFE, 20180525: support copy, paste, cut on waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
-        final DataFormat listDataFormat = new DataFormat("listOfGPXWaypoints");
         gpxTrackXML.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
             public void handle(KeyEvent event) {
                 // any combination that removes entries
-                if (controlCKey.match(event) || controlXKey.match(event) || shiftDeleteKey.match(event) || deleteKey.match(event)) {
+                if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
                     //System.out.println("Control+C Control+V or pressed");
                     
                     if (!gpxTrackXML.getSelectionModel().getSelectedItems().isEmpty()) {
                         // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                        if (controlCKey.match(event) || controlXKey.match(event) || shiftDeleteKey.match(event)) {
+                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
                             clipboardWayPoints.clear();
                             clipboardWayPoints.addAll(new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems()));
                         }
 
                         // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                        if (controlXKey.match(event) || shiftDeleteKey.match(event) || deleteKey.match(event)) {
+                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
                             deleteSelectedWaypoints();
                         }
                     }
                 // any combination that removes entries
-                } else if (controlVKey.match(event) || insertKey.match(event)) {
+                } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
+                           CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
                     //System.out.println("Control+V pressed");
                     
                     if(!clipboardWayPoints.isEmpty()) {
                         insertClipboardWaypoints();
-
-                        // show remaining waypoints
-                        showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
-                        // force repaint of gpxFileList to show unsaved items
-                        refreshGPXFileList();
                     }
                 } 
                 
@@ -916,7 +901,6 @@ public class GPXEditor implements Initializable {
             
             waypointMenu.getItems().add(new SeparatorMenuItem());
 
-            // TODO: fill with life
             final MenuItem editWaypoints = new MenuItem("Edit properties");
             editWaypoints.setOnAction((ActionEvent event) -> {
                 editWaypoints(event);
@@ -1099,8 +1083,20 @@ public class GPXEditor implements Initializable {
     }
     private void insertClipboardWaypoints() {
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
-        gpxTrackXML.getItems().addAll(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()), clipboardWayPoints);
+        // add waypoints to parent of currently selected waypoint - or directly to parent
+        if (!gpxTrackXML.getItems().isEmpty()) {
+            final GPXWaypoint waypoint = gpxTrackXML.getItems().get(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()));
+            final int waypointIndex = waypoint.getParent().getGPXWaypoints().indexOf(waypoint);
+            waypoint.getParent().getGPXWaypoints().addAll(waypointIndex, clipboardWayPoints);
+        } else {
+            ((GPXLineItem) gpxTrackXML.getUserData()).getGPXWaypoints().addAll(clipboardWayPoints);
+        }
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+
+        // show remaining waypoints
+        showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
+        // force repaint of gpxFileList to show unsaved items
+        refreshGPXFileList();
     }
 
     private void initBottomPane() {
@@ -1368,13 +1364,13 @@ public class GPXEditor implements Initializable {
         gpxFileList.clear();
     }
     
-    private void refreshGPXFileList() {
+    public void refreshGPXFileList() {
         gpxFileList.getSelectionModel().selectedItemProperty().removeListener(listenergpxFileListXMLSelection);
         gpxFileList.refresh();
         gpxFileList.getSelectionModel().selectedItemProperty().addListener(listenergpxFileListXMLSelection);
     }
 
-    private void refreshGPXWaypointList() {
+    public void refreshGPXWaypointList() {
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
         gpxTrackXML.refresh();
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
@@ -1386,11 +1382,7 @@ public class GPXEditor implements Initializable {
     }
 
     public void invertTracks(final ActionEvent event) {
-        final List<GPXLineItem> selectedItems = 
-            gpxFileList.getSelectionModel().getSelectedItems().stream().
-                map((TreeItem<GPXLineItem> t) -> {
-                    return t.getValue();
-                }).collect(Collectors.toList());
+        final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
         
         // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
         // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
@@ -1460,12 +1452,8 @@ public class GPXEditor implements Initializable {
         }
     }
 
-    public void mergeDeleteItems(final ActionEvent event, final MergeDeleteItems mergeOrDelete) {
-        final List<GPXLineItem> selectedItems = 
-            gpxFileList.getSelectionModel().getSelectedItems().stream().
-                map((TreeItem<GPXLineItem> t) -> {
-                    return t.getValue();
-                }).collect(Collectors.toList());
+    public void mergeDeleteItems(final Event event, final MergeDeleteItems mergeOrDelete) {
+        final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
         final List<GPXFile> gpxFiles = uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
         
         // confirmation dialogue
@@ -1551,9 +1539,12 @@ public class GPXEditor implements Initializable {
                 gpxFile.getGPXRoutes().removeAll(gpxRoutes);
             }
         }
+
+        // TFE, 20180811: unset selection in list
+        gpxFileList.getSelectionModel().clearSelection();
     }
 
-    public void moveItem(final ActionEvent event, final MoveUpDown moveUpDown) {
+    public void moveItem(final Event event, final MoveUpDown moveUpDown) {
         assert (gpxFileList.getSelectionModel().getSelectedItems().size() == 1);
         
         final GPXLineItem selectedItem = gpxFileList.getSelectionModel().getSelectedItems().get(0).getValue();
@@ -1594,11 +1585,11 @@ public class GPXEditor implements Initializable {
         }
     }
 
-    private void preferences(final ActionEvent event) {
+    private void preferences(final Event event) {
         AlgorithmPreferences.getInstance().showPreferencesDialogue();
     }
 
-    private void checkTrack(final ActionEvent event) {
+    private void checkTrack(final Event event) {
         if (gpxTrackXML.getItems().size() > 0) {
             final ObservableList<GPXWaypoint> gpxWaypoints = gpxTrackXML.getItems();
 
@@ -1669,7 +1660,7 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
-    private void fixGPXFiles(final ActionEvent event) {
+    private void fixGPXFiles(final Event event) {
         myWorker.fixGPXFiles(
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
                 Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
@@ -1678,7 +1669,7 @@ public class GPXEditor implements Initializable {
         refillGPXWayointList(true);
     }
 
-    private void reduceGPXFiles(final ActionEvent event) {
+    private void reduceGPXFiles(final Event event) {
         myWorker.reduceGPXFiles(
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
@@ -1688,7 +1679,7 @@ public class GPXEditor implements Initializable {
         refillGPXWayointList(true);
     }
     
-    private void editMetadata(final ActionEvent event) {
+    private void editMetadata(final Event event) {
         // show metadata viewer
         TrackMap.getInstance().setVisible(false);
         EditGPXMetadata.getInstance().getPane().setVisible(true);
@@ -1696,7 +1687,7 @@ public class GPXEditor implements Initializable {
         EditGPXMetadata.getInstance().editMetadata(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
     }
     
-    private void showDistributions(final ActionEvent event) {
+    private void showDistributions(final Event event) {
         // works only for one track segment and its waypoints
         List<GPXWaypoint> waypoints;
         GPXLineItem item = gpxFileList.getSelectionModel().getSelectedItem().getValue();
@@ -1724,15 +1715,15 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    private void showStatistics(final ActionEvent event) {
+    private void showStatistics(final Event event) {
         StatisticsViewer.getInstance().showStatistics(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
     }
     
-    private void editWaypoints(final ActionEvent event) {
+    private void editWaypoints(final Event event) {
         EditGPXWaypoint.getInstance().editWaypoint(gpxTrackXML.getSelectionModel().getSelectedItems());
     }
 
-    private void assignSRTMHeight(final ActionEvent event) {
+    private void assignSRTMHeight(final Event event) {
         // TODO: remove ugly hack to pass HostServices
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
@@ -1742,7 +1733,7 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    private void showSRTMData(final ActionEvent event) {
+    private void showSRTMData(final Event event) {
         SRTMDataViewer.getInstance().showSRTMData();
     }
     
@@ -1800,7 +1791,7 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
     
-    public void convertItem(final ActionEvent event, final GPXLineItem item) {
+    public void convertItem(final Event event, final GPXLineItem item) {
         assert item != null;
         
         if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {

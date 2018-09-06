@@ -47,6 +47,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
 import org.jzy3d.chart.AWTChart;
@@ -239,6 +240,7 @@ public class SRTMDataViewer {
         vbox.prefWidthProperty().bind(scene.widthProperty());
 
         stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL); 
         stage.show();
 
         // needs to be done after show()... to not mess up jzy3d

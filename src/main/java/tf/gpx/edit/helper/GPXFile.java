@@ -137,6 +137,33 @@ public class GPXFile extends GPXMeasurable {
         myGPXWaypoints.addListener(getListChangeListener());
     }
     
+    @Override
+    public GPXFile cloneMeWithChildren() {
+        final GPXFile myClone = new GPXFile();
+        
+        // set gpx via cloner
+        myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
+        
+        // clone all my children
+        myClone.myGPXMetadata = myGPXMetadata.cloneMeWithChildren();
+        for (GPXTrack gpxTrack : myGPXTracks) {
+            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren());
+        }
+        for (GPXRoute gpxRoute : myGPXRoutes) {
+            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren());
+        }
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+        }
+
+        myClone.myGPXTracks.addListener(getListChangeListener());
+        myClone.myGPXRoutes.addListener(getListChangeListener());
+        myClone.myGPXWaypoints.addListener(getListChangeListener());
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
+    }
+
     public boolean writeToFile(final File gpxFile) {
         boolean result = true;
         
