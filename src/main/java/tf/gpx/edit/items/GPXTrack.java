@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.GPX;
@@ -37,6 +37,8 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.GPXListHelper;
 
 /**
  *
@@ -101,6 +103,7 @@ public class GPXTrack extends GPXMeasurable {
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
             myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren());
         }
+        numberChildren(myClone.myGPXTrackSegments);
 
         myClone.myGPXTrackSegments.addListener(getListChangeListener());
 

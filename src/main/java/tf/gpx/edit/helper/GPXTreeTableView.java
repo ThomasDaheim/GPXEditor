@@ -25,6 +25,12 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -378,9 +384,20 @@ public class GPXTreeTableView {
                     
                     if(!clipboardLineItems.isEmpty()) {
                         // go through clipboardLineItems
-                        final TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
+                        TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
                         
+                        boolean canInsert = false;
                         if (acceptableItems(clipboardLineItems, target)){
+                            canInsert = true;
+                        } else {
+                            // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
+                            if (!GPXLineItem.GPXLineItemType.GPXFile.equals(target.getValue().getType())) {
+                                target = target.getParent();
+                                canInsert = acceptableItems(clipboardLineItems, target);
+                            }
+                        }
+                        
+                        if (canInsert) {
                             Collections.reverse(clipboardLineItems);
                             for (TreeItem<GPXLineItem> draggedItem : clipboardLineItems) {
                                 // create copy and insert - otherwise you simply overwrite with same values

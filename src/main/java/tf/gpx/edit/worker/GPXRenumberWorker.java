@@ -26,13 +26,13 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXMetadata;
-import tf.gpx.edit.helper.GPXRoute;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXMetadata;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.IGPXLineItemVisitor;
 
 /**
  *

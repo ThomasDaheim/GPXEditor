@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
@@ -40,6 +40,9 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.LatLongHelper;
 
 /**
  *
@@ -109,7 +112,7 @@ public class GPXWaypoint extends GPXLineItem {
         return myClone;
     }
 
-    protected Waypoint getWaypoint() {
+    public Waypoint getWaypoint() {
         return myWaypoint;
     }
 

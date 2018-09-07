@@ -48,8 +48,8 @@ import javafx.scene.shape.Rectangle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.general.HoveredNode;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
 /**

@@ -33,12 +33,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXRoute;
-import tf.gpx.edit.helper.GPXTrack;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  *

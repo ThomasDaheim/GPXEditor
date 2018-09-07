@@ -28,9 +28,9 @@ package tf.gpx.edit.worker;
 import java.util.ArrayList;
 import java.util.List;
 import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  *

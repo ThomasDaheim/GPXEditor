@@ -39,9 +39,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditorManager;
 
 /**

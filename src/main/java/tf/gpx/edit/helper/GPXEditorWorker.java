@@ -25,6 +25,13 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.items.IGPXLineItemVisitor;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

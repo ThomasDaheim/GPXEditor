@@ -29,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.srtm.SRTMDataStore;
 
 /**

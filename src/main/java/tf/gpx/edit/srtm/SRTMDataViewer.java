@@ -74,9 +74,9 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
 /**

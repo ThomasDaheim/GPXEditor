@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.GPXParser;
 import com.hs.gpxparser.GPXWriter;
@@ -54,6 +54,9 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.GPXEditorWorker;
+import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.parser.DefaultParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
@@ -155,6 +158,12 @@ public class GPXFile extends GPXMeasurable {
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
             myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
         }
+        numberChildren(myClone.myGPXTracks);
+        numberChildren(myClone.myGPXRoutes);
+        numberChildren(myClone.myGPXWaypoints);
+
+        // init prev/next waypoints
+        myClone.updatePrevNextGPXWaypoints();
 
         myClone.myGPXTracks.addListener(getListChangeListener());
         myClone.myGPXRoutes.addListener(getListChangeListener());
@@ -291,6 +300,21 @@ public class GPXFile extends GPXMeasurable {
         myGPXWaypoints.addAll(gpxGPXWaypoints);
         
         setHasUnsavedChanges();
+    }
+    
+    // doubly linked list for dummies :-)
+    private void updatePrevNextGPXWaypoints() {
+        if (!myGPXWaypoints.isEmpty()) {
+            GPXWaypoint prevGPXWaypoint = null;
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                if (prevGPXWaypoint != null) {
+                    prevGPXWaypoint.setNextGPXWaypoint(gpxWaypoint);
+                }
+                gpxWaypoint.setPrevGPXWaypoint(prevGPXWaypoint);
+                prevGPXWaypoint = gpxWaypoint;
+            }
+            myGPXWaypoints.get(myGPXWaypoints.size()-1).setNextGPXWaypoint(null);
+        }
     }
     
     public void setGPXMetadata(final GPXMetadata gpxMetadata) {

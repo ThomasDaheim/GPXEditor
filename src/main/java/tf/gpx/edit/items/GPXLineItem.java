@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
@@ -455,6 +455,13 @@ public abstract class GPXLineItem {
                     return (T) child.getContent();
                 // need to collect into a set that contains the order
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+    protected <T extends GPXLineItem> void numberChildren(final List<T> children) {
+        AtomicInteger counter = new AtomicInteger(1);
+        children.stream().
+                forEach((T child) -> {
+                    child.setNumber(counter.getAndIncrement());
+                });
     }
     
     // getter functions

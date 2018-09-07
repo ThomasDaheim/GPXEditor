@@ -48,8 +48,8 @@ import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.IGPXLineItemVisitor;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 

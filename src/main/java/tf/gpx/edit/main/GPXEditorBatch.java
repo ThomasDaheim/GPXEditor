@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorWorker;
-import tf.gpx.edit.helper.GPXFile;
+import tf.gpx.edit.items.GPXFile;
 
 /**
  *

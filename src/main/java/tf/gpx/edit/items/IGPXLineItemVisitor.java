@@ -23,7 +23,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
+
+import tf.gpx.edit.items.GPXMetadata;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
 
 /**
  *

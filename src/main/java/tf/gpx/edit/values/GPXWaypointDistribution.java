@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.values;
 
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  * Distribution class for binning GPXWaypoint data.

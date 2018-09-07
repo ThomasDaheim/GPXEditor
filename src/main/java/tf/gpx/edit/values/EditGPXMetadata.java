@@ -47,8 +47,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXMetadata;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
 
 /**
