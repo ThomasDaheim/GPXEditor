@@ -21,7 +21,7 @@ Following features are available via UI:
 
 ### Update v2.5
 
-* copy & paste for tracksegments, tracks, routes using same checks as forr drag & drop
+* copy & paste for tracksegments, tracks, routes using same checks as for drag & drop
 
 ### Update v2.4
 
