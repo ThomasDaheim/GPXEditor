@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.items.GPXWaypoint;
 import de.saring.leafletmap.LatLong;
 import java.util.regex.Pattern;
 

@@ -32,9 +32,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXLineItem.GPXLineItemType;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
 
 /**
  *

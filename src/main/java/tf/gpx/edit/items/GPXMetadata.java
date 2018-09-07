@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.Metadata;
@@ -33,6 +33,7 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.GPXCloner;
 
 /**
  *
@@ -53,6 +54,20 @@ public class GPXMetadata extends GPXMeasurable {
         
         myGPXFile = gpxFile;
         myMetadata = metadata;
+    }
+    
+    @Override
+    public GPXMetadata cloneMeWithChildren() {
+        final GPXMetadata myClone = new GPXMetadata();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        myClone.myMetadata = GPXCloner.getInstance().deepClone(myMetadata);
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
     }
     
     @Override

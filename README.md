@@ -11,16 +11,17 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.4)
+## Features (v2.5)
 
-UNFORTUNATELY some bugs have crept into the new features from the latest commit :-( Will get them fixed once I'm back online...
-* cop & paste: delete works, paste doesn't
-* drag & drop track segments sometimes doesn't work
-* editing waypoints under windows with other locale as US doesn't work
+Bugfixes for issues found while "on the road"...
 
 Following features are available via UI:
 
 ## File and track handling
+
+### Update v2.5
+
+* copy & paste for tracksegments, tracks, routes using same checks as for drag & drop
 
 ### Update v2.4
 
@@ -210,9 +211,10 @@ Explicit dependencies:
 * 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 * 'com.fasterxml.jackson.core:jackson-core:2.9.5'
 * 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-* org.jfxtras:jfxtras-controls:8.0-r6'
-* org.jfxtras:jfxtras-labs:8.0-r6'
-' org.apache.commons:commons-math3:3.6.1'
+* 'org.jfxtras:jfxtras-controls:8.0-r6'
+* 'org.jfxtras:jfxtras-labs:8.0-r6'
+* 'org.apache.commons:commons-math3:3.6.1'
+* 'uk.com.robust-it:cloning:1.9.10'
 
 Other things used internally:
 

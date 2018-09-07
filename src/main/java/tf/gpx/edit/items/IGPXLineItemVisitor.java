@@ -23,36 +23,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.items;
 
-import java.util.ArrayList;
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMetadata;
+import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
 
 /**
  *
  * @author Thomas
  */
-public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
-    private GPXFixGarminCrapWorker() {
-        super ();
-    }
-
-    public GPXFixGarminCrapWorker(final double parameter) {
-        super (parameter);
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
-        // AND distanceGPXWaypoints prev - next below epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
-
-        final boolean keep[] = EarthGeometry.fixTrack(waypoints, myParameter);
-        
-        removeGPXWaypoint(waypoints, keep);
-    }
+public interface IGPXLineItemVisitor {
+    public abstract void visitGPXFile(final GPXFile gpxFile);
+    public abstract void visitGPXMetadata(final GPXMetadata gpxMetadata);
+    public abstract void visitGPXTrack(final GPXTrack gpxTrack);
+    public abstract void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment);
+    public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
+    public abstract void visitGPXRoute(final GPXRoute gpxRoute);
+    public abstract boolean deepthFirst();
 }

@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.Track;
@@ -37,6 +37,8 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXCloner;
 
 /**
  *
@@ -47,13 +49,13 @@ public class GPXTrackSegment extends GPXMeasurable {
     private TrackSegment myTrackSegment;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
     
-    private Double myLength;
-    private Double myCumulativeAscent;
-    private Double myCumulativeDescent;
-    private Double myMinHeight;
-    private Double myMaxHeight;
-    private Date myStartingTime;
-    private Date myEndTime;
+    private Double myLength = null;
+    private Double myCumulativeAscent = null;
+    private Double myCumulativeDescent = null;
+    private Double myMinHeight = null;
+    private Double myMaxHeight = null;
+    private Date myStartingTime = null;
+    private Date myEndTime = null;
     
     private GPXTrackSegment() {
         super(GPXLineItemType.GPXTrackSegment);
@@ -99,6 +101,39 @@ public class GPXTrackSegment extends GPXMeasurable {
         }
         
         myGPXWaypoints.addListener(getListChangeListener());
+    }
+    
+    @Override
+    public GPXTrackSegment cloneMeWithChildren() {
+        final GPXTrackSegment myClone = new GPXTrackSegment();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXTrack = myGPXTrack;
+        
+        // set tracksegment via cloner
+        myClone.myTrackSegment = GPXCloner.getInstance().deepClone(myTrackSegment);
+        
+        myClone.myLength = myLength;
+        myClone.myCumulativeAscent = myCumulativeAscent;
+        myClone.myCumulativeDescent = myCumulativeDescent;
+        myClone.myMinHeight = myMinHeight;
+        myClone.myMaxHeight = myMaxHeight;
+        myClone.myStartingTime = myStartingTime;
+        myClone.myEndTime = myEndTime;
+        
+        // clone all my children
+        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+        }
+        numberChildren(myClone.myGPXWaypoints);
+
+        // init prev/next waypoints
+        myClone.updatePrevNextGPXWaypoints();
+
+        myClone.myGPXWaypoints.addListener(getListChangeListener());
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
     }
 
     protected TrackSegment getTrackSegment() {

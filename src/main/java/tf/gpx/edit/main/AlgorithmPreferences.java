@@ -134,6 +134,7 @@ public class AlgorithmPreferences {
         GridPane.setMargin(cancelBtn, new Insets(10));
         
         settingsStage.setScene(new Scene(gridPane));
+        settingsStage.initModality(Modality.APPLICATION_MODAL); 
         settingsStage.showAndWait();
         
         if (saveBtn.getText().equals(settingsStage.getTitle())) {

@@ -49,6 +49,7 @@ dependencies {
     compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '8.0-r6'
     compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '8.0-r6'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+    compile 'uk.com.robust-it:cloning:1.9.10'
     
     // You can read more about how to add dependency here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies

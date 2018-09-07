@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Extension;
 import com.hs.gpxparser.modal.GPX;
@@ -37,6 +37,8 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.GPXListHelper;
 
 /**
  *
@@ -85,6 +87,28 @@ public class GPXTrack extends GPXMeasurable {
         }
 
         myGPXTrackSegments.addListener(getListChangeListener());
+    }
+    
+    @Override
+    public GPXTrack cloneMeWithChildren() {
+        final GPXTrack myClone = new GPXTrack();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
+        
+        // clone all my children
+        for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
+            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren());
+        }
+        numberChildren(myClone.myGPXTrackSegments);
+
+        myClone.myGPXTrackSegments.addListener(getListChangeListener());
+
+        // nothing else to clone, needs to be set by caller
+        return myClone;
     }
 
     protected Track getTrack() {

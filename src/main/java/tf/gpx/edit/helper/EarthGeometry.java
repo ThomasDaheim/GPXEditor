@@ -1,5 +1,6 @@
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.items.GPXWaypoint;
 import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Arrays;

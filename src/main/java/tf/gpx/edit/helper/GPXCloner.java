@@ -25,16 +25,32 @@
  */
 package tf.gpx.edit.helper;
 
+import com.rits.cloning.Cloner;
+
 /**
- *
- * @author Thomas
+ * Cloner wrapper for cloning of gpx-parser class
+ * https://github.com/kostaskougios/cloning 
+ * 
+ * @author thomas
  */
-public interface IGPXLineItemVisitor {
-    public abstract void visitGPXFile(final GPXFile gpxFile);
-    public abstract void visitGPXMetadata(final GPXMetadata gpxMetadata);
-    public abstract void visitGPXTrack(final GPXTrack gpxTrack);
-    public abstract void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment);
-    public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
-    public abstract void visitGPXRoute(final GPXRoute gpxRoute);
-    public abstract boolean deepthFirst();
+public class GPXCloner {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private final static GPXCloner INSTANCE = new GPXCloner();
+    
+    private final static Cloner cloner = new Cloner();
+    
+    private GPXCloner() {
+        // Exists only to defeat instantiation.
+        
+        // add all exceptions for classes to cloner - cloner.registerConstant(MyClass.class,"MUTEX");
+    }
+
+    public static GPXCloner getInstance() {
+        return INSTANCE;
+    }
+    
+    public <T> T deepClone(T o) {
+        return cloner.deepClone(o);
+    }
 }

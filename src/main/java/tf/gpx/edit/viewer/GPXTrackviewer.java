@@ -26,8 +26,8 @@
 package tf.gpx.edit.viewer;
 
 import java.util.List;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
 

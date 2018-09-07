@@ -32,15 +32,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import tf.gpx.edit.helper.GPXFile;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditorManager;
 
 /**
@@ -158,7 +159,7 @@ public class StatisticsViewer {
         statisticsStage.setTitle("Statistics");
         statisticsStage.initModality(Modality.WINDOW_MODAL);
 
-        final GridPane gridPane = new GridPane();
+        final StackPane stackPane = new StackPane();
 
         // data will be shown in a table
         table.setEditable(false);
@@ -188,14 +189,12 @@ public class StatisticsViewer {
         
         table.setItems(statisticsList);
         
-        gridPane.add(table, 0, 0);
-        GridPane.setHgrow(table, Priority.ALWAYS);
-        GridPane.setVgrow(table, Priority.ALWAYS);
+        stackPane.getChildren().add(table);
       
-        statisticsStage.setScene(new Scene(gridPane));
+        statisticsStage.setScene(new Scene(stackPane));
         statisticsStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
         statisticsStage.setWidth(400);
-        statisticsStage.setHeight(780);
+        statisticsStage.setHeight(600);
         statisticsStage.setResizable(false);
     }
     
@@ -210,11 +209,7 @@ public class StatisticsViewer {
         // initialize the whole thing...
         initStatisticsViewer();
         
-        statisticsStage.show();
-        statisticsStage.setWidth(table.getWidth());
-        statisticsStage.setHeight(table.getHeight());
-        statisticsStage.hide();
-
+        statisticsStage.initModality(Modality.APPLICATION_MODAL); 
         statisticsStage.showAndWait();
                 
         return true;
@@ -269,11 +264,16 @@ public class StatisticsViewer {
         // walk through waypoints and calculate the remaining values...
         for (GPXWaypoint waypoint : gpxWaypoints) {
             avgHeight += waypoint.getElevation();
-            maxSpeed = Math.max(maxSpeed, waypoint.getSpeed());
+
+            double speed = waypoint.getSpeed();
+            if (Double.isInfinite(speed)) {
+                speed = 0.0;
+            }
+
+            maxSpeed = Math.max(maxSpeed, speed);
             
             final double heightDiff = waypoint.getElevationDiff();
             final double slope = waypoint.getSlope();
-            final double speed = waypoint.getSpeed();
             
             if (heightDiff > 0.0) {
                 lengthAsc += waypoint.getDistance();

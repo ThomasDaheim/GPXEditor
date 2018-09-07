@@ -57,10 +57,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
-import tf.gpx.edit.helper.GPXLineItem;
-import tf.gpx.edit.helper.GPXLineItem.GPXLineItemData;
-import tf.gpx.edit.helper.GPXTrackSegment;
-import tf.gpx.edit.helper.GPXWaypoint;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.GPXEditorManager;
 
@@ -348,6 +348,7 @@ public class DistributionViewer {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
+        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         distributionsStage.showAndWait();
                 
         return hasDeleted;

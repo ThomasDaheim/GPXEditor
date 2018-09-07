@@ -23,36 +23,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.general;
 
-import java.util.ArrayList;
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 
 /**
  *
- * @author Thomas
+ * @author thomas
  */
-public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
-    private GPXFixGarminCrapWorker() {
-        super ();
-    }
-
-    public GPXFixGarminCrapWorker(final double parameter) {
-        super (parameter);
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
-        // AND distanceGPXWaypoints prev - next below epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
-
-        final boolean keep[] = EarthGeometry.fixTrack(waypoints, myParameter);
+public class CopyPasteKeyCodes {
+    private final static KeyCodeCombination controlCKey = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
+    private final static KeyCodeCombination controlVKey = new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_ANY);
+    private final static KeyCodeCombination controlXKey = new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_ANY);
+    private final static KeyCodeCombination shiftDeleteKey = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
+    private final static KeyCodeCombination deleteKey = new KeyCodeCombination(KeyCode.DELETE);
+    private final static KeyCodeCombination insertKey = new KeyCodeCombination(KeyCode.INSERT);
+    
+    public static enum KeyCodes {
+        CNTRL_C(controlCKey),
+        CNTRL_V(controlVKey),
+        CNTRL_X(controlXKey),
+        SHIFT_DEL(shiftDeleteKey),
+        DEL(deleteKey),
+        INSERT(insertKey);
         
-        removeGPXWaypoint(waypoints, keep);
+        private final KeyCodeCombination keyCode;
+        
+        private KeyCodes(final KeyCodeCombination key) {
+            keyCode = key;
+        }
+
+        public KeyCodeCombination getKeyCode() {
+            return keyCode;
+        }
+        
+        public boolean match(final KeyEvent event) {
+            return keyCode.match(event);
+        }
     }
 }

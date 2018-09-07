@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
@@ -40,6 +40,9 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.LatLongHelper;
 
 /**
  *
@@ -94,8 +97,22 @@ public class GPXWaypoint extends GPXLineItem {
         myWaypoint = waypoint;
         setNumber(number);
     }
+    
+    @Override
+    public GPXWaypoint cloneMeWithChildren() {
+        final GPXWaypoint myClone = new GPXWaypoint();
+        
+        // parent needs to be set initially - list functions use this for checking
+        myClone.myGPXParent = myGPXParent;
+        
+        // set waypoint via cloner
+        myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
 
-    protected Waypoint getWaypoint() {
+        // nothing else to clone, needs to be set by caller
+        return myClone;
+    }
+
+    public Waypoint getWaypoint() {
         return myWaypoint;
     }
 
