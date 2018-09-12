@@ -78,7 +78,7 @@ public class SRTMDataViewer {
     
     private static final int MIN_PIXELS = 10;
     
-    private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0 '°'; #0.0 '°'");
+    private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'°'; #0.0'°'");
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
