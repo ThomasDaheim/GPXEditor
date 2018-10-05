@@ -27,7 +27,6 @@ package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
-import com.rits.cloning.Cloner;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
