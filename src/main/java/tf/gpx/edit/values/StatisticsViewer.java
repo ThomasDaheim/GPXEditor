@@ -32,8 +32,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
@@ -88,10 +86,10 @@ public class StatisticsViewer {
         AvgHeight("Avg. Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         CumulativeAscent("Total Ascent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         CumulativeDescent("Total Descent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSlopeAscent("Max. Slope ascending", "%", Double.class, GPXLineItem.SLOPE_FORMAT),
-        MaxSlopeDescent("Max. Slope descending", "%", Double.class, GPXLineItem.SLOPE_FORMAT),
-        AvgSlopeAscent("Avg. Slope ascending", "%", Double.class, GPXLineItem.SLOPE_FORMAT),
-        AvgSlopeDescent("Avg. Slope descending", "%", Double.class, GPXLineItem.SLOPE_FORMAT),
+        MaxSlopeAscent("Max. Slope ascending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        MaxSlopeDescent("Max. Slope descending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        AvgSlopeAscent("Avg. Slope ascending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        AvgSlopeDescent("Avg. Slope descending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
 
         Break4("", "", String.class, null),
 

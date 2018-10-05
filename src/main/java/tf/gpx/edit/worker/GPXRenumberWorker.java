@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.worker;
 
-import java.util.List;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;

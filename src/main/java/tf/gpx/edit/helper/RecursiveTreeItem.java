@@ -25,15 +25,14 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.util.Callback;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import javafx.collections.FXCollections;
 
 // based on https://gist.github.com/lestard/011e9ed4433f9eb791a8
 public class RecursiveTreeItem<T> extends TreeItem<T> {

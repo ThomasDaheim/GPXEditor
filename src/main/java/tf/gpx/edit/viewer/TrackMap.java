@@ -26,15 +26,16 @@
 package tf.gpx.edit.viewer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.saring.leafletmap.ColorMarker;
 import de.saring.leafletmap.ControlPosition;
 import de.saring.leafletmap.LatLong;
 import de.saring.leafletmap.LeafletMapView;
 import de.saring.leafletmap.MapConfig;
 import de.saring.leafletmap.MapLayer;
+import de.saring.leafletmap.Marker;
 import de.saring.leafletmap.ScaleControlConfig;
 import de.saring.leafletmap.ZoomControlConfig;
-import de.saring.leafletmap.Marker;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,14 +78,13 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.main.GPXEditor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones

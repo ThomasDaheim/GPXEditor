@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit;
 
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -38,7 +40,11 @@ import tf.gpx.edit.helper.LatLongHelper;
  * @author thomas
  */
 public class TestLatLon {
+    private final String dS;
+    
     public TestLatLon() {
+        // TFE, 20181005: with proper support for locals also the test values change
+       dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }
     
     @BeforeClass
@@ -62,27 +68,27 @@ public class TestLatLon {
         System.out.println("Test: testToString()");
         
         // 0 lat -> N 0°0'0.00"
-        Assert.assertTrue("N 0°0'0.00\"".equals(LatLongHelper.latToString(0)));
+        Assert.assertTrue(("N 0°0'0" + dS + "00\"").equals(LatLongHelper.latToString(0)));
         // 0 lon -> E 0°0'0.00"
-        Assert.assertTrue("E 0°0'0.00\"".equals(LatLongHelper.lonToString(0)));
+        Assert.assertTrue(("E 0°0'0" + dS + "00\"").equals(LatLongHelper.lonToString(0)));
 
         // 89.99999999999 lat -> N 89°59'59.99"
-        Assert.assertTrue("N 89°59'59.99\"".equals(LatLongHelper.latToString(89.99999999999)));
+        Assert.assertTrue(("N 89°59'59" + dS + "99\"").equals(LatLongHelper.latToString(89.99999999999)));
         // 90.0 lat -> N 90°0'0.00"
-        Assert.assertTrue("N 90°0'0.00\"".equals(LatLongHelper.latToString(90)));
+        Assert.assertTrue(("N 90°0'0" + dS + "00\"").equals(LatLongHelper.latToString(90)));
         // -89.99999999999 lat -> S 89°59'59.99"
-        Assert.assertTrue("S 89°59'59.99\"".equals(LatLongHelper.latToString(-89.99999999999)));
+        Assert.assertTrue(("S 89°59'59" + dS + "99\"").equals(LatLongHelper.latToString(-89.99999999999)));
         // -90.0 lat -> S 90°0'0.00"
-        Assert.assertTrue("S 90°0'0.00\"".equals(LatLongHelper.latToString(-90)));
+        Assert.assertTrue(("S 90°0'0" + dS + "00\"").equals(LatLongHelper.latToString(-90)));
 
         // 179.99999999999 lon -> E 179°59'59.99"
-        Assert.assertTrue("E 179°59'59.99\"".equals(LatLongHelper.lonToString(179.99999999999)));
+        Assert.assertTrue(("E 179°59'59" + dS + "99\"").equals(LatLongHelper.lonToString(179.99999999999)));
         // 180.0 lon -> E 180°0'0.00"
-        Assert.assertTrue("E 180°0'0.00\"".equals(LatLongHelper.lonToString(180)));
+        Assert.assertTrue(("E 180°0'0" + dS + "00\"").equals(LatLongHelper.lonToString(180)));
         // -179.99999999999 lon -> W 179°59'59.99"
-        Assert.assertTrue("W 179°59'59.99\"".equals(LatLongHelper.lonToString(-179.99999999999)));
+        Assert.assertTrue(("W 179°59'59" + dS + "99\"").equals(LatLongHelper.lonToString(-179.99999999999)));
         // -180.0 lon -> W 180°0'0.00"
-        Assert.assertTrue("W 180°0'0.00\"".equals(LatLongHelper.lonToString(-180)));
+        Assert.assertTrue(("W 180°0'0" + dS + "00\"").equals(LatLongHelper.lonToString(-180)));
         
         // 90.01 lat -> INVALID_LATITUDE
         Assert.assertTrue(LatLongHelper.INVALID_LATITUDE.equals(LatLongHelper.latToString(90.00000001)));
@@ -102,37 +108,37 @@ public class TestLatLon {
         System.out.println("Test: testFromString()");
         
         // 0 lat <- N 0°0'0.00"
-        Assert.assertEquals(0.0, LatLongHelper.latFromString("N 0°0'0.00\""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.latFromString("N 0°0'0" + dS + "00\""), 0.0);
         // 0 lat <- N°'."
-        Assert.assertEquals(0.0, LatLongHelper.latFromString("N°'.\""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.latFromString("N°'" + dS + "\""), 0.0);
         // 0 lat <- N   °  '  .  "
-        Assert.assertEquals(0.0, LatLongHelper.latFromString("N   °  '  .  \""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.latFromString("N   °  '  " + dS + "  \""), 0.0);
         // 0 lon <- E 0°0'0.00"
-        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E 0°0'0.00\""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E 0°0'0" + dS + "00\""), 0.0);
         // 0 lon <- E°'."
-        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E°'.\""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E°'" + dS + "\""), 0.0);
         // 0 lon <- E    °  '  .  "
-        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E    °  '  .  \""), 0.0);
+        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E    °  '  " + dS + "  \""), 0.0);
 
         // 89.99999999999 lat <- N 89°59'59.99"
-        Assert.assertEquals(89.99999999999, LatLongHelper.latFromString("N 89°59'59.99\""), 0.0001);
+        Assert.assertEquals(89.99999999999, LatLongHelper.latFromString("N 89°59'59" + dS + "99\""), 0.0001);
         // 90.0 lat -> N 90°00'00.00"
-        Assert.assertEquals(90.0, LatLongHelper.latFromString("N 90°00'00.00\""), 0.0);
+        Assert.assertEquals(90.0, LatLongHelper.latFromString("N 90°00'00" + dS + "00\""), 0.0);
         // -89.99999999999 lat <- S 89°59'59.99"
-        Assert.assertEquals(-89.99999999999, LatLongHelper.latFromString("S 89°59'59.99\""), 0.0001);
+        Assert.assertEquals(-89.99999999999, LatLongHelper.latFromString("S 89°59'59" + dS + "99\""), 0.0001);
         // -90.0 lat -> S 90°0'0.00"
         //Assert.assertEquals(-90.0, LatLongHelper.latFromString("S 90°0'0.00\""), 0.0);
         // 5.08486 lat <- N 5°5'5.5"
-        Assert.assertEquals(5.08486, LatLongHelper.latFromString("N 5°5'5.5\""), 0.0001);
+        Assert.assertEquals(5.08486, LatLongHelper.latFromString("N 5°5'5" + dS + "5\""), 0.0001);
         // 5.08486 lat <- N  5° 5' 5.5"
-        Assert.assertEquals(5.08486, LatLongHelper.latFromString("N  5° 5' 5.5\""), 0.0001);
+        Assert.assertEquals(5.08486, LatLongHelper.latFromString("N  5° 5' 5" + dS + "5\""), 0.0001);
 
         // 179.99999999999 lon <- E 179°59'59.99"
-        Assert.assertEquals(179.99999999999, LatLongHelper.lonFromString("E 179°59'59.99\""), 0.0001);
+        Assert.assertEquals(179.99999999999, LatLongHelper.lonFromString("E 179°59'59" + dS + "99\""), 0.0001);
         // 180.0 lon <- E 180°0'0.00"
         //Assert.assertEquals(180.0, LatLongHelper.lonFromString("E 180°0'0.00\""), 0.0);
         // -179.99999999999 lon <- W 179°59'59.99"
-        Assert.assertEquals(-179.99999999999, LatLongHelper.lonFromString("W 179°59'59.99\""), 0.0001);
+        Assert.assertEquals(-179.99999999999, LatLongHelper.lonFromString("W 179°59'59" + dS + "99\""), 0.0001);
         // -180.0 lon <- W 180°0'0.00"
         //Assert.assertEquals(-180.0, LatLongHelper.lonFromString("W 180°0'0.00\""), 0.0);
         
@@ -145,19 +151,19 @@ public class TestLatLon {
         System.out.println("Test: testRoundtrip()");
         
         // 0 lat <-> N 0°0'0.00"
-        Assert.assertTrue("N 0°0'0.00\"".equals(LatLongHelper.latToString(LatLongHelper.latFromString("N 0°0'0.00\""))));
+        Assert.assertTrue(("N 0°0'0" + dS + "00\"").equals(LatLongHelper.latToString(LatLongHelper.latFromString("N 0°0'0" + dS + "00\""))));
         Assert.assertEquals(0.0, LatLongHelper.latFromString(LatLongHelper.latToString(0)), 0.0);
         
         // 0 lon <-> E 0°0'0.00"
-        Assert.assertTrue("E 0°0'0.00\"".equals(LatLongHelper.lonToString(LatLongHelper.lonFromString("E 0°0'0.00\""))));
+        Assert.assertTrue(("E 0°0'0" + dS + "00\"").equals(LatLongHelper.lonToString(LatLongHelper.lonFromString("E 0°0'0" + dS + "00\""))));
         Assert.assertEquals(0.0, LatLongHelper.lonFromString(LatLongHelper.lonToString(0)), 0.0);
 
         // 5.08486 lat <-> N 5°5'5.50"
-        Assert.assertTrue("N 5°5'5.50\"".equals(LatLongHelper.latToString(LatLongHelper.latFromString("N 5°5'5.50\""))));
+        Assert.assertTrue(("N 5°5'5" + dS + "50\"").equals(LatLongHelper.latToString(LatLongHelper.latFromString("N 5°5'5" + dS + "50\""))));
         Assert.assertEquals(5.08486, LatLongHelper.latFromString(LatLongHelper.latToString(5.08486)), 0.0001);
 
         // -5.08486 lon <-> W 5°5'5.50"
-        Assert.assertTrue("W 5°5'5.50\"".equals(LatLongHelper.lonToString(LatLongHelper.lonFromString("W 5°5'5.50\""))));
+        Assert.assertTrue(("W 5°5'5" + dS + "50\"").equals(LatLongHelper.lonToString(LatLongHelper.lonFromString("W 5°5'5" + dS + "50\""))));
         Assert.assertEquals(-5.08486, LatLongHelper.lonFromString(LatLongHelper.lonToString(-5.08486)), 0.0001);
         
         System.out.println("Done.");

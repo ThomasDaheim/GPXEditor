@@ -88,7 +88,7 @@ public class RestrictiveTextField extends TextField {
  
                 //if (restrict.get() != null && !restrict.get().equals("") && !s1.matches(restrict.get() + "*")) {
                 // TFE, 20180602: use pattern
-                if (restrict.get() != null && !restrict.get().equals("") && !restrictPattern.matcher(s1).matches()) {
+                if (restrict.get() != null && !restrict.get().isEmpty() && !restrictPattern.matcher(s1).matches()) {
                     ignore = true;
                     setText(s);
                     ignore = false;

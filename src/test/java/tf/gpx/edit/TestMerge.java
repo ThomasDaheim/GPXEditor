@@ -27,7 +27,6 @@ package tf.gpx.edit;
 
 import java.io.File;
 import java.util.Arrays;
-import javafx.collections.ObservableList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -36,11 +35,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  *

@@ -25,12 +25,6 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,6 +57,12 @@ import javafx.scene.input.TransferMode;
 import javafx.util.Callback;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 

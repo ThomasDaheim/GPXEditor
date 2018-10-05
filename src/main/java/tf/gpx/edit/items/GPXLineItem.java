@@ -27,7 +27,6 @@ package tf.gpx.edit.items;
 
 import com.hs.gpxparser.modal.Bounds;
 import com.hs.gpxparser.modal.Extension;
-import com.rits.cloning.Cloner;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -54,7 +53,7 @@ public abstract class GPXLineItem {
     public static final DecimalFormat DURATION_FORMAT = new DecimalFormat("00"); 
     public static final DecimalFormat DOUBLE_FORMAT_3 = new DecimalFormat("0.000"); 
     public static final DecimalFormat DOUBLE_FORMAT_2 = new DecimalFormat("0.00"); 
-    public static final DecimalFormat SLOPE_FORMAT = new DecimalFormat("0.0"); 
+    public static final DecimalFormat DOUBLE_FORMAT_1 = new DecimalFormat("0.0"); 
     public static final DecimalFormat COUNT_FORMAT = new DecimalFormat("#########"); 
     public static final double NO_VALUE = Double.MIN_VALUE; 
     
@@ -197,7 +196,7 @@ public abstract class GPXLineItem {
         DistanceToPrevious(true, "Distance To Previous", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         Elevation(true, "Elevation", GPXLineItemDataType.Single, DOUBLE_FORMAT_2),
         ElevationDifferenceToPrevious(true, "Elevation Difference To Previous", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
-        Slope(true, "Slope", GPXLineItemDataType.Double, SLOPE_FORMAT),
+        Slope(true, "Slope", GPXLineItemDataType.Double, DOUBLE_FORMAT_1),
         NoItems(false, "NoItems", GPXLineItemDataType.Single, COUNT_FORMAT);
         
         private final boolean hasDoubleValue;
