@@ -25,9 +25,7 @@
  */
 package tf.gpx.edit.main;
 
-import com.sun.javafx.PlatformUtil;
 import java.io.IOException;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -54,19 +52,6 @@ public class GPXEditorManager extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // get rid of INFO messages from gluon maps
-        // https://stackoverflow.com/questions/13760095/java-dynamically-change-logging-level
-        final Handler[] handlers = Logger.getLogger("").getHandlers();
-        for (Handler handler : handlers) {
-            handler.setLevel(Level.WARNING);
-        }
-        
-        // set cache for map tile to avoid error message java.io.IOException: Storage Service is not available
-        // https://github.com/gluonhq/maps/issues/8#issuecomment-310389905
-        if(PlatformUtil.isWindows() || PlatformUtil.isMac() || PlatformUtil.isUnix()) {
-            System.setProperty("javafx.platform" , "Desktop");
-        }
-
         launch(GPXEditorManager.class, args);
     }
     

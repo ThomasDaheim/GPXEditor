@@ -138,7 +138,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                             // remove unnecessary multiple tabs and final newline
                             final String lastValue = myNode.getLastChild().getNodeValue();
                             // count number of tabs and remove that number in the whole output string
-                            final int lastIndex = lastValue.lastIndexOf("\t");
+                            final int lastIndex = lastValue.lastIndexOf('\t');
                             if (lastIndex != ArrayUtils.INDEX_NOT_FOUND) {
                                 final String tabsString = StringUtils.repeat("\t", lastIndex);
                                 nodeString = sw.toString().replace(tabsString, "");

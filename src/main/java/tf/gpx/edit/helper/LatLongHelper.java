@@ -25,9 +25,11 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.items.GPXWaypoint;
 import de.saring.leafletmap.LatLong;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.regex.Pattern;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  *
@@ -149,7 +151,7 @@ public class LatLongHelper {
         return result;
     }
     
-    private static double doubleFromString(final String latlon) {
+    private static double doubleFromString(final String latlon) throws ParseException {
         double result = 0;
         String temp = latlon;
         
@@ -160,11 +162,11 @@ public class LatLongHelper {
         temp = temp.split("°")[1];
         
         // 2) split rest @ ' and convert to double / 60
-        result += Double.parseDouble(temp.split("'")[0]) / 60.0;
+        result += NumberFormat.getNumberInstance().parse(temp.split("'")[0].trim()).doubleValue() / 60.0;
         temp = temp.split("'")[1];
         
         // 3) split rest @ \" and convert to double / 3600
-        result += Double.parseDouble(temp.split("\"")[0]) / 3600.0;
+        result += NumberFormat.getNumberInstance().parse(temp.split("\"")[0].trim()).doubleValue() / 3600.0;
         
         return result;
     }

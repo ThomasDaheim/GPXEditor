@@ -25,6 +25,11 @@
  */
 package tf.gpx.edit.main;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -52,8 +57,13 @@ public class AlgorithmPreferences {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static AlgorithmPreferences INSTANCE = new AlgorithmPreferences();
 
+    // TFE, 20181005: we also need our own decimalformat to have proper output
+    private final DecimalFormat decimalFormat = new DecimalFormat("0");
+
     private AlgorithmPreferences() {
         // Exists only to defeat instantiation.
+
+        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
     }
 
     public static AlgorithmPreferences getInstance() {
@@ -63,10 +73,8 @@ public class AlgorithmPreferences {
     public void showPreferencesDialogue() {
         EarthGeometry.Algorithm myAlgorithm = 
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
-        double myReduceEpsilon = 
-                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
-        double myFixEpsilon = 
-                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
+        double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
+        double myFixEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
 
         // create new scene with list of algos & parameter
         final Stage settingsStage = new Stage();
@@ -84,7 +92,7 @@ public class AlgorithmPreferences {
         final TextField fixText = new TextField();
         fixText.setMaxWidth(80);
         fixText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
-        fixText.setText(Double.toString(myFixEpsilon));
+        fixText.setText(decimalFormat.format(myFixEpsilon));
         fixText.setTooltip(new Tooltip("Minimum distance between waypoints for fix track algorithm."));
         gridPane.add(fixText, 1, rowNum, 1, 1);
         GridPane.setMargin(fixText, new Insets(10));
@@ -110,7 +118,7 @@ public class AlgorithmPreferences {
         final TextField epsilonText = new TextField();
         epsilonText.setMaxWidth(80);
         epsilonText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
-        epsilonText.setText(Double.toString(myReduceEpsilon));
+        epsilonText.setText(decimalFormat.format(myReduceEpsilon));
         epsilonText.setTooltip(new Tooltip("Minimum distance for track reduction algorithms."));
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, new Insets(10));
@@ -139,9 +147,10 @@ public class AlgorithmPreferences {
         
         if (saveBtn.getText().equals(settingsStage.getTitle())) {
             // read values from stage
-            myFixEpsilon = Double.valueOf(fixText.getText());
             myAlgorithm = EnumHelper.getInstance().selectedEnum(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
-            myReduceEpsilon = Double.valueOf(epsilonText.getText());
+
+            myFixEpsilon = Double.valueOf(fixText.getText().trim());
+            myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
 
             GPXEditorPreferences.put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
             GPXEditorPreferences.put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
