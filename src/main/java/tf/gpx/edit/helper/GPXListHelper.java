@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.items.GPXLineItem;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import tf.gpx.edit.items.GPXLineItem;
 
 /**
  * Concatenate into observable list that keeps track of changes of sublists.

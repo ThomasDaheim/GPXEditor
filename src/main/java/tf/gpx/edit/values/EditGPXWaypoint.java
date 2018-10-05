@@ -28,12 +28,13 @@ package tf.gpx.edit.values;
 import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.type.Fix;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -54,9 +55,9 @@ import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
 import tf.gpx.edit.general.RestrictiveTextField;
 import tf.gpx.edit.general.TooltipHelper;
+import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.viewer.MarkerManager;
@@ -98,6 +99,9 @@ public class EditGPXWaypoint {
     private final BigDecimalField waypointPdopTxt = new BigDecimalField();
     private final BigDecimalField waypointMagneticVariationTxt = new BigDecimalField();
     private final BigDecimalField waypointSatTxt = new BigDecimalField();
+    
+    // TFE, 20181005: we also need our own decimalformat to have proper output
+    private final DecimalFormat decimalFormat = new DecimalFormat("0");
 
     private final Insets insetNone = new Insets(0, 0, 0, 0);
     private final Insets insetSmall = new Insets(0, 10, 0, 10);
@@ -109,6 +113,8 @@ public class EditGPXWaypoint {
     
     private EditGPXWaypoint() {
         // Exists only to defeat instantiation.
+        
+        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
         
         initViewer();
     }
@@ -618,9 +624,7 @@ public class EditGPXWaypoint {
     private String setZeroToEmpty(final int test) {
         String result = "";
         
-        if (test != 0.0) {
-            result = Integer.toString(test);
-        }
+        result = Integer.toString(test);
 
         return result;
     }
@@ -628,9 +632,7 @@ public class EditGPXWaypoint {
     private String setZeroToEmpty(final double test) {
         String result = "";
         
-        if (test != 0.0) {
-            result = Double.toString(test);
-        }
+        result = decimalFormat.format(test);
 
         return result;
     }
@@ -679,7 +681,11 @@ public class EditGPXWaypoint {
         double result = 0.0;
         
         if (test != null && !test.isEmpty()) {
-            result = Double.valueOf(test);
+            try {
+                result = NumberFormat.getNumberInstance().parse(test.trim()).doubleValue();
+            } catch (ParseException ex) {
+                Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         return result;
