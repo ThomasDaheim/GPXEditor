@@ -147,6 +147,7 @@ public class StatisticsViewer {
         return INSTANCE;
     }
     
+    @SuppressWarnings("unchecked")
     private void initViewer() {
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
@@ -213,6 +214,7 @@ public class StatisticsViewer {
         return true;
     }
     
+    @SuppressWarnings("unchecked")
     private void initStatisticsViewer() {
         // reset all previous values
         for (StatisticValue value : statisticsList) {

@@ -418,6 +418,9 @@ public class GPXEditor implements Initializable {
         // Values
         //
         // enable / disable done in change listener of gpxFileListXML since only meaningful for single track segment
+        distributionsMenu.setOnAction((ActionEvent event) -> {
+            showDistributions(event);
+        });
         distributionsMenu.setDisable(true);
         specialValuesMenu.setOnAction((ActionEvent event) -> {
         });

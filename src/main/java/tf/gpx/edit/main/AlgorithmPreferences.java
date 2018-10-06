@@ -70,6 +70,7 @@ public class AlgorithmPreferences {
         return INSTANCE;
     }
     
+    @SuppressWarnings("unchecked")
     public void showPreferencesDialogue() {
         EarthGeometry.Algorithm myAlgorithm = 
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));

@@ -68,7 +68,7 @@ public class AssignSRTMHeight {
 
     // UI elements used in various methods need to be class-wide
     final Stage assignHeightStage = new Stage();
-    private final CheckListView<String> fileList = new CheckListView();
+    private final CheckListView<String> fileList = new CheckListView<>();
     private TextField srtmPathLbl;
     private VBox avgModeChoiceBox;
     private VBox asgnModeChoiceBox;

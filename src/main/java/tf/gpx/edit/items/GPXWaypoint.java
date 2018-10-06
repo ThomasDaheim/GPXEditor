@@ -317,7 +317,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public void setChildren(final List<GPXLineItem> children) {
+    public void setChildren(final List<? extends GPXLineItem> children) {
     }
     
     @Override
