@@ -127,7 +127,7 @@ public class DistributionViewer {
     private void initViewer() {
         // create new scene
         distributionsStage.setTitle("Distributions");
-        distributionsStage.initModality(Modality.WINDOW_MODAL);
+        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         
         final GridPane gridPane = new GridPane();
         
@@ -349,12 +349,12 @@ public class DistributionViewer {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
-        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         distributionsStage.showAndWait();
                 
         return hasDeleted;
     }
     
+    @SuppressWarnings("unchecked")
     private void initDistributionViewer(final GPXLineItemData dataType) {
         // calculate distribution to have inputs for nodes
         GPXWaypointDistribution.getInstance().setValues(myGPXWaypoints);

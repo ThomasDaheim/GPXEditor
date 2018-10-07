@@ -80,7 +80,6 @@ public class AlgorithmPreferences {
         // create new scene with list of algos & parameter
         final Stage settingsStage = new Stage();
         settingsStage.setTitle("Preferences");
-        settingsStage.initModality(Modality.WINDOW_MODAL);
         
         final GridPane gridPane = new GridPane();
 
