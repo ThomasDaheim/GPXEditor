@@ -39,6 +39,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.GPXListHelper;
 
 /**
  *
@@ -146,6 +147,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void setParent(GPXLineItem parent) {
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
         
@@ -154,12 +156,12 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXWaypoint> getChildren() {
-        return myGPXWaypoints;
+    public ObservableList<GPXLineItem> getChildren() {
+        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
     }
     
     @Override
-    public void setChildren(final List<GPXLineItem> children) {
+    public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXWaypoints(castChildren(GPXWaypoint.class, children));
     }
     

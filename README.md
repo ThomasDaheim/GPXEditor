@@ -11,11 +11,9 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.5)
+Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
-Bugfixes for issues found while "on the road"...
-
-Following features are available via UI:
+## Following features are available via UI:
 
 ## File and track handling
 

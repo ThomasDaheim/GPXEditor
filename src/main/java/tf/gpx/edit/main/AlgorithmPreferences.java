@@ -70,6 +70,7 @@ public class AlgorithmPreferences {
         return INSTANCE;
     }
     
+    @SuppressWarnings("unchecked")
     public void showPreferencesDialogue() {
         EarthGeometry.Algorithm myAlgorithm = 
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
@@ -79,7 +80,6 @@ public class AlgorithmPreferences {
         // create new scene with list of algos & parameter
         final Stage settingsStage = new Stage();
         settingsStage.setTitle("Preferences");
-        settingsStage.initModality(Modality.WINDOW_MODAL);
         
         final GridPane gridPane = new GridPane();
 

@@ -64,6 +64,14 @@ public class TooltipHelper {
             final double visibleDuration,
             final double closeDelay,
             final boolean hideOnExit) {
+        // TFE, 20181005: with java 9 its no longer necessary to use reflection
+        // since the required methods of behaviour are now available
+//        tooltip.setShowDelay(Duration.millis(openDelay));
+//        tooltip.setHideDelay(Duration.millis(closeDelay));
+//        tooltip.setShowDuration(Duration.millis(visibleDuration));
+//        tooltip.setAutoHide(hideOnExit);
+//        tooltip.setHideOnEscape(hideOnExit);
+//        tooltip.setAutoFix(true);
         try {
             // Get the non public field "BEHAVIOR"
             Field fieldBehavior = tooltip.getClass().getDeclaredField("BEHAVIOR");

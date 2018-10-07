@@ -78,6 +78,7 @@ public class GPXTrackviewer {
         HeightChart.getInstance().clearSelectedGPXWaypoints();
     }
 
+    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;

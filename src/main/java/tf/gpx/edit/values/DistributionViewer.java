@@ -39,6 +39,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.chart.Axis;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -89,7 +90,7 @@ public class DistributionViewer {
     private NumberAxis yAxis = new NumberAxis();
     private BarChart barChart;
     private final Label countLbl = new Label("0 from 100 points selected");
-    private final CheckListView<GPXWaypoint> wayPointList = new CheckListView();
+    private final CheckListView<GPXWaypoint> wayPointList = new CheckListView<>();
     
     private final DecimalFormat formater = new DecimalFormat("#.00"); 
     private final Insets insetNone = new Insets(0, 0, 0, 0);
@@ -126,7 +127,7 @@ public class DistributionViewer {
     private void initViewer() {
         // create new scene
         distributionsStage.setTitle("Distributions");
-        distributionsStage.initModality(Modality.WINDOW_MODAL);
+        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         
         final GridPane gridPane = new GridPane();
         
@@ -172,7 +173,7 @@ public class DistributionViewer {
         yAxis.setAutoRanging(false);
         yAxis.setOpacity(0);
 
-        barChart = new BarChart(xAxis, yAxis);
+        barChart = new BarChart<String, Number>(xAxis, yAxis);
         barChart.getStyleClass().add("unpad-chart");
         barChart.setLegendVisible(false);
         barChart.setAnimated(false);
@@ -348,12 +349,12 @@ public class DistributionViewer {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
-        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
         distributionsStage.showAndWait();
                 
         return hasDeleted;
     }
     
+    @SuppressWarnings("unchecked")
     private void initDistributionViewer(final GPXLineItemData dataType) {
         // calculate distribution to have inputs for nodes
         GPXWaypointDistribution.getInstance().setValues(myGPXWaypoints);
@@ -375,12 +376,12 @@ public class DistributionViewer {
         
         barChart.setVisible(false);
         barChart.getData().clear();
-        final List<XYChart.Data> dataList = new ArrayList<>();
+        final List<XYChart.Data<String, Double>> dataList = new ArrayList<>();
         for (BinValue value : binValues) {
-            dataList.add(new XYChart.Data(value.left.toString(), value.right));
+            dataList.add(new XYChart.Data<>(value.left.toString(), value.right));
         }
 
-        XYChart.Series series = new XYChart.Series();
+        XYChart.Series<String, Double> series = new XYChart.Series<>();
         series.getData().addAll(dataList);
         barChart.getData().add(series);
         barChart.lookupAll(".default-color0.chart-bar")

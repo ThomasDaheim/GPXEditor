@@ -5,7 +5,6 @@ apply plugin: 'application'
 apply plugin: 'idea'
 idea.module.downloadJavadoc = true
 
-sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 // NetBeans will automatically add "run" and "debug" tasks relying on the
@@ -41,7 +40,7 @@ dependencies {
     compile 'gpx-parser:gpx-parser:1.2'
     compile 'org.jzy3d:jzy3d-api:1.0.0'
     compile 'org.jzy3d:jzy3d-javafx:1.0.0'
-    compile 'org.controlsfx:controlsfx:8.40.14'
+    compile group: 'org.controlsfx', name: 'controlsfx', version: '8.40.14'
     compile 'de.jensd:fontawesomefx:8.9'
     compile 'de.saring:leafletmap:1.0.2-SNAPSHOT'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.5'
@@ -54,4 +53,12 @@ dependencies {
     // You can read more about how to add dependency here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
 }

@@ -180,7 +180,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public void setChildren(List<GPXLineItem> children) {
+    public void setChildren(List<? extends GPXLineItem> children) {
     }
 
     @Override
