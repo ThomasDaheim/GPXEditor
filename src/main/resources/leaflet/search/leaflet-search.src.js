@@ -1,19 +1,3 @@
-/* 
- * Leaflet Control Search v2.9.0 - 2018-05-16 
- * 
- * Copyright 2018 Stefano Cudini 
- * stefano.cudini@gmail.com 
- * http://labs.easyblog.it/ 
- * 
- * Licensed under the MIT license. 
- * 
- * Demo: 
- * http://labs.easyblog.it/maps/leaflet-search/ 
- * 
- * Source: 
- * git@github.com:stefanocudini/leaflet-search.git 
- * 
- */
 /*
 	Name					Data passed			   Description
 
@@ -563,7 +547,7 @@ L.Control.Search = L.Control.extend({
       }
       else {
         //throw new Error("propertyName '"+propName+"' not found in marker"); 
-         
+        console.warn("propertyName '"+propName+"' not found in marker"); 
       }
     }
     else if(layer instanceof L.Path || layer instanceof L.Polyline || layer instanceof L.Polygon)
@@ -582,7 +566,7 @@ L.Control.Search = L.Control.extend({
       }
       else {
         //throw new Error("propertyName '"+propName+"' not found in shape"); 
-         
+        console.warn("propertyName '"+propName+"' not found in shape"); 
       }
     }
     else if(layer.hasOwnProperty('feature'))//GeoJSON
@@ -598,12 +582,12 @@ L.Control.Search = L.Control.extend({
           loc.layer = layer;			
           retRecords[ layer.feature.properties[propName] ] = loc;
         } else {
-          
+          console.warn("Unknown type of Layer");
         }
       }
       else {
         //throw new Error("propertyName '"+propName+"' not found in feature");
-         
+        console.warn("propertyName '"+propName+"' not found in feature"); 
       }
     }
     else if(layer instanceof L.LayerGroup)
@@ -792,13 +776,21 @@ L.Control.Search = L.Control.extend({
 		}
 	},
 	
-	_handleAutoresize: function() {	//autoresize this._input
-	    //TODO refact _handleAutoresize now is not accurate
-	    if (this._input.style.maxWidth != this._map._container.offsetWidth) //If maxWidth isn't the same as when first set, reset to current Map width
-	        this._input.style.maxWidth = L.DomUtil.getStyle(this._map._container, 'width');
+	_handleAutoresize: function() {
+	    var maxWidth;
 
-		if(this.options.autoResize && (this._container.offsetWidth + 45 < this._map._container.offsetWidth))
-			this._input.size = this._input.value.length<this._inputMinSize ? this._inputMinSize : this._input.value.length;
+		if (this._input.style.maxWidth !== this._map._container.offsetWidth) {
+			maxWidth = this._map._container.clientWidth;
+
+			// other side margin + padding + width border + width search-button + width search-cancel
+			maxWidth -= 10 + 20 + 1 + 30 + 22; 
+
+			this._input.style.maxWidth = maxWidth.toString() + 'px';
+		}
+
+		if (this.options.autoResize && (this._container.offsetWidth + 20 < this._map._container.offsetWidth)) {
+			this._input.size = this._input.value.length < this._inputMinSize ? this._inputMinSize : this._input.value.length;
+		}
 	},
 
 	_handleArrowSelect: function(velocity) {
@@ -854,7 +846,9 @@ L.Control.Search = L.Control.extend({
 					this.showAlert();
 				else
 				{
-                                        var searchValue = this._input.value;
+					// TFE, 2018108: store this._input.value since it seems to get lost
+					// see also github issue https://github.com/stefanocudini/leaflet-search/issues/199
+					var searchValue = this._input.value;
 					this.showLocation(loc, this._input.value);
 					this.fire('search:locationfound', {
 							latlng: loc,
@@ -1009,5 +1003,3 @@ L.control.search = function (options) {
 return L.Control.Search;
 
 });
-
-

@@ -27,6 +27,9 @@ myMap.on('mousedown', disableCntrlDrag);
 // disable on cntrl mouse up
 myMap.on('mouseup', enableCntrlDrag);
 
+// wrap around world borders
+// https://stackoverflow.com/a/28323349
+myMap.options.worldCopyJump = true;
 
 // return lower left and upper right corners of currently shown map
 function getMapBounds() {
@@ -34,9 +37,7 @@ function getMapBounds() {
     return [bounds.getSouthWest().lat, bounds.getSouthWest().lng, bounds.getNorthEast().lat, bounds.getNorthEast().lng];
 }
 
-/*
- * 
- */
+// ability to change a marker icon and color (e.g. for highlighting) 
 function updateMarkerIcon(layer, icon) {
     window[layer].setIcon(window[icon]);
 }
@@ -46,6 +47,7 @@ function updateMarkerColor(layer, color) {
         weight: 2
     });
 }
+// move marker around
 function updateMarkerLocation(layer, lat, lng) {
     var marker = window[layer];
     var newLatLng = new L.LatLng(lat, lng);
@@ -56,7 +58,27 @@ function updateMarkerLocation(layer, lat, lng) {
  * add click handler to layer to send back lat/lon
  */
 function addClickToLayer(layer, lat, lng) {
-    window[layer].on('click', function(e) { callback.selectMarker(layer, lat, lng, e.originalEvent.shiftKey); });
+    var marker = window[layer];
+    
+    //callback.log('addClickToLayer: ' + layer + ", " + marker);
+    marker.on('click', function(e) {
+        callback.selectMarker(layer, lat, lng, e.originalEvent.shiftKey); 
+    });
+}
+
+/*
+ * add name to layer for tooltip
+ */
+function addNameToLayer(layer, name) {
+    var polyline = window[layer];
+    
+    if (polyline instanceof L.Polyline) {
+        //callback.log('addNameToLayer: ' + layer + ", " + name);
+        polyline.options.interactive = true;
+         
+        polyline.bindTooltip(name, {sticky: true});
+        setTitle(layer, name);
+    }
 }
 
 /*
@@ -74,6 +96,7 @@ function makeDraggable(layer, lat, lng) {
 function setTitle(layer, title) {
     var marker = window[layer];
             
+    //callback.log('setTitle: ' + layer + ", " + marker);
     if (marker._icon) {
         marker._icon.title = title;
     } else {
