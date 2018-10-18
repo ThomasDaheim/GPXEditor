@@ -189,9 +189,9 @@ public class TrackMap extends LeafletMapView {
 
     private BoundingBox myBoundingBox;
     private JSObject window;
-    // need to have instance variable for the callback to avoid garbage collection...
+    // need to have instance variable for the jscallback to avoid garbage collection...
     // https://stackoverflow.com/a/41908133
-    private Callback callback;
+    private JSCallback jscallback;
     
     private final CompletableFuture<Worker.State> cfMapLoadState;
     private boolean isLoaded = false;
@@ -250,12 +250,16 @@ public class TrackMap extends LeafletMapView {
             }
             assert myWebView != null;
 
-            //enableFirebug();
+//            enableFirebug();
             
+//            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
+//                (myWebView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
+//            );
+        
             window = (JSObject) execScript("window"); 
-            callback = new Callback(this);
-            window.setMember("callback", callback);
-            //execScript("callback.selectGPXWaypoints(\"Test\");");
+            jscallback = new JSCallback(this);
+            window.setMember("jscallback", jscallback);
+            //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
@@ -282,7 +286,16 @@ public class TrackMap extends LeafletMapView {
             // support for autorouting
             // https://github.com/perliedman/leaflet-routing-machine
             addStyleFromPath("/leaflet/routing/leaflet-routing-machine.css");
-            addScriptFromPath("/leaflet/routing/leaflet-routing-machine.min.js");
+            addScriptFromPath("/leaflet/routing/leaflet-routing-machine.js");
+            addScriptFromPath("/leaflet/openrouteservice/lodash.min.js");
+            addScriptFromPath("/leaflet/openrouteservice/corslite.js");
+            addScriptFromPath("/leaflet/openrouteservice/polyline.js");
+            addScriptFromPath("/leaflet/openrouteservice/L.Routing.OpenRouteService.js");
+            addStyleFromPath("/leaflet/geocoder/Control.Geocoder.css");
+            addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
+            addScriptFromPath("/leaflet/Routing.js");
+            // we need an api key
+            execScript("initRouting(\"" + "5b3ce3597851110001cf624885b852e7b9984af780f4d9f61c0f8f8a" + "\");");
 
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -370,7 +383,7 @@ public class TrackMap extends LeafletMapView {
             
             // TODO: not yet working
             // replace url paths with correct values
-            // since the html page we use is in another packe all path values used in url('') statements in css point to wrong locations
+            // since the html page we use is in another package all path values used in url('') statements in css point to wrong locations
             // this needs to be fixed manually since javafx doesn't resolve it properly
             final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
@@ -564,7 +577,7 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
             } else {
                 // start autorouting on current route
-                System.out.println("Here we would do autorouting...");
+                execScript("startRouting(\"" + routes.getKey(curRoute) + "\");");
             }
         });
         
@@ -1075,16 +1088,16 @@ public class TrackMap extends LeafletMapView {
         return layer;
     }
     
-    public class Callback {
-        // call back for callback :-)
+    public class JSCallback {
+        // call back for jscallback :-)
         private final TrackMap myTrackMap;
         private BoundingBox paneBounds; 
         
-        private Callback() {
+        private JSCallback() {
             myTrackMap = null;
         }
         
-        public Callback(final TrackMap trackMap) {
+        public JSCallback(final TrackMap trackMap) {
             myTrackMap = trackMap;
         }
         

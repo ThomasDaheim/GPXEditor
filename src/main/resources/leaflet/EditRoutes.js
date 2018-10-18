@@ -1,3 +1,29 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 // add editable as option to the map
 myMap.editTools = new L.Editable(myMap, {editable: true});
 
@@ -36,25 +62,6 @@ myMap.on('editable:drawing:end', removeTooltip);
 myMap.on('editable:drawing:click', updateTooltip);
 
 /*
- * JSON.stringify doesn't work on LatLngs...
- */
-function coordsToString(coords) {
-    var coordsString = "";
-    
-    var arrayLength = coords.length;
-    for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
-        
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
-        
-        if (i < arrayLength-1) {
-            coordsString = coordsString + " - "
-        }
-    }
-    return coordsString;
-}
-
-/*
  * Enable editing on marker and add callbacks for editing ends
  */
 function makeEditable(layer) {
@@ -63,25 +70,25 @@ function makeEditable(layer) {
     
     polyline.on('editable:drawing:end', function(e) {
         var coords = polyline.getLatLngs();
-        callback.updateRoute("editable:drawing:end", layer, coordsToString(coords));
+        jscallback.updateRoute("editable:drawing:end", layer, coordsToString(coords));
     });
     polyline.on('editable:vertex:dragend', function(e) {
         var coords = polyline.getLatLngs();
-        callback.updateRoute("editable:vertex:dragend", layer, coordsToString(coords));
+        jscallback.updateRoute("editable:vertex:dragend", layer, coordsToString(coords));
     });
     polyline.on('editable:vertex:deleted', function(e) {
         polyline.closeTooltip();
         var coords = polyline.getLatLngs();
-        callback.updateRoute("editable:vertex:deleted", layer, coordsToString(coords));
+        jscallback.updateRoute("editable:vertex:deleted", layer, coordsToString(coords));
     });
     polyline.on('editable:vertex:new', function(e) {
         var coords = polyline.getLatLngs();
-        callback.updateRoute("editable:vertex:new", layer, coordsToString(coords));
+        jscallback.updateRoute("editable:vertex:new", layer, coordsToString(coords));
     });
 
     polyline.on('editable:vertex:mouseover', function(e) {
         var latlng = e.latlng;
-        callback.registerRoute(layer, latlng.lat, latlng.lng);
+        jscallback.registerRoute(layer, latlng.lat, latlng.lng);
 
         // TFE, 20181009: show tooltip on vertex since mouseover on polyline isn't working
         polyline.openTooltip(latlng);
@@ -89,7 +96,7 @@ function makeEditable(layer) {
 
     polyline.on('editable:vertex:mouseout', function(e) {
         var latlng = e.latlng;
-        callback.deregisterRoute(layer, latlng.lat, latlng.lng);
+        jscallback.deregisterRoute(layer, latlng.lat, latlng.lng);
 
         // TFE, 20181009: hide tooltip on vertex since mouseout on polyline isn't working
         polyline.closeTooltip();
