@@ -20,27 +20,6 @@
         initialize: function (apiKey, options) {
             this._apiKey = apiKey;
             L.Util.setOptions(this, options);
-
-            this._headingsToModifier = [
-                //      'N',            'NE',           'E',            'SE',           'S',            'SW',           'W',            'NW'
-                // 'N'  'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'
-                // 'NE' 'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'
-                // 'E'  'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'
-                // 'SE' 'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'
-                // 'S'  'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'
-                // 'SW' 'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'
-                // 'W'  'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'
-                // 'NW' 'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'
-                ['Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft'],
-                ['SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left'],
-                ['Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft'],
-                ['SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn'],
-                ['Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight'],
-                ['SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right'],
-                ['Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight'],
-                ['SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight'],
-                // surely, there is a clever function out there somewhere - using diff between pre_oct and oct...
-            ];
         },
 
         route: function (waypoints, callback, context, options) {
@@ -149,9 +128,11 @@
                             instruction.type = 'DestinationReached';
 //                            jscallback.log("ending path");
                         } else {
+                            // find waypoint and roundabout from text
                             instruction.type = this._typeFromInstruction(instruction);
+                            // find direction text or bearings
                             instruction.modifier = this._modifierFromInstruction(instruction);
-                            jscallback.log("modifier: " + instruction.bearing_before + ", " + instruction.bearing_after+ ", " + instruction.type + ", " + instruction.modifier + ", '" + instruction.text + "'");
+                            //jscallback.log("modifier: " + instruction.bearing_before + ", " + instruction.bearing_after+ ", " + instruction.type + ", " + instruction.modifier + ", '" + instruction.text + "'");
                         }
 
                         instructions.push(instruction);
@@ -227,21 +208,13 @@
             };
         },
 
-        _bearingToOctogone: function(bearing) {
-            return Math.round(bearing / 45) % 8;
-        },
-
         _bearingToDirection: function(bearing, text) {
             var oct = Math.round(bearing / 45) % 8;
             return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][oct];
         },
         
         _modifierFromHeadings(bearing_before, bearing_after) {
-            var oct_before = this._bearingToOctogone(bearing_before);
-            var oct_after = this._bearingToOctogone(bearing_after);
-            var oct_direction = this._headingsToModifier[oct_before][oct_after];
-            
-            // TODO: calculate from difference in bearings and not using octogone
+            // calculate from difference in bearings
             // abs(diff) <= 45 * 1/2 => straight
             // abs(diff) > 45 * 1/2 <= 45 * 3/2 => slight left/right
             // abs(diff) > 45 * 3/2 <= 45 * 5/2 => left/right
@@ -276,7 +249,7 @@
                 direction = 'Uturn';
             }
             
-            jscallback.log("_modifierFromHeadings: " + bearing_before + ", " + bearing_after+ ", " + direction + ", " + oct_direction);
+            //jscallback.log("_modifierFromHeadings: " + bearing_before + ", " + bearing_after+ ", " + direction + ", " + oct_direction);
             return direction;
         },
         
