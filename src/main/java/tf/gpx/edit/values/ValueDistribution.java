@@ -26,7 +26,6 @@
 package tf.gpx.edit.values;
 
 import java.util.List;
-import tf.gpx.edit.items.GPXLineItem;
 
 /**
  * Abstract base for a list of values of type T and a method that returns a double value for each T.

@@ -78,6 +78,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -92,6 +93,34 @@ import tf.gpx.edit.main.GPXEditor;
  */
 public class TrackMap extends LeafletMapView {
     private final static TrackMap INSTANCE = new TrackMap();
+    
+    public enum RoutingProfile {
+        DrivingCar("driving-car"),
+        DrivingHGV("driving-hgv"),
+        CyclingRegular("cycling-regular"),
+        CyclingRoad("cycling-road"),
+        CyclingSafe("cycling-safe"),
+        CyclingMountain("cycling-mountain"),
+        CyclingTour("cycling-tour"),
+        CyclingElectric("cycling-electric"),
+        FootWalking("foot-walking"),
+        FootHiking("foot-hiking"),
+        Wheeelchair("wheelchair");
+
+        private final String profileName;
+        
+        RoutingProfile(final String profile) {
+            profileName = profile;
+        }
+        
+        public String getProfileName() {
+            return profileName;
+        }
+
+        public String toString() {
+            return name();
+        }
+    }
 
     // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
     private enum SearchItem {
@@ -295,7 +324,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
             addScriptFromPath("/leaflet/Routing.js");
             // we need an api key
-            execScript("initRouting(\"" + "5b3ce3597851110001cf624885b852e7b9984af780f4d9f61c0f8f8a" + "\");");
+            execScript("initRouting(\"" + GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -381,10 +410,10 @@ public class TrackMap extends LeafletMapView {
             final InputStream css = TrackMap.class.getResourceAsStream(stylepath);
             final String style = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(css, Charset.defaultCharset()));
             
-            // TODO: not yet working
-            // replace url paths with correct values
             // since the html page we use is in another package all path values used in url('') statements in css point to wrong locations
             // this needs to be fixed manually since javafx doesn't resolve it properly
+            // SOLUTION: use https://websemantics.uk/tools/image-to-data-uri-converter/ to convert images and
+            // replace url(IMAGE.TYPE) with url(data:image/TYPE;base64,...) in css
             final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
             addStyle(style);
@@ -479,6 +508,9 @@ public class TrackMap extends LeafletMapView {
         
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
+            // we might be routing...
+            execScript("stopRouting(true);");
+            
             assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
             LatLong latlong = (LatLong) contextMenu.getUserData();
             
@@ -552,13 +584,16 @@ public class TrackMap extends LeafletMapView {
 
         final MenuItem addRoute = new MenuItem("Add Route");
         addRoute.setOnAction((event) -> {
-            // check if a route is under the cursro in leaflet - if yes, use its values
+            // check if a route is under the cursor in leaflet - if yes, use its values
             GPXRoute curRoute = null;
             if (addRoute.getUserData() != null) {
                 curRoute = (GPXRoute) addRoute.getUserData();
             }
             
             if (curRoute == null) {
+                // we might be routing...
+                execScript("stopRouting(true);");
+            
                 // start new editable route
                 final String routeName = "route" + (routes.size() + 1);
 
@@ -577,7 +612,11 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
             } else {
                 // start autorouting on current route
-                execScript("startRouting(\"" + routes.getKey(curRoute) + "\");");
+                execScript("startRouting(\"" + 
+                        routes.getKey(curRoute) + "\", \"" + 
+                        TrackMap.RoutingProfile.valueOf(
+                                GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
+                                .getProfileName() + "\");");
             }
         });
         
@@ -589,6 +628,9 @@ public class TrackMap extends LeafletMapView {
             if (item.showInContextMenu) {
                 final MenuItem search = new MenuItem(item.name());
                 search.setOnAction((event) -> {
+                    // we might be routing...
+                    execScript("stopRouting(true);");
+            
                     assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
                     final LatLong latlong = (LatLong) contextMenu.getUserData();
 
@@ -732,6 +774,7 @@ public class TrackMap extends LeafletMapView {
         setVisible(false);
         clearMarkersAndTracks();
         execScript("clearSearchResults();");
+        execScript("stopRouting(false);");
 
         if (lineItem == null) {
             // nothing more todo...
@@ -1021,9 +1064,12 @@ public class TrackMap extends LeafletMapView {
             String gpxMarker = markers.removeValue(gpxWaypoint);
             removeMarker(gpxMarker);
             
-            gpxWaypoint = oldGPXWaypoints.get(oldGPXWaypoints.size()-1);
-            gpxMarker = markers.removeValue(gpxWaypoint);
-            removeMarker(gpxMarker);
+            // we have start & end markers
+            if (oldGPXWaypoints.size() > 1) {
+                gpxWaypoint = oldGPXWaypoints.get(oldGPXWaypoints.size()-1);
+                gpxMarker = markers.removeValue(gpxWaypoint);
+                removeMarker(gpxMarker);
+            }
         }
         
         route.setGPXWaypoints(newGPXWaypoints);
@@ -1035,10 +1081,13 @@ public class TrackMap extends LeafletMapView {
             String temp = addMarkerAndCallback(latLong, "", ColorMarker.GREEN_MARKER, 1000, false);
             markers.put(temp, gpxWaypoint);
 
-            gpxWaypoint = newGPXWaypoints.get(newGPXWaypoints.size()-1);
-            latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
-            temp = addMarkerAndCallback(latLong, "", ColorMarker.RED_MARKER, 2000, false);
-            markers.put(temp, gpxWaypoint);
+            // we have start & end point
+            if (newGPXWaypoints.size() > 1) {
+                gpxWaypoint = newGPXWaypoints.get(newGPXWaypoints.size()-1);
+                latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
+                temp = addMarkerAndCallback(latLong, "", ColorMarker.RED_MARKER, 2000, false);
+                markers.put(temp, gpxWaypoint);
+            }
         }
 
         //refresh fileWaypointsCount list without refreshing map...
@@ -1112,7 +1161,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         public void updateRoute(final String event, final String route, final String coords) {
-            //System.out.println(event + ", " + route + ", " + coords);
+//            System.out.println(event + ", " + route + ", " + coords);
             
             final List<LatLong> latlongs = new ArrayList<>();
             // parse coords string back into LatLongs

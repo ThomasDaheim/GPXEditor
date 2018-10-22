@@ -31,17 +31,17 @@ var curLayer;
 
 function initRouting(key) {
     apikey = key;
-    
 //    jscallback.log("initRouting: " + apikey);
 }
         
-function startRouting(layer) {
+function startRouting(layer, routingprofile) {
+//    jscallback.log("startRouting: " + layer + ", " + routingprofile);
     var polyline = window[layer];
 
     if (polyline instanceof L.Polyline) {
         if (routingControl instanceof L.Routing.Itinerary) {
             // we're currently routing... STOP IT!
-            stopRouting();
+            stopRouting(true);
         }
 
         // now lets start the next routing session...
@@ -58,7 +58,7 @@ function startRouting(layer) {
             router: new L.Routing.openrouteservice(
                 apikey,
                 {
-                    profile: 'foot-walking'
+                    profile: routingprofile
                 }),
             collapsible: true,
             collapseBtn: function(itinerary) {
@@ -75,24 +75,27 @@ function startRouting(layer) {
     }
 }
 
-function stopRouting() {
+function stopRouting(updateRoute) {
+//    jscallback.log("stopRouting: " + updateRoute);
     if (curRoute instanceof L.Polyline) {
         if (routingControl instanceof L.Routing.Itinerary) {
             myMap.removeControl(routingControl);
 
-            // get the waypoints as latlng's
-            var waypoints = routingControl.getWaypoints();
-            var latlngs = [];
-            waypoints.forEach(function(waypoint) {
-                latlngs.push(waypoint.latLng);
-            });
+            if (updateRoute != false) {
+                // get the waypoints as latlng's
+                var waypoints = routingControl.getWaypoints();
+                var latlngs = [];
+                waypoints.forEach(function(waypoint) {
+                    latlngs.push(waypoint.latLng);
+                });
 
-            // now save new route
-            curRoute.setLatLngs(latlngs);
+                // now save new route
+                curRoute.setLatLngs(latlngs);
 
-            // and publish it
-            //jscallback.log("stopRouting: " + layer + ", " + coordsToString(latlngs));
-            jscallback.updateRoute("routing:routingend", curLayer, coordsToString(latlngs));
+                // and publish it
+//                jscallback.log("stopRouting: " + curLayer + ", " + coordsToString(latlngs));
+                jscallback.updateRoute("routing:routingend", curLayer, coordsToString(latlngs));
+            }
 
             // show route as editable
             myMap.addLayer(curRoute);

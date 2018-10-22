@@ -1589,7 +1589,7 @@ public class GPXEditor implements Initializable {
     }
 
     private void preferences(final Event event) {
-        AlgorithmPreferences.getInstance().showPreferencesDialogue();
+        PreferenceEditor.getInstance().showPreferencesDialogue();
     }
 
     private void checkTrack(final Event event) {

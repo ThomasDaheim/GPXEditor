@@ -27,7 +27,6 @@ package tf.gpx.edit.values;
 
 import java.util.ArrayList;
 import java.util.List;
-import tf.gpx.edit.items.GPXLineItem;
 
 /**
  * Calculates bin values for 300 bins for a given distribution. The distribution

@@ -16,11 +16,31 @@
             profile: 'driving-car',
             urlParameters: {}
         },
-
+        
         initialize: function (apiKey, options) {
             this._apiKey = apiKey;
             L.Util.setOptions(this, options);
 
+            this._headingsToModifier = [
+                //      'N',            'NE',           'E',            'SE',           'S',            'SW',           'W',            'NW'
+                // 'N'  'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'
+                // 'NE' 'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'
+                // 'E'  'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'
+                // 'SE' 'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'    'Uturn'
+                // 'S'  'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'         'SharpRight'
+                // 'SW' 'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'   'Right'
+                // 'W'  'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'      'SlightRight'
+                // 'NW' 'SlightRight'   'Right'         'SharpRight'    'Uturn'         'SharpLeft'     'Left'          'SlightLeft'    'Straight'
+                ['Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft'],
+                ['SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left'],
+                ['Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft'],
+                ['SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight', 'Uturn'],
+                ['Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right', 'SharpRight'],
+                ['SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight', 'Right'],
+                ['Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight', 'SlightRight'],
+                ['SlightRight', 'Right', 'SharpRight', 'Uturn', 'SharpLeft', 'Left', 'SlightLeft', 'Straight'],
+                // surely, there is a clever function out there somewhere - using diff between pre_oct and oct...
+            ];
         },
 
         route: function (waypoints, callback, context, options) {
@@ -59,7 +79,7 @@
                 clearTimeout(timer);
                 if (!timedOut) {
                     if (!err) {
-                        // try {
+//                        jscallback.log("route: " + resp.responseText);
                         data = JSON.parse(resp.responseText);
                         this._routeDone(data, wps, callback, context);
                     } else {
@@ -118,6 +138,22 @@
                         distance += step.distance;
                         time += step.duration;
                         instruction = this._convertInstructions(step, coordinates);
+                        
+                        // calculate type & modifier, see getIconName for valid values
+                        if (k === 0 && j ===0) {
+                            // beginning of path
+                            instruction.type = 'Head';
+//                            jscallback.log("starting path");
+                        } else if (k === steps.length-1 && j === path.segments.length-1) {
+                            // end of path
+                            instruction.type = 'DestinationReached';
+//                            jscallback.log("ending path");
+                        } else {
+                            instruction.type = this._typeFromInstruction(instruction);
+                            instruction.modifier = this._modifierFromInstruction(instruction);
+                            jscallback.log("modifier: " + instruction.bearing_before + ", " + instruction.bearing_after+ ", " + instruction.type + ", " + instruction.modifier + ", '" + instruction.text + "'");
+                        }
+
                         instructions.push(instruction);
                         waypoint = coordinates[path.way_points[1]];
                         waypoints.push(waypoint);
@@ -171,6 +207,7 @@
                 geometry_format: 'geojson',
                 preference: 'recommended',
                 units: 'm',
+                maneuvers: true,
                 profile: this.options.profile,
                 api_key: this._apiKey
             }, this.options.urlParameters), baseUrl);
@@ -181,9 +218,107 @@
                 text: step.instruction,
                 distance: step.distance,
                 time: step.duration,
-                index: step.way_points[0]
+                road: step.name,
+                index: step.way_points[0],
+                // need bearing before & after to calculate type from it...
+                bearing_before: step.maneuver.bearing_before,
+                bearing_after: step.maneuver.bearing_after,
+                direction: this._bearingToDirection(step.maneuver.bearing_after),
             };
         },
+
+        _bearingToOctogone: function(bearing) {
+            return Math.round(bearing / 45) % 8;
+        },
+
+        _bearingToDirection: function(bearing, text) {
+            var oct = Math.round(bearing / 45) % 8;
+            return ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][oct];
+        },
+        
+        _modifierFromHeadings(bearing_before, bearing_after) {
+            var oct_before = this._bearingToOctogone(bearing_before);
+            var oct_after = this._bearingToOctogone(bearing_after);
+            var oct_direction = this._headingsToModifier[oct_before][oct_after];
+            
+            // TODO: calculate from difference in bearings and not using octogone
+            // abs(diff) <= 45 * 1/2 => straight
+            // abs(diff) > 45 * 1/2 <= 45 * 3/2 => slight left/right
+            // abs(diff) > 45 * 3/2 <= 45 * 5/2 => left/right
+            // abs(diff) > 45 * 5/2 <= 45 * 7/2 => sharp left/right
+            // abs(diff) > 45 * 7/2 => u-turn
+            // left / right from sign of diff: diff > 0 => right, diff < 0 => left
+            // 
+            // mod 360 handling: 
+            // 1a) before = 350, after = 10 => diff = -340 => diff = -340+360=20
+            // 1b) before = 350, after = 160 => diff = -190 => diff = -190+360=170
+            // => if diff < -180 -> diff += 360
+            // 2a) before = 10, after = 350 => diff = 340 => diff = 340-360=-20
+            // 2b) before = 10, after = 200 => diff = 190 => diff = 190-360=-170
+            // => if diff > 180 -> diff -= 360
+            var diff = bearing_after - bearing_before;
+            if (diff < -180) {
+                diff += 360;
+            } else if (diff > 180) {
+                diff -= 360;
+            }
+            var direction = (diff > 0) ? 'Right' : 'Left';
+            diff = Math.abs(diff);
+            if (diff <= 45 * 1/2) {
+                direction = 'Straight';
+            } else if (diff <= 45 * 3/2) {
+                direction = 'Slight' + direction;
+            } else if (diff <= 45 * 5/2) {
+                
+            } else if (diff <= 45 * 7/2) {
+                direction = 'Sharp' + direction;
+            } else {
+                direction = 'Uturn';
+            }
+            
+            jscallback.log("_modifierFromHeadings: " + bearing_before + ", " + bearing_after+ ", " + direction + ", " + oct_direction);
+            return direction;
+        },
+        
+        _typeFromInstruction(instruction) {
+            var text = instruction.text;
+    
+            var direction;
+            if (text.startsWith('Arrive at')) {
+                direction = 'WaypointReached';
+            } else if (text.startsWith('Enter the roundabout')) {
+                direction = 'Roundabout';
+            }
+            return direction;
+        }, 
+        
+        _modifierFromInstruction(instruction) {
+            var text = instruction.text;
+    
+            var direction;
+            if (text.startsWith('Turn sharp right')) {
+                direction = 'SharpRight';
+            } else if (text.startsWith('Turn sharp left')) {
+                direction = 'SharpLeft';
+            } else if (text.startsWith('Turn right')) {
+                direction = 'Right';
+            } else if (text.startsWith('Turn left')) {
+                direction = 'Left';
+            } else if (text.startsWith('Keep right')) {
+                direction = 'SlightRight';
+            } else if (text.startsWith('Keep left')) {
+                direction = 'SlightLeft';
+            } else if (text.startsWith('Continue straight')) {
+                direction = 'Straight';
+            } else if( text.startsWith('Head') || text.startsWith('Enter the roundabout') ) {
+                // here we don't have and info from the text - use the bearings
+                direction = this._modifierFromHeadings(instruction.bearing_before, instruction.bearing_after);
+            } else {
+                // nothing found, e.g. other language? - use bearings as fallback
+                 direction = this._modifierFromHeadings(instruction.bearing_before, instruction.bearing_after);
+            }
+            return direction;
+        }
     });
 
     L.Routing.openrouteservice = function (apiKey, options) {

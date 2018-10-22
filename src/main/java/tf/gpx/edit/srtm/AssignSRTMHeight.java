@@ -180,8 +180,8 @@ public class AssignSRTMHeight {
         final Button rescan = new Button("Rescan");
         rescan.setOnAction((ActionEvent event) -> {
             mySRTMDataPath = srtmPathLbl.getText();
-            myAverageMode = EnumHelper.getInstance().selectedEnum(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
-            myAssignMode = EnumHelper.getInstance().selectedEnum(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
+            myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
+            myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
             checkSRTMFiles();
         });
@@ -196,7 +196,7 @@ public class AssignSRTMHeight {
         GridPane.setMargin(srtmAvgLbl, insetTop);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
-        avgModeChoiceBox = EnumHelper.getInstance().enumChoiceBox(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
+        avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
         gridPane.add(avgModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(avgModeChoiceBox, insetTop);
         
@@ -207,7 +207,7 @@ public class AssignSRTMHeight {
         GridPane.setMargin(hghtAsgnLbl, insetTop);
         GridPane.setValignment(hghtAsgnLbl, VPos.TOP);
         
-        asgnModeChoiceBox = EnumHelper.getInstance().enumChoiceBox(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
+        asgnModeChoiceBox = EnumHelper.getInstance().createToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
         gridPane.add(asgnModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(asgnModeChoiceBox, insetTop);
 
@@ -218,8 +218,8 @@ public class AssignSRTMHeight {
             // only do something if all srtm files are available
             if (fileList.getItems().size() == fileList.getCheckModel().getCheckedItems().size()) {
                 mySRTMDataPath = srtmPathLbl.getText();
-                myAverageMode = EnumHelper.getInstance().selectedEnum(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
-                myAssignMode = EnumHelper.getInstance().selectedEnum(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
+                myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
+                myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
                 final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
