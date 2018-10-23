@@ -52,6 +52,9 @@ public class GPXEditorManager extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        // https://stackoverflow.com/a/44906031
+        // JavaFX WebView disable Same origin policy
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
         launch(GPXEditorManager.class, args);
     }
     

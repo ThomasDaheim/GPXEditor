@@ -23,27 +23,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.values;
 
-import java.util.List;
-
-/**
- * Abstract base for a list of values of type T and a method that returns a double value for each T.
- * Used as generic input for BinValueDistribution.
- * 
- * @author thomas
- * @param <T>
- */
-public abstract class ValueDistribution<T> {
-    private List<T> myValues;
-    
-    public List<T> getValues() {
-        return myValues;
-    }
-    
-    public void setValues(final List<T> values) {
-        myValues = values;
-    }
-    
-    public abstract double getValueAsDouble(final T value);
-}
+var options = {
+          position: 'topleft',
+        };
+L.control.ruler(options).addTo(myMap);

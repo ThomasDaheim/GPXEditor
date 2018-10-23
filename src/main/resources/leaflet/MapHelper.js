@@ -1,4 +1,30 @@
 /*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
  * Support for selecting with cntrl + mouse
  * 
  * functions to disable & enable dragging & zooming when cntrl mouse pressed & release
@@ -27,6 +53,9 @@ myMap.on('mousedown', disableCntrlDrag);
 // disable on cntrl mouse up
 myMap.on('mouseup', enableCntrlDrag);
 
+// wrap around world borders
+// https://stackoverflow.com/a/28323349
+myMap.options.worldCopyJump = true;
 
 // return lower left and upper right corners of currently shown map
 function getMapBounds() {
@@ -34,9 +63,7 @@ function getMapBounds() {
     return [bounds.getSouthWest().lat, bounds.getSouthWest().lng, bounds.getNorthEast().lat, bounds.getNorthEast().lng];
 }
 
-/*
- * 
- */
+// ability to change a marker icon and color (e.g. for highlighting) 
 function updateMarkerIcon(layer, icon) {
     window[layer].setIcon(window[icon]);
 }
@@ -46,6 +73,7 @@ function updateMarkerColor(layer, color) {
         weight: 2
     });
 }
+// move marker around
 function updateMarkerLocation(layer, lat, lng) {
     var marker = window[layer];
     var newLatLng = new L.LatLng(lat, lng);
@@ -56,7 +84,27 @@ function updateMarkerLocation(layer, lat, lng) {
  * add click handler to layer to send back lat/lon
  */
 function addClickToLayer(layer, lat, lng) {
-    window[layer].on('click', function(e) { callback.selectMarker(layer, lat, lng, e.originalEvent.shiftKey); });
+    var marker = window[layer];
+    
+    //jscallback.log('addClickToLayer: ' + layer + ", " + marker);
+    marker.on('click', function(e) {
+        jscallback.selectMarker(layer, lat, lng, e.originalEvent.shiftKey); 
+    });
+}
+
+/*
+ * add name to layer for tooltip
+ */
+function addNameToLayer(layer, name) {
+    var polyline = window[layer];
+    
+    if (polyline instanceof L.Polyline) {
+        //jscallback.log('addNameToLayer: ' + layer + ", " + name);
+        polyline.options.interactive = true;
+         
+        polyline.bindTooltip(name, {sticky: true});
+        setTitle(layer, name);
+    }
 }
 
 /*
@@ -68,12 +116,13 @@ function makeDraggable(layer, lat, lng) {
     marker.dragging.enable();
     marker.on('dragend', function(e) {
         var newPos = marker.getLatLng();
-        callback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
+        jscallback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
     });
 }
 function setTitle(layer, title) {
     var marker = window[layer];
             
+    //jscallback.log('setTitle: ' + layer + ", " + marker);
     if (marker._icon) {
         marker._icon.title = title;
     } else {
@@ -93,6 +142,24 @@ function getLatLngForPoint(x, y) {
 function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
+/*
+ * JSON.stringify doesn't work on LatLngs...
+ */
+function coordsToString(coords) {
+    var coordsString = "";
+    
+    var arrayLength = coords.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var latlan = coords[i];
+        
+        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+        
+        if (i < arrayLength-1) {
+            coordsString = coordsString + " - "
+        }
+    }
+    return coordsString;
+}
 
 /*
  * search and add results to marker layer
@@ -103,12 +170,12 @@ function getLatLngForRect(startx, starty, endx, endy) {
 function registerMarker(e) {
     var marker = e.target;
     var markerPos = marker.getLatLng();
-    callback.registerMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
+    jscallback.registerMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
 } 
 function deregisterMarker(e) {
     var marker = e.target;
     var markerPos = marker.getLatLng();
-    callback.deregisterMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
+    jscallback.deregisterMarker(JSON.stringify(marker.properties), markerPos.lat, markerPos.lng);
 } 
 
 // keep track of the markers for later communication with java
