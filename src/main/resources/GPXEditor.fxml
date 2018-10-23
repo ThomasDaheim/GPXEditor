@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -38,6 +38,8 @@
                         <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
                   <MenuItem fx:id="clearFileMenu" mnemonicParsing="false" text="Clear List" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu fx:id="recentFilesMenu" mnemonicParsing="false" text="Recent Files" />
                   <SeparatorMenuItem mnemonicParsing="false" />
@@ -84,8 +86,6 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                  <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="SRTM">

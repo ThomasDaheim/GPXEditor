@@ -126,7 +126,7 @@ public class EditGPXWaypoint {
     private void initViewer() {
         // create new scene
         waypointStage.setTitle("Edit Waypoint Properties");
-        waypointStage.initModality(Modality.WINDOW_MODAL);
+        waypointStage.initModality(Modality.APPLICATION_MODAL); 
         
         // https://de.wikipedia.org/wiki/GPS_Exchange_Format
         // http://www.topografix.com/gpx/1/1/
@@ -386,7 +386,6 @@ public class EditGPXWaypoint {
         waypointStage.setScene(new Scene(editWaypointPane));
         waypointStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
         waypointStage.setResizable(false);
-        waypointStage.initModality(Modality.APPLICATION_MODAL); 
     }
 
     public void setCallback(final GPXEditor gpxEditor) {

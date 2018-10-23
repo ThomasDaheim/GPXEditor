@@ -147,6 +147,7 @@ public class StatisticsViewer {
         return INSTANCE;
     }
     
+    @SuppressWarnings("unchecked")
     private void initViewer() {
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
@@ -155,7 +156,7 @@ public class StatisticsViewer {
 
         // create new scene
         statisticsStage.setTitle("Statistics");
-        statisticsStage.initModality(Modality.WINDOW_MODAL);
+        statisticsStage.initModality(Modality.APPLICATION_MODAL); 
 
         final StackPane stackPane = new StackPane();
 
@@ -166,24 +167,35 @@ public class StatisticsViewer {
         table.getStyleClass().add("stat-table");
         
         // Create column Description, Value, Unit
-        TableColumn<StatisticValue, String> descCol //
-                = new TableColumn<>("Observable");
+        TableColumn<StatisticValue, String> descCol = new TableColumn<>("Observable");
         descCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getDescription()));
         descCol.setSortable(false);
-        TableColumn<StatisticValue, String> valueCol //
-                = new TableColumn<>("Value");
+        
+        TableColumn<StatisticValue, String> valueCol = new TableColumn<>("Value");
         valueCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getStringValue()));
         valueCol.setSortable(false);
         valueCol.setStyle("-fx-alignment: CENTER-RIGHT;");
-        TableColumn<StatisticValue, String> unitCol //
-                = new TableColumn<>("Unit");
+        
+        TableColumn<StatisticValue, String> unitCol = new TableColumn<>("Unit");
         unitCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getUnit()));
         unitCol.setSortable(false);
         
-        table.getColumns().addAll(descCol, valueCol, unitCol);
+        TableColumn<StatisticValue, String> locCol = new TableColumn<>("Where");
+        locCol.setCellValueFactory(
+                (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getLocation()));
+        locCol.setSortable(false);
+        
+        TableColumn<StatisticValue, String> timeCol = new TableColumn<>("When");
+        timeCol.setCellValueFactory(
+                (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getTime()));
+        timeCol.setSortable(false);
+        
+        table.getColumns().addAll(descCol, valueCol, unitCol, locCol, timeCol);
+        // automatically adjust width of columns depending on their content
+        table.setColumnResizePolicy((param) -> true );
         
         table.setItems(statisticsList);
         
@@ -191,8 +203,8 @@ public class StatisticsViewer {
       
         statisticsStage.setScene(new Scene(stackPane));
         statisticsStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        statisticsStage.setWidth(400);
-        statisticsStage.setHeight(600);
+        statisticsStage.setWidth(725);
+        statisticsStage.setHeight(700);
         statisticsStage.setResizable(false);
     }
     
@@ -207,16 +219,17 @@ public class StatisticsViewer {
         // initialize the whole thing...
         initStatisticsViewer();
         
-        statisticsStage.initModality(Modality.APPLICATION_MODAL); 
         statisticsStage.showAndWait();
                 
         return true;
     }
     
+    @SuppressWarnings("unchecked")
     private void initStatisticsViewer() {
         // reset all previous values
         for (StatisticValue value : statisticsList) {
             value.setValue(null);
+            value.setGPXWaypoint(null);
         }
         statisticsList.get(StatisticData.Break1.ordinal()).setValue("");
         statisticsList.get(StatisticData.Break2.ordinal()).setValue("");
@@ -251,13 +264,18 @@ public class StatisticsViewer {
         
         double avgHeight = 0.0;
         double maxSlopeAsc = 0.0;
+        GPXWaypoint maxSlopeAscGPXWaypoint = null;
         double maxSlopeDesc = 0.0;
+        GPXWaypoint maxSlopeDescGPXWaypoint = null;
         double avgSlopeAsc = 0.0;
         double avgSlopeDesc = 0.0;
         
         double maxSpeed = 0.0;
+        GPXWaypoint maxSpeedGPXWaypoint = null;
         double maxSpeedAsc = 0.0;
+        GPXWaypoint maxSpeedAscGPXWaypoint = null;
         double maxSpeedDesc = 0.0;
+        GPXWaypoint maxSpeedDescGPXWaypoint = null;
 
         // walk through waypoints and calculate the remaining values...
         for (GPXWaypoint waypoint : gpxWaypoints) {
@@ -268,7 +286,10 @@ public class StatisticsViewer {
                 speed = 0.0;
             }
 
-            maxSpeed = Math.max(maxSpeed, speed);
+            if (speed > maxSpeed) {
+                maxSpeed = speed;
+                maxSpeedGPXWaypoint = waypoint;
+            }
             
             final double heightDiff = waypoint.getElevationDiff();
             final double slope = waypoint.getSlope();
@@ -276,15 +297,27 @@ public class StatisticsViewer {
             if (heightDiff > 0.0) {
                 lengthAsc += waypoint.getDistance();
                 durationAsc += waypoint.getDuration();
-                maxSlopeAsc = Math.max(maxSlopeAsc, slope);
+                if (slope > maxSlopeAsc) {
+                    maxSlopeAsc = slope;
+                    maxSlopeAscGPXWaypoint = waypoint;
+                }
                 avgSlopeAsc += slope;
-                maxSpeedAsc = Math.max(maxSpeedAsc, speed);
+                if (speed > maxSpeedAsc) {
+                    maxSpeedAsc = speed;
+                    maxSpeedAscGPXWaypoint = waypoint;
+                }
             } else {
                 lengthDesc += waypoint.getDistance();
                 durationDesc += waypoint.getDuration();
-                maxSlopeDesc = Math.min(maxSlopeDesc, slope);
+                if (slope < maxSlopeDesc) {
+                    maxSlopeDesc = slope;
+                    maxSlopeDescGPXWaypoint = waypoint;
+                }
                 avgSlopeDesc += slope;
-                maxSpeedDesc = Math.max(maxSpeedDesc, speed);
+                if (speed > maxSpeedAsc) {
+                    maxSpeedDesc = speed;
+                    maxSpeedDescGPXWaypoint = waypoint;
+                }
             }
         }
         
@@ -302,13 +335,18 @@ public class StatisticsViewer {
 
         statisticsList.get(StatisticData.AvgHeight.ordinal()).setValue(avgHeight);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setValue(maxSlopeAsc);
+        statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setGPXWaypoint(maxSlopeAscGPXWaypoint);
         statisticsList.get(StatisticData.MaxSlopeDescent.ordinal()).setValue(maxSlopeDesc);
+        statisticsList.get(StatisticData.MaxSlopeDescent.ordinal()).setGPXWaypoint(maxSlopeDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSlopeAscent.ordinal()).setValue(avgSlopeAsc);
         statisticsList.get(StatisticData.AvgSlopeDescent.ordinal()).setValue(avgSlopeDesc);
         
         statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
+        statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
         statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
+        statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
         statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
+        statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedAscent.ordinal()).setValue(lengthAsc/durationAsc*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
 
@@ -318,6 +356,7 @@ public class StatisticsViewer {
     private class StatisticValue<T> {
         private final StatisticData myData;
         private T myValue = null;
+        private GPXWaypoint myGPXWaypoint = null;
         
         StatisticValue (final StatisticData data) {
             myData = data;
@@ -330,6 +369,20 @@ public class StatisticsViewer {
         private void setValue(final T value) {
             myValue = value;
         }
+
+        /**
+         * @return the myGPXWaypoint
+         */
+        public GPXWaypoint getGPXWaypoint() {
+            return myGPXWaypoint;
+        }
+
+        /**
+         * @param myGPXWaypoint the myGPXWaypoint to set
+         */
+        public void setGPXWaypoint(final GPXWaypoint waypoint) {
+            myGPXWaypoint = waypoint;
+        }
         
         private String getDescription() {
             return myData.getDescription();
@@ -337,6 +390,22 @@ public class StatisticsViewer {
         
         private String getUnit() {
             return myData.getUnit();
+        }
+        
+        private String getLocation() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position);
+            }
+        }
+        
+        private String getTime() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Date);
+            }
         }
 
         private String getStringValue() {

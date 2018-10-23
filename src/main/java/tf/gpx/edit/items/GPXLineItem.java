@@ -261,7 +261,7 @@ public abstract class GPXLineItem {
     
     // cloning for extended class hierarchies
     // https://dzone.com/articles/java-cloning-even-copy-constructors-are-not-suffic
-    public abstract <T extends GPXLineItem> T cloneMeWithChildren();
+    public abstract GPXLineItem cloneMeWithChildren();
     
     @Override
     public String toString() {
@@ -352,10 +352,10 @@ public abstract class GPXLineItem {
  
     // getter & setter for my parent
     public abstract GPXLineItem getParent();
-    public abstract void setParent(final GPXLineItem parent);
+    public abstract <T extends GPXLineItem> void setParent(final T parent);
 
     // helper functions for child relations
-    public abstract <T extends GPXLineItem> ObservableList<T> getChildren();
+    public abstract ObservableList<GPXLineItem> getChildren();
     public ObservableList<? extends GPXLineItem> getChildrenOfType(final GPXLineItem.GPXLineItemType itemType) {
         switch (itemType) {
             case GPXFile:
@@ -374,8 +374,9 @@ public abstract class GPXLineItem {
                 return FXCollections.observableArrayList();
         }
     }
-    public abstract void setChildren(final List<GPXLineItem> children);
-    protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<GPXLineItem> children) {
+    public abstract void setChildren(final List<? extends GPXLineItem> children);
+    @SuppressWarnings("unchecked")
+    protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<? extends GPXLineItem> children) {
         // TFE, 20180215: don't assert that child.getClass().equals(clazz)
         // instead filter out such not matching children and return only matching class childs
         final List<T> gpxChildren = children.stream().
@@ -433,7 +434,7 @@ public abstract class GPXLineItem {
         // nothing to invert for waypoints...
         if (!GPXLineItemType.GPXWaypoint.equals(getType())) {
             // invert order of children
-            List<GPXLineItem> children = getChildren();
+            List<? extends GPXLineItem> children = getChildren();
             Collections.reverse(children);
             setChildren(children);
 
@@ -446,6 +447,7 @@ public abstract class GPXLineItem {
             }
         }
     }
+    @SuppressWarnings("unchecked")
     protected <T extends Extension, U extends GPXLineItem> Set<T> numberExtensions(final List<U> children) {
         AtomicInteger counter = new AtomicInteger(1);
         return children.stream().
@@ -501,8 +503,8 @@ public abstract class GPXLineItem {
     }
     
     // listener for observablelist to set hasUnsavedChanges
-    final protected ListChangeListener getListChangeListener() {
-        return (ListChangeListener) (ListChangeListener.Change c) -> {
+    final protected ListChangeListener<GPXLineItem> getListChangeListener() {
+        return (ListChangeListener.Change<? extends GPXLineItem> c) -> {
             hasUnsavedChanges = true;
             
             updateListValues(c.getList());

@@ -49,6 +49,7 @@ public class LinkTable extends TableView<Link> {
         initTableView();
     }
     
+    @SuppressWarnings("unchecked")
     private void initTableView() {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setEditable(true);

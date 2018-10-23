@@ -281,7 +281,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public void setChildren(final List<GPXLineItem> children) {
+    public void setChildren(final List<? extends GPXLineItem> children) {
         // children can be any of waypoints, tracks, routes, metadata...
         final List<GPXMetadata> metaList = castChildren(GPXMetadata.class, children);
         if (metaList.isEmpty()) {

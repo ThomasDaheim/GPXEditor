@@ -440,6 +440,7 @@ public class GPXTreeTableView {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private void onDragDropped(final TreeTableRow<GPXLineItem> row, final DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
@@ -488,6 +489,7 @@ public class GPXTreeTableView {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private boolean acceptableDragboard(final Dragboard db, final TreeTableRow<GPXLineItem> target) {
         boolean result = false;
         

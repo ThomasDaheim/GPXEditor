@@ -27,7 +27,10 @@ package tf.gpx.edit.general;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
@@ -49,7 +52,7 @@ public class EnumHelper {
         return INSTANCE;
     }
     
-    public <T extends Enum> VBox enumChoiceBox(final Class<T> enumClass, final Enum currentValue) {
+    public <T extends Enum> VBox createToggleGroup(final Class<T> enumClass, final Enum currentValue) {
         final T[] values = enumClass.getEnumConstants();
         
         final List<RadioButton> buttons = new ArrayList<>();
@@ -69,7 +72,7 @@ public class EnumHelper {
         return result;
     }
     
-    public <T extends Enum> T selectedEnum(final Class<T> enumClass, final VBox enumVBox) {
+    public <T extends Enum> T selectedEnumToggleGroup(final Class<T> enumClass, final VBox enumVBox) {
         assert enumClass.getEnumConstants().length == enumVBox.getChildren().size();
                 
         final T[] values = enumClass.getEnumConstants();
@@ -86,6 +89,26 @@ public class EnumHelper {
             
             i++;
         }
+
+        return result;
+    }
+    
+    public <T extends Enum> ChoiceBox createChoiceBox(final Class<T> enumClass, final Enum currentValue) {
+        final T[] values = enumClass.getEnumConstants();
+
+        ChoiceBox<T> result = new ChoiceBox<>();
+        result.setItems(FXCollections.observableArrayList(values));
+        
+        result.getSelectionModel().select(currentValue.ordinal());
+        
+        return result;
+    }
+    
+    public <T extends Enum> T selectedEnumChoiceBox(final Class<T> enumClass, final ChoiceBox enumChoiceBox) {
+        assert enumClass.getEnumConstants().length == enumChoiceBox.getItems().size();
+                
+        final T[] values = enumClass.getEnumConstants();
+        T result = values[enumChoiceBox.getSelectionModel().getSelectedIndex()];
 
         return result;
     }

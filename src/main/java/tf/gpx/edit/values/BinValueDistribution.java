@@ -56,6 +56,7 @@ public class BinValueDistribution {
         return INSTANCE;
     }
     
+    @SuppressWarnings("unchecked")
     public void calculateBinValues(final ValueDistribution valueDistribution) {
         assert valueDistribution != null && valueDistribution.getValues().size() > 0;
 
@@ -106,6 +107,7 @@ public class BinValueDistribution {
         }
     }
     
+    @SuppressWarnings("unchecked")
     private void calculateMinMaxXValues(final ValueDistribution valueDistribution) {
         myMinXValue = Double.MAX_VALUE;
         myMaxXValue = 0.0;

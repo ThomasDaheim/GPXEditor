@@ -11,13 +11,16 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-## Features (v2.5)
+Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
-Bugfixes for issues found while "on the road"...
-
-Following features are available via UI:
+## Following features are available via UI:
 
 ## File and track handling
+
+### Update v2.6
+
+* support for auto routing: using openroutingservice routes can be calculated for different profiles (car, bike, hike, ...). An api key is requiredd for that
+* support for ruler to measure distances and bearings
 
 ### Update v2.5
 
@@ -222,6 +225,9 @@ Other things used internally:
 * Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
 * leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
+* leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
+* leaflet-openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
 
 * search-plus icon: https://fontawesome.com/license
 * Sleeping Bed Silhouette icon: Icon made by https://www.flaticon.com/authors/scott-de-jonge from www.flaticon.com 
@@ -233,4 +239,6 @@ The following features are still on my todo-list - but I don't promise any timel
 
 * add TestFX UI test cases
 * add task handling for long running activities
+* converting routing results into route waypoints (optionally) so that it can be converted into tracks (for those of us who perfer tracks)
+* support for available garmin offline maps
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu

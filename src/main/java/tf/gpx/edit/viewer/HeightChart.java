@@ -57,6 +57,7 @@ import tf.gpx.edit.main.GPXEditor;
  * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
+@SuppressWarnings("unchecked")
 public class HeightChart<X,Y> extends AreaChart {
     private final static HeightChart INSTANCE = new HeightChart();
 
@@ -67,6 +68,7 @@ public class HeightChart<X,Y> extends AreaChart {
     
     private boolean noLayout = false;
 
+    @SuppressWarnings("unchecked")
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
@@ -100,6 +102,7 @@ public class HeightChart<X,Y> extends AreaChart {
         setVisible(enabled);
     }
     
+    @SuppressWarnings("unchecked")
     public void setGPXWaypoints(final GPXLineItem lineItem) {
         if (isDisabled()) {
             return;
@@ -158,6 +161,7 @@ public class HeightChart<X,Y> extends AreaChart {
         setVisible(!series.getData().isEmpty());
     }
 
+    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         if (isDisabled()) {
             return;
@@ -239,6 +243,7 @@ public class HeightChart<X,Y> extends AreaChart {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void layoutPlotChildren() {
         if (noLayout) return;
         
