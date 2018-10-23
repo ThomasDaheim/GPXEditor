@@ -326,6 +326,12 @@ public class TrackMap extends LeafletMapView {
             // we need an api key
             execScript("initRouting(\"" + GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
+            // support for ruler
+            // https://github.com/gokertanrisever/leaflet-ruler
+            addStyleFromPath("/leaflet/ruler/leaflet-ruler.css");
+            addScriptFromPath("/leaflet/ruler/leaflet-ruler.js");
+            addScriptFromPath("/leaflet/Rouler.js");
+            
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
             final Pane parentPane = (Pane) getParent();
