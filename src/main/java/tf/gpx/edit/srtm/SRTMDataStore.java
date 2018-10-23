@@ -206,23 +206,33 @@ public class SRTMDataStore {
         
         // TFE, 2018015
         // N:  54.1 -> N54
-        // S: -54.1 -> S55 -> -1 to latitude!
+        // S: -54.1 -> S55 -> 1 to abs(latitude)!
+        // TFE, 20181023 - BUT
+        // S: -54 -> S54 -> 1 only if not int value!
         if (latitude > 0) {
             result = "N";
         } else {
             result = "S";
-            latitude = Math.abs(latitude) + 1;
+            latitude = Math.abs(latitude);
+            if (latitude % 1 != 0) {
+               latitude++; 
+            }
         }
         result += String.format("%02d", (int) latitude);
         
         // TFE, 2018015
         // N:  65.9 -> N65
-        // W: -65.9 -> W66 -> -1 to longitude!
+        // W: -65.9 -> W66 -> 1 to abs(longitude)!
+        // TFE, 20181023 - BUT
+        // W: -54 -> W54 -> 1 only if not int value!
         if (longitude > 0) {
             result += "E";
         } else {
             result += "W";
-            longitude = Math.abs(longitude) + 1;
+            longitude = Math.abs(longitude);
+            if (longitude % 1 != 0) {
+               longitude++; 
+            }
         }
         result += String.format("%03d", (int) longitude);
         

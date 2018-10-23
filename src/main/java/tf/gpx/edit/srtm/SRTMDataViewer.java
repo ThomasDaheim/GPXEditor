@@ -307,14 +307,8 @@ public class SRTMDataViewer {
         final Mapper mapper = new Mapper() {
             @Override
             public double f(double x, double y) {
-                final float height;
-                if (latMin > 0) {
-                    // we need to trick jzy3d by changing signs for N in range AND in the mapper function AND in the grid tick
-                    height = Math.max(0f, (float) SRTMDataStore.getInstance().getValueForCoordinate(-x, y));
-                } else {
-                    height = Math.max(0f, (float) SRTMDataStore.getInstance().getValueForCoordinate(x, y));
-                }
-                return height;
+                // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+                return Math.max(0f, (float) SRTMDataStore.getInstance().getValueForCoordinate(-x, y));
             }
         };
 
@@ -323,19 +317,10 @@ public class SRTMDataViewer {
         final int steps = dataCount / 10;
         
         // Define range and precision for the function to plot
-        // Invert x for "N" since jzy3d always shows from lower to upper values independent of min / max in range
-        // NE: N wrong direction, E OK
-        // NW: N wrong direction, W OK
-        // SE: S OK, E OK
-        // SW: S OK, W OK
+        // Invert x for latitude since jzy3d always shows from lower to upper values independent of min / max in range
         
-        Range latrange;
-        if (latMin > 0) {
-            // we need to trick jzy3d by changing signs for N in range AND in the mapper function AND in the grid tick
-            latrange = new Range(-latMin, -latMax - 1f);
-        } else {
-            latrange = new Range(latMax + 1f, latMin);
-        }
+        // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+        final Range latrange = new Range(-latMin, -latMax - 1f);
         final Range lonrange = new Range(lonMin, lonMax + 1f);
         final OrthonormalGrid grid = new OrthonormalGrid(latrange, steps, lonrange, steps);
 
@@ -366,12 +351,8 @@ public class SRTMDataViewer {
             final IInterpolator line = new BernsteinInterpolator();
             final List<Coord3d> points = new ArrayList<>();
             for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
-                if (latMin > 0) {
-                    // we need to trick jzy3d by changing signs for N in range AND in the mapper function AND in the grid tick
-                    points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
-                } else {
-                    points.add(new Coord3d(waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
-                }
+                // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+                points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
             }
             line.interpolate(points, 1);
             

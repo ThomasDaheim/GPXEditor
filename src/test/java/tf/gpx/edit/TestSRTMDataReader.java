@@ -27,12 +27,31 @@ package tf.gpx.edit;
 
 import tf.gpx.edit.srtm.ISRTMDataReader;
 import tf.gpx.edit.srtm.SRTMData;
+import tf.gpx.edit.srtm.SRTMDataReader;
 
 /**
  *
  * @author Thomas
  */
 public class TestSRTMDataReader implements ISRTMDataReader {
+    // TFE, 20181023: delegate word for test cases on real values
+    private SRTMDataReader INSTANCE;
+    private String filePath;
+    
+    private boolean useInstance;
+    
+    public TestSRTMDataReader() {
+        INSTANCE = SRTMDataReader.getInstance();
+        useInstance = false;
+    }
+    
+    public void setUseInstance(final boolean value) {
+        useInstance = value;
+    }
+    
+    public void setFilePath(final String path) {
+        filePath = path;
+    }
 
     @Override
     public boolean checkSRTMDataFile(String name, String path) {
@@ -41,16 +60,20 @@ public class TestSRTMDataReader implements ISRTMDataReader {
 
     @Override
     public SRTMData readSRTMData(String name, String path) {
-        final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-        final SRTMData result = new SRTMData(name, name, dataType);
+        if (!useInstance) {
+            final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
+            final SRTMData result = new SRTMData(name, name, dataType);
 
-        for (int row = 0; row < dataType.getDataCount(); row++) { 
-            for (int col = 0; col < dataType.getDataCount(); col++) { 
-                result.setValue(row, col, (short) (row + col)); 
+            for (int row = 0; row < dataType.getDataCount(); row++) { 
+                for (int col = 0; col < dataType.getDataCount(); col++) { 
+                    result.setValue(row, col, (short) (row + col)); 
+                } 
             } 
-        } 
-        
-        return result;
+
+            return result;
+        } else {
+            return INSTANCE.readSRTMData(name, filePath);
+        }
     }
     
 }
