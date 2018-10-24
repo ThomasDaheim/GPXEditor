@@ -25,13 +25,21 @@
  */
 package tf.gpx.edit;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.srtm.ISRTMDataReader;
 import tf.gpx.edit.srtm.SRTMData;
 import tf.gpx.edit.srtm.SRTMDataStore;
 
@@ -40,32 +48,67 @@ import tf.gpx.edit.srtm.SRTMDataStore;
  * @author Thomas
  */
 public class TestSRTM {
-    private static final ISRTMDataReader mySRTMDataReader = new TestSRTMDataReader();
+    private static final TestSRTMDataReader mySRTMDataReader = new TestSRTMDataReader();
     
-    private double delta;
-    private double tileDist;
+    private static double delta;
+    private static double tileDist;
             
+    private static Path testpath;
+
     public TestSRTM() {
     }
     
     @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
+    public static void setUpClass() throws IOException {
         // we want our own private data reader to provide mock SRTM data
         SRTMDataStore.getInstance().setSRTMDataReader(mySRTMDataReader);
 
         tileDist = 1.0 / (SRTMData.SRTMDataType.SRTM3.getDataCount() - 1);
         // offset from corners in tiles is 0,1% of tile size
         delta = tileDist / 1000.0;
+        
+        // TFE, 20181023: copy hgt files from resource to temp directory
+        testpath = Files.createTempDirectory("TestGPXEditor");
+        // TFE, 20180930: set read/write/ exec for all to avoid exceptions in monitoring thread
+        testpath.toFile().setReadable(true, false);
+        testpath.toFile().setWritable(true, false);
+        testpath.toFile().setExecutable(true, false);
+        try {
+            copyTestFiles(testpath);
+        } catch (Throwable ex) {
+            Logger.getLogger(TestSRTM.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
+    private static void copyTestFiles(final Path testpath) throws Throwable {
+        final File srtmpath = new File("src/test/resources");
 
+        final File [] files = srtmpath.listFiles();
+        for (File srtmfile : files) {
+            if (FilenameUtils.isExtension(srtmfile.getName(), "hgt")) {
+                // get file name from path + file
+                String filename = srtmfile.getName();
+                // System.out.println("copying: " + filename);
+
+                // create new filename
+                Path notename = Paths.get(testpath.toAbsolutePath() + "/" + filename);
+                // System.out.println("to: " + notename.toString());
+
+                // copy
+                Files.copy(srtmfile.toPath(), notename);
+            }
+        }        
+    }
+    
+    @AfterClass
+    public static void tearDownClass() throws IOException {
+        // delete temp directory + files
+        FileUtils.deleteDirectory(testpath.toFile());
+    }
+    
+    @Before
+    public void setUp() {
+    }
+    
     @After
     public void tearDown() {
     }
@@ -73,6 +116,7 @@ public class TestSRTM {
     @Test
     public void createSRTMData() {
         System.out.println("Test: createSRTMData()");
+        mySRTMDataReader.setUseInstance(false);
         Assert.assertTrue(mySRTMDataReader.checkSRTMDataFile("Test", "Test"));
         
         final SRTMData testData = mySRTMDataReader.readSRTMData("Test", "Test");
@@ -92,6 +136,7 @@ public class TestSRTM {
     @Test
     public void getSingleValues() {
         System.out.println("Test: getSingleValues()");
+        mySRTMDataReader.setUseInstance(false);
         SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.NEAREST_ONLY);
         
         // get values for the four corners of the tile
@@ -134,6 +179,7 @@ public class TestSRTM {
     @Test
     public void getAverageValues() {
         System.out.println("Test: getAverageValues()");
+        mySRTMDataReader.setUseInstance(false);
         SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.AVERAGE_NEIGHBOURS);
         
         // get values for the four corners of the tile
@@ -195,6 +241,38 @@ public class TestSRTM {
         Assert.assertFalse(SRTMDataStore.NODATA == heightValue);
         Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
 
+        System.out.println("Done.");
+        System.out.println("");
+    }
+    
+    @Test
+    public void checkRealValues() {
+        System.out.println("Test: checkRealValues()");
+        mySRTMDataReader.setUseInstance(true);
+        mySRTMDataReader.setFilePath(testpath.toString());
+        SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.NEAREST_ONLY);
+        
+        double heightValue;
+        // NE hemisphere: MT EVEREST, 27.9881° N, 86.9250° E - 27° 59' 9.8340" N, 86° 55' 21.4428" E - 8848m
+        heightValue = SRTMDataStore.getInstance().getValueForCoordinate(27.9881, 86.9250);
+//        System.out.println("MT EVEREST: " + heightValue);
+        Assert.assertTrue(isCloseEnough(8840, heightValue));
+
+        // NW hemisphere: MT RAINIER, 46.8523° N, 121.7603° W - 46° 52' 47.8812" N, 121° 43' 36.8616" W - 4392m
+        heightValue = SRTMDataStore.getInstance().getValueForCoordinate(46.8523, -121.7603);
+//        System.out.println("MT RAINIER: " + heightValue);
+        Assert.assertTrue(isCloseEnough(4369, heightValue));
+        
+        // SE hemisphere: MT COOK, 43.5950° S, 170.1418° E - 43°35'26.81" S, 170°08'16.65" E - 3724m
+        heightValue = SRTMDataStore.getInstance().getValueForCoordinate(-43.5950, 170.1418);
+//        System.out.println("MT COOK: " + heightValue);
+        Assert.assertTrue(isCloseEnough(3712, heightValue));
+
+        // SW hemisphere: ACONGAGUA, 32.6532° S, 70.0109° W - 32° 39' 11.4444" S, 70° 0' 39.1104" W - 6908m
+        heightValue = SRTMDataStore.getInstance().getValueForCoordinate(-32.6532, -70.0109);
+//        System.out.println("ACONGAGUA: " + heightValue);
+        Assert.assertTrue(isCloseEnough(6929, heightValue));
+        
         System.out.println("Done.");
         System.out.println("");
     }
