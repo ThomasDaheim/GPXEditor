@@ -206,9 +206,9 @@ public class SRTMDataStore {
         
         // TFE, 2018015
         // N:  54.1 -> N54
-        // S: -54.1 -> S55 -> -1 to latitude!
-        // TFE, 20180909 - BUT
-        // S: -54 -> S54 -> -1 only if not int value!
+        // S: -54.1 -> S55 -> 1 to abs(latitude)!
+        // TFE, 20181023 - BUT
+        // S: -54 -> S54 -> 1 only if not int value!
         if (latitude > 0) {
             result = "N";
         } else {
@@ -222,9 +222,9 @@ public class SRTMDataStore {
         
         // TFE, 2018015
         // N:  65.9 -> N65
-        // W: -65.9 -> W66 -> -1 to longitude!
-        // TFE, 20180909 - BUT
-        // W: -54 -> W54 -> -1 only if not int value!
+        // W: -65.9 -> W66 -> 1 to abs(longitude)!
+        // TFE, 20181023 - BUT
+        // W: -54 -> W54 -> 1 only if not int value!
         if (longitude > 0) {
             result += "E";
         } else {
