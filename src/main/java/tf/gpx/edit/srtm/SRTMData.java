@@ -175,7 +175,13 @@ public class SRTMData {
             lonarcsecs /= data.getKey().getValue().getGridSize();
 
             // data starts in north / east corner - naming is from south / east corner...
-            final int rowNum = data.getKey().getValue().getDataCount() - 1 - (int) Math.round(latarcsecs);
+            // TFE, 20181023: inverse counting on southern hemisphere
+            int rowNum;
+            if (latitude > 0) {
+                rowNum = data.getKey().getValue().getDataCount() - 1 - (int) Math.round(latarcsecs);
+            } else {
+                rowNum = (int) Math.round(latarcsecs);
+            }
             int colNum;
             if (longitude > 0) {
                 colNum = (int) Math.round(lonarcsecs);

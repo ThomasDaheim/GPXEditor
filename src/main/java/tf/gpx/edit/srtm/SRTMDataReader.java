@@ -39,7 +39,7 @@ import tf.gpx.edit.srtm.SRTMData.SRTMDataType;
  *
  * @author Thomas
  */
-class SRTMDataReader implements ISRTMDataReader {
+public class SRTMDataReader implements ISRTMDataReader {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();
@@ -51,7 +51,7 @@ class SRTMDataReader implements ISRTMDataReader {
     private SRTMDataReader() {
     }
 
-    protected static SRTMDataReader getInstance() {
+    public static SRTMDataReader getInstance() {
         return INSTANCE;
     }
     
