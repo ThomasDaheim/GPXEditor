@@ -197,7 +197,9 @@ public abstract class GPXLineItem {
         Elevation(true, "Elevation", GPXLineItemDataType.Single, DOUBLE_FORMAT_2),
         ElevationDifferenceToPrevious(true, "Elevation Difference To Previous", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         Slope(true, "Slope", GPXLineItemDataType.Double, DOUBLE_FORMAT_1),
-        NoItems(false, "NoItems", GPXLineItemDataType.Single, COUNT_FORMAT);
+        NoItems(false, "NoItems", GPXLineItemDataType.Single, COUNT_FORMAT),
+        ID(false, "ID", GPXLineItemDataType.Integer, null),
+        CombinedID(false, "CombinedID", GPXLineItemDataType.Integer, null);
         
         private final boolean hasDoubleValue;
         private final String description;
@@ -241,7 +243,8 @@ public abstract class GPXLineItem {
     public static enum GPXLineItemDataType {
         Single,
         Double,
-        Multiple
+        Multiple,
+        Integer
     }
 
     private GPXLineItemType myItemType;
@@ -324,6 +327,16 @@ public abstract class GPXLineItem {
     public abstract void setName(final String name);
     public abstract String getDataAsString(final GPXLineItem.GPXLineItemData gpxLineItemData);
     public abstract Date getDate();
+    
+    // getter for ID and CombinedID with default implementation
+    public String getID() {
+        // count of item in parent
+        return Integer.toString(getNumber());
+    }
+    public String getCombinedID() {
+        // count of item in parent - override if something more fancy is required (e.g. GPXWaypoint)
+        return Integer.toString(getNumber());
+    }
     
     // get children of the diffferent types - but only direct children and not hierarchically!
     public abstract GPXFile getGPXFile();
