@@ -57,6 +57,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -613,6 +614,7 @@ public class GPXEditor implements Initializable {
 
         // cell factories for treetablecols
         idGPXCol.setCellValueFactory(
+                // getID not working for GPXFile - is always 0...
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
         idGPXCol.setEditable(false);
         idGPXCol.setPrefWidth(NORMAL_WIDTH);
@@ -932,9 +934,11 @@ public class GPXEditor implements Initializable {
 
         // cell factories for tablecols
         idTrackCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(Integer.toString(gpxTrackXML.getItems().indexOf(p.getValue())+1)));
+                (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.CombinedID)));
         idTrackCol.setEditable(false);
-        idTrackCol.setPrefWidth(SMALL_WIDTH);
+        idTrackCol.setPrefWidth(NORMAL_WIDTH);
+        // set comparator for CombinedID
+        idTrackCol.setComparator(GPXWaypoint.getCombinedIDComparator());
         
         typeTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getParent().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
@@ -1142,7 +1146,12 @@ public class GPXEditor implements Initializable {
 
         if (lineItem != null) {
             // collect all waypoints from all segments
-            gpxTrackXML.setItems(lineItem.getCombinedGPXWaypoints(null));
+            // use sortedlist in between to get back to original state for unsorted
+            // http://fxexperience.com/2013/08/returning-a-tableview-back-to-an-unsorted-state-in-javafx-8-0/
+            SortedList<GPXWaypoint> sortedList = new SortedList<>(lineItem.getCombinedGPXWaypoints(null));
+            sortedList.comparatorProperty().bind(gpxTrackXML.comparatorProperty());
+            
+            gpxTrackXML.setItems(sortedList);
             gpxTrackXML.setUserData(lineItem);
             // show beginning of list
             gpxTrackXML.scrollTo(0);

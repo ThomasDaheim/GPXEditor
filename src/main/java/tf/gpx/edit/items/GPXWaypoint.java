@@ -34,6 +34,7 @@ import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import com.hs.gpxparser.type.Fix;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -323,6 +324,12 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
+            case ID:
+                // count of wayoint in parent
+                return getID();
+            case CombinedID:
+                // count of wayoint in parent + count of parent in parent-parent + ... til GPXFile
+                return getCombinedID();
             case Type:
                 return getType().getDescription();
             case Name:
@@ -373,6 +380,116 @@ public class GPXWaypoint extends GPXLineItem {
                 return "";
         }
     }
+    
+    @Override
+    public String getCombinedID() {
+        // count of wayoint in parent + count of parent in parent-parent + ... til GPXFile
+        String result = "";
+        switch (getParent().getType()) {
+            case GPXFile:
+                result = "F" + Integer.toString(getNumber());
+                break;
+            case GPXRoute:
+                result = "R" + Integer.toString(getParent().getNumber()) + "." + Integer.toString(getNumber());
+                break;
+            case GPXTrackSegment:
+                result = "T" + Integer.toString(getParent().getParent().getNumber()) + ".S" + Integer.toString(getParent().getNumber()) + "." + Integer.toString(getNumber());
+                break;
+            default:
+        }
+        return result;
+    }
+    
+    public static Comparator<String> getCombinedIDComparator() {
+        return new Comparator<String>() {
+            @Override
+            public int compare(String id1, String id2) {
+//                System.out.println("id1: " + id1 + ", id2: " + id2);
+                int result = 0;
+                
+                // and now "invert" logic of getCombinedID...
+                char type1 = id1.charAt(0);
+                char type2 = id2.charAt(0);
+//                System.out.println("type1: " + type1 + ", type2: " + type2);
+                
+                if (type1 == type2) {
+                    // same type, dig into sub types and numbers
+                    // Fw, Rn.w, Tn.Sm.w
+                    if (type1 == 'F') {
+                        // compare the waypoint numbers
+                        result = Integer.parseInt(id1.substring(1)) - Integer.parseInt(id2.substring(1));
+                    } else {
+                        // shift & split
+                        id1 = id1.substring(1);
+                        id2 = id2.substring(1);
+//                        System.out.println("id1: " + id1 + ", id2: " + id2);
+                        // now we have n.w or n.Sm.w left...
+                        
+                        int num1 = Integer.parseInt(id1.split("\\.", 2)[0]);
+                        int num2 = Integer.parseInt(id2.split("\\.", 2)[0]);
+//                        System.out.println("num1: " + num1 + ", num2: " + num2);
+                        if (num1 != num2) {
+                            // number different :-)
+                            result = num1 - num2;
+                        } else {
+                            // need to check below
+                            
+                            // shift & split
+                            id1 = id1.split("\\.", 2)[1];
+                            id2 = id2.split("\\.", 2)[1];
+//                            System.out.println("id1: " + id1 + ", id2: " + id2);
+                            // now we have w or Sm.w left...
+                            
+                            if (id1.charAt(0) == 'S') {
+                                // rins and repeat
+                                id1 = id1.substring(1);
+                                id2 = id2.substring(1);
+//                                System.out.println("id1: " + id1 + ", id2: " + id2);
+                                // now we have m.w left...
+
+                                num1 = Integer.parseInt(id1.split("\\.", 2)[0]);
+                                num2 = Integer.parseInt(id2.split("\\.", 2)[0]);
+//                                System.out.println("num1: " + num1 + ", num2: " + num2);
+                                if (num1 != num2) {
+                                    // number different :-)
+                                    result = num1 - num2;
+                                } else {
+                                    id1 = id1.split("\\.", 2)[1];
+                                    id2 = id2.split("\\.", 2)[1];
+//                                    System.out.println("id1: " + id1 + ", id2: " + id2);
+                                    
+                                    num1 = Integer.parseInt(id1);
+                                    num2 = Integer.parseInt(id2);
+//                                    System.out.println("num1: " + num1 + ", num2: " + num2);
+
+                                    result = num1 - num2;
+                                }
+                            } else {
+                                num1 = Integer.parseInt(id1);
+                                num2 = Integer.parseInt(id2);
+//                                System.out.println("num1: " + num1 + ", num2: " + num2);
+                                
+                                result = num1 - num2;
+                            }
+                        }
+                    }
+                } else if (type1 == 'F') {
+                    // 'F' comes first
+                    result = -1;
+                } else if (type1 == 'R') {
+                    // 'R' comes last
+                    result =  1;
+                } else if (type1 == 'T') {
+                    // 'T' between 'F' and 'R'
+                    result = ((type2 == 'F') ? 1 : -1);
+                }
+
+//                System.out.println("id1: " + id1 + ", id2: " + id2 + ", result: " + result);
+                return result;
+            }
+        };
+    }
+
     
     public Double getDataAsDouble(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
