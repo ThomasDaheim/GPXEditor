@@ -105,6 +105,7 @@ import javafx.stage.Window;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.general.AboutMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.general.TooltipHelper;
@@ -340,6 +341,10 @@ public class GPXEditor implements Initializable {
         }
         // System.out.println("Processing " + gpxFileNames.size() + " files.");
         parseAndAddFiles(gpxFileNames);
+    }
+    
+    public void lateInitialize() {
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.0", "https://github.com/ThomasDaheim/GPXEditor");
     }
 
     public void stop() {

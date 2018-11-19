@@ -48,62 +48,8 @@ public class TestGeometry {
     private static double EARTH_CIRCUMFENCE = 2.0 * Math.PI * EarthGeometry.EarthAverageRadius; // 4.004145491050427E7
     private static double EARTH_AREA = 4.0 * Math.PI * EarthGeometry.EarthAverageRadius * EarthGeometry.EarthAverageRadius;
     
-    private class TestPointPair {
-        public String description;
-        public Waypoint p1;
-        public Waypoint p2;
-        public double bearingRef;
-        public double distanceRef;
-        
-        private TestPointPair() {
-        }
-
-        public TestPointPair(
-                final String desc,
-                final double lat1, final double lon1,
-                final double lat2, final double lon2,
-                final double bearing, final double distance) {
-            description = desc;
-            p1 = new Waypoint(lat1, lon1);
-            p1.setElevation(0.0);
-            p2 = new Waypoint(lat2, lon2);
-            p2.setElevation(0.0);
-            
-            bearingRef = bearing;
-            distanceRef = distance;
-        }
-    }
     private List<TestPointPair> testPointPairs = new ArrayList<>();
     
-    private class TestPointTriple {
-        public String description;
-        public Waypoint p1;
-        public Waypoint p2;
-        public Waypoint p3;
-        public double areaRef;
-        public double distanceToGreatCircleRef;
-        
-        private TestPointTriple() {
-        }
-
-        public TestPointTriple(
-                final String desc,
-                final double lat1, final double lon1,
-                final double lat2, final double lon2,
-                final double lat3, final double lon3,
-                final double area, final double distance) {
-            description = desc;
-            p1 = new Waypoint(lat1, lon1);
-            p1.setElevation(0.0);
-            p2 = new Waypoint(lat2, lon2);
-            p2.setElevation(0.0);
-            p3 = new Waypoint(lat3, lon3);
-            p3.setElevation(0.0);
-            
-            areaRef = area;
-            distanceToGreatCircleRef = distance;
-        }
-    }
     private List<TestPointTriple> testPointTriples = new ArrayList<>();
     
     public TestGeometry() {

@@ -13,7 +13,13 @@ So it was time to start a new self-learning project. And here you see the result
 
 Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
+Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
+
 ## Following features are available via UI:
+
+### Update v3.0
+
+* added About menu
 
 ## File and track handling
 
@@ -239,6 +245,4 @@ The following features are still on my todo-list - but I don't promise any timel
 
 * add TestFX UI test cases
 * add task handling for long running activities
-* converting routing results into route waypoints (optionally) so that it can be converted into tracks (for those of us who perfer tracks)
-* support for available garmin offline maps
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu

@@ -113,6 +113,9 @@ public class GPXEditorManager extends Application {
             myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
             myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
             myStage.initStyle(StageStyle.UNIFIED);
+            
+            controller.lateInitialize();
+
             myStage.show();
         }
     }

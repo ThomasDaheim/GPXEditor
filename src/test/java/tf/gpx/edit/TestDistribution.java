@@ -37,20 +37,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.values.BinValue;
 import tf.gpx.edit.values.BinValueDistribution;
-import tf.gpx.edit.values.ValueDistribution;
 
 /**
  *
  * @author thomas
  */
 public class TestDistribution {
-    private class DoubleDistribution extends ValueDistribution<Double> {
-        @Override
-        public double getValueAsDouble(Double value) {
-            return value;
-        }
-    }
-    
     private DoubleDistribution myDoubleDistribution = new DoubleDistribution();
 
     private List<Double> myList;
