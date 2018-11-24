@@ -436,6 +436,11 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
+    public String getCombinedID() {
+        return "File";
+    }
+    
+    @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXFile(this);
     }

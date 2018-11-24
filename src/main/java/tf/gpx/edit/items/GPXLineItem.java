@@ -179,6 +179,10 @@ public abstract class GPXLineItem {
         public String getDescription() {
             return description;
         }
+
+        public String getShortDescription() {
+            return description.substring(0, 1);
+        }
     }
     
     // Different data that I hold
@@ -335,7 +339,7 @@ public abstract class GPXLineItem {
     }
     public String getCombinedID() {
         // count of item in parent - override if something more fancy is required (e.g. GPXWaypoint)
-        return Integer.toString(getNumber());
+        return getType().getShortDescription() + Integer.toString(getNumber());
     }
     
     // get children of the diffferent types - but only direct children and not hierarchically!

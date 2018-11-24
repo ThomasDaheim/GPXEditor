@@ -387,13 +387,16 @@ public class GPXWaypoint extends GPXLineItem {
         String result = "";
         switch (getParent().getType()) {
             case GPXFile:
-                result = "F" + Integer.toString(getNumber());
+                result = GPXLineItemType.GPXFile.getShortDescription() + Integer.toString(getNumber());
                 break;
             case GPXRoute:
-                result = "R" + Integer.toString(getParent().getNumber()) + "." + Integer.toString(getNumber());
+                result = GPXLineItemType.GPXRoute.getShortDescription() + Integer.toString(getParent().getNumber()) +
+                        "." + Integer.toString(getNumber());
                 break;
             case GPXTrackSegment:
-                result = "T" + Integer.toString(getParent().getParent().getNumber()) + ".S" + Integer.toString(getParent().getNumber()) + "." + Integer.toString(getNumber());
+                result = GPXLineItemType.GPXTrack.getShortDescription() + Integer.toString(getParent().getParent().getNumber()) +
+                        "." + GPXLineItemType.GPXTrackSegment.getShortDescription() + Integer.toString(getParent().getNumber()) +
+                        "." + Integer.toString(getNumber());
                 break;
             default:
         }
