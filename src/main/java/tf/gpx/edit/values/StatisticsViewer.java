@@ -25,18 +25,26 @@
  */
 package tf.gpx.edit.values;
 
+import java.io.File;
 import java.text.Format;
 import java.util.Date;
 import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -53,6 +61,12 @@ public class StatisticsViewer {
     
     private final ObservableList<StatisticValue> statisticsList = FXCollections.observableArrayList();
     
+    private final Insets insetNone = new Insets(0, 0, 0, 0);
+    private final Insets insetSmall = new Insets(0, 10, 0, 10);
+    private final Insets insetTop = new Insets(10, 10, 0, 10);
+    private final Insets insetBottom = new Insets(0, 10, 10, 10);
+    private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
+
     // for what do we calc statistics
     private static enum StatisticData {
         // overall
@@ -158,7 +172,9 @@ public class StatisticsViewer {
         statisticsStage.setTitle("Statistics");
         statisticsStage.initModality(Modality.APPLICATION_MODAL); 
 
-        final StackPane stackPane = new StackPane();
+        final GridPane gridPane = new GridPane();
+
+        int rowNum = 0;
 
         // data will be shown in a table
         table.setEditable(false);
@@ -198,14 +214,40 @@ public class StatisticsViewer {
         table.setColumnResizePolicy((param) -> true );
         
         table.setItems(statisticsList);
+        table.setMinWidth(710);
+        table.setMinHeight(750);
         
-        stackPane.getChildren().add(table);
-      
-        statisticsStage.setScene(new Scene(stackPane));
+        gridPane.add(table, 0, rowNum, 2, 1);
+        GridPane.setMargin(table, insetTopBottom);
+        
+        rowNum++;
+        // 2nd row: OK und Export buttons
+        final Button OKButton = new Button("OK");
+        OKButton.setOnAction((ActionEvent event) -> {
+            // done, lets get out of here...
+            statisticsStage.close();
+        });      
+        gridPane.add(OKButton, 0, rowNum, 1, 1);
+        GridPane.setMargin(OKButton, insetBottom);
+        GridPane.setHalignment(OKButton, HPos.CENTER);
+
+        final Button exportButton = new Button("Export CSV");
+        exportButton.setOnAction((ActionEvent event) -> {
+            exportCSV();
+        });      
+        gridPane.add(exportButton, 1, rowNum, 1, 1);
+        GridPane.setMargin(exportButton, insetBottom);
+        GridPane.setHalignment(exportButton, HPos.CENTER);
+        
+        final ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        final ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        gridPane.getColumnConstraints().addAll(col1, col2);
+        
+        statisticsStage.setScene(new Scene(gridPane));
         statisticsStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        statisticsStage.setWidth(725);
-        statisticsStage.setHeight(700);
-        statisticsStage.setResizable(false);
+        statisticsStage.setResizable(true);
     }
     
     public boolean showStatistics(final GPXFile gpxFile) {
@@ -245,7 +287,8 @@ public class StatisticsViewer {
         
         // format duration as in getDurationAsString
         statisticsList.get(StatisticData.Duration.ordinal()).setValue(myGPXFile.getDurationAsString());
-        statisticsList.get(StatisticData.Length.ordinal()).setValue(myGPXFile.getLength()/1000d);
+        double totalLength = myGPXFile.getLength();
+        statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
         statisticsList.get(StatisticData.StartHeight.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
         statisticsList.get(StatisticData.EndHeight.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
@@ -255,7 +298,7 @@ public class StatisticsViewer {
         statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXFile.getCumulativeAscent());
         statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXFile.getCumulativeDescent());
         
-        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(myGPXFile.getLength()/myGPXFile.getDuration()*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getDuration()*1000d*3.6d);
 
         double lengthAsc = 0.0;
         double lengthDesc = 0.0;
@@ -351,6 +394,23 @@ public class StatisticsViewer {
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
 
         table.refresh();
+    }
+    
+    private void exportCSV() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("CSV File");
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("CSV Files (*.csv)", "*.csv"));
+        File selectedFile = fileChooser.showSaveDialog(null);
+
+        if(selectedFile == null){
+            System.out.println("No File selected");
+        } else if (!"csv".equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
+            System.out.println("No .csv File selected");
+        } else {
+            System.out.println("Not yet exporting to " + selectedFile.getName());
+            // export using opencsv and @CsvBindByPosition
+        }
     }
     
     private class StatisticValue<T> {
