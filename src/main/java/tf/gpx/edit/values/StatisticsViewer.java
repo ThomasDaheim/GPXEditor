@@ -26,9 +26,13 @@
 package tf.gpx.edit.values;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.Format;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -44,6 +48,8 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -408,8 +414,23 @@ public class StatisticsViewer {
         } else if (!"csv".equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
             System.out.println("No .csv File selected");
         } else {
-            System.out.println("Not yet exporting to " + selectedFile.getName());
-            // export using opencsv and @CsvBindByPosition
+            // export using appache csv
+            try (
+                    FileWriter out = new FileWriter(selectedFile);
+                    CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
+                  .withHeader("Observable", "Value", "Unit", "Where", "When"))
+                ) {
+                statisticsList.forEach((t) -> {
+                    // no idea, why a nested try & catch is required here...
+                    try {
+                        printer.printRecord(t.getDescription(), t.getStringValue(), t.getUnit(), t.getLocation(), t.getTime());
+                    } catch (IOException ex) {
+                        Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });                
+            } catch (IOException ex) {
+                Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     
