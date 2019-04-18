@@ -17,6 +17,11 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.1
+
+* height chart zooms with map
+* added csv export for statistics
+
 ### Update v3.0
 
 * added About menu

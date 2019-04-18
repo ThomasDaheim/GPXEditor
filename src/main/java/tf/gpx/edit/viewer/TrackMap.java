@@ -77,7 +77,7 @@ import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -829,7 +829,10 @@ public class TrackMap extends LeafletMapView {
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
 
         if (bounds[4] > 0d) {
-            setView(getCenter(), getZoom());
+//            setView(getCenter(), getZoom());
+
+            // use map.fitBounds to avoid calculation of center and zoom
+            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ");");
         }
         setVisible(bounds[4] > 0d);
     }
@@ -900,6 +903,8 @@ public class TrackMap extends LeafletMapView {
         bounds[1] = Math.max(bounds[1], latLong.getLatitude());
         bounds[2] = Math.min(bounds[2], latLong.getLongitude());
         bounds[3] = Math.max(bounds[3], latLong.getLongitude());
+        
+//        System.out.println("bounds[0]: " + bounds[0] + ", bounds[1]: " + bounds[1] + ", bounds[2]: " + bounds[2] + ", bounds[3]: " + bounds[3]);
 
         return bounds;
     }
@@ -1100,25 +1105,25 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWayointList(false);
     }
     
-    private LatLong getCenter() {
-        return new LatLong(myBoundingBox.getMinX()+myBoundingBox.getWidth()/2, myBoundingBox.getMinY()+myBoundingBox.getHeight()/2);
-    }
+//    private LatLong getCenter() {
+//        return new LatLong(myBoundingBox.getMinX()+myBoundingBox.getWidth()/2, myBoundingBox.getMinY()+myBoundingBox.getHeight()/2);
+//    }
 
-    private int getZoom() {
-        // http://stackoverflow.com/questions/4266754/how-to-calculate-google-maps-zoom-level-for-a-bounding-box-in-java
-        int zoomLevel;
-        
-        final double maxDiff = (myBoundingBox.getWidth() > myBoundingBox.getHeight()) ? myBoundingBox.getWidth() : myBoundingBox.getHeight();
-        if (maxDiff < 360d / Math.pow(2, 20)) {
-            zoomLevel = 21;
-        } else {
-            zoomLevel = (int) (-1d*( (Math.log(maxDiff)/Math.log(2d)) - (Math.log(360d)/Math.log(2d))) + 1d);
-            if (zoomLevel < 1)
-                zoomLevel = 1;
-        }
-        
-        return zoomLevel;
-    }
+//    private int getZoom() {
+//        // http://stackoverflow.com/questions/4266754/how-to-calculate-google-maps-zoom-level-for-a-bounding-box-in-java
+//        int zoomLevel;
+//        
+//        final double maxDiff = (myBoundingBox.getWidth() > myBoundingBox.getHeight()) ? myBoundingBox.getWidth() : myBoundingBox.getHeight();
+//        if (maxDiff < 360d / Math.pow(2, 20)) {
+//            zoomLevel = 21;
+//        } else {
+//            zoomLevel = (int) (-1d*( (Math.log(maxDiff)/Math.log(2d)) - (Math.log(360d)/Math.log(2d))) + 1d);
+//            if (zoomLevel < 1)
+//                zoomLevel = 1;
+//        }
+//        
+//        return zoomLevel;
+//    }
 
     private String addMarkerAndCallback(final LatLong point, final String pointname, final Marker marker, final int zIndex, final boolean interactive) {
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
@@ -1143,10 +1148,13 @@ public class TrackMap extends LeafletMapView {
         return layer;
     }
     
+    public void mapViewChanged(final BoundingBox newBoundingBox) {
+        HeightChart.getInstance().setViewLimits(newBoundingBox);
+    }
+    
     public class JSCallback {
         // call back for jscallback :-)
         private final TrackMap myTrackMap;
-        private BoundingBox paneBounds; 
         
         private JSCallback() {
             myTrackMap = null;
@@ -1205,6 +1213,11 @@ public class TrackMap extends LeafletMapView {
         public void deregisterRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.removeCurrentGPXRoute();
             //System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
+        }
+
+        public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
+            myTrackMap.mapViewChanged(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
+//            System.out.println("mapViewChanged: " + event + ", " + latMin + ", " + lonMin + ", " + latMax + ", " + lonMax);
         }
     }
 }

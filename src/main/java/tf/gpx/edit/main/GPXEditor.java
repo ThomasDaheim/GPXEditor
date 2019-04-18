@@ -344,7 +344,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.0", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.1", "https://github.com/ThomasDaheim/GPXEditor");
     }
 
     public void stop() {
@@ -620,7 +620,8 @@ public class GPXEditor implements Initializable {
         // cell factories for treetablecols
         idGPXCol.setCellValueFactory(
                 // getID not working for GPXFile - is always 0...
-                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
+//                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
+                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
         idGPXCol.setEditable(false);
         idGPXCol.setPrefWidth(NORMAL_WIDTH);
         

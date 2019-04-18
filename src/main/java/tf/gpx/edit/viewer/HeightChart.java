@@ -37,6 +37,7 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.BoundingBox;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -67,6 +68,11 @@ public class HeightChart<X,Y> extends AreaChart {
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
     
     private boolean noLayout = false;
+    
+    private double minDistance;
+    private double maxDistance;
+    private double minHeight;
+    private double maxHeight;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
@@ -117,16 +123,23 @@ public class HeightChart<X,Y> extends AreaChart {
             return;
         }
         
-        double distance = 0d;
+        minDistance = 0d;
+        maxDistance = 0d;
+        minHeight = Double.MAX_VALUE;
+        maxHeight = Double.MIN_VALUE;
         final List<XYChart.Data> dataList = new ArrayList<>();
         for (GPXWaypoint gpxWaypoint : lineItem.getCombinedGPXWaypoints(null)) {
-            distance += gpxWaypoint.getDistance();
-            XYChart.Data data = new XYChart.Data(distance / 1000.0, gpxWaypoint.getElevation());
+            maxDistance += gpxWaypoint.getDistance();
+            double elevation = gpxWaypoint.getElevation();
+            minHeight = Math.min(minHeight, elevation);
+            maxHeight = Math.max(maxHeight, elevation);
+            
+            XYChart.Data data = new XYChart.Data(maxDistance / 1000.0, elevation);
             // show elevation data on hover
             // https://gist.github.com/jewelsea/4681797
 
             // click handler for icon to mark waypoint via callback to gpxeditor
-            final Node node = new HoveredNode(String.format("Dist %.2fkm", distance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()));
+            final Node node = new HoveredNode(String.format("Dist %.2fkm", maxDistance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()));
             node.setUserData(gpxWaypoint);
             node.setOnMouseClicked((MouseEvent event) -> {
                 myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
@@ -134,9 +147,20 @@ public class HeightChart<X,Y> extends AreaChart {
             data.setNode(node);
             
             dataList.add(data);
-            myPoints.add(Pair.of(gpxWaypoint, distance));
+            myPoints.add(Pair.of(gpxWaypoint, maxDistance));
         }
         
+        XYChart.Series series = new XYChart.Series();
+        series.getData().addAll(dataList);
+        getData().add(series);
+        
+        setAxis(minDistance, maxDistance, minHeight, maxHeight);
+        
+        setVisible(!series.getData().isEmpty());
+    }
+    
+    private void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
+        double distance = maxDist - minDist;
         // calculate scaling for ticks so their number is smaller than 25
         double tickUnit = 1.0;
         if (distance / 1000.0 > 24.9) {
@@ -152,13 +176,17 @@ public class HeightChart<X,Y> extends AreaChart {
             tickUnit = 500.0;
         }
         ((NumberAxis) getXAxis()).setTickUnit(tickUnit);
-        
-        XYChart.Series series = new XYChart.Series();
-        series.getData().addAll(dataList);
-        getData().add(series);
-        ((NumberAxis) getXAxis()).setUpperBound(distance / 1000.0);
 
-        setVisible(!series.getData().isEmpty());
+        // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
+        ((NumberAxis) getXAxis()).setLowerBound(minDist / 1000.0);
+        ((NumberAxis) getXAxis()).setUpperBound(maxDist / 1000.0);
+
+        distance = maxHght - minHght;
+        ((NumberAxis) getYAxis()).setTickUnit(10.0);
+
+//        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
+        ((NumberAxis) getYAxis()).setLowerBound(minHght);
+        ((NumberAxis) getYAxis()).setUpperBound(maxHght);
     }
 
     @SuppressWarnings("unchecked")
@@ -240,6 +268,55 @@ public class HeightChart<X,Y> extends AreaChart {
         
         noLayout = false;
         layoutPlotChildren();
+    }
+    
+    // set a bounding box to limit which waypoints are shown
+    // or better: to define, what min and max x-axis to use
+    public void setViewLimits(final BoundingBox newBoundingBox) {
+        if (myPoints.isEmpty()) {
+            // nothing to show yet...
+            return;
+        }
+        
+        // init with maximum values
+        double minDist = minDistance;
+        double maxDist = maxDistance;
+        double minHght = minHeight;
+        double maxHght = maxHeight;
+
+        if (newBoundingBox != null) {
+            minHght = Double.MAX_VALUE;
+            maxHght = Double.MIN_VALUE;
+            
+            boolean waypointFound = false;
+            // 1. iterate over myPoints
+            for (Pair<GPXWaypoint, Double> point: myPoints) {
+                GPXWaypoint waypoint = point.getLeft();
+                if (newBoundingBox.contains(waypoint.getLatitude(), waypoint.getLongitude())) {
+                    // 2. if waypoint in bounding box:
+                    // if first waypoint use this for minDist
+                    // use this for maxDist
+                    if (!waypointFound) {
+                        minDist = point.getRight();
+                    }
+                    maxDist = point.getRight();
+                    
+                    final double elevation = waypoint.getElevation();
+                    minHght = Math.min(minHght, elevation);
+                    maxHght = Math.max(maxHght, elevation);
+                    waypointFound = true;
+                }
+            
+                if (!waypointFound) {
+                    minDist = 0.0;
+                    maxDist = 0.0;
+                }
+            }
+            
+            // if no waypoint in bounding box show nothing
+        }
+
+        setAxis(minDist, maxDist, minHght, maxHght);
     }
 
     @Override

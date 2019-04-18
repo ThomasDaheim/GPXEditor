@@ -95,6 +95,11 @@ public class GPXMetadata extends GPXMeasurable {
                 return "";
         }
     }
+    
+    @Override
+    public String getCombinedID() {
+        return "Meta";
+    }
 
     @Override
     public List<GPXMeasurable> getGPXMeasurables() {

@@ -53,9 +53,30 @@ myMap.on('mousedown', disableCntrlDrag);
 // disable on cntrl mouse up
 myMap.on('mouseup', enableCntrlDrag);
 
+// TFE, 20181124
+// add callbacks for map move or zoom that send bounds back to java
+function mapViewChanged(e) {
+    var bounds = getMapBounds();
+//    jscallback.log('mapViewChanged: ' + e.type + ", " + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]);
+    jscallback.mapViewChanged(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
+} 
+myMap.on('zoomend', mapViewChanged);
+myMap.on('moveend', mapViewChanged);
+myMap.on('resize', mapViewChanged);
+
+
 // wrap around world borders
 // https://stackoverflow.com/a/28323349
 myMap.options.worldCopyJump = true;
+
+// alternative to use setView - avoids calculating center and zoom from bounds manually
+function setMapBounds(latMin, latMax, lngMin, lngMax) {
+//    jscallback.log('addClickToLayer: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
+    myMap.fitBounds([
+        [latMin, lngMin],
+        [latMax, lngMax]
+    ]);
+}
 
 // return lower left and upper right corners of currently shown map
 function getMapBounds() {
