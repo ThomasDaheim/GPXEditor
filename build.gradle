@@ -30,6 +30,7 @@ ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'wi
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'tf.gpx.edit.main.GPXEditorManager'
 }
+mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 
 repositories {
     mavenCentral()
