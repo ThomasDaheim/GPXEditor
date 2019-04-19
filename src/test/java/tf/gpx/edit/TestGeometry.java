@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit;
 
-import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
