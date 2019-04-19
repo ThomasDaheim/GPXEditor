@@ -218,7 +218,7 @@ function removeSearchResult(markerCount) {
 }
 
 function showSearchResults(searchItem, result, iconName) {
-    //callback.log("result: " + result);
+//    jscallback.log("result: " + result);
     var data = JSON.parse(result);
     var icon = window[iconName];
     
@@ -243,6 +243,8 @@ function showSearchResults(searchItem, result, iconName) {
                 
                 // add result to the big list...
                 point.properties.MarkerCount = searchCount;
+//                jscallback.log("title: " + title);
+//                jscallback.log("point: " + point);
                 searchResults.push(point);
                 searchCount++;
             }
