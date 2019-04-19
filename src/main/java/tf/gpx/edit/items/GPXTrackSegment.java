@@ -76,8 +76,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         if (content instanceof Track) {
             ((Track) content).addTrackSegment(myTrackSegment);
         }
-        
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     // constructor for tracksegments from gpx parser
@@ -100,8 +99,7 @@ public class GPXTrackSegment extends GPXMeasurable {
 
             updatePrevNextGPXWaypoints();
         }
-        
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     @Override
@@ -131,7 +129,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         // init prev/next waypoints
         myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXWaypoints.addListener(getListChangeListener());
+        myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -149,6 +147,11 @@ public class GPXTrackSegment extends GPXMeasurable {
     @Override
     @SuppressWarnings("unchecked")
     public void setParent(GPXLineItem parent) {
+        // performance: only do something in case of change
+        if (myGPXTrack != null && myGPXTrack.equals(parent)) {
+            return;
+        }
+
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
         
         myGPXTrack = (GPXTrack) parent;
@@ -167,8 +170,15 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         //System.out.println("setGPXWaypoints: " + getName() + ", " + gpxWaypoints.size());
+        myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxWaypoints);
+        myGPXWaypoints.addListener(changeListener);
+
+        numberChildren(myGPXWaypoints);
+
+        // init prev/next waypoints
+        updatePrevNextGPXWaypoints();
         
         // reset cached values
         myLength = null;

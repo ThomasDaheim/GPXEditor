@@ -26,6 +26,7 @@
 package tf.gpx.edit.worker;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,7 +64,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
     
     private WorkMode myWorkMode = WorkMode.CHECK_DATA_FILES;
     private AssignMode myAssignMode = AssignMode.ALWAYS;
-    private Set<String> requiredDataFiles = new HashSet<>();
+    private Set<String> requiredDataFiles = new LinkedHashSet<>();
     
     private int assignedHeightCount = 0;
     private int noHeightCount = 0;
@@ -94,7 +95,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
     }
     
     public void clearRequiredDataFiles() {
-        requiredDataFiles = new HashSet<>();
+        requiredDataFiles = new LinkedHashSet<>();
     }
 
     public int getAssignedHeightCount() {

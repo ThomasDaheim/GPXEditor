@@ -78,7 +78,7 @@ public class GPXRoute extends GPXMeasurable {
             ((GPX) content).addRoute(myRoute);
         }
         
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     // constructor for routes from gpx parser
@@ -98,7 +98,7 @@ public class GPXRoute extends GPXMeasurable {
             updatePrevNextGPXWaypoints();
         }
         
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     @Override
@@ -120,7 +120,7 @@ public class GPXRoute extends GPXMeasurable {
         // init prev/next waypoints
         myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXWaypoints.addListener(getListChangeListener());
+        myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -138,6 +138,11 @@ public class GPXRoute extends GPXMeasurable {
     @Override
     @SuppressWarnings("unchecked")
     public void setParent(final GPXLineItem parent) {
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return;
+        }
+
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
@@ -156,8 +161,15 @@ public class GPXRoute extends GPXMeasurable {
     
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         //System.out.println("setGPXWaypoints: " + getName() + ", " + gpxWaypoints.size());
+        myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxWaypoints);
+        myGPXWaypoints.addListener(changeListener);
+
+        numberChildren(myGPXWaypoints);
+
+        // init prev/next waypoints
+        updatePrevNextGPXWaypoints();
         
         // reset cached values
         myLength = null;

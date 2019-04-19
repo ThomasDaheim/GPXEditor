@@ -252,18 +252,23 @@ public abstract class GPXLineItem {
     }
 
     private GPXLineItemType myItemType;
+    protected final ListChangeListener<GPXLineItem> changeListener;
 
     private boolean hasUnsavedChanges = false;
     private int myNumber;
 
     private GPXLineItem() {
         super();
+        
+        changeListener = getListChangeListener();
     }
     
     public GPXLineItem(final GPXLineItemType itemType) {
         super();
         
         myItemType = itemType;
+        
+        changeListener = getListChangeListener();
     }
     
     // cloning for extended class hierarchies
@@ -520,7 +525,7 @@ public abstract class GPXLineItem {
     }
     
     // listener for observablelist to set hasUnsavedChanges
-    final protected ListChangeListener<GPXLineItem> getListChangeListener() {
+    private ListChangeListener<GPXLineItem> getListChangeListener() {
         return (ListChangeListener.Change<? extends GPXLineItem> c) -> {
             hasUnsavedChanges = true;
             

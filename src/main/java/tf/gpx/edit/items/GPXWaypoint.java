@@ -306,6 +306,11 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public void setParent(GPXLineItem parent) {
+        // performance: only do something in case of change
+        if (myGPXParent != null && myGPXParent.equals(parent)) {
+            return;
+        }
+
         assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
         
         myGPXParent = parent;

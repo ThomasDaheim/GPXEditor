@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -79,9 +80,9 @@ public class GPXFile extends GPXMeasurable {
         // create empty gpx
         myGPX = new GPX();
         
-        myGPXTracks.addListener(getListChangeListener());
-        myGPXRoutes.addListener(getListChangeListener());
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXTracks.addListener(changeListener);
+        myGPXRoutes.addListener(changeListener);
+        myGPXWaypoints.addListener(changeListener);
     }
 
     // constructor for gpx from file
@@ -135,9 +136,9 @@ public class GPXFile extends GPXMeasurable {
         // TFE, 20180201: update header data & meta data
         setHeaderAndMeta();
         
-        myGPXTracks.addListener(getListChangeListener());
-        myGPXRoutes.addListener(getListChangeListener());
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXTracks.addListener(changeListener);
+        myGPXRoutes.addListener(changeListener);
+        myGPXWaypoints.addListener(changeListener);
     }
     
     @Override
@@ -165,9 +166,9 @@ public class GPXFile extends GPXMeasurable {
         // init prev/next waypoints
         myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXTracks.addListener(getListChangeListener());
-        myClone.myGPXRoutes.addListener(getListChangeListener());
-        myClone.myGPXWaypoints.addListener(getListChangeListener());
+        myClone.myGPXTracks.addListener(myClone.changeListener);
+        myClone.myGPXRoutes.addListener(myClone.changeListener);
+        myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -296,8 +297,12 @@ public class GPXFile extends GPXMeasurable {
     }
 
     public void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints) {
+        myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxGPXWaypoints);
+        myGPXWaypoints.addListener(changeListener);
+
+        numberChildren(myGPXWaypoints);
         
         setHasUnsavedChanges();
     }
@@ -453,7 +458,7 @@ public class GPXFile extends GPXMeasurable {
             });
             
             final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
-            myGPX.setWaypoints(new HashSet<>(waypoints));
+            myGPX.setWaypoints(new LinkedHashSet<>(waypoints));
         }
         if (myGPXRoutes.equals(list)) {
             myGPXRoutes.stream().forEach((t) -> {
@@ -461,7 +466,7 @@ public class GPXFile extends GPXMeasurable {
             });
             
             final Set<Route> routes = numberExtensions(myGPXRoutes);
-            myGPX.setRoutes(new HashSet<>(routes));
+            myGPX.setRoutes(new LinkedHashSet<>(routes));
         }
         if (myGPXTracks.equals(list)) {
             myGPXTracks.stream().forEach((t) -> {
@@ -469,7 +474,7 @@ public class GPXFile extends GPXMeasurable {
             });
             
             final Set<Track> tracks = numberExtensions(myGPXTracks);
-            myGPX.setTracks(new HashSet<>(tracks));
+            myGPX.setTracks(new LinkedHashSet<>(tracks));
         }
     }
 }

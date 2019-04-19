@@ -26,6 +26,8 @@
 package tf.gpx.edit.helper;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
@@ -69,7 +71,8 @@ public class GPXListHelper {
                         }
                     }
                     if (c.wasRemoved()) {
-                        list.removeAll(c.getRemoved());
+                        // performance: convert to hashset since its contains() is way faster
+                        list.removeAll(new LinkedHashSet<>(c.getRemoved()));
                     }
                 }
             });
@@ -90,7 +93,8 @@ public class GPXListHelper {
                     result.addAll(c.getFrom(), c.getAddedSubList());
                 }
                 if (c.wasRemoved()) {
-                    result.removeAll(c.getRemoved());
+                    // performance: convert to hashset since its contains() is way faster
+                    result.removeAll(new LinkedHashSet<>(c.getRemoved()));
                 }
             }
         });

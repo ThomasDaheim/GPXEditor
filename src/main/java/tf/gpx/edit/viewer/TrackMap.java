@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -944,7 +945,7 @@ public class TrackMap extends LeafletMapView {
         //clearSelectedGPXWaypoints();
         
         // hashset over arraylist for improved performance
-        final Set<GPXWaypoint> waypointSet = new HashSet<>(gpxWaypoints);
+        final Set<GPXWaypoint> waypointSet = new LinkedHashSet<>(gpxWaypoints);
 
         // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
         final BidiMap<String, GPXWaypoint> waypointsToUnselect = new DualHashBidiMap<>();
@@ -1035,7 +1036,7 @@ public class TrackMap extends LeafletMapView {
     }
     
     private void addGPXWaypointsToSelection(final List<GPXWaypoint> waypoints, final Boolean addToSelection) {
-        final Set<GPXWaypoint> newSelection = new HashSet<>();
+        final Set<GPXWaypoint> newSelection = new LinkedHashSet<>();
         if (addToSelection) {
             newSelection.addAll(selectedWaypoints.values());
         }

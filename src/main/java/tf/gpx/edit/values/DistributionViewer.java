@@ -28,6 +28,8 @@ package tf.gpx.edit.values;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.value.ChangeListener;
@@ -312,7 +314,8 @@ public class DistributionViewer {
                 final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
                 final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
 
-                newWaypoints.removeAll(wayPointList.getCheckModel().getCheckedItems());
+                // performance: convert to hashset since its contains() is way faster
+                newWaypoints.removeAll(new LinkedHashSet<>(wayPointList.getCheckModel().getCheckedItems()));
                 gpxTrackSegment.setGPXWaypoints(newWaypoints);
                 
                 // done, lets get out of here...

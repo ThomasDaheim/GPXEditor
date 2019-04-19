@@ -204,7 +204,7 @@ public class HeightChart<X,Y> extends AreaChart {
 //        selectedWaypoints.clear();
         
         // hashset over arraylist for improved performance
-        final Set<GPXWaypoint> waypointSet = new HashSet<>(gpxWaypoints);
+        final Set<GPXWaypoint> waypointSet = new LinkedHashSet<>(gpxWaypoints);
         
         // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
         final List<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new ArrayList<>();
@@ -219,7 +219,7 @@ public class HeightChart<X,Y> extends AreaChart {
         }
 
         // now figure out which ones to add
-        final Set<GPXWaypoint> selectedWaypointsSet = new HashSet<>(selectedWaypoints.stream().map((t) -> {
+        final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
             return t.getLeft();
         }).collect(Collectors.toList()));
                 
