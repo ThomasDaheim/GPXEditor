@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
@@ -110,7 +112,8 @@ public class RecursiveTreeItem<T> extends TreeItem<T> {
                                 RecursiveTreeItem.this.getChildren().stream().
                                 filter(treeItem -> treeItem.getValue().equals(t)).
                                 collect(Collectors.toList());
-                        RecursiveTreeItem.this.getChildren().removeAll(itemsToRemove);
+                        // performance: convert to hashset since its contains() is way faster
+                        RecursiveTreeItem.this.getChildren().removeAll(new LinkedHashSet<>(itemsToRemove));
                     });
                 }
 

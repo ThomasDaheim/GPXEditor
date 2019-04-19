@@ -68,7 +68,7 @@ public class GPXTrack extends GPXMeasurable {
             ((GPX) content).addTrack(myTrack);
         }
 
-        myGPXTrackSegments.addListener(getListChangeListener());
+        myGPXTrackSegments.addListener(changeListener);
     }
     
     // constructor for tracks from gpx parser
@@ -86,7 +86,7 @@ public class GPXTrack extends GPXMeasurable {
             assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
         }
 
-        myGPXTrackSegments.addListener(getListChangeListener());
+        myGPXTrackSegments.addListener(changeListener);
     }
     
     @Override
@@ -105,7 +105,7 @@ public class GPXTrack extends GPXMeasurable {
         }
         numberChildren(myClone.myGPXTrackSegments);
 
-        myClone.myGPXTrackSegments.addListener(getListChangeListener());
+        myClone.myGPXTrackSegments.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -148,6 +148,11 @@ public class GPXTrack extends GPXMeasurable {
     
     @Override
     public void setParent(final GPXLineItem parent) {
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return;
+        }
+
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;

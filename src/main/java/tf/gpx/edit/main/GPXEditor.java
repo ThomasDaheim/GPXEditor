@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1084,9 +1085,30 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
         // now loop through all the waypoints and try to remove them
         // can be waypoints from file, track, route
+
+        // performance: cluster waypoints by parents
+        final Map<GPXLineItem, List<GPXWaypoint>> waypointCluster = new HashMap<>();
         for (GPXWaypoint waypoint : selectedWaypoints) {
-            waypoint.getParent().getGPXWaypoints().remove(waypoint);
+            final GPXLineItem parent = waypoint.getParent();
+            
+            if (!waypointCluster.containsKey(parent)) {
+                final List<GPXWaypoint> parentWaypoints = selectedWaypoints.stream().filter((t) -> {
+                    return parent.equals(t.getParent());
+                }).collect(Collectors.toList());
+                waypointCluster.put(parent, parentWaypoints);
+            }
         }
+        for (GPXLineItem parent : waypointCluster.keySet()) {
+            // performance: do mass remove on List and not on ObservableList
+            final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
+            // performance: convert to hashset since its contains() is way faster
+            parentWaypoints.removeAll(new LinkedHashSet<>(waypointCluster.get(parent)));
+            parent.setChildren(parentWaypoints);
+        }
+
+//        for (GPXWaypoint waypoint : selectedWaypoints) {
+//            waypoint.getParent().getGPXWaypoints().remove(waypoint);
+//        }
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
         // show remaining waypoints
@@ -1522,7 +1544,8 @@ public class GPXEditor implements Initializable {
                         myWorker.mergeGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments);
                     }
                 } else {
-                    gpxTrack.getGPXTrackSegments().removeAll(gpxTrackSegments);
+                    // performance: convert to hashset since its contains() is way faster
+                    gpxTrack.getGPXTrackSegments().removeAll(new LinkedHashSet<>(gpxTrackSegments));
                 }
             }
 
@@ -1553,8 +1576,9 @@ public class GPXEditor implements Initializable {
                     myWorker.mergeGPXRoutes(gpxFile.getGPXRoutes(), gpxRoutes);
                 }
             } else {
-                gpxFile.getGPXTracks().removeAll(gpxTracks);
-                gpxFile.getGPXRoutes().removeAll(gpxRoutes);
+                // performance: convert to hashset since its contains() is way faster
+                gpxFile.getGPXTracks().removeAll(new LinkedHashSet<>(gpxTracks));
+                gpxFile.getGPXRoutes().removeAll(new LinkedHashSet<>(gpxRoutes));
             }
         }
 
