@@ -21,6 +21,8 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 * height chart zooms with map
 * added csv export for statistics
+* performance improvement when deleting multiple waypoints
+* bugfixes
 
 ### Update v3.0
 
