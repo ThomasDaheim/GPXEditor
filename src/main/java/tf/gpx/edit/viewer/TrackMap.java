@@ -48,6 +48,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -368,6 +369,23 @@ public class TrackMap extends LeafletMapView {
             createContextMenu();
 
             isInitialized = true;
+            
+            try {
+                // try to load png & convert to base64
+                // TODO: choose proper encoding
+                final String lodgingPNG= IOUtils.toString(TrackMap.class.getResourceAsStream("/dining.png"));
+                final String lodgingPNGBase64 = Base64.getEncoder().encodeToString(lodgingPNG.getBytes());
+                
+                final String scriptCmd = 
+                    "var url = \"data:image/png;base64," + lodgingPNGBase64 + "\";" + 
+                    "var restaurantSearchIcon = new CustomIcon12({iconUrl: url});" + 
+                    "var restaurantIcon = new CustomIcon16({iconUrl: url});";
+
+//                execScript(scriptCmd);
+            } catch (IOException ex) {
+                Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
         }
     }
     

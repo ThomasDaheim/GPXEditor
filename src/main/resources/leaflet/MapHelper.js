@@ -218,9 +218,11 @@ function removeSearchResult(markerCount) {
 }
 
 function showSearchResults(searchItem, result, iconName) {
-//    jscallback.log("result: " + result);
     var data = JSON.parse(result);
     var icon = window[iconName];
+//    jscallback.log("result: " + result);
+//    jscallback.log("iconName: " + iconName);
+//    jscallback.log("icon: " + icon);
     
     if(data.hasOwnProperty("elements")) {
         if(data.elements.length > 0) {
