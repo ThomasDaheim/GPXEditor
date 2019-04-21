@@ -356,6 +356,7 @@ public abstract class GPXLineItem {
     public abstract ObservableList<GPXTrack> getGPXTracks();
     public abstract ObservableList<GPXTrackSegment> getGPXTrackSegments();
     public abstract ObservableList<GPXRoute> getGPXRoutes();
+    public abstract void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints);
     public abstract ObservableList<GPXWaypoint> getGPXWaypoints();
     // get the actual content of com.hs.gpxparser.* type
     public abstract Extension getContent();

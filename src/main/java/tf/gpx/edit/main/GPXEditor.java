@@ -1103,7 +1103,7 @@ public class GPXEditor implements Initializable {
             final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
             // performance: convert to hashset since its contains() is way faster
             parentWaypoints.removeAll(new LinkedHashSet<>(waypointCluster.get(parent)));
-            parent.setChildren(parentWaypoints);
+            parent.setGPXWaypoints(parentWaypoints);
         }
 
 //        for (GPXWaypoint waypoint : selectedWaypoints) {
