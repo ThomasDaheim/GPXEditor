@@ -296,6 +296,7 @@ public class GPXFile extends GPXMeasurable {
         setGPXRoutes(castChildren(GPXRoute.class, children));
     }
 
+    @Override
     public void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints) {
         myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();

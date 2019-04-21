@@ -325,6 +325,10 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
     }
+
+    @Override
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    }
     
     @Override
     public String getDataAsString(final GPXLineItemData gpxLineItemData) {

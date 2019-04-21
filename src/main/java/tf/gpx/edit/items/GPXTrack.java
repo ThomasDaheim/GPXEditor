@@ -168,6 +168,10 @@ public class GPXTrack extends GPXMeasurable {
     public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXTrackSegments(castChildren(GPXTrackSegment.class, children));
     }
+
+    @Override
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    }
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
         //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());

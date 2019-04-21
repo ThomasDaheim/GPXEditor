@@ -117,6 +117,7 @@ public class TrackMap extends LeafletMapView {
             return profileName;
         }
 
+        @Override
         public String toString() {
             return name();
         }
@@ -649,12 +650,12 @@ public class TrackMap extends LeafletMapView {
 
         contextMenu.getItems().addAll(showCord, addWaypoint, addRoute, separator, searchPoints);
 
-        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
+//        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu(observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
+            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu(observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
+            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
         });
 
         myWebView.setOnMousePressed(e -> {
@@ -711,10 +712,16 @@ public class TrackMap extends LeafletMapView {
         return new LatLong(pointlat, pointlng);
     }
     private void updateContextMenu(
+            final String coord,
             final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue,
             final ContextMenu contextMenu, final MenuItem showCord, final MenuItem addWaypoint, final MenuItem addRoute) {
         if (newValue != null) {
-            final LatLong latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
+            LatLong latLong;
+            if ("X".equals(coord)) {
+                latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
+            } else {
+                latLong = pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue());
+            }
             contextMenu.setUserData(latLong);
 
             showCord.setText(LatLongHelper.LatLongToString(latLong));

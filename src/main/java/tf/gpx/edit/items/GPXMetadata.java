@@ -189,6 +189,10 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    }
+
+    @Override
     protected void visitMe(IGPXLineItemVisitor visitor) {
         visitor.visitGPXMetadata(this);
     }
