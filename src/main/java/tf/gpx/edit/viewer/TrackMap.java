@@ -37,6 +37,7 @@ import de.saring.leafletmap.Marker;
 import de.saring.leafletmap.ScaleControlConfig;
 import de.saring.leafletmap.ZoomControlConfig;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -69,6 +70,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -77,6 +79,7 @@ import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -371,17 +374,16 @@ public class TrackMap extends LeafletMapView {
             isInitialized = true;
             
             try {
-                // try to load png & convert to base64
-                // TODO: choose proper encoding
-                final String lodgingPNG= IOUtils.toString(TrackMap.class.getResourceAsStream("/dining.png"));
-                final String lodgingPNGBase64 = Base64.getEncoder().encodeToString(lodgingPNG.getBytes());
+                // load png & convert to base64
+                byte[] data = FileUtils.readFileToByteArray(new File("src/main/resources/lodging.png"));
+                String base64data = Base64.getEncoder().encodeToString(data);
                 
                 final String scriptCmd = 
-                    "var url = \"data:image/png;base64," + lodgingPNGBase64 + "\";" + 
-                    "var restaurantSearchIcon = new CustomIcon12({iconUrl: url});" + 
-                    "var restaurantIcon = new CustomIcon16({iconUrl: url});";
+                    "var url = \"data:image/png;base64," + base64data + "\";" + 
+                    "var hotelSearchIcon = new CustomIcon12({iconUrl: url});" + 
+                    "var hotelIcon = new CustomIcon16({iconUrl: url});";
 
-//                execScript(scriptCmd);
+                execScript(scriptCmd);
             } catch (IOException ex) {
                 Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
             }
