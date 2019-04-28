@@ -70,7 +70,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -375,13 +374,13 @@ public class TrackMap extends LeafletMapView {
             
             try {
                 // load png & convert to base64
-                byte[] data = FileUtils.readFileToByteArray(new File("src/main/resources/lodging.png"));
+                byte[] data = FileUtils.readFileToByteArray(new File("src/main/resources/icons/Lodging.png"));
                 String base64data = Base64.getEncoder().encodeToString(data);
                 
                 final String scriptCmd = 
                     "var url = \"data:image/png;base64," + base64data + "\";" + 
-                    "var hotelSearchIcon = new CustomIcon12({iconUrl: url});" + 
-                    "var hotelIcon = new CustomIcon16({iconUrl: url});";
+                    "var hotelSearchIcon = new CustomIcon24({iconUrl: url});" + 
+                    "var hotelIcon = new CustomIcon24({iconUrl: url});";
 
                 execScript(scriptCmd);
             } catch (IOException ex) {
@@ -1012,8 +1011,7 @@ public class TrackMap extends LeafletMapView {
             if (gpxWaypoint.isGPXFileWaypoint()) {
                 // updated current marker instead of adding new one on top of the old
                 waypoint = fileWaypoints.getKey(gpxWaypoint);
-                // TODO: use selected version of icon in all cases
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getSelectedIconName() + "\");");
+                execScript("highlightMarker(\"" + waypoint + "\");");
             } else if (trackWaypoints.contains(gpxWaypoint) || routeWaypoints.contains(gpxWaypoint)) {
                 // only show selected waypoint if already shown
                 waypoint = addMarkerAndCallback(latLong, "", MarkerManager.TrackMarker.TrackPointIcon, 0, false);
@@ -1038,7 +1036,7 @@ public class TrackMap extends LeafletMapView {
         for (String waypoint : waypoints.keySet()) {
             final GPXWaypoint gpxWaypoint = waypoints.get(waypoint);
             if (gpxWaypoint.isGPXFileWaypoint()) {
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getIconName() + "\");");
+                execScript("unlightMarker(\"" + waypoint + "\");");
             } else {
                 // TFE, 20180409: only remove waypoints that have actually been added
                 if (!waypoint.startsWith(NOT_SHOWN)) {

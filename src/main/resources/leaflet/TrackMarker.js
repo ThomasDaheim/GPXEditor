@@ -34,6 +34,16 @@ var CustomIcon32 = L.Icon.extend({
                     }
             });
 
+var CustomIcon24 = L.Icon.extend({
+                    options: {
+                            iconSize:     [24, 24],
+                            shadowSize:   [0, 0],
+                            iconAnchor:   [12, 13],
+                            shadowAnchor: [0, 0],
+                            popupAnchor:  [0, 0]
+                    }
+            });
+
 var CustomIcon16 = L.Icon.extend({
                     options: {
                             iconSize:     [16, 16],

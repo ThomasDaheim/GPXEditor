@@ -172,7 +172,7 @@ public class EditGPXWaypoint {
         waypointSymTxt.setEditable(true);
         waypointSymTxt.setVisibleRowCount(10);
         waypointSymTxt.getItems().addAll("", "Default", "Hotel", "Lodging", "Restaurant", "Bar", "Winery", "Fast Food", "Pizza");
-        waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getGarminSymbols());
+        waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getIconNames());
         editWaypointPane.add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, insetTop);
         
@@ -398,6 +398,10 @@ public class EditGPXWaypoint {
         
         if (waypointStage.isShowing()) {
             waypointStage.close();
+        }
+        
+        if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
+            return;
         }
 
         myGPXWaypoints = gpxWaypoints;
