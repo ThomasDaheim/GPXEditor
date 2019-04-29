@@ -55,41 +55,51 @@ public class MarkerManager {
     private final static String RESOURCE_PATH = "src/main/resources/icons";
     private final static String ICON_EXT = "png";
     
+    // fixed names to be used for search icons
     private final static String TRACKPOINT_ICON = "TrackPoint";
     private final static String PLACEMARK_ICON = "Placemark";
+    private final static String SEARCHRESULT_ICON = "Search Result";
+    private final static String HOTEL_ICON = "Lodging";
+    private final static String RESTAURANT_ICON = "Restaurant";
+    private final static String WINERY_ICON = "Winery";
+    private final static String PIZZA_ICON = "Pizza";
+    private final static String FASTFOOD_ICON = "Fast Food";
+    private final static String BAR_ICON = "Bar";
     
     private final Map<String, Pair<String, String>> iconMap = new HashMap<>();
     
-    private Map<String, TrackMarker> symbolMarkerMapping = new HashMap<>();
-    
     // definition of markers for leafletview - needs to match names given in js file
     public enum TrackMarker implements Marker {
-        TrackPointIcon("trackpointIcon", "trackpointIcon"),
-        PlaceMarkIcon("placemarkIcon", "placemarkSelectedIcon"),
-        PlaceMarkSelectedIcon("placemarkSelectedIcon", "placemarkSelectedIcon"),
-        HotelIcon("hotelIcon", "hotelSelectedIcon"),
-        HotelSearchIcon("hotelSearchIcon", "hotelSearchIcon"),
-        RestaurantIcon("restaurantIcon", "restaurantSelectedIcon"),
-        RestaurantSearchIcon("restaurantSearchIcon", "restaurantSearchIcon"),
-        SearchResultIcon("searchResultIcon", "searchResultIcon");
+        TrackPointIcon("", TRACKPOINT_ICON),
+        PlaceMarkIcon("", PLACEMARK_ICON),
+        HotelIcon("Hotel", HOTEL_ICON),
+        HotelSearchIcon("", HOTEL_ICON),
+        RestaurantIcon("Restaurant", RESTAURANT_ICON),
+        RestaurantSearchIcon("", RESTAURANT_ICON),
+        WineryIcon("Winery", WINERY_ICON),
+        WinerySearchIcon("", WINERY_ICON),
+        FastFoodIcon("Fast Food", FASTFOOD_ICON),
+        FastFoodSearchIcon("", FASTFOOD_ICON),
+        BarIcon("Bar", BAR_ICON),
+        BarSearchIcon("", BAR_ICON),
+        SearchResultIcon("", SEARCHRESULT_ICON);
         
+        private final String markerName;
         private final String iconName;
-        // icon to be used if selected
-        private final String selectedIconName;
 
-        TrackMarker(final String name, final String selectedName) {
-            iconName = name;
-            selectedIconName = selectedName;
+        TrackMarker(final String marker, final String icon) {
+            markerName = marker;
+            iconName = MarkerManager.getInstance().jsCompatibleIconName(icon);
         }
+
+        public String getMarkerName() {
+            return markerName;
+        }   
 
         @Override
         public String getIconName() {
             return iconName;
-        }   
-
-        public String getSelectedIconName() {
-            return selectedIconName;
-        }   
+        }
     }
     
     private MarkerManager() {
@@ -98,22 +108,6 @@ public class MarkerManager {
         initialize();
     }
     private void initialize() {
-        // add all know mappings symbol - marker
-        
-        // us for hotel
-        symbolMarkerMapping.put("Hotel", TrackMarker.HotelIcon);
-        // garmin mapsource to hotel
-        symbolMarkerMapping.put("Lodging", TrackMarker.HotelIcon);
-        
-        // us for restaurant
-        symbolMarkerMapping.put("Restaurant", TrackMarker.RestaurantIcon);
-        // garmin mapsource to restaurant
-        symbolMarkerMapping.put("Restaurant", TrackMarker.RestaurantIcon);
-        symbolMarkerMapping.put("Bar", TrackMarker.RestaurantIcon);
-        symbolMarkerMapping.put("Winery", TrackMarker.RestaurantIcon);
-        symbolMarkerMapping.put("Fast Food", TrackMarker.RestaurantIcon);
-        symbolMarkerMapping.put("Pizza", TrackMarker.RestaurantIcon);
-        
         // read icons from resouce path
         final File iconpath = new File(RESOURCE_PATH);
 
@@ -130,7 +124,7 @@ public class MarkerManager {
                 iconMap.put(baseName, new Pair<>(jsCompatibleIconName(baseName), ""));
 //                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
             }
-        }        
+        }  
     }
     private String jsCompatibleIconName(final String iconName) {
         String result = iconName;
@@ -148,6 +142,20 @@ public class MarkerManager {
         return INSTANCE;
     }
     
+    public void loadSearchIcons() {
+        // add all icons that are referenced in TrackMarker initially
+        // can't be done in initialize() sind TrackMap initialize() needs to run before to load TrackMarker.js...
+        for (TrackMarker trackMarker : TrackMarker.values()) { 
+            if (!trackMarker.name().contains("Search")) {
+                final String iconBase64 = getIcon(trackMarker.getIconName());
+//            System.out.println(trackMarker.getIconName() + ": " + iconBase64); 
+
+                // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
+                TrackMap.getInstance().addPNGIcon(trackMarker.getIconName(), iconBase64);
+            }
+        }        
+    }
+    
     // wade through the mess of possible waypoint sym values and convert to an available icon
     public TrackMarker getMarkerForWaypoint(final GPXWaypoint gpxWaypoint) {
         return getMarkerForSymbol(gpxWaypoint.getSym());
@@ -155,12 +163,26 @@ public class MarkerManager {
     
     // wade through the mess of possible waypoint sym values and convert to an available icon
     public TrackMarker getMarkerForSymbol(final String symbol) {
-        if (symbolMarkerMapping.containsKey(symbol)) {
-            return symbolMarkerMapping.get(symbol);
-        } else {
-            // nothing found - use our fallback icon
-            return TrackMarker.PlaceMarkIcon;
+        TrackMarker result = null;
+
+        for (TrackMarker trackMarker : TrackMarker.values()) { 
+            if (trackMarker.getMarkerName().equals(symbol)) {
+                result = trackMarker;
+                break;
+            }
         }
+        
+        // TODO: check all garmin icons as well and load as required
+        if (result == null) {
+            if (iconMap.containsValue(symbol)) {
+            }
+        }
+        
+        if (result == null) {
+            result = TrackMarker.PlaceMarkIcon;
+        }
+        
+        return result;
     }
     
     public Set<String> getIconNames() {
@@ -191,7 +213,8 @@ public class MarkerManager {
     }
     
     public String getIconJSName(final String iconName) {
-        String result = "";
+        // have somee default to use in case of stupid questions
+        String result = jsCompatibleIconName(TRACKPOINT_ICON);
         
         if (iconMap.containsKey(iconName)) {
             result = iconMap.get(iconName).getKey();

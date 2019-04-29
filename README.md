@@ -17,6 +17,12 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.2
+
+Icons, Icons, Icons!
+
+* added all garmin icons as possible markers in leaflet
+
 ### Update v3.1
 
 * height chart zooms with map
@@ -231,11 +237,12 @@ Explicit dependencies:
 * 'org.jfxtras:jfxtras-labs:8.0-r6'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'uk.com.robust-it:cloning:1.9.10'
+* 'org.apache.commons:commons-csv:1.6'
 
 Other things used internally:
 
 * leaflet: https://leafletjs.com/
-* Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
 * leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
 * leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
@@ -243,8 +250,7 @@ Other things used internally:
 * leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
 
 * search-plus icon: https://fontawesome.com/license
-* Sleeping Bed Silhouette icon: Icon made by https://www.flaticon.com/authors/scott-de-jonge from www.flaticon.com 
-* Restaurant icon: Icon made by https://www.flaticon.com/authors/freepik from www.flaticon.com 
+* Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
 
 ## Roadmap
 

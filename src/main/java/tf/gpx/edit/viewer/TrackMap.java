@@ -89,6 +89,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.MarkerManager.TrackMarker;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -127,18 +128,20 @@ public class TrackMap extends LeafletMapView {
     }
 
     // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
+    // values for amneties: https://wiki.openstreetmap.org/wiki/Key:amenity, https://wiki.openstreetmap.org/wiki/Key:tourism
     private enum SearchItem {
         Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.TrackMarker.HotelSearchIcon, true),
         Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
-        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
-        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
+        FastFood("[\"amenity\"=\"fast_food\"]", MarkerManager.TrackMarker.FastFoodSearchIcon, true),
+        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.BarSearchIcon, true),
+        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.WinerySearchIcon, true),
         SearchResult("", MarkerManager.TrackMarker.SearchResultIcon, false);
         
         private final String searchString;
-        private final Marker resultMarker;
+        private final TrackMarker resultMarker;
         private final boolean showInContextMenu;
         
-        SearchItem(final String search, final Marker marker, final boolean showItem) {
+        SearchItem(final String search, final TrackMarker marker, final boolean showItem) {
             searchString = search;
             resultMarker = marker;
             showInContextMenu = showItem;
@@ -148,7 +151,7 @@ public class TrackMap extends LeafletMapView {
             return searchString;
         }   
 
-        public Marker getResultMarker() {
+        public TrackMarker getResultMarker() {
             return resultMarker;
         }   
         
@@ -386,8 +389,21 @@ public class TrackMap extends LeafletMapView {
             } catch (IOException ex) {
                 Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
             }
+            
+            // now we have loaded TrackMarker.js...
+            MarkerManager.getInstance().loadSearchIcons();
 
         }
+    }
+    
+    public void addPNGIcon(final String iconName, final String base64data) {
+        System.out.println("Adding icon " + iconName + ", " + base64data);
+        
+        final String scriptCmd = 
+            "var url = \"data:image/png;base64," + base64data + "\";" + 
+            "var " + iconName + "= new CustomIcon24({iconUrl: url});";
+
+        execScript(scriptCmd);
     }
     
     /**
