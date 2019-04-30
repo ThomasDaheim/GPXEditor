@@ -235,7 +235,7 @@ public class KMLWriter {
         }
 
         final Element styleUrl = doc.createElement("styleUrl");
-        styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getMarkerForSymbol(mark.getSym()).getIconName()));
+        styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getIconNameForSymbol(mark.getSym()).getMarkerName()));
         placemark.appendChild(styleUrl);
 
         final Element desc = doc.createElement("description");

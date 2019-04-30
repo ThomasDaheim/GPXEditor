@@ -397,7 +397,7 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void addPNGIcon(final String iconName, final String base64data) {
-        System.out.println("Adding icon " + iconName + ", " + base64data);
+//        System.out.println("Adding icon " + iconName + ", " + base64data);
         
         final String scriptCmd = 
             "var url = \"data:image/png;base64," + base64data + "\";" + 

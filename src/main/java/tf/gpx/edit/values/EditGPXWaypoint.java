@@ -184,7 +184,7 @@ public class EditGPXWaypoint {
         // update label for any changes of combobox selection
         waypointSymTxt.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
-                symbolValue.setText(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
+                symbolValue.setText(MarkerManager.getInstance().getIconNameForSymbol(newValue).getMarkerName());
             }
         });
 

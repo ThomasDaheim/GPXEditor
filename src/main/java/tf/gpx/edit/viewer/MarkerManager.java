@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -66,6 +67,9 @@ public class MarkerManager {
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
     
+    // keys are jsNames
+    // pair keys are icon names as in garmin
+    // pair values are base64 png strings
     private final Map<String, Pair<String, String>> iconMap = new HashMap<>();
     
     // definition of markers for leafletview - needs to match names given in js file
@@ -121,7 +125,7 @@ public class MarkerManager {
             if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
                 final String baseName = FilenameUtils.getBaseName(iconName);
                 // add name without extension to list
-                iconMap.put(baseName, new Pair<>(jsCompatibleIconName(baseName), ""));
+                iconMap.put(jsCompatibleIconName(baseName), new Pair<>(baseName, ""));
 //                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
             }
         }  
@@ -158,11 +162,11 @@ public class MarkerManager {
     
     // wade through the mess of possible waypoint sym values and convert to an available icon
     public TrackMarker getMarkerForWaypoint(final GPXWaypoint gpxWaypoint) {
-        return getMarkerForSymbol(gpxWaypoint.getSym());
+        return getIconNameForSymbol(gpxWaypoint.getSym());
     }
     
     // wade through the mess of possible waypoint sym values and convert to an available icon
-    public TrackMarker getMarkerForSymbol(final String symbol) {
+    public TrackMarker getIconNameForSymbol(final String symbol) {
         TrackMarker result = null;
 
         for (TrackMarker trackMarker : TrackMarker.values()) { 
@@ -174,7 +178,7 @@ public class MarkerManager {
         
         // TODO: check all garmin icons as well and load as required
         if (result == null) {
-            if (iconMap.containsValue(symbol)) {
+            if (iconMap.containsValue(jsCompatibleIconName(symbol))) {
             }
         }
         
@@ -186,19 +190,23 @@ public class MarkerManager {
     }
     
     public Set<String> getIconNames() {
-        return iconMap.keySet();
+        // garmin names are the keys of the pairs...
+        return iconMap.entrySet().stream().map((t) -> {
+                            return t.getValue().getKey();
+                        }).collect(Collectors.toSet());
     }
     
     public String getIcon(final String iconName) {
         String result = "";
         
+        // tricky, because name is jsName...
         if (iconMap.containsKey(iconName)) {
             final Pair<String, String> iconPair = iconMap.get(iconName);
             result = iconPair.getValue();
             
             if (result.isBlank()) {
                 try {
-                    final byte[] data = FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + iconName + "." + ICON_EXT));
+                    final byte[] data = FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + iconPair.getKey()+ "." + ICON_EXT));
                     result = Base64.getEncoder().encodeToString(data);
                     
                     iconMap.put(iconName, new Pair<>(jsCompatibleIconName(iconName), result));
