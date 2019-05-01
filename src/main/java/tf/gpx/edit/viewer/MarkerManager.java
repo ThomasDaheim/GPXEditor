@@ -35,13 +35,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javafx.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- * One manager to role them all...
+ * One manager to rule them all...
  * 
  * Collection of enums, methods, ... to support marker management
  * - list of supported markers
@@ -70,10 +69,10 @@ public class MarkerManager {
     // keys are jsNames
     // pair keys are icon names as in garmin
     // pair values are base64 png strings
-    private final Map<String, Pair<String, String>> iconMap = new HashMap<>();
+    private final Map<String, MarkerIcon> iconMap = new HashMap<>();
     
-    // definition of markers for leafletview - needs to match names given in js file
-    public enum TrackMarker implements Marker {
+    // definition of special markers
+    public enum SpecialMarker {
         TrackPointIcon("", TRACKPOINT_ICON),
         PlaceMarkIcon("", PLACEMARK_ICON),
         HotelIcon("Hotel", HOTEL_ICON),
@@ -91,20 +90,21 @@ public class MarkerManager {
         private final String markerName;
         private final String iconName;
 
-        TrackMarker(final String marker, final String icon) {
+        SpecialMarker(final String marker, final String icon) {
             markerName = marker;
-            iconName = MarkerManager.getInstance().jsCompatibleIconName(icon);
+            iconName = icon;
         }
 
         public String getMarkerName() {
             return markerName;
         }   
 
-        @Override
         public String getIconName() {
             return iconName;
         }
     }
+    
+    private final Map<SpecialMarker, MarkerIcon> specialMarkers  = new HashMap<>();
     
     private MarkerManager() {
         super();
@@ -125,7 +125,7 @@ public class MarkerManager {
             if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
                 final String baseName = FilenameUtils.getBaseName(iconName);
                 // add name without extension to list
-                iconMap.put(jsCompatibleIconName(baseName), new Pair<>(baseName, ""));
+                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
 //                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
             }
         }  
@@ -146,53 +146,60 @@ public class MarkerManager {
         return INSTANCE;
     }
     
-    public void loadSearchIcons() {
+    public void loadSpecialIcons() {
         // add all icons that are referenced in TrackMarker initially
         // can't be done in initialize() sind TrackMap initialize() needs to run before to load TrackMarker.js...
-        for (TrackMarker trackMarker : TrackMarker.values()) { 
-            if (!trackMarker.name().contains("Search")) {
-                final String iconBase64 = getIcon(trackMarker.getIconName());
-//            System.out.println(trackMarker.getIconName() + ": " + iconBase64); 
-
+        for (SpecialMarker specialMarker : SpecialMarker.values()) { 
+            if (!specialMarker.name().contains("Search")) {
+                final MarkerIcon markerIcon = getMarkerForSymbol(specialMarker.getIconName());
+                
+                final String iconBase64 = getIcon(jsCompatibleIconName(specialMarker.getIconName()));
+//                System.out.println("Loading: " + specialMarker.getIconName() + ", " + iconBase64);
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
-                TrackMap.getInstance().addPNGIcon(trackMarker.getIconName(), iconBase64);
+                TrackMap.getInstance().addPNGIcon(jsCompatibleIconName(specialMarker.getIconName()), iconBase64);
+
+                // fill the list
+                specialMarkers.put(specialMarker, markerIcon);
             }
         }        
     }
     
-    // wade through the mess of possible waypoint sym values and convert to an available icon
-    public TrackMarker getMarkerForWaypoint(final GPXWaypoint gpxWaypoint) {
-        return getIconNameForSymbol(gpxWaypoint.getSym());
-    }
-    
-    // wade through the mess of possible waypoint sym values and convert to an available icon
-    public TrackMarker getIconNameForSymbol(final String symbol) {
-        TrackMarker result = null;
-
-        for (TrackMarker trackMarker : TrackMarker.values()) { 
-            if (trackMarker.getMarkerName().equals(symbol)) {
-                result = trackMarker;
-                break;
-            }
-        }
+    public Marker getSpecialMarker(final SpecialMarker special) {
+        Marker result;
         
-        // TODO: check all garmin icons as well and load as required
-        if (result == null) {
-            if (iconMap.containsValue(jsCompatibleIconName(symbol))) {
-            }
-        }
-        
-        if (result == null) {
-            result = TrackMarker.PlaceMarkIcon;
+        if (specialMarkers.containsKey(special)) {
+            result = specialMarkers.get(special);
+        } else {
+            // default is "Placemark"
+            result = specialMarkers.get(SpecialMarker.PlaceMarkIcon);
         }
         
         return result;
     }
     
+    public MarkerIcon getMarkerForSymbol(final String symbol) {
+        MarkerIcon result;
+        
+        final String jsSymbol = jsCompatibleIconName(symbol);
+        if (iconMap.containsKey(jsSymbol)) {
+            result = iconMap.get(jsSymbol);
+        } else {
+            // default is "Placemark"
+            result = iconMap.get(jsCompatibleIconName(PLACEMARK_ICON));
+        }
+        
+        return result;
+    }
+    
+    // wade through the mess of possible waypoint sym values and convert to an available icon
+    public MarkerIcon getMarkerForWaypoint(final GPXWaypoint gpxWaypoint) {
+        return getMarkerForSymbol(gpxWaypoint.getSym());
+    }
+    
     public Set<String> getIconNames() {
-        // garmin names are the keys of the pairs...
+        // garmin names are the marker names
         return iconMap.entrySet().stream().map((t) -> {
-                            return t.getValue().getKey();
+                            return t.getValue().getMarkerName();
                         }).collect(Collectors.toSet());
     }
     
@@ -201,31 +208,21 @@ public class MarkerManager {
         
         // tricky, because name is jsName...
         if (iconMap.containsKey(iconName)) {
-            final Pair<String, String> iconPair = iconMap.get(iconName);
-            result = iconPair.getValue();
+            final MarkerIcon markerIcon = iconMap.get(iconName);
+            result = markerIcon.getIconBase64();
             
             if (result.isBlank()) {
                 try {
-                    final byte[] data = FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + iconPair.getKey()+ "." + ICON_EXT));
+                    final byte[] data = FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT));
                     result = Base64.getEncoder().encodeToString(data);
                     
-                    iconMap.put(iconName, new Pair<>(jsCompatibleIconName(iconName), result));
+                    markerIcon.setIconBase64(result);
+                    iconMap.put(iconName, markerIcon);
                 } catch (IOException ex) {
                     Logger.getLogger(MarkerManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             
-        }
-
-        return result;
-    }
-    
-    public String getIconJSName(final String iconName) {
-        // have somee default to use in case of stupid questions
-        String result = jsCompatibleIconName(TRACKPOINT_ICON);
-        
-        if (iconMap.containsKey(iconName)) {
-            result = iconMap.get(iconName).getKey();
         }
 
         return result;
