@@ -606,7 +606,7 @@ public class TrackMap extends LeafletMapView {
                     newGPXWaypoint.setDescription(description);
                 }
                 
-                newGPXWaypoint.setSym(curMarker.searchItem.name());
+                newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getIconName());
                 
                 // remove marker from leaflet search results to avoid double markers
                 execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
@@ -732,7 +732,7 @@ public class TrackMap extends LeafletMapView {
 
                     //System.out.println(response.toString());
 
-                    execScript("showSearchResults(\"" + searchItem.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + searchItem.getResultMarker().getIconName() + "\");");
+                    execScript("showSearchResults(\"" + searchItem.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + searchItem.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
             }
 
         } catch (MalformedURLException ex) {

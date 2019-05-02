@@ -15,7 +15,7 @@ public class MarkerIcon implements Marker {
     // name of the marker = name of the png file
     private final String markerName;
     // js compatible name of the marker name
-    private final String iconName;
+    private final String iconJSName;
     // lazy loading of actual base64 string upon access
     private String iconBase64 = "";
     
@@ -23,12 +23,12 @@ public class MarkerIcon implements Marker {
         super();
         
         markerName = null;
-        iconName = null;
+        iconJSName = null;
     }
 
     MarkerIcon(final String marker, final String icon) {
         markerName = marker;
-        iconName = icon;
+        iconJSName = icon;
     }
 
     public String getMarkerName() {
@@ -37,7 +37,11 @@ public class MarkerIcon implements Marker {
 
     @Override
     public String getIconName() {
-        return iconName;
+        return iconJSName;
+    }
+    
+    public String getIconJSName() {
+        return iconJSName;
     }
     
     public String getIconBase64() {

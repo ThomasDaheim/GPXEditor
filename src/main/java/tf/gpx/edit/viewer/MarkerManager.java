@@ -73,22 +73,24 @@ public class MarkerManager {
     
     // definition of special markers
     public enum SpecialMarker {
-        TrackPointIcon("", TRACKPOINT_ICON),
-        PlaceMarkIcon("", PLACEMARK_ICON),
+        TrackPointIcon("TrackPoint", TRACKPOINT_ICON),
+        PlaceMarkIcon("Placemark", PLACEMARK_ICON),
         HotelIcon("Hotel", HOTEL_ICON),
-        HotelSearchIcon("", HOTEL_ICON),
+        HotelSearchIcon("Hotel", HOTEL_ICON),
         RestaurantIcon("Restaurant", RESTAURANT_ICON),
-        RestaurantSearchIcon("", RESTAURANT_ICON),
+        RestaurantSearchIcon("Restaurant", RESTAURANT_ICON),
         WineryIcon("Winery", WINERY_ICON),
-        WinerySearchIcon("", WINERY_ICON),
+        WinerySearchIcon("Winery", WINERY_ICON),
         FastFoodIcon("Fast Food", FASTFOOD_ICON),
-        FastFoodSearchIcon("", FASTFOOD_ICON),
+        FastFoodSearchIcon("Fast Food", FASTFOOD_ICON),
         BarIcon("Bar", BAR_ICON),
-        BarSearchIcon("", BAR_ICON),
+        BarSearchIcon("Bar", BAR_ICON),
         SearchResultIcon("", SEARCHRESULT_ICON);
         
         private final String markerName;
         private final String iconName;
+        // will be set in loadSpecialIcons() to avoid timing issues with setup of TrackMap via initialize()
+        private MarkerIcon markerIcon;
 
         SpecialMarker(final String marker, final String icon) {
             markerName = marker;
@@ -101,6 +103,14 @@ public class MarkerManager {
 
         public String getIconName() {
             return iconName;
+        }
+
+        public MarkerIcon getMarkerIcon() {
+            return markerIcon;
+        }
+        
+        public void setMarkerIcon(final MarkerIcon icon) {
+            markerIcon = icon;
         }
     }
     
@@ -130,7 +140,7 @@ public class MarkerManager {
             }
         }  
     }
-    private String jsCompatibleIconName(final String iconName) {
+    private static String jsCompatibleIconName(final String iconName) {
         String result = iconName;
         
         // no spaces and "," chars, please
@@ -150,9 +160,11 @@ public class MarkerManager {
         // add all icons that are referenced in TrackMarker initially
         // can't be done in initialize() sind TrackMap initialize() needs to run before to load TrackMarker.js...
         for (SpecialMarker specialMarker : SpecialMarker.values()) { 
-            if (!specialMarker.name().contains("Search")) {
-                final MarkerIcon markerIcon = getMarkerForSymbol(specialMarker.getIconName());
+            final MarkerIcon markerIcon = getMarkerForSymbol(specialMarker.getIconName());
+            specialMarker.setMarkerIcon(markerIcon);
                 
+            // no need to load twice...
+            if (!specialMarker.name().contains("Search")) {
                 final String iconBase64 = getIcon(jsCompatibleIconName(specialMarker.getIconName()));
 //                System.out.println("Loading: " + specialMarker.getIconName() + ", " + iconBase64);
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
@@ -196,7 +208,7 @@ public class MarkerManager {
         return getMarkerForSymbol(gpxWaypoint.getSym());
     }
     
-    public Set<String> getIconNames() {
+    public Set<String> getMarkerNames() {
         // garmin names are the marker names
         return iconMap.entrySet().stream().map((t) -> {
                             return t.getValue().getMarkerName();
