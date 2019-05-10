@@ -127,10 +127,9 @@ public class TrackMap extends LeafletMapView {
         }
     }
 
-    // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
     // values for amneties: https://wiki.openstreetmap.org/wiki/Key:amenity, https://wiki.openstreetmap.org/wiki/Key:tourism
     private enum SearchItem {
-        Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.SpecialMarker.HotelSearchIcon, true),
+        Lodging("[\"tourism\"=\"hotel\"]", MarkerManager.SpecialMarker.LodgingSearchIcon, true),
         Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.SpecialMarker.RestaurantSearchIcon, true),
         FastFood("[\"amenity\"=\"fast_food\"]", MarkerManager.SpecialMarker.FastFoodSearchIcon, true),
         Bar("[\"amenity\"=\"bar\"]", MarkerManager.SpecialMarker.BarSearchIcon, true),
@@ -375,24 +374,8 @@ public class TrackMap extends LeafletMapView {
 
             isInitialized = true;
             
-            try {
-                // load png & convert to base64
-                byte[] data = FileUtils.readFileToByteArray(new File("src/main/resources/icons/Lodging.png"));
-                String base64data = Base64.getEncoder().encodeToString(data);
-                
-                final String scriptCmd = 
-                    "var url = \"data:image/png;base64," + base64data + "\";" + 
-                    "var hotelSearchIcon = new CustomIcon24({iconUrl: url});" + 
-                    "var hotelIcon = new CustomIcon24({iconUrl: url});";
-
-                execScript(scriptCmd);
-            } catch (IOException ex) {
-                Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
             // now we have loaded TrackMarker.js...
             MarkerManager.getInstance().loadSpecialIcons();
-
         }
     }
     
@@ -606,7 +589,7 @@ public class TrackMap extends LeafletMapView {
                     newGPXWaypoint.setDescription(description);
                 }
                 
-                newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getIconName());
+                newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
                 
                 // remove marker from leaflet search results to avoid double markers
                 execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
@@ -617,7 +600,7 @@ public class TrackMap extends LeafletMapView {
             final String waypoint = addMarkerAndCallback(
                             latlong, 
                             "", 
-                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.PlaceMarkIcon), 
+                            MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
                             0, 
                             true);
             fileWaypoints.put(waypoint, newGPXWaypoint);

@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import de.saring.leafletmap.Marker;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class MarkerManager {
     private final static String TRACKPOINT_ICON = "TrackPoint";
     private final static String PLACEMARK_ICON = "Placemark";
     private final static String SEARCHRESULT_ICON = "Search Result";
-    private final static String HOTEL_ICON = "Lodging";
+    private final static String LODGING_ICON = "Lodging";
     private final static String RESTAURANT_ICON = "Restaurant";
     private final static String WINERY_ICON = "Winery";
     private final static String PIZZA_ICON = "Pizza";
@@ -75,8 +76,8 @@ public class MarkerManager {
     public enum SpecialMarker {
         TrackPointIcon("TrackPoint", TRACKPOINT_ICON),
         PlaceMarkIcon("Placemark", PLACEMARK_ICON),
-        HotelIcon("Hotel", HOTEL_ICON),
-        HotelSearchIcon("Hotel", HOTEL_ICON),
+        LodgingIcon("Lodging", LODGING_ICON),
+        LodgingSearchIcon("Lodging", LODGING_ICON),
         RestaurantIcon("Restaurant", RESTAURANT_ICON),
         RestaurantSearchIcon("Restaurant", RESTAURANT_ICON),
         WineryIcon("Winery", WINERY_ICON),
@@ -130,6 +131,7 @@ public class MarkerManager {
             return;
         }
         
+        Arrays.sort(files);
         for (File iconfile : files) {
             final String iconName = iconfile.getName();
             if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
