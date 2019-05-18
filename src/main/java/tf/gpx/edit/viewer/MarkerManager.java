@@ -67,6 +67,9 @@ public class MarkerManager {
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
     
+    public final static String DEFAULT_ICON_SIZE = "24";
+    private final static String SMALL_ICON_SIZE = "8";
+    
     // keys are jsNames
     // pair keys are icon names as in garmin
     // pair values are base64 png strings
@@ -74,28 +77,30 @@ public class MarkerManager {
     
     // definition of special markers
     public enum SpecialMarker {
-        TrackPointIcon("TrackPoint", TRACKPOINT_ICON),
-        PlaceMarkIcon("Placemark", PLACEMARK_ICON),
-        LodgingIcon("Lodging", LODGING_ICON),
-        LodgingSearchIcon("Lodging", LODGING_ICON),
-        RestaurantIcon("Restaurant", RESTAURANT_ICON),
-        RestaurantSearchIcon("Restaurant", RESTAURANT_ICON),
-        WineryIcon("Winery", WINERY_ICON),
-        WinerySearchIcon("Winery", WINERY_ICON),
-        FastFoodIcon("Fast Food", FASTFOOD_ICON),
-        FastFoodSearchIcon("Fast Food", FASTFOOD_ICON),
-        BarIcon("Bar", BAR_ICON),
-        BarSearchIcon("Bar", BAR_ICON),
-        SearchResultIcon("", SEARCHRESULT_ICON);
+        TrackPointIcon("TrackPoint", TRACKPOINT_ICON, SMALL_ICON_SIZE),
+        PlaceMarkIcon("Placemark", PLACEMARK_ICON, DEFAULT_ICON_SIZE),
+        LodgingIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
+        LodgingSearchIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
+        RestaurantIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        RestaurantSearchIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        WineryIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
+        WinerySearchIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
+        FastFoodIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        FastFoodSearchIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        BarIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
+        BarSearchIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
+        SearchResultIcon("", SEARCHRESULT_ICON, DEFAULT_ICON_SIZE);
         
         private final String markerName;
         private final String iconName;
         // will be set in loadSpecialIcons() to avoid timing issues with setup of TrackMap via initialize()
         private MarkerIcon markerIcon;
+        private final String iconSize;
 
-        SpecialMarker(final String marker, final String icon) {
+        SpecialMarker(final String marker, final String icon, final String size) {
             markerName = marker;
             iconName = icon;
+            iconSize = size;
         }
 
         public String getMarkerName() {
@@ -104,6 +109,10 @@ public class MarkerManager {
 
         public String getIconName() {
             return iconName;
+        }
+
+        public String getIconSize() {
+            return iconSize;
         }
 
         public MarkerIcon getMarkerIcon() {
@@ -170,7 +179,8 @@ public class MarkerManager {
                 final String iconBase64 = getIcon(jsCompatibleIconName(specialMarker.getIconName()));
 //                System.out.println("Loading: " + specialMarker.getIconName() + ", " + iconBase64);
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
-                TrackMap.getInstance().addPNGIcon(jsCompatibleIconName(specialMarker.getIconName()), iconBase64);
+                // and there is one special case (of course...) the TRACKPOINT_ICON is smaller than the others
+                TrackMap.getInstance().addPNGIcon(jsCompatibleIconName(specialMarker.getIconName()), specialMarker.getIconSize(), iconBase64);
 
                 // fill the list
                 specialMarkers.put(specialMarker, markerIcon);

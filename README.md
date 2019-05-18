@@ -7,7 +7,7 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 * batch mode to work on multiple files
 * UI mode to work on multiple tracks / tracksegments
-* standard fix for anoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
+* standard fix for annoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
 
 So it was time to start a new self-learning project. And here you see the result.
 
@@ -191,7 +191,7 @@ leads to one file containing all tracks combined into one, whereas
 -mergeTracks -mergeFiles
 ```
 
-leads to one file with all tracks combind per input file
+leads to one file with all tracks combined per input file
 
 Also, deletion is done "bottom up". So if your gpx file only contains track segments with less waypoints that the limit the whole file will be deleted.
 

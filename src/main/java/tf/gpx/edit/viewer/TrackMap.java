@@ -379,12 +379,12 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
-    public void addPNGIcon(final String iconName, final String base64data) {
+    public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
 //        System.out.println("Adding icon " + iconName + ", " + base64data);
         
         final String scriptCmd = 
             "var url = \"data:image/png;base64," + base64data + "\";" + 
-            "var " + iconName + "= new CustomIcon24({iconUrl: url});";
+            "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
 
         execScript(scriptCmd);
     }
@@ -1175,7 +1175,7 @@ public class TrackMap extends LeafletMapView {
         // make sure the icon has been loaded and added in js
         if (marker instanceof MarkerIcon && ((MarkerIcon) marker).getIconBase64().isEmpty()) {
             final MarkerIcon markerIcon = (MarkerIcon) marker;
-            addPNGIcon(markerIcon.getIconName(), MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
+            addPNGIcon(markerIcon.getIconName(), MarkerManager.DEFAULT_ICON_SIZE, MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
         }
         
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
