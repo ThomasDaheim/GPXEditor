@@ -30,8 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,7 +75,7 @@ public class MarkerManager {
     // keys are jsNames
     // pair keys are icon names as in garmin
     // pair values are base64 png strings
-    private final Map<String, MarkerIcon> iconMap = new HashMap<>();
+    private final Map<String, MarkerIcon> iconMap = new LinkedHashMap<>();
     
     // definition of special markers
     public enum SpecialMarker {
@@ -124,7 +126,7 @@ public class MarkerManager {
         }
     }
     
-    private final Map<SpecialMarker, MarkerIcon> specialMarkers  = new HashMap<>();
+    private final Map<SpecialMarker, MarkerIcon> specialMarkers  = new LinkedHashMap<>();
     
     private MarkerManager() {
         super();
@@ -152,7 +154,8 @@ public class MarkerManager {
         }  
     }
     private static String jsCompatibleIconName(final String iconName) {
-        String result = iconName;
+        // don't crash on null input...
+        String result = Objects.requireNonNullElse(iconName, "");
         
         // no spaces and "," chars, please
         result = result.replace(" ", "");
@@ -221,10 +224,22 @@ public class MarkerManager {
     }
     
     public Set<String> getMarkerNames() {
+        final LinkedHashSet<String> result = new LinkedHashSet<>();
+        
+        // add our special values upfront...
+        result.add(SpecialMarker.PlaceMarkIcon.getMarkerName());
+        result.add(SpecialMarker.LodgingIcon.getMarkerName());
+        result.add(SpecialMarker.RestaurantIcon.getMarkerName());
+        result.add(SpecialMarker.WineryIcon.getMarkerName());
+        result.add(SpecialMarker.FastFoodIcon.getMarkerName());
+        result.add(SpecialMarker.BarIcon.getMarkerName());
+        
         // garmin names are the marker names
-        return iconMap.entrySet().stream().map((t) -> {
+        result.addAll(iconMap.entrySet().stream().map((t) -> {
                             return t.getValue().getMarkerName();
-                        }).collect(Collectors.toSet());
+                        }).collect(Collectors.toCollection(LinkedHashSet::new)));
+        
+        return result;
     }
     
     public String getIcon(final String iconName) {

@@ -31,12 +31,14 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.ContextMenuEvent;
 
 /**
  *
@@ -124,6 +126,19 @@ public class LinkTable extends TableView<Link> {
                 .then((ContextMenu)null).otherwise(contextMenu));
             return row ;  
         });  
+        
+        // context menu for empty table
+        final ContextMenu contextMenu = new ContextMenu();
+
+        final MenuItem addMenuItem = new MenuItem("Add");
+        addMenuItem.setOnAction((ActionEvent event) -> {
+            getItems().add(new Link("YOUR_HREF"));
+        });
+        
+        contextMenu.getItems().add(addMenuItem);
+        
+        setContextMenu(contextMenu);
+
     }
     
     public List<Link> getValidLinks() {

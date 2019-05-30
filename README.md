@@ -251,6 +251,7 @@ Other things used internally:
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
+* placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 
 ## Roadmap
 
