@@ -27,10 +27,12 @@ package tf.gpx.edit.values;
 
 import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.type.Fix;
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +50,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -179,11 +183,12 @@ public class EditGPXWaypoint {
         editWaypointPane.add(symbolValue, 2, rowNum);
         GridPane.setMargin(symbolValue, insetTop);
         
-        // TODO: show icon instead of icon name
         // update label for any changes of combobox selection
         waypointSymTxt.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
-                symbolValue.setText(MarkerManager.getInstance().getMarkerForSymbol(newValue).getMarkerName());
+                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
+                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
+                symbolValue.setGraphic(new ImageView(image));
             }
         });
 
