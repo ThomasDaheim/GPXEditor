@@ -37,6 +37,7 @@ import de.saring.leafletmap.Marker;
 import de.saring.leafletmap.ScaleControlConfig;
 import de.saring.leafletmap.ZoomControlConfig;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,6 +49,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -76,6 +78,7 @@ import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -86,6 +89,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -123,19 +127,20 @@ public class TrackMap extends LeafletMapView {
         }
     }
 
-    // TODO: sync with MarkerManager symbolMarkerMapping - settings are dependent
+    // values for amneties: https://wiki.openstreetmap.org/wiki/Key:amenity, https://wiki.openstreetmap.org/wiki/Key:tourism
     private enum SearchItem {
-        Hotel("[\"tourism\"=\"hotel\"]", MarkerManager.TrackMarker.HotelSearchIcon, true),
-        Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
-        Bar("[\"amenity\"=\"bar\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
-        Winery("[\"amenity\"=\"winery\"]", MarkerManager.TrackMarker.RestaurantSearchIcon, true),
-        SearchResult("", MarkerManager.TrackMarker.SearchResultIcon, false);
+        Lodging("[\"tourism\"=\"hotel\"]", MarkerManager.SpecialMarker.LodgingSearchIcon, true),
+        Restaurant("[\"amenity\"=\"restaurant\"]", MarkerManager.SpecialMarker.RestaurantSearchIcon, true),
+        FastFood("[\"amenity\"=\"fast_food\"]", MarkerManager.SpecialMarker.FastFoodSearchIcon, true),
+        Bar("[\"amenity\"=\"bar\"]", MarkerManager.SpecialMarker.BarSearchIcon, true),
+        Winery("[\"amenity\"=\"winery\"]", MarkerManager.SpecialMarker.WinerySearchIcon, true),
+        SearchResult("", MarkerManager.SpecialMarker.SearchResultIcon, false);
         
         private final String searchString;
-        private final Marker resultMarker;
+        private final SpecialMarker resultMarker;
         private final boolean showInContextMenu;
         
-        SearchItem(final String search, final Marker marker, final boolean showItem) {
+        SearchItem(final String search, final SpecialMarker marker, final boolean showItem) {
             searchString = search;
             resultMarker = marker;
             showInContextMenu = showItem;
@@ -145,7 +150,7 @@ public class TrackMap extends LeafletMapView {
             return searchString;
         }   
 
-        public Marker getResultMarker() {
+        public SpecialMarker getResultMarker() {
             return resultMarker;
         }   
         
@@ -368,7 +373,20 @@ public class TrackMap extends LeafletMapView {
             createContextMenu();
 
             isInitialized = true;
+            
+            // now we have loaded TrackMarker.js...
+            MarkerManager.getInstance().loadSpecialIcons();
         }
+    }
+    
+    public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
+//        System.out.println("Adding icon " + iconName + ", " + base64data);
+        
+        final String scriptCmd = 
+            "var url = \"data:image/png;base64," + base64data + "\";" + 
+            "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
+
+        execScript(scriptCmd);
     }
     
     /**
@@ -571,7 +589,7 @@ public class TrackMap extends LeafletMapView {
                     newGPXWaypoint.setDescription(description);
                 }
                 
-                newGPXWaypoint.setSym(curMarker.searchItem.name());
+                newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
                 
                 // remove marker from leaflet search results to avoid double markers
                 execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
@@ -579,7 +597,12 @@ public class TrackMap extends LeafletMapView {
                     
             curGPXWaypoints.add(newGPXWaypoint);
             
-            final String waypoint = addMarkerAndCallback(latlong, "", MarkerManager.TrackMarker.PlaceMarkIcon, 0, true);
+            final String waypoint = addMarkerAndCallback(
+                            latlong, 
+                            "", 
+                            MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
+                            0, 
+                            true);
             fileWaypoints.put(waypoint, newGPXWaypoint);
             
             // refresh fileWaypointsCount list without refreshing map...
@@ -692,7 +715,7 @@ public class TrackMap extends LeafletMapView {
 
                     //System.out.println(response.toString());
 
-                    execScript("showSearchResults(\"" + searchItem.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + searchItem.getResultMarker().getIconName() + "\");");
+                    execScript("showSearchResults(\"" + searchItem.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(response.toString()) + "\", \"" + searchItem.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
             }
 
         } catch (MalformedURLException ex) {
@@ -862,7 +885,12 @@ public class TrackMap extends LeafletMapView {
                     // we show all file waypoints
                     // TFE, 20180520 - with their correct marker!
                     // and description - if any
-                    final String waypoint = addMarkerAndCallback(latLong, gpxWaypoint.getTooltip(), MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 0, true);
+                    final String waypoint = addMarkerAndCallback(
+                            latLong, 
+                            gpxWaypoint.getTooltip(), 
+                            MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 
+                            0, 
+                            true);
                     fileWaypoints.put(waypoint, gpxWaypoint);
                     
                     bounds[4] = 1d;
@@ -992,11 +1020,15 @@ public class TrackMap extends LeafletMapView {
             if (gpxWaypoint.isGPXFileWaypoint()) {
                 // updated current marker instead of adding new one on top of the old
                 waypoint = fileWaypoints.getKey(gpxWaypoint);
-                // TODO: use selected version of icon in all cases
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getSelectedIconName() + "\");");
+                execScript("highlightMarker(\"" + waypoint + "\");");
             } else if (trackWaypoints.contains(gpxWaypoint) || routeWaypoints.contains(gpxWaypoint)) {
                 // only show selected waypoint if already shown
-                waypoint = addMarkerAndCallback(latLong, "", MarkerManager.TrackMarker.TrackPointIcon, 0, false);
+                waypoint = addMarkerAndCallback(
+                        latLong, 
+                        "", 
+                        MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointIcon), 
+                        0, 
+                        false);
             } else {
                 notShownCount++;
                 waypoint = NOT_SHOWN + notShownCount;
@@ -1018,7 +1050,7 @@ public class TrackMap extends LeafletMapView {
         for (String waypoint : waypoints.keySet()) {
             final GPXWaypoint gpxWaypoint = waypoints.get(waypoint);
             if (gpxWaypoint.isGPXFileWaypoint()) {
-                execScript("updateMarkerIcon(\"" + waypoint + "\", \"" + MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint).getIconName() + "\");");
+                execScript("unlightMarker(\"" + waypoint + "\");");
             } else {
                 // TFE, 20180409: only remove waypoints that have actually been added
                 if (!waypoint.startsWith(NOT_SHOWN)) {
@@ -1139,6 +1171,12 @@ public class TrackMap extends LeafletMapView {
             markername = pointname + "\n";
         }
         markername = markername + LatLongHelper.LatLongToString(point);
+        
+        // make sure the icon has been loaded and added in js
+        if (marker instanceof MarkerIcon && ((MarkerIcon) marker).getIconBase64().isEmpty()) {
+            final MarkerIcon markerIcon = (MarkerIcon) marker;
+            addPNGIcon(markerIcon.getIconName(), MarkerManager.DEFAULT_ICON_SIZE, MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
+        }
         
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
         if (interactive) {

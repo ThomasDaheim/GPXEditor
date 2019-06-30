@@ -84,7 +84,7 @@ function getMapBounds() {
     return [bounds.getSouthWest().lat, bounds.getSouthWest().lng, bounds.getNorthEast().lat, bounds.getNorthEast().lng];
 }
 
-// ability to change a marker icon and color (e.g. for highlighting) 
+// ability to change a marker icon, background and color (e.g. for highlighting) 
 function updateMarkerIcon(layer, icon) {
     window[layer].setIcon(window[icon]);
 }
@@ -93,6 +93,12 @@ function updateMarkerColor(layer, color) {
         color: color,
         weight: 2
     });
+}
+function highlightMarker(layer) {
+    window[layer].valueOf()._icon.style.backgroundColor = 'red';
+}
+function unlightMarker(layer) {
+    window[layer].valueOf()._icon.style.backgroundColor = 'transparent';
 }
 // move marker around
 function updateMarkerLocation(layer, lat, lng) {
@@ -218,9 +224,11 @@ function removeSearchResult(markerCount) {
 }
 
 function showSearchResults(searchItem, result, iconName) {
-//    jscallback.log("result: " + result);
     var data = JSON.parse(result);
     var icon = window[iconName];
+//    jscallback.log("result: " + result);
+//    jscallback.log("iconName: " + iconName);
+//    jscallback.log("icon: " + icon);
     
     if(data.hasOwnProperty("elements")) {
         if(data.elements.length > 0) {

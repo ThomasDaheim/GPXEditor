@@ -7,7 +7,7 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 * batch mode to work on multiple files
 * UI mode to work on multiple tracks / tracksegments
-* standard fix for anoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
+* standard fix for annoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
 
 So it was time to start a new self-learning project. And here you see the result.
 
@@ -16,6 +16,12 @@ Note on Java 10: This code itself requires only small changes in TooltipHelper t
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 
 ## Following features are available via UI:
+
+### Update v3.2
+
+Icons, Icons, Icons!
+
+* added all garmin icons as possible markers in leaflet
 
 ### Update v3.1
 
@@ -185,7 +191,7 @@ leads to one file containing all tracks combined into one, whereas
 -mergeTracks -mergeFiles
 ```
 
-leads to one file with all tracks combind per input file
+leads to one file with all tracks combined per input file
 
 Also, deletion is done "bottom up". So if your gpx file only contains track segments with less waypoints that the limit the whole file will be deleted.
 
@@ -231,11 +237,12 @@ Explicit dependencies:
 * 'org.jfxtras:jfxtras-labs:8.0-r6'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'uk.com.robust-it:cloning:1.9.10'
+* 'org.apache.commons:commons-csv:1.6'
 
 Other things used internally:
 
 * leaflet: https://leafletjs.com/
-* Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
 * leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
 * leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
@@ -243,8 +250,8 @@ Other things used internally:
 * leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
 
 * search-plus icon: https://fontawesome.com/license
-* Sleeping Bed Silhouette icon: Icon made by https://www.flaticon.com/authors/scott-de-jonge from www.flaticon.com 
-* Restaurant icon: Icon made by https://www.flaticon.com/authors/freepik from www.flaticon.com 
+* Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
+* placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 
 ## Roadmap
 
