@@ -33,6 +33,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -1144,7 +1145,8 @@ public class GPXEditor implements Initializable {
     private void newFileAction(final ActionEvent event) {
         final GPXFile newFile = new GPXFile();
         newFile.setName("NewGPX.gpx");
-        newFile.setPath(System.getProperty("user.home"));
+        // TFE, 20190630: no, please ask for path on new file
+//        newFile.setPath(System.getProperty("user.home"));
         gpxFileList.addGPXFile(newFile);
         
     }
@@ -1681,11 +1683,13 @@ public class GPXEditor implements Initializable {
     }
     
     private void invertSelectedWaypoints() {
+//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - start:" + LocalDateTime.now());
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
 
-        final List<GPXWaypoint> selectedGPXWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems().stream().collect(Collectors.toList());
+        // performance: convert to hashset since its contains() is way faster
+        final Set<GPXWaypoint> selectedGPXWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
         gpxTrackXML.getSelectionModel().clearSelection();
 
         int index = 0;
@@ -1700,6 +1704,7 @@ public class GPXEditor implements Initializable {
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - stop:" + LocalDateTime.now());
     }
 
     private void fixGPXFiles(final Event event) {
