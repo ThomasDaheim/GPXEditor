@@ -122,13 +122,18 @@ public class GPXEditorWorker {
     public boolean saveFile(final GPXFile gpxFile, final boolean askFileName) {
         boolean result = false;
         
-        if (askFileName) {
+        if (askFileName || gpxFile.getPath() == null) {
             final List<String> extFilter = Arrays.asList("*." + GPX_EXT);
             final List<String> extValues = Arrays.asList(GPX_EXT);
 
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save GPX-File");
-            fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+            if (gpxFile.getPath() == null) {
+                fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            } else {
+                fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+            }
+            fileChooser.setInitialFileName(gpxFile.getName());
             // das sollte auch in den Worker gehen...
             fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("GPX-Files", extFilter));

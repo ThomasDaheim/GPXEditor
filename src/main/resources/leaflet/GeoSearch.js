@@ -82,5 +82,6 @@ searchControl.on('search:locationfound', function(e) {
     }
     
     var result = '{ "elements": [ { "type": "node", "lat": ' + e.latlng.lat + ', "lon": ' + e.latlng.lng + ', "tags": { "name": "' + name + '", "description": "' + description + '" } } ] }'
-    showSearchResults("SearchResult", result, "searchResultIcon");
+    // TFE, 20190702: icon name here needs to be in sync with icon name from java - maybe we should add a parameter here...
+    showSearchResults("SearchResult", result, "SearchResult_Icon");
 });

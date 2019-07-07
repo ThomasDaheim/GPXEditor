@@ -33,6 +33,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -190,7 +191,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem reduceTracksMenu;
     @FXML
-    private MenuItem mergeTracksMenu;
+    private MenuItem mergeItemsMenu;
     @FXML
     private MenuItem addFileMenu;
     @FXML
@@ -267,7 +268,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private TreeTableColumn<GPXLineItem, String> noItemsGPXCol;
     @FXML
-    private MenuItem deleteTracksMenu;
+    private MenuItem deleteItemsMenu;
     @FXML
     private SplitPane viewSplitPane;
     @FXML
@@ -281,7 +282,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem downloadSRTMDataMenu;
     @FXML
-    private MenuItem invertTracksMenu;
+    private MenuItem invertItemsMenu;
     @FXML
     private MenuItem statisticsMenu;
     @FXML
@@ -345,7 +346,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.2", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.3", "https://github.com/ThomasDaheim/GPXEditor");
     }
 
     public void stop() {
@@ -400,25 +401,25 @@ public class GPXEditor implements Initializable {
         //
         // Structure
         //
-        invertTracksMenu.setOnAction((ActionEvent event) -> {
-            invertTracks(event);
+        invertItemsMenu.setOnAction((ActionEvent event) -> {
+            invertItems(event);
         });
-        invertTracksMenu.disableProperty().bind(
+        invertItemsMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         mergeFilesMenu.setOnAction((ActionEvent event) -> {
             mergeFiles(event);
         });
         mergeFilesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 2));
-        mergeTracksMenu.setOnAction((ActionEvent event) -> {
+        mergeItemsMenu.setOnAction((ActionEvent event) -> {
             mergeDeleteItems(event, MergeDeleteItems.MERGE);
         });
-        mergeTracksMenu.disableProperty().bind(
+        mergeItemsMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 2));
-        deleteTracksMenu.setOnAction((ActionEvent event) -> {
+        deleteItemsMenu.setOnAction((ActionEvent event) -> {
             mergeDeleteItems(event, MergeDeleteItems.DELETE);
         });
-        deleteTracksMenu.disableProperty().bind(
+        deleteItemsMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         //
@@ -832,19 +833,20 @@ public class GPXEditor implements Initializable {
                         }
                         
                         // TFE, 20180517: use tooltip to show name / description / comment / link
-                        if (!waypoint.getTooltip().isEmpty()) {
-                            final Tooltip tooltip = new Tooltip();
-                            tooltip.setText(waypoint.getTooltip());
-                            TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
-                            setTooltip(tooltip);
-                        }
+                        // TFE, 20190630: use tooltip only on column name, otherwise, select doesn't work with one click
+//                        if (!waypoint.getTooltip().isEmpty()) {
+//                            final Tooltip tooltip = new Tooltip();
+//                            tooltip.setText(waypoint.getTooltip());
+//                            TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+//                            setTooltip(tooltip);
+//                        }
                     } else {
                         getStyleClass().removeAll("highlightedRow", "firstRow");
                         setTooltip(null);
                     }
                 }
             };
-        
+            
             final ContextMenu waypointMenu = new ContextMenu();
             final MenuItem selectWaypoints = new MenuItem("Select highlighted");
             selectWaypoints.setOnAction((ActionEvent event) -> {
@@ -979,6 +981,17 @@ public class GPXEditor implements Initializable {
                 super.updateItem(item, empty);
                 if (!empty && item != null) {
                     setText(item);
+                    
+                    // TFE, 20190630: use tooltip only on column name, otherwise, select doesn't work with one click
+                    final GPXWaypoint waypoint = (GPXWaypoint) getTableRow().getItem();
+                    if (waypoint != null && !waypoint.getTooltip().isEmpty()) {
+                        final Tooltip tooltip = new Tooltip();
+                        tooltip.setText(waypoint.getTooltip());
+                        TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                        setTooltip(tooltip);
+                    }
+                } else {
+                    setTooltip(null);
                 }
             }
         });
@@ -1144,7 +1157,8 @@ public class GPXEditor implements Initializable {
     private void newFileAction(final ActionEvent event) {
         final GPXFile newFile = new GPXFile();
         newFile.setName("NewGPX.gpx");
-        newFile.setPath(System.getProperty("user.home"));
+        // TFE, 20190630: no, please ask for path on new file
+//        newFile.setPath(System.getProperty("user.home"));
         gpxFileList.addGPXFile(newFile);
         
     }
@@ -1421,7 +1435,7 @@ public class GPXEditor implements Initializable {
         refreshGPXWaypointList();
     }
 
-    public void invertTracks(final ActionEvent event) {
+    public void invertItems(final ActionEvent event) {
         final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
         
         // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
@@ -1681,11 +1695,13 @@ public class GPXEditor implements Initializable {
     }
     
     private void invertSelectedWaypoints() {
+//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - start:" + LocalDateTime.now());
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
 
-        final List<GPXWaypoint> selectedGPXWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems().stream().collect(Collectors.toList());
+        // performance: convert to hashset since its contains() is way faster
+        final Set<GPXWaypoint> selectedGPXWaypoints = gpxTrackXML.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
         gpxTrackXML.getSelectionModel().clearSelection();
 
         int index = 0;
@@ -1700,6 +1716,7 @@ public class GPXEditor implements Initializable {
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - stop:" + LocalDateTime.now());
     }
 
     private void fixGPXFiles(final Event event) {
@@ -1763,6 +1780,9 @@ public class GPXEditor implements Initializable {
     
     private void editWaypoints(final Event event) {
         EditGPXWaypoint.getInstance().editWaypoint(gpxTrackXML.getSelectionModel().getSelectedItems());
+        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+        // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
+        showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
     }
 
     private void assignSRTMHeight(final Event event) {
@@ -1770,8 +1790,7 @@ public class GPXEditor implements Initializable {
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
-            refreshGPXFileList();
-            refreshGPXWaypointList();
+            refresh();
         }
     }
     

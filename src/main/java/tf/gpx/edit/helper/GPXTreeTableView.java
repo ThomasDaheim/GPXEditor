@@ -45,6 +45,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeSortMode;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
@@ -97,6 +98,11 @@ public class GPXTreeTableView {
         if (root == null) {
             myTreeTableView.setRoot(new TreeItem<>());
         }
+        
+        // init sorting by ID column (first one)
+        myTreeTableView.getSortOrder().clear();
+        myTreeTableView.getSortOrder().add(myTreeTableView.getColumns().get(0));
+        myTreeTableView.setSortMode(TreeSortMode.ALL_DESCENDANTS);
 
         // support drag & drop on GPXFile - level        
         // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html
@@ -240,6 +246,14 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(deleteItems);
 
                                 fileMenu.getItems().add(new SeparatorMenuItem());
+
+                                final MenuItem invertItems = new MenuItem("Invert Items");
+                                invertItems.setOnAction((ActionEvent event) -> {
+                                     myEditor.invertItems(event);
+                                });
+                                invertItems.disableProperty().bind(
+                                    Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                fileMenu.getItems().add(invertItems);
                                 
                                 final MenuItem convertItem = new MenuItem("Convert");
                                 if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {

@@ -79,6 +79,12 @@ public class GPXTrackviewer {
     }
 
     @SuppressWarnings("unchecked")
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        TrackMap.getInstance().updateGPXWaypoints(gpxWaypoints);
+        HeightChart.getInstance().updateGPXWaypoints(gpxWaypoints);
+    }
+
+    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;

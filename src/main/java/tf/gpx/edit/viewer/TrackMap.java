@@ -37,7 +37,6 @@ import de.saring.leafletmap.Marker;
 import de.saring.leafletmap.ScaleControlConfig;
 import de.saring.leafletmap.ZoomControlConfig;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -49,7 +48,6 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -78,7 +76,6 @@ import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -386,6 +383,7 @@ public class TrackMap extends LeafletMapView {
             "var url = \"data:image/png;base64," + base64data + "\";" + 
             "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
 
+//        System.out.println(iconName + " created");
         execScript(scriptCmd);
     }
     
@@ -968,6 +966,11 @@ public class TrackMap extends LeafletMapView {
                 routes.put(route, (GPXRoute) gpxpoint.getParent());
             }
         }
+    }
+    
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        // TFE, 20190707: after edit of a waypoint its icon and other features might have changed
+        // TODO: fill with life
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {

@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -54,14 +54,14 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Structure">
             <items>
-                  <MenuItem fx:id="invertTracksMenu" mnemonicParsing="false" text="Invert Tracks/Segments" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="mergeFilesMenu" mnemonicParsing="false" text="Merge Files" />
-              <MenuItem fx:id="mergeTracksMenu" mnemonicParsing="false" text="Merge Tracks/Segments">
+              <MenuItem fx:id="mergeItemsMenu" mnemonicParsing="false" text="Merge Items">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                  <MenuItem fx:id="deleteTracksMenu" mnemonicParsing="false" text="Delete Tracks/Segments" />
+                  <MenuItem fx:id="deleteItemsMenu" mnemonicParsing="false" text="Delete Items" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="invertItemsMenu" mnemonicParsing="false" text="Invert Items" />
             </items>
                <accelerator>
                   <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />

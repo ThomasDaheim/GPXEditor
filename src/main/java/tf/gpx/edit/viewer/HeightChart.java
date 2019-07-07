@@ -158,6 +158,11 @@ public class HeightChart<X,Y> extends AreaChart {
         setVisible(!series.getData().isEmpty());
     }
     
+    @SuppressWarnings("unchecked")
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        // TODO: fill with life
+    }
+    
     private void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;
         // calculate scaling for ticks so their number is smaller than 25
