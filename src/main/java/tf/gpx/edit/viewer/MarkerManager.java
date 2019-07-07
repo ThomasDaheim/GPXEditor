@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.items.GPXWaypoint;
+import static tf.gpx.edit.viewer.MarkerManager.SpecialMarker.SearchResultIcon;
 
 /**
  * One manager to rule them all...
@@ -178,7 +179,7 @@ public class MarkerManager {
             specialMarker.setMarkerIcon(markerIcon);
                 
             // no need to load twice...
-            if (!specialMarker.name().contains("Search")) {
+            if (!specialMarker.name().contains("Search") || SearchResultIcon.equals(specialMarker)) {
                 final String iconBase64 = getIcon(jsCompatibleIconName(specialMarker.getIconName()));
 //                System.out.println("Loading: " + specialMarker.getIconName() + ", " + iconBase64);
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView

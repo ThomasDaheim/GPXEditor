@@ -246,6 +246,14 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(deleteItems);
 
                                 fileMenu.getItems().add(new SeparatorMenuItem());
+
+                                final MenuItem invertItems = new MenuItem("Invert Items");
+                                invertItems.setOnAction((ActionEvent event) -> {
+                                     myEditor.invertItems(event);
+                                });
+                                invertItems.disableProperty().bind(
+                                    Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                fileMenu.getItems().add(invertItems);
                                 
                                 final MenuItem convertItem = new MenuItem("Convert");
                                 if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {

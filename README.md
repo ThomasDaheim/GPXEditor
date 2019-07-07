@@ -17,6 +17,10 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.3
+
+* minor updates & fixes to menues, search icon, ...
+
 ### Update v3.2
 
 Icons, Icons, Icons!
