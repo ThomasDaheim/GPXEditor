@@ -17,6 +17,10 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.4
+
+* replace JavaFX HeightChart with leaflet-elevation
+
 ### Update v3.3
 
 * minor updates & fixes to menues, search icon, ...
@@ -252,6 +256,7 @@ Other things used internally:
 * leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
 * leaflet-openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
+* leaflet-elevation: https://github.com/Raruto/leaflet-elevation
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html

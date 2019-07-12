@@ -26,7 +26,6 @@
 package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,17 +36,20 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import tf.gpx.edit.general.HoveredNode;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -72,6 +74,9 @@ public class HeightChart<X,Y> extends AreaChart {
     private double maxDistance;
     private double minHeight;
     private double maxHeight;
+    
+    private double lasteX = 0;
+    private double lasteY = 0;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
@@ -87,11 +92,72 @@ public class HeightChart<X,Y> extends AreaChart {
         setCache(true);
         setCacheShape(true);
         setCacheHint(CacheHint.SPEED);
-        setCursor(Cursor.CROSSHAIR);
         setLegendVisible(false);
+        setCursor(Cursor.DEFAULT);
 
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
+        
+        // TFE, 20190712: install overall tootip instead as node tooltips
+        // TODO: beautify code
+        // TODO: add callback to highlight waypoint in TrackMap
+        final Tooltip toolTip = new Tooltip();
+        toolTip.getStyleClass().add("track-popup");
+        Tooltip.install(this, toolTip);
+        
+        final Region plotArea = (Region) lookup(".chart-plot-background");
+        final Pane chartContent = (Pane) lookup(".chart-content");
+        final Line line = new Line();
+        line.setVisible(true);
+        chartContent.getChildren().add(line);
+
+        setOnMouseMoved(e -> {
+            double eX = e.getScreenX();
+            double eY = e.getScreenY();
+
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-a-xy-line/31382802#31382802
+            Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
+            NumberAxis xAxis = (NumberAxis) getXAxis();
+            NumberAxis yAxis = (NumberAxis) getYAxis();
+            double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
+            double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
+            double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
+            double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
+
+            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
+                // we want to show the elevation at this distance
+                final Double heightValue = getNearestDataForXValue(x).YValueProperty().getValue();
+                toolTip.setText(String.format("Region: Elev %.2fm", heightValue) + "\n" + String.format("Dist %.2fkm", x));
+                
+                // we want to show the tooltip at the elevation
+                double yHeight = yAxis.getDisplayPosition(heightValue);
+                double yValue = yAxis.localToScene(new Point2D(0, yHeight)).getY();
+                // https://stackoverflow.com/questions/30662190/javafx-pichart-my-hover-values-blink
+                toolTip.show(this, eX + 10, yValue);
+                
+                // and we want to show a line at this distance
+                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-line/40730299#40730299
+                Point2D a = plotArea.localToScene(new Point2D(xPosInAxis, 0));
+                Point2D b = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
+
+                Point2D aTrans = chartContent.sceneToLocal(a);
+                Point2D bTrans = chartContent.sceneToLocal(b);
+
+                line.setStartX(aTrans.getX());
+                line.setStartY(aTrans.getY());
+                line.setEndX(bTrans.getX());
+                line.setEndY(bTrans.getY());
+                line.setVisible(true);
+            } else {
+                toolTip.hide();
+                line.setVisible(false);
+            }
+        });
+        
+        setOnMouseExited(e -> {
+            toolTip.hide();
+            line.setVisible(false);
+        });
     }
     
     public static HeightChart getInstance() {
@@ -113,6 +179,10 @@ public class HeightChart<X,Y> extends AreaChart {
             return;
         }
         
+        // store visible state to keeep it later on
+        final Boolean isVisible = isVisible();
+        
+        // invisble update - much faster
         setVisible(false);
         myPoints.clear();
         getData().clear();
@@ -126,36 +196,51 @@ public class HeightChart<X,Y> extends AreaChart {
         maxDistance = 0d;
         minHeight = Double.MAX_VALUE;
         maxHeight = Double.MIN_VALUE;
-        final List<XYChart.Data> dataList = new ArrayList<>();
+        final List<XYChart.Data<Double, Double>> dataList = new ArrayList<>();
         for (GPXWaypoint gpxWaypoint : lineItem.getCombinedGPXWaypoints(null)) {
             maxDistance += gpxWaypoint.getDistance();
             double elevation = gpxWaypoint.getElevation();
             minHeight = Math.min(minHeight, elevation);
             maxHeight = Math.max(maxHeight, elevation);
             
-            XYChart.Data data = new XYChart.Data(maxDistance / 1000.0, elevation);
+            XYChart.Data<Double, Double> data = new XYChart.Data<>(maxDistance / 1000.0, elevation);
             // show elevation data on hover
             // https://gist.github.com/jewelsea/4681797
 
             // click handler for icon to mark waypoint via callback to gpxeditor
-            final Node node = new HoveredNode(String.format("Dist %.2fkm", maxDistance / 1000.0) + "\n" + String.format("Elev %.2fm", gpxWaypoint.getElevation()));
-            node.setUserData(gpxWaypoint);
-            node.setOnMouseClicked((MouseEvent event) -> {
-                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
-            });
-            data.setNode(node);
+//            final Node node = new HoveredNode(String.format("Elev %.2fm", gpxWaypoint.getElevation()) + "\n" + String.format("Dist %.2fkm", maxDistance / 1000.0));
+//            node.setUserData(gpxWaypoint);
+//            node.setOnMouseClicked((MouseEvent event) -> {
+//                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
+//            });
+//            data.setNode(node);
             
             dataList.add(data);
             myPoints.add(Pair.of(gpxWaypoint, maxDistance));
         }
         
-        XYChart.Series series = new XYChart.Series();
+        XYChart.Series<Double, Double> series = new XYChart.Series<>();
         series.getData().addAll(dataList);
         getData().add(series);
         
         setAxis(minDistance, maxDistance, minHeight, maxHeight);
         
-        setVisible(!series.getData().isEmpty());
+        setVisible(!series.getData().isEmpty() && isVisible);
+    }
+    
+    private XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
+        XYChart.Data<Double, Double> nearsetData = null;
+        double distance = Double.MAX_VALUE;
+
+        for (XYChart.Data<Double, Double> data : ((XYChart.Series<Double, Double>) getData().get(0)).getData()) {
+            double xData = data.getXValue();
+            double dataDistance = Math.abs(xValue - xData);
+            if (dataDistance < distance) {
+                distance = dataDistance;
+                nearsetData = data;
+            }
+        }
+        return nearsetData;
     }
     
     @SuppressWarnings("unchecked")

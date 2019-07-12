@@ -41,6 +41,7 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -501,7 +502,6 @@ public class GPXWaypoint extends GPXLineItem {
             }
         };
     }
-
     
     public Double getDataAsDouble(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {

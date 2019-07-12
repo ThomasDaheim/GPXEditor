@@ -15,7 +15,6 @@ public class GPXEditorPreferences {
     public final static String RECENTWINDOWWIDTH = "recentWindowWidth";
     public final static String RECENTWINDOWHEIGTH = "recentWindowHeigth";
     public final static String RECENTLEFTDIVIDERPOS = "recentLeftDividerPos";
-    public final static String RECENTRIGHTDIVIDERPOS = "recentRightDividerPos";
     public final static String RECENTCENTRALDIVIDERPOS = "recentCentralDividerPos";
     public final static String ALGORITHM = "algorithm";
     public final static String REDUCE_EPSILON = "epsilon";

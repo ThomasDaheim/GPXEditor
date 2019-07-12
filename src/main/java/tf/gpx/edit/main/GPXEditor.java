@@ -33,7 +33,6 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -68,7 +67,6 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -99,6 +97,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -131,7 +130,6 @@ import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditGPXWaypoint;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
-import tf.gpx.edit.viewer.HeightChart;
 import tf.gpx.edit.viewer.TrackMap;
 
 /**
@@ -270,11 +268,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem deleteItemsMenu;
     @FXML
-    private SplitPane viewSplitPane;
-    @FXML
     private AnchorPane mapAnchorPane;
-    @FXML
-    private AnchorPane profileAnchorPane;
     @FXML
     private MenuItem distributionsMenu;
     @FXML
@@ -295,13 +289,10 @@ public class GPXEditor implements Initializable {
         // TF, 20170720: store and read divider positions of panes
         final Double recentLeftDividerPos = Double.valueOf(
                 GPXEditorPreferences.get(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, "0.5"));
-        final Double recentRightDividerPos = Double.valueOf(
-                GPXEditorPreferences.get(GPXEditorPreferences.RECENTRIGHTDIVIDERPOS, "0.75"));
         final Double recentCentralDividerPos = Double.valueOf(
                 GPXEditorPreferences.get(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, "0.58"));
 
         trackSplitPane.setDividerPosition(0, recentLeftDividerPos);
-        viewSplitPane.setDividerPosition(0, recentRightDividerPos);
         splitPane.setDividerPosition(0, recentCentralDividerPos);
 
         initTopPane();
@@ -352,7 +343,6 @@ public class GPXEditor implements Initializable {
     public void stop() {
         // TF, 20170720: store and read divider positions of panes
         GPXEditorPreferences.put(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, Double.toString(trackSplitPane.getDividerPositions()[0]));
-        GPXEditorPreferences.put(GPXEditorPreferences.RECENTRIGHTDIVIDERPOS, Double.toString(viewSplitPane.getDividerPositions()[0]));
         GPXEditorPreferences.put(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, Double.toString(splitPane.getDividerPositions()[0]));
     }
     
@@ -553,13 +543,10 @@ public class GPXEditor implements Initializable {
         initGPXWaypointList();
 
         // right pane: resize with its anchor
-        viewSplitPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
-        viewSplitPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
-        
-        // right pane, top anchor: resize with its anchor
         mapAnchorPane.setMinHeight(0);
         mapAnchorPane.setMinWidth(0);
-        mapAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
+        mapAnchorPane.prefHeightProperty().bind(rightAnchorPane.heightProperty());
+        mapAnchorPane.prefWidthProperty().bind(rightAnchorPane.widthProperty());
 
         mapAnchorPane.getChildren().clear();
         final Region mapView = TrackMap.getInstance();
@@ -571,17 +558,6 @@ public class GPXEditor implements Initializable {
         metaPane.prefWidthProperty().bind(mapAnchorPane.widthProperty());
         metaPane.setVisible(false);
         mapAnchorPane.getChildren().addAll(mapView, metaPane);
-        
-        // right pane, bottom anchor: resize with its anchor
-        profileAnchorPane.setMinHeight(0);
-        profileAnchorPane.setMinWidth(0);
-        profileAnchorPane.prefWidthProperty().bind(viewSplitPane.widthProperty());
-
-        profileAnchorPane.getChildren().clear();
-        final XYChart chart = HeightChart.getInstance();
-        chart.prefHeightProperty().bind(profileAnchorPane.heightProperty());
-        chart.prefWidthProperty().bind(profileAnchorPane.widthProperty());
-        profileAnchorPane.getChildren().add(chart);
     }
     void initGPXFileList () {
         gpxFileList = new GPXTreeTableView(gpxFileListXML, this);
@@ -688,26 +664,31 @@ public class GPXEditor implements Initializable {
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
         lengthGPXCol.setEditable(false);
         lengthGPXCol.setPrefWidth(NORMAL_WIDTH);
+        lengthGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         speedGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
         speedGPXCol.setEditable(false);
         speedGPXCol.setPrefWidth(NORMAL_WIDTH);
+        speedGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         cumAccGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
         cumAccGPXCol.setEditable(false);
         cumAccGPXCol.setPrefWidth(SMALL_WIDTH);
+        cumAccGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         cumDescGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
         cumDescGPXCol.setEditable(false);
         cumDescGPXCol.setPrefWidth(SMALL_WIDTH);
+        cumDescGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         noItemsGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
         noItemsGPXCol.setEditable(false);
         noItemsGPXCol.setPrefWidth(SMALL_WIDTH);
+        noItemsGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
 
         extGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, Boolean> p) -> new SimpleBooleanProperty(
@@ -1017,26 +998,31 @@ public class GPXEditor implements Initializable {
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious)));
         lengthTrackCol.setEditable(false);
         lengthTrackCol.setPrefWidth(NORMAL_WIDTH);
+        lengthTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         speedTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
         speedTrackCol.setEditable(false);
         speedTrackCol.setPrefWidth(NORMAL_WIDTH);
+        speedTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         heightTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Elevation)));
         heightTrackCol.setEditable(false);
         heightTrackCol.setPrefWidth(SMALL_WIDTH);
+        heightTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         heightDiffTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.ElevationDifferenceToPrevious)));
         heightDiffTrackCol.setEditable(false);
         heightDiffTrackCol.setPrefWidth(SMALL_WIDTH);
+        heightDiffTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         slopeTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Slope)));
         slopeTrackCol.setEditable(false);
         slopeTrackCol.setPrefWidth(SMALL_WIDTH);
+        slopeTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
         
         extTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, Boolean> p) -> new SimpleBooleanProperty(

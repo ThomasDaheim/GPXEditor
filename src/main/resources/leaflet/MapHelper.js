@@ -64,7 +64,6 @@ myMap.on('zoomend', mapViewChanged);
 myMap.on('moveend', mapViewChanged);
 myMap.on('resize', mapViewChanged);
 
-
 // wrap around world borders
 // https://stackoverflow.com/a/28323349
 myMap.options.worldCopyJump = true;
