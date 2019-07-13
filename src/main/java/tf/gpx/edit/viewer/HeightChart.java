@@ -26,6 +26,7 @@
 package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +46,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -101,6 +104,10 @@ public class HeightChart<X,Y> extends AreaChart {
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
         
+        installMousePointer();
+    }
+    
+    private void installMousePointer() {
         // TFE, 20190712: install overall text & line instead as node tooltips
         // TODO: beautify code
         final Region plotArea = (Region) lookup(".chart-plot-background");
@@ -129,11 +136,11 @@ public class HeightChart<X,Y> extends AreaChart {
             // onyl show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                final Double distValue = getNearestDataForXValue(x).XValueProperty().getValue();
-                final Double heightValue = getNearestDataForXValue(x).YValueProperty().getValue();
-                // TODO: add callback to highlight waypoint in TrackMap
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
+                final Double distValue = data.XValueProperty().getValue();
+                final Double heightValue = data.YValueProperty().getValue();
 
-                text.setText(String.format("Elev %.2fm", heightValue) + "\n" + String.format("Dist %.2fkm", x));
+                text.setText(String.format("  Elev. %.2fm", heightValue) + "\n" + String.format("  Dist. %.2fkm", x));
                 
                 // we want to show the text at the elevation
                 double yHeight = yAxis.getDisplayPosition(heightValue);
@@ -158,6 +165,9 @@ public class HeightChart<X,Y> extends AreaChart {
                 line.setEndX(bTrans.getX());
                 line.setEndY(bTrans.getY());
                 line.setVisible(true);
+                
+                // callback to highlight waypoint in TrackMap
+                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getNode().getUserData()), true, true);
             } else {
                 line.setVisible(false);
                 text.setVisible(false);
@@ -214,16 +224,9 @@ public class HeightChart<X,Y> extends AreaChart {
             maxHeight = Math.max(maxHeight, elevation);
             
             XYChart.Data<Double, Double> data = new XYChart.Data<>(maxDistance / 1000.0, elevation);
-            // show elevation data on hover
-            // https://gist.github.com/jewelsea/4681797
-
-            // click handler for icon to mark waypoint via callback to gpxeditor
-//            final Node node = new HoveredNode(String.format("Elev %.2fm", gpxWaypoint.getElevation()) + "\n" + String.format("Dist %.2fkm", maxDistance / 1000.0));
-//            node.setUserData(gpxWaypoint);
-//            node.setOnMouseClicked((MouseEvent event) -> {
-//                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) node.getUserData()));
-//            });
-//            data.setNode(node);
+            final Node node = new Circle(1f, Color.BLACK);
+            node.setUserData(gpxWaypoint);
+            data.setNode(node);
             
             dataList.add(data);
             myPoints.add(Pair.of(gpxWaypoint, maxDistance));
@@ -287,7 +290,7 @@ public class HeightChart<X,Y> extends AreaChart {
     }
 
     @SuppressWarnings("unchecked")
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         if (isDisabled()) {
             return;
         }

@@ -61,6 +61,7 @@ public class MarkerManager {
     
     // fixed names to be used for search icons
     private final static String TRACKPOINT_ICON = "TrackPoint";
+    private final static String TRACKPOINTLINE_ICON = "TrackPointLine";
     private final static String PLACEMARK_ICON = "Placemark";
     private final static String SEARCHRESULT_ICON = "Search Result";
     private final static String LODGING_ICON = "Lodging";
@@ -70,6 +71,7 @@ public class MarkerManager {
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
     
+    public final static String LONG_ICON_SIZE = "Long";
     public final static String DEFAULT_ICON_SIZE = "24";
     private final static String SMALL_ICON_SIZE = "8";
     
@@ -81,6 +83,7 @@ public class MarkerManager {
     // definition of special markers
     public enum SpecialMarker {
         TrackPointIcon("TrackPoint", TRACKPOINT_ICON, SMALL_ICON_SIZE),
+        TrackPointLineIcon("TrackPointLine", TRACKPOINTLINE_ICON, LONG_ICON_SIZE),
         PlaceMarkIcon("Placemark", PLACEMARK_ICON, DEFAULT_ICON_SIZE),
         LodgingIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
         LodgingSearchIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),

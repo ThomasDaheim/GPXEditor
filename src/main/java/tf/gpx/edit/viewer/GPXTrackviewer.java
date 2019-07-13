@@ -85,11 +85,11 @@ public class GPXTrackviewer {
     }
 
     @SuppressWarnings("unchecked")
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;
 
-        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
-        HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
+        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
     }
 }

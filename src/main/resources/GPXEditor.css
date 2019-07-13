@@ -168,14 +168,10 @@
 
 .track-popup {
     -fx-fill: black;
-    -fx-background-color: black;
-    -fx-opacity: 0.75;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
     -fx-font-size: 12;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
-    -fx-padding: 5;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
 }
 
 /*
