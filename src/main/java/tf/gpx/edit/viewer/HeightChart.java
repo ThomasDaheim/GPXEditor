@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014ff Thomas Feuster
+ * Copyright (dataPoint) 2014ff Thomas Feuster
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -43,11 +43,11 @@ import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.items.GPXLineItem;
@@ -55,8 +55,8 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
 /**
- * Show a height chart for GPXWaypoints of a GPXLineItem and highlight selected ones
- * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+ * Show lineStart height chart for GPXWaypoints of lineStart GPXLineItem and highlight selected ones
+ Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
 @SuppressWarnings("unchecked")
@@ -75,16 +75,19 @@ public class HeightChart<X,Y> extends AreaChart {
     private double minHeight;
     private double maxHeight;
     
-    private double lasteX = 0;
-    private double lasteY = 0;
+    private NumberAxis xAxis;
+    private NumberAxis yAxis;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
-        ((NumberAxis) getXAxis()).setLowerBound(0.0);
-        ((NumberAxis) getXAxis()).setMinorTickVisible(false);
-        ((NumberAxis) getXAxis()).setTickUnit(1);
+        xAxis = (NumberAxis) getXAxis();
+        yAxis = (NumberAxis) getYAxis();
+        
+        xAxis.setLowerBound(0.0);
+        xAxis.setMinorTickVisible(false);
+        xAxis.setTickUnit(1);
         getXAxis().setAutoRanging(false);
         
         setVisible(false);
@@ -98,50 +101,57 @@ public class HeightChart<X,Y> extends AreaChart {
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
         
-        // TFE, 20190712: install overall tootip instead as node tooltips
+        // TFE, 20190712: install overall text & line instead as node tooltips
         // TODO: beautify code
-        // TODO: add callback to highlight waypoint in TrackMap
-        final Tooltip toolTip = new Tooltip();
-        toolTip.getStyleClass().add("track-popup");
-        Tooltip.install(this, toolTip);
-        
         final Region plotArea = (Region) lookup(".chart-plot-background");
         final Pane chartContent = (Pane) lookup(".chart-content");
+        
+        final Text text = new Text("");
+        text.getStyleClass().add("track-popup");
+        text.setVisible(true);
+        text.setMouseTransparent(true);
+
         final Line line = new Line();
         line.setVisible(true);
-        chartContent.getChildren().add(line);
+        line.setMouseTransparent(true);
+
+        chartContent.getChildren().addAll(line, text);
 
         setOnMouseMoved(e -> {
-            double eX = e.getScreenX();
-            double eY = e.getScreenY();
-
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-a-xy-line/31382802#31382802
+            // calculate cursor position in scene, relative to axis, x+y values in axis values
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
             Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
-            NumberAxis xAxis = (NumberAxis) getXAxis();
-            NumberAxis yAxis = (NumberAxis) getYAxis();
             double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
             double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
             double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
             double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
 
+            // onyl show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
+                final Double distValue = getNearestDataForXValue(x).XValueProperty().getValue();
                 final Double heightValue = getNearestDataForXValue(x).YValueProperty().getValue();
-                toolTip.setText(String.format("Region: Elev %.2fm", heightValue) + "\n" + String.format("Dist %.2fkm", x));
-                
-                // we want to show the tooltip at the elevation
-                double yHeight = yAxis.getDisplayPosition(heightValue);
-                double yValue = yAxis.localToScene(new Point2D(0, yHeight)).getY();
-                // https://stackoverflow.com/questions/30662190/javafx-pichart-my-hover-values-blink
-                toolTip.show(this, eX + 10, yValue);
-                
-                // and we want to show a line at this distance
-                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-line/40730299#40730299
-                Point2D a = plotArea.localToScene(new Point2D(xPosInAxis, 0));
-                Point2D b = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
+                // TODO: add callback to highlight waypoint in TrackMap
 
-                Point2D aTrans = chartContent.sceneToLocal(a);
-                Point2D bTrans = chartContent.sceneToLocal(b);
+                text.setText(String.format("Elev %.2fm", heightValue) + "\n" + String.format("Dist %.2fkm", x));
+                
+                // we want to show the text at the elevation
+                double yHeight = yAxis.getDisplayPosition(heightValue);
+                
+                // and we want to show lineStart line at this distance from top to bottom
+                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-line/40730299#40730299
+                Point2D lineStart = plotArea.localToScene(new Point2D(xPosInAxis, 0));
+                Point2D lineEnd = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
+                Point2D dataPoint = plotArea.localToScene(new Point2D(xPosInAxis, yHeight));
+
+                Point2D aTrans = chartContent.sceneToLocal(lineStart);
+                Point2D bTrans = chartContent.sceneToLocal(lineEnd);
+                Point2D cTrans = chartContent.sceneToLocal(dataPoint);
+                
+                text.setTranslateX(cTrans.getX());
+                text.setTranslateY(cTrans.getY());
+                // TODO: check if text still visible, otherwise show to the right of line
+                text.setVisible(true);
 
                 line.setStartX(aTrans.getX());
                 line.setStartY(aTrans.getY());
@@ -149,14 +159,14 @@ public class HeightChart<X,Y> extends AreaChart {
                 line.setEndY(bTrans.getY());
                 line.setVisible(true);
             } else {
-                toolTip.hide();
                 line.setVisible(false);
+                text.setVisible(false);
             }
         });
         
         setOnMouseExited(e -> {
-            toolTip.hide();
             line.setVisible(false);
+            text.setVisible(false);
         });
     }
     
@@ -264,18 +274,16 @@ public class HeightChart<X,Y> extends AreaChart {
         if (distance / 1000.0 > 4999.9) {
             tickUnit = 500.0;
         }
-        ((NumberAxis) getXAxis()).setTickUnit(tickUnit);
+        xAxis.setTickUnit(tickUnit);
 
         // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
-        ((NumberAxis) getXAxis()).setLowerBound(minDist / 1000.0);
-        ((NumberAxis) getXAxis()).setUpperBound(maxDist / 1000.0);
-
-        distance = maxHght - minHght;
-        ((NumberAxis) getYAxis()).setTickUnit(10.0);
+        xAxis.setLowerBound(minDist / 1000.0);
+        xAxis.setUpperBound(maxDist / 1000.0);
 
 //        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
-        ((NumberAxis) getYAxis()).setLowerBound(minHght);
-        ((NumberAxis) getYAxis()).setUpperBound(maxHght);
+        yAxis.setTickUnit(10.0);
+        yAxis.setLowerBound(minHght);
+        yAxis.setUpperBound(maxHght);
     }
 
     @SuppressWarnings("unchecked")
@@ -359,7 +367,7 @@ public class HeightChart<X,Y> extends AreaChart {
         layoutPlotChildren();
     }
     
-    // set a bounding box to limit which waypoints are shown
+    // set lineStart bounding box to limit which waypoints are shown
     // or better: to define, what min and max x-axis to use
     public void setViewLimits(final BoundingBox newBoundingBox) {
         if (myPoints.isEmpty()) {
@@ -415,7 +423,7 @@ public class HeightChart<X,Y> extends AreaChart {
         
         super.layoutPlotChildren();
         
-        // helper lists to speed things up - a SET for fast contains() a LIST for fast indexOf()
+        // helper lists to speed things up - lineStart SET for fast contains() lineStart LIST for fast indexOf()
         final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
             return t.getLeft();
         }).collect(Collectors.toList()));
