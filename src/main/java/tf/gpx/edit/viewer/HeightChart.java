@@ -171,12 +171,18 @@ public class HeightChart<X,Y> extends AreaChart {
             } else {
                 line.setVisible(false);
                 text.setVisible(false);
+                
+                // unset selected waypoint
+                myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
             }
         });
         
         setOnMouseExited(e -> {
             line.setVisible(false);
             text.setVisible(false);
+                
+            // unset selected waypoint
+            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
         });
     }
     
