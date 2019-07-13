@@ -19,7 +19,9 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ### Update v3.4
 
-* replace JavaFX HeightChart with leaflet-elevation
+* improve HeightChart to be more similar to e.g. leaflet-elevation
+* added support for ESRI satellite map tiles
+* minor updates & fixes
 
 ### Update v3.3
 
@@ -46,7 +48,7 @@ Icons, Icons, Icons!
 
 ### Update v2.6
 
-* support for auto routing: using openroutingservice routes can be calculated for different profiles (car, bike, hike, ...). An api key is requiredd for that
+* support for auto routing: using openroutingservice routes can be calculated for different profiles (car, bike, hike, ...). An api key is required for that
 * support for ruler to measure distances and bearings
 
 ### Update v2.5
@@ -238,7 +240,7 @@ Explicit dependencies:
 * 'org.jzy3d:jzy3d-javafx:1.0.0'
 * 'org.controlsfx:controlsfx:8.40.14'
 * 'de.jensd:fontawesomefx:8.9'
-* 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
+* 'de.saring:leafletmap:1.0.4-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven <- pull request open to support satellite map tiles
 * 'com.fasterxml.jackson.core:jackson-core:2.9.5'
 * 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
 * 'org.jfxtras:jfxtras-controls:8.0-r6'
