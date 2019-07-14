@@ -501,7 +501,6 @@ public class GPXWaypoint extends GPXLineItem {
             }
         };
     }
-
     
     public Double getDataAsDouble(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {

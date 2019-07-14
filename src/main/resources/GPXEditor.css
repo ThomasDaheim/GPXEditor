@@ -133,6 +133,16 @@
 /*
     elevation chart
 */
+.chart {
+    -fx-fill: white;
+    -fx-background-color: white;
+    -fx-opacity: 0.8;
+}
+.chart-content,
+.chart-plot-background {
+    -fx-fill: transparent;
+    -fx-background-color: transparent;
+}
 .chart-vert-rect { 
     -fx-border-style: none dotted none none;
     -fx-border-width: 5px;
@@ -146,6 +156,7 @@
 }
 .default-color0.chart-area-symbol {
     -fx-background-color: red, red;
+    -fx-background-radius: 1px;
 }
 .default-color0.chart-series-area-line {
     -fx-stroke: #000000; 
@@ -156,9 +167,11 @@
 }
 
 .track-popup {
+    -fx-fill: black;
     -fx-font-size: 12;
     -fx-font-weight: bold;
-    -fx-text-fill: black;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
 }
 
 /*

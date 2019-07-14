@@ -24,6 +24,16 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+var CustomIconLong = L.Icon.extend({
+                    options: {
+                            iconSize:     [8, 88],
+                            shadowSize:   [0, 0],
+                            iconAnchor:   [4, 84],
+                            shadowAnchor: [0, 0],
+                            popupAnchor:  [0, 0]
+                    }
+            });
+
 var CustomIcon32 = L.Icon.extend({
                     options: {
                             iconSize:     [32, 32],

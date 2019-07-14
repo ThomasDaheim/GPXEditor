@@ -31,6 +31,7 @@ import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import org.apache.commons.lang3.math.NumberUtils;
 
 /**
  *
@@ -535,4 +537,24 @@ public abstract class GPXLineItem {
     }
     // update numbering for changed list
     public abstract void updateListValues(final ObservableList list);
+
+    // comparator for sorting columns as numerical values
+    public static Comparator<String> getAsNumberComparator() {
+        return new Comparator<String>() {
+            @Override
+            public int compare(String id1, String id2) {
+//                System.out.println("id1: " + id1 + ", id2: " + id2);
+
+                // check if both are numbers - otherwise return string compare
+                if (!NumberUtils.isParsable(id1) || !NumberUtils.isParsable(id2)) {
+                    return id1.compareTo(id2);
+                }
+
+                final Double d1 = Double.parseDouble(id1);
+                final Double d2 = Double.parseDouble(id2);
+                
+                return d1.compareTo(d2);
+            }
+        };
+    }
 }

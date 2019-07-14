@@ -48,7 +48,6 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,6 +57,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
@@ -70,7 +70,9 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
@@ -226,6 +228,7 @@ public class TrackMap extends LeafletMapView {
     private JSCallback jscallback;
     
     private final CompletableFuture<Worker.State> cfMapLoadState;
+//    private int originalMapLayers = 0;
     private boolean isLoaded = false;
     private boolean isInitialized = false;
 
@@ -237,10 +240,10 @@ public class TrackMap extends LeafletMapView {
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
-        List<MapLayer> mapLayer = Arrays.asList(MapLayer.OPENSTREETMAP, MapLayer.HIKE_BIKE_MAP, MapLayer.MTB_MAP, MapLayer.MAPBOX);
-        Collections.reverse(mapLayer);
+        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.MAPBOX, MapLayer.OPENCYCLEMAP, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
+//        originalMapLayers = mapLayer.size();
         final MapConfig myMapConfig = new MapConfig(mapLayer, 
-                        new ZoomControlConfig(true, ControlPosition.BOTTOM_LEFT), 
+                        new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
                         new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
 
         cfMapLoadState = displayMap(myMapConfig);
@@ -295,6 +298,8 @@ public class TrackMap extends LeafletMapView {
 
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
+            // add satellite layer to controls
+//            addMoreMapLayers();
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -334,6 +339,13 @@ public class TrackMap extends LeafletMapView {
             addStyleFromPath("/leaflet/ruler/leaflet-ruler.css");
             addScriptFromPath("/leaflet/ruler/leaflet-ruler.js");
             addScriptFromPath("/leaflet/Rouler.js");
+
+            // support for custom buttons
+            // https://github.com/CliffCloud/Leaflet.EasyButton
+            addStyleFromPath("/leaflet/easybutton/easy-button.css");
+            addScriptFromPath("/leaflet/easybutton/easy-button.js");
+            addStyleFromPath("/leaflet/HeightChartButton.css");
+            addScriptFromPath("/leaflet/HeightChartButton.js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -343,6 +355,15 @@ public class TrackMap extends LeafletMapView {
             myPane.setPrefSize(0, 0);
             parentPane.getChildren().add(myPane);
             myPane.toFront();
+            
+            // TFE, 20190712: show heightchart above tracks - like done in leaflet-elevation
+            final Region chart = HeightChart.getInstance();
+            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+            chart.prefWidthProperty().bind(parentPane.widthProperty());
+            AnchorPane.setBottomAnchor(chart, 20.0);
+            parentPane.getChildren().add(chart); 
+            chart.toFront();
+            chart.setVisible(false);
 
             // support drawing rectangle with mouse + cntrl
             // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
@@ -376,6 +397,27 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
+//    private void addMoreMapLayers() {
+//        final int newLayer = originalMapLayers+1;
+//        String scriptCmd = 
+//            "var layer" + newLayer + " = " + 
+//            "L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',  {attribution: '&copy; <a href=\"http://www.esri.com/\">Esri</a>'});";
+//
+//        System.out.println(scriptCmd);
+//        execScript(scriptCmd);
+//
+//        scriptCmd = 
+//            "var ctlLayer = " + 
+//            "L.control.layers(baseMaps, overlayMaps).addTo(myMap);";
+//        System.out.println(scriptCmd);
+//        execScript(scriptCmd);
+//
+//        scriptCmd = 
+//            "ctlLayer.addBaseLayer(layer" + newLayer + ", 'Satellite');";
+//        System.out.println(scriptCmd);
+//        execScript(scriptCmd);
+//    }
+    
     public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
 //        System.out.println("Adding icon " + iconName + ", " + base64data);
         
@@ -383,8 +425,8 @@ public class TrackMap extends LeafletMapView {
             "var url = \"data:image/png;base64," + base64data + "\";" + 
             "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
 
-//        System.out.println(iconName + " created");
         execScript(scriptCmd);
+//        System.out.println(iconName + " created");
     }
     
     /**
@@ -973,7 +1015,7 @@ public class TrackMap extends LeafletMapView {
         // TODO: fill with life
     }
 
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         if (isDisabled()) {
             return;
         }
@@ -1024,22 +1066,30 @@ public class TrackMap extends LeafletMapView {
                 // updated current marker instead of adding new one on top of the old
                 waypoint = fileWaypoints.getKey(gpxWaypoint);
                 execScript("highlightMarker(\"" + waypoint + "\");");
-            } else if (trackWaypoints.contains(gpxWaypoint) || routeWaypoints.contains(gpxWaypoint)) {
+            } else if (trackWaypoints.contains(gpxWaypoint) || routeWaypoints.contains(gpxWaypoint) || highlightIfHidden) {
                 // only show selected waypoint if already shown
-                waypoint = addMarkerAndCallback(
-                        latLong, 
-                        "", 
-                        MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointIcon), 
-                        0, 
-                        false);
+                if (!useLineMarker) {
+                    waypoint = addMarkerAndCallback(
+                            latLong, 
+                            "", 
+                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointIcon), 
+                            0, 
+                            false);
+                } else {
+                    // use the fancy marker
+                    waypoint = addMarkerAndCallback(
+                            latLong, 
+                            "", 
+                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointLineIcon), 
+                            0, 
+                            false);
+                }
             } else {
                 notShownCount++;
                 waypoint = NOT_SHOWN + notShownCount;
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
-        
-        assert gpxWaypoints.size() == selectedWaypoints.size();
     }
 
     public void clearSelectedGPXWaypoints() {
@@ -1082,7 +1132,7 @@ public class TrackMap extends LeafletMapView {
             newSelection.addAll(selectedWaypoints.values());
         }
         newSelection.addAll(waypoints);
-        myGPXEditor.selectGPXWaypoints(newSelection.stream().collect(Collectors.toList()));
+        myGPXEditor.selectGPXWaypoints(newSelection.stream().collect(Collectors.toList()), false, false);
     }
             
     public void moveGPXWaypoint(final String marker, final LatLong newLatLong) {
@@ -1266,6 +1316,11 @@ public class TrackMap extends LeafletMapView {
         public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
             myTrackMap.mapViewChanged(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
 //            System.out.println("mapViewChanged: " + event + ", " + latMin + ", " + lonMin + ", " + latMax + ", " + lonMax);
+        }
+        
+        public void toggleHeightChart(final Boolean visible) {
+//            System.out.println("toggleHeightChart: " + visible);
+            HeightChart.getInstance().setVisible(visible);
         }
     }
 }
