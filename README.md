@@ -240,7 +240,7 @@ Explicit dependencies:
 * 'org.jzy3d:jzy3d-javafx:1.0.0'
 * 'org.controlsfx:controlsfx:8.40.14'
 * 'de.jensd:fontawesomefx:8.9'
-* 'de.saring:leafletmap:1.0.4-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven <- pull request open to support satellite map tiles
+* 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 * 'com.fasterxml.jackson.core:jackson-core:2.9.5'
 * 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
 * 'org.jfxtras:jfxtras-controls:8.0-r6'
