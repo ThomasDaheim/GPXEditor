@@ -153,6 +153,11 @@ public class GPXEditor implements Initializable {
         DOWN
     }
     
+    public static enum DeleteInformation {
+        DATE,
+        NAME
+    }
+
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
     private final List<GPXWaypoint> clipboardWayPoints = new ArrayList<>();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
@@ -336,7 +341,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.4", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.5", "https://github.com/ThomasDaheim/GPXEditor");
     }
 
     public void stop() {
@@ -600,6 +605,7 @@ public class GPXEditor implements Initializable {
 //                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
         idGPXCol.setEditable(false);
+        idGPXCol.setComparator(GPXLineItem.getSingleIDComparator());
         idGPXCol.setPrefWidth(NORMAL_WIDTH);
         
         typeGPXCol.setCellValueFactory(
@@ -846,6 +852,22 @@ public class GPXEditor implements Initializable {
             });
             waypointMenu.getItems().add(deleteWaypoints);
             
+            waypointMenu.getItems().add(new SeparatorMenuItem());
+            
+            final MenuItem deleteDates = new MenuItem("Delete Date(s)");
+            deleteDates.setOnAction((ActionEvent event) -> {
+                deleteSelectedWaypointsInformation(DeleteInformation.DATE);
+            });
+            waypointMenu.getItems().add(deleteDates);
+            
+            final MenuItem deleteNames = new MenuItem("Delete Name(s)");
+            deleteNames.setOnAction((ActionEvent event) -> {
+                deleteSelectedWaypointsInformation(DeleteInformation.DATE);
+            });
+            waypointMenu.getItems().add(deleteNames);
+            
+            // TFE, 20190715: support forr deletion of date & name
+
             waypointMenu.getItems().add(new SeparatorMenuItem());
 
             final MenuItem splitWaypoints = new MenuItem("Split below");
@@ -1130,6 +1152,25 @@ public class GPXEditor implements Initializable {
         showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
         // force repaint of gpxFileList to show unsaved items
         refreshGPXFileList();
+    }
+    
+    private void deleteSelectedWaypointsInformation(final DeleteInformation info) {
+        // all waypoints to remove - as copy since otherwise observablelist get messed up by deletes
+        final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems());
+
+        gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+
+        for (GPXWaypoint waypoint : selectedWaypoints){
+            if (DeleteInformation.DATE.equals(info)) {
+                waypoint.setDate(null);
+            } else {
+                waypoint.setName(null);
+            }
+        }
+
+        gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
+
+        refresh();
     }
 
     private void initBottomPane() {

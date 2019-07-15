@@ -413,6 +413,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public static Comparator<String> getCombinedIDComparator() {
+        // ID looks like F1, T1.S1.1, T10.S1.1004 - so a lot of special cases to be considererd
         return new Comparator<String>() {
             @Override
             public int compare(String id1, String id2) {

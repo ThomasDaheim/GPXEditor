@@ -28,6 +28,7 @@ var apikey;
 var routingControl;
 var curRoute;
 var curLayer;
+var foundRoute;
 
 function initRouting(key) {
     apikey = key;
@@ -54,6 +55,12 @@ function startRouting(layer, routingprofile) {
             routeWhileDragging: false,
             showAlternatives: false,
             geocoder: L.Control.Geocoder.nominatim(),
+//            plan: new L.Routing.Plan(
+//                    curRoute.getLatLngs(),
+//                {
+//                    addWaypoints: true,
+//                    reverseWaypoints: true
+//                }),
             // https://openrouteservice.org/plans/
             router: new L.Routing.openrouteservice(
                 apikey,
@@ -68,6 +75,10 @@ function startRouting(layer, routingprofile) {
                 itinerary._container.insertBefore(collapseBtn, itinerary._container.firstChild);
             },
             suppressDemoServerWarning: true
+        }).on('routesfound', function(e) {
+            var routes = e.routes;
+            jscallback.log('Found ' + routes.length + ' route(s).');
+            foundRoute = routes[0];
         }).addTo(myMap);
         
         curRoute.disableEdit();
@@ -83,11 +94,17 @@ function stopRouting(updateRoute) {
 
             if (updateRoute != false) {
                 // get the waypoints as latlng's
-                var waypoints = routingControl.getWaypoints();
                 var latlngs = [];
-                waypoints.forEach(function(waypoint) {
-                    latlngs.push(waypoint.latLng);
-                });
+                if (foundRoute && foundRoute.coordinates && foundRoute.coordinates.length > 0) {
+                    // use the detailed points from the routing result
+                    latlngs = foundRoute.coordinates;
+                } else {
+                    // use waypoints for routing
+                    var waypoints = routingControl.getWaypoints();
+                    waypoints.forEach(function(waypoint) {
+                        latlngs.push(waypoint.latLng);
+                    });
+                }
 
                 // now save new route
                 curRoute.setLatLngs(latlngs);
@@ -105,6 +122,7 @@ function stopRouting(updateRoute) {
             routingControl = undefined;
             curRoute = undefined;
             curLayer = undefined;
+            foundRoute = undefined;
         }
     }
 }

@@ -684,7 +684,7 @@ public class TrackMap extends LeafletMapView {
                 // start autorouting on current route
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
-                        TrackMap.RoutingProfile.valueOf(
+                        TrackMap.RoutingProfile.valueOf(    
                                 GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
                                 .getProfileName() + "\");");
             }
