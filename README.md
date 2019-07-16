@@ -17,6 +17,11 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.5
+
+* routing: inverse route & save explicitly
+* context menu to delete date(s) & name(s)
+
 ### Update v3.4
 
 * improve HeightChart to be more similar to e.g. leaflet-elevation
@@ -263,6 +268,7 @@ Other things used internally:
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
+* route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 
 ## Roadmap
 

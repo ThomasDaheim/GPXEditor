@@ -296,6 +296,8 @@ public class TrackMap extends LeafletMapView {
             window.setMember("jscallback", jscallback);
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
+            addStyleFromPath("/leaflet/leaflet.css");
+
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
             // add satellite layer to controls
@@ -344,7 +346,6 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/CliffCloud/Leaflet.EasyButton
             addStyleFromPath("/leaflet/easybutton/easy-button.css");
             addScriptFromPath("/leaflet/easybutton/easy-button.js");
-            addStyleFromPath("/leaflet/HeightChartButton.css");
             addScriptFromPath("/leaflet/HeightChartButton.js");
             
             // add pane on top of me with same width & height
@@ -574,7 +575,7 @@ public class TrackMap extends LeafletMapView {
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
             // we might be routing...
-            execScript("stopRouting(true);");
+            execScript("stopRouting(false);");
             
             assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
             LatLong latlong = (LatLong) contextMenu.getUserData();
@@ -662,7 +663,7 @@ public class TrackMap extends LeafletMapView {
             
             if (curRoute == null) {
                 // we might be routing...
-                execScript("stopRouting(true);");
+                execScript("stopRouting(false);");
             
                 // start new editable route
                 final String routeName = "route" + (routes.size() + 1);
@@ -699,7 +700,7 @@ public class TrackMap extends LeafletMapView {
                 final MenuItem search = new MenuItem(item.name());
                 search.setOnAction((event) -> {
                     // we might be routing...
-                    execScript("stopRouting(true);");
+                    execScript("stopRouting(false);");
             
                     assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
                     final LatLong latlong = (LatLong) contextMenu.getUserData();
