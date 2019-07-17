@@ -194,13 +194,22 @@ public class GPXTreeTableView {
                                 });
                                 fileMenu.getItems().add(saveAsFile);
 
-                                final MenuItem exportFile = new MenuItem("Export");
-                                exportFile.setOnAction((ActionEvent event) -> {
-                                    if (myEditor.exportFile(item)) {
-                                        myTreeTableView.refresh();
-                                    }
+                                // Export is a sub menu
+                                final Menu exportMenu = new Menu("Export");
+                                
+                                final MenuItem exportAsKML = new MenuItem("As KML");
+                                exportAsKML.setOnAction((ActionEvent event) -> {
+                                    myEditor.exportFile(item, GPXEditor.ExportFileType.KML);
                                 });
-                                fileMenu.getItems().add(exportFile);
+                                exportMenu.getItems().add(exportAsKML);
+                                
+                                final MenuItem exportAsCSV = new MenuItem("As CSV");
+                                exportAsCSV.setOnAction((ActionEvent event) -> {
+                                    myEditor.exportFile(item, GPXEditor.ExportFileType.CSV);
+                                });
+                                exportMenu.getItems().add(exportAsCSV);
+                                
+                                fileMenu.getItems().add(exportMenu);
 
                                 final MenuItem closeFile = new MenuItem("Close");
                                 closeFile.setOnAction((ActionEvent event) -> {
@@ -226,6 +235,7 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(showFile);
 
                                 break;
+
                             case GPXTrack:
                             case GPXTrackSegment:
                             case GPXRoute:

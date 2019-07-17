@@ -32,6 +32,12 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                  <Menu fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
+                    <items>
+                      <MenuItem fx:id="exportKMLMenu" mnemonicParsing="false" text="As KML" />
+                        <MenuItem fx:id="exportCSVMenu" mnemonicParsing="false" text="As CSV" />
+                    </items>
+                  </Menu>
                   <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="saveAllFilesMenu" mnemonicParsing="false" text="Save All">
                      <accelerator>

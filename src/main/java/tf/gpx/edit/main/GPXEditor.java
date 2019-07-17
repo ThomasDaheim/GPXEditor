@@ -157,6 +157,11 @@ public class GPXEditor implements Initializable {
         DATE,
         NAME
     }
+    
+    public static enum ExportFileType {
+        KML,
+        CSV
+    }
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
     private final List<GPXWaypoint> clipboardWayPoints = new ArrayList<>();
@@ -168,6 +173,12 @@ public class GPXEditor implements Initializable {
     private ListChangeListener<GPXWaypoint> listenergpxTrackXMLSelection;
     private ChangeListener<TreeItem<GPXLineItem>> listenergpxFileListXMLSelection;
     
+    @FXML
+    private MenuItem exportKMLMenu;
+    @FXML
+    private MenuItem exportCSVMenu;
+    @FXML
+    private Menu exportFileMenu;
     @FXML
     private MenuItem newFileMenu;
     @FXML
@@ -366,6 +377,14 @@ public class GPXEditor implements Initializable {
         });
         addFileMenu.setOnAction((ActionEvent event) -> {
             addFileAction(event);
+        });
+        exportFileMenu.disableProperty().bind(
+                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
+        exportKMLMenu.setOnAction((ActionEvent event) -> {
+            exportFilesAction(event, ExportFileType.KML);
+        });
+        exportCSVMenu.setOnAction((ActionEvent event) -> {
+            exportFilesAction(event, ExportFileType.CSV);
         });
         closeFileMenu.setOnAction((ActionEvent event) -> {
             saveAllFilesAction(event);
@@ -1351,8 +1370,21 @@ public class GPXEditor implements Initializable {
         return result;
     }
 
-    public Boolean exportFile(final GPXLineItem item) {
-        return myWorker.exportFile(item.getGPXFile());
+    private Boolean exportFilesAction(final ActionEvent event, final ExportFileType type) {
+        Boolean result = true;
+        
+        // iterate over selected files
+        for (GPXLineItem item : gpxFileList.getSelectedGPXLineItems()) {
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(item.getType())) {
+                result = result && exportFile(item, type);
+            }
+        }
+
+        return result;
+    }
+
+    public Boolean exportFile(final GPXLineItem item, final ExportFileType type) {
+        return myWorker.exportFile(item.getGPXFile(), type);
     }
 
     private Boolean closeAllFiles() {

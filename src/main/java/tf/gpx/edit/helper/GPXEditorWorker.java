@@ -67,6 +67,7 @@ import tf.gpx.edit.worker.GPXReduceWorker;
 public class GPXEditorWorker {
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
+    public static final String CSV_EXT = "csv";
     public static final String BAK_EXT = ".bak";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
@@ -186,33 +187,55 @@ public class GPXEditorWorker {
         return result;
     }
 
-    public boolean exportFile(final GPXFile gpxFile) {
+    public boolean exportFile(final GPXFile gpxFile, final GPXEditor.ExportFileType type) {
         boolean result = false;
         
-        final List<String> extFilter = Arrays.asList("*." + KML_EXT);
-        final List<String> extValues = Arrays.asList(KML_EXT);
+        File selectedFile;
+        if (GPXEditor.ExportFileType.KML.equals(type)) {
+            selectedFile = getExportFilename(gpxFile, KML_EXT);
+        } else {
+            selectedFile = getExportFilename(gpxFile, CSV_EXT);
+        }
+        
+        if (selectedFile == null) {
+            return result;
+        }
+        
+        if (GPXEditor.ExportFileType.KML.equals(type)) {
+            result = doExportKMLFile(gpxFile, selectedFile);
+        } else {
+            result = doExportCSVFile(gpxFile, selectedFile);
+        }
+
+        return result;
+    }
+    private File getExportFilename(final GPXFile gpxFile, final String ext) {
+        File result = null;
+        
+        final List<String> extFilter = Arrays.asList("*." + ext);
+        final List<String> extValues = Arrays.asList(ext);
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save KML-File");
+        fileChooser.setTitle("Save " + ext.toUpperCase() +"-File");
         fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
-        fileChooser.setInitialFileName(gpxFile.getName().replace(GPX_EXT, KML_EXT));
+        fileChooser.setInitialFileName(gpxFile.getName().replace(GPX_EXT, ext));
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("KML-Files", extFilter));
+            new FileChooser.ExtensionFilter(ext.toUpperCase() +"-Files", extFilter));
         File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
 
         if(selectedFile == null){
             System.out.println("No File selected");
         } else if (!KML_EXT.equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
-            System.out.println("No ." + KML_EXT + " File selected");
+            System.out.println("No ." + ext + " File selected");
         } else {
-            result = doExportFile(gpxFile, selectedFile);
+            result = selectedFile;
         }
-
+        
         return result;
     }
     
-    private boolean doExportFile(final GPXFile gpxFile, final File selectedFile) {
+    private boolean doExportKMLFile(final GPXFile gpxFile, final File selectedFile) {
         boolean result = false;
         
         final KMLWriter kmlWriter = new KMLWriter();
@@ -232,6 +255,21 @@ public class GPXEditorWorker {
         
         return result;
     }
+
+    private boolean doExportCSVFile(final GPXFile gpxFile, final File selectedFile) {
+        boolean result = false;
+        
+        // TODO: fill with life
+        
+        // 1) run worker on gpxfile
+        // 2) instantiate writer (see exportCSV() in StatisticsViewer)
+        // 3) retrieve output list of lists
+        // 4) send all lists as lines to the writer
+        // 5) close & go home
+
+        return result;
+    }
+        
     
     public void fixGPXFiles(final List<GPXFile> gpxFiles, final double distance) {
         runVisitor(gpxFiles, new GPXFixGarminCrapWorker(distance));
