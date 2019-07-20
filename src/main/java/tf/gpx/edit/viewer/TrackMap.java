@@ -240,7 +240,7 @@ public class TrackMap extends LeafletMapView {
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
-        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.MAPBOX, MapLayer.OPENCYCLEMAP, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
+        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
 //        originalMapLayers = mapLayer.size();
         final MapConfig myMapConfig = new MapConfig(mapLayer, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
@@ -300,8 +300,8 @@ public class TrackMap extends LeafletMapView {
 
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
-            // add satellite layer to controls
-//            addMoreMapLayers();
+            // set api key for open cycle map
+            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -397,27 +397,6 @@ public class TrackMap extends LeafletMapView {
             MarkerManager.getInstance().loadSpecialIcons();
         }
     }
-    
-//    private void addMoreMapLayers() {
-//        final int newLayer = originalMapLayers+1;
-//        String scriptCmd = 
-//            "var layer" + newLayer + " = " + 
-//            "L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',  {attribution: '&copy; <a href=\"http://www.esri.com/\">Esri</a>'});";
-//
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//
-//        scriptCmd = 
-//            "var ctlLayer = " + 
-//            "L.control.layers(baseMaps, overlayMaps).addTo(myMap);";
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//
-//        scriptCmd = 
-//            "ctlLayer.addBaseLayer(layer" + newLayer + ", 'Satellite');";
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//    }
     
     public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
 //        System.out.println("Adding icon " + iconName + ", " + base64data);

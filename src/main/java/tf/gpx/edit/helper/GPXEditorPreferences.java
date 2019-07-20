@@ -22,6 +22,7 @@ public class GPXEditorPreferences {
     public final static String SRTM_DATA_PATH = "SRTMDataPath";
     public final static String SRTM_DATA_AVERAGE = "SRTMDataAverage";
     public final static String HEIGHT_ASSIGN_MODE = "heightAssignMode";
+    public final static String OPENCYCLEMAP_API_KEY = "openCycleMapApiKey";
     public final static String ROUTING_API_KEY = "routingApiKey";
     public final static String ROUTING_PROFILE = "routingProfile";
 

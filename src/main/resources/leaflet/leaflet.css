@@ -28,8 +28,7 @@
     Author     : thomas
 */
 
-.leaflet-bar button,
-.leaflet-bar button:hover {
+#toggleHeightChartButton {
     width: 36px;
     height: 36px;
     line-height: 36px;

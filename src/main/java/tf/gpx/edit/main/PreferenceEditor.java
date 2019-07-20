@@ -75,6 +75,8 @@ public class PreferenceEditor {
         double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
         double myFixEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
         
+        String myOpenCycleMapApiKey = GPXEditorPreferences.get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
+
         String myRoutingApiKey = GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "");
         TrackMap.RoutingProfile myRoutingProfile =
                 TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
@@ -123,8 +125,7 @@ public class PreferenceEditor {
         epsilonText.setText(decimalFormat.format(myReduceEpsilon));
         epsilonText.setTooltip(new Tooltip("Minimum distance for track reduction algorithms."));
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
-        GridPane.setMargin(epsilonText, new Insets(10));
-        
+        GridPane.setMargin(epsilonText, new Insets(10));        
 
         rowNum++;
         // separator
@@ -136,18 +137,32 @@ public class PreferenceEditor {
         GridPane.setMargin(sepHor, new Insets(10));
 
         rowNum++;
-        // 4th row: routing api key
-        final Label apikeyLbl = new Label("Routing API key:");
-        gridPane.add(apikeyLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(apikeyLbl, VPos.TOP);
-        GridPane.setMargin(apikeyLbl, new Insets(10));
+        // 4th row: open cycle map api key
+        final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
+        gridPane.add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
+        GridPane.setMargin(openCycleMapApiKeyLbl, new Insets(10));
         
-        final TextField apikeyText = new TextField();
-        apikeyText.setMaxWidth(800);
-        apikeyText.setText(myRoutingApiKey);
-        apikeyText.setTooltip(new Tooltip("API key for OpenRouteService."));
-        gridPane.add(apikeyText, 1, rowNum, 1, 1);
-        GridPane.setMargin(apikeyText, new Insets(10));
+        final TextField openCycleMapApiKeyText = new TextField();
+        openCycleMapApiKeyText.setMaxWidth(800);
+        openCycleMapApiKeyText.setText(myOpenCycleMapApiKey);
+        openCycleMapApiKeyText.setTooltip(new Tooltip("API key for OpenCycleMap."));
+        gridPane.add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
+        GridPane.setMargin(openCycleMapApiKeyText, new Insets(10));
+
+        rowNum++;
+        // 4th row: routing api key
+        final Label routingApiKeyLbl = new Label("Routing API key:");
+        gridPane.add(routingApiKeyLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(routingApiKeyLbl, VPos.TOP);
+        GridPane.setMargin(routingApiKeyLbl, new Insets(10));
+        
+        final TextField routingApiKeyText = new TextField();
+        routingApiKeyText.setMaxWidth(800);
+        routingApiKeyText.setText(myRoutingApiKey);
+        routingApiKeyText.setTooltip(new Tooltip("API key for OpenRouteService."));
+        gridPane.add(routingApiKeyText, 1, rowNum, 1, 1);
+        GridPane.setMargin(routingApiKeyText, new Insets(10));
 
         rowNum++;
         // 5th row: routing profile
@@ -189,13 +204,17 @@ public class PreferenceEditor {
             myFixEpsilon = Double.valueOf(fixText.getText().trim());
             myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
             
-            myRoutingApiKey = apikeyText.getText().trim();
+            myOpenCycleMapApiKey = openCycleMapApiKeyText.getText().trim();
+            
+            myRoutingApiKey = routingApiKeyText.getText().trim();
             myRoutingProfile = EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox);
             
             GPXEditorPreferences.put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
             GPXEditorPreferences.put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
+            GPXEditorPreferences.put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);
+
             GPXEditorPreferences.put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
             GPXEditorPreferences.put(GPXEditorPreferences.ROUTING_PROFILE, myRoutingProfile.name());
         }
