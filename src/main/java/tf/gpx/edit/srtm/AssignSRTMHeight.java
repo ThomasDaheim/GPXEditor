@@ -98,11 +98,11 @@ public class AssignSRTMHeight {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
         myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
         
         // create new scene
         assignHeightStage.setTitle("Assign SRTM height values");
@@ -227,9 +227,9 @@ public class AssignSRTMHeight {
                 runVisitor(myGPXFiles, visitor);
                 
                 // save preferences
-                GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
-                GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
-                GPXEditorPreferences.put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
 
                 hasUpdated = true;
 

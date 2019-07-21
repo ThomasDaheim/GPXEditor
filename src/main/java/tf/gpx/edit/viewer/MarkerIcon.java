@@ -18,6 +18,8 @@ public class MarkerIcon implements Marker {
     private final String iconJSName;
     // lazy loading of actual base64 string upon access
     private String iconBase64 = "";
+    // has the item be created in leaflet?
+    private Boolean availableInLeaflet = false;
     
     private MarkerIcon() {
         super();
@@ -50,5 +52,13 @@ public class MarkerIcon implements Marker {
     
     public void setIconBase64(final String base64) {
         iconBase64 = base64;
+    }
+
+    public Boolean getAvailableInLeaflet() {
+        return availableInLeaflet;
+    }
+
+    public void setAvailableInLeaflet(Boolean available) {
+        availableInLeaflet = available;
     }
 }

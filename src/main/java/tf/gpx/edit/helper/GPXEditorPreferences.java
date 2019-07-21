@@ -5,8 +5,9 @@ import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.general.RecentFiles;
 import tf.gpx.edit.main.GPXEditorManager;
+import tf.gpx.edit.general.IPreferencesStore;
 
-public class GPXEditorPreferences {
+public class GPXEditorPreferences implements IPreferencesStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static GPXEditorPreferences INSTANCE = new GPXEditorPreferences();
@@ -40,7 +41,7 @@ public class GPXEditorPreferences {
         return MYRECENTFILES;
     }
     
-    public static String get(final String key, final String defaultValue) {
+    public String get(final String key, final String defaultValue) {
         String result = defaultValue;
         
         try {
@@ -52,7 +53,7 @@ public class GPXEditorPreferences {
         return result;
     }
     
-    public static void put(final String key, final String value) {
+    public void put(final String key, final String value) {
         MYPREFERENCES.put(key, value);
     }
 }

@@ -71,15 +71,15 @@ public class PreferenceEditor {
     @SuppressWarnings("unchecked")
     public void showPreferencesDialogue() {
         EarthGeometry.Algorithm myAlgorithm = 
-                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
-        double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
-        double myFixEpsilon = Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000"));
+                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
+        double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
+        double myFixEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000"));
         
-        String myOpenCycleMapApiKey = GPXEditorPreferences.get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
+        String myOpenCycleMapApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
 
-        String myRoutingApiKey = GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "");
+        String myRoutingApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "");
         TrackMap.RoutingProfile myRoutingProfile =
-                TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
+                TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
 
         // create new scene with list of algos & parameter
         final Stage settingsStage = new Stage();
@@ -209,14 +209,14 @@ public class PreferenceEditor {
             myRoutingApiKey = routingApiKeyText.getText().trim();
             myRoutingProfile = EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox);
             
-            GPXEditorPreferences.put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
-            GPXEditorPreferences.put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
-            GPXEditorPreferences.put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
-            GPXEditorPreferences.put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);
 
-            GPXEditorPreferences.put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
-            GPXEditorPreferences.put(GPXEditorPreferences.ROUTING_PROFILE, myRoutingProfile.name());
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_PROFILE, myRoutingProfile.name());
         }
     }
 }

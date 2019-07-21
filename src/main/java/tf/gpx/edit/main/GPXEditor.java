@@ -108,6 +108,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.general.AboutMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
+import tf.gpx.edit.general.TableViewPreferences;
 import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -303,9 +304,9 @@ public class GPXEditor implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         // TF, 20170720: store and read divider positions of panes
         final Double recentLeftDividerPos = Double.valueOf(
-                GPXEditorPreferences.get(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, "0.5"));
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, "0.5"));
         final Double recentCentralDividerPos = Double.valueOf(
-                GPXEditorPreferences.get(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, "0.58"));
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, "0.58"));
 
         trackSplitPane.setDividerPosition(0, recentLeftDividerPos);
         splitPane.setDividerPosition(0, recentCentralDividerPos);
@@ -315,6 +316,10 @@ public class GPXEditor implements Initializable {
         initBottomPane();
         
         initMenus();
+        
+        // load stored values for tableviews
+        TableViewPreferences.loadTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferences.getInstance());
+        TableViewPreferences.loadTableViewPreferences(gpxTrackXML, "gpxTrackXML", GPXEditorPreferences.getInstance());
         
         // they all need to be able to do something in the editor
         GPXTrackviewer.getInstance().setCallback(this);
@@ -357,8 +362,12 @@ public class GPXEditor implements Initializable {
 
     public void stop() {
         // TF, 20170720: store and read divider positions of panes
-        GPXEditorPreferences.put(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, Double.toString(trackSplitPane.getDividerPositions()[0]));
-        GPXEditorPreferences.put(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, Double.toString(splitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, Double.toString(trackSplitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, Double.toString(splitPane.getDividerPositions()[0]));
+        
+        // store values for tableviews
+        TableViewPreferences.saveTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferences.getInstance());
+        TableViewPreferences.saveTableViewPreferences(gpxTrackXML, "gpxTrackXML", GPXEditorPreferences.getInstance());
     }
     
     public Window getWindow() {
@@ -1713,11 +1722,11 @@ public class GPXEditor implements Initializable {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 final boolean keep1[] = EarthGeometry.simplifyTrack(
                         trackwaypoints, 
-                        EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())), 
-                        Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
+                        EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())), 
+                        Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
                 final boolean keep2[] = EarthGeometry.fixTrack(
                         trackwaypoints, 
-                        Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
+                        Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
 
                 int index = 0;
                 for (GPXWaypoint gpxWaypoint : trackwaypoints) {
@@ -1780,7 +1789,7 @@ public class GPXEditor implements Initializable {
     private void fixGPXFiles(final Event event) {
         myWorker.fixGPXFiles(
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
-                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.FIX_EPSILON, "1000")));
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         refreshGPXFileList();
         
         refillGPXWayointList(true);
@@ -1789,8 +1798,8 @@ public class GPXEditor implements Initializable {
     private void reduceGPXFiles(final Event event) {
         myWorker.reduceGPXFiles(
                 uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
-                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
-                Double.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
+                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
         refreshGPXFileList();
         
         refillGPXWayointList(true);

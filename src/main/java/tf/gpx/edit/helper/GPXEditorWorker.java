@@ -173,16 +173,18 @@ public class GPXEditorWorker {
         }
         
         // Only write files that have tracks in them! otherwise, the GPX isn't valid
-        try {
-            if (!gpxFile.getGPXTracks().isEmpty() || !gpxFile.getGPXRoutes().isEmpty() || !gpxFile.getGPXWaypoints().isEmpty() || !(gpxFile.getGPXMetadata() == null)) {
+        // TFE, 20190721: can't see what should be invalid for "empty" gpx
+        // <?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx xmlns="http://www.topografix.com/GPX/1/1" creator="GPXEditor" version="1.1"/>
+//        try {
+//            if (!gpxFile.getGPXTracks().isEmpty() || !gpxFile.getGPXRoutes().isEmpty() || !gpxFile.getGPXWaypoints().isEmpty() || !(gpxFile.getGPXMetadata() == null)) {
                 result = gpxFile.writeToFile(curFile.toFile());
-            } else {
-                Files.deleteIfExists(curFile);
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
-            result = false;
-        }
+//            } else {
+//                Files.deleteIfExists(curFile);
+//            }
+//        } catch (IOException ex) {
+//            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+//            result = false;
+//        }
         
         return result;
     }

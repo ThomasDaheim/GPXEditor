@@ -301,7 +301,7 @@ public class TrackMap extends LeafletMapView {
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
             // set api key for open cycle map
-            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
+            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -334,7 +334,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
             addScriptFromPath("/leaflet/Routing.js");
             // we need an api key
-            execScript("initRouting(\"" + GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
+            execScript("initRouting(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
             // support for ruler
             // https://github.com/gokertanrisever/leaflet-ruler
@@ -665,7 +665,7 @@ public class TrackMap extends LeafletMapView {
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
                         TrackMap.RoutingProfile.valueOf(    
-                                GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
+                                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
                                 .getProfileName() + "\");");
             }
         });
@@ -1206,9 +1206,10 @@ public class TrackMap extends LeafletMapView {
         markername = markername + LatLongHelper.LatLongToString(point);
         
         // make sure the icon has been loaded and added in js
-        if (marker instanceof MarkerIcon && ((MarkerIcon) marker).getIconBase64().isEmpty()) {
+        if (marker instanceof MarkerIcon && !((MarkerIcon) marker).getAvailableInLeaflet()) {
             final MarkerIcon markerIcon = (MarkerIcon) marker;
             addPNGIcon(markerIcon.getIconName(), MarkerManager.DEFAULT_ICON_SIZE, MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
+            markerIcon.setAvailableInLeaflet(true);
         }
         
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
