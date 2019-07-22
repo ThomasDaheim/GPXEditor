@@ -427,7 +427,7 @@ public class StatisticsViewer {
                     } catch (IOException ex) {
                         Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                });                
+                });  
             } catch (IOException ex) {
                 Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
             }

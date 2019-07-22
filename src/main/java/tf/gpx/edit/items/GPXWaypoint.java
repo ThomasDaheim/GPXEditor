@@ -345,6 +345,8 @@ public class GPXWaypoint extends GPXLineItem {
                 return getName();
             case Position:
                 return LatLongHelper.GPXWaypointToString(this);
+            // TFE, 20190722: Start for a Waypoint is same as Date...
+            case Start:
             case Date:
                 // format dd.mm.yyyy hh:mm:ss
                 final Date start = myWaypoint.getTime();

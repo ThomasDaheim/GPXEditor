@@ -31,23 +31,14 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.IGPXLineItemVisitor;
 
 /**
  *
  * @author Thomas
  */
-public class GPXRenumberWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
-
+public class GPXRenumberWorker extends GPXEmptyWorker {
     public GPXRenumberWorker() {
         super ();
-    }
-
-    public GPXRenumberWorker(final double parameter) {
-        super ();
-        
-        myParameter = parameter;
     }
 
     @Override
@@ -83,10 +74,5 @@ public class GPXRenumberWorker implements IGPXLineItemVisitor {
     public void visitGPXRoute(final GPXRoute gpxRoute) {
         // waypoints
         gpxRoute.updateListValues(gpxRoute.getGPXWaypoints());
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return true;
     }
 }

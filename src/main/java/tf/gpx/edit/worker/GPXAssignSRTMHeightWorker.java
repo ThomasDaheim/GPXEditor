@@ -36,7 +36,7 @@ import tf.gpx.edit.srtm.SRTMDataStore;
  *
  * @author Thomas
  */
-public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker  {
+public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
 
     public enum WorkMode {
         CHECK_DATA_FILES,

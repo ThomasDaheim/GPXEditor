@@ -188,6 +188,7 @@ public class MarkerManager {
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
                 // and there is one special case (of course...) the TRACKPOINT_ICON is smaller than the others
                 TrackMap.getInstance().addPNGIcon(jsCompatibleIconName(specialMarker.getIconName()), specialMarker.getIconSize(), iconBase64);
+                specialMarker.getMarkerIcon().setAvailableInLeaflet(true);
 
                 // fill the list
                 specialMarkers.put(specialMarker, markerIcon);

@@ -26,6 +26,7 @@
 package tf.gpx.edit.helper;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +44,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.items.GPXFile;
@@ -57,6 +60,7 @@ import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
+import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
 import tf.gpx.edit.worker.GPXReduceWorker;
 
@@ -228,7 +232,7 @@ public class GPXEditorWorker {
 
         if(selectedFile == null){
             System.out.println("No File selected");
-        } else if (!KML_EXT.equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
+        } else if (!ext.equals(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
             System.out.println("No ." + ext + " File selected");
         } else {
             result = selectedFile;
@@ -261,13 +265,26 @@ public class GPXEditorWorker {
     private boolean doExportCSVFile(final GPXFile gpxFile, final File selectedFile) {
         boolean result = false;
         
-        // TODO: fill with life
+        final GPXExtractCSVLinesWorker worker = new GPXExtractCSVLinesWorker();
+        gpxFile.acceptVisitor(worker);
         
-        // 1) run worker on gpxfile
-        // 2) instantiate writer (see exportCSV() in StatisticsViewer)
-        // 3) retrieve output list of lists
-        // 4) send all lists as lines to the writer
-        // 5) close & go home
+        // export using appache csv
+        try (
+                FileWriter out = new FileWriter(selectedFile);
+                CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
+              .withHeader(worker.getCSVHeader().toArray(new String[0])));
+            ) {
+            worker.getCSVLines().forEach((t) -> {
+                // no idea, why a nested try & catch is required here...
+                try {
+                    printer.printRecord((Object[]) t.toArray(new String[0]));
+                } catch (IOException ex) {
+                    Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });                
+        } catch (IOException ex) {
+            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         return result;
     }
