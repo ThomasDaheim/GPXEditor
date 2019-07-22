@@ -49,9 +49,12 @@ import static tf.gpx.edit.items.GPXLineItem.filterGPXWaypointsInBoundingBox;
  * @author Thomas
  */
 public class GPXRoute extends GPXMeasurable {
+    private static final String DEFAULT_COLOR = "blue";
+    
     private GPXFile myGPXFile;
     private Route myRoute;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private String color = DEFAULT_COLOR;
     
     private Double myLength = null;
     private Double myCumulativeAscent = null;
@@ -88,6 +91,8 @@ public class GPXRoute extends GPXMeasurable {
         myGPXFile = gpxFile;
         myRoute = route;
         
+        // TODO: set color from gpxx extension (if any)
+        
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
             for (Waypoint waypoint : myRoute.getRoutePoints()) {
@@ -99,6 +104,10 @@ public class GPXRoute extends GPXMeasurable {
         }
         
         myGPXWaypoints.addListener(changeListener);
+    }
+    
+    public String getColor() {
+        return color;
     }
     
     @Override

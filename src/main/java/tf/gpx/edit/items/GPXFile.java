@@ -58,7 +58,7 @@ import javax.xml.transform.TransformerException;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.parser.DefaultParser;
+import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
 /**
@@ -92,7 +92,7 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         final GPXParser parser = new GPXParser();
-        parser.addExtensionParser(DefaultParser.getInstance());
+        parser.addExtensionParser(DefaultExtensionParser.getInstance());
         
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
@@ -184,7 +184,7 @@ public class GPXFile extends GPXMeasurable {
         setHeaderAndMeta();
         
         final GPXWriter writer = new GPXWriter();
-        writer.addExtensionParser(DefaultParser.getInstance());
+        writer.addExtensionParser(DefaultExtensionParser.getInstance());
 
         final FileOutputStream out;
         try {

@@ -979,13 +979,17 @@ public class TrackMap extends LeafletMapView {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName());
-                tracks.put(track, (GPXTrack) gpxpoint.getParent().getParent());
+                final GPXTrack gpxTrack = (GPXTrack) gpxpoint.getParent().getParent();
+                // change color for routes to red (or what is set in gpxx extension)
+                execScript("updateMarkerColor(\"" + track + "\", \"" + gpxTrack.getColor() + "\");");
+                tracks.put(track, gpxTrack);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName());
-                // change color for routes to blue
-                execScript("updateMarkerColor(\"" + route + "\", \"blue\");");
+                final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
+                // change color for routes to blue (or what is set in gpxx extension)
+                execScript("updateMarkerColor(\"" + route + "\", \"" + gpxRoute.getColor() + "\");");
                 execScript("makeEditable(\"" + route + "\");");
-                routes.put(route, (GPXRoute) gpxpoint.getParent());
+                routes.put(route, gpxRoute);
             }
         }
     }

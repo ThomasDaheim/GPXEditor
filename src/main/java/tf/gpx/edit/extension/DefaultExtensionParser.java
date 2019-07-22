@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.parser;
+package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.GPXConstants;
 import com.hs.gpxparser.extension.DummyExtensionParser;
@@ -36,15 +36,15 @@ import org.w3c.dom.Node;
  * 
  * @author thomas
  */
-public class DefaultParser extends DummyExtensionParser {
-    private final static DefaultParser INSTANCE = new DefaultParser();
+public class DefaultExtensionParser extends DummyExtensionParser {
+    private final static DefaultExtensionParser INSTANCE = new DefaultExtensionParser();
 
     public final static String PARSER_ID = "DefaultParser";    
     
-    private DefaultParser() {
+    private DefaultExtensionParser() {
     }
 
-    public static DefaultParser getInstance() {
+    public static DefaultExtensionParser getInstance() {
         return INSTANCE;
     }
 

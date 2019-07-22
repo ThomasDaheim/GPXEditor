@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.parser;
+package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
@@ -174,6 +174,43 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             }
         }
         
+        return result;
+    }
+    
+    public NodeList getChildNodesForNode(final String nodeName) {
+        NodeList result = null;
+        
+        final NodeList myNodeList = getNodeList();
+        if (myNodeList != null) {
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+            for (int i = 0; i < myNodeList.getLength(); i++) {
+                final Node myNode = myNodeList.item(i);
+                
+                if (myNode.getNodeName() != null && myNode.getNodeName().equals(nodeName)) {
+                    result = myNode.getChildNodes();
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+    
+    public static String getTextForNodeInNodeList(final NodeList nodeList, final String nodeName) {
+        String result = null;
+        
+        if (nodeList != null) {
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                final Node myNode = nodeList.item(i);
+                
+                if (myNode.getNodeName() != null && myNode.getNodeName().equals(nodeName)) {
+                    result = myNode.getTextContent();
+                    break;
+                }
+            }
+        }
+
         return result;
     }
 }
