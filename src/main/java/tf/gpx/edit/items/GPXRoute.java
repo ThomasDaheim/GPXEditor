@@ -39,6 +39,10 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.extension.DefaultExtensionHolder;
+import tf.gpx.edit.extension.DefaultExtensionParser;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -49,12 +53,11 @@ import static tf.gpx.edit.items.GPXLineItem.filterGPXWaypointsInBoundingBox;
  * @author Thomas
  */
 public class GPXRoute extends GPXMeasurable {
-    private static final String DEFAULT_COLOR = "blue";
-    
     private GPXFile myGPXFile;
     private Route myRoute;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
-    private String color = DEFAULT_COLOR;
+
+    private String color = GarminDisplayColor.Blue.name();
     
     private Double myLength = null;
     private Double myCumulativeAscent = null;
@@ -91,7 +94,17 @@ public class GPXRoute extends GPXMeasurable {
         myGPXFile = gpxFile;
         myRoute = route;
         
-        // TODO: set color from gpxx extension (if any)
+        // set color from gpxx extension (if any)
+        final DefaultExtensionHolder extension = (DefaultExtensionHolder) myRoute.getExtensionData(DefaultExtensionParser.PARSER_ID);
+        if (extension != null && 
+                extension.holdsExtensionType(DefaultExtensionHolder.ExtensionType.GarminGPX)) {
+            final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(extension, 
+                            GarminExtensionWrapper.GarminExtension.RouteExtension, 
+                            GarminExtensionWrapper.GarminAttibute.DisplayColor);
+            if (nodeColor != null && !nodeColor.isBlank()) {
+                color = nodeColor;
+            }
+        }
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
@@ -106,8 +119,14 @@ public class GPXRoute extends GPXMeasurable {
         myGPXWaypoints.addListener(changeListener);
     }
     
+    @Override
     public String getColor() {
         return color;
+    }
+    
+    @Override
+    public void setColor(final String col) {
+        color = col;
     }
     
     @Override

@@ -55,8 +55,12 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
+import tf.gpx.edit.general.ColorSelectionMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -277,6 +281,34 @@ public class GPXTreeTableView {
                                 convertItem.disableProperty().bind(
                                     Bindings.greaterThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(convertItem);
+                                
+                                if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {
+                                    // select color for track or route
+                                    fileMenu.getItems().add(new SeparatorMenuItem());
+                                    
+                                    final EventHandler<ActionEvent> colorHandler = new EventHandler<ActionEvent>() {
+                                        @Override
+                                        public void handle(ActionEvent t) {
+                                            if ((t.getSource() != null) && (t.getSource() instanceof MenuItem)) {
+                                                final MenuItem color = (MenuItem) t.getSource();
+                                                
+                                                if (color.getUserData() != null && (color.getUserData() instanceof Color)) {
+//                                                    System.out.println(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
+                                                    item.setColor(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
+                                                    
+                                                    // TODO: refresh TrackMap
+                                                }
+                                            }
+                                        }
+                                    };
+
+                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(
+                                            GarminExtensionWrapper.getGarminColorsAsJavaFXColors(), colorHandler);
+                                    colorMenu.setOnShowing((t) -> {
+                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForName(item.getColor()));
+                                    });
+                                    fileMenu.getItems().add(colorMenu);
+                                }
                                 
                                 break;
                             case GPXMetadata:

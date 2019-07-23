@@ -27,6 +27,8 @@ package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -101,6 +103,9 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             return myName;
         }
     }
+    
+    // "cache" for known extensions: once holdsExtensionType is called the result is stored to speed up further lookups
+    private Map<ExtensionType, Node> extensionNodes = new HashMap<>();
 
     public DefaultExtensionHolder() {
         super();
@@ -157,8 +162,27 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         return result;
     }
     
+    public Node getExtensionForType(final ExtensionType type) {
+        Node result = null;
+        
+        // make ssure "cache" gets filled
+        if (holdsExtensionType(type)) {
+            result = extensionNodes.get(type);
+        }
+        
+        return result;
+    }
+    
     public boolean holdsExtensionType(final ExtensionType type) {
         boolean result = false;
+        
+        if (extensionNodes.containsKey(type)) {
+            // been here before
+            return (extensionNodes.get(type) != null);
+        }
+        
+        // first time for everything...
+        extensionNodes.put(type, null);
         
         // check all nodes in list for startswith
         final NodeList myNodeList = getNodeList();
@@ -168,49 +192,14 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                 final Node myNode = myNodeList.item(i);
                 
                 if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getStartsWith())) {
+                    extensionNodes.put(type, myNode);
+                    
                     result = true;
                     break;
                 }
             }
         }
         
-        return result;
-    }
-    
-    public NodeList getChildNodesForNode(final String nodeName) {
-        NodeList result = null;
-        
-        final NodeList myNodeList = getNodeList();
-        if (myNodeList != null) {
-            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
-            for (int i = 0; i < myNodeList.getLength(); i++) {
-                final Node myNode = myNodeList.item(i);
-                
-                if (myNode.getNodeName() != null && myNode.getNodeName().equals(nodeName)) {
-                    result = myNode.getChildNodes();
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
-    
-    public static String getTextForNodeInNodeList(final NodeList nodeList, final String nodeName) {
-        String result = null;
-        
-        if (nodeList != null) {
-            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                final Node myNode = nodeList.item(i);
-                
-                if (myNode.getNodeName() != null && myNode.getNodeName().equals(nodeName)) {
-                    result = myNode.getTextContent();
-                    break;
-                }
-            }
-        }
-
         return result;
     }
 }

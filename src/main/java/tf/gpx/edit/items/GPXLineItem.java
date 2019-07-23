@@ -592,4 +592,11 @@ public abstract class GPXLineItem {
             }
         };
     }
+    
+    // TFE, 20190723: some color, please
+    public String getColor() {
+        return "Black";
+    }
+    public void setColor(final String col) {
+    }
 }

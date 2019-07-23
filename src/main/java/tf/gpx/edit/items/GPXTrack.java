@@ -41,6 +41,7 @@ import org.w3c.dom.NodeList;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
 import tf.gpx.edit.extension.DefaultExtensionParser;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 
@@ -49,12 +50,11 @@ import tf.gpx.edit.helper.GPXListHelper;
  * @author Thomas
  */
 public class GPXTrack extends GPXMeasurable {
-    private static final String DEFAULT_COLOR = "red";
-    
     private GPXFile myGPXFile;
     private Track myTrack;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
-    private String color = DEFAULT_COLOR;
+
+    private String color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
@@ -85,20 +85,14 @@ public class GPXTrack extends GPXMeasurable {
         myGPXFile = gpxFile;
         myTrack = track;
         
-        // TODO: put into separate class
+        // set color from gpxx extension
         final DefaultExtensionHolder extension = (DefaultExtensionHolder) myTrack.getExtensionData(DefaultExtensionParser.PARSER_ID);
         if (extension != null && 
                 extension.holdsExtensionType(ExtensionType.GarminGPX)) {
-//            System.out.println("Garmin Extension found: " + extension.toString());
-            // set color from gpxx extension
-            // <gpxx:TrackExtension>
-            //     <gpxx:DisplayColor>Cyan</gpxx:DisplayColor>
-            // </gpxx:TrackExtension>
-            
-//            System.out.println("Childnodes: " + extension.getChildNodesForNode("gpxx:TrackExtension"));
-            final String nodeColor = extension.getTextForNodeInNodeList(extension.getChildNodesForNode("gpxx:TrackExtension"), "gpxx:DisplayColor");
+            final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(extension, 
+                            GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                            GarminExtensionWrapper.GarminAttibute.DisplayColor);
             if (nodeColor != null && !nodeColor.isBlank()) {
-                System.out.println("Track color: " + nodeColor);
                 color = nodeColor;
             }
         }
@@ -114,8 +108,14 @@ public class GPXTrack extends GPXMeasurable {
         myGPXTrackSegments.addListener(changeListener);
     }
     
+    @Override
     public String getColor() {
         return color;
+    }
+    
+    @Override
+    public void setColor(final String col) {
+        color = col;
     }
     
     @Override
