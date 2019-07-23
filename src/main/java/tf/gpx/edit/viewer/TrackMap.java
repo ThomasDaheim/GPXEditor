@@ -210,15 +210,15 @@ public class TrackMap extends LeafletMapView {
 
     private GPXLineItem myGPXLineItem;
 
-    // store gpxlineitem fileWaypointsCount, tracks, routes + markers as apache bidirectional map
+    // store gpxlineitem fileWaypointsCount, trackSegments, routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> fileWaypoints = new DualHashBidiMap<>();
     private final BidiMap<String, GPXWaypoint> selectedWaypoints = new DualHashBidiMap<>();
-    private final BidiMap<String, GPXTrack> tracks = new DualHashBidiMap<>();
+    private final BidiMap<String, GPXTrackSegment> trackSegments = new DualHashBidiMap<>();
     private final List<GPXWaypoint> trackWaypoints = new ArrayList<>();
     private final BidiMap<String, GPXRoute> routes = new DualHashBidiMap<>();
     private final List<GPXWaypoint> routeWaypoints = new ArrayList<>();
 
-    // store start/end fileWaypointsCount of tracks and routes + markers as apache bidirectional map
+    // store start/end fileWaypointsCount of trackSegments and routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> markers = new DualHashBidiMap<>();
 
     private BoundingBox myBoundingBox;
@@ -357,7 +357,7 @@ public class TrackMap extends LeafletMapView {
             parentPane.getChildren().add(myPane);
             myPane.toFront();
             
-            // TFE, 20190712: show heightchart above tracks - like done in leaflet-elevation
+            // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
             final Region chart = HeightChart.getInstance();
             chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             chart.prefWidthProperty().bind(parentPane.widthProperty());
@@ -819,7 +819,7 @@ public class TrackMap extends LeafletMapView {
         // forget the past...
         fileWaypoints.clear();
         selectedWaypoints.clear();
-        tracks.clear();
+        trackSegments.clear();
         trackWaypoints.clear();
         routes.clear();
         routeWaypoints.clear();
@@ -837,7 +837,7 @@ public class TrackMap extends LeafletMapView {
             return;
         }
         
-        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no tracks get shown if already enough waypoints...
+        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
         // file fileWaypointsCount don't count into MAX_DATAPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
         //final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
@@ -849,9 +849,9 @@ public class TrackMap extends LeafletMapView {
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
             masterList.add(lineItem.getGPXWaypoints());
         }
-        // TFE, 20180508: get waypoints from tracks ONLY if you're no tracksegment...
+        // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
         // otherwise, we never only show points from a single tracksegment!
-        // files and tracks can have tracks
+        // files and trackSegments can have trackSegments
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
             GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
             for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
@@ -979,10 +979,10 @@ public class TrackMap extends LeafletMapView {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName());
-                final GPXTrack gpxTrack = (GPXTrack) gpxpoint.getParent().getParent();
+                final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
                 // change color for routes to red (or what is set in gpxx extension)
-                execScript("updateMarkerColor(\"" + track + "\", \"" + gpxTrack.getColor() + "\");");
-                tracks.put(track, gpxTrack);
+                execScript("updateMarkerColor(\"" + track + "\", \"" + gpxTrackSegment.getParent().getColor() + "\");");
+                trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName());
                 final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
@@ -1073,6 +1073,29 @@ public class TrackMap extends LeafletMapView {
                 waypoint = NOT_SHOWN + notShownCount;
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
+        }
+    }
+    
+    public void updateLineColor(final GPXLineItem lineItem) {
+        if ((lineItem instanceof GPXTrack) || (lineItem instanceof GPXRoute)) {
+            String layer = null;
+            
+            if (lineItem instanceof GPXTrack) {
+                // update for each segment
+                for (GPXTrackSegment segment : ((GPXTrack) lineItem).getGPXTrackSegments()) {
+                    layer = trackSegments.getKey(segment);
+
+                    if (layer != null) {
+                        execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                    }
+                }
+            } else {
+                layer = routes.getKey((GPXRoute) lineItem);
+
+                if (layer != null) {
+                    execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                }
+            }
         }
     }
 

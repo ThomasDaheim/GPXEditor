@@ -25,9 +25,16 @@
  */
 package tf.gpx.edit.extension;
 
+import com.hs.gpxparser.modal.Extension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.paint.Color;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
@@ -86,32 +93,38 @@ public class GarminExtensionWrapper {
 
     // mapping to leaflet-conform colors might be required...
     public enum GarminDisplayColor {
-        Black(Color.BLACK),
-        DarkRed(Color.DARKRED),
-        DarkGreen(Color.DARKGREEN),
-        DarkYellow(Color.ORANGE),
-        DarkBlue(Color.DARKBLUE),
-        DarkMagenta(Color.DARKMAGENTA),
-        DarkCyan(Color.DARKCYAN),
-        LightGray(Color.LIGHTGRAY),
-        DarkGray(Color.DARKGRAY),
-        Red(Color.RED),
-        Green(Color.GREEN),
-        Yellow(Color.YELLOW),
-        Blue(Color.BLUE),
-        Magenta(Color.MAGENTA),
-        Cyan(Color.CYAN),
-        White(Color.WHITE),
-        Transparent(Color.SILVER);
+        Black(Color.BLACK, "Black"),
+        DarkRed(Color.DARKRED, "DarkRed"),
+        DarkGreen(Color.DARKGREEN, "DarkGreen"),
+        DarkYellow(Color.GOLDENROD, "GoldenRod"),
+        DarkBlue(Color.DARKBLUE, "DarkBlue"),
+        DarkMagenta(Color.DARKMAGENTA, "DarkMagenta"),
+        DarkCyan(Color.DARKCYAN, "DarkCyan"),
+        LightGray(Color.LIGHTGRAY, "LightGray"),
+        DarkGray(Color.DARKGRAY, "DarkGray"),
+        Red(Color.RED, "Red"),
+        Green(Color.GREEN, "Green"),
+        Yellow(Color.YELLOW, "Yellow"),
+        Blue(Color.BLUE, "Blue"),
+        Magenta(Color.MAGENTA, "Magenta"),
+        Cyan(Color.CYAN, "Cyan"),
+        White(Color.WHITE, "White"),
+        Transparent(Color.SILVER, "Transparent");
         
-        private final Color myColor;
+        private final Color myJavaFXColor;
+        private final String myJSColor;
         
-        private GarminDisplayColor(final Color color) {
-            myColor = color;
+        private GarminDisplayColor(final Color javaFXcolor, final String jsColor) {
+            myJavaFXColor = javaFXcolor;
+            myJSColor = jsColor;
         }
         
         public Color getJavaFXColor() {
-            return myColor;
+            return myJavaFXColor;
+        }
+        
+        public String getJSColor() {
+            return myJSColor;
         }
         
         public static Color getJavaFXColorForName(final String name) {
@@ -126,12 +139,24 @@ public class GarminExtensionWrapper {
             return result;
         }
         
-        public static String getNameForJavaFXColor(final Color col) {
+        public static String getJSColorForJavaFXColor(final Color col) {
             String result = "Black";
             
             for (GarminDisplayColor color : GarminDisplayColor.values()) {
                 if (color.getJavaFXColor().equals(col)) {
-                    result = color.name();
+                    result = color.getJSColor();
+                }
+            }
+        
+            return result;
+        }
+        
+        public static GarminDisplayColor getGarminDisplayColorForJSName(final String name) {
+            GarminDisplayColor result = GarminDisplayColor.Black;
+            
+            for (GarminDisplayColor color : GarminDisplayColor.values()) {
+                if (color.getJSColor().equals(name)) {
+                    result = color;
                 }
             }
         
@@ -146,15 +171,26 @@ public class GarminExtensionWrapper {
         return INSTANCE;
     }
     
-    public static boolean hasGarminExtension(final DefaultExtensionHolder extension) {
-        // just a wrapper to have all relevant methods in this class
-        return extension.holdsExtensionType(ExtensionType.GarminGPX);
+    public static boolean hasGarminExtension(final Extension extension) {
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        
+        if (extensionHolder == null) {
+            return false;
+        } else {
+            // just a wrapper to have all relevant methods in this class
+            return extensionHolder.holdsExtensionType(ExtensionType.GarminGPX);
+        }
     }
     
-    public static String getTextForGarminExtensionAndAttribute(final DefaultExtensionHolder extension, final GarminExtension ext, final GarminAttibute attr) {
+    public static String getTextForGarminExtensionAndAttribute(final Extension extension, final GarminExtension ext, final GarminAttibute attr) {
         String result = null;
         
-        final Node extNode = extension.getExtensionForType(ExtensionType.GarminGPX);
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        if (extensionHolder == null) {
+            return result;
+        }
+        
+        final Node extNode = extensionHolder.getExtensionForType(ExtensionType.GarminGPX);
         
         if (extNode == null) {
             return result;
@@ -177,7 +213,6 @@ public class GarminExtensionWrapper {
                     break;
                 }
             }
-            
         }
         
         // 2) find attribute in nodelist
@@ -194,6 +229,76 @@ public class GarminExtensionWrapper {
         }
         
         return result;
+    }
+    
+    public static void setTextForGarminExtensionAndAttribute(final Extension extension, final GarminExtension ext, final GarminAttibute attr, final String text) {
+        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+
+        try {
+            final DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            final Document doc = builder.newDocument();
+
+            Node extNode = null;
+
+            if (extensionHolder != null) {
+                extNode = extensionHolder.getExtensionForType(ExtensionType.GarminGPX);
+            }
+
+            final boolean hasGarminGPX = (extNode != null);
+            if (extNode == null) {
+                // create new node for GarminGPX;
+                extNode = doc.createElement(ext.toString());
+            }
+
+            // 1) find extension node OR create
+            NodeList nodeList = null;
+            // check node itself
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(ext.toString())) {
+                nodeList = extNode.getChildNodes();
+            } else {
+                NodeList childNodes = extNode.getChildNodes();
+
+                // check childnodes
+                for (int i = 0; i < childNodes.getLength(); i++) {
+                    final Node myNode = childNodes.item(i);
+
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(ext.toString())) {
+                        nodeList = myNode.getChildNodes();
+                        break;
+                    }
+                }
+            }
+
+            // 2) find attribute in nodelist OR create
+            if (nodeList != null) {
+                // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    final Node myNode = nodeList.item(i);
+
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.toString())) {
+                        myNode.setTextContent(text);
+                        break;
+                    }
+                }
+            } else {
+                final Node myNode = doc.createElement(attr.toString());
+
+                extNode.appendChild(myNode);
+            }
+
+            // update extension
+            if (!hasGarminGPX) {
+                if (extensionHolder != null) {
+                    extensionHolder.addNode(extNode);
+                } else {
+                    // create new extension
+                    extension.addExtensionData(DefaultExtensionParser.getInstance().getId(), new DefaultExtensionHolder(extNode.getChildNodes()));
+                }
+            }
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(GarminExtensionWrapper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
     
     public static List<Color> getGarminColorsAsJavaFXColors() {

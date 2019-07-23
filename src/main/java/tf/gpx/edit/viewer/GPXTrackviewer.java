@@ -92,4 +92,9 @@ public class GPXTrackviewer {
         TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
         HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
     }
+    
+    public void updateLineColor(final GPXLineItem lineItem) {
+        TrackMap.getInstance().updateLineColor(lineItem);
+        HeightChart.getInstance().updateLineColor(lineItem);
+    }
 }

@@ -202,4 +202,11 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         
         return result;
     }
+    
+    public void addNode(final Node node) {
+        if (getNodeList() == null) {
+            setNodeList(node.getChildNodes());
+        }
+        
+    }
 }

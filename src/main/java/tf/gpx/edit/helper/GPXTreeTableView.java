@@ -70,6 +70,7 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
+import tf.gpx.edit.viewer.GPXTrackviewer;
 
 /**
  *
@@ -294,9 +295,11 @@ public class GPXTreeTableView {
                                                 
                                                 if (color.getUserData() != null && (color.getUserData() instanceof Color)) {
 //                                                    System.out.println(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
-                                                    item.setColor(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
+                                                    item.setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
                                                     
-                                                    // TODO: refresh TrackMap
+                                                    // refresh TrackMap
+                                                    myEditor.refreshGPXFileList();
+                                                    GPXTrackviewer.getInstance().updateLineColor(item);
                                                 }
                                             }
                                         }

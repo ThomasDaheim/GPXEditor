@@ -37,10 +37,6 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
-import org.w3c.dom.NodeList;
-import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
-import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -86,15 +82,11 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        final DefaultExtensionHolder extension = (DefaultExtensionHolder) myTrack.getExtensionData(DefaultExtensionParser.PARSER_ID);
-        if (extension != null && 
-                extension.holdsExtensionType(ExtensionType.GarminGPX)) {
-            final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(extension, 
-                            GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                            GarminExtensionWrapper.GarminAttibute.DisplayColor);
-            if (nodeColor != null && !nodeColor.isBlank()) {
-                color = nodeColor;
-            }
+        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(myTrack, 
+                        GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
+        if (nodeColor != null && !nodeColor.isBlank()) {
+            color = nodeColor;
         }
         
         // TFE, 20180203: track without tracksegments is valid!
@@ -116,6 +108,12 @@ public class GPXTrack extends GPXMeasurable {
     @Override
     public void setColor(final String col) {
         color = col;
+        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                myTrack,
+                GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+
+        setHasUnsavedChanges();
     }
     
     @Override

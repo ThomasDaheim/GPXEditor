@@ -360,6 +360,9 @@ public class HeightChart<X,Y> extends AreaChart {
         layoutPlotChildren();
     }
     
+    public void updateLineColor(final GPXLineItem lineItem) {
+    }
+    
     public void clearSelectedGPXWaypoints() {
         if (isDisabled()) {
             return;

@@ -39,7 +39,7 @@ import org.w3c.dom.Node;
 public class DefaultExtensionParser extends DummyExtensionParser {
     private final static DefaultExtensionParser INSTANCE = new DefaultExtensionParser();
 
-    public final static String PARSER_ID = "DefaultParser";    
+    private final static String PARSER_ID = "DefaultParser";    
     
     private DefaultExtensionParser() {
     }

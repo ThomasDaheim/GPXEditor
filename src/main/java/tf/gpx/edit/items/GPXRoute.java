@@ -39,8 +39,6 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
-import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -95,15 +93,11 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        final DefaultExtensionHolder extension = (DefaultExtensionHolder) myRoute.getExtensionData(DefaultExtensionParser.PARSER_ID);
-        if (extension != null && 
-                extension.holdsExtensionType(DefaultExtensionHolder.ExtensionType.GarminGPX)) {
-            final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(extension, 
-                            GarminExtensionWrapper.GarminExtension.RouteExtension, 
-                            GarminExtensionWrapper.GarminAttibute.DisplayColor);
-            if (nodeColor != null && !nodeColor.isBlank()) {
-                color = nodeColor;
-            }
+        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(myRoute, 
+                        GarminExtensionWrapper.GarminExtension.RouteExtension, 
+                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
+        if (nodeColor != null && !nodeColor.isBlank()) {
+            color = nodeColor;
         }
         
         // TFE, 20180203: tracksegment without wayoints is valid!
@@ -127,6 +121,12 @@ public class GPXRoute extends GPXMeasurable {
     @Override
     public void setColor(final String col) {
         color = col;
+        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                myRoute,
+                GarminExtensionWrapper.GarminExtension.RouteExtension, 
+                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+
+        setHasUnsavedChanges();
     }
     
     @Override
