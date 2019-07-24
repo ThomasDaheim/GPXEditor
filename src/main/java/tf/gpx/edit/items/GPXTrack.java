@@ -82,7 +82,7 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(myTrack, 
+        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
                         GarminExtensionWrapper.GarminExtension.TrackExtension, 
                         GarminExtensionWrapper.GarminAttibute.DisplayColor);
         if (nodeColor != null && !nodeColor.isBlank()) {
@@ -109,7 +109,7 @@ public class GPXTrack extends GPXMeasurable {
     public void setColor(final String col) {
         color = col;
         GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                myTrack,
+                this,
                 GarminExtensionWrapper.GarminExtension.TrackExtension, 
                 GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
 

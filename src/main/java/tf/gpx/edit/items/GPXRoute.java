@@ -93,7 +93,7 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(myRoute, 
+        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
                         GarminExtensionWrapper.GarminExtension.RouteExtension, 
                         GarminExtensionWrapper.GarminAttibute.DisplayColor);
         if (nodeColor != null && !nodeColor.isBlank()) {
@@ -122,7 +122,7 @@ public class GPXRoute extends GPXMeasurable {
     public void setColor(final String col) {
         color = col;
         GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                myRoute,
+                this,
                 GarminExtensionWrapper.GarminExtension.RouteExtension, 
                 GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
 

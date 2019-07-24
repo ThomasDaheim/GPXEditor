@@ -25,7 +25,8 @@
  */
 package tf.gpx.edit.extension;
 
-import com.hs.gpxparser.modal.Extension;
+import com.hs.gpxparser.GPXConstants;
+import com.hs.gpxparser.modal.GPX;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,6 +39,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
+import tf.gpx.edit.items.GPXLineItem;
 
 /**
  * Wrapper for reading & TODO: writing Garmin extension attributes.
@@ -171,8 +173,8 @@ public class GarminExtensionWrapper {
         return INSTANCE;
     }
     
-    public static boolean hasGarminExtension(final Extension extension) {
-        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+    public static boolean hasGarminExtension(final GPXLineItem lineitem) {
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
         
         if (extensionHolder == null) {
             return false;
@@ -182,10 +184,10 @@ public class GarminExtensionWrapper {
         }
     }
     
-    public static String getTextForGarminExtensionAndAttribute(final Extension extension, final GarminExtension ext, final GarminAttibute attr) {
+    public static String getTextForGarminExtensionAndAttribute(final GPXLineItem lineitem, final GarminExtension ext, final GarminAttibute attr) {
         String result = null;
         
-        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
         if (extensionHolder == null) {
             return result;
         }
@@ -231,12 +233,19 @@ public class GarminExtensionWrapper {
         return result;
     }
     
-    public static void setTextForGarminExtensionAndAttribute(final Extension extension, final GarminExtension ext, final GarminAttibute attr, final String text) {
-        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+    public static void setTextForGarminExtensionAndAttribute(final GPXLineItem lineitem, final GarminExtension ext, final GarminAttibute attr, final String text) {
+        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
 
         try {
-            final DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            final Document doc = builder.newDocument();
+            Document doc;
+            
+            // get current document - if any
+            if (extensionHolder != null && extensionHolder.getNodeList() != null && extensionHolder.getNodeList().getLength() > 0) {
+                doc = extensionHolder.getNodeList().item(0).getOwnerDocument();
+            } else {
+                final DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                doc = builder.newDocument();
+            }
 
             Node extNode = null;
 
@@ -248,6 +257,19 @@ public class GarminExtensionWrapper {
             if (extNode == null) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(ext.toString());
+                
+                // extend gpx with garmin xmlns
+                // xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
+                // xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"
+                // xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"
+                // xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1"
+                // xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                final GPX gpx = lineitem.getGPXFile().getGPX();
+                gpx.getXmlns().put("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+                gpx.getXmlns().put("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+                gpx.getXmlns().put("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
+                gpx.getXmlns().put("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+                gpx.getXmlns().put("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             }
 
             // 1) find extension node OR create
@@ -270,6 +292,7 @@ public class GarminExtensionWrapper {
             }
 
             // 2) find attribute in nodelist OR create
+            boolean foundNode = false;
             if (nodeList != null) {
                 // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
                 for (int i = 0; i < nodeList.getLength(); i++) {
@@ -277,22 +300,48 @@ public class GarminExtensionWrapper {
 
                     if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.toString())) {
                         myNode.setTextContent(text);
+                        foundNode = true;
                         break;
                     }
                 }
-            } else {
+            }
+            if (!foundNode) {
                 final Node myNode = doc.createElement(attr.toString());
+                myNode.setTextContent(text);
 
                 extNode.appendChild(myNode);
             }
 
             // update extension
             if (!hasGarminGPX) {
+                // there is no way to add to a NodeList :-(
+                // so we need to go the way of manipulations to create a new / extended NodeList for the extension
+                // WARNING: ugly hack coming up...
+                
+                // create new extension and add node to it
+                // so that we can get a NodeList from there
+                final Node dummy = doc.createElement(GPXConstants.NODE_EXTENSIONS);
+                
+                // TODO: save previous extension
+                if (extensionHolder != null && extensionHolder.getNodeList() != null) {
+                    // get the current NodeList first
+                    final NodeList curList = extensionHolder.getNodeList();
+                    for (int i = 0; i < curList.getLength(); i++) {
+                        final Node myNode = curList.item(i);
+                        
+                        dummy.appendChild(myNode);
+                    }
+                }
+
+                // now for our new / updated node
+                dummy.appendChild(extNode);
+
                 if (extensionHolder != null) {
-                    extensionHolder.addNode(extNode);
+                    // we have an extended extension
+                    extensionHolder.setNodeList(dummy.getChildNodes());
                 } else {
-                    // create new extension
-                    extension.addExtensionData(DefaultExtensionParser.getInstance().getId(), new DefaultExtensionHolder(extNode.getChildNodes()));
+                    // we have a brand new extension
+                    lineitem.getContent().addExtensionData(DefaultExtensionParser.getInstance().getId(), new DefaultExtensionHolder(dummy.getChildNodes()));
                 }
             }
         } catch (ParserConfigurationException ex) {
