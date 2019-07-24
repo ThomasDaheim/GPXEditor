@@ -29,6 +29,7 @@ import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -78,9 +79,14 @@ import org.w3c.dom.NodeList;
  * @author thomas
  */
 public class DefaultExtensionHolder extends DummyExtensionHolder {
+    private final static String LINE_SEP = System.lineSeparator();
+    private final static String LINE_SEP_QUOTE = LINE_SEP.replace("\\", "\\\\");
+    
     public enum ExtensionType {
         GarminGPX("gpxx:", "GarminGPX"),
-        GarminTrkpt("gpxtpx:", "GarminTrkpt"),
+        GarminTrkpt("gpxtpx:", "GarminTrackPoint"),
+        GarminTrksts("gpxtrkx:", "GarminTrackStats"),
+        GarminWpt("wptx1:", "GarminWaypoint"),
         GarminAccl("gpxacc:", "GarminAccl"),
         PixAndMore("pmx:GoogleEarth", "PixAndMore"),
         Humminbird("h:", "Humminbird"),
@@ -139,8 +145,8 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                         t.transform(new DOMSource(myNode), new StreamResult(sw));
 
                         String nodeString = sw.toString();
+                        // remove unnecessary multiple tabs
                         if (myNode.getLastChild() != null && myNode.getLastChild().getNodeValue() != null) {
-                            // remove unnecessary multiple tabs and final newline
                             final String lastValue = myNode.getLastChild().getNodeValue();
                             // count number of tabs and remove that number in the whole output string
                             final int lastIndex = lastValue.lastIndexOf('\t');
@@ -149,8 +155,15 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                                 nodeString = sw.toString().replace(tabsString, "");
                             }
                         }
-                        nodeString = nodeString.substring(0, nodeString.length() - 2);
+                        // remove empty lines
+                        nodeString = nodeString.replaceAll(LINE_SEP_QUOTE + "\\s+" + LINE_SEP_QUOTE,LINE_SEP);
+                        // remove final newline
+                        nodeString = nodeString.substring(0, nodeString.length() - LINE_SEP.length());
 
+                        if (!result.isEmpty()) {
+                            // add newline
+                            result += LINE_SEP;
+                        }
                         result += nodeString;
                     }
                 }

@@ -259,17 +259,18 @@ public class GarminExtensionWrapper {
                 extNode = doc.createElement(ext.toString());
                 
                 // extend gpx with garmin xmlns
+                // xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"
                 // xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
                 // xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"
-                // xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"
                 // xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1"
                 // xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                 final GPX gpx = lineitem.getGPXFile().getGPX();
-                gpx.getXmlns().put("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
-                gpx.getXmlns().put("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
                 gpx.getXmlns().put("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
-                gpx.getXmlns().put("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
-                gpx.getXmlns().put("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                // others currently not used...
+//                gpx.getXmlns().put("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+//                gpx.getXmlns().put("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+//                gpx.getXmlns().put("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+//                gpx.getXmlns().put("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             }
 
             // 1) find extension node OR create
@@ -329,12 +330,16 @@ public class GarminExtensionWrapper {
                     for (int i = 0; i < curList.getLength(); i++) {
                         final Node myNode = curList.item(i);
                         
-                        dummy.appendChild(myNode);
+                        // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+                        final Node copyNode = doc.importNode(myNode, true);
+                        dummy.appendChild(copyNode);
                     }
                 }
 
                 // now for our new / updated node
-                dummy.appendChild(extNode);
+                // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+                final Node copyNode = doc.importNode(extNode, true);
+                dummy.appendChild(copyNode);
 
                 if (extensionHolder != null) {
                     // we have an extended extension
