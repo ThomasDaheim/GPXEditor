@@ -156,7 +156,8 @@ public class GPXEditor implements Initializable {
     
     public static enum DeleteInformation {
         DATE,
-        NAME
+        NAME,
+        EXTENSION
     }
     
     public static enum ExportFileType {
@@ -880,22 +881,28 @@ public class GPXEditor implements Initializable {
             });
             waypointMenu.getItems().add(deleteWaypoints);
             
-            waypointMenu.getItems().add(new SeparatorMenuItem());
-            
-            final MenuItem deleteDates = new MenuItem("Delete Date(s)");
+            final Menu deletAttr = new Menu("Delete Attribute(s)");
+            // TFE, 20190715: support forr deletion of date & name...
+            final MenuItem deleteDates = new MenuItem("Date(s)");
             deleteDates.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.DATE);
             });
-            waypointMenu.getItems().add(deleteDates);
+            deletAttr.getItems().add(deleteDates);
             
-            final MenuItem deleteNames = new MenuItem("Delete Name(s)");
+            final MenuItem deleteNames = new MenuItem("Name(s)");
             deleteNames.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.DATE);
             });
-            waypointMenu.getItems().add(deleteNames);
-            
-            // TFE, 20190715: support forr deletion of date & name
+            deletAttr.getItems().add(deleteNames);
 
+            final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
+            deleteExtensions.setOnAction((ActionEvent event) -> {
+                deleteSelectedWaypointsInformation(DeleteInformation.EXTENSION);
+            });
+            deletAttr.getItems().add(deleteExtensions);
+            
+            waypointMenu.getItems().add(deletAttr);
+            
             waypointMenu.getItems().add(new SeparatorMenuItem());
 
             final MenuItem splitWaypoints = new MenuItem("Split below");
@@ -1189,10 +1196,16 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
 
         for (GPXWaypoint waypoint : selectedWaypoints){
-            if (DeleteInformation.DATE.equals(info)) {
-                waypoint.setDate(null);
-            } else {
-                waypoint.setName(null);
+            switch (info) {
+                case DATE:
+                    waypoint.setDate(null);
+                    break;
+                case NAME:
+                    waypoint.setName(null);
+                    break;
+                case EXTENSION:
+                    waypoint.getWaypoint().getExtensionData().clear();
+                    break;
             }
         }
 

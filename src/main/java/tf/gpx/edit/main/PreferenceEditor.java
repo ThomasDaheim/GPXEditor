@@ -41,6 +41,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -75,6 +76,8 @@ public class PreferenceEditor {
         double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
         double myFixEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000"));
         
+        int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
+        
         String myOpenCycleMapApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
 
         String myRoutingApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "");
@@ -89,7 +92,9 @@ public class PreferenceEditor {
 
         int rowNum = 0;
         // 1st row: select fixTrack distanceGPXWaypoints
+        Tooltip t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
         final Label fixLbl = new Label("Min. Distance for fixing:");
+        fixLbl.setTooltip(t);
         gridPane.add(fixLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(fixLbl, new Insets(10));
         
@@ -97,24 +102,29 @@ public class PreferenceEditor {
         fixText.setMaxWidth(80);
         fixText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
         fixText.setText(decimalFormat.format(myFixEpsilon));
-        fixText.setTooltip(new Tooltip("Minimum distance between waypoints for fix track algorithm."));
+        fixText.setTooltip(t);
         gridPane.add(fixText, 1, rowNum, 1, 1);
         GridPane.setMargin(fixText, new Insets(10));
         
         rowNum++;
         // 2nd row: select reduce algorithm
+        t = new Tooltip("Reduction algorithm to use");
         final Label algoLbl = new Label("Reduction Algorithm:");
+        algoLbl.setTooltip(t);
         gridPane.add(algoLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(algoLbl, VPos.TOP);
         GridPane.setMargin(algoLbl, new Insets(10));
 
         final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
+        reduceAlgoChoiceBox.setTooltip(t);
         gridPane.add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, new Insets(10));
 
         rowNum++;
         // 3rd row: select reduce epsilon
+        t = new Tooltip("Minimum distance for track reduction algorithms");
         final Label epsilonLbl = new Label("Algorithm Epsilon:");
+        epsilonLbl.setTooltip(t);
         gridPane.add(epsilonLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(epsilonLbl, VPos.TOP);
         GridPane.setMargin(epsilonLbl, new Insets(10));
@@ -123,7 +133,7 @@ public class PreferenceEditor {
         epsilonText.setMaxWidth(80);
         epsilonText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
         epsilonText.setText(decimalFormat.format(myReduceEpsilon));
-        epsilonText.setTooltip(new Tooltip("Minimum distance for track reduction algorithms."));
+        epsilonText.setTooltip(t);
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, new Insets(10));        
 
@@ -137,8 +147,27 @@ public class PreferenceEditor {
         GridPane.setMargin(sepHor, new Insets(10));
 
         rowNum++;
+        // 3rd row: select Break duration
+        t = new Tooltip("Duration between waypoints that counts as a break");
+        final Label breakLbl = new Label("Break duration:");
+        breakLbl.setTooltip(t);
+        gridPane.add(breakLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(breakLbl, VPos.TOP);
+        GridPane.setMargin(breakLbl, new Insets(10));
+        
+        final TextField breakText = new TextField();
+        breakText.setMaxWidth(80);
+        breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        breakText.setText(decimalFormat.format(myBreakDuration));
+        breakText.setTooltip(t);
+        gridPane.add(breakText, 1, rowNum, 1, 1);
+        GridPane.setMargin(breakText, new Insets(10));        
+
+        rowNum++;
         // 4th row: open cycle map api key
+        t = new Tooltip("API key for OpenCycleMap");
         final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
+        openCycleMapApiKeyLbl.setTooltip(t);
         gridPane.add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
         GridPane.setMargin(openCycleMapApiKeyLbl, new Insets(10));
@@ -146,13 +175,15 @@ public class PreferenceEditor {
         final TextField openCycleMapApiKeyText = new TextField();
         openCycleMapApiKeyText.setMaxWidth(800);
         openCycleMapApiKeyText.setText(myOpenCycleMapApiKey);
-        openCycleMapApiKeyText.setTooltip(new Tooltip("API key for OpenCycleMap."));
+        openCycleMapApiKeyText.setTooltip(t);
         gridPane.add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
         GridPane.setMargin(openCycleMapApiKeyText, new Insets(10));
 
         rowNum++;
         // 4th row: routing api key
+        t = new Tooltip("API key for OpenRouteService");
         final Label routingApiKeyLbl = new Label("Routing API key:");
+        routingApiKeyLbl.setTooltip(t);
         gridPane.add(routingApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(routingApiKeyLbl, VPos.TOP);
         GridPane.setMargin(routingApiKeyLbl, new Insets(10));
@@ -160,18 +191,21 @@ public class PreferenceEditor {
         final TextField routingApiKeyText = new TextField();
         routingApiKeyText.setMaxWidth(800);
         routingApiKeyText.setText(myRoutingApiKey);
-        routingApiKeyText.setTooltip(new Tooltip("API key for OpenRouteService."));
+        routingApiKeyText.setTooltip(t);
         gridPane.add(routingApiKeyText, 1, rowNum, 1, 1);
         GridPane.setMargin(routingApiKeyText, new Insets(10));
 
         rowNum++;
         // 5th row: routing profile
+        t = new Tooltip("Routing profile to use");
         final Label profileLbl = new Label("Routing:");
+        profileLbl.setTooltip(t);
         gridPane.add(profileLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(profileLbl, VPos.TOP);
         GridPane.setMargin(profileLbl, new Insets(10));
 
         final ChoiceBox profileChoiceBox = EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, myRoutingProfile);
+        profileChoiceBox.setTooltip(t);
         gridPane.add(profileChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(profileChoiceBox, new Insets(10));
         
@@ -203,6 +237,8 @@ public class PreferenceEditor {
 
             myFixEpsilon = Double.valueOf(fixText.getText().trim());
             myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
+
+            myBreakDuration = Integer.valueOf(breakText.getText().trim());
             
             myOpenCycleMapApiKey = openCycleMapApiKeyText.getText().trim();
             
@@ -213,6 +249,8 @@ public class PreferenceEditor {
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.BREAK_DURATION, Integer.toString(myBreakDuration));
+
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);
 
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
