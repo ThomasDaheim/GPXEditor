@@ -30,6 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.scene.paint.Color;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -42,6 +43,10 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.viewer.MarkerManager;
 
@@ -171,7 +176,7 @@ public class KMLWriter {
 
             style = doc.createElement("Style");
             root.appendChild(style);
-            style.setAttribute("id", "hotelIcon");
+            style.setAttribute("id", "lodgingIcon");
 
             iconStyle = doc.createElement("IconStyle");
             style.appendChild(iconStyle);
@@ -267,31 +272,29 @@ public class KMLWriter {
     /**
      * Add a track to this KML object.
      * @param track
-     * @param trackName
      */
-    public void addTrack(final List<GPXWaypoint> track, final String trackName) {
+    public void addTrack(final GPXTrack track) {
         if (tracks == null) {
             tracks = createFolder("Tracks");
 
             root.appendChild(tracks);
         }
         
-        addPath(track, trackName, PathType.Track);
+        addPath(track, PathType.Track);
     }
 
     /**
      * Add a route to this KML object.
      * @param route
-     * @param routeName
      */
-    public void addRoute(final List<GPXWaypoint> route, final String routeName) {
+    public void addRoute(final GPXRoute route) {
         if (routes == null) {
             routes = createFolder("Routes");
 
             root.appendChild(routes);
         }
         
-        addPath(route, routeName, PathType.Route);
+        addPath(route, PathType.Route);
     }
         
     /**
@@ -299,7 +302,15 @@ public class KMLWriter {
      * @param path
      * @param pathName
      */
-    private void addPath(final List<GPXWaypoint> path, final String pathName, final PathType type) {
+    private void addPath(final GPXLineItem item, final PathType type) {
+        final GPXLineItem.GPXLineItemType itemType = item.getType();
+        
+        if (!GPXLineItem.GPXLineItemType.GPXTrack.equals(itemType) && !GPXLineItem.GPXLineItemType.GPXRoute.equals(itemType)) {
+            return;
+        }
+        
+        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(itemType);
+        
         final Element placemark = doc.createElement("Placemark");
         if (PathType.Track.equals(type)) {
             tracks.appendChild(placemark);
@@ -307,9 +318,9 @@ public class KMLWriter {
             routes.appendChild(placemark);
         }
 
-        if(pathName != null) {
+        if(item.getName() != null) {
             final Element name = doc.createElement("name");
-            name.appendChild(doc.createTextNode(pathName));
+            name.appendChild(doc.createTextNode(item.getName()));
             placemark.appendChild(name);
         }
 
@@ -320,6 +331,22 @@ public class KMLWriter {
             styleUrl.appendChild(doc.createTextNode("#routesLineStyle"));
         }
         placemark.appendChild(styleUrl);
+
+        // support individual track/route colors
+//          <Style>
+//            <LineStyle>
+//              <color>ffffff00</color>
+//            </LineStyle>
+//          </Style>
+        final Element style = doc.createElement("Style");
+        placemark.appendChild(style);
+
+        final Element lineStyle = doc.createElement("LineStyle");
+        style.appendChild(lineStyle);
+
+        final Element color = doc.createElement("color");
+        color.appendChild(doc.createTextNode(toKMLString(GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(item.getColor()))));
+        lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement("LineString");
         placemark.appendChild(lineString);
@@ -343,6 +370,18 @@ public class KMLWriter {
         }
         coords.appendChild(doc.createTextNode(points));
         lineString.appendChild(coords);
+    }
+    
+    // https://stackoverflow.com/a/56733608
+    private static String toKMLString(final Color color) {
+        // kml uses alpha + BGR
+        return "ff" + doubleToHex(color.getBlue()) + doubleToHex(color.getGreen()) + doubleToHex(color.getRed());
+    }
+    // two char hex 0..255 from double value 0..1
+    private static String doubleToHex(double val) {
+        final String in = Integer.toHexString((int) Math.round(val * 255)).toUpperCase();
+        
+        return in.length() == 1 ? "0" + in : in;
     }
 
     /**

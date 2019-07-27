@@ -252,10 +252,10 @@ public class GPXEditorWorker {
             kmlWriter.addMark(waypoint);
         }
         for (GPXTrack track : gpxFile.getGPXTracks()) {
-            kmlWriter.addTrack(track.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack), track.getName());
+            kmlWriter.addTrack(track);
         }
         for (GPXRoute route : gpxFile.getGPXRoutes()) {
-            kmlWriter.addRoute(route.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute), route.getName());
+            kmlWriter.addRoute(route);
         }
         result = kmlWriter.writeFile(selectedFile);
         
