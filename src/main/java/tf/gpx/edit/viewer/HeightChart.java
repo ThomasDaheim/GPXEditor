@@ -197,6 +197,7 @@ public class HeightChart<X,Y> extends AreaChart {
     public void setEnable(final boolean enabled) {
         setDisable(!enabled);
         setVisible(enabled);
+        toFront();
     }
     
     @SuppressWarnings("unchecked")

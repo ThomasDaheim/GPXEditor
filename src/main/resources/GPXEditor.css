@@ -239,3 +239,14 @@
     -fx-padding: 0;
     -fx-shape: null;
 }
+
+.srtm-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
+}
+
+.srtm-viewer-button {
+    -fx-background-color: white
+}
