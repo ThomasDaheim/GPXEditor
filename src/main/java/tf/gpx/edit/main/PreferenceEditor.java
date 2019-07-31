@@ -149,7 +149,7 @@ public class PreferenceEditor {
         rowNum++;
         // 3rd row: select Break duration
         t = new Tooltip("Duration between waypoints that counts as a break");
-        final Label breakLbl = new Label("Break duration:");
+        final Label breakLbl = new Label("Break duration (mins):");
         breakLbl.setTooltip(t);
         gridPane.add(breakLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(breakLbl, VPos.TOP);

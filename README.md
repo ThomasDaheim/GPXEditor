@@ -17,6 +17,8 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v3.6
+
 ### Update v3.5
 
 * routing: inverse route & save explicitly

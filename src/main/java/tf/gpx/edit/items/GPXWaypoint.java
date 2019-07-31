@@ -561,19 +561,31 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public ObservableList<GPXTrack> getGPXTracks() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXTrack> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getType())) {
+            result.addAll(myGPXParent.getGPXTracks());
+        }
         return result;
     }
 
     @Override
     public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXTrackSegment> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getType())) {
+            result.add((GPXTrackSegment) myGPXParent);
+        }
         return result;
     }
 
     @Override
     public ObservableList<GPXRoute> getGPXRoutes() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXRoute> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXRoute.equals(myGPXParent.getType())) {
+            result.add((GPXRoute) myGPXParent);
+        }
         return result;
     }
 

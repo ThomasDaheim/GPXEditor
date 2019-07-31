@@ -51,6 +51,7 @@ import javafx.stage.Stage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -64,6 +65,10 @@ public class StatisticsViewer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();
+    
+    private final static long BREAK_DURATION = 3;
+    
+    private long breakDuration = BREAK_DURATION;
     
     private final ObservableList<StatisticValue> statisticsList = FXCollections.observableArrayList();
     
@@ -83,11 +88,15 @@ public class StatisticsViewer {
         Break1("", "", String.class, null),
 
         // duration
-        Duration("Duration", "hhh:mm:ss", String.class, null),
+        DurationOverall("Duration overall", "hhh:mm:ss", String.class, null),
+        DurationActive("Duration active", "hhh:mm:ss", String.class, null),
+        DurationNoPause("Duration w/o pause", "hhh:mm:ss", String.class, null),
         DurationAscent("Duration ascending", "hhh:mm:ss", String.class, null),
+        DurationAscentNoPause("Duration ascending w/o pause", "hhh:mm:ss", String.class, null),
         DurationDescent("Duration descending", "hhh:mm:ss", String.class, null),
-        // DurationTravel("Duration of Travel", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
-        // DurationBreaks("Duration of Breaks (Breaks > 3 min)", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
+        DurationDescentNoPause("Duration descending w/o pause", "hhh:mm:ss", String.class, null),
+        // DurationTravel("DurationOverall of Travel", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
+        // DurationBreaks("DurationOverall of Breaks (Breaks > 3 min)", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
 
         Break2("", "", String.class, null),
 
@@ -106,20 +115,23 @@ public class StatisticsViewer {
         AvgHeight("Avg. Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         CumulativeAscent("Total Ascent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         CumulativeDescent("Total Descent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSlopeAscent("Max. Slope ascending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        MaxSlopeDescent("Max. Slope descending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        AvgSlopeAscent("Avg. Slope ascending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        AvgSlopeDescent("Avg. Slope descending", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        MaxSlopeAscent("Max. Slope asc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        MaxSlopeDescent("Max. Slope desc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        AvgSlopeAscent("Avg. Slope asc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        AvgSlopeDescent("Avg. Slope desc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
 
         Break4("", "", String.class, null),
 
         // speed
         MaxSpeed("Max. Speed", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         AvgSpeeed("Avg. Speed", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSpeedAscent("Max. Speed ascending", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedAscent("Avg. Speed ascending", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSpeedDescent("Max. Speed descending", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedDescent("Avg. Speed descending", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        AvgSpeeedNoPause("Avg. Speed w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        MaxSpeedAscent("Max. Speed asc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        AvgSpeeedAscent("Avg. Speed asc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        AvgSpeeedAscentNoPause("Avg. Speed asc. w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        MaxSpeedDescent("Max. Speed desc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        AvgSpeeedDescent("Avg. Speed desc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        AvgSpeeedDescentNoPause("Avg. Speed desc. w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
         ;
         
         private final String description;
@@ -220,7 +232,7 @@ public class StatisticsViewer {
         table.setColumnResizePolicy((param) -> true );
         
         table.setItems(statisticsList);
-        table.setMinWidth(710);
+        table.setMinWidth(770);
         table.setMinHeight(750);
         
         gridPane.add(table, 0, rowNum, 2, 1);
@@ -284,6 +296,11 @@ public class StatisticsViewer {
         statisticsList.get(StatisticData.Break3.ordinal()).setValue("");
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
+        // get limits to identify a pause
+        breakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, String.valueOf(BREAK_DURATION)));
+        // minutes -> milliseconds
+        breakDuration *= 60*1000;
+        
         final List<GPXWaypoint> gpxWaypoints = myGPXFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         // set values that don't need calculation
@@ -292,7 +309,7 @@ public class StatisticsViewer {
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
         // format duration as in getDurationAsString
-        statisticsList.get(StatisticData.Duration.ordinal()).setValue(myGPXFile.getDurationAsString());
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(myGPXFile.getDurationAsString());
         double totalLength = myGPXFile.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
@@ -309,7 +326,9 @@ public class StatisticsViewer {
         double lengthAsc = 0.0;
         double lengthDesc = 0.0;
         long durationAsc = 0;
+        long durationAscNoPause = 0;
         long durationDesc = 0;
+        long durationDescNoPause = 0;
         
         double avgHeight = 0.0;
         double maxSlopeAsc = 0.0;
@@ -327,7 +346,27 @@ public class StatisticsViewer {
         GPXWaypoint maxSpeedDescGPXWaypoint = null;
 
         // walk through waypoints and calculate the remaining values...
+        // TFE, 20190730: check for pauses between waypoints - but what is a pause???
+        
+        // https://github.com/hrehfeld/split-gpx-track/blob/master/split-gpx
+//        #pauses need to be at least this long
+//        pause_min_timedelta = timedelta(hours=1.5)
+//        #pauses cant be faster than
+//        pause_max_velocity = 2
+        // gps-track-analyser.net
+        // pause > preference_value
+
+        GPXWaypoint prevGPXWaypoint = null;
         for (GPXWaypoint waypoint : gpxWaypoints) {
+            // do we have a break?
+            boolean isBreak = false;
+            if (prevGPXWaypoint != null && !waypoint.getGPXTrackSegments().get(0).equals(prevGPXWaypoint.getGPXTrackSegments().get(0)) ||
+                    (waypoint.getDuration() > breakDuration)) {
+                isBreak = true;
+//                System.out.println("prevGPXWaypoint: " + prevGPXWaypoint);
+//                System.out.println("waypoint: " + waypoint);
+            }
+            
             avgHeight += waypoint.getElevation();
 
             double speed = waypoint.getSpeed();
@@ -346,6 +385,9 @@ public class StatisticsViewer {
             if (heightDiff > 0.0) {
                 lengthAsc += waypoint.getDistance();
                 durationAsc += waypoint.getDuration();
+                if (!isBreak) {
+                    durationAscNoPause += waypoint.getDuration();
+                }
                 if (slope > maxSlopeAsc) {
                     maxSlopeAsc = slope;
                     maxSlopeAscGPXWaypoint = waypoint;
@@ -358,6 +400,9 @@ public class StatisticsViewer {
             } else {
                 lengthDesc += waypoint.getDistance();
                 durationDesc += waypoint.getDuration();
+                if (!isBreak) {
+                    durationDescNoPause += waypoint.getDuration();
+                }
                 if (slope < maxSlopeDesc) {
                     maxSlopeDesc = slope;
                     maxSlopeDescGPXWaypoint = waypoint;
@@ -368,19 +413,25 @@ public class StatisticsViewer {
                     maxSpeedDescGPXWaypoint = waypoint;
                 }
             }
+            
+            prevGPXWaypoint = waypoint;
         }
         
         // average values
         avgHeight /= gpxWaypoints.size();
         avgSlopeAsc /= gpxWaypoints.size();
         avgSlopeDesc /= gpxWaypoints.size();
-
+        
+        statisticsList.get(StatisticData.DurationActive.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAsc+durationDesc));
+        statisticsList.get(StatisticData.DurationNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAscNoPause+durationDescNoPause));
         
         statisticsList.get(StatisticData.LengthAscent.ordinal()).setValue(lengthAsc/1000d);
         statisticsList.get(StatisticData.LengthDescent.ordinal()).setValue(lengthDesc/1000d);
         
         statisticsList.get(StatisticData.DurationAscent.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAsc));
+        statisticsList.get(StatisticData.DurationAscentNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAscNoPause));
         statisticsList.get(StatisticData.DurationDescent.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationDesc));
+        statisticsList.get(StatisticData.DurationDescentNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationDescNoPause));
 
         statisticsList.get(StatisticData.AvgHeight.ordinal()).setValue(avgHeight);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setValue(maxSlopeAsc);
@@ -392,12 +443,15 @@ public class StatisticsViewer {
         
         statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
         statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
+        statisticsList.get(StatisticData.AvgSpeeedNoPause.ordinal()).setValue(totalLength/(durationAscNoPause+durationDescNoPause)*1000d*3.6d);
         statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
         statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
         statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
         statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedAscent.ordinal()).setValue(lengthAsc/durationAsc*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeedAscentNoPause.ordinal()).setValue(lengthAsc/durationAscNoPause*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeedDescentNoPause.ordinal()).setValue(lengthDesc/durationDescNoPause*1000d*3.6d);
 
         table.refresh();
     }
