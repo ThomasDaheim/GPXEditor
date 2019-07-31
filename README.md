@@ -19,6 +19,18 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ### Update v3.6
 
+Stuff from my bugs & features list:
+
+* identify & show breaks in statistics
+* upgrade SRTM viewer with ability to zoom, shift, rotate
+* select colors for tracks & routes and store in Garmin gpx extension
+* export colors of tracks & routes in KML
+* CSV export
+* save tableview settings: column order, width, visibility, sorting
+* menu to delete date, name, extension information of selected waypoints
+* inverse and save autorouting explicitly
+* added support for OpenCycleMap api key
+
 ### Update v3.5
 
 * routing: inverse route & save explicitly
