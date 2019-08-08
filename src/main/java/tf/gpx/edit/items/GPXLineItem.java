@@ -599,4 +599,9 @@ public abstract class GPXLineItem {
     }
     public void setColor(final String col) {
     }
+    
+    // TFE, 20190808: general list converter from anywhere to List<GPXLineItem>
+    public static List<GPXLineItem> castToGPXLineItem(final List<? extends GPXLineItem> gpxAnyList) {
+        return gpxAnyList.stream().collect(Collectors.toList());
+    }
 }

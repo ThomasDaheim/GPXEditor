@@ -27,6 +27,7 @@ package tf.gpx.edit.worker;
 
 import java.util.List;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 
@@ -50,8 +51,16 @@ public class GPXReduceWorker extends GPXEmptyWorker  {
     @Override
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // remove all waypoints using given algorithm an epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
-        
+        reduceGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
+    }
+
+    @Override
+    public void visitGPXRoute(GPXRoute gpxRoute) {
+        // remove all waypoints using given algorithm an epsilon
+        reduceGPXWaypoints(gpxRoute.getGPXWaypoints());
+    }
+    
+    private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
         final boolean keep[] = EarthGeometry.simplifyTrack(waypoints, myAlgorithm, myParameter);
         
         removeGPXWaypoint(waypoints, keep);

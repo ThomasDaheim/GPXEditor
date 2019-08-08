@@ -38,6 +38,7 @@ import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 
 /**
  *
@@ -109,15 +110,15 @@ public class GPXEditorBatch {
                 }
                 if(GPXEditorParameters.CmdOps.reduceTracks.toString().equals(arg) && myParameters.doReduceTracks()) {
                     System.out.println("Reducing Tracks in Files");
-                    myWorker.reduceGPXFiles(gpxFiles, myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
+                    myWorker.reduceGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
                 }
                 if(GPXEditorParameters.CmdOps.fixTracks.toString().equals(arg) && myParameters.doFixTracks()) {
                     System.out.println("Fixing Tracks in Files");
-                    myWorker.fixGPXFiles(gpxFiles, myParameters.getFixDistance());
+                    myWorker.fixGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getFixDistance());
                 }
                 if(GPXEditorParameters.CmdOps.deleteEmpty.toString().equals(arg) && myParameters.doDeleteEmpty()) {
                     System.out.println("Deleting empty line items in Files");
-                    myWorker.deleteGPXTrackSegments(gpxFiles, myParameters.getDeleteCount());
+                    myWorker.deleteEmptyGPXTrackSegments(gpxFiles, myParameters.getDeleteCount());
                 }
             }
             

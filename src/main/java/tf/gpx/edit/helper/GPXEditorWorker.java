@@ -290,51 +290,21 @@ public class GPXEditorWorker {
     }
         
     
-    public void fixGPXFiles(final List<GPXFile> gpxFiles, final double distance) {
-        runVisitor(gpxFiles, new GPXFixGarminCrapWorker(distance));
+    public void fixGPXLineItems(final List<GPXLineItem> gpxLineItems, final double distance) {
+        runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXFiles(final List<GPXFile> gpxFiles, final EarthGeometry.Algorithm algorithm, final double epsilon) {
-        runVisitor(gpxFiles, new GPXReduceWorker(algorithm, epsilon));
+    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.Algorithm algorithm, final double epsilon) {
+        runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 
-    public void deleteGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
-        runVisitor(gpxFiles, new GPXDeleteEmptyLineItemsWorker(deleteCount));
-    }
-    
-    public void assignSRTMHeight(final List<GPXFile> gpxFiles, String dataPath, final SRTMDataStore.SRTMDataAverage averageMode, final GPXAssignSRTMHeightWorker.AssignMode assignMode) {
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(dataPath, averageMode, assignMode);
-        
-        // first check if all data files are available
-        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
-        runVisitor(gpxFiles, visitor);
-
-        List<String> missingDataFiles;
-        do {
-            missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
-            if (!missingDataFiles.isEmpty()) {
-                // show list of missing files
-                final String filesList = missingDataFiles.stream()
-                        .collect(Collectors.joining(",\n"));
-
-                final ButtonType buttonRecheck = new ButtonType("Recheck", ButtonBar.ButtonData.OTHER);
-                final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
-                Optional<ButtonType> doAction = ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION, "Missing SRTM data files", "The following SRTM files are missing:", filesList, buttonRecheck, buttonCancel);
-
-                if (!doAction.isPresent() || !doAction.get().equals(buttonRecheck)) {
-                    return;
-                }
-            }
-        } while (!missingDataFiles.isEmpty());
-        
-        // if yes, do the work
-        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
-        runVisitor(gpxFiles, visitor);
+    public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
+        runVisitor(GPXLineItem.castToGPXLineItem(gpxFiles), new GPXDeleteEmptyLineItemsWorker(deleteCount));
     }
     
-    private void runVisitor(final List<GPXFile> gpxFiles, final IGPXLineItemVisitor visitor) {
-        for (GPXFile gpxFile : gpxFiles) {
-            gpxFile.acceptVisitor(visitor);
+    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
+        for (GPXLineItem gpxLineItem : gpxLineItems) {
+            gpxLineItem.acceptVisitor(visitor);
         }
     }
 

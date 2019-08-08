@@ -49,6 +49,7 @@ import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
@@ -79,7 +80,7 @@ public class AssignSRTMHeight {
     private final Insets insetBottom = new Insets(0, 10, 10, 10);
     private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
     
-    private List<GPXFile> myGPXFiles;
+    private List<GPXLineItem> myGPXLineItems;
     
     // host services from main application
     private HostServices myHostServices;
@@ -224,7 +225,7 @@ public class AssignSRTMHeight {
                 final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
-                runVisitor(myGPXFiles, visitor);
+                runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
                 GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
@@ -246,9 +247,9 @@ public class AssignSRTMHeight {
         assignHeightStage.setResizable(false);
     }
     
-    public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXFile> gpxFiles) {
+    public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {
         myHostServices = hostServices;
-        myGPXFiles = gpxFiles;
+        myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;
         
@@ -264,7 +265,7 @@ public class AssignSRTMHeight {
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
-        runVisitor(myGPXFiles, visitor);
+        runVisitor(myGPXLineItems, visitor);
         
         // sorted list of files and mark missing ones
         fileList.getItems().clear();
@@ -301,9 +302,9 @@ public class AssignSRTMHeight {
         
     }
 
-    private void runVisitor(final List<GPXFile> gpxFiles, final IGPXLineItemVisitor visitor) {
-        for (GPXFile gpxFile : gpxFiles) {
-            gpxFile.acceptVisitor(visitor);
+    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
+        for (GPXLineItem gpxLineItem : gpxLineItems) {
+            gpxLineItem.acceptVisitor(visitor);
         }
     }
 }

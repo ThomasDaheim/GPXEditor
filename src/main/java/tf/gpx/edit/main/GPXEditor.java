@@ -186,7 +186,11 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem showSRTMDataMenu;
     @FXML
-    private MenuItem assignSRTMheightsMenu;
+    private Menu assignSRTMheightsMenu;
+    @FXML
+    private MenuItem assignSRTMheightsTracksMenu;
+    @FXML
+    private MenuItem assignSRTMheightsFilesMenu;
     @FXML
     private Menu recentFilesMenu;
     @FXML
@@ -202,9 +206,17 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem exitFileMenu;
     @FXML
+    private Menu fixMenu;
+    @FXML
+    private Menu reduceMenu;
+    @FXML
     private MenuItem fixTracksMenu;
     @FXML
     private MenuItem reduceTracksMenu;
+    @FXML
+    private MenuItem fixFilesMenu;
+    @FXML
+    private MenuItem reduceFilesMenu;
     @FXML
     private MenuItem mergeItemsMenu;
     @FXML
@@ -470,15 +482,23 @@ public class GPXEditor implements Initializable {
         });
         checkTrackMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
+        
+        fixFilesMenu.setOnAction((ActionEvent event) -> {
+            fixGPXLineItems(event, true);
+        });
         fixTracksMenu.setOnAction((ActionEvent event) -> {
-            fixGPXFiles(event);
+            fixGPXLineItems(event, false);
         });
-        fixTracksMenu.disableProperty().bind(
+        fixMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
-        reduceTracksMenu.setOnAction((ActionEvent event) -> {
-            reduceGPXFiles(event);
+        
+        reduceFilesMenu.setOnAction((ActionEvent event) -> {
+            reduceGPXLineItems(event, true);
         });
-        reduceTracksMenu.disableProperty().bind(
+        reduceTracksMenu.setOnAction((ActionEvent event) -> {
+            reduceGPXLineItems(event, false);
+        });
+        reduceMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         preferencesMenu.setOnAction((ActionEvent event) -> {
@@ -488,11 +508,15 @@ public class GPXEditor implements Initializable {
         //
         // SRTM
         //
-        assignSRTMheightsMenu.setOnAction((ActionEvent event) -> {
-            assignSRTMHeight(event);
+        assignSRTMheightsFilesMenu.setOnAction((ActionEvent event) -> {
+            assignSRTMHeight(event, true);
+        });
+        assignSRTMheightsTracksMenu.setOnAction((ActionEvent event) -> {
+            assignSRTMHeight(event, false);
         });
         assignSRTMheightsMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
+        
         showSRTMDataMenu.setOnAction((ActionEvent event) -> {
             showSRTMData(event);
         });
@@ -1799,18 +1823,34 @@ public class GPXEditor implements Initializable {
 //        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - stop:" + LocalDateTime.now());
     }
 
-    private void fixGPXFiles(final Event event) {
-        myWorker.fixGPXFiles(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+    private void fixGPXLineItems(final Event event, final boolean fileLevel) {
+        List<GPXLineItem> gpxLineItems;
+
+        if (fileLevel) {
+            gpxLineItems = GPXLineItem.castToGPXLineItem(uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()));
+        } else {
+            gpxLineItems = uniqueGPXParentListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
+        }
+
+        myWorker.fixGPXLineItems(
+                gpxLineItems,
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         refreshGPXFileList();
         
         refillGPXWayointList(true);
     }
 
-    private void reduceGPXFiles(final Event event) {
-        myWorker.reduceGPXFiles(
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()),
+    private void reduceGPXLineItems(final Event event, final boolean fileLevel) {
+        List<GPXLineItem> gpxLineItems;
+
+        if (fileLevel) {
+            gpxLineItems = GPXLineItem.castToGPXLineItem(uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()));
+        } else {
+            gpxLineItems = uniqueGPXParentListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
+        }
+
+        myWorker.reduceGPXLineItems(
+                gpxLineItems,
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
         refreshGPXFileList();
@@ -1865,11 +1905,19 @@ public class GPXEditor implements Initializable {
         showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true);
     }
 
-    private void assignSRTMHeight(final Event event) {
+    private void assignSRTMHeight(final Event event, final boolean fileLevel) {
+        List<GPXLineItem> gpxLineItems;
+
+        if (fileLevel) {
+            gpxLineItems = GPXLineItem.castToGPXLineItem(uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()));
+        } else {
+            gpxLineItems = uniqueGPXParentListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
+        }
+
         // TODO: remove ugly hack to pass HostServices
         if (AssignSRTMHeight.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
-                uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems()))) {
+                gpxLineItems)) {
             refresh();
         }
     }
@@ -1913,6 +1961,45 @@ public class GPXEditor implements Initializable {
         return trackSet.stream().collect(Collectors.toList());
     }
     
+    private List<GPXLineItem> uniqueGPXParentListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
+        final List<GPXLineItem> result = new ArrayList<>();
+
+        // look out for a few special cases:
+        // file is selected and track as well -> don't add track
+        // file is selected and tracksegment as well -> don't add track
+        // file is selected and route as well -> don't add route
+        // track is selected and tracksegment as well -> don't add tracksegment
+        
+        // approach:
+        // 1) sort items "ascending" by id
+        // 2) add "upper" ids first
+        // 3) check per item if parent or parents parent is in the list, add only if not
+        final List<GPXLineItem> sortedItems = 
+                selectedItems.stream().map((item) -> {
+                    return item.getValue();
+                }).sorted((item1, item2) -> {
+                    return GPXLineItem.getSingleIDComparator().compare(item1.getID(), item2.getID());
+                }).collect(Collectors.toList());
+        
+        for (GPXLineItem item : sortedItems) {
+            // iterate over all parents and check if they're already in the list
+            boolean doAdd = true;
+            GPXLineItem parent = item.getParent();
+            while (parent != null) {
+                if (result.contains(parent)) {
+                    doAdd = false;
+                    break;
+                }
+                parent = parent.getParent();
+            }
+            
+            if (doAdd) {
+                result.add(item);
+            }
+        }
+        return result;
+    }
+
     //
     // support callback functions for other classes
     // 
