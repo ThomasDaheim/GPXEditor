@@ -30,6 +30,8 @@ Stuff from my bugs & features list:
 * menu to delete date, name, extension information of selected waypoints
 * inverse and save autorouting explicitly
 * added support for OpenCycleMap api key
+* option to fix/reduce/assign height for selected items only (instead of always on whole file)
+* bumped up used libraries to current versions
 
 ### Update v3.5
 
