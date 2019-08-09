@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.HostServices;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -48,7 +49,6 @@ import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditorManager;
@@ -217,7 +217,9 @@ public class AssignSRTMHeight {
         final Button assignButton = new Button("Assign SRTM height values");
         assignButton.setOnAction((ActionEvent event) -> {
             // only do something if all srtm files are available
-            if (fileList.getItems().size() == fileList.getCheckModel().getCheckedItems().size()) {
+            // TFE, 20190809: check against number of not-null entries in getCheckedItems()
+            if (fileList.getItems().size() == 
+                    fileList.getCheckModel().getCheckedItems().stream().filter(e -> e != null).count()) {
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
@@ -270,7 +272,10 @@ public class AssignSRTMHeight {
         // sorted list of files and mark missing ones
         fileList.getItems().clear();
         fileList.getCheckModel().clearChecks();
-            
+        // TFE, 20190809: if called the second time the list of checked items isn't empty
+        // and might be longer than the list of files added here --> check in assignButton.setOnAction fails...
+        // known bug: https://github.com/controlsfx/controlsfx/issues/1098
+
         final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
         

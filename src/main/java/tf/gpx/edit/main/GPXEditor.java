@@ -1971,14 +1971,12 @@ public class GPXEditor implements Initializable {
         // track is selected and tracksegment as well -> don't add tracksegment
         
         // approach:
-        // 1) sort items "ascending" by id
+        // 1) items are sorted "ascending"
         // 2) add "upper" ids first
         // 3) check per item if parent or parents parent is in the list, add only if not
         final List<GPXLineItem> sortedItems = 
                 selectedItems.stream().map((item) -> {
                     return item.getValue();
-                }).sorted((item1, item2) -> {
-                    return GPXLineItem.getSingleIDComparator().compare(item1.getID(), item2.getID());
                 }).collect(Collectors.toList());
         
         for (GPXLineItem item : sortedItems) {

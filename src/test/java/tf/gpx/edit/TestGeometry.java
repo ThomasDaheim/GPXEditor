@@ -40,16 +40,16 @@ import tf.gpx.edit.helper.EarthGeometry;
  * @author Thomas
  */
 public class TestGeometry {
-    private static double DELTA_ANGLE = 0.01;
-    private static double DELTA_DISTANCE = 1.0;
+    private static final double DELTA_ANGLE = 0.01;
+    private static final double DELTA_DISTANCE = 1.0;
     
-    private static double EARTH_RADIUS = EarthGeometry.EarthAverageRadius; //6372795.477598
-    private static double EARTH_CIRCUMFENCE = 2.0 * Math.PI * EarthGeometry.EarthAverageRadius; // 4.004145491050427E7
-    private static double EARTH_AREA = 4.0 * Math.PI * EarthGeometry.EarthAverageRadius * EarthGeometry.EarthAverageRadius;
+    private static final double EARTH_RADIUS = EarthGeometry.EarthAverageRadius; //6372795.477598
+    private static final double EARTH_CIRCUMFENCE = 2.0 * Math.PI * EarthGeometry.EarthAverageRadius; // 4.004145491050427E7
+    private static final double EARTH_AREA = 4.0 * Math.PI * EarthGeometry.EarthAverageRadius * EarthGeometry.EarthAverageRadius;
     
-    private List<TestPointPair> testPointPairs = new ArrayList<>();
+    private final List<TestPointPair> testPointPairs = new ArrayList<>();
     
-    private List<TestPointTriple> testPointTriples = new ArrayList<>();
+    private final List<TestPointTriple> testPointTriples = new ArrayList<>();
     
     public TestGeometry() {
     }
