@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -44,7 +43,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.InputEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -65,26 +63,26 @@ import org.jzy3d.colors.colormaps.ColorMapRainbow;
 import org.jzy3d.javafx.JavaFXChartFactory;
 import org.jzy3d.javafx.JavaFXRenderer3d;
 import org.jzy3d.javafx.controllers.mouse.JavaFXCameraMouseController;
-import org.jzy3d.maths.BoundingBox3d;
 import org.jzy3d.maths.Coord2d;
 import org.jzy3d.maths.Coord3d;
 import org.jzy3d.maths.Range;
 import org.jzy3d.maths.Scale;
-import org.jzy3d.maths.algorithms.interpolation.IInterpolator;
 import org.jzy3d.maths.algorithms.interpolation.algorithms.BernsteinInterpolator;
 import org.jzy3d.plot3d.builder.Builder;
 import org.jzy3d.plot3d.builder.Mapper;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
-import org.jzy3d.plot3d.primitives.LineStripInterpolated;
+import org.jzy3d.plot3d.primitives.LineStrip;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
+import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
@@ -109,6 +107,8 @@ public class SRTMDataViewer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataViewer INSTANCE = new SRTMDataViewer();
+    
+    private final static float ZOOM_STEP = 0.9f;
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
@@ -277,6 +277,9 @@ public class SRTMDataViewer {
         imagePane.setMinWidth(0);
         vbox.setMinHeight(0);
         vbox.setMinWidth(0);
+
+        // TFE, 20190810: start with low peaks...
+        View.current().zoomZ(1f / (ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP), true);
     }
     
     private List<File> getFiles() {
@@ -334,9 +337,9 @@ public class SRTMDataViewer {
             }
         };
 
-        // we don't want to plot the full set, only 1/10 of it
+        // we don't want to plot the full set, only 1/4 of it
         final int dataCount = SRTMData.SRTMDataType.SRTM3.getDataCount();
-        final int steps = dataCount / 10;
+        final int steps = dataCount / 4;
         
         // Define range and precision for the function to plot
         // Invert x for latitude since jzy3d always shows from lower to upper values independent of min / max in range
@@ -350,14 +353,15 @@ public class SRTMDataViewer {
         final Shape surface = Builder.buildOrthonormal(grid, mapper);
         final ColorMapper localColorMapper = new ColorMapper(new ColorMapRainbow(), surface.getBounds().getZmin(), surface.getBounds().getZmax(), new Color(1, 1, 1, .5f));
 
-        surface.getBounds().setZmin(-1f);
         surface.setColorMapper(localColorMapper);
         surface.setFaceDisplayed(true);
         surface.setWireframeDisplayed(false);
+
+        surface.getBounds().setZmin(-1f);
         
         // -------------------------------
         // Create a chart
-        Quality quality = Quality.Advanced;
+        Quality quality = Quality.Nicest;
         quality.setSmoothPolygon(true);
         //quality.setAnimated(true);
         
@@ -370,16 +374,27 @@ public class SRTMDataViewer {
         
         // add waypoints from gpxFile (if any)
         if (gpxFile != null) {
-            final IInterpolator line = new BernsteinInterpolator();
-            final List<Coord3d> points = new ArrayList<>();
-            for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
-                // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
+            // add tracks individually with their color
+            for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
+                final List<Coord3d> points = new ArrayList<>();
+                for (GPXWaypoint waypoint : gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
+                    // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+                    points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
+                }
+                final BernsteinInterpolator line = new BernsteinInterpolator();
+                final LineStrip fline = new LineStrip(line.interpolate(points, 1));
+    
+                // Color is not the same as Color...
+                final javafx.scene.paint.Color javaFXColor = GarminDisplayColor.getJavaFXColorForName(gpxTrack.getColor());
+                final org.jzy3d.colors.Color jzy3dColor = new Color(
+                        (float) javaFXColor.getRed(), 
+                        (float) javaFXColor.getGreen(), 
+                        (float) javaFXColor.getBlue(), 
+                        (float) javaFXColor.getOpacity());
+                fline.setWireframeColor(jzy3dColor);
+                fline.setWireframeWidth(6);
+                chart.getScene().getGraph().add(fline);
             }
-            line.interpolate(points, 1);
-            
-            final LineStripInterpolated fline = new LineStripInterpolated(line, points, 0);
-            chart.getScene().getGraph().add(fline);
         }
         
         // and now for some beautifying
@@ -396,7 +411,7 @@ public class SRTMDataViewer {
         chart.getAxeLayout().setXTickRenderer(tickRend);
         chart.getAxeLayout().setYTickRenderer(tickRend);
         chart.getAxeLayout().setZTickRenderer(tickRend);
-
+        
         chart.setViewMode(ViewPositionMode.FREE);
         chart.setViewPoint(new Coord3d(0.05f, 1.1f, 1000f));
 
@@ -433,7 +448,6 @@ public class SRTMDataViewer {
     // proper checking for left / right mouse button
     // zoom in on mouse wheel
     private class MyJavaFXCameraMouseController extends JavaFXCameraMouseController {
-        private final static float ZOOM_STEP = 0.9f;
         // TFE, 20190728: count number of times zoomed in (+1) vs. zoomed out (-1)
         // only allow zooming out when count > 0
         private int zoomInOutCount = 0;
@@ -526,6 +540,9 @@ public class SRTMDataViewer {
                 View.current().zoomY(factor, false);
             }
             View.current().zoomZ(factor, true);
+            
+            // zmin should stay -1f
+            View.current().getBounds().setZmin(-1f);
         }
     }
 }
