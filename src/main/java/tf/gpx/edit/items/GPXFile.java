@@ -305,6 +305,8 @@ public class GPXFile extends GPXMeasurable {
 
         numberChildren(myGPXWaypoints);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     
@@ -331,16 +333,24 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
+        myGPXTracks.removeListener(changeListener);
         myGPXTracks.clear();
         myGPXTracks.addAll(gpxTracks);
+        myGPXTracks.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTracks);
         setHasUnsavedChanges();
     }
 
     public void setGPXRoutes(final List<GPXRoute> gpxGPXRoutes) {
+        myGPXRoutes.removeListener(changeListener);
         myGPXRoutes.clear();
         myGPXRoutes.addAll(gpxGPXRoutes);
+        myGPXRoutes.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXRoutes);
         setHasUnsavedChanges();
     }
     

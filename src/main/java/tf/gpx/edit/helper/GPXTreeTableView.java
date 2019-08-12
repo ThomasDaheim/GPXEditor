@@ -165,6 +165,9 @@ public class GPXTreeTableView {
                                 break;
                         }
 
+                        // TFE, 20190812: reset highlight for this rrow - might have been used before ith other gpx...
+                        getStyleClass().remove("gpxFileRow");
+                        
                         switch (item.getType()) {
                             case GPXFile:
                                 getStyleClass().add("gpxFileRow");
@@ -198,23 +201,6 @@ public class GPXTreeTableView {
                                     }
                                 });
                                 fileMenu.getItems().add(saveAsFile);
-
-                                // Export is a sub menu
-                                final Menu exportMenu = new Menu("Export");
-                                
-                                final MenuItem exportAsKML = new MenuItem("As KML");
-                                exportAsKML.setOnAction((ActionEvent event) -> {
-                                    myEditor.exportFile(item, GPXEditor.ExportFileType.KML);
-                                });
-                                exportMenu.getItems().add(exportAsKML);
-                                
-                                final MenuItem exportAsCSV = new MenuItem("As CSV");
-                                exportAsCSV.setOnAction((ActionEvent event) -> {
-                                    myEditor.exportFile(item, GPXEditor.ExportFileType.CSV);
-                                });
-                                exportMenu.getItems().add(exportAsCSV);
-                                
-                                fileMenu.getItems().add(exportMenu);
 
                                 final MenuItem closeFile = new MenuItem("Close");
                                 closeFile.setOnAction((ActionEvent event) -> {
@@ -318,6 +304,24 @@ public class GPXTreeTableView {
                             default:
                                 break;
                         }
+
+                        fileMenu.getItems().add(new SeparatorMenuItem());
+                        // Export is a sub menu
+                        final Menu exportMenu = new Menu("Export");
+
+                        final MenuItem exportAsKML = new MenuItem("As KML");
+                        exportAsKML.setOnAction((ActionEvent event) -> {
+                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.KML);
+                        });
+                        exportMenu.getItems().add(exportAsKML);
+
+                        final MenuItem exportAsCSV = new MenuItem("As CSV");
+                        exportAsCSV.setOnAction((ActionEvent event) -> {
+                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.CSV);
+                        });
+                        exportMenu.getItems().add(exportAsCSV);
+
+                        fileMenu.getItems().add(exportMenu);
                         
                         if (!item.getType().equals(GPXLineItem.GPXLineItemType.GPXMetadata)) {
                             fileMenu.getItems().add(new SeparatorMenuItem());

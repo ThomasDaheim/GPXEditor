@@ -202,9 +202,13 @@ public class GPXTrack extends GPXMeasurable {
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
         //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());
+        myGPXTrackSegments.removeListener(changeListener);
         myGPXTrackSegments.clear();
         myGPXTrackSegments.addAll(gpxTrackSegments);
+        myGPXTrackSegments.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTrackSegments);
         setHasUnsavedChanges();
     }
     

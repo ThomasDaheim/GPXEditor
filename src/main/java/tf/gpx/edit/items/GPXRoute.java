@@ -205,6 +205,8 @@ public class GPXRoute extends GPXMeasurable {
         myCumulativeAscent = null;
         myCumulativeDescent = null;
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     

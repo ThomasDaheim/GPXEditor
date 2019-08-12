@@ -466,7 +466,7 @@ public class SRTMDataViewer {
             Coord2d mouse = new Coord2d(e.getX(), e.getY());
             // Rotate
             if (e.isPrimaryButtonDown()) {
-                final Coord2d move = mouse.sub(prevMouse).div(100f);
+                final Coord2d move = prevMouse.sub(mouse).div(100f);
 //                System.out.println("Rotating: " + move);
                 rotate(move, true);
             }
@@ -475,18 +475,18 @@ public class SRTMDataViewer {
                 // use setScaleX, setScaleY to move x/y positions on right / shift + right mouse
                 // inspired by View.shift
                 final View view = View.current();
-                final Coord2d move = mouse.sub(prevMouse);
-                if (move.y != 0) {
-//                    System.out.println("Shifting x: " + move.y / 500f);
-                    final Scale current = new Scale(view.getBounds().getXmin(), view.getBounds().getXmax());
-                    final Scale newScale = current.add((-move.y / 500f) * current.getRange());
-                    view.setScaleX(newScale, true);
-                }
+                final Coord2d move = prevMouse.sub(mouse);
                 if (move.x != 0) {
 //                    System.out.println("Shifting y: " + move.x / 500f);
                     final Scale current = new Scale(view.getBounds().getYmin(), view.getBounds().getYmax());
-                    final Scale newScale = current.add((-move.x / 500f) * current.getRange());
+                    final Scale newScale = current.add((move.x / 500f) * current.getRange());
                     view.setScaleY(newScale, true);
+                }
+                if (move.y != 0) {
+//                    System.out.println("Shifting x: " + move.y / 500f);
+                    final Scale current = new Scale(view.getBounds().getXmin(), view.getBounds().getXmax());
+                    final Scale newScale = current.add((move.y / 500f) * current.getRange());
+                    view.setScaleX(newScale, true);
                 }
             }
             prevMouse = mouse;

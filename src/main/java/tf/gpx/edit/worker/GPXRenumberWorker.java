@@ -43,7 +43,9 @@ public class GPXRenumberWorker extends GPXEmptyWorker {
 
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
+        // TFE, 20190812: file has waypoints too - bummer!
         // tracks and routes
+        gpxFile.updateListValues(gpxFile.getGPXWaypoints());
         gpxFile.updateListValues(gpxFile.getGPXTracks());
         gpxFile.updateListValues(gpxFile.getGPXRoutes());
     }

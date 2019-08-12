@@ -829,7 +829,10 @@ public class GPXEditor implements Initializable {
                             CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
                             clipboardWayPoints.clear();
-                            clipboardWayPoints.addAll(new ArrayList<>(gpxTrackXML.getSelectionModel().getSelectedItems()));
+                            // TFE, 20190812: add clone to clipboardWayPoints
+                            for (GPXWaypoint gpxWaypoint : gpxTrackXML.getSelectionModel().getSelectedItems()) {
+                                clipboardWayPoints.add(gpxWaypoint.cloneMeWithChildren());
+                            }
                         }
 
                         // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
@@ -1420,17 +1423,15 @@ public class GPXEditor implements Initializable {
         Boolean result = true;
         
         // iterate over selected files
-        for (GPXLineItem item : gpxFileList.getSelectedGPXLineItems()) {
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(item.getType())) {
-                result = result && exportFile(item, type);
-            }
+        for (GPXFile gpxFile : uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems())) {
+            result = result && exportFile(gpxFile, type);
         }
 
         return result;
     }
 
-    public Boolean exportFile(final GPXLineItem item, final ExportFileType type) {
-        return myWorker.exportFile(item.getGPXFile(), type);
+    public Boolean exportFile(final GPXFile gpxFile, final ExportFileType type) {
+        return myWorker.exportFile(gpxFile, type);
     }
 
     private Boolean closeAllFiles() {
