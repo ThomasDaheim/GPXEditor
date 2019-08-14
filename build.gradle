@@ -115,6 +115,7 @@ run {
     doFirst {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
         jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs '-Xss80M'
     }
 }
 

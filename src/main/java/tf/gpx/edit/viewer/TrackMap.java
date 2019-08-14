@@ -300,6 +300,9 @@ public class TrackMap extends LeafletMapView {
 
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
+
+            // map helper functions for manipulating layer control entries
+            addScriptFromPath("/leaflet/LayerControl.js");
             // set api key for open cycle map
             execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 

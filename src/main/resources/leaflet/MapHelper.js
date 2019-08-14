@@ -53,18 +53,6 @@ myMap.on('mousedown', disableCntrlDrag);
 // disable on cntrl mouse up
 myMap.on('mouseup', enableCntrlDrag);
 
-// TFE, 20190720: add api keys later on - rewrite url with api key...
-function changeMapLayerUrl(layernum, url) {
-//    jscallback.log('initApiKey: ' + layernum + ", " + url);
-    
-    // get layer for tileset
-    var tileLayer = window["layer" + layernum];
-//    jscallback.log('tileLayer.url: ' + tileLayer._url);
-    
-    tileLayer.setUrl(url);
-//    jscallback.log('tileLayer.url: ' + tileLayer._url);
-}
-
 // TFE, 20181124
 // add callbacks for map move or zoom that send bounds back to java
 function mapViewChanged(e) {
