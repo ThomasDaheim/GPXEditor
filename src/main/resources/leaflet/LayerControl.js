@@ -36,7 +36,7 @@ function changeMapLayerUrl(layernum, url) {
 //    jscallback.log('tileLayer.url: ' + tileLayer._url);
 }
 
-// TFE, 20190814: add Hydda roads and labels and OpenMapSurfer contour lines to SATELLITE layer
+// TFE, 20190814: add Hydda roads and labels and OpenMapSurfer contour lines to SATELLITE & MAPBOX layer where required
 var Hydda_RoadsAndLabels = L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: 'Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors'
@@ -47,9 +47,9 @@ Hydda_RoadsAndLabels.setZIndex(4);
 var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/asterc/webmercator/{z}/{x}/{y}.png', {
 	maxZoom: 18,
 	attribution: 'Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM',
-	minZoom: 13
+	minZoom: 12
 });
-OpenMapSurfer_ContourLines.setZIndex(4);
+OpenMapSurfer_ContourLines.setZIndex(5);
 
 function baseLayerChange(e) {
     var hasHyddaLayer = myMap.hasLayer(Hydda_RoadsAndLabels);
@@ -57,21 +57,18 @@ function baseLayerChange(e) {
     
     //jscallback.log('baseLayerChange: ' + e.name + ", " + hasLayer);
 
+    if (hasHyddaLayer) {
+        myMap.removeLayer(Hydda_RoadsAndLabels);
+    }
     if (e.name === 'Satellite Esri') {
-        // add if not already there
-        if (!hasHyddaLayer) {
-            myMap.addLayer(Hydda_RoadsAndLabels);
-        }
-        if (!hasOpenMapSurferLayer) {
-            myMap.addLayer(OpenMapSurfer_ContourLines);
-        }
-    } else {
-        if (hasHyddaLayer) {
-            myMap.removeLayer(Hydda_RoadsAndLabels);
-        }
-        if (hasOpenMapSurferLayer) {
-            myMap.addLayer(OpenMapSurfer_ContourLines);
-        }
+        myMap.addLayer(Hydda_RoadsAndLabels);
+    }
+
+    if (hasOpenMapSurferLayer) {
+        myMap.removeLayer(OpenMapSurfer_ContourLines);
+    }
+    if (e.name === 'Satellite Esri' || e.name === 'MapBox') {
+        myMap.addLayer(OpenMapSurfer_ContourLines);
     }
 } 
 myMap.on('baselayerchange', baseLayerChange);

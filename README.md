@@ -21,7 +21,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 Stuff from my bugs & features list:
 
-* add labels for cities, streets and contour lines in Satellite map
+* add labels for cities, streets and contour lines in Satellite & MapBox map where missing
 * identify & show breaks in statistics
 * upgrade SRTM viewer with ability to zoom, shift, rotate & show track colors
 * select colors for tracks & routes and store in Garmin gpx extension
