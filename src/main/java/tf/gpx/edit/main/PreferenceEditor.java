@@ -77,6 +77,8 @@ public class PreferenceEditor {
         double myFixEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000"));
         
         int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
+
+        int mySearchRadius = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000"));
         
         String myOpenCycleMapApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
 
@@ -147,8 +149,25 @@ public class PreferenceEditor {
         GridPane.setMargin(sepHor, new Insets(10));
 
         rowNum++;
+        // 3rd row: select search radius
+        t = new Tooltip("Radius in meter for searching on map");
+        final Label searchLbl = new Label("Search radius (m):");
+        searchLbl.setTooltip(t);
+        gridPane.add(searchLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(searchLbl, VPos.TOP);
+        GridPane.setMargin(searchLbl, new Insets(10));
+        
+        final TextField searchText = new TextField();
+        searchText.setMaxWidth(80);
+        searchText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        searchText.setText(decimalFormat.format(mySearchRadius));
+        searchText.setTooltip(t);
+        gridPane.add(searchText, 1, rowNum, 1, 1);
+        GridPane.setMargin(searchText, new Insets(10));        
+
+        rowNum++;
         // 3rd row: select Break duration
-        t = new Tooltip("Duration between waypoints that counts as a break");
+        t = new Tooltip("Duration in minutes between waypoints that counts as a break");
         final Label breakLbl = new Label("Break duration (mins):");
         breakLbl.setTooltip(t);
         gridPane.add(breakLbl, 0, rowNum, 1, 1);
@@ -238,6 +257,8 @@ public class PreferenceEditor {
             myFixEpsilon = Double.valueOf(fixText.getText().trim());
             myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
 
+            mySearchRadius = Integer.valueOf(searchText.getText().trim());
+            
             myBreakDuration = Integer.valueOf(breakText.getText().trim());
             
             myOpenCycleMapApiKey = openCycleMapApiKeyText.getText().trim();
@@ -249,6 +270,8 @@ public class PreferenceEditor {
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SEARCH_RADIUS, Integer.toString(mySearchRadius));
+
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.BREAK_DURATION, Integer.toString(myBreakDuration));
 
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);

@@ -533,14 +533,12 @@ public class TrackMap extends LeafletMapView {
             selectRect.setWidth(curPoint.getX() - startPoint.getX()) ;
             selectRect.setHeight(curPoint.getY() - startPoint.getY()) ;
 
-            if ( selectRect.getWidth() < 0 )
-            {
+            if ( selectRect.getWidth() < 0 ) {
                 selectRect.setWidth( - selectRect.getWidth() ) ;
                 selectRect.setX( startPoint.getX() - selectRect.getWidth() ) ;
             }
 
-            if ( selectRect.getHeight() < 0 )
-            {
+            if ( selectRect.getHeight() < 0 ) {
                 selectRect.setHeight( - selectRect.getHeight() ) ;
                 selectRect.setY( startPoint.getY() - selectRect.getHeight() ) ;
             }
@@ -714,7 +712,11 @@ public class TrackMap extends LeafletMapView {
     }
     private void searchItems(final SearchItem searchItem, final LatLong latlong) {
         try {
-            final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")" + searchItem.getSearchString() + ";out;", "UTF-8");
+            final String searchParam = URLEncoder.encode(
+                    "[out:json];node(around:" + 
+                    GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000") + ".0," + 
+                    latlong.getLatitude() + "," + latlong.getLongitude() + ")" + 
+                    searchItem.getSearchString() + ";out;", "UTF-8");
 
             final URL url = new URL("https://overpass-api.de/api/interpreter");
             final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();

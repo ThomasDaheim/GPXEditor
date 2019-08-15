@@ -27,6 +27,7 @@ public class GPXEditorPreferences implements IPreferencesStore {
     public final static String ROUTING_API_KEY = "routingApiKey";
     public final static String ROUTING_PROFILE = "routingProfile";
     public final static String BREAK_DURATION = "breakDuration";
+    public final static String SEARCH_RADIUS = "searchRadius";
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
     
