@@ -849,10 +849,14 @@ public class TrackMap extends LeafletMapView {
         final double ratio = GPXTrackviewer.MAX_DATAPOINTS / lineItem.getCombinedGPXWaypoints(null).size();
 
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
+        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
         // only files can have file waypoints
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
             masterList.add(lineItem.getGPXWaypoints());
+        } else if (alwayShowFileWaypoints) {
+            // TFE, 20190818: add file waypoints as well, even though file isn't selected
+            masterList.add(lineItem.getGPXFile().getGPXWaypoints());
         }
         // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
         // otherwise, we never only show points from a single tracksegment!
@@ -878,7 +882,7 @@ public class TrackMap extends LeafletMapView {
             }
         }
 
-        double[] bounds = showWaypoints(masterList, ratio);
+        double[] bounds = showWaypoints(masterList, ratio, alwayShowFileWaypoints);
 
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
@@ -891,7 +895,7 @@ public class TrackMap extends LeafletMapView {
         }
         setVisible(bounds[4] > 0d);
     }
-    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final double ratio) {
+    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final double ratio, final boolean ignoreFileWayPointsInBounds) {
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
         double[] bounds = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, 0d};
@@ -904,7 +908,10 @@ public class TrackMap extends LeafletMapView {
 
             for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
                 final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
-                bounds = extendBounds(bounds, latLong);
+                // TFE, 20180818: don't count file waypoints in bounds if they're only shown "additionally"
+                if (!gpxWaypoint.isGPXFileWaypoint() || !ignoreFileWayPointsInBounds) {
+                    bounds = extendBounds(bounds, latLong);
+                }
 
                 if (gpxWaypoint.isGPXFileWaypoint()) {
                     // we show all file waypoints

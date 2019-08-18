@@ -31,6 +31,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -79,6 +80,8 @@ public class PreferenceEditor {
         int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
 
         int mySearchRadius = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000"));
+
+        boolean myAlwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
         
         String myOpenCycleMapApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
 
@@ -147,6 +150,21 @@ public class PreferenceEditor {
         GridPane.setColumnSpan(sepHor, 2);
         gridPane.getChildren().add(sepHor);
         GridPane.setMargin(sepHor, new Insets(10));
+
+        rowNum++;
+        // 3rd row: alway show waypoints from file level in maps
+        t = new Tooltip("Always show waypoints from gpx file");
+        final Label waypointLbl = new Label("Always show file waypoints:");
+        waypointLbl.setTooltip(t);
+        gridPane.add(waypointLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(waypointLbl, VPos.TOP);
+        GridPane.setMargin(waypointLbl, new Insets(10));
+        
+        final CheckBox waypointChkBox = new CheckBox();
+        waypointChkBox.setSelected(myAlwaysShowFileWaypoints);
+        waypointChkBox.setTooltip(t);
+        gridPane.add(waypointChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(waypointChkBox, new Insets(10));        
 
         rowNum++;
         // 3rd row: select search radius
@@ -256,6 +274,8 @@ public class PreferenceEditor {
 
             myFixEpsilon = Double.valueOf(fixText.getText().trim());
             myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
+            
+            myAlwaysShowFileWaypoints = waypointChkBox.isSelected();
 
             mySearchRadius = Integer.valueOf(searchText.getText().trim());
             
@@ -270,6 +290,8 @@ public class PreferenceEditor {
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(myAlwaysShowFileWaypoints));
+
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SEARCH_RADIUS, Integer.toString(mySearchRadius));
 
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.BREAK_DURATION, Integer.toString(myBreakDuration));
