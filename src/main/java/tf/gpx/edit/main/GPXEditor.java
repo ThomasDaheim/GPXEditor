@@ -370,7 +370,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v3.6", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v4.0", "https://github.com/ThomasDaheim/GPXEditor");
     }
 
     public void stop() {
@@ -682,6 +682,22 @@ public class GPXEditor implements Initializable {
                         setEditable(false);
                     } else {
                         setEditable(true);
+                    }
+                    
+                    // TFE, 20190819: add full path name to name tooltip for gpx files
+                    if (lineItem != null && GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                        final Tooltip t = new Tooltip();
+                        final StringBuilder tooltext = new StringBuilder();
+                        if (((GPXFile) lineItem).getPath() == null) {
+                            tooltext.append(new File(System.getProperty("user.home")).getAbsolutePath());
+                        } else {
+                            tooltext.append(((GPXFile) lineItem).getPath());
+                        }
+                        tooltext.append(((GPXFile) lineItem).getName());
+                        t.setText(tooltext.toString());
+                        setTooltip(t);
+                    } else {
+                        setTooltip(null);
                     }
                 }
             }
@@ -1572,6 +1588,50 @@ public class GPXEditor implements Initializable {
         refreshGPXFileList();
     }
     
+    public void convertItems(final Event event) {
+        for (GPXLineItem item : gpxFileList.getSelectedGPXLineItems()) {
+            if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
+                // new track & segment
+                final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
+                final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
+                gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
+
+                gpxTrack.setName(item.getName());
+                gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
+
+                // move waypoints
+                gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
+                item.getGPXWaypoints().clear();
+
+                // replace route with track
+                item.getGPXFile().getGPXTracks().add(gpxTrack);
+                item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
+            } else if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType()) || GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {
+                // new route
+                final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
+
+                gpxRoute.setName(item.getName());
+                gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
+
+                // move waypoints
+                if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                    gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
+                } else {
+                    gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
+                }
+                item.getGPXWaypoints().clear();
+
+                // replace track with route
+                item.getGPXFile().getGPXRoutes().add(gpxRoute);
+                if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                    item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
+                } else {
+                    item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
+                }
+            }
+        }
+    }
+    
     public void mergeFiles(final ActionEvent event) {
         final List<GPXFile> gpxFiles = uniqueGPXFileListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
         
@@ -2016,49 +2076,5 @@ public class GPXEditor implements Initializable {
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems(), highlightIfHidden, useLineMarker);
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
-    }
-    
-    public void convertItem(final Event event, final GPXLineItem item) {
-        assert item != null;
-        
-        if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
-            // new track & segment
-            final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
-            final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
-            gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
-            
-            gpxTrack.setName(item.getName());
-            gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
-            
-            // move waypoints
-            gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
-            item.getGPXWaypoints().clear();
-            
-            // replace route with track
-            item.getGPXFile().getGPXTracks().add(gpxTrack);
-            item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
-        } else if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType()) || GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {
-            // new route
-            final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
-            
-            gpxRoute.setName(item.getName());
-            gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
-
-            // move waypoints
-            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
-                gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
-            } else {
-                gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
-            }
-            item.getGPXWaypoints().clear();
-            
-            // replace track with route
-            item.getGPXFile().getGPXRoutes().add(gpxRoute);
-            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
-                item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
-            } else {
-                item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
-            }
-        }
     }
 }

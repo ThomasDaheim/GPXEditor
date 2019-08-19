@@ -843,10 +843,13 @@ public class TrackMap extends LeafletMapView {
         }
         
         // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
-        // file fileWaypointsCount don't count into MAX_DATAPOINTS
+        // file fileWaypointsCount don't count into MAX_WAYPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
-        //final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
-        final double ratio = GPXTrackviewer.MAX_DATAPOINTS / lineItem.getCombinedGPXWaypoints(null).size();
+        //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        // TFE, 20190819: make number of waypoints to show a preference
+        final double ratio = 
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                lineItem.getCombinedGPXWaypoints(null).size();
 
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
@@ -927,7 +930,7 @@ public class TrackMap extends LeafletMapView {
                     
                     bounds[4] = 1d;
                 } else {
-                    // we only show a subset of other waypoints - up to MAX_DATAPOINTS
+                    // we only show a subset of other waypoints - up to MAX_WAYPOINTS
                     i++;    
                     if (i * ratio >= count) {
                         waypoints.add(latLong);

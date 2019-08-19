@@ -29,6 +29,7 @@ public class GPXEditorPreferences implements IPreferencesStore {
     public final static String BREAK_DURATION = "breakDuration";
     public final static String SEARCH_RADIUS = "searchRadius";
     public final static String ALWAYS_SHOW_FILE_WAYPOINTS = "alwaysShowFileWaypoints";
+    public final static String MAX_WAYPOINTS_TO_SHOW = "maxWaypointsToShow";
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
     

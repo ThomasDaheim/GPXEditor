@@ -38,7 +38,7 @@ import tf.gpx.edit.main.GPXEditor;
  */
 public class GPXTrackviewer {
     // don't show more than this number of points
-    public final static double MAX_DATAPOINTS = 1000d;
+    public final static int MAX_WAYPOINTS = 1000;
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
 

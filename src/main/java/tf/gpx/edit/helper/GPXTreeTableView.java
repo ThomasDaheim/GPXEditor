@@ -256,17 +256,12 @@ public class GPXTreeTableView {
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(invertItems);
                                 
-                                final MenuItem convertItem = new MenuItem("Convert");
-                                if (GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
-                                    convertItem.setText("Convert to Track");
-                                } else {
-                                    convertItem.setText("Convert to Route");
-                                }
+                                final MenuItem convertItem = new MenuItem("Convert Tracks \u2194 Routes");
                                 convertItem.setOnAction((ActionEvent event) -> {
-                                    myEditor.convertItem(event, item);
+                                    myEditor.convertItems(event);
                                 });
                                 convertItem.disableProperty().bind(
-                                    Bindings.greaterThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                    Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(convertItem);
                                 
                                 if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {

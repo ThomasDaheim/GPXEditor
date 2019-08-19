@@ -17,10 +17,12 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
-### Update v3.6
+### Update v4.0
 
-Stuff from my bugs & features list:
+A lot of stuff from my bugs & features list!
 
+* select waypoints in height chart via mouse drag
+* set max number of waypoints shown via preferences
 * set search radius via preferences
 * add labels for cities, streets and contour lines in Satellite & MapBox map where missing
 * identify & show breaks in statistics
@@ -34,6 +36,7 @@ Stuff from my bugs & features list:
 * added support for OpenCycleMap api key
 * option to fix/reduce/assign height for selected items only (instead of always on whole file)
 * bumped up used libraries to current versions
+* various bugfixes
 
 ### Update v3.5
 

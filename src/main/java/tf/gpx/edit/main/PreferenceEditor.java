@@ -46,6 +46,7 @@ import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 
 /**
@@ -80,6 +81,8 @@ public class PreferenceEditor {
         int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
 
         int mySearchRadius = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000"));
+
+        int myMaxWaypointsToShow = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS)));
 
         boolean myAlwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
         
@@ -167,6 +170,23 @@ public class PreferenceEditor {
         GridPane.setMargin(waypointChkBox, new Insets(10));        
 
         rowNum++;
+        // 3rd row: number of waypoints to show
+        t = new Tooltip("Number of waypoints to show on map");
+        final Label numShowLbl = new Label("No. waypoints to show:");
+        numShowLbl.setTooltip(t);
+        gridPane.add(numShowLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(numShowLbl, VPos.TOP);
+        GridPane.setMargin(numShowLbl, new Insets(10));
+        
+        final TextField numShowText = new TextField();
+        numShowText.setMaxWidth(80);
+        numShowText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        numShowText.setText(decimalFormat.format(myMaxWaypointsToShow));
+        numShowText.setTooltip(t);
+        gridPane.add(numShowText, 1, rowNum, 1, 1);
+        GridPane.setMargin(numShowText, new Insets(10));        
+
+        rowNum++;
         // 3rd row: select search radius
         t = new Tooltip("Radius in meter for searching on map");
         final Label searchLbl = new Label("Search radius (m):");
@@ -193,7 +213,7 @@ public class PreferenceEditor {
         GridPane.setMargin(breakLbl, new Insets(10));
         
         final TextField breakText = new TextField();
-        breakText.setMaxWidth(80);
+        breakText.setMaxWidth(40);
         breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
         breakText.setText(decimalFormat.format(myBreakDuration));
         breakText.setTooltip(t);
@@ -277,6 +297,8 @@ public class PreferenceEditor {
             
             myAlwaysShowFileWaypoints = waypointChkBox.isSelected();
 
+            myMaxWaypointsToShow = Integer.valueOf(numShowText.getText().trim());
+            
             mySearchRadius = Integer.valueOf(searchText.getText().trim());
             
             myBreakDuration = Integer.valueOf(breakText.getText().trim());
@@ -291,6 +313,8 @@ public class PreferenceEditor {
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
             
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(myAlwaysShowFileWaypoints));
+
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(myMaxWaypointsToShow));
 
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SEARCH_RADIUS, Integer.toString(mySearchRadius));
 

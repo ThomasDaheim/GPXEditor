@@ -78,6 +78,11 @@ public class HeightChart<X,Y> extends AreaChart {
     private double minHeight;
     private double maxHeight;
     
+    private double dragStartDistance = Double.MAX_VALUE;
+    private double dragEndDistance = Double.MIN_VALUE;
+    private double dragActDistance = 0;
+    private boolean dragActive = false;
+    
     private NumberAxis xAxis;
     private NumberAxis yAxis;
 
@@ -184,6 +189,80 @@ public class HeightChart<X,Y> extends AreaChart {
             // unset selected waypoint
             myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
         });
+
+        // TFE. 20190819: support for marking waypoints with drag
+        // setOnDragDetected not too usefull since it gets triggered only after a few setOnMouseDragged :-(
+        setOnMouseDragged((e) -> {
+            if (!dragActive) {
+                // reset previous start / end points of dragging
+                dragStartDistance = Double.MAX_VALUE;
+                dragEndDistance = Double.MIN_VALUE;
+
+                clearSelectedGPXWaypoints();
+            }
+            
+            // calculate cursor position in scene, relative to axis, x+y values in axis values
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
+            Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
+            double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
+            double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
+            double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
+            double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
+
+            // only show on top of chart area, not on axis
+            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
+                // we want to show the elevation at this distance
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
+                final Double distValue = data.XValueProperty().getValue();
+                final Double heightValue = data.YValueProperty().getValue();
+                
+//                System.out.println("setOnMouseDragged: " + " @ " + distValue);
+
+                if (dragActive) {
+                // Math.min / max don't work since you e.g. might drag to the right initially and then drag to the left
+//                dragStartDistance = Math.min(dragStartDistance, distValue);
+//                dragEndDistance = Math.max(dragEndDistance, distValue);
+                    
+                    // compare against >=, <= to handle the case that we get called twice with same distValue
+                    if (distValue <= dragStartDistance) {
+//                        System.out.println("new start distance");
+                        dragStartDistance = distValue;
+                    } else if(distValue >= dragEndDistance) {
+//                        System.out.println("new end distance");
+                        dragEndDistance = distValue;
+                    } else {
+                        // someone reversed the dragging direction - not a nice thing todo
+                        // figure out how things have beeen reversed
+                        if (distValue <= dragActDistance) {
+                            // changed from right to left
+//                            System.out.println("new reduced end distance");
+                            dragEndDistance = distValue;
+                        } else {
+                            // changed from left to right
+//                            System.out.println("new increased start distance");
+                            dragStartDistance = distValue;
+                        }
+                    }
+                    
+                    // TODO: select all waypoints between start & end
+                    selectWaypointsInRange();
+                } else {
+                    dragStartDistance = distValue;
+                    dragEndDistance = distValue;
+
+                    dragActive = true;
+                }
+                
+                dragActDistance = distValue;
+                
+//                System.out.println("setOnMouseDragged: " + dragStartDistance + " to " + dragEndDistance);
+            }
+        });
+        
+        setOnDragDone((e) -> {
+            dragActive = false;
+//            System.out.println("setOnDragDone");
+        });
     }
     
     public static HeightChart getInstance() {
@@ -248,6 +327,11 @@ public class HeightChart<X,Y> extends AreaChart {
         setVisible(!series.getData().isEmpty() && isVisible);
     }
     
+    @SuppressWarnings("unchecked")
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        // TODO: fill with life
+    }
+    
     private XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
         XYChart.Data<Double, Double> nearsetData = null;
         double distance = Double.MAX_VALUE;
@@ -263,9 +347,17 @@ public class HeightChart<X,Y> extends AreaChart {
         return nearsetData;
     }
     
-    @SuppressWarnings("unchecked")
-    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        // TODO: fill with life
+    private void selectWaypointsInRange() {
+        final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
+
+        for (XYChart.Data<Double, Double> data : ((XYChart.Series<Double, Double>) getData().get(0)).getData()) {
+            final Double distValue = data.XValueProperty().getValue();
+            if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
+                selectedWaypointsInRange.add((GPXWaypoint) data.getNode().getUserData());
+            }
+        }
+        
+        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, true, false);
     }
     
     private void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
