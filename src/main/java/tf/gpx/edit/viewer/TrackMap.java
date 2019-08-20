@@ -298,9 +298,14 @@ public class TrackMap extends LeafletMapView {
 
             addStyleFromPath("/leaflet/leaflet.css");
 
+            // support to show mouse coordinates
+            addStyleFromPath("/leaflet/MousePosition/L.Control.MousePosition.css");
+            addScriptFromPath("/leaflet/MousePosition/L.Control.MousePosition.js");
+            addScriptFromPath("/leaflet/MousePosition.js");
+
             // support to show center coordinates
-            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.min.css");
-            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.min.js");
+            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.css");
+            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.js");
             addScriptFromPath("/leaflet/MapCenter.js");
 
             // map helper functions for selecting, clicking, ...

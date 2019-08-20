@@ -24,11 +24,45 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-L.control.mapCenterCoord({
+var mapCenterCoord = L.control.mapCenterCoord({
     position: 'topleft',
     icon: false,
     latlngFormat: 'DD',
-    latlngDesignators: true,
-    template: 'Center: {y} | {x}'
-}).addTo(myMap);
+    latlngDesignators: false,
+    template: 'Center: {y} | {x}',
+    // format without ° because it gets messed up
+    latLngFormatter: function(latIn, lngIn) {
+        var lat, lng, deg, min;
 
+        //make a copy of center so we aren't affecting leaflet's internal state
+        var centerCopy = {
+            lat: latIn,
+            lng: lngIn
+        };
+
+        // 180 degrees & negative
+        if (centerCopy.lng < 0) {
+            centerCopy.lng_neg = true;
+            centerCopy.lng = Math.abs(centerCopy.lng);
+        } else centerCopy.lng_neg = false;
+        if (centerCopy.lat < 0) {
+            centerCopy.lat_neg = true;
+            centerCopy.lat = Math.abs(centerCopy.lat);
+        } else centerCopy.lat_neg = false;
+        if (centerCopy.lng > 180) {
+            centerCopy.lng = 360 - centerCopy.lng;
+            centerCopy.lng_neg = !centerCopy.lng_neg;
+        }
+
+        // format
+        lng = mapCenterCoord._format('#0.00000', centerCopy.lng);
+        lat = mapCenterCoord._format('##0.00000', centerCopy.lat);
+
+        return L.Util.template(mapCenterCoord.options.template, {
+            x: (!mapCenterCoord.options.latlngDesignators && centerCopy.lng_neg ? '-' : '') + lng + (mapCenterCoord.options.latlngDesignators ? (centerCopy.lng_neg ? ' W' : ' E') : ''),
+            y: (!mapCenterCoord.options.latlngDesignators && centerCopy.lat_neg ? '-' : '') + lat + (mapCenterCoord.options.latlngDesignators ? (centerCopy.lat_neg ? ' S' : ' N') : '')
+        });
+    }
+});
+        
+mapCenterCoord.addTo(myMap);

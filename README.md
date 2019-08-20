@@ -21,7 +21,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 A lot of stuff from my bugs & features list!
 
-* show center position on map, button to re-center map
+* show mouse & center position on map, button to re-center map
 * select waypoints in height chart via mouse drag
 * set max number of waypoints shown via preferences
 * set search radius via preferences
@@ -280,6 +280,7 @@ Other things used internally:
 
 * leaflet: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
+* leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
