@@ -69,12 +69,21 @@ myMap.on('resize', mapViewChanged);
 myMap.options.worldCopyJump = true;
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
+var mapBounds;
 function setMapBounds(latMin, latMax, lngMin, lngMax) {
-//    jscallback.log('addClickToLayer: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
-    myMap.fitBounds([
+//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
+    mapBounds = [
         [latMin, lngMin],
         [latMax, lngMax]
-    ]);
+    ];
+    
+    // delegate to internal function that can also be sued from CenterButton.js
+    doSetMapBounds(mapBounds);
+}
+function doSetMapBounds(bounds) {
+    if (typeof bounds !== 'undefined') {
+        myMap.fitBounds(bounds);
+    }
 }
 
 // return lower left and upper right corners of currently shown map

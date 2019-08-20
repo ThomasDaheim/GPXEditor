@@ -21,6 +21,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 A lot of stuff from my bugs & features list!
 
+* show center position on map, button to re-center map
 * select waypoints in height chart via mouse drag
 * set max number of waypoints shown via preferences
 * set search radius via preferences
@@ -278,13 +279,14 @@ Explicit dependencies:
 Other things used internally:
 
 * leaflet: https://leafletjs.com/
-* leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
-* leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
-* leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
-* leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
-* leaflet-openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
-* leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
-* leaflet-elevation: https://github.com/Raruto/leaflet-elevation
+* leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
+* leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
+* leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
+* leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
+* leaflet.search: http://labs.easyblog.it/maps/leaflet-search/
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html

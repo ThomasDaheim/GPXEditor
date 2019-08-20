@@ -298,6 +298,11 @@ public class TrackMap extends LeafletMapView {
 
             addStyleFromPath("/leaflet/leaflet.css");
 
+            // support to show center coordinates
+            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.min.css");
+            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.min.js");
+            addScriptFromPath("/leaflet/MapCenter.js");
+
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
 
@@ -350,6 +355,10 @@ public class TrackMap extends LeafletMapView {
             addStyleFromPath("/leaflet/easybutton/easy-button.css");
             addScriptFromPath("/leaflet/easybutton/easy-button.js");
             addScriptFromPath("/leaflet/HeightChartButton.js");
+
+            // support to re-center
+            addStyleFromPath("/leaflet/CenterButton.css");
+            addScriptFromPath("/leaflet/CenterButton.js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -814,7 +823,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor = gpxEditor;
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+   public void setGPXWaypoints(final GPXLineItem lineItem) {
         if (isDisabled()) {
             return;
         }
