@@ -861,9 +861,11 @@ public class TrackMap extends LeafletMapView {
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
         // TFE, 20190819: make number of waypoints to show a preference
+        final int waypointCount = lineItem.getCombinedGPXWaypoints(null).size();
         final double ratio = 
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
-                lineItem.getCombinedGPXWaypoints(null).size();
+                // might have no waypoints at all...
+                Math.max(waypointCount, 1);
 
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
@@ -904,7 +906,8 @@ public class TrackMap extends LeafletMapView {
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
 
-        if (bounds[4] > 0d) {
+        // TFE, 20190822: setMapBounds fails for nbo waypoints...
+        if (bounds[4] > 0d && waypointCount > 0) {
 //            setView(getCenter(), getZoom());
 
             // use map.fitBounds to avoid calculation of center and zoom

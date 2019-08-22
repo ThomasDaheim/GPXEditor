@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -85,6 +86,36 @@ public class GPXTreeTableView {
     private GPXEditor myEditor;
     
     private final List<TreeItem<GPXLineItem>> clipboardLineItems = new ArrayList<>();
+
+    private static enum RelativePositionPseudoClass {
+        ABOVE(PseudoClass.getPseudoClass("drop-target-above")),
+        BELOW(PseudoClass.getPseudoClass("drop-target-below"));
+        
+        private final PseudoClass myPseudoClass;
+        
+        RelativePositionPseudoClass(final PseudoClass pseudoClass) {
+            myPseudoClass = pseudoClass;
+        }
+        
+        public PseudoClass getPseudoClass() {
+            return myPseudoClass;
+        }
+        
+        public static PseudoClass getPseudoClassForRelativePosition(final GPXEditor.RelativePosition relativePosition) {
+            if (GPXEditor.RelativePosition.ABOVE.equals(relativePosition)) {
+                return RelativePositionPseudoClass.ABOVE.getPseudoClass();
+            } else {
+                return RelativePositionPseudoClass.BELOW.getPseudoClass();
+            }
+        }
+    }
+    
+    // TFE: 20190822: we need to differentiate between dropping on me or my parent - required for decission of "above" is possible
+    private static enum TargetForDragDrop {
+        NONE,
+        DROP_ON_ME,
+        DROP_ON_PARENT;
+    }
 
     private GPXTreeTableView() {
         super();
@@ -384,33 +415,49 @@ public class GPXTreeTableView {
            
             // drag enters this row
             row.setOnDragEntered(event -> {
-                Dragboard db = event.getDragboard();
+                final Dragboard db = event.getDragboard();
                 if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
                     final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
-                    if (acceptableDragboard(db, checkRow)) {
-                        if (!GPXLineItem.GPXLineItemType.GPXFile.equals(checkRow.getItem().getType()) && row.equals(checkRow)) {
-                            checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-above"), true);
-                        } else {
-                            checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-below"), true);
+
+                    GPXEditor.RelativePosition relativePosition;
+                    // TODO: also check for types - on parent types its always below
+                    if (!GPXLineItem.GPXLineItemType.GPXFile.equals(checkRow.getItem().getType()) && row.equals(checkRow)) {
+                        relativePosition = GPXEditor.RelativePosition.ABOVE;
+                    } else {
+                        relativePosition = GPXEditor.RelativePosition.BELOW;
+                    }
+                    final TargetForDragDrop accetable = acceptableDragboard(db, checkRow, relativePosition);
+                    if (!TargetForDragDrop.NONE.equals(accetable)) {
+                        if (TargetForDragDrop.DROP_ON_ME.equals(accetable)) {
+                            relativePosition = GPXEditor.RelativePosition.BELOW;
                         }
+                        checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.getPseudoClassForRelativePosition(relativePosition), true);
                     }
                 }
             });
 
             // drag exits this row
             row.setOnDragExited(event -> {
-                TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+                final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
 
                 if (checkRow != null) {
-                    checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-above"), false);
-                    checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-below"), false);
+                    checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.ABOVE.getPseudoClass(), false);
+                    checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.BELOW.getPseudoClass(), false);
                 }
             });
    
             // and here is the drop
             row.setOnDragDropped(event -> {
-                onDragDropped(row, event);
-                event.consume();
+                TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+
+                if (checkRow != null) {
+                    if (checkRow.getPseudoClassStates().contains(RelativePositionPseudoClass.ABOVE.getPseudoClass())) {
+                        onDragDropped(event, row, GPXEditor.RelativePosition.ABOVE);
+                    } else {
+                        onDragDropped(event, row, GPXEditor.RelativePosition.BELOW);
+                    }
+                    event.consume();
+                }
             });
 
             // dragging something over the list
@@ -472,31 +519,36 @@ public class GPXTreeTableView {
                 }
             // any combination that inserts entries
             } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
+                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
                 //System.out.println("Control+V pressed");
                 
                 if(!clipboardLineItems.isEmpty()) {
+                    GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
+                    if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+                        position = GPXEditor.RelativePosition.BELOW;
+                    }
+                    
                     // go through clipboardLineItems
                     TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
                     
                     boolean canInsert = false;
-                    if (acceptableItems(clipboardLineItems, target)){
+                    if (!TargetForDragDrop.NONE.equals(acceptableItems(clipboardLineItems, target, position))){
                         canInsert = true;
                     } else {
                         // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
                         if (!GPXLineItem.GPXLineItemType.GPXFile.equals(target.getValue().getType())) {
                             target = target.getParent();
-                            canInsert = acceptableItems(clipboardLineItems, target);
+                            canInsert = !TargetForDragDrop.NONE.equals(acceptableItems(clipboardLineItems, target, position));
                         }
                     }
                     
                     if (canInsert) {
                         Collections.reverse(clipboardLineItems);
                         for (TreeItem<GPXLineItem> draggedItem : clipboardLineItems) {
-                            // create copy and insert - otherwise you simply overwrite with same values
-                            final GPXLineItem insertItem = draggedItem.getValue().cloneMeWithChildren();
-                            
-                            insertItemAtlocation(insertItem, target.getValue(), false);
+                            insertItemAtLocation(draggedItem.getValue(), target.getValue(), position, false);
                         }
                     }
                     
@@ -544,34 +596,40 @@ public class GPXTreeTableView {
     }
     
     @SuppressWarnings("unchecked")
-    private void onDragDropped(final TreeTableRow<GPXLineItem> row, final DragEvent event) {
+    private void onDragDropped(final DragEvent event, final TreeTableRow<GPXLineItem> row, final GPXEditor.RelativePosition relativePosition) {
         Dragboard db = event.getDragboard();
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
             final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
-            if (acceptableDragboard(db, checkRow)) {
+            if (!TargetForDragDrop.NONE.equals(acceptableDragboard(db, checkRow, relativePosition))) {
                 // get dragged item and item drop on to
-                // and that means working on a copy of treeitems since otherwise everything gets messed up...
                 final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+                // work from bottom to top - otherwise delete will mess up things
+                Collections.reverse(selection);
 
                 final GPXLineItem target = checkRow.getTreeItem().getValue();
 
-                TreeItem<GPXLineItem> draggedItem = null;
-                Collections.reverse(selection);
-                for (int draggedIndex : selection) {
-                    draggedItem = myTreeTableView.getTreeItem(draggedIndex);
-                    
-                    insertItemAtlocation(draggedItem.getValue(), target, true);
+                final List<GPXLineItem> items =
+                selection.stream().map((t) -> {
+                        return myTreeTableView.getTreeItem(t).getValue();
+                    }).collect(Collectors.toList());
+                
+                for (GPXLineItem draggedItem : items) {
+                    insertItemAtLocation(draggedItem, target, relativePosition, true);
                 }
 
                 // clear drag&drop list since it might have been invalidated
                 clipboardLineItems.clear();
                 
                 event.setDropCompleted(true);
+                
                 myTreeTableView.getSelectionModel().clearSelection();
-                if (draggedItem != null) {
-                    myTreeTableView.getSelectionModel().select(draggedItem);
+                if (!selection.isEmpty()) {
+                    myTreeTableView.getSelectionModel().select(myTreeTableView.getTreeItem(selection.get(selection.size()-1)));
                 }
-                myTreeTableView.refresh();
+                // TFE, 20190822: trigger re-sort manually
+                myTreeTableView.sort(); 
+                myTreeTableView.refresh(); 
+                
                 event.consume();
             }           
         } else {
@@ -594,8 +652,8 @@ public class GPXTreeTableView {
     }
     
     @SuppressWarnings("unchecked")
-    private boolean acceptableDragboard(final Dragboard db, final TreeTableRow<GPXLineItem> target) {
-        boolean result = false;
+    private TargetForDragDrop acceptableDragboard(final Dragboard db, final TreeTableRow<GPXLineItem> target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.DROP_ON_ME;
         
         if (db.hasContent(SERIALIZED_MIME_TYPE) && !target.isEmpty()) {
             final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
@@ -604,13 +662,13 @@ public class GPXTreeTableView {
                         return myTreeTableView.getTreeItem(t);
                     }).collect(Collectors.toList());
             
-            result = acceptableItems(items, target.getTreeItem());
+            result = acceptableItems(items, target.getTreeItem(), position);
         }
         
         return result;
     }
-    private boolean acceptableItems(final List<TreeItem<GPXLineItem>> selection, final TreeItem<GPXLineItem> target) {
-        boolean result = false;
+    private TargetForDragDrop acceptableItems(final List<TreeItem<GPXLineItem>> selection, final TreeItem<GPXLineItem> target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.DROP_ON_ME;
         
         final GPXLineItem.GPXLineItemType targetType = target.getValue().getType();
 
@@ -620,22 +678,33 @@ public class GPXTreeTableView {
                 final GPXLineItem.GPXLineItemType itemType = item.getValue().getType();
 
                 // don't create loops and only insert on same level or drop on direct parent type
-                result = !isParent(item, target) && 
-                        (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType));
-                if (!result) {
+                if (!isParent(item, target) && 
+                        (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType))) {
+                    // once anything is dropped on parent this is the highest to use as return value
+                    if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType)) {
+                        result = TargetForDragDrop.DROP_ON_PARENT;
+                    }
+                } else {
+                    result = TargetForDragDrop.NONE;
                     // one not matching line is enough
                     break;
                 }
+            } else {
+                result = TargetForDragDrop.NONE;
+                // one not matching line is enough
+                break;
             }
         }
 
         return result;
     }
     
-    public void insertItemAtlocation(final GPXLineItem insert, final GPXLineItem location, final boolean doRemove) {
+    public void insertItemAtLocation(final GPXLineItem insert, final GPXLineItem location, final GPXEditor.RelativePosition position, final boolean doRemove) {
         final GPXLineItem.GPXLineItemType insertType = insert.getType();
         final GPXLineItem.GPXLineItemType locationType = location.getType();
-                    
+        
+        // TFE, 20190822: insert a clone since we might loose insert after we have removed it
+        final GPXLineItem insertReal = insert.cloneMeWithChildren();
         if (doRemove) {
             // remove dragged item from treeitem and gpxlineitem
             // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...
@@ -644,14 +713,28 @@ public class GPXTreeTableView {
             insert.getParent().getChildrenOfType(insertType).remove(insert);
         }
 
-        GPXLineItem targetLineItemReal;
+        GPXLineItem locationReal;
         if (GPXLineItem.GPXLineItemType.isSameTypeAs(locationType, insertType)) {
-            targetLineItemReal = location.getParent();
+            locationReal = location.getParent();
         } else {
-            targetLineItemReal = location;
+            locationReal = location;
         }
 
-        final int insertIndex = Math.max(targetLineItemReal.getChildrenOfType(insertType).indexOf(location), 0);
+        final ObservableList childList = locationReal.getChildrenOfType(insertType);
+        // TFE, 20190822: extend for insert above & below
+        int insertIndex = childList.indexOf(location);
+        if (insertIndex > -1) {
+            if (GPXEditor.RelativePosition.BELOW.equals(position)) {
+                insertIndex++;
+            }
+        } else {
+            // location not found - insert upfront or at the end
+            if (GPXEditor.RelativePosition.ABOVE.equals(position)) {
+                insertIndex = 0;
+            } else {
+                insertIndex = childList.size();
+            }
+        }
         switch (insertType) {
             case GPXFile:
                 // can't drag files into files
@@ -660,16 +743,16 @@ public class GPXTreeTableView {
                 // can't drag metadata
                 break;
             case GPXTrack:
-                targetLineItemReal.getGPXTracks().add(insertIndex, (GPXTrack) insert);
+                locationReal.getGPXTracks().add(insertIndex, (GPXTrack) insertReal);
                 break;
             case GPXTrackSegment:
-                targetLineItemReal.getGPXTrackSegments().add(insertIndex, (GPXTrackSegment) insert);
+                locationReal.getGPXTrackSegments().add(insertIndex, (GPXTrackSegment) insertReal);
                 break;
             case GPXWaypoint:
-                targetLineItemReal.getGPXWaypoints().add(insertIndex, (GPXWaypoint) insert);
+                locationReal.getGPXWaypoints().add(insertIndex, (GPXWaypoint) insertReal);
                 break;
             case GPXRoute:
-                targetLineItemReal.getGPXRoutes().add(insertIndex, (GPXRoute) insert);
+                locationReal.getGPXRoutes().add(insertIndex, (GPXRoute) insertReal);
                 break;
             default:
         }
