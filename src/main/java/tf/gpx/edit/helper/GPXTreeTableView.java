@@ -80,6 +80,8 @@ public class GPXTreeTableView {
     private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 
     private TreeTableView<GPXLineItem> myTreeTableView;
+    // need to store last non-empty row for drag & drop support
+    private TreeTableRow<GPXLineItem> lastRow;
     private GPXEditor myEditor;
     
     private final List<TreeItem<GPXLineItem>> clipboardLineItems = new ArrayList<>();
@@ -348,6 +350,18 @@ public class GPXTreeTableView {
                             getStyleClass().removeAll("hasUnsavedChanges");
                         }
                     }
+                    
+                }
+                
+                @Override
+                public void updateIndex(int i) {
+                    super.updateIndex(i);
+                    
+//                    System.out.println("updateIndex: " + i + ", " + this + ", " + this.getItem());
+                    if (!this.isEmpty() && ((lastRow == null) || i > lastRow.getIndex())) {
+                        lastRow = this;
+//                        System.out.println("lastRow: " + lastRow.getItem());
+                    }
                 }
             };
 
@@ -372,117 +386,148 @@ public class GPXTreeTableView {
             row.setOnDragEntered(event -> {
                 Dragboard db = event.getDragboard();
                 if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
-                    if (acceptableDragboard(db, row)) {
-                        row.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target"), true);
+                    final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+                    if (acceptableDragboard(db, checkRow)) {
+                        if (!GPXLineItem.GPXLineItemType.GPXFile.equals(checkRow.getItem().getType()) && row.equals(checkRow)) {
+                            checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-above"), true);
+                        } else {
+                            checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-below"), true);
+                        }
                     }
                 }
             });
 
             // drag exits this row
             row.setOnDragExited(event -> {
-                row.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target"), false);
-            });
+                TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
 
-            // dragging something over the list
-            row.setOnDragOver(event -> {
-                onDragOver(row, event);
+                if (checkRow != null) {
+                    checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-above"), false);
+                    checkRow.pseudoClassStateChanged(PseudoClass.getPseudoClass("drop-target-below"), false);
+                }
             });
    
             // and here is the drop
             row.setOnDragDropped(event -> {
                 onDragDropped(row, event);
+                event.consume();
+            });
+
+            // dragging something over the list
+            row.setOnDragOver(event -> {
+                onDragOver(event);
+                event.consume();
             });
             
             return row;
         });
         
-        // allow file drag and drop to gpxFileList
-        myTreeTableView.setOnDragOver((DragEvent event) -> {
-            onDragOver(null, event);
+        myTreeTableView.expandedItemCountProperty().addListener((o) -> {
+            // things have changed an re-paint is going to happen - reset lastRow
+//            System.out.println("expandedItemCountProperty changed");
+            lastRow = null;
         });
-        
-        // Dropping over surface
-        myTreeTableView.setOnDragDropped((DragEvent event) -> {
-            onDragDropped(null, event);
-        });
+
+        // TFE, 20190821: not required since we have the same on row level...
+//        // allow file drag and drop to gpxFileList
+//        myTreeTableView.setOnDragOver((DragEvent event) -> {
+//            onDragOver(null, event);
+//        });
+//        
+//        // Dropping over surface
+//        myTreeTableView.setOnDragDropped((DragEvent event) -> {
+//            onDragDropped(null, event);
+//        });
         
         // TFE, 20180812: support copy, paste, cut on lineitems - analogues to waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
-        myTreeTableView.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                // any combination that removes entries
-                if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+        myTreeTableView.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
+            // TODO: generalize and merge with similar code for gpxwaypointlist
+            // UNFORTUNATELY TreeTableView and TableView don't have any common ancesstors except Control...
+            
+            // any combination that removes entries
+            if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
-                    //System.out.println("Control+C Control+V or pressed");
-                    
-                    if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                        // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+                //System.out.println("Control+C Control+V or pressed");
+                
+                if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
+                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
-                            clipboardLineItems.clear();
-                            // TODO: filter out file & metadata - those can't be copy & paste
-                            clipboardLineItems.addAll(new ArrayList<>(myTreeTableView.getSelectionModel().getSelectedItems()));
-                        }
-
-                        // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
+                        clipboardLineItems.clear();
+                        // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
+                        // no cloning done here since we store TreeItem<GPXLineItem> to have common code with drag & drop
+                        clipboardLineItems.addAll(new ArrayList<>(myTreeTableView.getSelectionModel().getSelectedItems()));
+                    }
+                    
+                    // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
+                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
-                            myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
-                        }
+                        myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
                     }
-                // any combination that removes entries
-                } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                           CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
-                    //System.out.println("Control+V pressed");
+                }
+            // any combination that inserts entries
+            } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
+                //System.out.println("Control+V pressed");
+                
+                if(!clipboardLineItems.isEmpty()) {
+                    // go through clipboardLineItems
+                    TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
                     
-                    if(!clipboardLineItems.isEmpty()) {
-                        // go through clipboardLineItems
-                        TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
-                        
-                        boolean canInsert = false;
-                        if (acceptableItems(clipboardLineItems, target)){
-                            canInsert = true;
-                        } else {
-                            // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
-                            if (!GPXLineItem.GPXLineItemType.GPXFile.equals(target.getValue().getType())) {
-                                target = target.getParent();
-                                canInsert = acceptableItems(clipboardLineItems, target);
-                            }
+                    boolean canInsert = false;
+                    if (acceptableItems(clipboardLineItems, target)){
+                        canInsert = true;
+                    } else {
+                        // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
+                        if (!GPXLineItem.GPXLineItemType.GPXFile.equals(target.getValue().getType())) {
+                            target = target.getParent();
+                            canInsert = acceptableItems(clipboardLineItems, target);
                         }
-                        
-                        if (canInsert) {
-                            Collections.reverse(clipboardLineItems);
-                            for (TreeItem<GPXLineItem> draggedItem : clipboardLineItems) {
-                                // create copy and insert - otherwise you simply overwrite with same values
-                                final GPXLineItem insertItem = draggedItem.getValue().cloneMeWithChildren();
-                                
-                                insertItemAtlocation(insertItem, target.getValue(), false);
-                            }
-                        }
-
-                        // force repaint of gpxFileList to show unsaved items
-                        myEditor.refreshGPXFileList();
                     }
-                } 
-            };
+                    
+                    if (canInsert) {
+                        Collections.reverse(clipboardLineItems);
+                        for (TreeItem<GPXLineItem> draggedItem : clipboardLineItems) {
+                            // create copy and insert - otherwise you simply overwrite with same values
+                            final GPXLineItem insertItem = draggedItem.getValue().cloneMeWithChildren();
+                            
+                            insertItemAtlocation(insertItem, target.getValue(), false);
+                        }
+                    }
+                    
+                    // force repaint of gpxFileList to show unsaved items
+                    myEditor.refreshGPXFileList();
+                }
+            }
         });
         
         myTreeTableView.setPlaceholder(new Label("Add or drag gpx-Files here"));
         myTreeTableView.setShowRoot(false);
     }
     
-    private void onDragOver(final TreeTableRow<GPXLineItem> row, final DragEvent event) {
+    private TreeTableRow<GPXLineItem> getRowToCheckForDragDrop(final TreeTableRow<GPXLineItem> row) {
+        TreeTableRow<GPXLineItem> result;
+        
+        if (!row.isEmpty()) {
+            result = row;
+        } else {
+            result = lastRow;
+        }
+        
+        return result;
+    }
+    
+    private void onDragOver(final DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
-            if (!row.isEmpty()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-                event.consume();
-            }
+            // TFE, 20190821: allow dragging after last row - means dropping at the end
+            event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            event.consume();
         } else {
             if (db.hasFiles()) {
                 for (File file:db.getFiles()) {
@@ -502,12 +547,13 @@ public class GPXTreeTableView {
     private void onDragDropped(final TreeTableRow<GPXLineItem> row, final DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
-            if (acceptableDragboard(db, row)) {
+            final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+            if (acceptableDragboard(db, checkRow)) {
                 // get dragged item and item drop on to
                 // and that means working on a copy of treeitems since otherwise everything gets messed up...
                 final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
 
-                final GPXLineItem target = row.getTreeItem().getValue();
+                final GPXLineItem target = checkRow.getTreeItem().getValue();
 
                 TreeItem<GPXLineItem> draggedItem = null;
                 Collections.reverse(selection);

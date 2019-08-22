@@ -36,18 +36,22 @@ import javafx.scene.input.KeyEvent;
  */
 public class CopyPasteKeyCodes {
     private final static KeyCodeCombination controlCKey = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
+    private final static KeyCodeCombination shiftControlVKey = new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_ANY, KeyCombination.SHIFT_DOWN);
     private final static KeyCodeCombination controlVKey = new KeyCodeCombination(KeyCode.V, KeyCombination.CONTROL_ANY);
     private final static KeyCodeCombination controlXKey = new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_ANY);
     private final static KeyCodeCombination shiftDeleteKey = new KeyCodeCombination(KeyCode.DELETE, KeyCombination.SHIFT_DOWN);
     private final static KeyCodeCombination deleteKey = new KeyCodeCombination(KeyCode.DELETE);
+    private final static KeyCodeCombination shiftInsertKey = new KeyCodeCombination(KeyCode.INSERT, KeyCombination.SHIFT_DOWN);
     private final static KeyCodeCombination insertKey = new KeyCodeCombination(KeyCode.INSERT);
     
     public static enum KeyCodes {
         CNTRL_C(controlCKey),
         CNTRL_V(controlVKey),
+        SHIFT_CNTRL_V(shiftControlVKey),
         CNTRL_X(controlXKey),
         SHIFT_DEL(shiftDeleteKey),
         DEL(deleteKey),
+        SHIFT_INSERT(shiftInsertKey),
         INSERT(insertKey);
         
         private final KeyCodeCombination keyCode;

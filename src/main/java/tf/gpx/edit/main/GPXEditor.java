@@ -149,12 +149,12 @@ public class GPXEditor implements Initializable {
         DELETE
     }
 
-    public static enum MoveUpDown {
+    private static enum MoveUpDown {
         UP,
         DOWN
     }
     
-    public static enum DeleteInformation {
+    private static enum DeleteInformation {
         DATE,
         NAME,
         EXTENSION
@@ -164,9 +164,14 @@ public class GPXEditor implements Initializable {
         KML,
         CSV
     }
+    
+    public static enum RelativePosition {
+        ABOVE,
+        BELOW
+    }
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
-    private final List<GPXWaypoint> clipboardWayPoints = new ArrayList<>();
+    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
     private boolean onlyShiftPressed = false;
 
@@ -858,15 +863,18 @@ public class GPXEditor implements Initializable {
                             deleteSelectedWaypoints();
                         }
                     }
-                // any combination that removes entries
+                // any combination that adds entries
                 } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
                            CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
                     //System.out.println("Control+V pressed");
                     
-                    if(!clipboardWayPoints.isEmpty()) {
-                        insertClipboardWaypoints();
-                    }
-                } 
+                    insertClipboardWaypoints(RelativePosition.ABOVE);
+                } else if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
+                           CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+                    //System.out.println("Shift Control+V pressed");
+                    
+                    insertClipboardWaypoints(RelativePosition.BELOW);
+                }
                 
                 // track SHIFT key pressed - without CNTRL or ALT
                 onlyShiftPressed = event.isShiftDown() && !event.isAltDown() && !event.isControlDown() && !event.isMetaDown();
@@ -912,7 +920,7 @@ public class GPXEditor implements Initializable {
             });
             waypointMenu.getItems().add(selectWaypoints);
 
-            final MenuItem invertSelection = new MenuItem("Invert Selection");
+            final MenuItem invertSelection = new MenuItem("Invert selection");
             invertSelection.setOnAction((ActionEvent event) -> {
                 invertSelectedWaypoints();
             });
@@ -924,30 +932,46 @@ public class GPXEditor implements Initializable {
             });
             waypointMenu.getItems().add(deleteWaypoints);
             
-            final Menu deletAttr = new Menu("Delete Attribute(s)");
+            final Menu deleteAttr = new Menu("Delete attribute(s)");
             // TFE, 20190715: support forr deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date(s)");
             deleteDates.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.DATE);
             });
-            deletAttr.getItems().add(deleteDates);
+            deleteAttr.getItems().add(deleteDates);
             
             final MenuItem deleteNames = new MenuItem("Name(s)");
             deleteNames.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.DATE);
             });
-            deletAttr.getItems().add(deleteNames);
+            deleteAttr.getItems().add(deleteNames);
 
             final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
             deleteExtensions.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.EXTENSION);
             });
-            deletAttr.getItems().add(deleteExtensions);
+            deleteAttr.getItems().add(deleteExtensions);
             
-            waypointMenu.getItems().add(deletAttr);
+            waypointMenu.getItems().add(deleteAttr);
             
             waypointMenu.getItems().add(new SeparatorMenuItem());
 
+            final Menu insertItems = new Menu("Insert");
+            final MenuItem insertAbove = new MenuItem("above");
+            insertAbove.setOnAction((ActionEvent event) -> {
+                insertClipboardWaypoints(RelativePosition.ABOVE);
+            });
+            insertItems.getItems().add(insertAbove);
+            
+            final MenuItem insertBelow = new MenuItem("below");
+            insertBelow.setOnAction((ActionEvent event) -> {
+                insertClipboardWaypoints(RelativePosition.BELOW);
+            });
+            insertItems.getItems().add(insertBelow);
+            insertItems.disableProperty().bind(Bindings.isEmpty(clipboardWayPoints));
+            
+            waypointMenu.getItems().add(insertItems);
+            
             final MenuItem splitWaypoints = new MenuItem("Split below");
             splitWaypoints.setOnAction((ActionEvent event) -> {
                 // we split after first selected item
@@ -1214,15 +1238,30 @@ public class GPXEditor implements Initializable {
         // force repaint of gpxFileList to show unsaved items
         refreshGPXFileList();
     }
-    private void insertClipboardWaypoints() {
+    private void insertClipboardWaypoints(final RelativePosition position) {
+        if(clipboardWayPoints.isEmpty()) {
+            // nothing to copy...
+            return;
+        }
+
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
+        
+        // TFE, 20190821: always clone and insert the clones! you might want to insert more than once...
+        final List<GPXWaypoint> insertWaypoints = clipboardWayPoints.stream().map((t) -> {
+            return t.cloneMeWithChildren();
+        }).collect(Collectors.toList());
+        
         // add waypoints to parent of currently selected waypoint - or directly to parent
         if (!gpxTrackXML.getItems().isEmpty()) {
             final GPXWaypoint waypoint = gpxTrackXML.getItems().get(Math.max(0, gpxTrackXML.getSelectionModel().getSelectedIndex()));
             final int waypointIndex = waypoint.getParent().getGPXWaypoints().indexOf(waypoint);
-            waypoint.getParent().getGPXWaypoints().addAll(waypointIndex, clipboardWayPoints);
+            if (RelativePosition.ABOVE.equals(position)) {
+                waypoint.getParent().getGPXWaypoints().addAll(waypointIndex, insertWaypoints);
+            } else {
+                waypoint.getParent().getGPXWaypoints().addAll(waypointIndex+1, insertWaypoints);
+            }
         } else {
-            ((GPXLineItem) gpxTrackXML.getUserData()).getGPXWaypoints().addAll(clipboardWayPoints);
+            ((GPXLineItem) gpxTrackXML.getUserData()).getGPXWaypoints().addAll(insertWaypoints);
         }
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 
