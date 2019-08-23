@@ -21,6 +21,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 A lot of stuff from my bugs & features list!
 
+* pimped AboutMenu to show build information from MANIFEST.MF
 * show mouse & center position on map, button to re-center map
 * select waypoints in height chart via mouse drag
 * set max number of waypoints shown via preferences
