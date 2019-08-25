@@ -142,7 +142,7 @@ public class AboutMenu {
         
         // TFE, 20190823: try to read data from manifest file
         try {
-	    final JarFile jar = jarFileOf(AboutMenu.class, inAppName);
+	    final JarFile jar = JarFileLoader.jarFileOf(AboutMenu.class);
 //            System.out.println("jar: " + jar);
             if (jar != null) {
                 final Manifest manifest = jar.getManifest();
@@ -224,48 +224,6 @@ public class AboutMenu {
         
         return result;
     }
-    
-    /**
-     * https://github.com/aws/aws-sdk-java/blob/master/aws-java-sdk-core/src/main/java/com/amazonaws/util/Classes.java
-     * 
-     * @param klass To find jar file for
-     * @param jarName
-     * @return  Returns the jar file from which the given class is loaded; or null if no such jar file can be located.
-     */
-    public static JarFile jarFileOf(final Class<?> klass, final String jarName) {
-        URL url = klass.getResource(
-            "/" + klass.getName().replace('.', '/') + ".class");
-        if (url == null)
-            return null;
-        
-        String s = url.getFile();
-
-        int beginIndex = s.indexOf("file:/") + "file:/".length();
-        int endIndex = s.indexOf(".jar!");
-        
-        String f = null;
-        if (endIndex == -1) {
-            // TFE, 20190823: we might be running in the editor... below works for netbeans under windows
-            beginIndex = 1;
-            endIndex = s.indexOf("build/") + "build/".length();
-            f = s.substring(beginIndex, endIndex) + "libs/" + jarName + ".jar";
-        } else {
-            endIndex += ".jar".length();
-            f = s.substring(beginIndex, endIndex);
-        }
-        if (f == null) 
-            return null;
-
-        // TFE, 20190823: replace spaces in filename - at least under windows
-        f = f.replaceAll("%20", "\\ ");
-        
-        final File file = new File(f);
-        try {
-            return file.getAbsoluteFile().exists() ? new JarFile(file) : null;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }    
     
     private static BufferedImage decodeToImage(String imageString) {
         BufferedImage image = null;
