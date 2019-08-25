@@ -193,6 +193,19 @@ public class TrackMap extends LeafletMapView {
     }
     private CurrentMarker currentMarker;
     
+    public enum HeightChartButtonState {
+        ON,
+        OFF;
+        
+        public static HeightChartButtonState fromBoolean(final Boolean state) {
+            if (state) {
+                return ON;
+            } else {
+                return OFF;
+            }
+        }
+    }
+    
     // TFE, 20181009: store route under cursor
     private GPXRoute currentGPXRoute;
 
@@ -1288,6 +1301,10 @@ public class TrackMap extends LeafletMapView {
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
         HeightChart.getInstance().setViewLimits(newBoundingBox);
+    }
+    
+    public void setHeightChartButtonState(final HeightChartButtonState state) {
+        execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
     }
     
     public class JSCallback {

@@ -46,3 +46,11 @@ var toggleHeightChartButton = L.easyButton({
 });
 
 toggleHeightChartButton.addTo(myMap);
+
+function setHeightChartButtonState(state) {
+    if (state.toUpperCase() == 'ON') {
+        toggleHeightChartButton.state('hide-height-chart');
+    } else if (state.toUpperCase() == 'OFF') {
+        toggleHeightChartButton.state('show-height-chart');
+    }
+}

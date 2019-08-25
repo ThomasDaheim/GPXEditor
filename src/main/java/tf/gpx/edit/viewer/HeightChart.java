@@ -276,6 +276,7 @@ public class HeightChart<X,Y> extends AreaChart {
     public void setEnable(final boolean enabled) {
         setDisable(!enabled);
         setVisible(enabled);
+        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(enabled));
         toFront();
     }
     
@@ -324,7 +325,10 @@ public class HeightChart<X,Y> extends AreaChart {
         
         setAxis(minDistance, maxDistance, minHeight, maxHeight);
         
+        // hide heightchart of no waypoints have been set
         setVisible(!series.getData().isEmpty() && isVisible);
+        // if visible changes to false, also the button needs to be pressed
+        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(isVisible()));
     }
     
     @SuppressWarnings("unchecked")
