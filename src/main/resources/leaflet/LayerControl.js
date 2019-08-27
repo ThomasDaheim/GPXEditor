@@ -54,6 +54,21 @@ var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsur
 var hasOpenMapSurferLayer = false;
 OpenMapSurfer_ContourLines.setZIndex(5);
 
+var HikeBike_HillShading = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+	attribution: '&copy; OpenStreetMap'
+});
+var hasHikeBikeLayer = false;
+HikeBike_HillShading.setZIndex(6);
+
+var OpenRailwayMap = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+	attribution: 'Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenRailwayMap (CC-BY-SA)'
+});
+var hasOpenRailwayMap = false;
+OpenRailwayMap.setZIndex(99);
+controlLayer.addOverlay(OpenRailwayMap, "Railways");
+    
 // add automatically for maps that need the additional info
 function baseLayerChange(e) {
     //jscallback.log('baseLayerChange: ' + e.name + ", " + hasHyddaLayer + ", " + hasOpenMapSurferLayer);
@@ -75,10 +90,22 @@ function baseLayerChange(e) {
         controlLayer.removeLayer(OpenMapSurfer_ContourLines);
     }
 
-    if (e.name === 'Satellite Esri' || e.name === 'MapBox') {
+    if (e.name === 'Satellite Esri' || e.name === 'MapBox' || e.name === 'OpenStreetMap') {
+//    if (e.name === 'Satellite Esri' || e.name === 'MapBox') {
         myMap.addLayer(OpenMapSurfer_ContourLines);
         controlLayer.addOverlay(OpenMapSurfer_ContourLines, "Contour Lines");
         hasOpenMapSurferLayer = true;
+        //jscallback.log('added layer OpenMapSurfer_ContourLines');
+    }
+
+    if (hasHikeBikeLayer) {
+        myMap.removeLayer(HikeBike_HillShading);
+        controlLayer.removeLayer(HikeBike_HillShading);
+    }
+
+    if (e.name === 'OpenStreetMap') {
+        controlLayer.addOverlay(HikeBike_HillShading, "Hill Shading");
+        hasHikeBikeLayer = true;
         //jscallback.log('added layer OpenMapSurfer_ContourLines');
     }
 } 
