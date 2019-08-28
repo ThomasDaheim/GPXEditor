@@ -23,10 +23,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.parser;
+package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -76,9 +78,14 @@ import org.w3c.dom.NodeList;
  * @author thomas
  */
 public class DefaultExtensionHolder extends DummyExtensionHolder {
+    private final static String LINE_SEP = System.lineSeparator();
+    private final static String LINE_SEP_QUOTE = LINE_SEP.replace("\\", "\\\\");
+    
     public enum ExtensionType {
         GarminGPX("gpxx:", "GarminGPX"),
-        GarminTrkpt("gpxtpx:", "GarminTrkpt"),
+        GarminTrkpt("gpxtpx:", "GarminTrackPoint"),
+        GarminTrksts("gpxtrkx:", "GarminTrackStats"),
+        GarminWpt("wptx1:", "GarminWaypoint"),
         GarminAccl("gpxacc:", "GarminAccl"),
         PixAndMore("pmx:GoogleEarth", "PixAndMore"),
         Humminbird("h:", "Humminbird"),
@@ -101,6 +108,9 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             return myName;
         }
     }
+    
+    // "cache" for known extensions: once holdsExtensionType is called the result is stored to speed up further lookups
+    private Map<ExtensionType, Node> extensionNodes = new HashMap<>();
 
     public DefaultExtensionHolder() {
         super();
@@ -134,8 +144,8 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                         t.transform(new DOMSource(myNode), new StreamResult(sw));
 
                         String nodeString = sw.toString();
+                        // remove unnecessary multiple tabs
                         if (myNode.getLastChild() != null && myNode.getLastChild().getNodeValue() != null) {
-                            // remove unnecessary multiple tabs and final newline
                             final String lastValue = myNode.getLastChild().getNodeValue();
                             // count number of tabs and remove that number in the whole output string
                             final int lastIndex = lastValue.lastIndexOf('\t');
@@ -144,8 +154,15 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                                 nodeString = sw.toString().replace(tabsString, "");
                             }
                         }
-                        nodeString = nodeString.substring(0, nodeString.length() - 2);
+                        // remove empty lines
+                        nodeString = nodeString.replaceAll(LINE_SEP_QUOTE + "\\s+" + LINE_SEP_QUOTE,LINE_SEP);
+                        // remove final newline
+                        nodeString = nodeString.substring(0, nodeString.length() - LINE_SEP.length());
 
+                        if (!result.isEmpty()) {
+                            // add newline
+                            result += LINE_SEP;
+                        }
                         result += nodeString;
                     }
                 }
@@ -157,8 +174,27 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         return result;
     }
     
+    public Node getExtensionForType(final ExtensionType type) {
+        Node result = null;
+        
+        // make ssure "cache" gets filled
+        if (holdsExtensionType(type)) {
+            result = extensionNodes.get(type);
+        }
+        
+        return result;
+    }
+    
     public boolean holdsExtensionType(final ExtensionType type) {
         boolean result = false;
+        
+        if (extensionNodes.containsKey(type)) {
+            // been here before
+            return (extensionNodes.get(type) != null);
+        }
+        
+        // first time for everything...
+        extensionNodes.put(type, null);
         
         // check all nodes in list for startswith
         final NodeList myNodeList = getNodeList();
@@ -168,6 +204,8 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                 final Node myNode = myNodeList.item(i);
                 
                 if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getStartsWith())) {
+                    extensionNodes.put(type, myNode);
+                    
                     result = true;
                     break;
                 }

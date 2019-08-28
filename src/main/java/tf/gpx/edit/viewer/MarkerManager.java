@@ -26,10 +26,18 @@
 package tf.gpx.edit.viewer;
 
 import de.saring.leafletmap.Marker;
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -38,8 +46,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.apache.commons.io.FileUtils;
+import java.util.stream.Stream;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import tf.gpx.edit.items.GPXWaypoint;
 import static tf.gpx.edit.viewer.MarkerManager.SpecialMarker.SearchResultIcon;
 
@@ -56,7 +65,8 @@ public class MarkerManager {
     private final static MarkerManager INSTANCE = new MarkerManager();
     
     // where to look for the garmin icons in the jar file
-    private final static String RESOURCE_PATH = "src/main/resources/icons";
+    private final static String RESOURCE_PATH = "/icons";
+    private final static String JAR_EXT = "jar";
     private final static String ICON_EXT = "png";
     
     // fixed names to be used for search icons
@@ -137,26 +147,38 @@ public class MarkerManager {
         
         initialize();
     }
+    
     private void initialize() {
         // read icons from resouce path
-        final File iconpath = new File(RESOURCE_PATH);
+        // https://stackoverflow.com/a/28057735
+        // parse icons directory - working for both IDE and jar
+        final URI uri;
+        try {
+            uri = MarkerManager.class.getResource(RESOURCE_PATH).toURI();
 
-        final File [] files = iconpath.listFiles();
-        if (files == null) {
-            return;
-        }
-        
-        Arrays.sort(files);
-        for (File iconfile : files) {
-            final String iconName = iconfile.getName();
-            if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
-                final String baseName = FilenameUtils.getBaseName(iconName);
-                // add name without extension to list
-                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
-//                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
+            Path myPath;
+            if (uri.getScheme().equals(JAR_EXT)) {
+                FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+                myPath = fileSystem.getPath(RESOURCE_PATH);
+            } else {
+                myPath = Paths.get(uri);
             }
-        }  
+            
+            Stream<Path> walk = Files.walk(myPath, 1);
+            for (Iterator<Path> it = walk.iterator(); it.hasNext();){
+                final String iconName = it.next().toString();
+                if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
+                    final String baseName = FilenameUtils.getBaseName(iconName);
+                    // add name without extension to list
+                    iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
+                    //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
+                }
+            }        
+        } catch (URISyntaxException | IOException ex) {
+            Logger.getLogger(MarkerManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
+    
     private static String jsCompatibleIconName(final String iconName) {
         // don't crash on null input...
         String result = Objects.requireNonNullElse(iconName, "");
@@ -188,6 +210,7 @@ public class MarkerManager {
                 // set icon in js via TrackMap (thats the only one that has access to execScript() of LeafletMapView
                 // and there is one special case (of course...) the TRACKPOINT_ICON is smaller than the others
                 TrackMap.getInstance().addPNGIcon(jsCompatibleIconName(specialMarker.getIconName()), specialMarker.getIconSize(), iconBase64);
+                specialMarker.getMarkerIcon().setAvailableInLeaflet(true);
 
                 // fill the list
                 specialMarkers.put(specialMarker, markerIcon);
@@ -256,7 +279,8 @@ public class MarkerManager {
             
             if (result.isBlank()) {
                 try {
-                    final byte[] data = FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT));
+                    final InputStream iconStream = MarkerManager.class.getResourceAsStream(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT);
+                    final byte[] data = IOUtils.toByteArray(iconStream); //FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT));
                     result = Base64.getEncoder().encodeToString(data);
                     
                     markerIcon.setIconBase64(result);

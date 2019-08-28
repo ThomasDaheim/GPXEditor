@@ -23,46 +23,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
-
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
+package tf.gpx.edit.general;
 
 /**
  *
- * @author Thomas
+ * @author thomas
  */
-public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
-
-    private GPXReduceWorker() {
-        super ();
-    }
-
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
-        super (parameter);
-        
-        myAlgorithm = algorithm;
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // remove all waypoints using given algorithm an epsilon
-        reduceGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
-    }
-
-    @Override
-    public void visitGPXRoute(GPXRoute gpxRoute) {
-        // remove all waypoints using given algorithm an epsilon
-        reduceGPXWaypoints(gpxRoute.getGPXWaypoints());
-    }
+public interface IPreferencesStore {
+    public abstract String get(final String key, final String defaultValue);
     
-    private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final boolean keep[] = EarthGeometry.simplifyTrack(waypoints, myAlgorithm, myParameter);
-        
-        removeGPXWaypoint(waypoints, keep);
-    }
+    public abstract void put(final String key, final String value);
 }

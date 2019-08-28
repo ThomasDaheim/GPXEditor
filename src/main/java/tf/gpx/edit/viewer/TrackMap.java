@@ -193,6 +193,19 @@ public class TrackMap extends LeafletMapView {
     }
     private CurrentMarker currentMarker;
     
+    public enum HeightChartButtonState {
+        ON,
+        OFF;
+        
+        public static HeightChartButtonState fromBoolean(final Boolean state) {
+            if (state) {
+                return ON;
+            } else {
+                return OFF;
+            }
+        }
+    }
+    
     // TFE, 20181009: store route under cursor
     private GPXRoute currentGPXRoute;
 
@@ -210,15 +223,15 @@ public class TrackMap extends LeafletMapView {
 
     private GPXLineItem myGPXLineItem;
 
-    // store gpxlineitem fileWaypointsCount, tracks, routes + markers as apache bidirectional map
+    // store gpxlineitem fileWaypointsCount, trackSegments, routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> fileWaypoints = new DualHashBidiMap<>();
     private final BidiMap<String, GPXWaypoint> selectedWaypoints = new DualHashBidiMap<>();
-    private final BidiMap<String, GPXTrack> tracks = new DualHashBidiMap<>();
+    private final BidiMap<String, GPXTrackSegment> trackSegments = new DualHashBidiMap<>();
     private final List<GPXWaypoint> trackWaypoints = new ArrayList<>();
     private final BidiMap<String, GPXRoute> routes = new DualHashBidiMap<>();
     private final List<GPXWaypoint> routeWaypoints = new ArrayList<>();
 
-    // store start/end fileWaypointsCount of tracks and routes + markers as apache bidirectional map
+    // store start/end fileWaypointsCount of trackSegments and routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> markers = new DualHashBidiMap<>();
 
     private BoundingBox myBoundingBox;
@@ -240,7 +253,7 @@ public class TrackMap extends LeafletMapView {
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
-        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.MAPBOX, MapLayer.OPENCYCLEMAP, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
+        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
 //        originalMapLayers = mapLayer.size();
         final MapConfig myMapConfig = new MapConfig(mapLayer, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
@@ -296,10 +309,25 @@ public class TrackMap extends LeafletMapView {
             window.setMember("jscallback", jscallback);
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
+            addStyleFromPath("/leaflet/leaflet.css");
+
+            // support to show mouse coordinates
+            addStyleFromPath("/leaflet/MousePosition/L.Control.MousePosition.css");
+            addScriptFromPath("/leaflet/MousePosition/L.Control.MousePosition.js");
+            addScriptFromPath("/leaflet/MousePosition.js");
+
+            // support to show center coordinates
+            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.css");
+            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.js");
+            addScriptFromPath("/leaflet/MapCenter.js");
+
             // map helper functions for selecting, clicking, ...
             addScriptFromPath("/leaflet/MapHelper.js");
-            // add satellite layer to controls
-//            addMoreMapLayers();
+
+            // map helper functions for manipulating layer control entries
+            addScriptFromPath("/leaflet/LayerControl.js");
+            // set api key for open cycle map
+            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -332,7 +360,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
             addScriptFromPath("/leaflet/Routing.js");
             // we need an api key
-            execScript("initRouting(\"" + GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
+            execScript("initRouting(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
             // support for ruler
             // https://github.com/gokertanrisever/leaflet-ruler
@@ -344,8 +372,11 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/CliffCloud/Leaflet.EasyButton
             addStyleFromPath("/leaflet/easybutton/easy-button.css");
             addScriptFromPath("/leaflet/easybutton/easy-button.js");
-            addStyleFromPath("/leaflet/HeightChartButton.css");
             addScriptFromPath("/leaflet/HeightChartButton.js");
+
+            // support to re-center
+            addStyleFromPath("/leaflet/CenterButton.css");
+            addScriptFromPath("/leaflet/CenterButton.js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -356,7 +387,7 @@ public class TrackMap extends LeafletMapView {
             parentPane.getChildren().add(myPane);
             myPane.toFront();
             
-            // TFE, 20190712: show heightchart above tracks - like done in leaflet-elevation
+            // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
             final Region chart = HeightChart.getInstance();
             chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             chart.prefWidthProperty().bind(parentPane.widthProperty());
@@ -396,27 +427,6 @@ public class TrackMap extends LeafletMapView {
             MarkerManager.getInstance().loadSpecialIcons();
         }
     }
-    
-//    private void addMoreMapLayers() {
-//        final int newLayer = originalMapLayers+1;
-//        String scriptCmd = 
-//            "var layer" + newLayer + " = " + 
-//            "L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',  {attribution: '&copy; <a href=\"http://www.esri.com/\">Esri</a>'});";
-//
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//
-//        scriptCmd = 
-//            "var ctlLayer = " + 
-//            "L.control.layers(baseMaps, overlayMaps).addTo(myMap);";
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//
-//        scriptCmd = 
-//            "ctlLayer.addBaseLayer(layer" + newLayer + ", 'Satellite');";
-//        System.out.println(scriptCmd);
-//        execScript(scriptCmd);
-//    }
     
     public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
 //        System.out.println("Adding icon " + iconName + ", " + base64data);
@@ -550,14 +560,12 @@ public class TrackMap extends LeafletMapView {
             selectRect.setWidth(curPoint.getX() - startPoint.getX()) ;
             selectRect.setHeight(curPoint.getY() - startPoint.getY()) ;
 
-            if ( selectRect.getWidth() < 0 )
-            {
+            if ( selectRect.getWidth() < 0 ) {
                 selectRect.setWidth( - selectRect.getWidth() ) ;
                 selectRect.setX( startPoint.getX() - selectRect.getWidth() ) ;
             }
 
-            if ( selectRect.getHeight() < 0 )
-            {
+            if ( selectRect.getHeight() < 0 ) {
                 selectRect.setHeight( - selectRect.getHeight() ) ;
                 selectRect.setY( startPoint.getY() - selectRect.getHeight() ) ;
             }
@@ -574,7 +582,7 @@ public class TrackMap extends LeafletMapView {
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
             // we might be routing...
-            execScript("stopRouting(true);");
+            execScript("stopRouting(false);");
             
             assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
             LatLong latlong = (LatLong) contextMenu.getUserData();
@@ -662,7 +670,7 @@ public class TrackMap extends LeafletMapView {
             
             if (curRoute == null) {
                 // we might be routing...
-                execScript("stopRouting(true);");
+                execScript("stopRouting(false);");
             
                 // start new editable route
                 final String routeName = "route" + (routes.size() + 1);
@@ -684,8 +692,8 @@ public class TrackMap extends LeafletMapView {
                 // start autorouting on current route
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
-                        TrackMap.RoutingProfile.valueOf(
-                                GPXEditorPreferences.get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
+                        TrackMap.RoutingProfile.valueOf(    
+                                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
                                 .getProfileName() + "\");");
             }
         });
@@ -699,7 +707,7 @@ public class TrackMap extends LeafletMapView {
                 final MenuItem search = new MenuItem(item.name());
                 search.setOnAction((event) -> {
                     // we might be routing...
-                    execScript("stopRouting(true);");
+                    execScript("stopRouting(false);");
             
                     assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
                     final LatLong latlong = (LatLong) contextMenu.getUserData();
@@ -731,7 +739,11 @@ public class TrackMap extends LeafletMapView {
     }
     private void searchItems(final SearchItem searchItem, final LatLong latlong) {
         try {
-            final String searchParam = URLEncoder.encode("[out:json];node(around:5000.0," + latlong.getLatitude() + "," + latlong.getLongitude() + ")" + searchItem.getSearchString() + ";out;", "UTF-8");
+            final String searchParam = URLEncoder.encode(
+                    "[out:json];node(around:" + 
+                    GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000") + ".0," + 
+                    latlong.getLatitude() + "," + latlong.getLongitude() + ")" + 
+                    searchItem.getSearchString() + ";out;", "UTF-8");
 
             final URL url = new URL("https://overpass-api.de/api/interpreter");
             final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -829,7 +841,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor = gpxEditor;
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+   public void setGPXWaypoints(final GPXLineItem lineItem) {
         if (isDisabled()) {
             return;
         }
@@ -839,7 +851,7 @@ public class TrackMap extends LeafletMapView {
         // forget the past...
         fileWaypoints.clear();
         selectedWaypoints.clear();
-        tracks.clear();
+        trackSegments.clear();
         trackWaypoints.clear();
         routes.clear();
         routeWaypoints.clear();
@@ -857,21 +869,30 @@ public class TrackMap extends LeafletMapView {
             return;
         }
         
-        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no tracks get shown if already enough waypoints...
-        // file fileWaypointsCount don't count into MAX_DATAPOINTS
+        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
+        // file fileWaypointsCount don't count into MAX_WAYPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
-        //final double ratio = (GPXTrackviewer.MAX_DATAPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
-        final double ratio = GPXTrackviewer.MAX_DATAPOINTS / lineItem.getCombinedGPXWaypoints(null).size();
+        //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        // TFE, 20190819: make number of waypoints to show a preference
+        final int waypointCount = lineItem.getCombinedGPXWaypoints(null).size();
+        final double ratio = 
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                // might have no waypoints at all...
+                Math.max(waypointCount, 1);
 
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
+        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
         // only files can have file waypoints
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
             masterList.add(lineItem.getGPXWaypoints());
+        } else if (alwayShowFileWaypoints) {
+            // TFE, 20190818: add file waypoints as well, even though file isn't selected
+            masterList.add(lineItem.getGPXFile().getGPXWaypoints());
         }
-        // TFE, 20180508: get waypoints from tracks ONLY if you're no tracksegment...
+        // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
         // otherwise, we never only show points from a single tracksegment!
-        // files and tracks can have tracks
+        // files and trackSegments can have trackSegments
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
             GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
             for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
@@ -893,12 +914,13 @@ public class TrackMap extends LeafletMapView {
             }
         }
 
-        double[] bounds = showWaypoints(masterList, ratio);
+        double[] bounds = showWaypoints(masterList, ratio, alwayShowFileWaypoints);
 
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
 
-        if (bounds[4] > 0d) {
+        // TFE, 20190822: setMapBounds fails for nbo waypoints...
+        if (bounds[4] > 0d && waypointCount > 0) {
 //            setView(getCenter(), getZoom());
 
             // use map.fitBounds to avoid calculation of center and zoom
@@ -906,7 +928,7 @@ public class TrackMap extends LeafletMapView {
         }
         setVisible(bounds[4] > 0d);
     }
-    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final double ratio) {
+    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final double ratio, final boolean ignoreFileWayPointsInBounds) {
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
         double[] bounds = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, 0d};
@@ -919,7 +941,10 @@ public class TrackMap extends LeafletMapView {
 
             for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
                 final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
-                bounds = extendBounds(bounds, latLong);
+                // TFE, 20180818: don't count file waypoints in bounds if they're only shown "additionally"
+                if (!gpxWaypoint.isGPXFileWaypoint() || !ignoreFileWayPointsInBounds) {
+                    bounds = extendBounds(bounds, latLong);
+                }
 
                 if (gpxWaypoint.isGPXFileWaypoint()) {
                     // we show all file waypoints
@@ -935,7 +960,7 @@ public class TrackMap extends LeafletMapView {
                     
                     bounds[4] = 1d;
                 } else {
-                    // we only show a subset of other waypoints - up to MAX_DATAPOINTS
+                    // we only show a subset of other waypoints - up to MAX_WAYPOINTS
                     i++;    
                     if (i * ratio >= count) {
                         waypoints.add(latLong);
@@ -999,13 +1024,17 @@ public class TrackMap extends LeafletMapView {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName());
-                tracks.put(track, (GPXTrack) gpxpoint.getParent().getParent());
+                final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
+                // change color for routes to red (or what is set in gpxx extension)
+                execScript("updateMarkerColor(\"" + track + "\", \"" + gpxTrackSegment.getParent().getColor() + "\");");
+                trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName());
-                // change color for routes to blue
-                execScript("updateMarkerColor(\"" + route + "\", \"blue\");");
+                final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
+                // change color for routes to blue (or what is set in gpxx extension)
+                execScript("updateMarkerColor(\"" + route + "\", \"" + gpxRoute.getColor() + "\");");
                 execScript("makeEditable(\"" + route + "\");");
-                routes.put(route, (GPXRoute) gpxpoint.getParent());
+                routes.put(route, gpxRoute);
             }
         }
     }
@@ -1089,6 +1118,29 @@ public class TrackMap extends LeafletMapView {
                 waypoint = NOT_SHOWN + notShownCount;
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
+        }
+    }
+    
+    public void updateLineColor(final GPXLineItem lineItem) {
+        if ((lineItem instanceof GPXTrack) || (lineItem instanceof GPXRoute)) {
+            String layer = null;
+            
+            if (lineItem instanceof GPXTrack) {
+                // update for each segment
+                for (GPXTrackSegment segment : ((GPXTrack) lineItem).getGPXTrackSegments()) {
+                    layer = trackSegments.getKey(segment);
+
+                    if (layer != null) {
+                        execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                    }
+                }
+            } else {
+                layer = routes.getKey((GPXRoute) lineItem);
+
+                if (layer != null) {
+                    execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                }
+            }
         }
     }
 
@@ -1226,9 +1278,10 @@ public class TrackMap extends LeafletMapView {
         markername = markername + LatLongHelper.LatLongToString(point);
         
         // make sure the icon has been loaded and added in js
-        if (marker instanceof MarkerIcon && ((MarkerIcon) marker).getIconBase64().isEmpty()) {
+        if (marker instanceof MarkerIcon && !((MarkerIcon) marker).getAvailableInLeaflet()) {
             final MarkerIcon markerIcon = (MarkerIcon) marker;
             addPNGIcon(markerIcon.getIconName(), MarkerManager.DEFAULT_ICON_SIZE, MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
+            markerIcon.setAvailableInLeaflet(true);
         }
         
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
@@ -1248,6 +1301,10 @@ public class TrackMap extends LeafletMapView {
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
         HeightChart.getInstance().setViewLimits(newBoundingBox);
+    }
+    
+    public void setHeightChartButtonState(final HeightChartButtonState state) {
+        execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
     }
     
     public class JSCallback {

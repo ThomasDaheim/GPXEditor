@@ -30,8 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
-import tf.gpx.edit.main.GPXEditorManager;
 
 /**
  *
@@ -42,15 +40,13 @@ public class RecentFiles {
     public final static String RECENTFILENAME_COUNT = "recentFileName_Count";
     public final static String NORECENTFILENAME = "NOT_FOUND";
     
-    private Preferences myPreferences = Preferences.userNodeForPackage(GPXEditorManager.class);
-    private final RecentList<String> recentFiles;
+    private IPreferencesStore myPreferences = null;
+    private RecentList<String> recentFiles = null;
 
     private RecentFiles() {
-        myPreferences = Preferences.userNodeForPackage(RecentFiles.class);
-        recentFiles = new RecentList<>(1);
     }
 
-    public RecentFiles(final Preferences preferences, final int maxLength) {
+    public RecentFiles(final IPreferencesStore preferences, final int maxLength) {
         myPreferences = preferences;
         recentFiles = new RecentList<>(maxLength);
         

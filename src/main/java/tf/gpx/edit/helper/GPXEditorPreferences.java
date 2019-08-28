@@ -3,10 +3,11 @@ package tf.gpx.edit.helper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import tf.gpx.edit.general.IPreferencesStore;
 import tf.gpx.edit.general.RecentFiles;
 import tf.gpx.edit.main.GPXEditorManager;
 
-public class GPXEditorPreferences {
+public class GPXEditorPreferences implements IPreferencesStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static GPXEditorPreferences INSTANCE = new GPXEditorPreferences();
@@ -22,10 +23,15 @@ public class GPXEditorPreferences {
     public final static String SRTM_DATA_PATH = "SRTMDataPath";
     public final static String SRTM_DATA_AVERAGE = "SRTMDataAverage";
     public final static String HEIGHT_ASSIGN_MODE = "heightAssignMode";
+    public final static String OPENCYCLEMAP_API_KEY = "openCycleMapApiKey";
     public final static String ROUTING_API_KEY = "routingApiKey";
     public final static String ROUTING_PROFILE = "routingProfile";
+    public final static String BREAK_DURATION = "breakDuration";
+    public final static String SEARCH_RADIUS = "searchRadius";
+    public final static String ALWAYS_SHOW_FILE_WAYPOINTS = "alwaysShowFileWaypoints";
+    public final static String MAX_WAYPOINTS_TO_SHOW = "maxWaypointsToShow";
 
-    private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
+    private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
     
     private GPXEditorPreferences() {
         // Exists only to defeat instantiation.
@@ -39,7 +45,7 @@ public class GPXEditorPreferences {
         return MYRECENTFILES;
     }
     
-    public static String get(final String key, final String defaultValue) {
+    public String get(final String key, final String defaultValue) {
         String result = defaultValue;
         
         try {
@@ -51,7 +57,7 @@ public class GPXEditorPreferences {
         return result;
     }
     
-    public static void put(final String key, final String value) {
+    public void put(final String key, final String value) {
         MYPREFERENCES.put(key, value);
     }
 }

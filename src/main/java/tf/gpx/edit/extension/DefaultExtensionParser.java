@@ -23,46 +23,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.extension;
 
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
+import com.hs.gpxparser.GPXConstants;
+import com.hs.gpxparser.extension.DummyExtensionParser;
+import org.w3c.dom.Node;
 
 /**
- *
- * @author Thomas
+ * Default abstract parser for gpx files
+ * 
+ * Implements the general writeExtensions method
+ * 
+ * @author thomas
  */
-public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
+public class DefaultExtensionParser extends DummyExtensionParser {
+    private final static DefaultExtensionParser INSTANCE = new DefaultExtensionParser();
 
-    private GPXReduceWorker() {
-        super ();
-    }
-
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
-        super (parameter);
-        
-        myAlgorithm = algorithm;
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // remove all waypoints using given algorithm an epsilon
-        reduceGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
-    }
-
-    @Override
-    public void visitGPXRoute(GPXRoute gpxRoute) {
-        // remove all waypoints using given algorithm an epsilon
-        reduceGPXWaypoints(gpxRoute.getGPXWaypoints());
-    }
+    private final static String PARSER_ID = "DefaultParser";    
     
-    private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final boolean keep[] = EarthGeometry.simplifyTrack(waypoints, myAlgorithm, myParameter);
-        
-        removeGPXWaypoint(waypoints, keep);
+    private DefaultExtensionParser() {
+    }
+
+    public static DefaultExtensionParser getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String getId() {
+        return PARSER_ID;
+    }
+
+    @Override
+    public Object parseExtensions(Node node) {
+        // store all nodes under extension in DummyExtensionHolder - if any
+        if (GPXConstants.NODE_EXTENSIONS.equals(node.getNodeName()) && (node.getChildNodes().getLength() > 0)) {
+            return new DefaultExtensionHolder(node.getChildNodes());
+        } else {
+            return null;
+        }
     }
 }

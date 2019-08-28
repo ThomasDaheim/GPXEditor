@@ -25,79 +25,82 @@
  */
 package tf.gpx.edit.worker;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.IGPXLineItemVisitor;
 
 /**
  *
- * @author Thomas
+ * @author thomas
  */
-public class GPXEmptyWorker implements IGPXLineItemVisitor {
-    protected double myParameter = Double.MIN_VALUE;
-    protected boolean deepthFirst = true;
-
-    public GPXEmptyWorker() {
-        super ();
-    }
-
-    public GPXEmptyWorker(final double parameter) {
+public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
+    private static final List<String> CSV_HEADER = Arrays.asList("ID", "Type", "Position", "Start/Date", "Name", "Duration", "Length [km]", "Speed [km/h]");
+    
+    private List<List<String>> csvLines = new ArrayList<>();
+    
+    public GPXExtractCSVLinesWorker() {
         super ();
         
-        myParameter = parameter;
+        deepthFirst = false;
+    }
+    
+    public List<String> getCSVHeader() {
+        return CSV_HEADER;
+    }
+    
+    public List<List<String>> getCSVLines() {
+        return csvLines;
     }
 
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
-        // nothing to do
+        csvLines = new ArrayList<>();
+        
+        csvLines.add(visitGPXLineItem(gpxFile));
     }
 
     @Override
     public void visitGPXMetadata(final GPXMetadata gpxMetadata) {
-        // nothing to do
+        // Nothing to do
     }
 
     @Override
     public void visitGPXTrack(final GPXTrack gpxTrack) {
-        // nothing to do
+        csvLines.add(visitGPXLineItem(gpxTrack));
     }
 
     @Override
     public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
-        // nothing to do
+        csvLines.add(visitGPXLineItem(gpxTrackSegment));
     }
 
     @Override
     public void visitGPXWaypoint(final GPXWaypoint gpxWayPoint) {
-        // nothing to do
+        csvLines.add(visitGPXLineItem(gpxWayPoint));
     }
 
     @Override
     public void visitGPXRoute(final GPXRoute gpxRoute) {
-        // nothing to do
-    }
-
-    @Override
-    public boolean deepthFirst() {
-        return deepthFirst;
+        csvLines.add(visitGPXLineItem(gpxRoute));
     }
     
-    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
-        assert gpxWayPoints.size() == keep.length;
-        
-        // go through keep[] backwards and remove the waypoints with FALSE
-        final int size = keep.length;
-        for (int i = size - 1; i >= 0; i--) {
-            if (!keep[i]) {
-                gpxWayPoints.remove(i);
-            }
-        }
-        
-        return gpxWayPoints;
+    private List<String> visitGPXLineItem(final GPXLineItem gpxLineItem) {
+        return Arrays.asList(
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.CombinedID),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Type),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Position),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Start),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Name),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Duration),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Length),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Speed)
+            );
     }
 }

@@ -17,6 +17,34 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v4.0
+
+A lot of stuff from my bugs & features list!
+
+* pimped AboutMenu to show build information from MANIFEST.MF
+* show mouse & center position on map, button to re-center map
+* select waypoints in height chart via mouse drag
+* set max number of waypoints shown via preferences
+* set search radius via preferences
+* add labels for cities, streets and contour lines in Satellite & MapBox map where missing
+* identify & show breaks in statistics
+* upgrade SRTM viewer with ability to zoom, shift, rotate & show track colors
+* select colors for tracks & routes and store in Garmin gpx extension
+* export colors of tracks & routes in KML
+* CSV export
+* save tableview settings: column order, width, visibility, sorting
+* menu to delete date, name, extension information of selected waypoints
+* inverse and save autorouting explicitly
+* added support for OpenCycleMap api key
+* option to fix/reduce/assign height for selected items only (instead of always on whole file)
+* bumped up used libraries to current versions
+* various bugfixes
+
+### Update v3.5
+
+* routing: inverse route & save explicitly
+* context menu to delete date(s) & name(s)
+
 ### Update v3.4
 
 * improve HeightChart to be more similar to e.g. leaflet-elevation
@@ -252,17 +280,20 @@ Explicit dependencies:
 Other things used internally:
 
 * leaflet: https://leafletjs.com/
-* leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
-* leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
-* leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
-* leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
-* leaflet-openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
-* leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
-* leaflet-elevation: https://github.com/Raruto/leaflet-elevation
+* leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
+* leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
+* leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
+* leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
+* leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
+* leaflet.search: http://labs.easyblog.it/maps/leaflet-search/
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
+* route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 
 ## Roadmap
 

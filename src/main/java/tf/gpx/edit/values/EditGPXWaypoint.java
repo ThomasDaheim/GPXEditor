@@ -57,6 +57,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
+import org.controlsfx.control.textfield.TextFields;
 import tf.gpx.edit.general.RestrictiveTextField;
 import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -176,6 +177,8 @@ public class EditGPXWaypoint {
         waypointSymTxt.setEditable(true);
         waypointSymTxt.setVisibleRowCount(10);
         waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getMarkerNames());
+        // TFE, 20190721: filter while typing
+        TextFields.bindAutoCompletion(waypointSymTxt.getEditor(), waypointSymTxt.getItems());
         editWaypointPane.add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, insetTop);
         

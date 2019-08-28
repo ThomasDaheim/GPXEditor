@@ -48,7 +48,7 @@ import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.general.EnumHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
@@ -79,7 +79,7 @@ public class AssignSRTMHeight {
     private final Insets insetBottom = new Insets(0, 10, 10, 10);
     private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
     
-    private List<GPXFile> myGPXFiles;
+    private List<GPXLineItem> myGPXLineItems;
     
     // host services from main application
     private HostServices myHostServices;
@@ -98,11 +98,11 @@ public class AssignSRTMHeight {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
         myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
         
         // create new scene
         assignHeightStage.setTitle("Assign SRTM height values");
@@ -216,7 +216,9 @@ public class AssignSRTMHeight {
         final Button assignButton = new Button("Assign SRTM height values");
         assignButton.setOnAction((ActionEvent event) -> {
             // only do something if all srtm files are available
-            if (fileList.getItems().size() == fileList.getCheckModel().getCheckedItems().size()) {
+            // TFE, 20190809: check against number of not-null entries in getCheckedItems()
+            if (fileList.getItems().size() == 
+                    fileList.getCheckModel().getCheckedItems().stream().filter(e -> e != null).count()) {
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
@@ -224,12 +226,12 @@ public class AssignSRTMHeight {
                 final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
-                runVisitor(myGPXFiles, visitor);
+                runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
-                GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
-                GPXEditorPreferences.put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
-                GPXEditorPreferences.put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
+                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
 
                 hasUpdated = true;
 
@@ -246,9 +248,9 @@ public class AssignSRTMHeight {
         assignHeightStage.setResizable(false);
     }
     
-    public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXFile> gpxFiles) {
+    public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {
         myHostServices = hostServices;
-        myGPXFiles = gpxFiles;
+        myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;
         
@@ -264,12 +266,15 @@ public class AssignSRTMHeight {
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
-        runVisitor(myGPXFiles, visitor);
+        runVisitor(myGPXLineItems, visitor);
         
         // sorted list of files and mark missing ones
         fileList.getItems().clear();
         fileList.getCheckModel().clearChecks();
-            
+        // TFE, 20190809: if called the second time the list of checked items isn't empty
+        // and might be longer than the list of files added here --> check in assignButton.setOnAction fails...
+        // known bug: https://github.com/controlsfx/controlsfx/issues/1098
+
         final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
         
@@ -301,9 +306,9 @@ public class AssignSRTMHeight {
         
     }
 
-    private void runVisitor(final List<GPXFile> gpxFiles, final IGPXLineItemVisitor visitor) {
-        for (GPXFile gpxFile : gpxFiles) {
-            gpxFile.acceptVisitor(visitor);
+    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
+        for (GPXLineItem gpxLineItem : gpxLineItems) {
+            gpxLineItem.acceptVisitor(visitor);
         }
     }
 }

@@ -37,6 +37,7 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 
@@ -48,6 +49,8 @@ public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
+
+    private String color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
@@ -78,6 +81,14 @@ public class GPXTrack extends GPXMeasurable {
         myGPXFile = gpxFile;
         myTrack = track;
         
+        // set color from gpxx extension
+        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
+                        GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
+        if (nodeColor != null && !nodeColor.isBlank()) {
+            color = nodeColor;
+        }
+        
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
             for (TrackSegment segment : myTrack.getTrackSegments()) {
@@ -87,6 +98,22 @@ public class GPXTrack extends GPXMeasurable {
         }
 
         myGPXTrackSegments.addListener(changeListener);
+    }
+    
+    @Override
+    public String getColor() {
+        return color;
+    }
+    
+    @Override
+    public void setColor(final String col) {
+        color = col;
+        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                this,
+                GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+
+        setHasUnsavedChanges();
     }
     
     @Override
@@ -175,9 +202,13 @@ public class GPXTrack extends GPXMeasurable {
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
         //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());
+        myGPXTrackSegments.removeListener(changeListener);
         myGPXTrackSegments.clear();
         myGPXTrackSegments.addAll(gpxTrackSegments);
+        myGPXTrackSegments.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTrackSegments);
         setHasUnsavedChanges();
     }
     

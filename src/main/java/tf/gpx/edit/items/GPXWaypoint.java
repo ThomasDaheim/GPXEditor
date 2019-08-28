@@ -345,6 +345,8 @@ public class GPXWaypoint extends GPXLineItem {
                 return getName();
             case Position:
                 return LatLongHelper.GPXWaypointToString(this);
+            // TFE, 20190722: Start for a Waypoint is same as Date...
+            case Start:
             case Date:
                 // format dd.mm.yyyy hh:mm:ss
                 final Date start = myWaypoint.getTime();
@@ -413,6 +415,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public static Comparator<String> getCombinedIDComparator() {
+        // ID looks like F1, T1.S1.1, T10.S1.1004 - so a lot of special cases to be considererd
         return new Comparator<String>() {
             @Override
             public int compare(String id1, String id2) {
@@ -558,19 +561,31 @@ public class GPXWaypoint extends GPXLineItem {
 
     @Override
     public ObservableList<GPXTrack> getGPXTracks() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXTrack> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getType())) {
+            result.addAll(myGPXParent.getGPXTracks());
+        }
         return result;
     }
 
     @Override
     public ObservableList<GPXTrackSegment> getGPXTrackSegments() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXTrackSegment> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXTrackSegment.equals(myGPXParent.getType())) {
+            result.add((GPXTrackSegment) myGPXParent);
+        }
         return result;
     }
 
     @Override
     public ObservableList<GPXRoute> getGPXRoutes() {
+        // TFE, 20190731: add parent nodes as well
         ObservableList<GPXRoute> result = FXCollections.observableArrayList();
+        if (myGPXParent != null && GPXLineItemType.GPXRoute.equals(myGPXParent.getType())) {
+            result.add((GPXRoute) myGPXParent);
+        }
         return result;
     }
 

@@ -55,10 +55,10 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.parser.DefaultParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
 /**
@@ -92,7 +92,7 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         final GPXParser parser = new GPXParser();
-        parser.addExtensionParser(DefaultParser.getInstance());
+        parser.addExtensionParser(DefaultExtensionParser.getInstance());
         
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
@@ -184,7 +184,7 @@ public class GPXFile extends GPXMeasurable {
         setHeaderAndMeta();
         
         final GPXWriter writer = new GPXWriter();
-        writer.addExtensionParser(DefaultParser.getInstance());
+        writer.addExtensionParser(DefaultExtensionParser.getInstance());
 
         final FileOutputStream out;
         try {
@@ -305,6 +305,8 @@ public class GPXFile extends GPXMeasurable {
 
         numberChildren(myGPXWaypoints);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     
@@ -331,16 +333,24 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
+        myGPXTracks.removeListener(changeListener);
         myGPXTracks.clear();
         myGPXTracks.addAll(gpxTracks);
+        myGPXTracks.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTracks);
         setHasUnsavedChanges();
     }
 
     public void setGPXRoutes(final List<GPXRoute> gpxGPXRoutes) {
+        myGPXRoutes.removeListener(changeListener);
         myGPXRoutes.clear();
         myGPXRoutes.addAll(gpxGPXRoutes);
+        myGPXRoutes.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXRoutes);
         setHasUnsavedChanges();
     }
     

@@ -41,8 +41,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -62,20 +66,23 @@ import org.jzy3d.javafx.controllers.mouse.JavaFXCameraMouseController;
 import org.jzy3d.maths.Coord2d;
 import org.jzy3d.maths.Coord3d;
 import org.jzy3d.maths.Range;
-import org.jzy3d.maths.algorithms.interpolation.IInterpolator;
+import org.jzy3d.maths.Scale;
 import org.jzy3d.maths.algorithms.interpolation.algorithms.BernsteinInterpolator;
 import org.jzy3d.plot3d.builder.Builder;
 import org.jzy3d.plot3d.builder.Mapper;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
-import org.jzy3d.plot3d.primitives.LineStripInterpolated;
+import org.jzy3d.plot3d.primitives.LineStrip;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
+import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
+import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
@@ -101,7 +108,7 @@ public class SRTMDataViewer {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataViewer INSTANCE = new SRTMDataViewer();
     
-    private static final int MIN_PIXELS = 10;
+    private final static float ZOOM_STEP = 0.9f;
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
@@ -114,11 +121,11 @@ public class SRTMDataViewer {
     public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
         // get all required files
         final String mySRTMDataPath = 
-                GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
         final SRTMDataStore.SRTMDataAverage myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
         GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
 
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
@@ -215,29 +222,44 @@ public class SRTMDataViewer {
         // Jzy3d
         final MyJavaFXChartFactory factory = new MyJavaFXChartFactory();
         final AWTChart chart = getChartFromSRTMData(factory, "offscreen", latMin, lonMin, latMax, lonMax, gpxFile);
-        final ImageView imageView = factory.bindImageView(chart);
         
         // JavaFX
+        final ImageView imageView = factory.bindImageView(chart);
+        imageView.setPreserveRatio(true);
+
         final StackPane imagePane = new StackPane();
         imagePane.getChildren().add(imageView);
+        
+        // some explanation for rote & zoom
+        final Label label = new Label("LftBtn: Rotate X+Y+Z" + System.lineSeparator() + "RgtBtn: Shift X+Y" + System.lineSeparator() + "Wheel: Zoom X+Y+Z" + System.lineSeparator() + "ShiftWheel: Zoom Z");
+        label.getStyleClass().add("srtm-viewer-label");
+        StackPane.setAlignment(label, Pos.TOP_LEFT);
+        imagePane.getChildren().add(label);
+        label.toFront();
 
         final Button closeButton = new Button("Close");
         closeButton.setOnAction((ActionEvent event) -> {
-            ((Stage)(((Button)event.getSource()).getScene().getWindow())).close();
+            stage.close();
         });
         
         final VBox vbox = new VBox();
         vbox.setPadding(new Insets(10, 10, 10, 10));
         vbox.setAlignment(Pos.CENTER);
-        vbox.setStyle("-fx-background-color: white");
+        vbox.getStyleClass().add("srtm-viewer-button");
         
         vbox.getChildren().addAll(imagePane, closeButton);
         imagePane.prefHeightProperty().bind(Bindings.subtract(vbox.heightProperty(), closeButton.heightProperty()));
         imagePane.prefWidthProperty().bind(vbox.widthProperty());
         
         final Scene scene = new Scene(vbox);
+        scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.css").toExternalForm());
         vbox.prefHeightProperty().bind(scene.heightProperty());
         vbox.prefWidthProperty().bind(scene.widthProperty());
+        scene.setOnKeyPressed((KeyEvent t) -> {
+            if (KeyCode.ESCAPE.equals(t.getCode())){
+                stage.close();
+            }
+        });
 
         stage.setScene(scene);
         stage.initModality(Modality.APPLICATION_MODAL); 
@@ -255,6 +277,9 @@ public class SRTMDataViewer {
         imagePane.setMinWidth(0);
         vbox.setMinHeight(0);
         vbox.setMinWidth(0);
+
+        // TFE, 20190810: start with low peaks...
+        View.current().zoomZ(1f / (ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP), true);
     }
     
     private List<File> getFiles() {
@@ -263,7 +288,7 @@ public class SRTMDataViewer {
         final List<String> extFilter = Arrays.asList("*." + SRTMDataStore.HGT_EXT);
         final List<String> extValues = Arrays.asList(SRTMDataStore.HGT_EXT);
 
-        final File curPath = new File(GPXEditorPreferences.get(GPXEditorPreferences.SRTM_DATA_PATH, ""));
+        final File curPath = new File(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, ""));
         final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
 
         FileChooser fileChooser = new FileChooser();
@@ -312,9 +337,9 @@ public class SRTMDataViewer {
             }
         };
 
-        // we don't want to plot the full set, only 1/10 of it
+        // we don't want to plot the full set, only 1/4 of it
         final int dataCount = SRTMData.SRTMDataType.SRTM3.getDataCount();
-        final int steps = dataCount / 10;
+        final int steps = dataCount / 4;
         
         // Define range and precision for the function to plot
         // Invert x for latitude since jzy3d always shows from lower to upper values independent of min / max in range
@@ -328,10 +353,11 @@ public class SRTMDataViewer {
         final Shape surface = Builder.buildOrthonormal(grid, mapper);
         final ColorMapper localColorMapper = new ColorMapper(new ColorMapRainbow(), surface.getBounds().getZmin(), surface.getBounds().getZmax(), new Color(1, 1, 1, .5f));
 
-        surface.getBounds().setZmin(-1f);
         surface.setColorMapper(localColorMapper);
         surface.setFaceDisplayed(true);
         surface.setWireframeDisplayed(false);
+
+        surface.getBounds().setZmin(-1f);
         
         // -------------------------------
         // Create a chart
@@ -348,16 +374,27 @@ public class SRTMDataViewer {
         
         // add waypoints from gpxFile (if any)
         if (gpxFile != null) {
-            final IInterpolator line = new BernsteinInterpolator();
-            final List<Coord3d> points = new ArrayList<>();
-            for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
-                // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
+            // add tracks individually with their color
+            for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
+                final List<Coord3d> points = new ArrayList<>();
+                for (GPXWaypoint waypoint : gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
+                    // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+                    points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
+                }
+                final BernsteinInterpolator line = new BernsteinInterpolator();
+                final LineStrip fline = new LineStrip(line.interpolate(points, 1));
+    
+                // Color is not the same as Color...
+                final javafx.scene.paint.Color javaFXColor = GarminDisplayColor.getJavaFXColorForName(gpxTrack.getColor());
+                final org.jzy3d.colors.Color jzy3dColor = new Color(
+                        (float) javaFXColor.getRed(), 
+                        (float) javaFXColor.getGreen(), 
+                        (float) javaFXColor.getBlue(), 
+                        (float) javaFXColor.getOpacity());
+                fline.setWireframeColor(jzy3dColor);
+                fline.setWireframeWidth(6);
+                chart.getScene().getGraph().add(fline);
             }
-            line.interpolate(points, 1);
-            
-            final LineStripInterpolated fline = new LineStripInterpolated(line, points, 0);
-            chart.getScene().getGraph().add(fline);
         }
         
         // and now for some beautifying
@@ -374,7 +411,7 @@ public class SRTMDataViewer {
         chart.getAxeLayout().setXTickRenderer(tickRend);
         chart.getAxeLayout().setYTickRenderer(tickRend);
         chart.getAxeLayout().setZTickRenderer(tickRend);
-
+        
         chart.setViewMode(ViewPositionMode.FREE);
         chart.setViewPoint(new Coord3d(0.05f, 1.1f, 1000f));
 
@@ -411,6 +448,10 @@ public class SRTMDataViewer {
     // proper checking for left / right mouse button
     // zoom in on mouse wheel
     private class MyJavaFXCameraMouseController extends JavaFXCameraMouseController {
+        // TFE, 20190728: count number of times zoomed in (+1) vs. zoomed out (-1)
+        // only allow zooming out when count > 0
+        private int zoomInOutCount = 0;
+        
         public MyJavaFXCameraMouseController(Node node) {
             super(node);
         }
@@ -418,49 +459,90 @@ public class SRTMDataViewer {
         public MyJavaFXCameraMouseController(Chart chart, Node node) {
             super(chart, node);
         }
-
+        
 	@Override
         protected void mouseDragged(MouseEvent e) {
+            e.consume();
             Coord2d mouse = new Coord2d(e.getX(), e.getY());
             // Rotate
-            if (myIsLeftDown(e)) {
-                Coord2d move = mouse.sub(prevMouse).div(100);
-                rotate(move);
-                for(Chart chart: targets){
-                    chart.render();
-                }
+            if (e.isPrimaryButtonDown()) {
+                final Coord2d move = prevMouse.sub(mouse).div(100f);
+//                System.out.println("Rotating: " + move);
+                rotate(move, true);
             }
             // Shift
-            else if (myIsRightDown(e)) {
-                Coord2d move = mouse.sub(prevMouse);
-                if (move.y != 0)
-                    shift(move.y / 500);
+            else if (e.isSecondaryButtonDown()) {
+                // use setScaleX, setScaleY to move x/y positions on right / shift + right mouse
+                // inspired by View.shift
+                final View view = View.current();
+                final Coord2d move = prevMouse.sub(mouse);
+                if (move.x != 0) {
+//                    System.out.println("Shifting y: " + move.x / 500f);
+                    final Scale current = new Scale(view.getBounds().getYmin(), view.getBounds().getYmax());
+                    final Scale newScale = current.add((move.x / 500f) * current.getRange());
+                    view.setScaleY(newScale, true);
+                }
+                if (move.y != 0) {
+//                    System.out.println("Shifting x: " + move.y / 500f);
+                    final Scale current = new Scale(view.getBounds().getXmin(), view.getBounds().getXmax());
+                    final Scale newScale = current.add((move.y / 500f) * current.getRange());
+                    view.setScaleX(newScale, true);
+                }
             }
             prevMouse = mouse;
         }
         
-        // TODO: actually zoom in - need to change boundingbox & don't squarify
-//	@Override
-//	protected void mouseWheelMoved(ScrollEvent e) {
-//            // no mouse zoom, please zoom into diagram
-//            float multiplier = 0.75f;
-//            if (e.getDeltaY() < 0) {
-//                multiplier = 1f / multiplier;
-//            }
-//            System.out.println("multiplier: " + multiplier);
-//            for(Chart chart: targets){
-//                chart.setViewPoint(chart.getViewPoint().mul(multiplier));
-//            }
-//            if(threadController!=null)
-//                threadController.stop();
-//        }
-        
-        public boolean myIsLeftDown(MouseEvent e) {
-            return e.isPrimaryButtonDown();
-        }
+        // actually zoom in
+	@Override
+	protected void mouseWheelMoved(ScrollEvent e) {
+            e.consume();
 
-        public boolean myIsRightDown(MouseEvent e) {
-            return e.isSecondaryButtonDown();
-        }        
+            if(threadController!=null)
+                threadController.stop();
+            
+            // https://stackoverflow.com/a/52707611
+            // if shift is pressed with mouse wheel x is changed instead of y...
+            double scrollDelta = 0d;
+            if (!e.isShiftDown()) {
+                scrollDelta = e.getDeltaY();
+            } else {
+                scrollDelta = e.getDeltaX();
+            }
+
+            // no mouse zoom, please zoom into diagram
+            float factor;
+            if (scrollDelta > 0) {
+                factor = ZOOM_STEP;
+                // z-only zoooming is allowed
+                if (!e.isShiftDown()) {
+                    zoomInOutCount++;
+                }
+            } else {
+                factor = 1f / ZOOM_STEP;
+                // z-only zoooming is allowed
+                if (!e.isShiftDown()) {
+                    zoomInOutCount--;
+                }
+            }
+            if (zoomInOutCount < 0) {
+//                System.out.println("No zooming out allowed!");
+                zoomInOutCount = 0;
+                return;
+            }
+
+            // Use the source, Luke!
+            // https://github.com/jzy3d/jzy3d-api/blob/master/jzy3d-api/src/api/org/jzy3d/plot3d/rendering/view/View.java
+            // shows what easy methods are available for zooming :-)
+            
+            // scrill with shift -> only zoom z-axis
+            if (!e.isShiftDown()) {
+                View.current().zoomX(factor, false);
+                View.current().zoomY(factor, false);
+            }
+            View.current().zoomZ(factor, true);
+            
+            // zmin should stay -1f
+            View.current().getBounds().setZmin(-1f);
+        }
     }
 }

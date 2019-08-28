@@ -557,4 +557,51 @@ public abstract class GPXLineItem {
             }
         };
     }
+
+    // comparator for sorting columns by IDs
+    public static Comparator<String> getSingleIDComparator() {
+        // ID looks like F1, T1, S10
+        return new Comparator<String>() {
+            @Override
+            public int compare(String id1, String id2) {
+//                System.out.println("id1: " + id1 + ", id2: " + id2);
+
+                // and now "invert" logic of getCombinedID...
+                char type1 = id1.charAt(0);
+                char type2 = id2.charAt(0);
+//                System.out.println("type1: " + type1 + ", type2: " + type2);
+
+                if (type1 == type2) {
+                    // shift & compare
+                    id1 = id1.substring(1);
+                    id2 = id2.substring(1);
+                    
+                    // check if both are numbers - otherwise return string compare
+                    if (!NumberUtils.isParsable(id1) || !NumberUtils.isParsable(id2)) {
+                        return id1.compareTo(id2);
+                    }
+
+                    final Double d1 = Double.parseDouble(id1);
+                    final Double d2 = Double.parseDouble(id2);
+
+                    return d1.compareTo(d2);
+                } else {
+                    // shouldn't happen - but anyways...
+                    return id1.compareTo(id2);
+                }
+            }
+        };
+    }
+    
+    // TFE, 20190723: some color, please
+    public String getColor() {
+        return "Black";
+    }
+    public void setColor(final String col) {
+    }
+    
+    // TFE, 20190808: general list converter from anywhere to List<GPXLineItem>
+    public static List<GPXLineItem> castToGPXLineItem(final List<? extends GPXLineItem> gpxAnyList) {
+        return gpxAnyList.stream().collect(Collectors.toList());
+    }
 }

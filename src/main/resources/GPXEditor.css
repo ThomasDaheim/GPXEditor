@@ -31,28 +31,34 @@
 /*
     treetableview for gpxfiles, tracks, tracksegments
 */
-/* http://stackoverflow.com/questions/21704598/how-to-show-grid-lines-for-rows-in-treetableview */
+/* https://stackoverflow.com/a/47338913 */
 .tree-table-row-cell {
-    -fx-background-color: -fx-table-cell-border-color, -fx-control-inner-background;
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
     -fx-background-insets: 0, 0 0 1 0;
-    -fx-padding: 0.0em;
-    -fx-text-fill: -fx-text-inner-color;
 }
-.tree-table-row-cell:selected {
-    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-focus-color;
-    -fx-background-insets: 0, 1, 2;
-}
+/* Let odd rows look different */
 .tree-table-row-cell:odd {
-    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-5%);
-    -fx-background-insets: 0, 0 0 1 0;
+    -fx-background: -fx-control-inner-background-alt;
 }
-.tree-table-row-cell:selected:odd {
-    -fx-background-color: -fx-focus-color, -fx-cell-focus-inner-border, -fx-focus-color;
-    -fx-background-insets: 0, 1, 2;
+/* Selected when control is focused */
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:selected {
+    -fx-background: -fx-selection-bar;
+    -fx-table-cell-border-color: derive(-fx-selection-bar, 20%);
 }
-.tree-table-row-cell:drop-target {
+/* Selected when control is not focused */
+.tree-table-row-cell:filled:selected {
+    -fx-background: -fx-selection-bar-non-focused;
+    -fx-table-cell-border-color: derive(-fx-selection-bar-non-focused, 20%);
+}
+.tree-table-row-cell:drop-target-above {
     -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
     -fx-background-insets: 0, 1, 2;
+    -fx-border-color: black transparent transparent transparent;
+}
+.tree-table-row-cell:drop-target-below {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: transparent transparent black transparent;
 }
 
 .tree-table-view .table-cell, .tree-table-view .column-header {
@@ -238,4 +244,15 @@
     -fx-background-insets: 0;
     -fx-padding: 0;
     -fx-shape: null;
+}
+
+.srtm-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
+}
+
+.srtm-viewer-button {
+    -fx-background-color: white
 }

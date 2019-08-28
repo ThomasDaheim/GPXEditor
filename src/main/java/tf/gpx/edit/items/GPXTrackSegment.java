@@ -188,6 +188,8 @@ public class GPXTrackSegment extends GPXMeasurable {
         myStartingTime = null;
         myEndTime = null;
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     

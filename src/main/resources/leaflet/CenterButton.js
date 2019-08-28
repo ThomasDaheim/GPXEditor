@@ -23,19 +23,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* 
-    Created on : 12-Jul-2019, 18:09:14
-    Author     : thomas
-*/
 
-.leaflet-bar button,
-.leaflet-bar button:hover {
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
-}
+var centerButton = L.easyButton({
+    position: 'topright',
+    id: 'centerButton',
+    states: [{
+            stateName: 'center-button',
+            icon:      '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAANtJREFUeNpiYMADjI2N/+OTZ8KhSQEfHwYYcWhcD8SOQPweiAWBeD8QB549e/YBslpmdM3Pnz//ICUlxQlk5gOxBhRvBGrcgdPZyE4DKpyArAiZj6yOCdmpQLoASU8iED+A0jCNBVB1Cih+BgoIAKn5MI1A2z4QkmPBER0GQKyIxD8PxDDnBgD1gBksQFMYsZmOZpghNpsZ0aJnISxwoIaBbDSEKYb6OR4j2rAkDFDA/AfRuBIMM3L8ooWqAjSObwDjXRIofwJdHUUpjAFf2obFBK60zUBJrgIIMABGHmR/wLeX2AAAAABJRU5ErkJggg==">',
+            title:     'Center map',
+            onClick: function(btn, map) {
+                //jscallback.log('centerButton pressed');
+                doSetMapBounds(mapBounds);
+            }
+        }]
+});
+//jscallback.log(L.DomUtil.getClass(centerButton.button));
 
-.cross{
-    font-size: 1.5em;
-    font-weight: bold;
-}
+centerButton.addTo(myMap);

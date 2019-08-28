@@ -1,4 +1,4 @@
-/*
+    /*
  * Copyright (c) 2014ff Thomas Feuster
  * All rights reserved.
  * 
@@ -23,43 +23,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.parser;
 
-import com.hs.gpxparser.GPXConstants;
-import com.hs.gpxparser.extension.DummyExtensionParser;
-import org.w3c.dom.Node;
+L.control.mousePosition({
+    position: 'topleft',
+    prefix: 'Mouse:',
+    separator: ' | '
+}).addTo(myMap);
 
-/**
- * Default abstract parser for gpx files
- * 
- * Implements the general writeExtensions method
- * 
- * @author thomas
- */
-public class DefaultParser extends DummyExtensionParser {
-    private final static DefaultParser INSTANCE = new DefaultParser();
-
-    public final static String PARSER_ID = "DefaultParser";    
-    
-    private DefaultParser() {
-    }
-
-    public static DefaultParser getInstance() {
-        return INSTANCE;
-    }
-
-    @Override
-    public String getId() {
-        return PARSER_ID;
-    }
-
-    @Override
-    public Object parseExtensions(Node node) {
-        // store all nodes under extension in DummyExtensionHolder - if any
-        if (GPXConstants.NODE_EXTENSIONS.equals(node.getNodeName()) && (node.getChildNodes().getLength() > 0)) {
-            return new DefaultExtensionHolder(node.getChildNodes());
-        } else {
-            return null;
-        }
-    }
-}
