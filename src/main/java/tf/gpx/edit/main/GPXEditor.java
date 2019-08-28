@@ -105,6 +105,7 @@ import javafx.stage.Window;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.general.AboutMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
@@ -121,7 +122,6 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
@@ -535,6 +535,7 @@ public class GPXEditor implements Initializable {
         //
         // Views
         //
+        // TFE, 20190828: is that really need after various performance improvements?
         switchMapMenu.setUserData("TRUE");
         switchMapMenu.setText("Disable Map");
         switchMapMenu.setOnAction((ActionEvent event) -> {
@@ -547,6 +548,7 @@ public class GPXEditor implements Initializable {
             } else {
                 switchMapMenu.setUserData("TRUE");
                 switchMapMenu.setText("Disable Map");
+                // TODO: save previous state and only enable if something to show...
                 GPXTrackviewer.getInstance().setEnable(true);
             }
         });

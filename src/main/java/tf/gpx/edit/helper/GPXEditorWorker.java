@@ -36,18 +36,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -57,8 +51,6 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.srtm.SRTMDataStore;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
@@ -277,7 +269,7 @@ public class GPXEditorWorker {
             worker.getCSVLines().forEach((t) -> {
                 // no idea, why a nested try & catch is required here...
                 try {
-                    printer.printRecord((Object[]) t.toArray(new String[0]));
+                    printer.printRecord((Object[]) t.toArray(new String[t.size()]));
                 } catch (IOException ex) {
                     Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
                 }

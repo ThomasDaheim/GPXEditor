@@ -27,9 +27,7 @@ package tf.gpx.edit.general;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Base64;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -204,10 +202,10 @@ public class AboutMenu {
         rowNum++;
         final Label lbl5 = new Label(
                 "\nBuilt by:\t\t\t" + builtBy + 
-                "\nBuild-Timestamp:\t" + buildTimestamp + 
-                "\nBuild-Jdk:\t\t\t" + buildJdk + 
-                "\nBuild-OS:\t\t\t" + buildOS + 
-                "\nCreated-By:\t\t" + createdBy);
+                "\nBuild timestamp:\t" + buildTimestamp + 
+                "\nBuild JDK:\t\t\t" + buildJdk + 
+                "\nBuild OS:\t\t\t" + buildOS + 
+                "\nCreated by:\t\t" + createdBy);
         pane.add(lbl5, 0, rowNum, 2, 1);
         
         alert.getDialogPane().contentProperty().set(pane);

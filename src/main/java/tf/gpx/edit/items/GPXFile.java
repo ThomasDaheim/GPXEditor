@@ -55,10 +55,10 @@ import javafx.collections.ObservableList;
 import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXEditorWorker;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
 /**

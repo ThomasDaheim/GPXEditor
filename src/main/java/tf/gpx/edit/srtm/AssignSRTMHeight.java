@@ -30,7 +30,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.HostServices;
-import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

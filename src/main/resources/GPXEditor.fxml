@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -118,9 +118,9 @@
                   <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="View">
+            <Menu disable="true" mnemonicParsing="false" text="View" visible="false">
               <items>
-                <MenuItem fx:id="switchMapMenu" mnemonicParsing="false" text="Disable Map" />
+                <MenuItem fx:id="switchMapMenu" disable="true" mnemonicParsing="false" text="Disable Map" visible="false" />
               </items>
             </Menu>
         </menus>

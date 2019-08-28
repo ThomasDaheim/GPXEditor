@@ -3,9 +3,9 @@ package tf.gpx.edit.helper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import tf.gpx.edit.general.IPreferencesStore;
 import tf.gpx.edit.general.RecentFiles;
 import tf.gpx.edit.main.GPXEditorManager;
-import tf.gpx.edit.general.IPreferencesStore;
 
 public class GPXEditorPreferences implements IPreferencesStore {
     // this is a singleton for everyones use
@@ -31,7 +31,7 @@ public class GPXEditorPreferences implements IPreferencesStore {
     public final static String ALWAYS_SHOW_FILE_WAYPOINTS = "alwaysShowFileWaypoints";
     public final static String MAX_WAYPOINTS_TO_SHOW = "maxWaypointsToShow";
 
-    private final static RecentFiles MYRECENTFILES = new RecentFiles(MYPREFERENCES, 5);
+    private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
     
     private GPXEditorPreferences() {
         // Exists only to defeat instantiation.

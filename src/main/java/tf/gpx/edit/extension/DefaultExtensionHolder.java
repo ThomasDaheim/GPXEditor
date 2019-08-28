@@ -29,7 +29,6 @@ import com.hs.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
