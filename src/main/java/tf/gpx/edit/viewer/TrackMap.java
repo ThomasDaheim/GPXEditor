@@ -240,6 +240,7 @@ public class TrackMap extends LeafletMapView {
     // https://stackoverflow.com/a/41908133
     private JSCallback jscallback;
     
+    final List<MapLayer> mapLayers;
     private final CompletableFuture<Worker.State> cfMapLoadState;
 //    private int originalMapLayers = 0;
     private boolean isLoaded = false;
@@ -253,9 +254,9 @@ public class TrackMap extends LeafletMapView {
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
-        final List<MapLayer> mapLayer = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
-//        originalMapLayers = mapLayer.size();
-        final MapConfig myMapConfig = new MapConfig(mapLayer, 
+        mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
+//        originalMapLayers = mapLayers.size();
+        final MapConfig myMapConfig = new MapConfig(mapLayers, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
                         new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
 
@@ -328,6 +329,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath("/leaflet/LayerControl.js");
             // set api key for open cycle map
             execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
+            execScript("setCurrentBaselayer(\"" + 1 + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
