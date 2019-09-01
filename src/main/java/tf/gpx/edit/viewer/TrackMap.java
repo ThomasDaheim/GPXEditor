@@ -1296,9 +1296,7 @@ public class TrackMap extends LeafletMapView {
     public void loadPreferences() {
         // neeed to make sure our intrenal setup has been completed...
         if (isInitialized) {
-            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.INITIAL_BASELAYER, "0") + "\");");
-            
-            // overlays per baselayer
+            // overlays per baselayer first
             // first need to get the know names from js...
             final List<String> baselayerNames = new ArrayList<>();
             transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
@@ -1324,6 +1322,9 @@ public class TrackMap extends LeafletMapView {
                 
                 execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
             }
+
+            // and now switch the baselayer
+            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.INITIAL_BASELAYER, "0") + "\");");
         }
     }
     public void savePreferences() {
