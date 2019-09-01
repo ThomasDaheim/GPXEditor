@@ -571,4 +571,12 @@ public class HeightChart<X,Y> extends AreaChart {
             prevPair = pair;
         }
     }
+
+    public void loadPreferences() {
+        // nothing todo
+    }
+    
+    public void savePreferences() {
+        // nothing todo
+    }
 }

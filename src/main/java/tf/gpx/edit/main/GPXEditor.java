@@ -375,7 +375,10 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v4.0", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v4.1", "https://github.com/ThomasDaheim/GPXEditor");
+        
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences();
     }
 
     public void stop() {
@@ -386,6 +389,9 @@ public class GPXEditor implements Initializable {
         // store values for tableviews
         TableViewPreferences.saveTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferences.getInstance());
         TableViewPreferences.saveTableViewPreferences(gpxTrackXML, "gpxTrackXML", GPXEditorPreferences.getInstance());
+
+        // TFE, 20180901: store values for track & height map
+        GPXTrackviewer.getInstance().savePreferences();
     }
     
     public Window getWindow() {

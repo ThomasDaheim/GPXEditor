@@ -57,6 +57,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -329,7 +330,6 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath("/leaflet/LayerControl.js");
             // set api key for open cycle map
             execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
-            execScript("setCurrentBaselayer(\"" + 1 + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -427,6 +427,9 @@ public class TrackMap extends LeafletMapView {
             
             // now we have loaded TrackMarker.js...
             MarkerManager.getInstance().loadSpecialIcons();
+            
+            // TFE, 20190901: load preferences - now things are up & running
+            loadPreferences();
         }
     }
     
@@ -1251,26 +1254,6 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWayointList(false);
     }
     
-//    private LatLong getCenter() {
-//        return new LatLong(myBoundingBox.getMinX()+myBoundingBox.getWidth()/2, myBoundingBox.getMinY()+myBoundingBox.getHeight()/2);
-//    }
-
-//    private int getZoom() {
-//        // http://stackoverflow.com/questions/4266754/how-to-calculate-google-maps-zoom-level-for-a-bounding-box-in-java
-//        int zoomLevel;
-//        
-//        final double maxDiff = (myBoundingBox.getWidth() > myBoundingBox.getHeight()) ? myBoundingBox.getWidth() : myBoundingBox.getHeight();
-//        if (maxDiff < 360d / Math.pow(2, 20)) {
-//            zoomLevel = 21;
-//        } else {
-//            zoomLevel = (int) (-1d*( (Math.log(maxDiff)/Math.log(2d)) - (Math.log(360d)/Math.log(2d))) + 1d);
-//            if (zoomLevel < 1)
-//                zoomLevel = 1;
-//        }
-//        
-//        return zoomLevel;
-//    }
-
     private String addMarkerAndCallback(final LatLong point, final String pointname, final Marker marker, final int zIndex, final boolean interactive) {
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
         String markername = "";
@@ -1309,6 +1292,111 @@ public class TrackMap extends LeafletMapView {
         execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
     }
     
+    // TFE, 20190901: support to store & load overlay settings per baselayer
+    public void loadPreferences() {
+        // neeed to make sure our intrenal setup has been completed...
+        if (isInitialized) {
+            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.INITIAL_BASELAYER, "0") + "\");");
+            
+            // overlays per baselayer
+            // first need to get the know names from js...
+            final List<String> baselayerNames = new ArrayList<>();
+            transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
+
+            final List<String> overlayNames = new ArrayList<>();
+            transformToJavaList("getKnownOverlayNames();", overlayNames, false);
+
+            // know read the combinations of baselayer and overlay names from the preferences
+            final List<String> preferenceValues = new ArrayList<>();
+            final List<String> defaultValues = new ArrayList<>();
+            for (String baselayer : baselayerNames) {
+                preferenceValues.clear();
+                defaultValues.clear();
+                
+                // get current values as default - bootstrap for no preferences set...
+                transformToJavaList("getOverlayValues(\"" + baselayer + "\");", defaultValues, false);
+
+                for (int i = 0; i < overlayNames.size(); i++) {
+                    final String overlay = overlayNames.get(i);
+                    final String defaultVal = defaultValues.get(i);
+                    preferenceValues.add(GPXEditorPreferences.getInstance().get(preferenceString(baselayer, overlay), defaultVal));
+                }
+                
+                execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
+            }
+        }
+    }
+    public void savePreferences() {
+        Integer outVal = (Integer) execScript("getCurrentBaselayer();");
+        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.INITIAL_BASELAYER, outVal.toString());
+
+        // overlays per baselayer
+        // first need to get the know names from js...
+        final List<String> baselayerNames = new ArrayList<>();
+        transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
+
+        final List<String> overlayNames = new ArrayList<>();
+        transformToJavaList("getKnownOverlayNames();", overlayNames, false);
+
+        // know read the combinations of baselayer and overlay names from the preferences
+        final List<String> overlayValues = new ArrayList<>();
+        for (String baselayer : baselayerNames) {
+            overlayValues.clear();
+
+            // get current values as default - bootstrap for no preferences set...
+            transformToJavaList("getOverlayValues(\"" + baselayer + "\");", overlayValues, false);
+
+            for (int i = 0; i < overlayNames.size(); i++) {
+                final String overlay = overlayNames.get(i);
+                final String overlayVal = overlayValues.get(i);
+                
+//                System.out.println("GPXEditorPreferences.getInstance().put: " + preferenceString(baselayer, overlay) + " to " + overlayVal);
+                GPXEditorPreferences.getInstance().put(preferenceString(baselayer, overlay), overlayVal);
+            }
+        }
+    }
+    private static String preferenceString(final String baselayer, final String overlay) {
+        // no spaces in preference names, please
+        return GPXEditorPreferences.BASELAYER_PREFIX + GPXEditorPreferences.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
+                GPXEditorPreferences.SEPARATOR + 
+                GPXEditorPreferences.OVERLAY_PREFIX + GPXEditorPreferences.SEPARATOR + overlay.replaceAll("\\s+", "");
+    }
+    private void transformToJavaList(final String jsScript, final List<String> result, final boolean appendTo) {
+        if (!appendTo) {
+            result.clear();
+        }
+        
+        JSObject jsValue = (JSObject) execScript(jsScript);
+        Object slotVal;
+        for (int i = 0; i < 999; i++) {
+            slotVal = jsValue.getSlot(i);
+            if ("undefined".equals(slotVal.toString())) {
+                break;
+            }
+            result.add(slotVal.toString());
+        }
+    }
+    private static String transformToJavascriptArray(final List<String> arr, final boolean quoteItems) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("[");
+
+        for (String str : arr) {
+            if (quoteItems) {
+                sb.append("\"").append(str).append("\"").append(", ");
+            } else {
+                sb.append(str).append(", ");
+            }
+        }
+
+        if (sb.length() > 1) {
+            sb.replace(sb.length() - 2, sb.length(), "");
+        }
+
+        sb.append("]");
+
+        return sb.toString();
+    }    
+
     public class JSCallback {
         // call back for jscallback :-)
         private final TrackMap myTrackMap;

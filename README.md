@@ -17,6 +17,10 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v4.1
+
+* save last used baselayer and overlay settings per baselayer as preference for the next time
+
 ### Update v4.0
 
 A lot of stuff from my bugs & features list!

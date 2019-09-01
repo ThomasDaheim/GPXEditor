@@ -58,7 +58,7 @@ public class TableViewPreferences {
     private final static String COLUMN_WIDTH = "ColumnWidth";
     private final static String COLUMN_VISBILTY = "ColumnVisibility";
     private final static String SORT_ORDER = "SortOrder";
-    private final static String SEPERATOR = "-";
+    private final static String SEPARATOR = "-";
             
     private TableViewPreferences() {
         // Exists only to defeat instantiation.
@@ -86,7 +86,7 @@ public class TableViewPreferences {
         if (checkUniqueIds(columns)) {
             for (TableColumnBase column : columns) {
                 final String id = column.getId();
-                final String prefKey = prefPrefix + SEPERATOR + COLUMN_ORDER + SEPERATOR + String.valueOf(colNum);
+                final String prefKey = prefPrefix + SEPARATOR + COLUMN_ORDER + SEPARATOR + String.valueOf(colNum);
                 
 //                System.out.println("save: prefKey: " + prefKey + ", id: " + id);
                 prefStore.put(prefKey, id);
@@ -99,7 +99,7 @@ public class TableViewPreferences {
         colNum = 0;
         for (TableColumnBase column : columns) {
             final String value = String.valueOf(column.getWidth());
-            final String prefKey = prefPrefix + SEPERATOR + COLUMN_WIDTH + SEPERATOR + String.valueOf(colNum);
+            final String prefKey = prefPrefix + SEPARATOR + COLUMN_WIDTH + SEPARATOR + String.valueOf(colNum);
 
 //            System.out.println("save: prefKey: " + prefKey + ", value: " + value);
           prefStore.put(prefKey, value);
@@ -111,7 +111,7 @@ public class TableViewPreferences {
         colNum = 0;
         for (TableColumnBase column : columns) {
             final String value = String.valueOf(column.isVisible());
-            final String prefKey = prefPrefix + SEPERATOR + COLUMN_VISBILTY + SEPERATOR + String.valueOf(colNum);
+            final String prefKey = prefPrefix + SEPARATOR + COLUMN_VISBILTY + SEPARATOR + String.valueOf(colNum);
 
 //            System.out.println("save: prefKey: " + prefKey + ", value: " + value);
           prefStore.put(prefKey, value);
@@ -126,7 +126,7 @@ public class TableViewPreferences {
         if (checkUniqueIds(columns)) {
             for (TableColumnBase column : columns) {
                 final String id = column.getId();
-                final String prefKey = prefPrefix + SEPERATOR + SORT_ORDER + SEPERATOR + String.valueOf(colNum);
+                final String prefKey = prefPrefix + SEPARATOR + SORT_ORDER + SEPARATOR + String.valueOf(colNum);
                 
 //                System.out.println("save: prefKey: " + prefKey + ", id: " + id);
                 prefStore.put(prefKey, id);
@@ -183,7 +183,7 @@ public class TableViewPreferences {
             final List<TableColumnBase> columnList = new ArrayList<>();
             
             for (int colNum = 0; colNum < columns.size(); colNum++) {
-                final String prefKey = prefPrefix + SEPERATOR + COLUMN_ORDER + SEPERATOR + String.valueOf(colNum);
+                final String prefKey = prefPrefix + SEPARATOR + COLUMN_ORDER + SEPARATOR + String.valueOf(colNum);
                 
                 final String id = prefStore.get(prefKey, "");
 //                System.out.println("load: prefKey: " + prefKey + ", id: " + id);
@@ -205,7 +205,7 @@ public class TableViewPreferences {
         // load column width: store value as string - need to iterate of sorted columns!
         int colNum = 0;
         for (TableColumnBase column : result) {
-            final String prefKey = prefPrefix + SEPERATOR + COLUMN_WIDTH + SEPERATOR + String.valueOf(colNum);
+            final String prefKey = prefPrefix + SEPARATOR + COLUMN_WIDTH + SEPARATOR + String.valueOf(colNum);
                 
             final String value = prefStore.get(prefKey, "");
 //            System.out.println("load: prefKey: " + prefKey + ", value: " + value);
@@ -220,7 +220,7 @@ public class TableViewPreferences {
         // load column visibility: store value as string - need to iterate of sorted columns!
         colNum = 0;
         for (TableColumnBase column : result) {
-            final String prefKey = prefPrefix + SEPERATOR + COLUMN_VISBILTY + SEPERATOR + String.valueOf(colNum);
+            final String prefKey = prefPrefix + SEPARATOR + COLUMN_VISBILTY + SEPARATOR + String.valueOf(colNum);
                 
             final String value = prefStore.get(prefKey, "");
 //            System.out.println("load: prefKey: " + prefKey + ", value: " + value);
@@ -246,7 +246,7 @@ public class TableViewPreferences {
         
         if (checkUniqueIds(columns)) {
             for (int colNum = 0; colNum < columns.size(); colNum++) {
-                final String prefKey = prefPrefix + SEPERATOR + SORT_ORDER + SEPERATOR + String.valueOf(colNum);
+                final String prefKey = prefPrefix + SEPARATOR + SORT_ORDER + SEPARATOR + String.valueOf(colNum);
                 
                 final String id = prefStore.get(prefKey, "");
 //                System.out.println("load: prefKey: " + prefKey + ", id: " + id);

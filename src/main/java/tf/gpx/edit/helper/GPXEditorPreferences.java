@@ -30,6 +30,11 @@ public class GPXEditorPreferences implements IPreferencesStore {
     public final static String SEARCH_RADIUS = "searchRadius";
     public final static String ALWAYS_SHOW_FILE_WAYPOINTS = "alwaysShowFileWaypoints";
     public final static String MAX_WAYPOINTS_TO_SHOW = "maxWaypointsToShow";
+    public final static String INITIAL_BASELAYER = "initialBaselayer";
+    
+    public final static String BASELAYER_PREFIX = "baselayer";
+    public final static String OVERLAY_PREFIX = "overlay";
+    public final static String SEPARATOR = "-";
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
     

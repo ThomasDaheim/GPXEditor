@@ -97,4 +97,14 @@ public class GPXTrackviewer {
         TrackMap.getInstance().updateLineColor(lineItem);
         HeightChart.getInstance().updateLineColor(lineItem);
     }
+    
+    public void loadPreferences() {
+        TrackMap.getInstance().loadPreferences();
+        HeightChart.getInstance().loadPreferences();
+    }
+    
+    public void savePreferences() {
+        TrackMap.getInstance().savePreferences();
+        HeightChart.getInstance().savePreferences();
+    }
 }

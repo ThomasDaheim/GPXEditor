@@ -79,11 +79,19 @@ const overlaysList = {
         3: {name: 'Railways', layer: OpenRailwayMap}
     }
 };
-for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
-    controlLayer.addOverlay(overlaysList.properties[i].layer, overlaysList.properties[i].name);
+
+// support function for load/save preferences in TrackMap
+function getKnownOverlayNames() {
+    var result = [];
+    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
+        result.push(overlaysList.properties[i].name);
+    }
+    
+//    jscallback.log('getKnownOverlayNames: ' + result);
+    return result;
 }
 
-const baselayerEnum = {
+const baselayerList = {
     ITERATE_FIRST: 0,
     OPENCYCLEMAP: 0,
     MAPBOX: 1,
@@ -100,17 +108,62 @@ const baselayerEnum = {
         99: {name: 'UNKNOWN', overlays: [false, false, false, false]}
     }
 };
-// MapBox needs contour lines
-baselayerEnum.properties[baselayerEnum.MAPBOX].overlays[overlaysList.CONTOUR_LINES] = true;
-// OpenStreetMap needs contour lines and hill shading
-baselayerEnum.properties[baselayerEnum.OPENSTREETMAP].overlays[overlaysList.CONTOUR_LINES] = true;
-baselayerEnum.properties[baselayerEnum.OPENSTREETMAP].overlays[overlaysList.HILL_SHADING] = true;
-// Satellite Esri needs roads/labels and contour lines
-baselayerEnum.properties[baselayerEnum.SATELLITEESRI].overlays[overlaysList.CONTOUR_LINES] = true;
-baselayerEnum.properties[baselayerEnum.SATELLITEESRI].overlays[overlaysList.ROADS_AND_LABELS] = true;
 
+// MapBox needs contour lines
+baselayerList.properties[baselayerList.MAPBOX].overlays[overlaysList.CONTOUR_LINES] = true;
+// OpenStreetMap needs contour lines and hill shading
+baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.CONTOUR_LINES] = true;
+baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.HILL_SHADING] = true;
+// Satellite Esri needs roads/labels and contour lines
+baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.CONTOUR_LINES] = true;
+baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.ROADS_AND_LABELS] = true;
+
+// support function for load/save preferences in TrackMap
+function getKnownBaselayerNames() {
+    var result = [];
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        result.push(baselayerList.properties[i].name);
+    }
+    
+//    jscallback.log('getKnownBaselayerNames: ' + result);
+    return result;
+}
+
+// get values to save preferences in TrackMap
+function getOverlayValues(baselayer) {
+//    jscallback.log('getOverlayValues: ' + baselayer);
+    var result = [false, false, false, false];
+
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (baselayer === baselayerList.properties[i].name) {
+//            jscallback.log('getOverlayValues: ' + baselayerList.properties[i].overlays);
+
+            result = baselayerList.properties[i].overlays.slice(0);
+            break;
+        }
+    }
+    
+    return result;
+}
+
+// set loaded preferences from TrackMap
+function setOverlayValues(baselayer, overlays) {
+//    jscallback.log('setOverlayValues: ' + baselayer + " to " + overlays);
+    
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (baselayer === baselayerList.properties[i].name) {
+//            jscallback.log('setOverlayValues: ' + baselayerList.properties[i].overlays);
+            
+            baselayerList.properties[i].overlays = overlays.slice(0);
+        }
+    }
+}
+
+
+// initialize everything for base layer #0
 var currentBaselayer = 0;
-var currentOverlays = baselayerEnum.properties[0].overlays;
+var currentOverlays = baselayerList.properties[0].overlays.slice(0);
+baselayerchange({name: baselayerList.properties[0].name});
 
 function setCurrentBaselayer(layer) {
     var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
@@ -122,30 +175,32 @@ function getCurrentBaselayer() {
 
 // add automatically for maps that need the additional info
 function baselayerchange(e) {
-    currentBaselayer = baselayerEnum.UNKNOWN;
-    for (let i = baselayerEnum.ITERATE_FIRST; i <= baselayerEnum.ITERATE_LAST; i++) {
-        if (e.name === baselayerEnum.properties[i].name) {
-            jscallback.log('baselayerchange to: ' + i + ' from ' + currentBaselayer);
+    currentBaselayer = baselayerList.UNKNOWN;
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (e.name === baselayerList.properties[i].name) {
+//            jscallback.log('baselayerchange to: ' + i + ' from ' + currentBaselayer);
 
             currentBaselayer = i;
             break;
         }
     }
     
+    logOverlays();
+    
     // go through all 
-    baselayerEnum.properties[currentBaselayer].overlays.forEach(function (item, index) {
-        jscallback.log('working on: ' + currentOverlays[index] + ', ' + item + ', ' + overlaysList.properties[index].name);
+    baselayerList.properties[currentBaselayer].overlays.forEach(function (item, index) {
+//        jscallback.log('working on: ' + currentOverlays[index] + ', ' + item + ', ' + overlaysList.properties[index].name);
         
         if (currentOverlays[index] !== item) {
             // remove if previously present
             if (currentOverlays[index]) {
-                jscallback.log('myMap.removeLayer');
+//                jscallback.log('myMap.removeLayer');
                 myMap.removeLayer(overlaysList.properties[index].layer);
             }
 
             // add if to be used
             if (item) {
-                jscallback.log('myMap.addLayer');
+//                jscallback.log('myMap.addLayer');
                 myMap.addLayer(overlaysList.properties[index].layer);
             }
         }
@@ -168,19 +223,29 @@ function overlayremove(e) {
 function overlayChanged(e, value) {
     for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
         if (e.name === overlaysList.properties[i].name) {
-            jscallback.log('overlayChanged to ' + value + ' for baselayer: ' + currentBaselayer + ' and overlay: ' + i);
+//            jscallback.log('overlayChanged to ' + value + ' for baselayer: ' + currentBaselayer + ' and overlay: ' + i);
             
             currentOverlays[i] = value;
     
             // update value for baselayer as well to store for next usage
-            baselayerEnum.properties[currentBaselayer].overlays[i] = value;
+            baselayerList.properties[currentBaselayer].overlays[i] = value;
             break;
         }
     }
+
+    logOverlays();
 }
 myMap.on('baselayerchange', baselayerchange);
 myMap.on('overlayadd', overlayadd);
 myMap.on('overlayremove', overlayremove);
+
+function logOverlays() {
+//    jscallback.log('------------------------------------------------------------------------------------------');
+//    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+//        jscallback.log('baselayer: ' + baselayerList.properties[i].name + ', overlays: ' + baselayerList.properties[i].overlays);
+//    }
+//    jscallback.log('------------------------------------------------------------------------------------------');
+}
 
 //
 // Possible list of additional base layers (curtesy of view-source:https://www.gpsvisualizer.com/leaflet/functions.js)
