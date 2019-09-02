@@ -96,9 +96,6 @@ import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
  */
 public class TrackMap extends LeafletMapView {
     private final static TrackMap INSTANCE = new TrackMap();
-    
-    // time period (in millisec) for which move / zoom will be ignored after MapViewFixedPeriodStart
-    private final static long SETMAPBOUNDSDELAY = 3000;
 
     public enum RoutingProfile {
         DrivingCar("driving-car"),
@@ -209,6 +206,9 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
+    
+    private int varNameSuffix = 1;
+            
     // TFE, 20181009: store route under cursor
     private GPXRoute currentGPXRoute;
 
@@ -273,6 +273,27 @@ public class TrackMap extends LeafletMapView {
     
     public static TrackMap getInstance() {
         return INSTANCE;
+    }
+    
+    // TFE, can't overwrite addTrack from kotlin LeafletMapView...
+    private String myAddTrack(final List<LatLong> positions, final String color) {
+        final String varName = "track" + varNameSuffix++;
+
+        final StringBuffer sb = new StringBuffer();
+        sb.append("[");
+        for (LatLong latlong : positions) {
+            sb.append("    [").append(latlong.getLatitude()).append(", ").append(latlong.getLongitude()).append("]").append(", \n");
+        }
+        if (sb.length() > 1) {
+            sb.replace(sb.length() - 3, sb.length(), "");
+        }
+        sb.append("]");
+        String jsPositions = sb.toString();
+        
+        execScript("var latLngs = " + jsPositions + ";");
+        execScript("var " + varName + " = L.polyline(latLngs, {color: '" + color + "', weight: 2}).addTo(myMap);");
+
+        return varName;
     }
     
     public void setEnable(final boolean enabled) {
@@ -931,10 +952,7 @@ public class TrackMap extends LeafletMapView {
 //            setView(getCenter(), getZoom());
 
             // use map.fitBounds to avoid calculation of center and zoom
-            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]+ ", " + 0 + ");");
-
-            // and now once again.. WITH DELAY to "fix" anoying shift after full paint
-            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]+ ", " + SETMAPBOUNDSDELAY + ");");
+            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ");");
 //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
         setVisible(bounds[4] > 0d);
@@ -1034,16 +1052,12 @@ public class TrackMap extends LeafletMapView {
             
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
-                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName());
                 final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
-                // change color for routes to red (or what is set in gpxx extension)
-                execScript("updateMarkerColor(\"" + track + "\", \"" + gpxTrackSegment.getParent().getColor() + "\");");
+                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getColor());
                 trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
-                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName());
                 final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
-                // change color for routes to blue (or what is set in gpxx extension)
-                execScript("updateMarkerColor(\"" + route + "\", \"" + gpxRoute.getColor() + "\");");
+                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getColor());
                 execScript("makeEditable(\"" + route + "\");");
                 routes.put(route, gpxRoute);
             }
@@ -1257,7 +1271,7 @@ public class TrackMap extends LeafletMapView {
         }
 
         //refresh fileWaypointsCount list without refreshing map...
-        myGPXEditor.refillGPXWayointList(false);
+        myGPXEditor.refillGPXWaypointList(false);
     }
     
     private String addMarkerAndCallback(final LatLong point, final String pointname, final Marker marker, final int zIndex, final boolean interactive) {
@@ -1283,8 +1297,8 @@ public class TrackMap extends LeafletMapView {
         return layer;
     }
 
-    private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName) {
-        final String layer = addTrack(waypoints);
+    private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
+        final String layer = myAddTrack(waypoints, color);
         execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);");
         execScript("addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;

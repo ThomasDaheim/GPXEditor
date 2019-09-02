@@ -1385,7 +1385,7 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
     }
 
-    public void refillGPXWayointList(final boolean updateViewer) {
+    public void refillGPXWaypointList(final boolean updateViewer) {
         final GPXLineItem lineItem = (GPXLineItem) gpxTrackXML.getUserData();
         if (lineItem != null) {
             // find the lineItem in the gpxFileList 
@@ -1950,7 +1950,7 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
         refreshGPXFileList();
         
-        refillGPXWayointList(true);
+        refillGPXWaypointList(true);
     }
 
     private void reduceGPXLineItems(final Event event, final boolean fileLevel) {
@@ -1968,7 +1968,7 @@ public class GPXEditor implements Initializable {
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
         refreshGPXFileList();
         
-        refillGPXWayointList(true);
+        refillGPXWaypointList(true);
     }
     
     private void editMetadata(final Event event) {

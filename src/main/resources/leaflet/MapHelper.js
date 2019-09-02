@@ -70,8 +70,8 @@ myMap.options.worldCopyJump = true;
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
-function setMapBounds(latMin, latMax, lngMin, lngMax, millisec) {
-//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax + ", " + millisec);
+function setMapBounds(latMin, latMax, lngMin, lngMax) {
+//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
     
     mapBounds = [
         [latMin, lngMin],
@@ -79,16 +79,7 @@ function setMapBounds(latMin, latMax, lngMin, lngMax, millisec) {
     ];
     
     // delegate to internal function that can also be used from CenterButton.js
-    if (millisec > 0) {
-//        jscallback.log('setMapBounds: with delay...');
-        setTimeout(function(){
-//            jscallback.log('setMapBounds: here it comes!');
-            doSetMapBounds(mapBounds); 
-        }, millisec);
-    } else {
-//        jscallback.log('setMapBounds: without delay');
-        doSetMapBounds(mapBounds);
-    }
+    doSetMapBounds(mapBounds);
 }
 function doSetMapBounds(bounds) {
     if (typeof bounds !== 'undefined') {
