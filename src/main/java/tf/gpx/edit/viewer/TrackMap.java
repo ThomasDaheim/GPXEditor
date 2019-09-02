@@ -57,7 +57,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -98,6 +97,9 @@ import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 public class TrackMap extends LeafletMapView {
     private final static TrackMap INSTANCE = new TrackMap();
     
+    // time period (in millisec) for which move / zoom will be ignored after MapViewFixedPeriodStart
+    private final static long SETMAPBOUNDSDELAY = 3000;
+
     public enum RoutingProfile {
         DrivingCar("driving-car"),
         DrivingHGV("driving-hgv"),
@@ -924,12 +926,16 @@ public class TrackMap extends LeafletMapView {
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
 
-        // TFE, 20190822: setMapBounds fails for nbo waypoints...
+        // TFE, 20190822: setMapBounds fails for no waypoints...
         if (bounds[4] > 0d && waypointCount > 0) {
 //            setView(getCenter(), getZoom());
 
             // use map.fitBounds to avoid calculation of center and zoom
-            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ");");
+            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]+ ", " + 0 + ");");
+
+            // and now once again.. WITH DELAY to "fix" anoying shift after full paint
+            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]+ ", " + SETMAPBOUNDSDELAY + ");");
+//            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
         setVisible(bounds[4] > 0d);
     }
@@ -1463,7 +1469,7 @@ public class TrackMap extends LeafletMapView {
 
         public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
             myTrackMap.mapViewChanged(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
-//            System.out.println("mapViewChanged: " + event + ", " + latMin + ", " + lonMin + ", " + latMax + ", " + lonMax);
+//            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
         }
         
         public void toggleHeightChart(final Boolean visible) {

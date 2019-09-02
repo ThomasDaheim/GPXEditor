@@ -57,7 +57,7 @@ myMap.on('mouseup', enableCntrlDrag);
 // add callbacks for map move or zoom that send bounds back to java
 function mapViewChanged(e) {
     var bounds = getMapBounds();
-//    jscallback.log('mapViewChanged: ' + e.type + ", " + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]);
+//    jscallback.log('mapViewChanged: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
     jscallback.mapViewChanged(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
 } 
 myMap.on('zoomend', mapViewChanged);
@@ -70,15 +70,25 @@ myMap.options.worldCopyJump = true;
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
-function setMapBounds(latMin, latMax, lngMin, lngMax) {
-//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
+function setMapBounds(latMin, latMax, lngMin, lngMax, millisec) {
+//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax + ", " + millisec);
+    
     mapBounds = [
         [latMin, lngMin],
         [latMax, lngMax]
     ];
     
-    // delegate to internal function that can also be sued from CenterButton.js
-    doSetMapBounds(mapBounds);
+    // delegate to internal function that can also be used from CenterButton.js
+    if (millisec > 0) {
+//        jscallback.log('setMapBounds: with delay...');
+        setTimeout(function(){
+//            jscallback.log('setMapBounds: here it comes!');
+            doSetMapBounds(mapBounds); 
+        }, millisec);
+    } else {
+//        jscallback.log('setMapBounds: without delay');
+        doSetMapBounds(mapBounds);
+    }
 }
 function doSetMapBounds(bounds) {
     if (typeof bounds !== 'undefined') {

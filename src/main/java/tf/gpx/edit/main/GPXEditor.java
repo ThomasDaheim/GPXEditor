@@ -154,7 +154,7 @@ public class GPXEditor implements Initializable {
         DOWN
     }
     
-    private static enum DeleteInformation {
+    public static enum DeleteInformation {
         DATE,
         NAME,
         EXTENSION
@@ -412,7 +412,7 @@ public class GPXEditor implements Initializable {
             addFileAction(event);
         });
         exportFileMenu.disableProperty().bind(
-                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
+                Bindings.isNotEmpty(gpxFileList.getRoot().getChildren()));
         exportKMLMenu.setOnAction((ActionEvent event) -> {
             exportFilesAction(event, ExportFileType.KML);
         });
@@ -941,7 +941,7 @@ public class GPXEditor implements Initializable {
             waypointMenu.getItems().add(deleteWaypoints);
             
             final Menu deleteAttr = new Menu("Delete attribute(s)");
-            // TFE, 20190715: support forr deletion of date & name...
+            // TFE, 20190715: support for deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date(s)");
             deleteDates.setOnAction((ActionEvent event) -> {
                 deleteSelectedWaypointsInformation(DeleteInformation.DATE);
@@ -950,7 +950,7 @@ public class GPXEditor implements Initializable {
             
             final MenuItem deleteNames = new MenuItem("Name(s)");
             deleteNames.setOnAction((ActionEvent event) -> {
-                deleteSelectedWaypointsInformation(DeleteInformation.DATE);
+                deleteSelectedWaypointsInformation(DeleteInformation.NAME);
             });
             deleteAttr.getItems().add(deleteNames);
 
@@ -1294,7 +1294,12 @@ public class GPXEditor implements Initializable {
                     waypoint.setName(null);
                     break;
                 case EXTENSION:
-                    waypoint.getWaypoint().getExtensionData().clear();
+                    if (waypoint.getWaypoint().getExtensionData() != null) {
+                        waypoint.getWaypoint().getExtensionData().clear();
+                        waypoint.setHasUnsavedChanges();
+                    }
+                    break;
+                default:
                     break;
             }
         }
