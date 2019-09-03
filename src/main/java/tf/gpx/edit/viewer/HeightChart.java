@@ -281,7 +281,7 @@ public class HeightChart<X,Y> extends AreaChart {
     }
     
     @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
         if (isDisabled()) {
             return;
         }

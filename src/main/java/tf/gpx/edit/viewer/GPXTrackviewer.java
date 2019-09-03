@@ -65,16 +65,16 @@ public class GPXTrackviewer {
         HeightChart.getInstance().setEnable(enabled);
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
         assert myGPXEditor != null;
         assert lineItem != null;
 
         // show in LeafletMapView map
-        TrackMap.getInstance().setGPXWaypoints(lineItem);
+        TrackMap.getInstance().setGPXWaypoints(lineItem, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
 
         // show elevation chart
-        HeightChart.getInstance().setGPXWaypoints(lineItem);
+        HeightChart.getInstance().setGPXWaypoints(lineItem, doFitBounds);
         HeightChart.getInstance().clearSelectedGPXWaypoints();
     }
 

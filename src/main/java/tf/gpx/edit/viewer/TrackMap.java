@@ -685,7 +685,7 @@ public class TrackMap extends LeafletMapView {
             myGPXEditor.refresh();
             
             // redraw height chart
-            HeightChart.getInstance().setGPXWaypoints(myGPXLineItem);
+            HeightChart.getInstance().setGPXWaypoints(myGPXLineItem, true);
         });
 
         final MenuItem addRoute = new MenuItem("Add Route");
@@ -869,7 +869,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor = gpxEditor;
     }
     
-   public void setGPXWaypoints(final GPXLineItem lineItem) {
+   public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
         if (isDisabled()) {
             return;
         }
@@ -952,7 +952,7 @@ public class TrackMap extends LeafletMapView {
 //            setView(getCenter(), getZoom());
 
             // use map.fitBounds to avoid calculation of center and zoom
-            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ");");
+            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ", " + doFitBounds + ");");
 //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
         setVisible(bounds[4] > 0d);
