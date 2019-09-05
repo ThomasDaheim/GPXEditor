@@ -20,6 +20,8 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 ### Update v4.1
 
 * save last used baselayer and overlay settings per baselayer as preference for the next time
+* make selected waypoints of tracks draggable
+* fixed some anyoing issues (e.g. incorrect zooming for files with many tracks)
 
 ### Update v4.0
 
