@@ -786,12 +786,22 @@ public class GPXTreeTableView {
     }
     
     public void removeGPXFile(final GPXFile gpxFile) {
-        myTreeTableView.getRoot().getChildren().remove(getIndexForGPXFile(gpxFile));        
+        final int index = getIndexForGPXFile(gpxFile);
+        if (index > -1) {
+            // something went horribly wrong...
+            myTreeTableView.getRoot().getChildren().remove(getIndexForGPXFile(gpxFile));        
+        }
     }
     
     public void replaceGPXFile(final GPXFile gpxFile) {
-        final int index = getIndexForGPXFile(gpxFile);
-        myTreeTableView.getRoot().getChildren().remove(index);
+        int index = getIndexForGPXFile(gpxFile);
+        if (index > -1) {
+            // something went horribly wrong...
+            myTreeTableView.getRoot().getChildren().remove(index);
+        } else {
+            // but we still want to add the file
+            index = 0;
+        }
         myTreeTableView.getRoot().getChildren().add(index, createTreeItemForGPXFile(gpxFile));
     }
     

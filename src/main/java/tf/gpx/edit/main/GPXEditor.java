@@ -412,7 +412,7 @@ public class GPXEditor implements Initializable {
             addFileAction(event);
         });
         exportFileMenu.disableProperty().bind(
-                Bindings.isNotEmpty(gpxFileList.getRoot().getChildren()));
+                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
         exportKMLMenu.setOnAction((ActionEvent event) -> {
             exportFilesAction(event, ExportFileType.KML);
         });
