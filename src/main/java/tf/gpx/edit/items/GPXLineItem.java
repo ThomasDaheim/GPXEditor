@@ -58,6 +58,7 @@ public abstract class GPXLineItem {
     public static final DecimalFormat DOUBLE_FORMAT_1 = new DecimalFormat("0.0"); 
     public static final DecimalFormat COUNT_FORMAT = new DecimalFormat("#########"); 
     public static final double NO_VALUE = Double.MIN_VALUE; 
+    public static final String NO_DATA = "---";
     
     // What am I?
     public static enum GPXLineItemType {
@@ -497,11 +498,17 @@ public abstract class GPXLineItem {
         return formatDurationAsString(getDuration());
     }
     public static String formatDurationAsString(final long diff) {
-        // TFE, 20170716: negative differences are only shown for hours
-        final long diffSeconds = Math.abs(diff / 1000 % 60);
-        final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
-        final long diffHours = diff / (60 * 60 * 1000);
-        return DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
+        String result = NO_DATA;
+        
+        if (diff > 0) {
+            // TFE, 20170716: negative differences are only shown for hours
+            final long diffSeconds = Math.abs(diff / 1000 % 60);
+            final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
+            final long diffHours = diff / (60 * 60 * 1000);
+            result = DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
+        }
+        
+        return result;
     }
     protected abstract Bounds getBounds();
     

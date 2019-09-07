@@ -545,7 +545,7 @@ public class StatisticsViewer {
 
         private String getStringValue() {
             if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
-                return "---";
+                return GPXLineItem.NO_DATA;
             } else {
                 if (myData.getFormat() != null) {
                     return myData.getFormat().format(myValue);

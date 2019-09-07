@@ -362,25 +362,25 @@ public class GPXWaypoint extends GPXLineItem {
                 if (start != null) {
                     return gpxLineItemData.getFormat().format(start);
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case Duration:
                 if (myPrevGPXWaypoint != null) {
                     return getDurationAsString();
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
                     return gpxLineItemData.getFormat().format(EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case Speed:
                 if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
                     return gpxLineItemData.getFormat().format(getSpeed());
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case Elevation:
                 return DOUBLE_FORMAT_2.format(myWaypoint.getElevation());
@@ -388,13 +388,13 @@ public class GPXWaypoint extends GPXLineItem {
                 if (myPrevGPXWaypoint != null) {
                     return gpxLineItemData.getFormat().format(getElevationDiff());
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case Slope:
                 if (myPrevGPXWaypoint != null) {
                     return gpxLineItemData.getFormat().format(getSlope());
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             default:
                 return "";

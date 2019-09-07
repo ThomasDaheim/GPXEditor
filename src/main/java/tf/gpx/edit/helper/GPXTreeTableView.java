@@ -362,16 +362,16 @@ public class GPXTreeTableView {
                         if (!item.getType().equals(GPXLineItem.GPXLineItemType.GPXMetadata)) {
                             fileMenu.getItems().add(new SeparatorMenuItem());
                             // add context menu to expand/collapse all selected items
-                            final MenuItem expandContextMenu = new MenuItem("Expand");
+                            final MenuItem expandContextMenu = new MenuItem("Expand All");
                             expandContextMenu.setOnAction((ActionEvent event) -> {
                                  myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
-                                 t.setExpanded(true);});
+                                 GPXTreeTableView.expandNodeAndChildren(t);});
                             });
                             fileMenu.getItems().add(expandContextMenu);
-                            final MenuItem collapseContextMenu = new MenuItem("Collapse");
+                            final MenuItem collapseContextMenu = new MenuItem("Collapse All");
                             collapseContextMenu.setOnAction((ActionEvent event) -> {
                                  myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
-                                 t.setExpanded(false);});
+                                 GPXTreeTableView.collapseNodeAndChildren(t);});
                             });
                             fileMenu.getItems().add(collapseContextMenu);
 
@@ -710,6 +710,16 @@ public class GPXTreeTableView {
         }
 
         return result;
+    }
+    
+    // see https://github.com/ChrisLMerrill/FancyFxTree/blob/master/src/main/java/net/christophermerrill/FancyFxTree/FancyTreeView.java for the idea :-)
+    private static void expandNodeAndChildren(final TreeItem<GPXLineItem> node) {
+        node.setExpanded(true);
+        node.getChildren().forEach(GPXTreeTableView::expandNodeAndChildren);
+    }
+    private static void collapseNodeAndChildren(final TreeItem<GPXLineItem> node) {
+        node.getChildren().forEach(GPXTreeTableView::collapseNodeAndChildren);
+        node.setExpanded(false);
     }
     
     public void insertItemAtLocation(final GPXLineItem insert, final GPXLineItem location, final GPXEditor.RelativePosition position, final boolean doRemove) {

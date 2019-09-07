@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
@@ -74,6 +75,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
@@ -330,6 +332,10 @@ public class TrackMap extends LeafletMapView {
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
 //                (myWebView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
 //            );
+            // show "alert" Javascript messages in stdout (useful to debug)	            
+            myWebView.getEngine().setOnAlert((WebEvent<String> arg0) -> {
+                System.err.println("TrackMap: " + arg0.getData());
+            });
         
             window = (JSObject) execScript("window"); 
             jscallback = new JSCallback(this);
