@@ -42,7 +42,7 @@ import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
 import tf.gpx.edit.items.GPXLineItem;
 
 /**
- * Wrapper for reading & TODO: writing Garmin extension attributes.
+ * Wrapper for reading writing Garmin extension attributes.
  * Not planned (yet) as a fully fledged editor as in e.g. BaseCamp...
  * 
  * @author thomas
@@ -50,6 +50,7 @@ import tf.gpx.edit.items.GPXLineItem;
 public class GarminExtensionWrapper {
     private final static GarminExtensionWrapper INSTANCE = new GarminExtensionWrapper();
     
+    // we can only handle GarminGPX at the moment
     private static final String GARMIN_PREFIX = ExtensionType.GarminGPX.getStartsWith();
 
     public enum GarminExtension {

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -210,7 +211,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public String getName() {
-        return myGPXTrack.getName() + " - Segment " + getNumber();
+        return Objects.toString(myGPXTrack.getName(), "") + " - Segment " + getNumber();
     }
 
     @Override

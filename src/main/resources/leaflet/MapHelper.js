@@ -57,7 +57,7 @@ myMap.on('mouseup', enableCntrlDrag);
 // add callbacks for map move or zoom that send bounds back to java
 function mapViewChanged(e) {
     var bounds = getMapBounds();
-//    jscallback.log('mapViewChanged: ' + e.type + ", " + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3]);
+//    jscallback.log('mapViewChanged: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
     jscallback.mapViewChanged(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
 } 
 myMap.on('zoomend', mapViewChanged);
@@ -70,15 +70,18 @@ myMap.options.worldCopyJump = true;
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
-function setMapBounds(latMin, latMax, lngMin, lngMax) {
-//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax);
+function setMapBounds(latMin, latMax, lngMin, lngMax, doFitBounds) {
+//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax + ", " + doFitBounds);
+    
     mapBounds = [
         [latMin, lngMin],
         [latMax, lngMax]
     ];
     
-    // delegate to internal function that can also be sued from CenterButton.js
-    doSetMapBounds(mapBounds);
+    if (doFitBounds) {
+        // delegate to internal function that can also be used from CenterButton.js
+        doSetMapBounds(mapBounds);
+    }
 }
 function doSetMapBounds(bounds) {
     if (typeof bounds !== 'undefined') {
@@ -145,14 +148,57 @@ function addNameToLayer(layer, name) {
 /*
  * support for draggable markers including callback at dragend
  */
-function makeDraggable(layer, lat, lng) {
+function makeDraggable(layer, lat, lng, line) {
+//    jscallback.log('makeDraggable: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
     var marker = window[layer];
+    var markerLine = window[line];
     
-    marker.dragging.enable();
+    // redraw line when moving point - if we have a line!
+    // https://stackoverflow.com/a/33520112
+    marker.on('dragstart', function(e) {
+        if (line !== '') {
+            // Get the polyline's latlngs
+            var latlngs = markerLine.getLatLngs(),
+
+            // Get the marker's start latlng
+            latlng = marker.getLatLng();
+
+            // Iterate the polyline's latlngs
+            for (var i = 0; i < latlngs.length; i++) {
+                // Compare each to the marker's latlng
+                if (latlng.equals(latlngs[i])) {
+                    // If equals store key in marker instance
+                    this.polylineLatlng = i;
+                }
+            }
+        }
+    });
+    marker.on('drag', function(e) {
+        if (line !== '') {
+            // Get the polyline's latlngs
+            var latlngs = markerLine.getLatLngs(),
+
+            // Get the marker's start latlng
+            latlng = marker.getLatLng();
+
+            // Replace the old latlng with the new
+            latlngs.splice(this.polylineLatlng, 1, latlng);
+
+            // Update the polyline with the new latlngs
+            markerLine.setLatLngs(latlngs);
+        }
+    });
     marker.on('dragend', function(e) {
         var newPos = marker.getLatLng();
         jscallback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
+
+        if (line !== '') {
+            // Delete key from marker instance
+            delete marker.polylineLatlng;
+        }
     });
+
+    marker.dragging.enable();
 }
 function setTitle(layer, title) {
     var marker = window[layer];

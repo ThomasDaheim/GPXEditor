@@ -57,7 +57,8 @@ public class GPXWaypoint extends GPXLineItem {
     private GPXWaypoint myNextGPXWaypoint = null;
     
     private boolean myHighlight = false;
-    
+    private String myMarker = "";
+
     private GPXWaypoint() {
         super(GPXLineItemType.GPXWaypoint);
     }
@@ -123,6 +124,14 @@ public class GPXWaypoint extends GPXLineItem {
 
     public void setHighlight(final boolean myHighlight) {
         this.myHighlight = myHighlight;
+    }
+
+    public String getMarker() {
+        return myMarker;
+    }
+
+    public void setMarker(final String marker) {
+        myMarker = marker;
     }
     
     public GPXWaypoint getPrevGPXWaypoint() {

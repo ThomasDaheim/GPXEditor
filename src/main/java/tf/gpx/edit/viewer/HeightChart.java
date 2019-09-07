@@ -281,7 +281,7 @@ public class HeightChart<X,Y> extends AreaChart {
     }
     
     @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
         if (isDisabled()) {
             return;
         }
@@ -441,12 +441,12 @@ public class HeightChart<X,Y> extends AreaChart {
                 .filter(x -> x.getLeft().equals(waypoint))
                 .findFirst().orElse(null);
             
-            assert point != null;
-            
-            Rectangle rectangle = new Rectangle(0,0,0,0);
-            rectangle.getStyleClass().add("chart-vert-rect");
-            rectangles.add(rectangle);
-            selectedWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
+            if (point != null) {
+                Rectangle rectangle = new Rectangle(0,0,0,0);
+                rectangle.getStyleClass().add("chart-vert-rect");
+                rectangles.add(rectangle);
+                selectedWaypoints.add(Triple.of(waypoint, point.getRight(), rectangle));
+            }
         }
 
         if (rectangles.size() > 0) {
@@ -570,5 +570,13 @@ public class HeightChart<X,Y> extends AreaChart {
             prevSelected = (selectedPoint != null);
             prevPair = pair;
         }
+    }
+
+    public void loadPreferences() {
+        // nothing todo
+    }
+    
+    public void savePreferences() {
+        // nothing todo
     }
 }

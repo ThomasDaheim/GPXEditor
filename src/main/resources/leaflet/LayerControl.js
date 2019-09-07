@@ -37,28 +37,22 @@ function changeMapLayerUrl(layernum, url) {
 }
 
 // TFE, 20190814: add Hydda roads and labels and OpenMapSurfer contour lines to SATELLITE & MAPBOX layer where required
+var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/asterc/webmercator/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+	attribution: 'Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM'
+});
+OpenMapSurfer_ContourLines.setZIndex(97);
+
 var Hydda_RoadsAndLabels = L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png', {
     maxZoom: 18,
     attribution: 'Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors'
 });
-var hasHyddaLayer = false;
-// move to front - one more as used in TrackMap for layer control init
-// could be made dynamic by checking layers from controlLayer to find 'Satellite Esri' and +1 to its zindex...
-Hydda_RoadsAndLabels.setZIndex(4);
-
-var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/asterc/webmercator/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: 'Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM',
-	minZoom: 12
-});
-var hasOpenMapSurferLayer = false;
-OpenMapSurfer_ContourLines.setZIndex(5);
-
+Hydda_RoadsAndLabels.setZIndex(98);
+    
 var HikeBike_HillShading = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
 	maxZoom: 18,
 	attribution: '&copy; OpenStreetMap'
 });
-var hasHikeBikeLayer = false;
 HikeBike_HillShading.setZIndex(6);
 
 var OpenRailwayMap = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
@@ -67,49 +61,191 @@ var OpenRailwayMap = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/
 });
 var hasOpenRailwayMap = false;
 OpenRailwayMap.setZIndex(99);
-controlLayer.addOverlay(OpenRailwayMap, "Railways");
+
+// TFE, 20190831: add enums & arrays to store previously active overlays per base layer
+// https://stijndewitt.com/2014/01/26/enums-in-javascript/
+const overlaysList = {
+    ITERATE_FIRST: 0,
+    CONTOUR_LINES: 0,
+    ROADS_AND_LABELS: 1,
+    HILL_SHADING: 2,
+    RAILWAY_LINES: 3,
+    ITERATE_LAST: 3,
     
+    properties: {
+        0: {name: 'Contour Lines', layer: OpenMapSurfer_ContourLines},
+        1: {name: 'Roads and Labels', layer: Hydda_RoadsAndLabels},
+        2: {name: 'Hill Shading', layer: HikeBike_HillShading},
+        3: {name: 'Railways', layer: OpenRailwayMap}
+    }
+};
+
+// support function for load/save preferences in TrackMap
+function getKnownOverlayNames() {
+    var result = [];
+    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
+        result.push(overlaysList.properties[i].name);
+    }
+    
+//    jscallback.log('getKnownOverlayNames: ' + result);
+    return result;
+}
+
+const baselayerList = {
+    ITERATE_FIRST: 0,
+    OPENCYCLEMAP: 0,
+    MAPBOX: 1,
+    OPENSTREETMAP: 2,
+    SATELLITEESRI: 3,
+    ITERATE_LAST: 3,
+    UNKNOWN: 99,
+    
+    properties: {
+        0: {name: 'OpenCycleMap', overlays: [false, false, false, false]},
+        1: {name: 'MapBox', overlays: [false, false, false, false]},
+        2: {name: 'OpenStreetMap', overlays: [false, false, false, false]},
+        3: {name: 'Satellite Esri', overlays: [false, false, false, false]},
+        99: {name: 'UNKNOWN', overlays: [false, false, false, false]}
+    }
+};
+
+// MapBox needs contour lines
+baselayerList.properties[baselayerList.MAPBOX].overlays[overlaysList.CONTOUR_LINES] = true;
+// OpenStreetMap needs contour lines and hill shading
+baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.CONTOUR_LINES] = true;
+baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.HILL_SHADING] = true;
+// Satellite Esri needs roads/labels and contour lines
+baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.CONTOUR_LINES] = true;
+baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.ROADS_AND_LABELS] = true;
+
+// support function for load/save preferences in TrackMap
+function getKnownBaselayerNames() {
+    var result = [];
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        result.push(baselayerList.properties[i].name);
+    }
+    
+//    jscallback.log('getKnownBaselayerNames: ' + result);
+    return result;
+}
+
+// get values to save preferences in TrackMap
+function getOverlayValues(baselayer) {
+//    jscallback.log('getOverlayValues: ' + baselayer);
+    var result = [false, false, false, false];
+
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (baselayer === baselayerList.properties[i].name) {
+//            jscallback.log('getOverlayValues: ' + baselayerList.properties[i].overlays);
+
+            result = baselayerList.properties[i].overlays.slice(0);
+            break;
+        }
+    }
+    
+    return result;
+}
+
+// set loaded preferences from TrackMap
+function setOverlayValues(baselayer, overlays) {
+//    jscallback.log('setOverlayValues: ' + baselayer + " to " + overlays);
+    
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (baselayer === baselayerList.properties[i].name) {
+//            jscallback.log('setOverlayValues: ' + baselayerList.properties[i].overlays);
+            
+            baselayerList.properties[i].overlays = overlays.slice(0);
+        }
+    }
+}
+
+
+// initialize everything for base layer #0
+var currentBaselayer = 0;
+var currentOverlays = baselayerList.properties[0].overlays.slice(0);
+baselayerchange({name: baselayerList.properties[0].name});
+
+function setCurrentBaselayer(layer) {
+    var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
+    layerControlElement.getElementsByTagName('input')[layer].click();
+}
+function getCurrentBaselayer() {
+    return currentBaselayer;
+}
+
 // add automatically for maps that need the additional info
-function baseLayerChange(e) {
-    //jscallback.log('baseLayerChange: ' + e.name + ", " + hasHyddaLayer + ", " + hasOpenMapSurferLayer);
+function baselayerchange(e) {
+    currentBaselayer = baselayerList.UNKNOWN;
+    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+        if (e.name === baselayerList.properties[i].name) {
+//            jscallback.log('baselayerchange to: ' + i + ' from ' + currentBaselayer);
 
-    if (hasHyddaLayer) {
-        myMap.removeLayer(Hydda_RoadsAndLabels);
-        controlLayer.removeLayer(Hydda_RoadsAndLabels);
+            currentBaselayer = i;
+            break;
+        }
     }
+    
+    logOverlays();
+    
+    // go through all 
+    baselayerList.properties[currentBaselayer].overlays.forEach(function (item, index) {
+//        jscallback.log('working on: ' + currentOverlays[index] + ', ' + item + ', ' + overlaysList.properties[index].name);
+        
+        if (currentOverlays[index] !== item) {
+            // remove if previously present
+            if (currentOverlays[index]) {
+//                jscallback.log('myMap.removeLayer');
+                myMap.removeLayer(overlaysList.properties[index].layer);
+            }
 
-    if (e.name === 'Satellite Esri') {
-        myMap.addLayer(Hydda_RoadsAndLabels);
-        controlLayer.addOverlay(Hydda_RoadsAndLabels, "Roads and Labels");
-        hasHyddaLayer = true;
-        //jscallback.log('added layer Hydda_RoadsAndLabels');
-    }
+            // add if to be used
+            if (item) {
+//                jscallback.log('myMap.addLayer');
+                myMap.addLayer(overlaysList.properties[index].layer);
+            }
+        }
 
-    if (hasOpenMapSurferLayer) {
-        myMap.removeLayer(OpenMapSurfer_ContourLines);
-        controlLayer.removeLayer(OpenMapSurfer_ContourLines);
-    }
+        // update Layer control
+        controlLayer.removeLayer(overlaysList.properties[index].layer);
+        controlLayer.addOverlay(overlaysList.properties[index].layer, overlaysList.properties[index].name);
+    });
 
-    if (e.name === 'Satellite Esri' || e.name === 'MapBox' || e.name === 'OpenStreetMap') {
-//    if (e.name === 'Satellite Esri' || e.name === 'MapBox') {
-        myMap.addLayer(OpenMapSurfer_ContourLines);
-        controlLayer.addOverlay(OpenMapSurfer_ContourLines, "Contour Lines");
-        hasOpenMapSurferLayer = true;
-        //jscallback.log('added layer OpenMapSurfer_ContourLines');
-    }
-
-    if (hasHikeBikeLayer) {
-        myMap.removeLayer(HikeBike_HillShading);
-        controlLayer.removeLayer(HikeBike_HillShading);
-    }
-
-    if (e.name === 'OpenStreetMap') {
-        controlLayer.addOverlay(HikeBike_HillShading, "Hill Shading");
-        hasHikeBikeLayer = true;
-        //jscallback.log('added layer OpenMapSurfer_ContourLines');
-    }
+//    jscallback.log('baseLayerChange: ' + e.name + ', ' + overlaysToUse + ', ' + currentOverlays);
 } 
-myMap.on('baselayerchange', baseLayerChange);
+function overlayadd(e) {
+//    jscallback.log('overlayadd: ' + e.name + ' for baselayer: ' + currentBaselayer);
+    overlayChanged(e, true);
+}
+function overlayremove(e) {
+//    jscallback.log('overlayremove: ' + e.name + ' for baselayer: ' + currentBaselayer);
+    overlayChanged(e, false);
+}
+function overlayChanged(e, value) {
+    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
+        if (e.name === overlaysList.properties[i].name) {
+//            jscallback.log('overlayChanged to ' + value + ' for baselayer: ' + currentBaselayer + ' and overlay: ' + i);
+            
+            currentOverlays[i] = value;
+    
+            // update value for baselayer as well to store for next usage
+            baselayerList.properties[currentBaselayer].overlays[i] = value;
+            break;
+        }
+    }
+
+    logOverlays();
+}
+myMap.on('baselayerchange', baselayerchange);
+myMap.on('overlayadd', overlayadd);
+myMap.on('overlayremove', overlayremove);
+
+function logOverlays() {
+//    jscallback.log('------------------------------------------------------------------------------------------');
+//    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+//        jscallback.log('baselayer: ' + baselayerList.properties[i].name + ', overlays: ' + baselayerList.properties[i].overlays);
+//    }
+//    jscallback.log('------------------------------------------------------------------------------------------');
+}
 
 //
 // Possible list of additional base layers (curtesy of view-source:https://www.gpsvisualizer.com/leaflet/functions.js)

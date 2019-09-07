@@ -279,6 +279,14 @@ public class GPXTreeTableView {
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(deleteItems);
 
+                                final Menu deleteAttr = new Menu("Delete attribute(s)");
+                                final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
+                                deleteExtensions.setOnAction((ActionEvent event) -> {
+                                    deleteSelectedItemsInformation(GPXEditor.DeleteInformation.EXTENSION);
+                                });
+                                deleteAttr.getItems().add(deleteExtensions);
+                                fileMenu.getItems().add(deleteAttr);
+
                                 fileMenu.getItems().add(new SeparatorMenuItem());
 
                                 final MenuItem invertItems = new MenuItem("Invert Items");
@@ -476,15 +484,16 @@ public class GPXTreeTableView {
         });
 
         // TFE, 20190821: not required since we have the same on row level...
-//        // allow file drag and drop to gpxFileList
-//        myTreeTableView.setOnDragOver((DragEvent event) -> {
-//            onDragOver(null, event);
-//        });
-//        
-//        // Dropping over surface
-//        myTreeTableView.setOnDragDropped((DragEvent event) -> {
-//            onDragDropped(null, event);
-//        });
+        // TFE, 20190902: still needed - in case of empty treetableview we don't have any rows!!!
+        // allow file drag and drop to gpxFileList
+        myTreeTableView.setOnDragOver((DragEvent event) -> {
+            onDragOver(event);
+        });
+        
+        // Dropping over surface
+        myTreeTableView.setOnDragDropped((DragEvent event) -> {
+            onDragDropped(event);
+        });
         
         // TFE, 20180812: support copy, paste, cut on lineitems - analogues to waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
@@ -595,6 +604,10 @@ public class GPXTreeTableView {
         }
     }
     
+    @SuppressWarnings("unchecked")
+    private void onDragDropped(final DragEvent event) {
+        onDragDropped(event, null, null);
+    }
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TreeTableRow<GPXLineItem> row, final GPXEditor.RelativePosition relativePosition) {
         Dragboard db = event.getDragboard();
@@ -773,12 +786,22 @@ public class GPXTreeTableView {
     }
     
     public void removeGPXFile(final GPXFile gpxFile) {
-        myTreeTableView.getRoot().getChildren().remove(getIndexForGPXFile(gpxFile));        
+        final int index = getIndexForGPXFile(gpxFile);
+        if (index > -1) {
+            // something went horribly wrong...
+            myTreeTableView.getRoot().getChildren().remove(getIndexForGPXFile(gpxFile));        
+        }
     }
     
     public void replaceGPXFile(final GPXFile gpxFile) {
-        final int index = getIndexForGPXFile(gpxFile);
-        myTreeTableView.getRoot().getChildren().remove(index);
+        int index = getIndexForGPXFile(gpxFile);
+        if (index > -1) {
+            // something went horribly wrong...
+            myTreeTableView.getRoot().getChildren().remove(index);
+        } else {
+            // but we still want to add the file
+            index = 0;
+        }
         myTreeTableView.getRoot().getChildren().add(index, createTreeItemForGPXFile(gpxFile));
     }
     
@@ -816,6 +839,26 @@ public class GPXTreeTableView {
                 map((TreeItem<GPXLineItem> t) -> {
                     return t.getValue();
                 }).collect(Collectors.toList());
+    }
+    
+    private void deleteSelectedItemsInformation(final GPXEditor.DeleteInformation info) {
+        // all waypoints to remove - as copy since otherwise observablelist get messed up by deletes
+        final List<GPXLineItem> selectedItems = getSelectedGPXLineItems();
+
+        for (GPXLineItem waypoint : selectedItems){
+            switch (info) {
+                case EXTENSION:
+                    if (waypoint.getContent().getExtensionData() != null) {
+                        waypoint.getContent().getExtensionData().clear();
+                        waypoint.setHasUnsavedChanges();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        myEditor.refresh();
     }
 
     /* Required getter and setter methods are forwarded to internal TreeTableView */
