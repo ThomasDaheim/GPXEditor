@@ -123,6 +123,11 @@
                 <MenuItem fx:id="switchMapMenu" disable="true" mnemonicParsing="false" text="Disable Map" visible="false" />
               </items>
             </Menu>
+            <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
+              <items>
+                <MenuItem fx:id="onlineHelpMenu" mnemonicParsing="false" text="Online Help" />
+              </items>
+            </Menu>
         </menus>
       </MenuBar>
    </top>

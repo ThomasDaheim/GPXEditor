@@ -37,12 +37,14 @@ import java.util.logging.Logger;
 import javafx.application.HostServices;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -103,29 +105,46 @@ public class AboutMenu {
         return INSTANCE;
     }
     
+    public void addAboutMenu(final Window window, final Menu menu, final String appName, final String appVersion, final String appURL) {
+        // add menu to menuBar
+        menu.getItems().add(createMenuItem(window, appName, appVersion, appURL, new MenuItem(), false));
+    }
+    
     public void addAboutMenu(final Window window, final MenuBar menuBar, final String appName, final String appVersion, final String appURL) {
+        // add menu to menuBar
+        menuBar.getMenus().add((Menu) createMenuItem(window, appName, appVersion, appURL, new Menu(), true));
+    };
+    
+    private MenuItem createMenuItem(final Window window, final String appName, final String appVersion, final String appURL, final MenuItem menuItem, final boolean useImage) {
         // create alert from data with OK button
         final Alert alert = createAboutAlert(window, appName, appVersion, appURL);
         
-        // create menu, add image and onclick handler to show alert
-        final ImageView menuImage = new ImageView();
-        menuImage.setImage(menuIcon);
-        menuImage.setPreserveRatio(true);
-        menuImage.setFitHeight(12);
+        if (useImage) {
+            // create menu, add image and onclick handler to show alert
+            final ImageView menuImage = new ImageView();
+            menuImage.setImage(menuIcon);
+            menuImage.setPreserveRatio(true);
+            menuImage.setFitHeight(12);
 
-        // setOnMouseClicked works only on Label, not directly on ImageView...
-        final Label menuLabel = new Label("");
-        menuLabel.setGraphic(menuImage);
-        menuLabel.setOnMouseClicked((event) -> {
+            // setOnMouseClicked works only on Label, not directly on ImageView...
+            final Label menuLabel = new Label("");
+            menuLabel.setGraphic(menuImage);
+            menuLabel.setOnMouseClicked((event) -> {
+                alert.showAndWait();
+            });
+
+            menuItem.setGraphic(menuLabel);
+        } else {
+            menuItem.setText("About");
+        }
+        
+        // make double sure we get the click :-)
+        menuItem.setOnAction((t) -> {
             alert.showAndWait();
         });
-        
-        final Menu menu = new Menu();
-        menu.setGraphic(menuLabel);
 
-        // add menu to menuBar
-        menuBar.getMenus().add(menu);
-    };
+        return menuItem;
+    }
     
     private Alert createAboutAlert(final Window window, final String inAppName, final String inAppVersion, final String inAppURL) {
         String appName = inAppName;

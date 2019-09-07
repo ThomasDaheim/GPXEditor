@@ -92,6 +92,7 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -317,6 +318,10 @@ public class GPXEditor implements Initializable {
     private TreeTableColumn<GPXLineItem, Boolean> extGPXCol;
     @FXML
     private TableColumn<GPXWaypoint, Boolean> extTrackCol;
+    @FXML
+    private Menu helpMenu;
+    @FXML
+    private MenuItem onlineHelpMenu;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -375,7 +380,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), menuBar, "GPXEditor", "v4.1", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.2", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
@@ -556,6 +561,18 @@ public class GPXEditor implements Initializable {
                 switchMapMenu.setText("Disable Map");
                 // TODO: save previous state and only enable if something to show...
                 GPXTrackviewer.getInstance().setEnable(true);
+            }
+        });
+        
+        //
+        // Help
+        //
+        onlineHelpMenu.setAccelerator(KeyCombination.keyCombination("F1"));
+        onlineHelpMenu.setOnAction((ActionEvent event) -> {
+            // open help page in github with default app - https://github.com/ThomasDaheim/GPXEditor/wiki
+            HostServices hostServices = (HostServices) borderPane.getScene().getWindow().getProperties().get("hostServices");
+            if (hostServices != null) {
+                hostServices.showDocument("https://github.com/ThomasDaheim/GPXEditor/wiki");
             }
         });
     }
