@@ -380,7 +380,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.2", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.1", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
