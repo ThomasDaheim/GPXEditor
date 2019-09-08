@@ -19,7 +19,8 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ### Update v4.2
 
-* 
+* edit waypoint from leaflet context menu
+* preference to auto-assign height for new / changed items
 
 ### Update v4.1
 
