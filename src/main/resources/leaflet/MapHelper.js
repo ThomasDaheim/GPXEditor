@@ -367,3 +367,23 @@ function getTitleFromTags(point, data) {
     
     return title;
 }
+
+/*
+ * track mouseover for waypoints so that context menu can be adapted accordingly
+ */
+// use separate layer for search results for easy removal
+// register / deregister marker under mouse
+function addMouseOverToLayer(layer) {
+    var marker = window[layer];
+
+    marker.on('mouseover', function(e){
+        var marker = e.target;
+        var markerPos = marker.getLatLng();
+        jscallback.registerWaypoint(layer, markerPos.lat, markerPos.lng);
+    });
+    marker.on('mouseout', function(e){
+        var marker = e.target;
+        var markerPos = marker.getLatLng();
+        jscallback.deregisterWaypoint(layer, markerPos.lat, markerPos.lng);
+    });
+}

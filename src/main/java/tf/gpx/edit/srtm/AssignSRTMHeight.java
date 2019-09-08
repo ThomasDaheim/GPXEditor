@@ -224,7 +224,6 @@ public class AssignSRTMHeight {
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
                 final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
-
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
                 runVisitor(myGPXLineItems, visitor);
                 
@@ -261,8 +260,23 @@ public class AssignSRTMHeight {
         
         return hasUpdated;
     }
+    
+    public boolean assignSRTMHeightNoUI(final List<GPXLineItem> gpxLineItems) {
+        myGPXLineItems = gpxLineItems;
+        
+        hasUpdated = false;
+        if (checkSRTMFiles()) {
+            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+            visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+            runVisitor(myGPXLineItems, visitor);
 
-    private void checkSRTMFiles() {
+            hasUpdated = true;
+        }
+        
+        return hasUpdated;
+    }
+
+    private boolean checkSRTMFiles() {
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
@@ -303,7 +317,8 @@ public class AssignSRTMHeight {
 
 //        System.setOut(out);
 //        System.setErr(err);
-        
+
+        return missingDataFiles.isEmpty();
     }
 
     private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {

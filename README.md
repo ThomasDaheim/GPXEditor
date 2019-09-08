@@ -17,6 +17,10 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v4.2
+
+* 
+
 ### Update v4.1
 
 * link to help pages in github
