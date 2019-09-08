@@ -61,7 +61,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
                 if (start != null) {
                     return gpxLineItemData.getFormat().format(start);
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case Duration:
                 return getDurationAsString();
@@ -72,7 +72,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
                 if (duration > 0.0) {
                     return gpxLineItemData.getFormat().format(getLength()/getDuration()*1000d*3.6d);
                 } else {
-                    return "---";
+                    return NO_DATA;
                 }
             case CumulativeAscent:
                 return gpxLineItemData.getFormat().format(getCumulativeAscent());

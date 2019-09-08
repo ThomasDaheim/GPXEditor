@@ -58,6 +58,7 @@ public abstract class GPXLineItem {
     public static final DecimalFormat DOUBLE_FORMAT_1 = new DecimalFormat("0.0"); 
     public static final DecimalFormat COUNT_FORMAT = new DecimalFormat("#########"); 
     public static final double NO_VALUE = Double.MIN_VALUE; 
+    public static final String NO_DATA = "---";
     
     // What am I?
     public static enum GPXLineItemType {
@@ -497,11 +498,17 @@ public abstract class GPXLineItem {
         return formatDurationAsString(getDuration());
     }
     public static String formatDurationAsString(final long diff) {
-        // TFE, 20170716: negative differences are only shown for hours
-        final long diffSeconds = Math.abs(diff / 1000 % 60);
-        final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
-        final long diffHours = diff / (60 * 60 * 1000);
-        return DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
+        String result = NO_DATA;
+        
+        if (diff > 0) {
+            // TFE, 20170716: negative differences are only shown for hours
+            final long diffSeconds = Math.abs(diff / 1000 % 60);
+            final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
+            final long diffHours = diff / (60 * 60 * 1000);
+            result = DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
+        }
+        
+        return result;
     }
     protected abstract Bounds getBounds();
     
@@ -540,10 +547,36 @@ public abstract class GPXLineItem {
 
     // comparator for sorting columns as numerical values
     public static Comparator<String> getAsNumberComparator() {
-        return new Comparator<String>() {
-            @Override
-            public int compare(String id1, String id2) {
-//                System.out.println("id1: " + id1 + ", id2: " + id2);
+        return (String id1, String id2) -> {
+            //                System.out.println("id1: " + id1 + ", id2: " + id2);
+            
+            // check if both are numbers - otherwise return string compare
+            if (!NumberUtils.isParsable(id1) || !NumberUtils.isParsable(id2)) {
+                return id1.compareTo(id2);
+            }
+            
+            final Double d1 = Double.parseDouble(id1);
+            final Double d2 = Double.parseDouble(id2);
+            
+            return d1.compareTo(d2);
+        };
+    }
+
+    // comparator for sorting columns by IDs
+    public static Comparator<String> getSingleIDComparator() {
+        // ID looks like F1, T1, S10
+        return (String id1, String id2) -> {
+            //                System.out.println("id1: " + id1 + ", id2: " + id2);
+            
+            // and now "invert" logic of getCombinedID...
+            char type1 = id1.charAt(0);
+            char type2 = id2.charAt(0);
+//                System.out.println("type1: " + type1 + ", type2: " + type2);
+
+            if (type1 == type2) {
+                // shift & compare
+                id1 = id1.substring(1);
+                id2 = id2.substring(1);
 
                 // check if both are numbers - otherwise return string compare
                 if (!NumberUtils.isParsable(id1) || !NumberUtils.isParsable(id2)) {
@@ -552,43 +585,11 @@ public abstract class GPXLineItem {
 
                 final Double d1 = Double.parseDouble(id1);
                 final Double d2 = Double.parseDouble(id2);
-                
+
                 return d1.compareTo(d2);
-            }
-        };
-    }
-
-    // comparator for sorting columns by IDs
-    public static Comparator<String> getSingleIDComparator() {
-        // ID looks like F1, T1, S10
-        return new Comparator<String>() {
-            @Override
-            public int compare(String id1, String id2) {
-//                System.out.println("id1: " + id1 + ", id2: " + id2);
-
-                // and now "invert" logic of getCombinedID...
-                char type1 = id1.charAt(0);
-                char type2 = id2.charAt(0);
-//                System.out.println("type1: " + type1 + ", type2: " + type2);
-
-                if (type1 == type2) {
-                    // shift & compare
-                    id1 = id1.substring(1);
-                    id2 = id2.substring(1);
-                    
-                    // check if both are numbers - otherwise return string compare
-                    if (!NumberUtils.isParsable(id1) || !NumberUtils.isParsable(id2)) {
-                        return id1.compareTo(id2);
-                    }
-
-                    final Double d1 = Double.parseDouble(id1);
-                    final Double d2 = Double.parseDouble(id2);
-
-                    return d1.compareTo(d2);
-                } else {
-                    // shouldn't happen - but anyways...
-                    return id1.compareTo(id2);
-                }
+            } else {
+                // shouldn't happen - but anyways...
+                return id1.compareTo(id2);
             }
         };
     }

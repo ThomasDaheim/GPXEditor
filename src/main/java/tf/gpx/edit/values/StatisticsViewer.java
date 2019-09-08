@@ -83,7 +83,7 @@ public class StatisticsViewer {
         // overall
         Start("Start", "", Date.class, GPXLineItem.DATE_FORMAT),
         End("End", "", Date.class, GPXLineItem.DATE_FORMAT),
-        Count("Count Waypoints", "", Integer.class, GPXLineItem.COUNT_FORMAT),
+        Count("Waypoints", "", Integer.class, GPXLineItem.COUNT_FORMAT),
         
         Break1("", "", String.class, null),
 
@@ -91,10 +91,10 @@ public class StatisticsViewer {
         DurationOverall("Duration overall", "hhh:mm:ss", String.class, null),
         DurationActive("Duration active", "hhh:mm:ss", String.class, null),
         DurationNoPause("Duration w/o pause", "hhh:mm:ss", String.class, null),
-        DurationAscent("Duration ascending", "hhh:mm:ss", String.class, null),
-        DurationAscentNoPause("Duration ascending w/o pause", "hhh:mm:ss", String.class, null),
-        DurationDescent("Duration descending", "hhh:mm:ss", String.class, null),
-        DurationDescentNoPause("Duration descending w/o pause", "hhh:mm:ss", String.class, null),
+        DurationAscent("Duration asc.", "hhh:mm:ss", String.class, null),
+        DurationAscentNoPause("Duration asc. w/o pause", "hhh:mm:ss", String.class, null),
+        DurationDescent("Duration desc.", "hhh:mm:ss", String.class, null),
+        DurationDescentNoPause("Duration desc. w/o pause", "hhh:mm:ss", String.class, null),
         // DurationTravel("DurationOverall of Travel", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
         // DurationBreaks("DurationOverall of Breaks (Breaks > 3 min)", "HH:MM:SS", String.class, GPXLineItem.TIME_FORMAT),
 
@@ -304,8 +304,6 @@ public class StatisticsViewer {
         final List<GPXWaypoint> gpxWaypoints = myGPXFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         // set values that don't need calculation
-        statisticsList.get(StatisticData.Start.ordinal()).setValue(gpxWaypoints.get(0).getDate());
-        statisticsList.get(StatisticData.End.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getDate());
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
         // format duration as in getDurationAsString
@@ -323,6 +321,8 @@ public class StatisticsViewer {
         
         statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getDuration()*1000d*3.6d);
 
+        Date startDate = gpxWaypoints.get(0).getDate();
+        Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();
         double lengthAsc = 0.0;
         double lengthDesc = 0.0;
         long durationAsc = 0;
@@ -358,6 +358,15 @@ public class StatisticsViewer {
 
         GPXWaypoint prevGPXWaypoint = null;
         for (GPXWaypoint waypoint : gpxWaypoints) {
+            // TFE, 20190908: start & end don't need to be first & last waypoint...
+            final Date waypointDate = waypoint.getDate();
+            if (startDate == null || startDate.after(waypointDate)) {
+                startDate = waypointDate;
+            }
+            if (endDate == null || endDate.before(waypointDate)) {
+                endDate = waypointDate;
+            }
+            
             // do we have a break?
             boolean isBreak = false;
             if (prevGPXWaypoint != null && !waypoint.getGPXTrackSegments().get(0).equals(prevGPXWaypoint.getGPXTrackSegments().get(0)) ||
@@ -417,6 +426,9 @@ public class StatisticsViewer {
             prevGPXWaypoint = waypoint;
         }
         
+        statisticsList.get(StatisticData.Start.ordinal()).setValue(startDate);
+        statisticsList.get(StatisticData.End.ordinal()).setValue(endDate);
+
         // average values
         avgHeight /= gpxWaypoints.size();
         avgSlopeAsc /= gpxWaypoints.size();
@@ -545,7 +557,7 @@ public class StatisticsViewer {
 
         private String getStringValue() {
             if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
-                return "---";
+                return GPXLineItem.NO_DATA;
             } else {
                 if (myData.getFormat() != null) {
                     return myData.getFormat().format(myValue);

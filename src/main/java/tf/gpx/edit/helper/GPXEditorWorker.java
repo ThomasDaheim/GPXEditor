@@ -262,8 +262,8 @@ public class GPXEditorWorker {
         
         // export using appache csv
         try (
-                FileWriter out = new FileWriter(selectedFile);
-                CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
+            FileWriter out = new FileWriter(selectedFile);
+            CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
               .withHeader(worker.getCSVHeader().toArray(new String[0])));
             ) {
             worker.getCSVLines().forEach((t) -> {
@@ -273,7 +273,10 @@ public class GPXEditorWorker {
                 } catch (IOException ex) {
                     Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            });                
+            });
+            
+            printer.close(true);
+            out.close();
         } catch (IOException ex) {
             Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -78,19 +78,19 @@ public class GPXMetadata extends GPXMeasurable {
             case Name:
                 return getName();
             case Start:
-                return "---";
+                return NO_DATA;
             case Duration:
-                return "---";
+                return NO_DATA;
             case Length:
-                return "---";
+                return NO_DATA;
             case Speed:
-                return "---";
+                return NO_DATA;
             case CumulativeAscent:
-                return "---";
+                return NO_DATA;
             case CumulativeDescent:
-                return "---";
+                return NO_DATA;
             case NoItems:
-                return "---";
+                return NO_DATA;
             default:
                 return "";
         }

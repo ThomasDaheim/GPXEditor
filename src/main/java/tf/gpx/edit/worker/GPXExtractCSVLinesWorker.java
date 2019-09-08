@@ -41,7 +41,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
-    private static final List<String> CSV_HEADER = Arrays.asList("ID", "Type", "Position", "Start/Date", "Name", "Duration", "Length [km]", "Speed [km/h]");
+    private static final List<String> CSV_HEADER = Arrays.asList("ID", "Type", "Position", "Start/Date", "Name", "Duration", "Length [m]", "Speed [km/h]", "Height [m]");
     
     private List<List<String>> csvLines = new ArrayList<>();
     
@@ -92,6 +92,14 @@ public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
     }
     
     private List<String> visitGPXLineItem(final GPXLineItem gpxLineItem) {
+        String length = "";
+        String height = "";
+        if (GPXLineItem.GPXLineItemType.GPXWaypoint.equals(gpxLineItem.getType())) {
+            length = gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious);
+            height = gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Elevation);
+        } else {
+            length = gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Length) + " [km]";
+        }
         return Arrays.asList(
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.CombinedID),
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Type),
@@ -99,8 +107,9 @@ public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Start),
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Name),
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Duration),
-                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Length),
-                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Speed)
+                length,
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Speed),
+                height
             );
     }
 }
