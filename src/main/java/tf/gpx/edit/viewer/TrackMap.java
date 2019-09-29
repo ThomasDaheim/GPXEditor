@@ -1088,16 +1088,17 @@ public class TrackMap extends LeafletMapView {
     }
     private void showWaypointsOnMap(final List<LatLong> waypoints, final List<GPXWaypoint> gpxWaypoints) {
         if (!waypoints.isEmpty()) {
-            final GPXWaypoint gpxpoint = gpxWaypoints.get(0);
             
             // show start & end markers
             LatLong point = waypoints.get(0);
+            GPXWaypoint gpxpoint = gpxWaypoints.get(0);
             String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, 1000, false);
             markers.put(marker, gpxpoint);
             
             point = waypoints.get(waypoints.size()-1);
+            gpxpoint = gpxWaypoints.get(gpxWaypoints.size()-1);
             marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, 2000, false);
-            markers.put(marker, gpxWaypoints.get(gpxWaypoints.size()-1));
+            markers.put(marker, gpxpoint);
             
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
