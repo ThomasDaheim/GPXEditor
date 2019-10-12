@@ -424,7 +424,7 @@ public class GPXTreeTableView {
             // drag enters this row
             row.setOnDragEntered(event -> {
                 final Dragboard db = event.getDragboard();
-                if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
+                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
                     final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
 
                     GPXEditor.RelativePosition relativePosition;
@@ -585,7 +585,7 @@ public class GPXTreeTableView {
     
     private void onDragOver(final DragEvent event) {
         Dragboard db = event.getDragboard();
-        if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
+        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
             // TFE, 20190821: allow dragging after last row - means dropping at the end
             event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             event.consume();
@@ -611,7 +611,7 @@ public class GPXTreeTableView {
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TreeTableRow<GPXLineItem> row, final GPXEditor.RelativePosition relativePosition) {
         Dragboard db = event.getDragboard();
-        if (db.getContent(SERIALIZED_MIME_TYPE) != null) {
+        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
             final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
             if (!TargetForDragDrop.NONE.equals(acceptableDragboard(db, checkRow, relativePosition))) {
                 // get dragged item and item drop on to
