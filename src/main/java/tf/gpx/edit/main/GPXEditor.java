@@ -380,7 +380,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.1", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.2", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
@@ -859,51 +859,48 @@ public class GPXEditor implements Initializable {
         
         // TFE, 20180525: support copy, paste, cut on waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
-        gpxTrackXML.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                // any combination that removes entries
-                if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+        gpxTrackXML.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
+            // any combination that removes entries
+            if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
                     CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
-                    //System.out.println("Control+C Control+V or pressed");
-                    
-                    if (!gpxTrackXML.getSelectionModel().getSelectedItems().isEmpty()) {
-                        // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
+                //System.out.println("Control+C Control+V or pressed");
+                
+                if (!gpxTrackXML.getSelectionModel().getSelectedItems().isEmpty()) {
+                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
                             CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
-                            clipboardWayPoints.clear();
-                            // TFE, 20190812: add clone to clipboardWayPoints
-                            for (GPXWaypoint gpxWaypoint : gpxTrackXML.getSelectionModel().getSelectedItems()) {
-                                clipboardWayPoints.add(gpxWaypoint.cloneMeWithChildren());
-                            }
-                        }
-
-                        // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                        if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
-                            deleteSelectedWaypoints();
+                        clipboardWayPoints.clear();
+                        // TFE, 20190812: add clone to clipboardWayPoints
+                        for (GPXWaypoint gpxWaypoint : gpxTrackXML.getSelectionModel().getSelectedItems()) {
+                            clipboardWayPoints.add(gpxWaypoint.cloneMeWithChildren());
                         }
                     }
-                // any combination that adds entries
-                } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                           CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
-                    //System.out.println("Control+V pressed");
                     
-                    insertClipboardWaypoints(RelativePosition.ABOVE);
-                } else if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                           CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
-                    //System.out.println("Shift Control+V pressed");
-                    
-                    insertClipboardWaypoints(RelativePosition.BELOW);
+                    // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
+                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
+                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+                        deleteSelectedWaypoints();
+                    }
                 }
+                // any combination that adds entries
+            } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
+                //System.out.println("Control+V pressed");
                 
-                // track SHIFT key pressed - without CNTRL or ALT
-                onlyShiftPressed = event.isShiftDown() && !event.isAltDown() && !event.isControlDown() && !event.isMetaDown();
-            };
+                insertClipboardWaypoints(RelativePosition.ABOVE);
+            } else if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+                //System.out.println("Shift Control+V pressed");
+                
+                insertClipboardWaypoints(RelativePosition.BELOW);
+            }
+            
+            // track SHIFT key pressed - without CNTRL or ALT
+            onlyShiftPressed = event.isShiftDown() && !event.isAltDown() && !event.isControlDown() && !event.isMetaDown();
         });
         
         gpxTrackXML.setRowFactory((TableView<GPXWaypoint> tableView) -> {
@@ -2029,8 +2026,12 @@ public class GPXEditor implements Initializable {
     }
     
     private void editWaypoints(final Event event) {
-        EditGPXWaypoint.getInstance().editWaypoint(gpxTrackXML.getSelectionModel().getSelectedItems());
-        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+        editGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems());
+    }
+    
+    public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
+        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
         // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
         showGPXWaypoints((GPXLineItem) gpxTrackXML.getUserData(), true, false);
     }

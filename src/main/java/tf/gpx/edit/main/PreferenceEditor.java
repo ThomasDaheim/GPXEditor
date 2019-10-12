@@ -77,6 +77,8 @@ public class PreferenceEditor {
                 EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
         double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
         double myFixEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000"));
+
+        boolean myAssignHeight = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)));
         
         int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
 
@@ -144,6 +146,21 @@ public class PreferenceEditor {
         epsilonText.setTooltip(t);
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, new Insets(10));        
+
+        rowNum++;
+        // 3rd row: auto assign height for new waypoints
+        t = new Tooltip("Assign height values for new items automatically");
+        final Label assignHeightLbl = new Label("Auto-assign height:");
+        assignHeightLbl.setTooltip(t);
+        gridPane.add(assignHeightLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(assignHeightLbl, VPos.TOP);
+        GridPane.setMargin(assignHeightLbl, new Insets(10));
+        
+        final CheckBox assignHeightChkBox = new CheckBox();
+        assignHeightChkBox.setSelected(myAssignHeight);
+        assignHeightChkBox.setTooltip(t);
+        gridPane.add(assignHeightChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(assignHeightChkBox, new Insets(10));   
 
         rowNum++;
         // separator
@@ -295,6 +312,8 @@ public class PreferenceEditor {
             myFixEpsilon = Double.valueOf(fixText.getText().trim());
             myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
             
+            myAssignHeight = assignHeightChkBox.isSelected();
+            
             myAlwaysShowFileWaypoints = waypointChkBox.isSelected();
 
             myMaxWaypointsToShow = Integer.valueOf(numShowText.getText().trim());
@@ -311,6 +330,8 @@ public class PreferenceEditor {
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
+            
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(myAssignHeight));
             
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(myAlwaysShowFileWaypoints));
 

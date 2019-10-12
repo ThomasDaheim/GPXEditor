@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
-import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
@@ -90,6 +89,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 
 /**
@@ -211,8 +211,11 @@ public class TrackMap extends LeafletMapView {
     
     private int varNameSuffix = 1;
             
-    // TFE, 20181009: store route under cursor
+    // TFE, 20181009: store gpxRoute under cursor
     private GPXRoute currentGPXRoute;
+    
+    // TFE, 20190908: store waypoint under cursor
+    private GPXWaypoint currentGPXWaypoint;
 
     private final static String NOT_SHOWN = "Not shown";
     private final static String TRACKPOINT_MARKER = "Trackpoint";
@@ -294,8 +297,7 @@ public class TrackMap extends LeafletMapView {
         sb.append("]");
         String jsPositions = sb.toString();
         
-        execScript("var latLngs = " + jsPositions + ";");
-        execScript("var " + varName + " = L.polyline(latLngs, {color: '" + color + "', weight: 2}).addTo(myMap);");
+        execScript("var " + varName + " = L.polyline(" + jsPositions + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
 
         return varName;
     }
@@ -617,88 +619,103 @@ public class TrackMap extends LeafletMapView {
         
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
-            // we might be routing...
-            execScript("stopRouting(false);");
-            
-            assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
-            LatLong latlong = (LatLong) contextMenu.getUserData();
-            
-            // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
-            final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
+            final Object userData = addWaypoint.getUserData();
+            // check if a waypoint is under the cursor in leaflet - if yes, use its values
+            GPXWaypoint curWaypoint = null;
+            if (userData != null && (userData instanceof GPXWaypoint)) {
+                curWaypoint = (GPXWaypoint) userData;
+            }
 
-            // check if a marker is under the cursor in leaflet - if yes, use its values
-            CurrentMarker curMarker = null;
-            if (addWaypoint.getUserData() != null) {
-                curMarker = (CurrentMarker) addWaypoint.getUserData();
-                latlong = curMarker.latlong;
+            if (curWaypoint == null) {
+                // we might be routing...
+                execScript("stopRouting(false);");
+
+                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+                LatLong latlong = (LatLong) contextMenu.getUserData();
+
+                // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
+                final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
+
+                // check if a marker is under the cursor in leaflet - if yes, use its values
+                CurrentMarker curMarker = null;
+                if (userData != null && (userData instanceof CurrentMarker)) {
+                    curMarker = (CurrentMarker) userData;
+                    latlong = curMarker.latlong;
+                }
+
+                final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+                newGPXWaypoint.setNumber(curGPXWaypoints.size());
+                if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+                    // assign height
+                    AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(newGPXWaypoint));
+                }
+
+                if (curMarker != null) {
+                    // set name / description / comment from search result marker options (if any)
+                    if (curMarker.markerOptions.containsKey(MarkerOptions.Name.name())) {
+                        newGPXWaypoint.setName(curMarker.markerOptions.get(MarkerOptions.Name.name()));
+                    }
+
+                    String description = "";
+                    if (curMarker.markerOptions.containsKey(MarkerOptions.Description.name())) {
+                        description = description + curMarker.markerOptions.get(MarkerOptions.Description.name());
+                    } else {
+                        // lets see if we have other values from the marker in leaflet...
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Cousine.name())) {
+                            description = description + "Cousine: " + curMarker.markerOptions.get(MarkerOptions.Cousine.name());
+                        }
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Phone.name())) {
+                            if (!description.isEmpty()) {
+                                description += "; ";
+                            }
+                            description = description + "Phone: " + curMarker.markerOptions.get(MarkerOptions.Phone.name());
+                        }
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Email.name())) {
+                            if (!description.isEmpty()) {
+                                description += "; ";
+                            }
+                            description = description + "Email: " + curMarker.markerOptions.get(MarkerOptions.Email.name());
+                        }
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Website.name())) {
+                            if (!description.isEmpty()) {
+                                description += "; ";
+                            }
+                            description = description + "Website: " + curMarker.markerOptions.get(MarkerOptions.Website.name());
+                        }
+                    }
+                    if (!description.isEmpty()) {
+                        newGPXWaypoint.setDescription(description);
+                    }
+
+                    newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
+
+                    // remove marker from leaflet search results to avoid double markers
+                    execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
+                }
+
+                curGPXWaypoints.add(newGPXWaypoint);
+
+                final String waypoint = addMarkerAndCallback(
+                                newGPXWaypoint, 
+                                "", 
+                                MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
+                                0, 
+                                true);
+                fileWaypoints.put(waypoint, newGPXWaypoint);
+
+                // refresh fileWaypointsCount list without refreshing map...
+                myGPXEditor.refresh();
+
+                // redraw height chart
+                HeightChart.getInstance().setGPXWaypoints(myGPXLineItem, true);
+            } else {
+                myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
-            
-            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
-            newGPXWaypoint.setNumber(curGPXWaypoints.size());
-            
-            if (curMarker != null) {
-                // set name / description / comment from search result marker options (if any)
-                if (curMarker.markerOptions.containsKey(MarkerOptions.Name.name())) {
-                    newGPXWaypoint.setName(curMarker.markerOptions.get(MarkerOptions.Name.name()));
-                }
-                
-                String description = "";
-                if (curMarker.markerOptions.containsKey(MarkerOptions.Description.name())) {
-                    description = description + curMarker.markerOptions.get(MarkerOptions.Description.name());
-                } else {
-                    // lets see if we have other values from the marker in leaflet...
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Cousine.name())) {
-                        description = description + "Cousine: " + curMarker.markerOptions.get(MarkerOptions.Cousine.name());
-                    }
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Phone.name())) {
-                        if (!description.isEmpty()) {
-                            description += "; ";
-                        }
-                        description = description + "Phone: " + curMarker.markerOptions.get(MarkerOptions.Phone.name());
-                    }
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Email.name())) {
-                        if (!description.isEmpty()) {
-                            description += "; ";
-                        }
-                        description = description + "Email: " + curMarker.markerOptions.get(MarkerOptions.Email.name());
-                    }
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Website.name())) {
-                        if (!description.isEmpty()) {
-                            description += "; ";
-                        }
-                        description = description + "Website: " + curMarker.markerOptions.get(MarkerOptions.Website.name());
-                    }
-                }
-                if (!description.isEmpty()) {
-                    newGPXWaypoint.setDescription(description);
-                }
-                
-                newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
-                
-                // remove marker from leaflet search results to avoid double markers
-                execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
-            }
-                    
-            curGPXWaypoints.add(newGPXWaypoint);
-            
-            final String waypoint = addMarkerAndCallback(
-                            newGPXWaypoint, 
-                            "", 
-                            MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
-                            0, 
-                            true);
-            fileWaypoints.put(waypoint, newGPXWaypoint);
-            
-            // refresh fileWaypointsCount list without refreshing map...
-            myGPXEditor.refresh();
-            
-            // redraw height chart
-            HeightChart.getInstance().setGPXWaypoints(myGPXLineItem, true);
         });
 
         final MenuItem addRoute = new MenuItem("Add Route");
         addRoute.setOnAction((event) -> {
-            // check if a route is under the cursor in leaflet - if yes, use its values
+            // check if a gpxRoute is under the cursor in leaflet - if yes, use its values
             GPXRoute curRoute = null;
             if (addRoute.getUserData() != null) {
                 curRoute = (GPXRoute) addRoute.getUserData();
@@ -708,13 +725,17 @@ public class TrackMap extends LeafletMapView {
                 // we might be routing...
                 execScript("stopRouting(false);");
             
-                // start new editable route
+                // start new editable gpxRoute
                 final String routeName = "route" + (routes.size() + 1);
 
                 final GPXRoute gpxRoute = new GPXRoute(myGPXLineItem.getGPXFile());
                 gpxRoute.setName("New " + routeName);
 
                 myGPXLineItem.getGPXFile().getGPXRoutes().add(gpxRoute);
+                if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+                    // assign height
+                    AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+                }
 
                 execScript("var " + routeName + " = myMap.editTools.startPolyline();");
                 execScript("updateMarkerColor(\"" + routeName + "\", \"blue\");");
@@ -725,7 +746,7 @@ public class TrackMap extends LeafletMapView {
                 // refresh fileWaypointsCount list without refreshing map...
                 myGPXEditor.refresh();
             } else {
-                // start autorouting on current route
+                // start autorouting on current gpxRoute
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
                         TrackMap.RoutingProfile.valueOf(    
@@ -837,12 +858,17 @@ public class TrackMap extends LeafletMapView {
 
             showCord.setText(LatLongHelper.LatLongToString(latLong));
 
-            if (currentMarker != null) {
-                addWaypoint.setText("Add Waypoint from " + currentMarker.searchItem.name());
+            if (currentGPXWaypoint != null) {
+                addWaypoint.setText("Edit Waypoint");
+                addWaypoint.setUserData(currentGPXWaypoint);
             } else {
-                addWaypoint.setText("Add Waypoint");
+                if (currentMarker != null) {
+                    addWaypoint.setText("Add Waypoint from " + currentMarker.searchItem.name());
+                } else {
+                    addWaypoint.setText("Add Waypoint");
+                }
+                addWaypoint.setUserData(currentMarker);
             }
-            addWaypoint.setUserData(currentMarker);
 
             if (currentGPXRoute != null) {
                 addRoute.setText("Start autorouting");
@@ -863,6 +889,18 @@ public class TrackMap extends LeafletMapView {
     
     public void removeCurrentMarker() {
         currentMarker = null;
+    }
+
+    public void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
+        if (fileWaypoints.containsKey(waypoint)) {
+            currentGPXWaypoint = fileWaypoints.get(waypoint);
+        } else {
+            removeCurrentWaypoint();
+        }
+    }
+    
+    public void removeCurrentWaypoint() {
+        currentGPXWaypoint = null;
     }
 
     public void setCurrentGPXRoute(final String route, final Double lat, final Double lng) {
@@ -1050,16 +1088,17 @@ public class TrackMap extends LeafletMapView {
     }
     private void showWaypointsOnMap(final List<LatLong> waypoints, final List<GPXWaypoint> gpxWaypoints) {
         if (!waypoints.isEmpty()) {
-            final GPXWaypoint gpxpoint = gpxWaypoints.get(0);
             
             // show start & end markers
             LatLong point = waypoints.get(0);
+            GPXWaypoint gpxpoint = gpxWaypoints.get(0);
             String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, 1000, false);
             markers.put(marker, gpxpoint);
             
             point = waypoints.get(waypoints.size()-1);
+            gpxpoint = gpxWaypoints.get(gpxWaypoints.size()-1);
             marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, 2000, false);
-            markers.put(marker, gpxWaypoints.get(gpxWaypoints.size()-1));
+            markers.put(marker, gpxpoint);
             
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
@@ -1281,19 +1320,19 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void updateGPXRoute(final String marker, final List<LatLong> latlongs) {
-        final GPXRoute route = routes.get(marker);
-        assert route != null;
+        final GPXRoute gpxRoute = routes.get(marker);
+        assert gpxRoute != null;
         
         final List<GPXWaypoint> newGPXWaypoints = new ArrayList<>();
         int i = 1;
         for (LatLong latlong : latlongs) {
-            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(route, latlong.getLatitude(), latlong.getLongitude());
+            final GPXWaypoint newGPXWaypoint = new GPXWaypoint(gpxRoute, latlong.getLatitude(), latlong.getLongitude());
             newGPXWaypoint.setNumber(i);
             newGPXWaypoints.add(newGPXWaypoint);
             i++;
         }
 
-        final List<GPXWaypoint> oldGPXWaypoints = route.getGPXWaypoints();
+        final List<GPXWaypoint> oldGPXWaypoints = gpxRoute.getGPXWaypoints();
         if (!oldGPXWaypoints.isEmpty()) {
             // remove old start / end markers
             GPXWaypoint gpxWaypoint = oldGPXWaypoints.get(0);
@@ -1308,7 +1347,11 @@ public class TrackMap extends LeafletMapView {
             }
         }
         
-        route.setGPXWaypoints(newGPXWaypoints);
+        gpxRoute.setGPXWaypoints(newGPXWaypoints);
+        if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+            // assign height
+            AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+        }
         
         if (!newGPXWaypoints.isEmpty()) {
             // add new start / end markers
@@ -1346,6 +1389,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
+        execScript("addMouseOverToLayer(\"" + layer + "\");");
         if (interactive) {
             execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
             
@@ -1360,8 +1404,8 @@ public class TrackMap extends LeafletMapView {
 
     private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
         final String layer = myAddTrack(waypoints, color);
-        execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);");
-        execScript("addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
+        // reduce number of calls to execScript()
+        execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);" + "\n" + "addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;
     }
     
@@ -1502,7 +1546,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         public void updateRoute(final String event, final String route, final String coords) {
-//            System.out.println(event + ", " + route + ", " + coords);
+//            System.out.println(event + ", " + gpxRoute + ", " + coords);
             
             final List<LatLong> latlongs = new ArrayList<>();
             // parse coords string back into LatLongs
@@ -1532,14 +1576,24 @@ public class TrackMap extends LeafletMapView {
             //System.out.println("Marker deregistered: " + marker + ", " + lat + ", " + lon);
         }
         
+        public void registerWaypoint(final String waypoint, final Double lat, final Double lon) {
+            myTrackMap.setCurrentWaypoint(waypoint, lat, lon);
+//            System.out.println("Waypoint registered: " + waypoint + ", " + lat + ", " + lon);
+        }
+
+        public void deregisterWaypoint(final String waypoint, final Double lat, final Double lon) {
+            myTrackMap.removeCurrentWaypoint();
+//            System.out.println("Waypoint deregistered: " + waypoint + ", " + lat + ", " + lon);
+        }
+        
         public void registerRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.setCurrentGPXRoute(route, lat, lon);
-            //System.out.println("Route registered: " + route + ", " + lat + ", " + lon);
+            //System.out.println("Route registered: " + gpxRoute + ", " + lat + ", " + lon);
         }
 
         public void deregisterRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.removeCurrentGPXRoute();
-            //System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
+            //System.out.println("Route deregistered: " + gpxRoute + ", " + lat + ", " + lon);
         }
 
         public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
