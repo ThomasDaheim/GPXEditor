@@ -1346,6 +1346,9 @@ public class GPXEditor implements Initializable {
         if (!files.isEmpty()) {
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
+                    // TFE, 20191024 add warning for format issues
+                    GPXEditorWorker.verifyXMLFile(file);
+                    
                     gpxFileList.addGPXFile(new GPXFile(file));
 
                     // store last filename
