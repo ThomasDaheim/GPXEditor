@@ -204,8 +204,16 @@ public class GPXFile extends GPXMeasurable {
     
     public final void setHeaderAndMeta() {
         myGPX.setCreator("GPXEditor");
-        myGPX.setVersion("1.1");
+        myGPX.setVersion("4.2");
+                
+        // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
+        myGPX.addXmlns("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
+        // others currently not used...
+//        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+//        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+//        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+//        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
