@@ -99,6 +99,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -107,7 +108,9 @@ import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
+import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.general.AboutMenu;
+import tf.gpx.edit.general.ColorConverter;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.general.TableViewPreferences;
@@ -687,6 +690,42 @@ public class GPXEditor implements Initializable {
                 // getID not working for GPXFile - is always 0...
 //                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
+        idGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (!empty && item != null) {
+                    setText(item);
+
+                    // TFE, 20191118: text color to color of lineitem
+                    // https://stackoverflow.com/a/33393401
+                    Color color = null;
+                    final GPXLineItem lineItem = getTreeTableRow().getItem();
+                    if (lineItem != null) {
+                        switch (lineItem.getType()) {
+                            case GPXTrack:
+                            // tracksegments havee color from their tracks
+                            case GPXTrackSegment:
+                            case GPXRoute:
+                                color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    if (color != null) {
+                        final String cssColor = ColorConverter.JavaFXtoCSS(color);
+                        // TODO: change text color instead of background
+//                            setStyle("-fx-text-fill: " + cssColor + " !important;");
+                        setStyle("-fx-background-color: " + cssColor + " !important;");
+                    } else {
+                        setStyle(null);
+                    }
+                } else {
+                    setStyle(null);
+                }
+            }
+        });
         idGPXCol.setEditable(false);
         idGPXCol.setComparator(GPXLineItem.getSingleIDComparator());
         idGPXCol.setPrefWidth(NORMAL_WIDTH);
@@ -2136,6 +2175,8 @@ public class GPXEditor implements Initializable {
     // support callback functions for other classes
     // 
     public void selectGPXWaypoints(final List<GPXWaypoint> waypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+        System.out.println("selectGPXWaypoints: " + waypoints.size());
+
         // disable listener for checked changes since it fires for each waypoint...
         // TODO: use something fancy like LibFX ListenerHandle...
         gpxTrackXML.getSelectionModel().getSelectedItems().removeListener(listenergpxTrackXMLSelection);
@@ -2149,6 +2190,10 @@ public class GPXEditor implements Initializable {
         // move to first selected waypoint
         if (!waypoints.isEmpty()) {
             gpxTrackXML.scrollTo(waypoints.get(0));
+        }
+        
+        if (waypoints.size() > 1) {
+            System.out.println("Range");
         }
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems(), highlightIfHidden, useLineMarker);

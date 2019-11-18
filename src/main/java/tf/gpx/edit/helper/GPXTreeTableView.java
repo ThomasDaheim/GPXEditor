@@ -61,6 +61,7 @@ import javafx.util.Callback;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
+import tf.gpx.edit.general.ColorConverter;
 import tf.gpx.edit.general.ColorSelectionMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.items.GPXFile;

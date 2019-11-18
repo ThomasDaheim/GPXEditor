@@ -26,7 +26,6 @@
 package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.GPXConstants;
-import com.hs.gpxparser.modal.GPX;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;

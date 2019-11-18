@@ -102,6 +102,12 @@ public class GPXTrackSegment extends GPXMeasurable {
         }
         myGPXWaypoints.addListener(changeListener);
     }
+
+    @Override
+    public String getColor() {
+        // tracksegments have the color of their tracks
+        return getParent().getColor();
+    }
     
     @Override
     public GPXTrackSegment cloneMeWithChildren() {

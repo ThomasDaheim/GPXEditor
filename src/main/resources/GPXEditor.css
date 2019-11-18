@@ -156,11 +156,119 @@
     -fx-fill: red;
     -fx-opacity: 0.1;
 }
+.chart-series-area-fill {
+    -fx-opacity: 0.8;
+}
 .chart-series-area-line {    
     -fx-stroke-width: 0.5px;
     -fx-effect: null;
 }
-.default-color0.chart-area-symbol {
+
+/* TFE, 20191113: pseudoclasses to color line and area in heigghtchart */
+.chart-series-area-fill:line-color-Black {
+    -fx-fill: Black;
+}
+.chart-series-area-line:line-color-Black {
+    -fx-stroke: Black;
+}
+.chart-series-area-fill:line-color-DarkRed {
+    -fx-fill: DarkRed;
+}
+.chart-series-area-line:line-color-DarkRed {
+    -fx-stroke: DarkRed;
+}
+.chart-series-area-fill:line-color-DarkGreen {
+    -fx-fill: DarkGreen;
+}
+.chart-series-area-line:line-color-DarkGreen {
+    -fx-stroke: DarkGreen;
+}
+.chart-series-area-fill:line-color-GoldenRod {
+    -fx-fill: GoldenRod;
+}
+.chart-series-area-line:line-color-GoldenRod {
+    -fx-stroke: GoldenRod;
+}
+.chart-series-area-fill:line-color-DarkBlue {
+    -fx-fill: DarkBlue;
+}
+.chart-series-area-line:line-color-DarkBlue {
+    -fx-stroke: DarkBlue;
+}
+.chart-series-area-fill:line-color-DarkMagenta {
+    -fx-fill: DarkMagenta;
+}
+.chart-series-area-line:line-color-DarkMagenta {
+    -fx-stroke: DarkMagenta;
+}
+.chart-series-area-fill:line-color-DarkCyan {
+    -fx-fill: DarkCyan;
+}
+.chart-series-area-line:line-color-DarkCyan {
+    -fx-stroke: DarkCyan;
+}
+.chart-series-area-fill:line-color-DarkGray {
+    -fx-fill: DarkGray;
+}
+.chart-series-area-line:line-color-DarkGray {
+    -fx-stroke: DarkGray;
+}
+.chart-series-area-fill:line-color-LightGray {
+    -fx-fill: LightGray;
+}
+.chart-series-area-line:line-color-LightGray {
+    -fx-stroke: LightGray;
+}
+.chart-series-area-fill:line-color-Red {
+    -fx-fill: Red;
+}
+.chart-series-area-line:line-color-Red {
+    -fx-stroke: Red;
+}
+.chart-series-area-fill:line-color-Green {
+    -fx-fill: Green;
+}
+.chart-series-area-line:line-color-Green {
+    -fx-stroke: Green;
+}
+.chart-series-area-fill:line-color-Yellow {
+    -fx-fill: Yellow;
+}
+.chart-series-area-line:line-color-Yellow {
+    -fx-stroke: Yellow;
+}
+.chart-series-area-fill:line-color-Blue {
+    -fx-fill: Blue;
+}
+.chart-series-area-line:line-color-Blue {
+    -fx-stroke: Blue;
+}
+.chart-series-area-fill:line-color-Magenta {
+    -fx-fill: Magenta;
+}
+.chart-series-area-line:line-color-Magenta {
+    -fx-stroke: Magenta;
+}
+.chart-series-area-fill:line-color-Cyan {
+    -fx-fill: Cyan;
+}
+.chart-series-area-line:line-color-Cyan {
+    -fx-stroke: Cyan;
+}
+.chart-series-area-fill:line-color-White {
+    -fx-fill: White;
+}
+.chart-series-area-line:line-color-White {
+    -fx-stroke: White;
+}
+.chart-series-area-fill:line-color-Silver {
+    -fx-fill: Silver;
+}
+.chart-series-area-line:line-color-Silver {
+    -fx-stroke: Silver;
+}
+
+/*.default-color0.chart-area-symbol {
     -fx-background-color: red, red;
     -fx-background-radius: 1px;
 }
@@ -168,9 +276,9 @@
     -fx-stroke: #000000; 
 }
 .default-color0.chart-series-area-fill {
-    /* http://blog.e-zest.com/gradients-in-javafx-2/ */
+     http://blog.e-zest.com/gradients-in-javafx-2/ 
     -fx-fill: linear-gradient(to top, #058243 0%, #B9DCCA 50%, #FFFFFF 80%);
-}
+}*/
 
 .track-popup {
     -fx-fill: black;
