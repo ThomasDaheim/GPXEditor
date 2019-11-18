@@ -159,7 +159,7 @@
 .chart-series-area-fill {
     -fx-opacity: 0.8;
 }
-.chart-series-area-line {    
+.chart-series-area-line, .chart-series-line {    
     -fx-stroke-width: 0.5px;
     -fx-effect: null;
 }
@@ -168,103 +168,103 @@
 .chart-series-area-fill:line-color-Black {
     -fx-fill: Black;
 }
-.chart-series-area-line:line-color-Black {
+.chart-series-area-line:line-color-Black, .chart-series-line:line-color-Black {
     -fx-stroke: Black;
 }
 .chart-series-area-fill:line-color-DarkRed {
     -fx-fill: DarkRed;
 }
-.chart-series-area-line:line-color-DarkRed {
+.chart-series-area-line:line-color-DarkRed, .chart-series-line:line-color-DarkRed {
     -fx-stroke: DarkRed;
 }
 .chart-series-area-fill:line-color-DarkGreen {
     -fx-fill: DarkGreen;
 }
-.chart-series-area-line:line-color-DarkGreen {
+.chart-series-area-line:line-color-DarkGreen, .chart-series-line:line-color-DarkGreen {
     -fx-stroke: DarkGreen;
 }
 .chart-series-area-fill:line-color-GoldenRod {
     -fx-fill: GoldenRod;
 }
-.chart-series-area-line:line-color-GoldenRod {
+.chart-series-area-line:line-color-GoldenRod, .chart-series-line:line-color-GoldenRod {
     -fx-stroke: GoldenRod;
 }
 .chart-series-area-fill:line-color-DarkBlue {
     -fx-fill: DarkBlue;
 }
-.chart-series-area-line:line-color-DarkBlue {
+.chart-series-area-line:line-color-DarkBlue, .chart-series-line:line-color-DarkBlue {
     -fx-stroke: DarkBlue;
 }
 .chart-series-area-fill:line-color-DarkMagenta {
     -fx-fill: DarkMagenta;
 }
-.chart-series-area-line:line-color-DarkMagenta {
+.chart-series-area-line:line-color-DarkMagenta, .chart-series-line:line-color-DarkMagenta {
     -fx-stroke: DarkMagenta;
 }
 .chart-series-area-fill:line-color-DarkCyan {
     -fx-fill: DarkCyan;
 }
-.chart-series-area-line:line-color-DarkCyan {
+.chart-series-area-line:line-color-DarkCyan, .chart-series-line:line-color-DarkCyan {
     -fx-stroke: DarkCyan;
 }
 .chart-series-area-fill:line-color-DarkGray {
     -fx-fill: DarkGray;
 }
-.chart-series-area-line:line-color-DarkGray {
+.chart-series-area-line:line-color-DarkGray, .chart-series-line:line-color-DarkGray {
     -fx-stroke: DarkGray;
 }
 .chart-series-area-fill:line-color-LightGray {
     -fx-fill: LightGray;
 }
-.chart-series-area-line:line-color-LightGray {
+.chart-series-area-line:line-color-LightGray, .chart-series-line:line-color-LightGray {
     -fx-stroke: LightGray;
 }
 .chart-series-area-fill:line-color-Red {
     -fx-fill: Red;
 }
-.chart-series-area-line:line-color-Red {
+.chart-series-area-line:line-color-Red, .chart-series-line:line-color-Red {
     -fx-stroke: Red;
 }
 .chart-series-area-fill:line-color-Green {
     -fx-fill: Green;
 }
-.chart-series-area-line:line-color-Green {
+.chart-series-area-line:line-color-Green, .chart-series-line:line-color-Green {
     -fx-stroke: Green;
 }
 .chart-series-area-fill:line-color-Yellow {
     -fx-fill: Yellow;
 }
-.chart-series-area-line:line-color-Yellow {
+.chart-series-area-line:line-color-Yellow, .chart-series-line:line-color-Yellow {
     -fx-stroke: Yellow;
 }
 .chart-series-area-fill:line-color-Blue {
     -fx-fill: Blue;
 }
-.chart-series-area-line:line-color-Blue {
+.chart-series-area-line:line-color-Blue, .chart-series-line:line-color-Blue {
     -fx-stroke: Blue;
 }
 .chart-series-area-fill:line-color-Magenta {
     -fx-fill: Magenta;
 }
-.chart-series-area-line:line-color-Magenta {
+.chart-series-area-line:line-color-Magenta, .chart-series-line:line-color-Magenta {
     -fx-stroke: Magenta;
 }
 .chart-series-area-fill:line-color-Cyan {
     -fx-fill: Cyan;
 }
-.chart-series-area-line:line-color-Cyan {
+.chart-series-area-line:line-color-Cyan, .chart-series-line:line-color-Cyan {
     -fx-stroke: Cyan;
 }
 .chart-series-area-fill:line-color-White {
     -fx-fill: White;
 }
-.chart-series-area-line:line-color-White {
+.chart-series-area-line:line-color-White, .chart-series-line:line-color-White {
     -fx-stroke: White;
 }
 .chart-series-area-fill:line-color-Silver {
     -fx-fill: Silver;
 }
-.chart-series-area-line:line-color-Silver {
+.chart-series-area-line:line-color-Silver, .chart-series-line:line-color-Silver {
     -fx-stroke: Silver;
 }
 

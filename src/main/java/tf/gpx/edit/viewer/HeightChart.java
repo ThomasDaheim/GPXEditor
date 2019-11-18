@@ -36,9 +36,8 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
-import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
+import javafx.geometry.Side;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -52,11 +51,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -66,7 +61,7 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class HeightChart<X,Y> extends AreaChart {
+public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     private final static HeightChart INSTANCE = new HeightChart();
 
     private GPXEditor myGPXEditor;
@@ -74,48 +69,6 @@ public class HeightChart<X,Y> extends AreaChart {
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
     
-    private static enum ColorPseudoClass {
-        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
-        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
-        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
-        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
-        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
-        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
-        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
-        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
-        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
-        RED(PseudoClass.getPseudoClass("line-color-Red")),
-        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
-        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
-        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
-        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
-        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
-        WHITE(PseudoClass.getPseudoClass("line-color-White")),
-        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
-
-        private final PseudoClass myPseudoClass;
-        
-        ColorPseudoClass(final PseudoClass pseudoClass) {
-            myPseudoClass = pseudoClass;
-        }
-        
-        public PseudoClass getPseudoClass() {
-            return myPseudoClass;
-        }
-        
-        public static PseudoClass getPseudoClassForColorName(final String colorName) {
-            PseudoClass result = BLACK.getPseudoClass();
-            
-            for (ColorPseudoClass color : ColorPseudoClass.values()) {
-                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
-                    result = color.getPseudoClass();
-                }
-            }
-        
-            return result;
-        }
-    }
-
     private boolean noLayout = false;
     
     private double minDistance;
@@ -128,8 +81,8 @@ public class HeightChart<X,Y> extends AreaChart {
     private double dragActDistance = 0;
     private boolean dragActive = false;
     
-    private NumberAxis xAxis;
-    private NumberAxis yAxis;
+    private final NumberAxis xAxis;
+    private final NumberAxis yAxis;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
@@ -142,6 +95,8 @@ public class HeightChart<X,Y> extends AreaChart {
         xAxis.setMinorTickVisible(false);
         xAxis.setTickUnit(1);
         getXAxis().setAutoRanging(false);
+        
+        yAxis.setSide(Side.LEFT);
         
         setVisible(false);
         setAnimated(false);
@@ -187,7 +142,7 @@ public class HeightChart<X,Y> extends AreaChart {
             // onyl show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x, (List<XYChart.Series<Double, Double>>) getData());
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
 
@@ -258,7 +213,7 @@ public class HeightChart<X,Y> extends AreaChart {
             // only show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x, (List<XYChart.Series<Double, Double>>) getData());
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
                 
@@ -315,148 +270,68 @@ public class HeightChart<X,Y> extends AreaChart {
         return INSTANCE;
     }
     
+    @Override
+    public XYChart getChart() {
+        return this;
+    }
+    
+    @Override
+    public double getMinimumDistance() {
+        return minDistance;
+    }
+
+    @Override
+    public void setMinimumDistance(final double value) {
+        minDistance = value;
+    }
+
+    @Override
+    public double getMaximumDistance() {
+        return maxDistance;
+    }
+
+    @Override
+    public void setMaximumDistance(final double value) {
+        maxDistance = value;
+    }
+
+    @Override
+    public double getMinimumHeight() {
+        return minHeight;
+    }
+
+    @Override
+    public void setMinimumHeight(final double value) {
+        minHeight = value;
+    }
+
+    @Override
+    public double getMaximumHeight() {
+        return maxHeight;
+    }
+
+    @Override
+    public void setMaximumHeight(final double value) {
+        maxHeight = value;
+    }
+
+    @Override
+    public List<Pair<GPXWaypoint, Double>> getPoints() {
+        return myPoints;
+    }
+    
+    @Override
+    public double getYValue(final GPXWaypoint gpxWaypoint) {
+        return gpxWaypoint.getElevation();
+    }
+    
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
-    }
-    
-    public void setEnable(final boolean enabled) {
-        setDisable(!enabled);
-        setVisible(enabled);
-        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(enabled));
-        toFront();
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        if (isDisabled()) {
-            return;
-        }
-        
-        // store visible state to keeep it later on
-        final Boolean isVisible = isVisible();
-        
-        // invisble update - much faster
-        setVisible(false);
-        myPoints.clear();
-        getData().clear();
-        
-        if (lineItem == null) {
-            // nothing more todo...
-            return;
-        }
-        
-        minDistance = 0d;
-        maxDistance = 0d;
-        minHeight = Double.MAX_VALUE;
-        maxHeight = Double.MIN_VALUE;
-
-        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
-        
-        boolean hasData = false;
-        // TFE, 20191112: create series per track & route to be able to handle different colors
-        final List<XYChart.Series<Double, Double>> seriesList = new ArrayList<>();
-
-        // only files can have file waypoints
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-            hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
-        } else if (alwayShowFileWaypoints) {
-            // add file waypoints as well, even though file isn't selected
-            hasData = addXYChartSeriesToList(seriesList, lineItem.getGPXFile(), hasData);
-        }
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
-            for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
-                // add track segments individually
-                for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                    hasData = addXYChartSeriesToList(seriesList, gpxTrackSegment, hasData);
-                }
-            }
-        }
-        // track segments can have track segments
-        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
-            hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
-        }
-        // files and routes can have routes
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
-            for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
-                hasData = addXYChartSeriesToList(seriesList, gpxRoute, hasData);
-            }
-        }
-        
-        getData().addAll(seriesList);
-        
-        // and now color the series nodes according to lineitem color
-        // https://gist.github.com/jewelsea/2129306
-        for (int i = 0; i < seriesList.size(); i++) {
-            final XYChart.Series<Double, Double> series = seriesList.get(i);
-            final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(series.getName());
-            series.getNode().pseudoClassStateChanged(color, true);
-            Set<Node> nodes = lookupAll(".series" + i);
-            for (Node n : nodes) {
-                n.pseudoClassStateChanged(color, true);
-            }
-        }
-        
-        setAxis(minDistance, maxDistance, minHeight, maxHeight);
-        
-        // hide heightchart of no waypoints have been set
-        setVisible(hasData && isVisible);
-        // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(isVisible()));
-    }
-
-    private boolean addXYChartSeriesToList(final List<XYChart.Series<Double, Double>> seriesList, final GPXLineItem lineItem, final boolean hasData) {
-        final XYChart.Series<Double, Double> series = getXYChartSeriesForGPXLineItem(lineItem);
-        seriesList.add(series);
-        return (hasData | !series.getData().isEmpty());
-    }
-
-    private XYChart.Series<Double, Double> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
-        final List<XYChart.Data<Double, Double>> dataList = new ArrayList<>();
-        
-        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
-            maxDistance += gpxWaypoint.getDistance();
-            final double elevation = gpxWaypoint.getElevation();
-            minHeight = Math.min(minHeight, elevation);
-            maxHeight = Math.max(maxHeight, elevation);
-            
-            XYChart.Data<Double, Double> data = new XYChart.Data<>(maxDistance / 1000.0, elevation);
-            data.setExtraValue(gpxWaypoint);
-            
-            dataList.add(data);
-            myPoints.add(Pair.of(gpxWaypoint, maxDistance));
-        }
-        
-        final XYChart.Series<Double, Double> series = new XYChart.Series<>();
-        series.getData().addAll(dataList);
-        
-        series.setName(lineItem.getColor());
-        
-        return series;
     }
     
     @SuppressWarnings("unchecked")
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         // TODO: fill with life
-    }
-    
-    private XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
-        XYChart.Data<Double, Double> nearestData = null;
-        double distance = Double.MAX_VALUE;
-
-        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getData();
-        for (XYChart.Series<Double, Double> series: seriesList) {
-            for (XYChart.Data<Double, Double> data : series.getData()) {
-                double xData = data.getXValue();
-                double dataDistance = Math.abs(xValue - xData);
-                if (dataDistance < distance) {
-                    distance = dataDistance;
-                    nearestData = data;
-                }
-            }
-        }
-        return nearestData;
     }
     
     private void selectWaypointsInRange() {
@@ -473,34 +348,6 @@ public class HeightChart<X,Y> extends AreaChart {
         }
         
         myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, true, false);
-    }
-    
-    private void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
-        double distance = maxDist - minDist;
-        // calculate scaling for ticks so their number is smaller than 25
-        double tickUnit = 1.0;
-        if (distance / 1000.0 > 24.9) {
-            tickUnit = 2.0;
-        }
-        if (distance / 1000.0 > 49.9) {
-            tickUnit = 5.0;
-        }
-        if (distance / 1000.0 > 499.9) {
-            tickUnit = 50.0;
-        }
-        if (distance / 1000.0 > 4999.9) {
-            tickUnit = 500.0;
-        }
-        xAxis.setTickUnit(tickUnit);
-
-        // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
-        xAxis.setLowerBound(minDist / 1000.0);
-        xAxis.setUpperBound(maxDist / 1000.0);
-
-//        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
-        yAxis.setTickUnit(10.0);
-        yAxis.setLowerBound(minHght);
-        yAxis.setUpperBound(maxHght);
     }
 
     @SuppressWarnings("unchecked")
@@ -585,55 +432,6 @@ public class HeightChart<X,Y> extends AreaChart {
         
         noLayout = false;
         layoutPlotChildren();
-    }
-    
-    // set lineStart bounding box to limit which waypoints are shown
-    // or better: to define, what min and max x-axis to use
-    public void setViewLimits(final BoundingBox newBoundingBox) {
-        if (myPoints.isEmpty()) {
-            // nothing to show yet...
-            return;
-        }
-        
-        // init with maximum values
-        double minDist = minDistance;
-        double maxDist = maxDistance;
-        double minHght = minHeight;
-        double maxHght = maxHeight;
-
-        if (newBoundingBox != null) {
-            minHght = Double.MAX_VALUE;
-            maxHght = Double.MIN_VALUE;
-            
-            boolean waypointFound = false;
-            // 1. iterate over myPoints
-            for (Pair<GPXWaypoint, Double> point: myPoints) {
-                GPXWaypoint waypoint = point.getLeft();
-                if (newBoundingBox.contains(waypoint.getLatitude(), waypoint.getLongitude())) {
-                    // 2. if waypoint in bounding box:
-                    // if first waypoint use this for minDist
-                    // use this for maxDist
-                    if (!waypointFound) {
-                        minDist = point.getRight();
-                    }
-                    maxDist = point.getRight();
-                    
-                    final double elevation = waypoint.getElevation();
-                    minHght = Math.min(minHght, elevation);
-                    maxHght = Math.max(maxHght, elevation);
-                    waypointFound = true;
-                }
-            
-                if (!waypointFound) {
-                    minDist = 0.0;
-                    maxDist = 0.0;
-                }
-            }
-            
-            // if no waypoint in bounding box show nothing
-        }
-
-        setAxis(minDist, maxDist, minHght, maxHght);
     }
 
     @Override
