@@ -28,13 +28,11 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.Side;
-import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -53,8 +51,8 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     
     private double minDistance;
     private double maxDistance;
-    private double minHeight;
-    private double maxHeight;
+    private double minSpeed;
+    private double maxSpeed;
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
@@ -69,17 +67,15 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
         xAxis.setLowerBound(0.0);
         xAxis.setMinorTickVisible(false);
         xAxis.setTickUnit(1);
-        getXAxis().setAutoRanging(false);
+        xAxis.setAutoRanging(false);
+        xAxis.setVisible(false);
+        xAxis.setOpacity(0.0); // somehow the upper setVisible does not work
         
         yAxis.setSide(Side.RIGHT);
+        yAxis.setLabel("Speed [km/h]");
         
-        setVisible(false);
-        setAnimated(false);
+        initialize();
         setCreateSymbols(false);
-        setCache(true);
-        setCacheShape(true);
-        setCacheHint(CacheHint.SPEED);
-        setLegendVisible(false);
         setCursor(Cursor.NONE);
     }
     
@@ -113,23 +109,23 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     }
 
     @Override
-    public double getMinimumHeight() {
-        return minHeight;
+    public double getMinimumYValue() {
+        return minSpeed;
     }
 
     @Override
-    public void setMinimumHeight(final double value) {
-        minHeight = value;
+    public void setMinimumYValue(final double value) {
+        minSpeed = value;
     }
 
     @Override
-    public double getMaximumHeight() {
-        return maxHeight;
+    public double getMaximumYValue() {
+        return maxSpeed;
     }
 
     @Override
-    public void setMaximumHeight(final double value) {
-        maxHeight = value;
+    public void setMaximumYValue(final double value) {
+        maxSpeed = value;
     }
 
     @Override
@@ -138,40 +134,17 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     }
     
     @Override
-    public double getYValue(final GPXWaypoint gpxWaypoint) {
-        return gpxWaypoint.getSpeed();
+    public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
+        final double result = gpxWaypoint.getSpeed();
+        
+        minSpeed = Math.min(minSpeed, result);
+        maxSpeed = Math.max(maxSpeed, result);
+        
+        return result;
     }
     
+    @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        // TODO: fill with life
-    }
-
-    @SuppressWarnings("unchecked")
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
-        if (isDisabled()) {
-            return;
-        }
-    }
-    
-    public void updateLineColor(final GPXLineItem lineItem) {
-    }
-    
-    public void clearSelectedGPXWaypoints() {
-        if (isDisabled()) {
-            return;
-        }
-    }
-
-    public void loadPreferences() {
-        // nothing todo
-    }
-    
-    public void savePreferences() {
-        // nothing todo
     }
 }

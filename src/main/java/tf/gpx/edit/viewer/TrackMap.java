@@ -423,7 +423,8 @@ public class TrackMap extends LeafletMapView {
             myPane.toFront();
             
             // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
-            final Region chart = HeightChart.getInstance();
+            // TFE, 20191119: show chart pane instead to support multiple charts (height, speed, ...)
+            final Region chart = ChartsPane.getInstance();
             chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             chart.prefWidthProperty().bind(parentPane.widthProperty());
             AnchorPane.setBottomAnchor(chart, 20.0);
@@ -707,7 +708,7 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
 
                 // redraw height chart
-                HeightChart.getInstance().setGPXWaypoints(myGPXLineItem, true);
+                ChartsPane.getInstance().setGPXWaypoints(myGPXLineItem, true);
             } else {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
@@ -1410,7 +1411,7 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
-        HeightChart.getInstance().setViewLimits(newBoundingBox);
+        ChartsPane.getInstance().setViewLimits(newBoundingBox);
     }
     
     public void setHeightChartButtonState(final HeightChartButtonState state) {
@@ -1603,7 +1604,7 @@ public class TrackMap extends LeafletMapView {
         
         public void toggleHeightChart(final Boolean visible) {
 //            System.out.println("toggleHeightChart: " + visible);
-            HeightChart.getInstance().setVisible(visible);
+            ChartsPane.getInstance().setVisible(visible);
         }
     }
 }

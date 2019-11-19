@@ -38,7 +38,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
-import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
@@ -51,7 +50,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -97,14 +95,10 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         getXAxis().setAutoRanging(false);
         
         yAxis.setSide(Side.LEFT);
+        yAxis.setLabel("Height [m]");
         
-        setVisible(false);
-        setAnimated(false);
+        initialize();
         setCreateSymbols(false);
-        setCache(true);
-        setCacheShape(true);
-        setCacheHint(CacheHint.SPEED);
-        setLegendVisible(false);
         setCursor(Cursor.DEFAULT);
 
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
@@ -296,22 +290,22 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     }
 
     @Override
-    public double getMinimumHeight() {
+    public double getMinimumYValue() {
         return minHeight;
     }
 
     @Override
-    public void setMinimumHeight(final double value) {
+    public void setMinimumYValue(final double value) {
         minHeight = value;
     }
 
     @Override
-    public double getMaximumHeight() {
+    public double getMaximumYValue() {
         return maxHeight;
     }
 
     @Override
-    public void setMaximumHeight(final double value) {
+    public void setMaximumYValue(final double value) {
         maxHeight = value;
     }
 
@@ -321,17 +315,18 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     }
     
     @Override
-    public double getYValue(final GPXWaypoint gpxWaypoint) {
-        return gpxWaypoint.getElevation();
+    public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
+        final double result = gpxWaypoint.getElevation();
+        
+        minHeight = Math.min(minHeight, result);
+        maxHeight = Math.max(maxHeight, result);
+        
+        return result;
     }
     
+    @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        // TODO: fill with life
     }
     
     private void selectWaypointsInRange() {
@@ -351,6 +346,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         if (isDisabled()) {
             return;
@@ -415,9 +411,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         layoutPlotChildren();
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
-    }
-    
+    @Override
     public void clearSelectedGPXWaypoints() {
         if (isDisabled()) {
             return;
@@ -479,13 +473,5 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
             prevSelected = (selectedPoint != null);
             prevPair = pair;
         }
-    }
-
-    public void loadPreferences() {
-        // nothing todo
-    }
-    
-    public void savePreferences() {
-        // nothing todo
     }
 }

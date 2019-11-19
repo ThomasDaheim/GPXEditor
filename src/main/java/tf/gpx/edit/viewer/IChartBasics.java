@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
+import javafx.scene.CacheHint;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -40,6 +42,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  * Helper class to hold stuff required by both HeightChart and LineChart
@@ -92,17 +95,32 @@ public interface IChartBasics {
             return result;
         }
     }
+
+    default void initialize() {
+        getChart().setVisible(false);
+        getChart().setAnimated(false);
+        getChart().setCache(true);
+        getChart().setCacheShape(true);
+        getChart().setCacheHint(CacheHint.SPEED);
+        getChart().setLegendVisible(false);
+        getChart().setCursor(Cursor.DEFAULT);
+        
+        getChart().getXAxis().setAnimated(false);
+        getChart().getYAxis().setAnimated(false);
+    }
     
     public abstract double getMinimumDistance();
     public abstract void setMinimumDistance(final double value);
     public abstract double getMaximumDistance();
     public abstract void setMaximumDistance(final double value);
-    public abstract double getMinimumHeight();
-    public abstract void setMinimumHeight(final double value);
-    public abstract double getMaximumHeight();
-    public abstract void setMaximumHeight(final double value);
+    public abstract double getMinimumYValue();
+    public abstract void setMinimumYValue(final double value);
+    public abstract double getMaximumYValue();
+    public abstract void setMaximumYValue(final double value);
     public abstract List<Pair<GPXWaypoint, Double>> getPoints();
     public abstract XYChart getChart();
+    
+    public abstract void setCallback(final GPXEditor gpxEditor);
     
     default void setEnable(final boolean enabled) {
         getChart().setDisable(!enabled);
@@ -131,8 +149,8 @@ public interface IChartBasics {
         
         setMinimumDistance(0d);
         setMaximumDistance(0d);
-        setMinimumHeight(Double.MAX_VALUE);
-        setMaximumHeight(Double.MIN_VALUE);
+        setMinimumYValue(Double.MAX_VALUE);
+        setMaximumYValue(Double.MIN_VALUE);
 
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
         
@@ -182,7 +200,7 @@ public interface IChartBasics {
             }
         }
         
-        setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumHeight(), getMaximumHeight());
+        setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide heightchart of no waypoints have been set
         getChart().setVisible(hasData && isVisible);
@@ -201,9 +219,7 @@ public interface IChartBasics {
         
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
             setMaximumDistance(getMaximumDistance() + gpxWaypoint.getDistance());
-            final double yValue = getYValue(gpxWaypoint);
-            setMinimumHeight(Math.min(getMinimumHeight(), yValue));
-            setMaximumHeight(Math.max(getMaximumHeight(), yValue));
+            final double yValue = getYValueAndSetMinMax(gpxWaypoint);
             
             XYChart.Data<Double, Double> data = new XYChart.Data<>(getMaximumDistance() / 1000.0, yValue);
             data.setExtraValue(gpxWaypoint);
@@ -220,7 +236,7 @@ public interface IChartBasics {
         return series;
     }
 
-    public abstract double getYValue(final GPXWaypoint gpxWaypoint);
+    public abstract double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
 
     default void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;
@@ -278,8 +294,8 @@ public interface IChartBasics {
         // init with maximum values
         double minDist = getMinimumDistance();
         double maxDist = getMaximumDistance();
-        double minHght = getMinimumHeight();
-        double maxHght = getMaximumHeight();
+        double minHght = getMinimumYValue();
+        double maxHght = getMaximumYValue();
 
         if (newBoundingBox != null) {
             minHght = Double.MAX_VALUE;
@@ -314,5 +330,34 @@ public interface IChartBasics {
         }
 
         setAxis(minDist, maxDist, minHght, maxHght);
+    }
+    
+    @SuppressWarnings("unchecked")
+    default void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        // TODO: fill with life
+    }
+
+    default void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+        if (getChart().isDisabled()) {
+            return;
+        }
+    }
+
+    default void clearSelectedGPXWaypoints() {
+        if (getChart().isDisabled()) {
+            return;
+        }
+    }
+    
+    default void updateLineColor(final GPXLineItem lineItem) {
+        // nothing todo
+    }
+
+    default void loadPreferences() {
+        // nothing todo
+    }
+    
+    default void savePreferences() {
+        // nothing todo
     }
 }
