@@ -97,7 +97,6 @@ public interface IChartBasics {
     }
 
     default void initialize() {
-        getChart().setVisible(false);
         getChart().setAnimated(false);
         getChart().setCache(true);
         getChart().setCacheShape(true);
@@ -205,7 +204,7 @@ public interface IChartBasics {
         // hide heightchart of no waypoints have been set
         getChart().setVisible(hasData && isVisible);
         // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(getChart().isVisible()));
+        TrackMap.getInstance().setChartsButtonState(TrackMap.ChartsButtonState.fromBoolean(getChart().isVisible()));
     }
     
     default boolean addXYChartSeriesToList(final List<XYChart.Series<Double, Double>> seriesList, final GPXLineItem lineItem, final boolean hasData) {

@@ -33,7 +33,6 @@ import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -61,9 +60,13 @@ public class ChartsPane extends StackPane {
     private ChartsPane() {
         super();
         
+        getStyleClass().add("charts-pane");
+        
         baseChart = HeightChart.getInstance();
         additionalCharts.add(SpeedChart.getInstance());
         totalYAxisWidth *= additionalCharts.size();
+        // n charts only have n-1 separators between them ;-)
+        totalYAxisWidth -= YAXIS_SEP;
         
         charts.add(baseChart);
         charts.addAll(additionalCharts);
@@ -83,14 +86,17 @@ public class ChartsPane extends StackPane {
         // set up margins, ... for xAxis depending on side of yAxis
         final XYChart chart = baseChart.getChart();
         setFixedAxisWidth(chart);
-        getChildren().add(resizeBaseChart(chart));
+        styleChart(chart, true);
+        getChildren().add(resizeChart(chart, true));
         
         additionalCharts.stream().forEach((t) -> {
             final XYChart addChart = t.getChart();
             
-            styleAdditionalChart(addChart);
             setFixedAxisWidth(addChart);
-            getChildren().add(resizeAdditionalChart(addChart));
+            styleChart(addChart, false);
+            final Node node = resizeChart(addChart, false);
+            getChildren().add(node);
+            node.toFront();
         });
     }
 
@@ -99,42 +105,41 @@ public class ChartsPane extends StackPane {
         chart.getYAxis().setMaxWidth(YAXIS_WIDTH);
     }
 
-    private void styleAdditionalChart(final XYChart chart) {
-        final Node contentBackground = chart.lookup(".chart-content").lookup(".chart-plot-background");
-        contentBackground.setStyle("-fx-background-color: transparent;");
-
-        chart.setVerticalZeroLineVisible(false);
-        chart.setHorizontalZeroLineVisible(false);
+    private void styleChart(final XYChart chart, final boolean isBase) {
         chart.setVerticalGridLinesVisible(false);
         chart.setHorizontalGridLinesVisible(false);
+
+        chart.setVerticalZeroLineVisible(!isBase);
+        chart.setHorizontalZeroLineVisible(!isBase);
+        if (!isBase) {
+            chart.getXAxis().setVisible(false);
+            chart.getXAxis().setOpacity(0.0); // somehow the upper setVisible does not work
+        }
     }
 
-    private Node resizeBaseChart(final XYChart chart) {
+    private Node resizeChart(final XYChart chart, final boolean isBase) {
         HBox hBox = new HBox(chart);
         hBox.setAlignment(Pos.CENTER_LEFT);
+        hBox.minHeightProperty().bind(heightProperty());
         hBox.prefHeightProperty().bind(heightProperty());
+        hBox.maxHeightProperty().bind(heightProperty());
+        hBox.minWidthProperty().bind(widthProperty());
         hBox.prefWidthProperty().bind(widthProperty());
+        hBox.maxWidthProperty().bind(widthProperty());
+        hBox.setMouseTransparent(!isBase);
+
+        chart.minHeightProperty().bind(heightProperty());
+        chart.prefHeightProperty().bind(heightProperty());
+        chart.maxHeightProperty().bind(heightProperty());
 
         chart.minWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
         chart.prefWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
         chart.maxWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-
-        return chart;
-    }
-
-    private Node resizeAdditionalChart(final XYChart chart) {
-        HBox hBox = new HBox(chart);
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.prefHeightProperty().bind(heightProperty());
-        hBox.prefWidthProperty().bind(widthProperty());
-        hBox.setMouseTransparent(true);
-
-        chart.minWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.prefWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.maxWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-
-        chart.translateXProperty().bind(baseChart.getChart().getYAxis().widthProperty());
-        chart.getYAxis().setTranslateX((YAXIS_WIDTH+YAXIS_SEP) * additionalCharts.indexOf(chart));
+        
+        if (!isBase) {
+            chart.translateXProperty().bind(baseChart.getChart().getYAxis().widthProperty());
+            chart.getYAxis().setTranslateX((YAXIS_WIDTH+YAXIS_SEP) * additionalCharts.indexOf(chart));
+        }
 
         return hBox;
     }

@@ -195,11 +195,11 @@ public class TrackMap extends LeafletMapView {
     }
     private CurrentMarker currentMarker;
     
-    public enum HeightChartButtonState {
+    public enum ChartsButtonState {
         ON,
         OFF;
         
-        public static HeightChartButtonState fromBoolean(final Boolean state) {
+        public static ChartsButtonState fromBoolean(final Boolean state) {
             if (state) {
                 return ON;
             } else {
@@ -1414,7 +1414,7 @@ public class TrackMap extends LeafletMapView {
         ChartsPane.getInstance().setViewLimits(newBoundingBox);
     }
     
-    public void setHeightChartButtonState(final HeightChartButtonState state) {
+    public void setChartsButtonState(final ChartsButtonState state) {
         execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
     }
     

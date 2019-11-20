@@ -46,6 +46,7 @@ var toggleHeightChartButton = L.easyButton({
 });
 
 toggleHeightChartButton.addTo(myMap);
+jscallback.toggleHeightChart(false);
 
 function setHeightChartButtonState(state) {
     if (state.toUpperCase() == 'ON') {

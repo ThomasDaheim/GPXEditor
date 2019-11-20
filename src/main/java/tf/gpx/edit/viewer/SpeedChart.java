@@ -1,5 +1,5 @@
 /*
- * Copyright (dataPoint) 2014ff Thomas Feuster
+ * Copyright (c) 2014ff Thomas Feuster
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -68,8 +68,6 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
         xAxis.setMinorTickVisible(false);
         xAxis.setTickUnit(1);
         xAxis.setAutoRanging(false);
-        xAxis.setVisible(false);
-        xAxis.setOpacity(0.0); // somehow the upper setVisible does not work
         
         yAxis.setSide(Side.RIGHT);
         yAxis.setLabel("Speed [km/h]");
