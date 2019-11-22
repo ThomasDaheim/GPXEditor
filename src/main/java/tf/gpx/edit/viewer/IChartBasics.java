@@ -95,8 +95,9 @@ public interface IChartBasics {
             return result;
         }
     }
-
+    
     default void initialize() {
+        getChart().setVisible(false);
         getChart().setAnimated(false);
         getChart().setCache(true);
         getChart().setCacheShape(true);
@@ -132,9 +133,6 @@ public interface IChartBasics {
         if (getChart().isDisabled()) {
             return;
         }
-        
-        // store visible state to keeep it later on
-        final Boolean isVisible = getChart().isVisible();
         
         // invisble update - much faster
         getChart().setVisible(false);
@@ -202,12 +200,23 @@ public interface IChartBasics {
         setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide heightchart of no waypoints have been set
-        getChart().setVisible(hasData && isVisible);
-        // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setChartsButtonState(TrackMap.ChartsButtonState.fromBoolean(getChart().isVisible()));
+        getChart().setVisible(hasData);
     }
     
-    default boolean addXYChartSeriesToList(final List<XYChart.Series<Double, Double>> seriesList, final GPXLineItem lineItem, final boolean hasData) {
+    default boolean hasData() {
+        boolean result = false;
+        
+        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getChart().getData();
+        for (XYChart.Series<Double, Double> series: seriesList) {
+            if (!series.getData().isEmpty()) {
+                result = true;
+            }
+        }
+
+        return result;
+    }
+    
+    private boolean addXYChartSeriesToList(final List<XYChart.Series<Double, Double>> seriesList, final GPXLineItem lineItem, final boolean hasData) {
         final XYChart.Series<Double, Double> series = getXYChartSeriesForGPXLineItem(lineItem);
         seriesList.add(series);
         return (hasData | !series.getData().isEmpty());
@@ -265,7 +274,8 @@ public interface IChartBasics {
         ((NumberAxis) getChart().getYAxis()).setUpperBound(maxHght);
     }
     
-    default XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue, final List<XYChart.Series<Double, Double>> seriesList) {
+    default XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
+        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getChart().getData();
         XYChart.Data<Double, Double> nearestData = null;
         double distance = Double.MAX_VALUE;
 

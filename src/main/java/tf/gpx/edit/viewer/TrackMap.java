@@ -407,7 +407,7 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/CliffCloud/Leaflet.EasyButton
             addStyleFromPath("/leaflet/easybutton/easy-button.css");
             addScriptFromPath("/leaflet/easybutton/easy-button.js");
-            addScriptFromPath("/leaflet/HeightChartButton.js");
+            addScriptFromPath("/leaflet/ChartsPaneButton.js");
 
             // support to re-center
             addStyleFromPath("/leaflet/CenterButton.css");
@@ -1414,8 +1414,8 @@ public class TrackMap extends LeafletMapView {
         ChartsPane.getInstance().setViewLimits(newBoundingBox);
     }
     
-    public void setChartsButtonState(final ChartsButtonState state) {
-        execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
+    public void setChartsPaneButtonState(final ChartsButtonState state) {
+        execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
     }
     
     // TFE, 20190901: support to store & load overlay settings per baselayer
@@ -1602,8 +1602,8 @@ public class TrackMap extends LeafletMapView {
 //            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
         }
         
-        public void toggleHeightChart(final Boolean visible) {
-//            System.out.println("toggleHeightChart: " + visible);
+        public void toggleChartsPane(final Boolean visible) {
+//            System.out.println("toggleChartsPane: " + visible);
             ChartsPane.getInstance().setVisible(visible);
         }
     }

@@ -136,7 +136,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
             // onyl show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x, (List<XYChart.Series<Double, Double>>) getData());
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
 
@@ -207,7 +207,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
             // only show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x, (List<XYChart.Series<Double, Double>>) getData());
+                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
                 
