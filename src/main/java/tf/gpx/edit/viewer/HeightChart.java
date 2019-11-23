@@ -416,6 +416,10 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         if (isDisabled()) {
             return;
         }
+        // speed up things: anything to do?
+        if (selectedWaypoints.isEmpty()) {
+            return;
+        }
 
         noLayout = true;
         

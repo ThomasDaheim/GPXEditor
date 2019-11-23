@@ -26,6 +26,7 @@
 package tf.gpx.edit.viewer;
 
 import java.util.List;
+import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -73,9 +74,12 @@ public class GPXTrackviewer {
         TrackMap.getInstance().setGPXWaypoints(lineItem, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
 
-        // show all charts
-        ChartsPane.getInstance().setGPXWaypoints(lineItem, doFitBounds);
-        ChartsPane.getInstance().clearSelectedGPXWaypoints();
+        // this can be done a bit later - get the map drawn as early as possible
+        Platform.runLater(() -> {
+            // show all charts
+            ChartsPane.getInstance().setGPXWaypoints(lineItem, doFitBounds);
+            ChartsPane.getInstance().clearSelectedGPXWaypoints();
+        });
     }
 
     @SuppressWarnings("unchecked")

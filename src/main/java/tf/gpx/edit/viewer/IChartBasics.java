@@ -203,6 +203,7 @@ public interface IChartBasics {
         getChart().setVisible(hasData);
     }
     
+    @SuppressWarnings("unchecked")
     default boolean hasData() {
         boolean result = false;
         
@@ -274,6 +275,7 @@ public interface IChartBasics {
         ((NumberAxis) getChart().getYAxis()).setUpperBound(maxHght);
     }
     
+    @SuppressWarnings("unchecked")
     default XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
         final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getChart().getData();
         XYChart.Data<Double, Double> nearestData = null;

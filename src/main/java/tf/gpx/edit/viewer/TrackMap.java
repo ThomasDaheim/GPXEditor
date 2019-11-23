@@ -208,7 +208,6 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
-    
     private int varNameSuffix = 1;
             
     // TFE, 20181009: store gpxRoute under cursor
@@ -220,6 +219,9 @@ public class TrackMap extends LeafletMapView {
     private final static String NOT_SHOWN = "Not shown";
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
+    
+    private final static String LEAFLET_PATH = "/leaflet_BUILD";
+    private final static String MIN_EXT = ".min";
     
     // webview holds the leaflet map
     private WebView myWebView = null;
@@ -344,74 +346,74 @@ public class TrackMap extends LeafletMapView {
             window.setMember("jscallback", jscallback);
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
-            addStyleFromPath("/leaflet/leaflet.css");
+            addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
             // support to show mouse coordinates
-            addStyleFromPath("/leaflet/MousePosition/L.Control.MousePosition.css");
-            addScriptFromPath("/leaflet/MousePosition/L.Control.MousePosition.js");
-            addScriptFromPath("/leaflet/MousePosition.js");
+            addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
 
             // support to show center coordinates
-            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.css");
-            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.js");
-            addScriptFromPath("/leaflet/MapCenter.js");
+            addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
 
             // map helper functions for selecting, clicking, ...
-            addScriptFromPath("/leaflet/MapHelper.js");
+            addScriptFromPath(LEAFLET_PATH + "/MapHelper" + MIN_EXT + ".js");
 
             // map helper functions for manipulating layer control entries
-            addScriptFromPath("/leaflet/LayerControl.js");
+            addScriptFromPath(LEAFLET_PATH + "/LayerControl" + MIN_EXT + ".js");
             // set api key for open cycle map
             execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
-            addScriptFromPath("/leaflet/TrackMarker.js");
+            addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
 
             // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath("/leaflet/editable/Leaflet.Editable.min.js");
-            addScriptFromPath("/leaflet/EditRoutes.js");
+            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
             // add support for lat / lon lines
             // https://github.com/cloudybay/leaflet.latlng-graticule
-            addScriptFromPath("/leaflet/graticule/leaflet.latlng-graticule.min.js");
-            addScriptFromPath("/leaflet/ShowLatLan.js");
+            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
             
             // https://github.com/smeijer/leaflet-geosearch
             // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
-            addStyleFromPath("/leaflet/search/leaflet-search.src.css");
-            addScriptFromPath("/leaflet/search/leaflet-search.src.js");
-            addScriptFromPath("/leaflet/GeoSearch.js");
+            addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
             
             // support for autorouting
             // https://github.com/perliedman/leaflet-routing-machine
-            addStyleFromPath("/leaflet/routing/leaflet-routing-machine.css");
-            addScriptFromPath("/leaflet/routing/leaflet-routing-machine.js");
-            addScriptFromPath("/leaflet/openrouteservice/lodash.min.js");
-            addScriptFromPath("/leaflet/openrouteservice/corslite.js");
-            addScriptFromPath("/leaflet/openrouteservice/polyline.js");
-            addScriptFromPath("/leaflet/openrouteservice/L.Routing.OpenRouteService.js");
-            addStyleFromPath("/leaflet/geocoder/Control.Geocoder.css");
-            addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
-            addScriptFromPath("/leaflet/Routing.js");
+            addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/lodash.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/corslite" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/polyline" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteService" + MIN_EXT + ".js");
+            addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
             // we need an api key
             execScript("initRouting(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
             // support for ruler
             // https://github.com/gokertanrisever/leaflet-ruler
-            addStyleFromPath("/leaflet/ruler/leaflet-ruler.css");
-            addScriptFromPath("/leaflet/ruler/leaflet-ruler.js");
-            addScriptFromPath("/leaflet/Rouler.js");
+            addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Rouler" + MIN_EXT + ".js");
 
             // support for custom buttons
             // https://github.com/CliffCloud/Leaflet.EasyButton
-            addStyleFromPath("/leaflet/easybutton/easy-button.css");
-            addScriptFromPath("/leaflet/easybutton/easy-button.js");
-            addScriptFromPath("/leaflet/ChartsPaneButton.js");
+            addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
 
             // support to re-center
-            addStyleFromPath("/leaflet/CenterButton.css");
-            addScriptFromPath("/leaflet/CenterButton.js");
+            addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -474,6 +476,7 @@ public class TrackMap extends LeafletMapView {
             "var url = \"data:image/png;base64," + base64data + "\";" + 
             "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
 
+//        System.out.println(scriptCmd);
         execScript(scriptCmd);
 //        System.out.println(iconName + " created");
     }

@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -168,7 +169,6 @@ public class ChartsPane extends StackPane {
             hasData.set(hasData.get() | t.hasData());
         });
         setVisible(isVisible && hasData.get());
-        
 
         // if visible changes to false, also the button needs to be pressed
         TrackMap.getInstance().setChartsPaneButtonState(TrackMap.ChartsButtonState.fromBoolean(isVisible()));
