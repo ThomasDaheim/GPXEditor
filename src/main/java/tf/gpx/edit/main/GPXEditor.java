@@ -112,6 +112,7 @@ import tf.gpx.edit.general.AboutMenu;
 import tf.gpx.edit.general.ColorConverter;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
 import tf.gpx.edit.general.ShowAlerts;
+import tf.gpx.edit.general.TableMenuUtils;
 import tf.gpx.edit.general.TableViewPreferences;
 import tf.gpx.edit.general.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -728,7 +729,8 @@ public class GPXEditor implements Initializable {
         idGPXCol.setEditable(false);
         idGPXCol.setComparator(GPXLineItem.getSingleIDComparator());
         idGPXCol.setPrefWidth(NORMAL_WIDTH);
-        
+        idGPXCol.setUserData(TableMenuUtils.NO_HIDE_COLUMN);
+         
         typeGPXCol.setCellValueFactory(
                 (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
         typeGPXCol.setEditable(false);
@@ -894,6 +896,10 @@ public class GPXEditor implements Initializable {
         gpxTrackXML.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         // automatically adjust width of columns depending on their content
         gpxTrackXML.setColumnResizePolicy((param) -> true );
+        
+        Platform.runLater(() -> {
+            TableMenuUtils.addCustomTableViewMenu(gpxTrackXML);
+        });
         
         // TFE, 20180525: support copy, paste, cut on waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
@@ -1112,6 +1118,7 @@ public class GPXEditor implements Initializable {
         idTrackCol.setPrefWidth(NORMAL_WIDTH);
         // set comparator for CombinedID
         idTrackCol.setComparator(GPXWaypoint.getCombinedIDComparator());
+        idTrackCol.setUserData(TableMenuUtils.NO_HIDE_COLUMN);
         
         typeTrackCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getParent().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
