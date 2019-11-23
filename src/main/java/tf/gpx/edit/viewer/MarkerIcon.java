@@ -6,7 +6,6 @@
 package tf.gpx.edit.viewer;
 
 import de.saring.leafletmap.Marker;
-import java.util.regex.Pattern;
 
 /**
  *

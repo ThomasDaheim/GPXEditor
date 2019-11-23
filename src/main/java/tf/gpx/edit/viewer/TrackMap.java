@@ -220,7 +220,7 @@ public class TrackMap extends LeafletMapView {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
-    private final static String LEAFLET_PATH = "/leaflet_BUILD";
+    private final static String LEAFLET_PATH = "/leaflet";
     private final static String MIN_EXT = ".min";
     
     // webview holds the leaflet map
@@ -267,10 +267,13 @@ public class TrackMap extends LeafletMapView {
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
         mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
-//        originalMapLayers = mapLayers.size();
         final MapConfig myMapConfig = new MapConfig(mapLayers, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
+                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
+                        new LatLong(51.505, -0.09),
+                        // wrap around world borders
+                        // https://stackoverflow.com/a/28323349
+                        "worldCopyJump: true, zoomAnimation: false,");
 
         cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {

@@ -24,6 +24,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+//jscallback.log('addClickToLayer: ' + layer + ", " + marker);
+
 /*
  * Support for selecting with cntrl + mouse
  * 
@@ -63,10 +65,6 @@ function mapViewChanged(e) {
 myMap.on('zoomend', mapViewChanged);
 myMap.on('moveend', mapViewChanged);
 myMap.on('resize', mapViewChanged);
-
-// wrap around world borders
-// https://stackoverflow.com/a/28323349
-myMap.options.worldCopyJump = true;
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
