@@ -69,6 +69,10 @@ public class MarkerManager {
     private final static String JAR_EXT = "jar";
     private final static String ICON_EXT = "png";
     
+    // simple pattern for illegal chars in js var names
+    private final static String JSVARNAME_PATTERN = "[\\s,\\(\\)-]";
+    private final static String JSVARNAME_PREFIX = "icon";
+
     // fixed names to be used for search icons
     private final static String TRACKPOINT_ICON = "TrackPoint";
     private final static String TRACKPOINTLINE_ICON = "TrackPointLine";
@@ -183,13 +187,9 @@ public class MarkerManager {
         // don't crash on null input...
         String result = Objects.requireNonNullElse(iconName, "");
         
-        // no spaces and "," chars, please
-        result = result.replace(" ", "");
-        result = result.replace(",", "");
-        result = result.replace("-", "");
-        result += "_Icon";
-        
-        return result;
+        //TFE, 20191122: name can contain invalid characters for a js variable name - needs to be sanitized or quoted
+        // simple version: replace all " ", ",", "(", ")", "-" with "_"
+        return JSVARNAME_PREFIX + result.replaceAll(JSVARNAME_PATTERN, "_");
     }
     
     public static MarkerManager getInstance() {
@@ -221,9 +221,8 @@ public class MarkerManager {
     public Marker getSpecialMarker(final SpecialMarker special) {
         Marker result;
         
-        if (specialMarkers.containsKey(special)) {
-            result = specialMarkers.get(special);
-        } else {
+        result = specialMarkers.get(special);
+        if (result == null) {
             // default is "Placemark"
             result = specialMarkers.get(SpecialMarker.PlaceMarkIcon);
         }
@@ -234,10 +233,8 @@ public class MarkerManager {
     public MarkerIcon getMarkerForSymbol(final String symbol) {
         MarkerIcon result;
         
-        final String jsSymbol = jsCompatibleIconName(symbol);
-        if (iconMap.containsKey(jsSymbol)) {
-            result = iconMap.get(jsSymbol);
-        } else {
+        result = iconMap.get(jsCompatibleIconName(symbol));
+        if (result == null) {
             // default is "Placemark"
             result = iconMap.get(jsCompatibleIconName(PLACEMARK_ICON));
         }

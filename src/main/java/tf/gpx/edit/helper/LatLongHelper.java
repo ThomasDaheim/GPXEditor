@@ -29,6 +29,7 @@ import de.saring.leafletmap.LatLong;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.regex.Pattern;
+import org.apache.commons.math3.util.Precision;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -95,10 +96,14 @@ public class LatLongHelper {
             seconds = 59.99;
         }
         
-        String result = String.format("%2d°%2d'%4.2f\"", degrees, (int) Math.floor(minutes), seconds);
+        // TFE, 20191124: speed things up a little...
+//        String result = String.format("%2d°%2d'%4.2f\"", degrees, (int) Math.floor(minutes), seconds);
         // TFE, 20180601: remove spaces between numbers...
-        result = result.replaceAll(" ", "");
-        return direction + " " + result;
+//        result = result.replaceAll(" ", "");
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(degrees).append("°").append((int) Math.floor(minutes)).append("'").append(Precision.round(seconds, 2)).append("\"");
+        return direction + " " + sb.toString();
     }
     
     public static double latFromString(final String lat) {
@@ -119,7 +124,7 @@ public class LatLongHelper {
 
             // 4) add sign
             result *= sign;
-        } catch (Exception ex){
+        } catch (ParseException ex){
             // what should be a good default? lets stick with 0...
         }
         
@@ -144,7 +149,7 @@ public class LatLongHelper {
 
             // 4) add sign
             result *= sign;
-        } catch (Exception ex){
+        } catch (ParseException ex){
             // what should be a good default? lets stick with 0...
         }
         

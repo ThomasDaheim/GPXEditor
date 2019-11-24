@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -899,11 +900,7 @@ public class TrackMap extends LeafletMapView {
     }
 
     public void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
-        if (fileWaypoints.containsKey(waypoint)) {
-            currentGPXWaypoint = fileWaypoints.get(waypoint);
-        } else {
-            removeCurrentWaypoint();
-        }
+        currentGPXWaypoint = fileWaypoints.get(waypoint);
     }
     
     public void removeCurrentWaypoint() {
@@ -1131,6 +1128,7 @@ public class TrackMap extends LeafletMapView {
             return;
         }
 
+//        System.out.println("Map Start:    " + Instant.now());
         // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
         //clearSelectedGPXWaypoints();
         
@@ -1148,10 +1146,11 @@ public class TrackMap extends LeafletMapView {
         for (String waypoint : waypointsToUnselect.keySet()) {
             selectedWaypoints.remove(waypoint);
         }
+//        System.out.println("Map Unselect: " + Instant.now() + " " + waypointsToUnselect.size() + " waypoints");
         clearSomeSelectedGPXWaypoints(waypointsToUnselect);
         
         // now figure out which ones to add
-        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
+        final Set<GPXWaypoint> waypointsToSelect = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             if (!selectedWaypoints.containsValue(gpxWaypoint)) {
                 waypointsToSelect.add(gpxWaypoint);
@@ -1169,6 +1168,7 @@ public class TrackMap extends LeafletMapView {
             }
         }).max().orElse(0);
         
+//        System.out.println("Map Select:   " + Instant.now() + " " + waypointsToSelect.size() + " waypoints");
         for (GPXWaypoint gpxWaypoint : waypointsToSelect) {
             final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
             String waypoint;
@@ -1213,6 +1213,7 @@ public class TrackMap extends LeafletMapView {
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
+//        System.out.println("Map End:      " + Instant.now());
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {

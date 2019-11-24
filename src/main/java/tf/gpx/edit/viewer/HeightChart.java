@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -352,6 +353,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
             return;
         }
 
+//        System.out.println("Cht Start:    " + Instant.now());
         noLayout = true;
 
         // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
@@ -364,12 +366,13 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         final Set<GPXWaypoint> waypointSet = new LinkedHashSet<>(gpxWaypoints);
         
         // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
-        final List<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new ArrayList<>();
+        final Set<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new LinkedHashSet<>();
         for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
             if (!waypointSet.contains(waypoint.getLeft())) {
                 waypointsToUnselect.add(waypoint);
             }
         }
+//        System.out.println("Cht Unselect: " + Instant.now() + " " + waypointsToUnselect.size() + " waypoints");
         for (Triple<GPXWaypoint, Double, Node> waypoint : waypointsToUnselect) {
             selectedWaypoints.remove(waypoint);
             getPlotChildren().remove(waypoint.getRight());
@@ -380,20 +383,29 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
             return t.getLeft();
         }).collect(Collectors.toList()));
                 
-        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
+        final Set<GPXWaypoint> waypointsToSelect = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             if (!selectedWaypointsSet.contains(gpxWaypoint)) {
                 waypointsToSelect.add(gpxWaypoint);
             }
         }
 
+//        System.out.println("Cht Select:   " + Instant.now() + " " + waypointsToSelect.size() + " waypoints");
         // now add only the new ones
-        final List<Rectangle> rectangles = new ArrayList<>();
+        final Set<Rectangle> rectangles = new LinkedHashSet<>();
         for (GPXWaypoint waypoint: waypointsToSelect) {
             // find matching point from myPoints
-            final Pair<GPXWaypoint, Double> point = myPoints.stream()
-                .filter(x -> x.getLeft().equals(waypoint))
-                .findFirst().orElse(null);
+//            final Pair<GPXWaypoint, Double> point = myPoints.stream()
+//                .filter(x -> x.getLeft().equals(waypoint))
+//                .findFirst().orElse(null);
+            // TFE, 20191124: speed things up a little...
+            Pair<GPXWaypoint, Double> point = null;
+            for (Pair<GPXWaypoint, Double> myPoint : myPoints) {
+                if (myPoint.getLeft().equals(waypoint)) {
+                    point = myPoint;
+                    break;
+                }
+            }
             
             if (point != null) {
                 Rectangle rectangle = new Rectangle(0,0,0,0);
@@ -409,6 +421,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
 
         noLayout = false;
         layoutPlotChildren();
+//        System.out.println("Cht End:      " + Instant.now());
     }
     
     @Override
