@@ -33,13 +33,12 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TableView;
-import javafx.scene.input.MouseEvent;
-
-import javafx.scene.control.skin.TableHeaderRow;
 import javafx.scene.control.SkinBase;
 import javafx.scene.control.TableColumnBase;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.skin.TableHeaderRow;
+import javafx.scene.input.MouseEvent;
 
 /**
  * Customize the table menu for tableviews and treetableviews.

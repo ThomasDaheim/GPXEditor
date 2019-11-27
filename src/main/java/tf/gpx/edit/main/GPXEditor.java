@@ -33,9 +33,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -2220,7 +2218,7 @@ public class GPXEditor implements Initializable {
         
 //        System.out.println("========================================================");
 //        System.out.println("Start select: " + Instant.now());
-        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxTrackXML.getSelectionModel().getSelectedItems(), highlightIfHidden, useLineMarker);
+        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker);
         gpxTrackXML.getSelectionModel().getSelectedItems().addListener(listenergpxTrackXMLSelection);
 //        System.out.println("End select:   " + Instant.now());
     }

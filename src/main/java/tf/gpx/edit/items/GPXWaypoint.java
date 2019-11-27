@@ -33,14 +33,12 @@ import com.hs.gpxparser.modal.Route;
 import com.hs.gpxparser.modal.TrackSegment;
 import com.hs.gpxparser.modal.Waypoint;
 import com.hs.gpxparser.type.Fix;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -614,15 +612,6 @@ public class GPXWaypoint extends GPXLineItem {
     public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
         ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
         if (itemType == null || itemType.equals(myGPXParent.getType())) {
-            result.add(this);
-        }
-        return result;
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        List<GPXWaypoint> result = new ArrayList<>();
-        if (boundingBox.contains(this.getLatitude(), this.getLongitude())) {
             result.add(this);
         }
         return result;

@@ -369,8 +369,10 @@ public abstract class GPXLineItem {
     public abstract ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItem.GPXLineItemType itemType);
     
     // find points in a given bounding box
-    public abstract List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox);
-    protected static List<GPXWaypoint> filterGPXWaypointsInBoundingBox(final List<GPXWaypoint> gpxWaypoints, final BoundingBox boundingBox) {
+    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
+        return filterGPXWaypointsInBoundingBox(getCombinedGPXWaypoints(null), boundingBox);
+    }
+    private static List<GPXWaypoint> filterGPXWaypointsInBoundingBox(final List<GPXWaypoint> gpxWaypoints, final BoundingBox boundingBox) {
         return gpxWaypoints.stream().filter((t) -> {
                         return boundingBox.contains(t.getLatitude(), t.getLongitude());
                     }).collect(Collectors.toList());

@@ -109,6 +109,8 @@ public interface IChartBasics {
         getChart().getYAxis().setAnimated(false);
     }
     
+    public abstract GPXLineItem getGPXLineItem();
+    public void setGPXLineItem(final GPXLineItem gpxLineItem);
     public abstract double getMinimumDistance();
     public abstract void setMinimumDistance(final double value);
     public abstract double getMaximumDistance();
@@ -130,6 +132,8 @@ public interface IChartBasics {
     
     @SuppressWarnings("unchecked")
     default void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
+        setGPXLineItem(lineItem);
+        
         if (getChart().isDisabled()) {
             return;
         }
@@ -183,24 +187,82 @@ public interface IChartBasics {
             }
         }
         
-        getChart().getData().addAll(seriesList);
-        
-        // and now color the series nodes according to lineitem color
-        // https://gist.github.com/jewelsea/2129306
-        for (int i = 0; i < seriesList.size(); i++) {
-            final XYChart.Series<Double, Double> series = seriesList.get(i);
-            final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(series.getName());
-            series.getNode().pseudoClassStateChanged(color, true);
-            Set<Node> nodes = getChart().lookupAll(".series" + i);
-            for (Node n : nodes) {
-                n.pseudoClassStateChanged(color, true);
-            }
+        int dataCount = 0;
+        for (XYChart.Series<Double, Double> series : seriesList) {
+            dataCount += series.getData().size();
         }
+        
+        showData(seriesList, dataCount);
         
         setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide heightchart of no waypoints have been set
         getChart().setVisible(hasData);
+    }
+    @SuppressWarnings("unchecked")
+    private void showData(final List<XYChart.Series<Double, Double>> seriesList, final int dataCount) {
+        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
+        // file fileWaypointsCount don't count into MAX_WAYPOINTS
+        //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
+        //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        // TFE, 20190819: make number of waypoints to show a preference
+        final double ratio = 
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                // might have no waypoints at all...
+                Math.max(dataCount, 1);
+
+        // TFE, 20191125: only show up to GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW wayoints
+        // similar logic to TrackMap.showWaypoints - could maybe be abstracted
+        int count = 0, i = 0, j = 0;
+        for (XYChart.Series<Double, Double> series : seriesList) {
+            if (!series.getData().isEmpty()) {
+                final XYChart.Series<Double, Double> reducedSeries = new XYChart.Series<>();
+                reducedSeries.setName(series.getName());
+
+                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
+                if (GPXLineItem.GPXLineItemType.GPXFile.equals(firstWaypoint.getType())) {
+                    // we show all file waypoints
+                    reducedSeries.getData().addAll(series.getData());
+                 } else {
+                    // we only show a subset of other waypoints - up to MAX_WAYPOINTS
+                    for (XYChart.Data<Double, Double> data : series.getData()) {
+                        i++;    
+                        if (i * ratio >= count) {
+                            reducedSeries.getData().add(data);
+                            count++;
+                        }
+                    }
+               }
+
+                getChart().getData().add(reducedSeries);        
+
+                // and now color the series nodes according to lineitem color
+                // https://gist.github.com/jewelsea/2129306
+                final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(reducedSeries.getName());
+                reducedSeries.getNode().pseudoClassStateChanged(color, true);
+                Set<Node> nodes = getChart().lookupAll(".series" + j);
+                for (Node n : nodes) {
+                    n.pseudoClassStateChanged(color, true);
+                }
+                
+                j++;
+            }
+        }
+        
+//        getChart().getData().addAll(seriesList);        
+//       
+//        // and now color the series nodes according to lineitem color
+//        // https://gist.github.com/jewelsea/2129306
+//        for (int j = 0; j < seriesList.size(); j++) {
+//            final XYChart.Series<Double, Double> series = seriesList.get(j);
+//            final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(series.getName());
+//            series.getNode().pseudoClassStateChanged(color, true);
+//            Set<Node> nodes = getChart().lookupAll(".series" + j);
+//            for (Node n : nodes) {
+//                n.pseudoClassStateChanged(color, true);
+//            }
+//        }
+        
     }
     
     @SuppressWarnings("unchecked")

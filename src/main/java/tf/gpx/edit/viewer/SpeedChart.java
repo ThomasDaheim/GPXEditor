@@ -33,6 +33,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -46,6 +47,8 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
+
+    private GPXLineItem myGPXLineItem;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     
@@ -84,6 +87,16 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     @Override
     public XYChart getChart() {
         return this;
+    }
+    
+    @Override
+    public GPXLineItem getGPXLineItem() {
+        return myGPXLineItem;
+    }
+    
+    @Override
+    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
+        myGPXLineItem = gpxLineItem;
     }
     
     @Override

@@ -37,7 +37,6 @@ import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -276,11 +275,6 @@ public class GPXTrackSegment extends GPXMeasurable {
             result = myGPXWaypoints;
         }
         return result;
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
     }
 
     /**

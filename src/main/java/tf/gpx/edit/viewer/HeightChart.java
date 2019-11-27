@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.viewer;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -51,6 +50,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -64,6 +65,8 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     private final static HeightChart INSTANCE = new HeightChart();
 
     private GPXEditor myGPXEditor;
+
+    private GPXLineItem myGPXLineItem;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
@@ -179,11 +182,12 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         });
         
         setOnMouseExited(e -> {
-            line.setVisible(false);
-            text.setVisible(false);
-                
-            // unset selected waypoint
-            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
+            // TFE, 20191127 - don't reset everything
+//            line.setVisible(false);
+//            text.setVisible(false);
+//                
+//            // unset selected waypoint
+//            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
         });
 
         // TFE. 20190819: support for marking waypoints with drag
@@ -264,10 +268,20 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     public static HeightChart getInstance() {
         return INSTANCE;
     }
-    
+
     @Override
     public XYChart getChart() {
         return this;
+    }
+    
+    @Override
+    public GPXLineItem getGPXLineItem() {
+        return myGPXLineItem;
+    }
+    
+    @Override
+    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
+        myGPXLineItem = gpxLineItem;
     }
     
     @Override
@@ -333,17 +347,43 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     private void selectWaypointsInRange() {
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
-        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getData();
-        for (XYChart.Series<Double, Double> series: seriesList) {
-            for (XYChart.Data<Double, Double> data : series.getData()) {
-                final Double distValue = data.XValueProperty().getValue();
+        // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
+        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        
+        double distValue = 0.0;
+        for (GPXWaypoint gpxWaypoint: myGPXLineItem.getCombinedGPXWaypoints(null)) {
+            distValue += gpxWaypoint.getDistance() / 1000.0;
+            
+            if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
+                 GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem) ||
+                 alwayShowFileWaypoints) {
                 if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
-                    selectedWaypointsInRange.add((GPXWaypoint) data.getExtraValue());
+                    selectedWaypointsInRange.add(gpxWaypoint);
                 }
+            }
+            
+            // end of the range - no need to look further
+            if (distValue > dragEndDistance) {
+                break;
             }
         }
         
-        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, true, false);
+//        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getData();
+//        for (XYChart.Series<Double, Double> series: seriesList) {
+//            for (XYChart.Data<Double, Double> data : series.getData()) {
+//                final Double distValue = data.XValueProperty().getValue();
+//                if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
+//                    selectedWaypointsInRange.add((GPXWaypoint) data.getExtraValue());
+//                }
+//            
+//                // end of the range - no need to look further
+//                if (distValue > dragEndDistance) {
+//                    break;
+//                }
+//            }
+//        }
+        
+        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false);
     }
 
     @SuppressWarnings("unchecked")
@@ -382,7 +422,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
             return t.getLeft();
         }).collect(Collectors.toList()));
-                
+        
         final Set<GPXWaypoint> waypointsToSelect = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             if (!selectedWaypointsSet.contains(gpxWaypoint)) {
@@ -420,7 +460,10 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         }
 
         noLayout = false;
-        layoutPlotChildren();
+        // did we change anything?
+        if (waypointsToUnselect.size() + waypointsToSelect.size() > 0) {
+            layoutPlotChildren();
+        }
 //        System.out.println("Cht End:      " + Instant.now());
     }
     

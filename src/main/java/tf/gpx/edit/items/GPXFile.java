@@ -52,7 +52,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import tf.gpx.edit.extension.DefaultExtensionParser;
@@ -421,22 +420,6 @@ public class GPXFile extends GPXMeasurable {
             }
         }
         return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        // iterate over my segments
-        final List<GPXWaypoint> result = new ArrayList<>();
-        
-        result.addAll(filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox));
-        for (GPXTrack track : myGPXTracks) {
-            result.addAll(track.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-        for (GPXRoute route : myGPXRoutes) {
-            result.addAll(route.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-
-        return result;
     }
     
     @Override

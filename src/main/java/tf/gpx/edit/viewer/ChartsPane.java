@@ -28,7 +28,6 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Pos;
 import javafx.scene.Node;

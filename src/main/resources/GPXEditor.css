@@ -142,7 +142,7 @@
 .charts-pane {
     -fx-fill: white;
     -fx-background-color: white;
-    -fx-opacity: 0.8;
+    -fx-opacity: 0.9;
 }
 /*
     elevation, speed, ... chart
