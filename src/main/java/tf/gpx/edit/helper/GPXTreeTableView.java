@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -63,6 +64,7 @@ import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.general.ColorSelectionMenu;
 import tf.gpx.edit.general.CopyPasteKeyCodes;
+import tf.gpx.edit.general.TableMenuUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -141,6 +143,10 @@ public class GPXTreeTableView {
         myTreeTableView.getSortOrder().clear();
         myTreeTableView.getSortOrder().add(myTreeTableView.getColumns().get(0));
         myTreeTableView.setSortMode(TreeSortMode.ALL_DESCENDANTS);
+        
+        Platform.runLater(() -> {
+            TableMenuUtils.addCustomTreeTableViewMenu(myTreeTableView);
+        });
 
         // support drag & drop on GPXFile - level        
         // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html

@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -195,11 +196,11 @@ public class TrackMap extends LeafletMapView {
     }
     private CurrentMarker currentMarker;
     
-    public enum HeightChartButtonState {
+    public enum ChartsButtonState {
         ON,
         OFF;
         
-        public static HeightChartButtonState fromBoolean(final Boolean state) {
+        public static ChartsButtonState fromBoolean(final Boolean state) {
             if (state) {
                 return ON;
             } else {
@@ -208,6 +209,10 @@ public class TrackMap extends LeafletMapView {
         }
     }
     
+    private enum MarkerType {
+        MARKER,
+        CIRCLEMARKER
+    }
     
     private int varNameSuffix = 1;
             
@@ -220,6 +225,9 @@ public class TrackMap extends LeafletMapView {
     private final static String NOT_SHOWN = "Not shown";
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
+    
+    private final static String LEAFLET_PATH = "/leaflet";
+    private final static String MIN_EXT = ".min";
     
     // webview holds the leaflet map
     private WebView myWebView = null;
@@ -265,10 +273,13 @@ public class TrackMap extends LeafletMapView {
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
         mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
-//        originalMapLayers = mapLayers.size();
         final MapConfig myMapConfig = new MapConfig(mapLayers, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
+                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
+                        new LatLong(51.505, -0.09),
+                        // wrap around world borders
+                        // https://stackoverflow.com/a/28323349
+                        "worldCopyJump: true, zoomAnimation: false, preferCanvas: true,");
 
         cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
@@ -344,74 +355,74 @@ public class TrackMap extends LeafletMapView {
             window.setMember("jscallback", jscallback);
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
-            addStyleFromPath("/leaflet/leaflet.css");
+            addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
             // support to show mouse coordinates
-            addStyleFromPath("/leaflet/MousePosition/L.Control.MousePosition.css");
-            addScriptFromPath("/leaflet/MousePosition/L.Control.MousePosition.js");
-            addScriptFromPath("/leaflet/MousePosition.js");
+            addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
 
             // support to show center coordinates
-            addStyleFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.css");
-            addScriptFromPath("/leaflet/MapCenterCoord/L.Control.MapCenterCoord.js");
-            addScriptFromPath("/leaflet/MapCenter.js");
+            addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
 
             // map helper functions for selecting, clicking, ...
-            addScriptFromPath("/leaflet/MapHelper.js");
+            addScriptFromPath(LEAFLET_PATH + "/MapHelper" + MIN_EXT + ".js");
 
             // map helper functions for manipulating layer control entries
-            addScriptFromPath("/leaflet/LayerControl.js");
+            addScriptFromPath(LEAFLET_PATH + "/LayerControl" + MIN_EXT + ".js");
             // set api key for open cycle map
             execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
-            addScriptFromPath("/leaflet/TrackMarker.js");
+            addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
 
             // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath("/leaflet/editable/Leaflet.Editable.min.js");
-            addScriptFromPath("/leaflet/EditRoutes.js");
+            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
             // add support for lat / lon lines
             // https://github.com/cloudybay/leaflet.latlng-graticule
-            addScriptFromPath("/leaflet/graticule/leaflet.latlng-graticule.min.js");
-            addScriptFromPath("/leaflet/ShowLatLan.js");
+            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
             
             // https://github.com/smeijer/leaflet-geosearch
             // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
-            addStyleFromPath("/leaflet/search/leaflet-search.src.css");
-            addScriptFromPath("/leaflet/search/leaflet-search.src.js");
-            addScriptFromPath("/leaflet/GeoSearch.js");
+            addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
             
             // support for autorouting
             // https://github.com/perliedman/leaflet-routing-machine
-            addStyleFromPath("/leaflet/routing/leaflet-routing-machine.css");
-            addScriptFromPath("/leaflet/routing/leaflet-routing-machine.js");
-            addScriptFromPath("/leaflet/openrouteservice/lodash.min.js");
-            addScriptFromPath("/leaflet/openrouteservice/corslite.js");
-            addScriptFromPath("/leaflet/openrouteservice/polyline.js");
-            addScriptFromPath("/leaflet/openrouteservice/L.Routing.OpenRouteService.js");
-            addStyleFromPath("/leaflet/geocoder/Control.Geocoder.css");
-            addScriptFromPath("/leaflet/geocoder/Control.Geocoder.js");
-            addScriptFromPath("/leaflet/Routing.js");
+            addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/lodash.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/corslite" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/polyline" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteService" + MIN_EXT + ".js");
+            addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
             // we need an api key
             execScript("initRouting(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
 
             // support for ruler
             // https://github.com/gokertanrisever/leaflet-ruler
-            addStyleFromPath("/leaflet/ruler/leaflet-ruler.css");
-            addScriptFromPath("/leaflet/ruler/leaflet-ruler.js");
-            addScriptFromPath("/leaflet/Rouler.js");
+            addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Rouler" + MIN_EXT + ".js");
 
             // support for custom buttons
             // https://github.com/CliffCloud/Leaflet.EasyButton
-            addStyleFromPath("/leaflet/easybutton/easy-button.css");
-            addScriptFromPath("/leaflet/easybutton/easy-button.js");
-            addScriptFromPath("/leaflet/HeightChartButton.js");
+            addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
 
             // support to re-center
-            addStyleFromPath("/leaflet/CenterButton.css");
-            addScriptFromPath("/leaflet/CenterButton.js");
+            addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -423,7 +434,8 @@ public class TrackMap extends LeafletMapView {
             myPane.toFront();
             
             // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
-            final Region chart = HeightChart.getInstance();
+            // TFE, 20191119: show chart pane instead to support multiple charts (height, speed, ...)
+            final Region chart = ChartsPane.getInstance();
             chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             chart.prefWidthProperty().bind(parentPane.widthProperty());
             AnchorPane.setBottomAnchor(chart, 20.0);
@@ -473,6 +485,7 @@ public class TrackMap extends LeafletMapView {
             "var url = \"data:image/png;base64," + base64data + "\";" + 
             "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
 
+//        System.out.println(scriptCmd);
         execScript(scriptCmd);
 //        System.out.println(iconName + " created");
     }
@@ -699,6 +712,7 @@ public class TrackMap extends LeafletMapView {
                                 newGPXWaypoint, 
                                 "", 
                                 MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
+                                MarkerType.MARKER,
                                 0, 
                                 true);
                 fileWaypoints.put(waypoint, newGPXWaypoint);
@@ -707,7 +721,7 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
 
                 // redraw height chart
-                HeightChart.getInstance().setGPXWaypoints(myGPXLineItem, true);
+                ChartsPane.getInstance().setGPXWaypoints(myGPXLineItem, true);
             } else {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
@@ -892,11 +906,7 @@ public class TrackMap extends LeafletMapView {
     }
 
     public void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
-        if (fileWaypoints.containsKey(waypoint)) {
-            currentGPXWaypoint = fileWaypoints.get(waypoint);
-        } else {
-            removeCurrentWaypoint();
-        }
+        currentGPXWaypoint = fileWaypoints.get(waypoint);
     }
     
     public void removeCurrentWaypoint() {
@@ -916,11 +926,11 @@ public class TrackMap extends LeafletMapView {
     }
     
    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
+        myGPXLineItem = lineItem;
+
         if (isDisabled()) {
             return;
         }
-
-        myGPXLineItem = lineItem;
 
         // forget the past...
         fileWaypoints.clear();
@@ -943,17 +953,6 @@ public class TrackMap extends LeafletMapView {
             return;
         }
         
-        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
-        // file fileWaypointsCount don't count into MAX_WAYPOINTS
-        //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
-        //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
-        // TFE, 20190819: make number of waypoints to show a preference
-        final int waypointCount = lineItem.getCombinedGPXWaypoints(null).size();
-        final double ratio = 
-                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
-                // might have no waypoints at all...
-                Math.max(waypointCount, 1);
-
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
@@ -988,7 +987,12 @@ public class TrackMap extends LeafletMapView {
             }
         }
 
-        double[] bounds = showWaypoints(masterList, ratio, alwayShowFileWaypoints);
+        int waypointCount = 0;
+        for (List<GPXWaypoint> gpxWaypoints : masterList) {
+            waypointCount += gpxWaypoints.size();
+        }
+        
+        double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints);
 
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
@@ -1003,7 +1007,17 @@ public class TrackMap extends LeafletMapView {
         }
         setVisible(bounds[4] > 0d);
     }
-    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final double ratio, final boolean ignoreFileWayPointsInBounds) {
+    private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final int waypointCount, final boolean ignoreFileWayPointsInBounds) {
+        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
+        // file fileWaypointsCount don't count into MAX_WAYPOINTS
+        //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
+        //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
+        // TFE, 20190819: make number of waypoints to show a preference
+        final double ratio = 
+                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                // might have no waypoints at all...
+                Math.max(waypointCount, 1);
+
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
         double[] bounds = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, 0d};
@@ -1029,6 +1043,7 @@ public class TrackMap extends LeafletMapView {
                             gpxWaypoint, 
                             gpxWaypoint.getTooltip(), 
                             MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 
+                            MarkerType.MARKER,
                             0, 
                             false);
                     fileWaypoints.put(waypoint, gpxWaypoint);
@@ -1092,12 +1107,12 @@ public class TrackMap extends LeafletMapView {
             // show start & end markers
             LatLong point = waypoints.get(0);
             GPXWaypoint gpxpoint = gpxWaypoints.get(0);
-            String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, 1000, false);
+            String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, MarkerType.MARKER, 1000, false);
             markers.put(marker, gpxpoint);
             
             point = waypoints.get(waypoints.size()-1);
             gpxpoint = gpxWaypoints.get(gpxWaypoints.size()-1);
-            marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, 2000, false);
+            marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, MarkerType.MARKER, 2000, false);
             markers.put(marker, gpxpoint);
             
             if (gpxpoint.isGPXTrackWaypoint()) {
@@ -1124,6 +1139,7 @@ public class TrackMap extends LeafletMapView {
             return;
         }
 
+//        System.out.println("Map Start:    " + Instant.now());
         // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
         //clearSelectedGPXWaypoints();
         
@@ -1141,10 +1157,11 @@ public class TrackMap extends LeafletMapView {
         for (String waypoint : waypointsToUnselect.keySet()) {
             selectedWaypoints.remove(waypoint);
         }
+//        System.out.println("Map Unselect: " + Instant.now() + " " + waypointsToUnselect.size() + " waypoints");
         clearSomeSelectedGPXWaypoints(waypointsToUnselect);
         
         // now figure out which ones to add
-        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
+        final Set<GPXWaypoint> waypointsToSelect = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             if (!selectedWaypoints.containsValue(gpxWaypoint)) {
                 waypointsToSelect.add(gpxWaypoint);
@@ -1162,6 +1179,7 @@ public class TrackMap extends LeafletMapView {
             }
         }).max().orElse(0);
         
+//        System.out.println("Map Select:   " + Instant.now() + " " + waypointsToSelect.size() + " waypoints " + notShownCount + " not shown");
         for (GPXWaypoint gpxWaypoint : waypointsToSelect) {
             final LatLong latLong = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
             String waypoint;
@@ -1176,7 +1194,8 @@ public class TrackMap extends LeafletMapView {
                     waypoint = addMarkerAndCallback(
                             gpxWaypoint, 
                             "", 
-                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointIcon), 
+                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointIcon),
+                            MarkerType.CIRCLEMARKER,
                             0, 
                             // TFE, 20190905: make draggable for track points
                             trackWaypoints.containsValue(gpxWaypoint));
@@ -1185,7 +1204,8 @@ public class TrackMap extends LeafletMapView {
                     waypoint = addMarkerAndCallback(
                             gpxWaypoint, 
                             "", 
-                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointLineIcon), 
+                            MarkerManager.getInstance().getSpecialMarker(MarkerManager.SpecialMarker.TrackPointLineIcon),
+                            MarkerType.MARKER, 
                             0, 
                             false);
                 }
@@ -1206,6 +1226,7 @@ public class TrackMap extends LeafletMapView {
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
+//        System.out.println("Map End:      " + Instant.now() + " " + notShownCount + " not shown");
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {
@@ -1356,13 +1377,13 @@ public class TrackMap extends LeafletMapView {
         if (!newGPXWaypoints.isEmpty()) {
             // add new start / end markers
             GPXWaypoint gpxWaypoint = newGPXWaypoints.get(0);
-            String temp = addMarkerAndCallback(gpxWaypoint, "", ColorMarker.GREEN_MARKER, 1000, false);
+            String temp = addMarkerAndCallback(gpxWaypoint, "", ColorMarker.GREEN_MARKER, MarkerType.MARKER, 1000, false);
             markers.put(temp, gpxWaypoint);
 
             // we have start & end point
             if (newGPXWaypoints.size() > 1) {
                 gpxWaypoint = newGPXWaypoints.get(newGPXWaypoints.size()-1);
-                temp = addMarkerAndCallback(gpxWaypoint, "", ColorMarker.RED_MARKER, 2000, false);
+                temp = addMarkerAndCallback(gpxWaypoint, "", ColorMarker.RED_MARKER, MarkerType.MARKER, 2000, false);
                 markers.put(temp, gpxWaypoint);
             }
         }
@@ -1371,15 +1392,15 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWaypointList(false);
     }
     
-    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointname, final Marker marker, final int zIndex, final boolean interactive) {
+    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final Marker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
         final LatLong point = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
         
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
-        String markername = "";
-        if ((pointname != null) && !pointname.isEmpty()) {
-            markername = pointname + "\n";
+        String markerTitle = "";
+        if ((pointTitle != null) && !pointTitle.isEmpty()) {
+            markerTitle = pointTitle + "\n";
         }
-        markername = markername + LatLongHelper.LatLongToString(point);
+        markerTitle = markerTitle + LatLongHelper.LatLongToString(point);
         
         // make sure the icon has been loaded and added in js
         if (marker instanceof MarkerIcon && !((MarkerIcon) marker).getAvailableInLeaflet()) {
@@ -1388,18 +1409,38 @@ public class TrackMap extends LeafletMapView {
             markerIcon.setAvailableInLeaflet(true);
         }
         
-        final String layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markername), marker, zIndex);
-        execScript("addMouseOverToLayer(\"" + layer + "\");");
-        if (interactive) {
-            execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
-            
-            // TFE, 20190905: pass line marker name as well - if any
-            final GPXLineItem parent = gpxWaypoint.getParent();
-            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType())) {
-                execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
+        String layer;
+        // TFE, 20191125: use CircleMarker for MarkerManager.SpecialMarker.TrackPointIcon
+        if (MarkerType.CIRCLEMARKER.equals(markerType)) {
+            layer = addCircleMarker(point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker, zIndex);
+        } else {
+            layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker, zIndex);
+        
+            execScript("addMouseOverToLayer(\"" + layer + "\");");
+            if (interactive) {
+                execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
+
+                // TFE, 20190905: pass line marker name as well - if any
+                final GPXLineItem parent = gpxWaypoint.getParent();
+                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType())) {
+                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
+                }
             }
         }
+
         return layer;
+    }
+    
+    private String addCircleMarker(final LatLong position, final String title, final Marker marker, final int zIndexOffset) {
+        final String varName = "circleMarker" + varNameSuffix++;
+
+//        execScript("var " + varName + " = L.marker([" + position.getLatitude() + ", " + position.getLongitude() + "], "
+//                + "{title: '" + title + "', icon: " + marker.getIconName() + ", zIndexOffset: " + zIndexOffset + "}).addTo(myMap);");
+                
+        execScript("var " + varName + " = L.circleMarker([" + position.getLatitude() + ", " + position.getLongitude() + "], "
+                + "{radius: 4, fillOpacity: 1, color: 'red', fillColor: 'yellow', weight: 1}).addTo(myMap);");
+
+        return varName;
     }
 
     private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
@@ -1410,11 +1451,11 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
-        HeightChart.getInstance().setViewLimits(newBoundingBox);
+        ChartsPane.getInstance().setViewLimits(newBoundingBox);
     }
     
-    public void setHeightChartButtonState(final HeightChartButtonState state) {
-        execScript("setHeightChartButtonState(\"" + state.toString() + "\");");
+    public void setChartsPaneButtonState(final ChartsButtonState state) {
+        execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
     }
     
     // TFE, 20190901: support to store & load overlay settings per baselayer
@@ -1601,9 +1642,9 @@ public class TrackMap extends LeafletMapView {
 //            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
         }
         
-        public void toggleHeightChart(final Boolean visible) {
-//            System.out.println("toggleHeightChart: " + visible);
-            HeightChart.getInstance().setVisible(visible);
+        public void toggleChartsPane(final Boolean visible) {
+//            System.out.println("toggleChartsPane: " + visible);
+            ChartsPane.getInstance().setVisible(visible);
         }
     }
 }

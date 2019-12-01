@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.scene.paint.Color;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,6 +43,7 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.general.ColorConverter;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -345,7 +345,7 @@ public class KMLWriter {
         style.appendChild(lineStyle);
 
         final Element color = doc.createElement("color");
-        color.appendChild(doc.createTextNode(toKMLString(GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(item.getColor()))));
+        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(item.getColor()))));
         lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement("LineString");
@@ -372,18 +372,6 @@ public class KMLWriter {
         lineString.appendChild(coords);
     }
     
-    // https://stackoverflow.com/a/56733608
-    private static String toKMLString(final Color color) {
-        // kml uses alpha + BGR
-        return "ff" + doubleToHex(color.getBlue()) + doubleToHex(color.getGreen()) + doubleToHex(color.getRed());
-    }
-    // two char hex 0..255 from double value 0..1
-    private static String doubleToHex(double val) {
-        final String in = Integer.toHexString((int) Math.round(val * 255)).toUpperCase();
-        
-        return in.length() == 1 ? "0" + in : in;
-    }
-
     /**
      * Write this KML object to a file.
      * @param file

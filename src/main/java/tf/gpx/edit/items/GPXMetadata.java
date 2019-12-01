@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import tf.gpx.edit.helper.GPXCloner;
 
 /**
@@ -154,11 +153,6 @@ public class GPXMetadata extends GPXMeasurable {
 
     @Override
     public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(GPXLineItemType itemType) {
-        return FXCollections.observableArrayList();
-    }
-
-    @Override
-    public ObservableList<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
         return FXCollections.observableArrayList();
     }
 

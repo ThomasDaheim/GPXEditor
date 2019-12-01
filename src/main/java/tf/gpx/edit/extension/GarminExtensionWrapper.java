@@ -26,7 +26,6 @@
 package tf.gpx.edit.extension;
 
 import com.hs.gpxparser.GPXConstants;
-import com.hs.gpxparser.modal.GPX;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -258,20 +257,6 @@ public class GarminExtensionWrapper {
             if (extNode == null) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(ext.toString());
-                
-                // extend gpx with garmin xmlns
-                // xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"
-                // xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
-                // xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"
-                // xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1"
-                // xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                final GPX gpx = lineitem.getGPXFile().getGPX();
-                gpx.getXmlns().put("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
-                // others currently not used...
-//                gpx.getXmlns().put("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
-//                gpx.getXmlns().put("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
-//                gpx.getXmlns().put("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
-//                gpx.getXmlns().put("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
             }
 
             // 1) find extension node OR create

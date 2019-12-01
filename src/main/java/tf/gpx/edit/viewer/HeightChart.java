@@ -36,9 +36,8 @@ import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
-import javafx.scene.CacheHint;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
@@ -46,13 +45,12 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -63,10 +61,12 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class HeightChart<X,Y> extends AreaChart {
+public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     private final static HeightChart INSTANCE = new HeightChart();
 
     private GPXEditor myGPXEditor;
+
+    private GPXLineItem myGPXLineItem;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
@@ -83,8 +83,8 @@ public class HeightChart<X,Y> extends AreaChart {
     private double dragActDistance = 0;
     private boolean dragActive = false;
     
-    private NumberAxis xAxis;
-    private NumberAxis yAxis;
+    private final NumberAxis xAxis;
+    private final NumberAxis yAxis;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
@@ -98,12 +98,11 @@ public class HeightChart<X,Y> extends AreaChart {
         xAxis.setTickUnit(1);
         getXAxis().setAutoRanging(false);
         
-        setVisible(false);
-        setAnimated(false);
-        setCache(true);
-        setCacheShape(true);
-        setCacheHint(CacheHint.SPEED);
-        setLegendVisible(false);
+        yAxis.setSide(Side.LEFT);
+        yAxis.setLabel("Height [m]");
+        
+        initialize();
+        setCreateSymbols(false);
         setCursor(Cursor.DEFAULT);
 
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
@@ -172,7 +171,7 @@ public class HeightChart<X,Y> extends AreaChart {
                 line.setVisible(true);
                 
                 // callback to highlight waypoint in TrackMap
-                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getNode().getUserData()), true, true);
+                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true);
             } else {
                 line.setVisible(false);
                 text.setVisible(false);
@@ -183,11 +182,12 @@ public class HeightChart<X,Y> extends AreaChart {
         });
         
         setOnMouseExited(e -> {
-            line.setVisible(false);
-            text.setVisible(false);
-                
-            // unset selected waypoint
-            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
+            // TFE, 20191127 - don't reset everything
+//            line.setVisible(false);
+//            text.setVisible(false);
+//                
+//            // unset selected waypoint
+//            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
         });
 
         // TFE. 20190819: support for marking waypoints with drag
@@ -268,136 +268,132 @@ public class HeightChart<X,Y> extends AreaChart {
     public static HeightChart getInstance() {
         return INSTANCE;
     }
+
+    @Override
+    public XYChart getChart() {
+        return this;
+    }
     
+    @Override
+    public GPXLineItem getGPXLineItem() {
+        return myGPXLineItem;
+    }
+    
+    @Override
+    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
+        myGPXLineItem = gpxLineItem;
+    }
+    
+    @Override
+    public double getMinimumDistance() {
+        return minDistance;
+    }
+
+    @Override
+    public void setMinimumDistance(final double value) {
+        minDistance = value;
+    }
+
+    @Override
+    public double getMaximumDistance() {
+        return maxDistance;
+    }
+
+    @Override
+    public void setMaximumDistance(final double value) {
+        maxDistance = value;
+    }
+
+    @Override
+    public double getMinimumYValue() {
+        return minHeight;
+    }
+
+    @Override
+    public void setMinimumYValue(final double value) {
+        minHeight = value;
+    }
+
+    @Override
+    public double getMaximumYValue() {
+        return maxHeight;
+    }
+
+    @Override
+    public void setMaximumYValue(final double value) {
+        maxHeight = value;
+    }
+
+    @Override
+    public List<Pair<GPXWaypoint, Double>> getPoints() {
+        return myPoints;
+    }
+    
+    @Override
+    public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
+        final double result = gpxWaypoint.getElevation();
+        
+        minHeight = Math.min(minHeight, result);
+        maxHeight = Math.max(maxHeight, result);
+        
+        return result;
+    }
+    
+    @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
-    }
-    
-    public void setEnable(final boolean enabled) {
-        setDisable(!enabled);
-        setVisible(enabled);
-        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(enabled));
-        toFront();
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        if (isDisabled()) {
-            return;
-        }
-        
-        // store visible state to keeep it later on
-        final Boolean isVisible = isVisible();
-        
-        // invisble update - much faster
-        setVisible(false);
-        myPoints.clear();
-        getData().clear();
-        
-        if (lineItem == null) {
-            // nothing more todo...
-            return;
-        }
-        
-        minDistance = 0d;
-        maxDistance = 0d;
-        minHeight = Double.MAX_VALUE;
-        maxHeight = Double.MIN_VALUE;
-        final List<XYChart.Data<Double, Double>> dataList = new ArrayList<>();
-        for (GPXWaypoint gpxWaypoint : lineItem.getCombinedGPXWaypoints(null)) {
-            maxDistance += gpxWaypoint.getDistance();
-            double elevation = gpxWaypoint.getElevation();
-            minHeight = Math.min(minHeight, elevation);
-            maxHeight = Math.max(maxHeight, elevation);
-            
-            XYChart.Data<Double, Double> data = new XYChart.Data<>(maxDistance / 1000.0, elevation);
-            final Node node = new Circle(1f, Color.BLACK);
-            node.setUserData(gpxWaypoint);
-            data.setNode(node);
-            
-            dataList.add(data);
-            myPoints.add(Pair.of(gpxWaypoint, maxDistance));
-        }
-        
-        XYChart.Series<Double, Double> series = new XYChart.Series<>();
-        series.getData().addAll(dataList);
-        getData().add(series);
-        
-        setAxis(minDistance, maxDistance, minHeight, maxHeight);
-        
-        // hide heightchart of no waypoints have been set
-        setVisible(!series.getData().isEmpty() && isVisible);
-        // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setHeightChartButtonState(TrackMap.HeightChartButtonState.fromBoolean(isVisible()));
-    }
-    
-    @SuppressWarnings("unchecked")
-    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        // TODO: fill with life
-    }
-    
-    private XYChart.Data<Double, Double> getNearestDataForXValue(final Double xValue) {
-        XYChart.Data<Double, Double> nearsetData = null;
-        double distance = Double.MAX_VALUE;
-
-        for (XYChart.Data<Double, Double> data : ((XYChart.Series<Double, Double>) getData().get(0)).getData()) {
-            double xData = data.getXValue();
-            double dataDistance = Math.abs(xValue - xData);
-            if (dataDistance < distance) {
-                distance = dataDistance;
-                nearsetData = data;
-            }
-        }
-        return nearsetData;
     }
     
     private void selectWaypointsInRange() {
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
-        for (XYChart.Data<Double, Double> data : ((XYChart.Series<Double, Double>) getData().get(0)).getData()) {
-            final Double distValue = data.XValueProperty().getValue();
-            if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
-                selectedWaypointsInRange.add((GPXWaypoint) data.getNode().getUserData());
+        // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
+        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        
+        double distValue = 0.0;
+        for (GPXWaypoint gpxWaypoint: myGPXLineItem.getCombinedGPXWaypoints(null)) {
+            distValue += gpxWaypoint.getDistance() / 1000.0;
+            
+            if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
+                 GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem) ||
+                 alwayShowFileWaypoints) {
+                if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
+                    selectedWaypointsInRange.add(gpxWaypoint);
+                }
+            }
+            
+            // end of the range - no need to look further
+            if (distValue > dragEndDistance) {
+                break;
             }
         }
         
-        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, true, false);
-    }
-    
-    private void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
-        double distance = maxDist - minDist;
-        // calculate scaling for ticks so their number is smaller than 25
-        double tickUnit = 1.0;
-        if (distance / 1000.0 > 24.9) {
-            tickUnit = 2.0;
-        }
-        if (distance / 1000.0 > 49.9) {
-            tickUnit = 5.0;
-        }
-        if (distance / 1000.0 > 499.9) {
-            tickUnit = 50.0;
-        }
-        if (distance / 1000.0 > 4999.9) {
-            tickUnit = 500.0;
-        }
-        xAxis.setTickUnit(tickUnit);
-
-        // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
-        xAxis.setLowerBound(minDist / 1000.0);
-        xAxis.setUpperBound(maxDist / 1000.0);
-
-//        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
-        yAxis.setTickUnit(10.0);
-        yAxis.setLowerBound(minHght);
-        yAxis.setUpperBound(maxHght);
+//        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getData();
+//        for (XYChart.Series<Double, Double> series: seriesList) {
+//            for (XYChart.Data<Double, Double> data : series.getData()) {
+//                final Double distValue = data.XValueProperty().getValue();
+//                if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
+//                    selectedWaypointsInRange.add((GPXWaypoint) data.getExtraValue());
+//                }
+//            
+//                // end of the range - no need to look further
+//                if (distValue > dragEndDistance) {
+//                    break;
+//                }
+//            }
+//        }
+        
+        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false);
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         if (isDisabled()) {
             return;
         }
 
+//        System.out.println("Cht Start:    " + Instant.now());
         noLayout = true;
 
         // TFE, 20180606: don't throw away old selected waypoints - set / unset only diff to improve performance
@@ -410,12 +406,13 @@ public class HeightChart<X,Y> extends AreaChart {
         final Set<GPXWaypoint> waypointSet = new LinkedHashSet<>(gpxWaypoints);
         
         // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
-        final List<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new ArrayList<>();
+        final Set<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new LinkedHashSet<>();
         for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
             if (!waypointSet.contains(waypoint.getLeft())) {
                 waypointsToUnselect.add(waypoint);
             }
         }
+//        System.out.println("Cht Unselect: " + Instant.now() + " " + waypointsToUnselect.size() + " waypoints");
         for (Triple<GPXWaypoint, Double, Node> waypoint : waypointsToUnselect) {
             selectedWaypoints.remove(waypoint);
             getPlotChildren().remove(waypoint.getRight());
@@ -425,21 +422,30 @@ public class HeightChart<X,Y> extends AreaChart {
         final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
             return t.getLeft();
         }).collect(Collectors.toList()));
-                
-        final List<GPXWaypoint> waypointsToSelect = new ArrayList<>();
+        
+        final Set<GPXWaypoint> waypointsToSelect = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             if (!selectedWaypointsSet.contains(gpxWaypoint)) {
                 waypointsToSelect.add(gpxWaypoint);
             }
         }
 
+//        System.out.println("Cht Select:   " + Instant.now() + " " + waypointsToSelect.size() + " waypoints");
         // now add only the new ones
-        final List<Rectangle> rectangles = new ArrayList<>();
+        final Set<Rectangle> rectangles = new LinkedHashSet<>();
         for (GPXWaypoint waypoint: waypointsToSelect) {
             // find matching point from myPoints
-            final Pair<GPXWaypoint, Double> point = myPoints.stream()
-                .filter(x -> x.getLeft().equals(waypoint))
-                .findFirst().orElse(null);
+//            final Pair<GPXWaypoint, Double> point = myPoints.stream()
+//                .filter(x -> x.getLeft().equals(waypoint))
+//                .findFirst().orElse(null);
+            // TFE, 20191124: speed things up a little...
+            Pair<GPXWaypoint, Double> point = null;
+            for (Pair<GPXWaypoint, Double> myPoint : myPoints) {
+                if (myPoint.getLeft().equals(waypoint)) {
+                    point = myPoint;
+                    break;
+                }
+            }
             
             if (point != null) {
                 Rectangle rectangle = new Rectangle(0,0,0,0);
@@ -454,14 +460,20 @@ public class HeightChart<X,Y> extends AreaChart {
         }
 
         noLayout = false;
-        layoutPlotChildren();
+        // did we change anything?
+        if (waypointsToUnselect.size() + waypointsToSelect.size() > 0) {
+            layoutPlotChildren();
+        }
+//        System.out.println("Cht End:      " + Instant.now());
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
-    }
-    
+    @Override
     public void clearSelectedGPXWaypoints() {
         if (isDisabled()) {
+            return;
+        }
+        // speed up things: anything to do?
+        if (selectedWaypoints.isEmpty()) {
             return;
         }
 
@@ -474,55 +486,6 @@ public class HeightChart<X,Y> extends AreaChart {
         
         noLayout = false;
         layoutPlotChildren();
-    }
-    
-    // set lineStart bounding box to limit which waypoints are shown
-    // or better: to define, what min and max x-axis to use
-    public void setViewLimits(final BoundingBox newBoundingBox) {
-        if (myPoints.isEmpty()) {
-            // nothing to show yet...
-            return;
-        }
-        
-        // init with maximum values
-        double minDist = minDistance;
-        double maxDist = maxDistance;
-        double minHght = minHeight;
-        double maxHght = maxHeight;
-
-        if (newBoundingBox != null) {
-            minHght = Double.MAX_VALUE;
-            maxHght = Double.MIN_VALUE;
-            
-            boolean waypointFound = false;
-            // 1. iterate over myPoints
-            for (Pair<GPXWaypoint, Double> point: myPoints) {
-                GPXWaypoint waypoint = point.getLeft();
-                if (newBoundingBox.contains(waypoint.getLatitude(), waypoint.getLongitude())) {
-                    // 2. if waypoint in bounding box:
-                    // if first waypoint use this for minDist
-                    // use this for maxDist
-                    if (!waypointFound) {
-                        minDist = point.getRight();
-                    }
-                    maxDist = point.getRight();
-                    
-                    final double elevation = waypoint.getElevation();
-                    minHght = Math.min(minHght, elevation);
-                    maxHght = Math.max(maxHght, elevation);
-                    waypointFound = true;
-                }
-            
-                if (!waypointFound) {
-                    minDist = 0.0;
-                    maxDist = 0.0;
-                }
-            }
-            
-            // if no waypoint in bounding box show nothing
-        }
-
-        setAxis(minDist, maxDist, minHght, maxHght);
     }
 
     @Override
@@ -570,13 +533,5 @@ public class HeightChart<X,Y> extends AreaChart {
             prevSelected = (selectedPoint != null);
             prevPair = pair;
         }
-    }
-
-    public void loadPreferences() {
-        // nothing todo
-    }
-    
-    public void savePreferences() {
-        // nothing todo
     }
 }

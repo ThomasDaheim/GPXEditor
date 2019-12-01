@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -266,15 +265,6 @@ public class GPXTrack extends GPXMeasurable {
             }
         }
         return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        List<GPXWaypoint> result = new ArrayList<>();
-        for (GPXTrackSegment trackSegment : myGPXTrackSegments) {
-            result.addAll(trackSegment.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-        return result;
     }
 
     @Override

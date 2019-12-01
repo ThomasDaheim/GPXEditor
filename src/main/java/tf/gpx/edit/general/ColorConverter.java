@@ -23,33 +23,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/* 
-    Created on : 12-Jul-2019, 18:09:14
-    Author     : thomas
-*/
+package tf.gpx.edit.general;
 
-#toggleChartsPaneButton {
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
-}
+import javafx.scene.paint.Color;
 
-.cross{
-    font-size: 1.5em;
-    font-weight: bold;
-}
+/**
+ * Helper for various conversions between colors from
+ * JavaFX, css, kml
+ * With the help of https://stackoverflow.com/a/56733608
+ * @author thomas
+ */
+public class ColorConverter {
+    private final static ColorConverter INSTANCE = new ColorConverter();
+    
+    private ColorConverter() {
+    }
 
-.routeSaveBtn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    font-size: 24px;
-    color: #ccc;
-    font-weight: bold;
-    display:inline-block;
-    width: 40px;
-}
-.routeSaveImg {
-     width: 20px;
-     float: left;
+    public static ColorConverter getInstance() {
+        return INSTANCE;
+    }
+    
+    // two char hex 0..255 from double value 0..1
+    private static String doubleToHex(double val) {
+        final String in = Integer.toHexString((int) Math.round(val * 255)).toUpperCase();
+        
+        return in.length() == 1 ? "0" + in : in;
+    }
+
+    // https://stackoverflow.com/a/56733608
+    public static String JavaFXtoKML(final Color color) {
+        // kml uses alpha + BGR
+        return "ff" + doubleToHex(color.getBlue()) + doubleToHex(color.getGreen()) + doubleToHex(color.getRed());
+    }
+
+    public static String JavaFXtoCSS(final Color color) {
+        // kml uses alpha + BGR
+        return "#" + (doubleToHex(color.getRed()) + doubleToHex(color.getGreen()) + doubleToHex(color.getBlue())).toUpperCase();
+    }
 }

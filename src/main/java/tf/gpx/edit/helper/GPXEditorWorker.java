@@ -36,12 +36,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+import tf.gpx.edit.general.ShowAlerts;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -181,6 +191,9 @@ public class GPXEditorWorker {
 //            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
 //            result = false;
 //        }
+
+        // TFE, 20191024 add warning for format issues
+        verifyXMLFile(curFile.toFile());
         
         return result;
     }
@@ -250,6 +263,9 @@ public class GPXEditorWorker {
             kmlWriter.addRoute(route);
         }
         result = kmlWriter.writeFile(selectedFile);
+
+        // TFE, 20191024 add warning for format issues
+        verifyXMLFile(selectedFile);
         
         return result;
     }
@@ -358,6 +374,31 @@ public class GPXEditorWorker {
             mergedGPXWaypoints.addAll(gpxTrackSegment.getGPXWaypoints());
             
             gpxTrackSegments.remove(gpxTrackSegment);
+        }
+    }
+    
+    public static void verifyXMLFile(final File gpxFile) {
+        try {
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setValidating(false);
+            
+            final SAXParser parser = factory.newSAXParser();
+            final DefaultHandler handler = new DefaultHandler();
+
+            parser.parse(gpxFile, handler);
+            
+        } catch(IOException | ParserConfigurationException | SAXException ex) {
+//            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            
+            final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
+            Optional<ButtonType> doAction = 
+                    ShowAlerts.getInstance().showAlert(
+                            Alert.AlertType.WARNING,
+                            "Warning",
+                            "Invalid file: " + gpxFile.getName(),
+                            ex.getMessage(),
+                            buttonOK);
         }
     }
 }

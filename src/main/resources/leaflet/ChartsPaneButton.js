@@ -24,33 +24,33 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-var toggleHeightChartButton = L.easyButton({
-    id: 'toggleHeightChartButton',
+var toggleChartsPaneButton = L.easyButton({
+    id: 'toggleChartsPaneButton',
     states: [{
-            stateName: 'show-height-chart',
+            stateName: 'show-charts-pane',
             icon:      '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJBSURBVEiJ3dbPS9NxGMDx9/Pd9/vdpjbCzW26MU3bJqURomCHJDz1i4gKIvoDIohw7GsHKWGXThoF3Tp07DCxg3SNqEOnKArCSFxq1Pwxyaxm0+3TIQQxZZV8DXqOz8PzefF8eODzEaUU2xHatij/N2RZVpVlWZbtEFAFbAtka/wWdCUtwcSQnLcdKmjcBa6nHoluG9STlkuiOAxEFuY4Ywt0OS17NE0GPZXeWd1hzipI/i206VWk0mKaDv0+IsQbOl/O5DK+iezr9p5h6bp5Sj3uSUu/JpxQiiUgD+RF486N02rkjyb6arpuFUsrscbQ/ldOo6JQ549Pa6J91kr0Jobktggp3eF0GYbTpetGUDTpUorBVEo2PHPDifpGPEeXV5YueHeGJwPVDTMADk0v+qvrM9lc5jiAv7rhTSzSMbnak82NF8amnrV9auEscK/sRL3DjmP574sPTMP9LRppH11biwT2zoloxVBNfDQW6RhfWwt4G6dNwz1PiT5BpCwUDrYatb6mseb6zue6ZhTX1kzTXWiNHnq6K7Qvs75PgHCgeRKhJZHmZFmoPhCbagq3vfVU+hbX1wA8Fd4N8wC13qasqbsWlHC1LLSVEBFV549NAG2JITliGwQQqol+MAznF4FrtkIimqrz7Z5QcCCRlu7V/C/rXVSlJQ15vxUsXBP9mM1lvIXlfDfwEECSyaQbcAJ+4AkQ3wqySSzqQD9wkZ8bugN4ZwN0UFa/W5ZlBYEXAwMDQRugf/PCzgPn7IJ+ALqHn3DKM+/GAAAAAElFTkSuQmCC">',
             title:     'Show Elevation',
             onClick: function(btn, map) {
-                jscallback.toggleHeightChart(true);
-                btn.state('hide-height-chart');
+                jscallback.toggleChartsPane(true);
+                btn.state('hide-charts-pane');
             }
         }, {
-            stateName: 'hide-height-chart',
+            stateName: 'hide-charts-pane',
             icon:      '<span class="cross">&cross;</span>',
             title:     'Hide Elevation',
             onClick: function(btn, map) {
-                jscallback.toggleHeightChart(false);
-                btn.state('show-height-chart');
+                jscallback.toggleChartsPane(false);
+                btn.state('show-charts-pane');
             }
     }]
 });
 
-toggleHeightChartButton.addTo(myMap);
+toggleChartsPaneButton.addTo(myMap);
 
-function setHeightChartButtonState(state) {
+function setChartsPaneButtonState(state) {
     if (state.toUpperCase() == 'ON') {
-        toggleHeightChartButton.state('hide-height-chart');
+        toggleChartsPaneButton.state('hide-charts-pane');
     } else if (state.toUpperCase() == 'OFF') {
-        toggleHeightChartButton.state('show-height-chart');
+        toggleChartsPaneButton.state('show-charts-pane');
     }
 }

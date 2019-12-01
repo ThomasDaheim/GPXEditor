@@ -52,7 +52,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import tf.gpx.edit.extension.DefaultExtensionParser;
@@ -204,8 +203,16 @@ public class GPXFile extends GPXMeasurable {
     
     public final void setHeaderAndMeta() {
         myGPX.setCreator("GPXEditor");
-        myGPX.setVersion("1.1");
+        myGPX.setVersion("4.2");
+                
+        // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
+        myGPX.addXmlns("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
+        // others currently not used...
+//        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+//        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+//        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+//        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
@@ -413,22 +420,6 @@ public class GPXFile extends GPXMeasurable {
             }
         }
         return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        // iterate over my segments
-        final List<GPXWaypoint> result = new ArrayList<>();
-        
-        result.addAll(filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox));
-        for (GPXTrack track : myGPXTracks) {
-            result.addAll(track.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-        for (GPXRoute route : myGPXRoutes) {
-            result.addAll(route.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-
-        return result;
     }
     
     @Override

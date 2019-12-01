@@ -38,13 +38,11 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
-import static tf.gpx.edit.items.GPXLineItem.filterGPXWaypointsInBoundingBox;
 
 /**
  *
@@ -301,11 +299,6 @@ public class GPXRoute extends GPXMeasurable {
             result = myGPXWaypoints;
         }
         return result;
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
     }
 
     /**

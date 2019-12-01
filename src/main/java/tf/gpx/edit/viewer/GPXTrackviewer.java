@@ -26,6 +26,7 @@
 package tf.gpx.edit.viewer;
 
 import java.util.List;
+import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -57,12 +58,12 @@ public class GPXTrackviewer {
         
         // pass it on!
         TrackMap.getInstance().setCallback(gpxEditor);
-        HeightChart.getInstance().setCallback(gpxEditor);
+        ChartsPane.getInstance().setCallback(gpxEditor);
     }
     
     public void setEnable(final boolean enabled) {
         TrackMap.getInstance().setEnable(enabled);
-        HeightChart.getInstance().setEnable(enabled);
+        ChartsPane.getInstance().setEnable(enabled);
     }
     
     public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
@@ -73,15 +74,19 @@ public class GPXTrackviewer {
         TrackMap.getInstance().setGPXWaypoints(lineItem, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
 
-        // show elevation chart
-        HeightChart.getInstance().setGPXWaypoints(lineItem, doFitBounds);
-        HeightChart.getInstance().clearSelectedGPXWaypoints();
+        // this can be done a bit later - get the map drawn as early as possible
+        Platform.runLater(() -> {
+            // show all charts
+            ChartsPane.getInstance().setGPXWaypoints(lineItem, doFitBounds);
+            ChartsPane.getInstance().clearSelectedGPXWaypoints();
+        });
     }
 
     @SuppressWarnings("unchecked")
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         TrackMap.getInstance().updateGPXWaypoints(gpxWaypoints);
-        HeightChart.getInstance().updateGPXWaypoints(gpxWaypoints);
+        
+        ChartsPane.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
     @SuppressWarnings("unchecked")
@@ -90,21 +95,25 @@ public class GPXTrackviewer {
         assert gpxWaypoints != null;
 
         TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
-        HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        
+        ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {
         TrackMap.getInstance().updateLineColor(lineItem);
-        HeightChart.getInstance().updateLineColor(lineItem);
+
+        ChartsPane.getInstance().updateLineColor(lineItem);
     }
     
     public void loadPreferences() {
         TrackMap.getInstance().loadPreferences();
-        HeightChart.getInstance().loadPreferences();
+
+        ChartsPane.getInstance().loadPreferences();
     }
     
     public void savePreferences() {
         TrackMap.getInstance().savePreferences();
-        HeightChart.getInstance().savePreferences();
+
+        ChartsPane.getInstance().savePreferences();
     }
 }
