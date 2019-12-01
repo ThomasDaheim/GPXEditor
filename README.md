@@ -21,6 +21,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 * show track/route colors in table and height chart
 * show speeds together with hight chart
+* Performance: include various profiling improvements
 
 ### Update v4.2
 
