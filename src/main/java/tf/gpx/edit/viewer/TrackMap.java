@@ -1226,7 +1226,7 @@ public class TrackMap extends LeafletMapView {
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
-//        System.out.println("Map End:      " + Instant.now() + " " + notShownCount + " not shown");
+//        System.out.println("Map End:      " + Instant.now() + ", " + notShownCount + " not shown");
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {
