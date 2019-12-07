@@ -629,25 +629,25 @@ public class GPXWaypoint extends GPXLineItem {
     
     @Override
     public String getTooltip() {
-        String result = "";
+        StringBuilder result = new StringBuilder(128);
         
         if ((getName() != null) && !getName().isEmpty()) {
-            result += getName();
+            result.append(getName());
         }
         if ((getDescription() != null) && !getDescription().isEmpty()) {
-            result += "\n";
-            result += getDescription();
+            result.append("\n");
+            result.append(getDescription());
         }
         if ((getComment() != null) && !getComment().isEmpty() && !getComment().equals(getDescription())) {
-            result += "\n";
-            result += getComment();
+            result.append("\n");
+            result.append(getComment());
         }
         if ((getLinks() != null) && !getLinks().isEmpty()) {
-            result += "\n";
-            result += getLinks().iterator().next().getHref();
+            result.append("\n");
+            result.append(getLinks().iterator().next().getHref());
         }
         
-        return result;
+        return result.toString();
     }
     
     public double getSpeed() {

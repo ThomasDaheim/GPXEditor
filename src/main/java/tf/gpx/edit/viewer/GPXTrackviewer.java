@@ -96,7 +96,10 @@ public class GPXTrackviewer {
 
         TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
         
-        ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        // this can be done a bit later - get the map drawn as early as possible
+        Platform.runLater(() -> {
+            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        });
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {
