@@ -275,11 +275,7 @@ public class TrackMap extends LeafletMapView {
         mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
         final MapConfig myMapConfig = new MapConfig(mapLayers, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
-                        new LatLong(51.505, -0.09),
-                        // wrap around world borders
-                        // https://stackoverflow.com/a/28323349
-                        "worldCopyJump: true, zoomAnimation: false, preferCanvas: true,");
+                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
 
         cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {

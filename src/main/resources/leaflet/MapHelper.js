@@ -34,6 +34,12 @@
  * 
  */
 
+// wrap around world borders
+// https://stackoverflow.com/a/28323349
+myMap.options.worldCopyJump = true;
+myMap.options.zoomAnimation = false;
+myMap.options.preferCanvas = true;
+
 // disable drag & zoom for events with control key
 function disableCntrlDrag(e) {
     if (e.originalEvent.ctrlKey) {

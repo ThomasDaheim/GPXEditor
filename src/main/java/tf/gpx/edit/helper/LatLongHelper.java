@@ -26,10 +26,8 @@
 package tf.gpx.edit.helper;
 
 import de.saring.leafletmap.LatLong;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.regex.Pattern;
-import org.apache.commons.math3.util.Precision;
+import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -37,8 +35,12 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public class LatLongHelper {
-    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([NS][ ]?90°0{0,2}'0{0,2}[.,]0{0,2}\")";
-    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([EW][ ]?180°0{0,2}'0{0,2}[.,]0{0,2}\")";
+    public final static String DEG = new String(Character.toChars(176)); //"°";
+    public final static String MIN = "'";
+    public final static String SEC = "\"";
+    
+    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([NS][ ]?90" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")";
+    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([EW][ ]?180" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")";
     
     public final static String INVALID_LATITUDE = "INVALID LATITUDE";
     public final static String INVALID_LONGITUDE = "INVALID LONGITUDE";
@@ -102,7 +104,7 @@ public class LatLongHelper {
 //        result = result.replaceAll(" ", "");
 
         final StringBuilder sb = new StringBuilder();
-        sb.append(degrees).append("°").append((int) Math.floor(minutes)).append("'").append(Precision.round(seconds, 2)).append("\"");
+        sb.append(degrees).append(DEG).append((int) Math.floor(minutes)).append(MIN).append(String.format("%4.2f", seconds)).append(SEC);
         return direction + " " + sb.toString();
     }
     
@@ -124,7 +126,7 @@ public class LatLongHelper {
 
             // 4) add sign
             result *= sign;
-        } catch (ParseException ex){
+        } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }
         
@@ -149,29 +151,31 @@ public class LatLongHelper {
 
             // 4) add sign
             result *= sign;
-        } catch (ParseException ex){
+        } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }
         
         return result;
     }
     
-    private static double doubleFromString(final String latlon) throws ParseException {
+    private static double doubleFromString(final String latlon) {
         double result = 0;
         String temp = latlon;
         
         // latlon looks like %2d°%2d'%4.2f\"
         
         // 1) split @ ° and convert to int
-        result = Integer.parseInt(temp.split("°")[0]);
-        temp = temp.split("°")[1];
+        String[] tempArray = temp.split(DEG);
+        result = NumberUtils.toInt(tempArray[0], 0);
+        temp = tempArray[1];
         
         // 2) split rest @ ' and convert to double / 60
-        result += NumberFormat.getNumberInstance().parse(temp.split("'")[0].trim()).doubleValue() / 60.0;
-        temp = temp.split("'")[1];
+        tempArray = temp.split(MIN);
+        result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
+        temp = tempArray[1];
         
         // 3) split rest @ \" and convert to double / 3600
-        result += NumberFormat.getNumberInstance().parse(temp.split("\"")[0].trim()).doubleValue() / 3600.0;
+        result += NumberUtils.toDouble(temp.split(SEC)[0].replace(",", "."), 0) / 3600.0;
         
         return result;
     }
