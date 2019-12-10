@@ -51,7 +51,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import tf.gpx.edit.general.ShowAlerts;
+import tf.helper.ShowAlerts;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;

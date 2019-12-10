@@ -46,7 +46,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
-import tf.gpx.edit.general.EnumHelper;
+import tf.helper.EnumHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;

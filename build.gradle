@@ -31,10 +31,13 @@ if (!hasProperty('mainClass')) {
     ext.mainClass = 'tf.gpx.edit.main.GPXEditorManager'
 }
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
+def appName='GPXEditor'
+group='GPXEditor'
+version='4.3'
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
     jcenter()
     // You may define additional repositories, or even remove "mavenCentral()".
     // Read more about repositories here:
@@ -53,7 +56,10 @@ dependencies {
     compile "org.openjfx:javafx-swing:11.0.2:$platform"
     compile "org.openjfx:javafx-web:11.0.2:$platform"
     compile "org.openjfx:javafx-media:11.0.2:$platform"
-    
+
+    // TFE, 20191209: our own helper library
+    compile 'JavaHelper:JavaHelper:1.0'
+
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'commons-cli:commons-cli:1.4'
@@ -142,8 +148,8 @@ jar {
             'Created-By'     : "Gradle ${gradle.gradleVersion}",
             'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
             'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
-            'App-Name'       : "GPXEditor",
-            'App-Version'    : "4.3",
+            'App-Name'       : appName,
+            'App-Version'    : version,
             'App-URL'        : "https://github.com/ThomasDaheim/GPXEditor"
         )
     }

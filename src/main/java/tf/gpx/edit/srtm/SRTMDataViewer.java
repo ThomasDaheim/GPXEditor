@@ -78,7 +78,7 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
-import tf.gpx.edit.general.ShowAlerts;
+import tf.helper.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
