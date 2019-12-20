@@ -109,13 +109,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.gpx.edit.general.AboutMenu;
-import tf.gpx.edit.general.ColorConverter;
-import tf.gpx.edit.general.CopyPasteKeyCodes;
-import tf.gpx.edit.general.ShowAlerts;
-import tf.gpx.edit.general.TableMenuUtils;
-import tf.gpx.edit.general.TableViewPreferences;
-import tf.gpx.edit.general.TooltipHelper;
+import tf.helper.AboutMenu;
+import tf.helper.ColorConverter;
+import tf.helper.CopyPasteKeyCodes;
+import tf.helper.ShowAlerts;
+import tf.helper.TableMenuUtils;
+import tf.helper.TableViewPreferences;
+import tf.helper.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -384,7 +384,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.3", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.3", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();

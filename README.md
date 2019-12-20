@@ -17,6 +17,10 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ## Following features are available via UI:
 
+### Update v4.4
+
+* Usage of JavaHelper repo, no changes to functionality
+
 ### Update v4.3
 
 * show track/route colors in table and height chart
@@ -278,6 +282,7 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
+* 'JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
 * 'commons-cli:commons-cli:1.3.1'
 * 'commons-io:commons-io:2.4'
@@ -303,11 +308,12 @@ Other things used internally:
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
-* leaflet.search: http://labs.easyblog.it/maps/leaflet-search/
+* leaflet.search: https://github.com/stefanocudini/leaflet-search
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
