@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import com.hs.gpxparser.modal.Metadata;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +68,7 @@ import tf.helper.CopyPasteKeyCodes;
 import tf.helper.TableMenuUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -169,7 +171,7 @@ public class GPXTreeTableView {
                             case GPXFile:
                                 final Menu newItem = new Menu("New...");
 
-                                final MenuItem newTrack = new MenuItem("New Track");
+                                final MenuItem newTrack = new MenuItem("Track");
                                 newTrack.setOnAction((ActionEvent event) -> {
                                     final GPXTrack newStuff = new GPXTrack((GPXFile) item);
                                     newStuff.setName("New Track");
@@ -177,7 +179,7 @@ public class GPXTreeTableView {
                                 });
                                 newItem.getItems().add(newTrack);
 
-                                final MenuItem newRoute = new MenuItem("New Route");
+                                final MenuItem newRoute = new MenuItem("Route");
                                 newRoute.setOnAction((ActionEvent event) -> {
                                     final GPXRoute newStuff = new GPXRoute((GPXFile) item);
                                     newStuff.setName("New Route");
@@ -185,6 +187,18 @@ public class GPXTreeTableView {
                                 });
                                 newItem.getItems().add(newRoute);
 
+                                // TFE, 20191230: add metadata if not already present
+                                if (((GPXFile) item).getGPXMetadata() == null) {
+                                    final MenuItem newMetadata = new MenuItem("Metadata");
+                                    newMetadata.setOnAction((ActionEvent event) -> {
+                                        final GPXMetadata newStuff = new GPXMetadata((GPXFile) item, new Metadata());
+                                        newStuff.setName("New Metadata");
+                                        ((GPXFile) item).setGPXMetadata(newStuff);
+                                        ((GPXFile) item).setHeaderAndMeta();
+                                    });
+                                    newItem.getItems().add(newMetadata);
+                                }
+                                
                                 fileMenu.getItems().add(newItem);
                                 fileMenu.getItems().add(new SeparatorMenuItem());
                                 
@@ -193,7 +207,7 @@ public class GPXTreeTableView {
                                 final MenuItem newTrackSegment = new MenuItem("New Tracksegment");
                                 newTrackSegment.setOnAction((ActionEvent event) -> {
                                     final GPXTrackSegment newStuff = new GPXTrackSegment((GPXTrack) item);
-                                    newStuff.setName("New Track");
+                                    newStuff.setName("New Tracksegment");
                                     ((GPXTrack) item).getGPXTrackSegments().add(newStuff);
                                 });
                                 fileMenu.getItems().add(newTrackSegment);
@@ -343,6 +357,13 @@ public class GPXTreeTableView {
                                 
                                 break;
                             case GPXMetadata:
+                                final MenuItem deleteMetadata = new MenuItem("Delete");
+                                deleteMetadata.setOnAction((ActionEvent event) -> {
+                                     item.getGPXFile().setGPXMetadata(null);
+                                });
+                                fileMenu.getItems().add(deleteMetadata);
+                                
+                                break;
                             default:
                                 break;
                         }
@@ -380,14 +401,14 @@ public class GPXTreeTableView {
                                  GPXTreeTableView.collapseNodeAndChildren(t);});
                             });
                             fileMenu.getItems().add(collapseContextMenu);
-
-                            // Set context menu on row, but use a binding to make it only show for non-empty rows:
-                            contextMenuProperty().bind(
-                                Bindings.when(emptyProperty())
-                                    .then((ContextMenu) null)
-                                    .otherwise(fileMenu)
-                            );
                         }
+
+                        // Set context menu on row, but use a binding to make it only show for non-empty rows:
+                        contextMenuProperty().bind(
+                            Bindings.when(emptyProperty())
+                                .then((ContextMenu) null)
+                                .otherwise(fileMenu)
+                        );
 
                         if (item.hasUnsavedChanges()) {
                             getStyleClass().add("hasUnsavedChanges");

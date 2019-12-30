@@ -68,7 +68,9 @@ public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
-    private GPXMetadata myGPXMetadata;
+    // TFE, 20191230: need to treat metadata as list as well to be able to use automated update
+    // of treetableview via combined observable list... has 0 or 1 entries
+    private final ObservableList<GPXMetadata> myGPXMetadata = FXCollections.observableArrayList();
     private final ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
     private final ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
@@ -100,7 +102,7 @@ public class GPXFile extends GPXMeasurable {
         }
         
         if (myGPX.getMetadata() != null) {
-            myGPXMetadata = new GPXMetadata(this, myGPX.getMetadata());
+            myGPXMetadata.add(new GPXMetadata(this, myGPX.getMetadata()));
         }
 
         // TFE, 20180203: gpx without tracks is valid!
@@ -148,7 +150,9 @@ public class GPXFile extends GPXMeasurable {
         myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
         
         // clone all my children
-        myClone.myGPXMetadata = myGPXMetadata.cloneMeWithChildren();
+        for (GPXMetadata gpxMetadata : myGPXMetadata) {
+            myClone.myGPXMetadata.add(gpxMetadata.cloneMeWithChildren());
+        }
         for (GPXTrack gpxTrack : myGPXTracks) {
             myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren());
         }
@@ -203,7 +207,7 @@ public class GPXFile extends GPXMeasurable {
     
     public final void setHeaderAndMeta() {
         myGPX.setCreator("GPXEditor");
-        myGPX.setVersion("4.2");
+        myGPX.setVersion("4.4");
                 
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
@@ -217,7 +221,9 @@ public class GPXFile extends GPXMeasurable {
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
 
-            metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            if (metadata.getTime() == null) {
+                metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            }
             metadata.setBounds(getBounds());
 
             // add link to me if not already present
@@ -277,10 +283,8 @@ public class GPXFile extends GPXMeasurable {
         // iterate over my segments
         List<ObservableList<GPXLineItem>> children = new ArrayList<>();
 
-        if (myGPXMetadata != null) {
-            children.add(FXCollections.observableArrayList(myGPXMetadata));
-        }
-        // need to down-cast waypoints, tracks, routes to GPXLineItem
+        // need to down-cast everything to GPXLineItem
+        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
         children.add(GPXListHelper.asGPXLineItemList(myGPXWaypoints));
         children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
         children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));
@@ -291,11 +295,10 @@ public class GPXFile extends GPXMeasurable {
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
         // children can be any of waypoints, tracks, routes, metadata...
+        myGPXMetadata.clear();
         final List<GPXMetadata> metaList = castChildren(GPXMetadata.class, children);
-        if (metaList.isEmpty()) {
-            myGPXMetadata = null;
-        } else {
-            myGPXMetadata = metaList.get(0);
+        if (!metaList.isEmpty()) {
+            myGPXMetadata.add(metaList.get(0));
         }
 
         setGPXWaypoints(castChildren(GPXWaypoint.class, children));
@@ -333,8 +336,15 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public void setGPXMetadata(final GPXMetadata gpxMetadata) {
-        myGPXMetadata = gpxMetadata;
-        myGPX.setMetadata(gpxMetadata.getMetadata());
+        myGPXMetadata.clear();
+        
+        // TFE, 20191230: need a way to delete metadata as well...
+        if (gpxMetadata != null) {
+            myGPXMetadata.add(gpxMetadata);
+            myGPX.setMetadata(gpxMetadata.getMetadata());
+        } else {
+            myGPX.setMetadata(null);
+        }
 
         setHasUnsavedChanges();
     }
@@ -378,7 +388,11 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public GPXMetadata getGPXMetadata() {
-        return myGPXMetadata;
+        if (!myGPXMetadata.isEmpty()) {
+            return myGPXMetadata.get(0);
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -143,7 +143,8 @@ public interface IChartBasics {
         getPoints().clear();
         getChart().getData().clear();
         
-        if (lineItem == null) {
+        // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
+        if (lineItem == null || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getType())) {
             // nothing more todo...
             return;
         }
