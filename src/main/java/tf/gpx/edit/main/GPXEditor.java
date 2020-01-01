@@ -658,6 +658,10 @@ public class GPXEditor implements Initializable {
         gpxFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         gpxFileList.getSelectionModel().setCellSelectionEnabled(false);
         
+        // TODO: add listener to getSelectionModel().getSelectedItems().addListener
+        // to prevent selection of items across gpx files
+        // as first step to enable multi-selection of items from same gpx file
+        
         // selection change listener to populate the track table
         listenergpxFileListXMLSelection = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
             if (oldSelection != null) {
