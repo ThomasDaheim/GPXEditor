@@ -19,6 +19,7 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 ### Update v4.4
 
+* add/delete of metadata segment via context menu
 * Usage of JavaHelper repo, no changes to functionality
 
 ### Update v4.3

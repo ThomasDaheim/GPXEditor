@@ -384,7 +384,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.3", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.4", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
@@ -657,6 +657,10 @@ public class GPXEditor implements Initializable {
         gpxFileList.setEditable(true);
         gpxFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         gpxFileList.getSelectionModel().setCellSelectionEnabled(false);
+        
+        // TODO: add listener to getSelectionModel().getSelectedItems().addListener
+        // to prevent selection of items across gpx files
+        // as first step to enable multi-selection of items from same gpx file
         
         // selection change listener to populate the track table
         listenergpxFileListXMLSelection = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
