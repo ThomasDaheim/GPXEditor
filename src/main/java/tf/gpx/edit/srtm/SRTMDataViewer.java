@@ -53,6 +53,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jzy3d.chart.AWTChart;
 import org.jzy3d.chart.Chart;
@@ -299,7 +300,7 @@ public class SRTMDataViewer {
             new FileChooser.ExtensionFilter("HGT-Files", extFilter));
         List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
 
-        if(selectedFiles != null && !selectedFiles.isEmpty()){
+        if(!CollectionUtils.isEmpty(selectedFiles)){
             for (File selectedFile : selectedFiles) {
                 if (!extValues.contains(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
                     showAlert(selectedFile.getName());

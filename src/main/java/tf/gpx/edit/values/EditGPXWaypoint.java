@@ -57,6 +57,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.textfield.TextFields;
 import tf.helper.RestrictiveTextField;
 import tf.helper.TooltipHelper;
@@ -401,13 +403,13 @@ public class EditGPXWaypoint {
     
     public void editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
-        assert gpxWaypoints != null && !gpxWaypoints.isEmpty();
+        assert !CollectionUtils.isEmpty(gpxWaypoints);
         
         if (waypointStage.isShowing()) {
             waypointStage.close();
         }
         
-        if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
+        if (CollectionUtils.isEmpty(gpxWaypoints)) {
             return;
         }
 
@@ -650,7 +652,7 @@ public class EditGPXWaypoint {
     private String setNullStringToEmpty(final String test) {
         String result = "";
         
-        if (test != null && !test.isEmpty()) {
+        if (!StringUtils.isEmpty(test)) {
             result = test;
         }
 
@@ -670,7 +672,7 @@ public class EditGPXWaypoint {
     private String setEmptyToNullString(final String test) {
         String result = null;
         
-        if (test != null && !test.isEmpty()) {
+        if (!StringUtils.isEmpty(test)) {
             result = test;
         }
 
@@ -680,7 +682,7 @@ public class EditGPXWaypoint {
     private int setEmptyToZeroInt(final String test) {
         int result = 0;
         
-        if (test != null && !test.isEmpty()) {
+        if (!StringUtils.isEmpty(test)) {
             result = Integer.valueOf(test);
         }
 
@@ -690,7 +692,7 @@ public class EditGPXWaypoint {
     private double setEmptyToZeroDouble(final String test) {
         double result = 0.0;
         
-        if (test != null && !test.isEmpty()) {
+        if (!StringUtils.isEmpty(test)) {
             try {
                 result = NumberFormat.getNumberInstance().parse(test.trim()).doubleValue();
             } catch (ParseException ex) {

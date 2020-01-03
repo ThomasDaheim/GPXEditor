@@ -39,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -631,18 +633,18 @@ public class GPXWaypoint extends GPXLineItem {
     public String getTooltip() {
         StringBuilder result = new StringBuilder(128);
         
-        if ((getName() != null) && !getName().isEmpty()) {
+        if (!StringUtils.isEmpty(getName())) {
             result.append(getName());
         }
-        if ((getDescription() != null) && !getDescription().isEmpty()) {
+        if (!StringUtils.isEmpty(getDescription())) {
             result.append("\n");
             result.append(getDescription());
         }
-        if ((getComment() != null) && !getComment().isEmpty() && !getComment().equals(getDescription())) {
+        if (!StringUtils.isEmpty(getComment()) && !getComment().equals(getDescription())) {
             result.append("\n");
             result.append(getComment());
         }
-        if ((getLinks() != null) && !getLinks().isEmpty()) {
+        if (!CollectionUtils.isEmpty(getLinks())) {
             result.append("\n");
             result.append(getLinks().iterator().next().getHref());
         }
