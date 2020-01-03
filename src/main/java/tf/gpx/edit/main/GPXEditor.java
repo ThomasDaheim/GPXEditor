@@ -707,6 +707,7 @@ public class GPXEditor implements Initializable {
                     return t.getValue();
                 }).collect(Collectors.toList()), true, true);
                 
+                // TODO: extend to list of lineitems
                 if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(selectedItems.get(0).getValue().getType())) {
                     distributionsMenu.setDisable(false);
                     specialValuesMenu.setDisable(false);
@@ -1473,23 +1474,26 @@ public class GPXEditor implements Initializable {
     }
     
     private void showGPXWaypoints(final List<GPXLineItem> lineItems, final boolean updateViewer, final boolean doFitBounds) {
+        // TFE, 20200103: we don't show waypoints twice - so if a tracksegment and its track are selected only the track is relevant
+        final List<GPXLineItem> uniqueItems = uniqueHierarchyGPXLineItems(lineItems);
+        
         // TFE, 20200103: check if new lineitem <> old one - otherwise do nothing
-        if ((lineItems != null) && (gpxWaypointsXML.getUserData() != null) && lineItems.equals(gpxWaypointsXML.getUserData())) {
+        if ((gpxWaypointsXML.getUserData() != null) && uniqueItems.equals(gpxWaypointsXML.getUserData())) {
             return;
         }
         
         // disable listener for checked changes since it fires for each waypoint...
         gpxWaypointsXML.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
 
-        if (!CollectionUtils.isEmpty(lineItems)) {
+        if (!CollectionUtils.isEmpty(uniqueItems)) {
             // collect all waypoints from all segments
             // use sortedlist in between to get back to original state for unsorted
             // http://fxexperience.com/2013/08/returning-a-tableview-back-to-an-unsorted-state-in-javafx-8-0/
-            SortedList<GPXWaypoint> sortedList = new SortedList<>(lineItems.get(0).getCombinedGPXWaypoints(null));
+            SortedList<GPXWaypoint> sortedList = new SortedList<>(uniqueItems.get(0).getCombinedGPXWaypoints(null));
             sortedList.comparatorProperty().bind(gpxWaypointsXML.comparatorProperty());
             
             gpxWaypointsXML.setItems(sortedList);
-            gpxWaypointsXML.setUserData(lineItems);
+            gpxWaypointsXML.setUserData(uniqueItems);
             // show beginning of list
             gpxWaypointsXML.scrollTo(0);
         } else {
@@ -1499,10 +1503,10 @@ public class GPXEditor implements Initializable {
         gpxWaypointsXML.getSelectionModel().clearSelection();
 
         if (updateViewer) {
-            GPXTrackviewer.getInstance().setGPXWaypoints(lineItems.get(0), doFitBounds);
+            GPXTrackviewer.getInstance().setGPXWaypoints(uniqueItems, doFitBounds);
         }
-        if (lineItems != null) {
-            if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItems.get(0).getType())) {
+        if (!CollectionUtils.isEmpty(uniqueItems)) {
+            if (!GPXLineItem.GPXLineItemType.GPXMetadata.equals(uniqueItems.get(0).getType())) {
                 // show map if not metadata
                 TrackMap.getInstance().setVisible(true);
                 EditGPXMetadata.getInstance().getPane().setVisible(false);
@@ -1511,7 +1515,7 @@ public class GPXEditor implements Initializable {
                 TrackMap.getInstance().setVisible(false);
                 EditGPXMetadata.getInstance().getPane().setVisible(true);
                 
-                EditGPXMetadata.getInstance().editMetadata(lineItems.get(0).getGPXFile());
+                EditGPXMetadata.getInstance().editMetadata(uniqueItems.get(0).getGPXFile());
             }
         }
         
@@ -1753,26 +1757,7 @@ public class GPXEditor implements Initializable {
         
         // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
         // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
-        selectedItems.sort(Comparator.comparing(o -> o.getType()));
-        
-        // add all items that are not childs of previous items to list of items to invert
-        final List<GPXLineItem> invertItems = new ArrayList<>();
-        for (GPXLineItem selectedItem : selectedItems) {
-            boolean isChild = false;
-            
-            for (GPXLineItem invertItem : invertItems) {
-                if (selectedItem.isChildOf(invertItem)) {
-                    isChild = true;
-                    break;
-                }
-            }
-            if (!isChild) {
-                invertItems.add(selectedItem);
-            }
-        }
-        
-        // invert all root nodes
-        for (GPXLineItem invertItem : invertItems) {
+        for (GPXLineItem invertItem : uniqueHierarchyGPXLineItems(gpxFileList.getSelectedGPXLineItems())) {
             invertItem.invert();
         }
 
@@ -2318,5 +2303,35 @@ public class GPXEditor implements Initializable {
     @SuppressWarnings("unchecked")
     private List<GPXLineItem> getShownGPXLineItems () {
         return (List<GPXLineItem>) gpxWaypointsXML.getUserData();
+    }
+    
+    private List<GPXLineItem> uniqueHierarchyGPXLineItems(final List<GPXLineItem> lineItems) {
+        // only use "highest" node in hierarchy and discard all child nodes in list - this is required
+        // 1) to avoid to show waypoints twice in case parent and child items are selected
+        // 2) when inverting selected items in order to avoid invertion of parent and child items waypoints
+        final List<GPXLineItem> uniqueItems = new ArrayList<>();
+        
+        if(!CollectionUtils.isEmpty(lineItems)) {
+            // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
+            // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
+            lineItems.sort(Comparator.comparing(o -> o.getType()));
+
+            // add all items that are not childs of previous items to result
+            for (GPXLineItem lineItem : lineItems) {
+                boolean isChild = false;
+
+                for (GPXLineItem uniqueItem : uniqueItems) {
+                    if (lineItem.isChildOf(uniqueItem)) {
+                        isChild = true;
+                        break;
+                    }
+                }
+                if (!isChild) {
+                    uniqueItems.add(lineItem);
+                }
+            }
+        }
+
+        return uniqueItems;
     }
 }

@@ -79,6 +79,7 @@ import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -717,7 +718,7 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
 
                 // redraw height chart
-                ChartsPane.getInstance().setGPXWaypoints(myGPXLineItem, true);
+                ChartsPane.getInstance().setGPXWaypoints(Arrays.asList(myGPXLineItem), true);
             } else {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
@@ -921,8 +922,8 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor = gpxEditor;
     }
     
-   public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        myGPXLineItem = lineItem;
+   public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+        myGPXLineItem = lineItems.get(0);
 
         if (isDisabled()) {
             return;
@@ -945,7 +946,7 @@ public class TrackMap extends LeafletMapView {
         execScript("stopRouting(false);");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
-        if (lineItem == null || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getType())) {
+        if (CollectionUtils.isEmpty(lineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItems.get(0).getType())) {
             // nothing more todo...
             return;
         }
@@ -954,18 +955,18 @@ public class TrackMap extends LeafletMapView {
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
         // only files can have file waypoints
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-            masterList.add(lineItem.getGPXWaypoints());
+        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType())) {
+            masterList.add(myGPXLineItem.getGPXWaypoints());
         } else if (alwayShowFileWaypoints) {
             // TFE, 20190818: add file waypoints as well, even though file isn't selected
-            masterList.add(lineItem.getGPXFile().getGPXWaypoints());
+            masterList.add(myGPXLineItem.getGPXFile().getGPXWaypoints());
         }
         // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
         // otherwise, we never only show points from a single tracksegment!
         // files and trackSegments can have trackSegments
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
-            for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
+        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()) ||
+            GPXLineItem.GPXLineItemType.GPXTrack.equals(myGPXLineItem.getType())) {
+            for (GPXTrack gpxTrack : myGPXLineItem.getGPXTracks()) {
                 // add track segments individually
                 for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
                     masterList.add(gpxTrackSegment.getGPXWaypoints());
@@ -973,13 +974,13 @@ public class TrackMap extends LeafletMapView {
             }
         }
         // track segments can have track segments
-        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
-            masterList.add(lineItem.getGPXWaypoints());
+        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(myGPXLineItem.getType())) {
+            masterList.add(myGPXLineItem.getGPXWaypoints());
         }
         // files and routes can have routes
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
-            for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
+        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()) ||
+            GPXLineItem.GPXLineItemType.GPXRoute.equals(myGPXLineItem.getType())) {
+            for (GPXRoute gpxRoute : myGPXLineItem.getGPXRoutes()) {
                 masterList.add(gpxRoute.getGPXWaypoints());
             }
         }

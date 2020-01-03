@@ -157,14 +157,14 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        assert lineItem != null;
+    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+        assert lineItems != null;
 
         final boolean isVisible = isVisible();
         AtomicBoolean hasData = new AtomicBoolean(false);
         // show all chart
         charts.stream().forEach((t) -> {
-            t.setGPXWaypoints(lineItem, doFitBounds);
+            t.setGPXWaypoints(lineItems, doFitBounds);
             hasData.set(hasData.get() | t.hasData());
         });
         setVisible(isVisible && hasData.get());

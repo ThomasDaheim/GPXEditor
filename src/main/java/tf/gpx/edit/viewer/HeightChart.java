@@ -66,7 +66,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
 
     private GPXEditor myGPXEditor;
 
-    private GPXLineItem myGPXLineItem;
+    private List<GPXLineItem> myGPXLineItems;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
@@ -275,13 +275,13 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     }
     
     @Override
-    public GPXLineItem getGPXLineItem() {
-        return myGPXLineItem;
+    public List<GPXLineItem> getGPXLineItems() {
+        return myGPXLineItems;
     }
     
     @Override
-    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
-        myGPXLineItem = gpxLineItem;
+    public void setGPXLineItems(final List<GPXLineItem> lineItems) {
+        myGPXLineItems = lineItems;
     }
     
     @Override
@@ -351,11 +351,12 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
         
         double distValue = 0.0;
-        for (GPXWaypoint gpxWaypoint: myGPXLineItem.getCombinedGPXWaypoints(null)) {
+        // TODO: replace with iteration over lineItems
+        for (GPXWaypoint gpxWaypoint: myGPXLineItems.get(0).getCombinedGPXWaypoints(null)) {
             distValue += gpxWaypoint.getDistance() / 1000.0;
             
             if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
-                 GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem) ||
+                 GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItems) ||
                  alwayShowFileWaypoints) {
                 if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
                     selectedWaypointsInRange.add(gpxWaypoint);

@@ -66,18 +66,18 @@ public class GPXTrackviewer {
         ChartsPane.getInstance().setEnable(enabled);
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
         assert myGPXEditor != null;
-        assert lineItem != null;
+        assert lineItems != null;
 
         // show in LeafletMapView map
-        TrackMap.getInstance().setGPXWaypoints(lineItem, doFitBounds);
+        TrackMap.getInstance().setGPXWaypoints(lineItems, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
 
         // this can be done a bit later - get the map drawn as early as possible
         Platform.runLater(() -> {
             // show all charts
-            ChartsPane.getInstance().setGPXWaypoints(lineItem, doFitBounds);
+            ChartsPane.getInstance().setGPXWaypoints(lineItems, doFitBounds);
             ChartsPane.getInstance().clearSelectedGPXWaypoints();
         });
     }

@@ -66,8 +66,8 @@ public abstract class GPXLineItem {
         GPXMetadata("Meta"),
         GPXTrack("Track"),
         GPXTrackSegment("Sgmnt"),
-        GPXWaypoint("Waypt"),
-        GPXRoute("Route");
+        GPXRoute("Route"),
+        GPXWaypoint("Waypt");
 
         public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
             // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)

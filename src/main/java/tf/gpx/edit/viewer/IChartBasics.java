@@ -35,6 +35,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
@@ -109,8 +110,8 @@ public interface IChartBasics {
         getChart().getYAxis().setAnimated(false);
     }
     
-    public abstract GPXLineItem getGPXLineItem();
-    public void setGPXLineItem(final GPXLineItem gpxLineItem);
+    public abstract List<GPXLineItem> getGPXLineItems();
+    public void setGPXLineItems(final List<GPXLineItem> lineItems);
     public abstract double getMinimumDistance();
     public abstract void setMinimumDistance(final double value);
     public abstract double getMaximumDistance();
@@ -131,8 +132,8 @@ public interface IChartBasics {
     }
     
     @SuppressWarnings("unchecked")
-    default void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        setGPXLineItem(lineItem);
+    default void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+        setGPXLineItems(lineItems);
         
         if (getChart().isDisabled()) {
             return;
@@ -144,7 +145,7 @@ public interface IChartBasics {
         getChart().getData().clear();
         
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
-        if (lineItem == null || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItem.getType())) {
+        if (CollectionUtils.isEmpty(lineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItems.get(0).getType())) {
             // nothing more todo...
             return;
         }
@@ -159,6 +160,9 @@ public interface IChartBasics {
         boolean hasData = false;
         // TFE, 20191112: create series per track & route to be able to handle different colors
         final List<XYChart.Series<Double, Double>> seriesList = new ArrayList<>();
+        
+        // TODO: replace with iteration over lineItems
+        final GPXLineItem lineItem = lineItems.get(0);
 
         // only files can have file waypoints
         if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {

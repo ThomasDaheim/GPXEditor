@@ -48,7 +48,7 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
 
     private GPXEditor myGPXEditor;
 
-    private GPXLineItem myGPXLineItem;
+    private List<GPXLineItem> myGPXLineItems;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     
@@ -90,13 +90,13 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     }
     
     @Override
-    public GPXLineItem getGPXLineItem() {
-        return myGPXLineItem;
+    public List<GPXLineItem> getGPXLineItems() {
+        return myGPXLineItems;
     }
     
     @Override
-    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
-        myGPXLineItem = gpxLineItem;
+    public void setGPXLineItems(final List<GPXLineItem> lineItems) {
+        myGPXLineItems = lineItems;
     }
     
     @Override
