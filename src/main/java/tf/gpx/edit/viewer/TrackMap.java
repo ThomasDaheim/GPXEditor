@@ -50,6 +50,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -240,7 +242,7 @@ public class TrackMap extends LeafletMapView {
 
     private GPXEditor myGPXEditor;
 
-    private GPXLineItem myGPXLineItem;
+    private List<GPXLineItem> myGPXLineItems;
 
     // store gpxlineitem fileWaypointsCount, trackSegments, routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> fileWaypoints = new DualHashBidiMap<>();
@@ -644,7 +646,7 @@ public class TrackMap extends LeafletMapView {
                 LatLong latlong = (LatLong) contextMenu.getUserData();
 
                 // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
-                final List<GPXWaypoint> curGPXWaypoints = myGPXLineItem.getGPXFile().getGPXWaypoints();
+                final List<GPXWaypoint> curGPXWaypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
 
                 // check if a marker is under the cursor in leaflet - if yes, use its values
                 CurrentMarker curMarker = null;
@@ -653,7 +655,7 @@ public class TrackMap extends LeafletMapView {
                     latlong = curMarker.latlong;
                 }
 
-                final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItem.getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+                final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
                 newGPXWaypoint.setNumber(curGPXWaypoints.size());
                 if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
                     // assign height
@@ -718,7 +720,7 @@ public class TrackMap extends LeafletMapView {
                 myGPXEditor.refresh();
 
                 // redraw height chart
-                ChartsPane.getInstance().setGPXWaypoints(Arrays.asList(myGPXLineItem), true);
+                ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
             } else {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
@@ -739,10 +741,10 @@ public class TrackMap extends LeafletMapView {
                 // start new editable gpxRoute
                 final String routeName = "route" + (routes.size() + 1);
 
-                final GPXRoute gpxRoute = new GPXRoute(myGPXLineItem.getGPXFile());
+                final GPXRoute gpxRoute = new GPXRoute(myGPXLineItems.get(0).getGPXFile());
                 gpxRoute.setName("New " + routeName);
 
-                myGPXLineItem.getGPXFile().getGPXRoutes().add(gpxRoute);
+                myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
                 if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
@@ -923,7 +925,7 @@ public class TrackMap extends LeafletMapView {
     }
     
    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
-        myGPXLineItem = lineItems.get(0);
+        myGPXLineItems = lineItems;
 
         if (isDisabled()) {
             return;
@@ -946,7 +948,7 @@ public class TrackMap extends LeafletMapView {
         execScript("stopRouting(false);");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
-        if (CollectionUtils.isEmpty(lineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItems.get(0).getType())) {
+        if (CollectionUtils.isEmpty(myGPXLineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(myGPXLineItems.get(0).getType())) {
             // nothing more todo...
             return;
         }
@@ -954,34 +956,36 @@ public class TrackMap extends LeafletMapView {
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
-        // only files can have file waypoints
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType())) {
-            masterList.add(myGPXLineItem.getGPXWaypoints());
-        } else if (alwayShowFileWaypoints) {
-            // TFE, 20190818: add file waypoints as well, even though file isn't selected
-            masterList.add(myGPXLineItem.getGPXFile().getGPXWaypoints());
-        }
-        // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
-        // otherwise, we never only show points from a single tracksegment!
-        // files and trackSegments can have trackSegments
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXTrack.equals(myGPXLineItem.getType())) {
-            for (GPXTrack gpxTrack : myGPXLineItem.getGPXTracks()) {
-                // add track segments individually
-                for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                    masterList.add(gpxTrackSegment.getGPXWaypoints());
+        for (GPXLineItem lineItem : myGPXLineItems) {
+            // only files can have file waypoints
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                masterList.add(lineItem.getGPXWaypoints());
+            } else if (alwayShowFileWaypoints) {
+                // TFE, 20190818: add file waypoints as well, even though file isn't selected
+                masterList.add(lineItem.getGPXFile().getGPXWaypoints());
+            }
+            // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
+            // otherwise, we never only show points from a single tracksegment!
+            // files and trackSegments can have trackSegments
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
+                for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
+                    // add track segments individually
+                    for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
+                        masterList.add(gpxTrackSegment.getGPXWaypoints());
+                    }
                 }
             }
-        }
-        // track segments can have track segments
-        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(myGPXLineItem.getType())) {
-            masterList.add(myGPXLineItem.getGPXWaypoints());
-        }
-        // files and routes can have routes
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXRoute.equals(myGPXLineItem.getType())) {
-            for (GPXRoute gpxRoute : myGPXLineItem.getGPXRoutes()) {
-                masterList.add(gpxRoute.getGPXWaypoints());
+            // track segments can have track segments
+            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+                masterList.add(lineItem.getGPXWaypoints());
+            }
+            // files and routes can have routes
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
+                for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
+                    masterList.add(gpxRoute.getGPXWaypoints());
+                }
             }
         }
 
@@ -1282,7 +1286,12 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
-        addGPXWaypointsToSelection(myGPXLineItem.getGPXWaypointsInBoundingBox(boundingBox), addToSelection);
+        // TFE, 20200104: for list of lineitems we need to collect waypoints from all of them
+        final Set<GPXWaypoint> waypoints = new LinkedHashSet<>();
+        for (GPXLineItem lineItem : myGPXLineItems) {
+            waypoints.addAll(lineItem.getGPXWaypointsInBoundingBox(boundingBox));
+        }
+        addGPXWaypointsToSelection(waypoints, addToSelection);
     }
     
     public void selectGPXWaypointFromMarker(final String marker, final LatLong newLatLong, final Boolean addToSelection) {
@@ -1302,16 +1311,14 @@ public class TrackMap extends LeafletMapView {
         }
         
         //System.out.println("waypoint: " + waypoint);
-        addGPXWaypointsToSelection(Arrays.asList(waypoint), addToSelection);
+        addGPXWaypointsToSelection(Stream.of(waypoint).collect(Collectors.toSet()), addToSelection);
     }
     
-    private void addGPXWaypointsToSelection(final List<GPXWaypoint> waypoints, final Boolean addToSelection) {
-        final Set<GPXWaypoint> newSelection = new LinkedHashSet<>();
+    private void addGPXWaypointsToSelection(final Set<GPXWaypoint> waypoints, final Boolean addToSelection) {
         if (addToSelection) {
-            newSelection.addAll(selectedWaypoints.values());
+            waypoints.addAll(selectedWaypoints.values());
         }
-        newSelection.addAll(waypoints);
-        myGPXEditor.selectGPXWaypoints(newSelection.stream().collect(Collectors.toList()), false, false);
+        myGPXEditor.selectGPXWaypoints(waypoints.stream().collect(Collectors.toList()), false, false);
     }
             
     public void moveGPXWaypoint(final String marker, final LatLong newLatLong) {

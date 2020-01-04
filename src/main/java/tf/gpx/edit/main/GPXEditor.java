@@ -119,6 +119,7 @@ import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXEditorWorker;
+import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -708,7 +709,7 @@ public class GPXEditor implements Initializable {
                 }).collect(Collectors.toList()), true, true);
                 
                 // TODO: extend to list of lineitems
-                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(selectedItems.get(0).getValue().getType())) {
+                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(selectedItems.get(0).getValue().getType()) && (selectedItems.size() == 1)) {
                     distributionsMenu.setDisable(false);
                     specialValuesMenu.setDisable(false);
                 } else {
@@ -1489,7 +1490,12 @@ public class GPXEditor implements Initializable {
             // collect all waypoints from all segments
             // use sortedlist in between to get back to original state for unsorted
             // http://fxexperience.com/2013/08/returning-a-tableview-back-to-an-unsorted-state-in-javafx-8-0/
-            SortedList<GPXWaypoint> sortedList = new SortedList<>(uniqueItems.get(0).getCombinedGPXWaypoints(null));
+            final List<ObservableList<GPXWaypoint>> waypoints = new ArrayList<>();
+            for (GPXLineItem lineItem : lineItems) {
+                waypoints.add(lineItem.getCombinedGPXWaypoints(null));
+                
+            }
+            final SortedList<GPXWaypoint> sortedList = new SortedList<>(GPXListHelper.concat(FXCollections.observableArrayList(), waypoints));
             sortedList.comparatorProperty().bind(gpxWaypointsXML.comparatorProperty());
             
             gpxWaypointsXML.setItems(sortedList);

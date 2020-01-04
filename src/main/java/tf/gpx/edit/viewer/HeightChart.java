@@ -352,37 +352,25 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         
         double distValue = 0.0;
         // TODO: replace with iteration over lineItems
-        for (GPXWaypoint gpxWaypoint: myGPXLineItems.get(0).getCombinedGPXWaypoints(null)) {
-            distValue += gpxWaypoint.getDistance() / 1000.0;
-            
-            if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
-                 GPXLineItem.GPXLineItemType.GPXFile.equals(myGPXLineItems) ||
-                 alwayShowFileWaypoints) {
-                if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
-                    selectedWaypointsInRange.add(gpxWaypoint);
+        
+        for (GPXLineItem lineItem : myGPXLineItems) {
+            for (GPXWaypoint gpxWaypoint: lineItem.getCombinedGPXWaypoints(null)) {
+                distValue += gpxWaypoint.getDistance() / 1000.0;
+
+                if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
+                     GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                     alwayShowFileWaypoints) {
+                    if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
+                        selectedWaypointsInRange.add(gpxWaypoint);
+                    }
+                }
+
+                // end of the range - no need to look further
+                if (distValue > dragEndDistance) {
+                    break;
                 }
             }
-            
-            // end of the range - no need to look further
-            if (distValue > dragEndDistance) {
-                break;
-            }
         }
-        
-//        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getData();
-//        for (XYChart.Series<Double, Double> series: seriesList) {
-//            for (XYChart.Data<Double, Double> data : series.getData()) {
-//                final Double distValue = data.XValueProperty().getValue();
-//                if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
-//                    selectedWaypointsInRange.add((GPXWaypoint) data.getExtraValue());
-//                }
-//            
-//                // end of the range - no need to look further
-//                if (distValue > dragEndDistance) {
-//                    break;
-//                }
-//            }
-//        }
         
         myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false);
     }

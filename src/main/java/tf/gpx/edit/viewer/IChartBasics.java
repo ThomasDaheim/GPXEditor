@@ -161,34 +161,33 @@ public interface IChartBasics {
         // TFE, 20191112: create series per track & route to be able to handle different colors
         final List<XYChart.Series<Double, Double>> seriesList = new ArrayList<>();
         
-        // TODO: replace with iteration over lineItems
-        final GPXLineItem lineItem = lineItems.get(0);
-
-        // only files can have file waypoints
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
-            hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
-        } else if (alwayShowFileWaypoints) {
-            // add file waypoints as well, even though file isn't selected
-            hasData = addXYChartSeriesToList(seriesList, lineItem.getGPXFile(), hasData);
-        }
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
-            for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
-                // add track segments individually
-                for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                    hasData = addXYChartSeriesToList(seriesList, gpxTrackSegment, hasData);
+        for (GPXLineItem lineItem : lineItems) {
+            // only files can have file waypoints
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
+            } else if (alwayShowFileWaypoints) {
+                // add file waypoints as well, even though file isn't selected
+                hasData = addXYChartSeriesToList(seriesList, lineItem.getGPXFile(), hasData);
+            }
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
+                for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
+                    // add track segments individually
+                    for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
+                        hasData = addXYChartSeriesToList(seriesList, gpxTrackSegment, hasData);
+                    }
                 }
             }
-        }
-        // track segments can have track segments
-        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
-            hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
-        }
-        // files and routes can have routes
-        if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-            GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
-            for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
-                hasData = addXYChartSeriesToList(seriesList, gpxRoute, hasData);
+            // track segments can have track segments
+            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+                hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
+            }
+            // files and routes can have routes
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
+                for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
+                    hasData = addXYChartSeriesToList(seriesList, gpxRoute, hasData);
+                }
             }
         }
         
