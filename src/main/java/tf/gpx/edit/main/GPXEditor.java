@@ -674,7 +674,13 @@ public class GPXEditor implements Initializable {
                     }
                 }
                 // check added against current gpxfile (if any)
-                if (c.wasAdded() && gpxWaypointsXML.getUserData() != null && !getShownGPXLineItems().isEmpty()) {
+                if (c.wasAdded() && 
+                        // something most currrently be shown
+                        gpxWaypointsXML.getUserData() != null && 
+                        // which is not emtpy
+                        !getShownGPXLineItems().isEmpty() &&
+                        // and we select more than one item
+                        (selectedItems.size() > 1)) {
                     final GPXFile selectedGPXFile = getShownGPXLineItems().get(0).getGPXFile();
                     final List<TreeItem<GPXLineItem>> toUnselect = new ArrayList<>();
                     
@@ -1493,8 +1499,8 @@ public class GPXEditor implements Initializable {
             final List<ObservableList<GPXWaypoint>> waypoints = new ArrayList<>();
             for (GPXLineItem lineItem : lineItems) {
                 waypoints.add(lineItem.getCombinedGPXWaypoints(null));
-                
             }
+            // TODO: automated refresh after insert / delete not working
             final SortedList<GPXWaypoint> sortedList = new SortedList<>(GPXListHelper.concat(FXCollections.observableArrayList(), waypoints));
             sortedList.comparatorProperty().bind(gpxWaypointsXML.comparatorProperty());
             
