@@ -108,13 +108,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.helper.AboutMenu;
-import tf.helper.ColorConverter;
-import tf.helper.CopyPasteKeyCodes;
-import tf.helper.ShowAlerts;
-import tf.helper.TableMenuUtils;
-import tf.helper.TableViewPreferences;
-import tf.helper.TooltipHelper;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -128,6 +121,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
+import tf.gpx.edit.srtm.FindSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.DistributionViewer;
@@ -136,6 +130,13 @@ import tf.gpx.edit.values.EditGPXWaypoint;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
+import tf.helper.AboutMenu;
+import tf.helper.ColorConverter;
+import tf.helper.CopyPasteKeyCodes;
+import tf.helper.ShowAlerts;
+import tf.helper.TableMenuUtils;
+import tf.helper.TableViewPreferences;
+import tf.helper.TooltipHelper;
 
 /**
  *
@@ -327,6 +328,8 @@ public class GPXEditor implements Initializable {
     private Menu helpMenu;
     @FXML
     private MenuItem onlineHelpMenu;
+    @FXML
+    private MenuItem heightForCoordinateMenu;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -485,10 +488,12 @@ public class GPXEditor implements Initializable {
         distributionsMenu.setOnAction((ActionEvent event) -> {
             showDistributions(event);
         });
-        distributionsMenu.setDisable(true);
+        distributionsMenu.disableProperty().bind(
+                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         specialValuesMenu.setOnAction((ActionEvent event) -> {
         });
-        specialValuesMenu.setDisable(true);
+        specialValuesMenu.disableProperty().bind(
+                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         statisticsMenu.setOnAction((ActionEvent event) -> {
             showStatistics(event);
         });
@@ -538,13 +543,19 @@ public class GPXEditor implements Initializable {
         assignSRTMheightsMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
+        heightForCoordinateMenu.setOnAction((ActionEvent event) -> {
+            heightForCoordinate(event);
+        });
+                
         showSRTMDataMenu.setOnAction((ActionEvent event) -> {
             showSRTMData(event);
         });
         downloadSRTMDataMenu.setOnAction((ActionEvent event) -> {
             final HostServices myHostServices = (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices");
             if (myHostServices != null) {
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
+                // TFE, 20201020: show download link for SRTM1 as well
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM1);
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
             }
         });
 
@@ -713,19 +724,8 @@ public class GPXEditor implements Initializable {
                 showGPXWaypoints(selectedItems.stream().map((t) -> {
                     return t.getValue();
                 }).collect(Collectors.toList()), true, true);
-                
-                // TODO: extend to list of lineitems
-                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(selectedItems.get(0).getValue().getType()) && (selectedItems.size() == 1)) {
-                    distributionsMenu.setDisable(false);
-                    specialValuesMenu.setDisable(false);
-                } else {
-                    distributionsMenu.setDisable(true);
-                    specialValuesMenu.setDisable(true);
-                }
             } else {
                 showGPXWaypoints(null, true, true);
-                distributionsMenu.setDisable(true);
-                specialValuesMenu.setDisable(true);
             }
         };
         gpxFileList.getSelectionModel().getSelectedItems().addListener(gpxFileListSelectionListener);
@@ -2118,24 +2118,16 @@ public class GPXEditor implements Initializable {
     
     private void showDistributions(final Event event) {
         // works only for one track segment and its waypoints
-        List<GPXWaypoint> waypoints;
+        final List<GPXWaypoint> waypoints = new ArrayList<>();
         GPXLineItem item = gpxFileList.getSelectionModel().getSelectedItem().getValue();
         
         switch (item.getType()) {
             case GPXFile:
-                waypoints = item.getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                break;
             case GPXTrack:
-                waypoints = item.getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                break;
             case GPXTrackSegment:
-                waypoints = item.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                break;
-            case GPXWaypoint:
-                waypoints = item.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                waypoints.addAll(item.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
                 break;
             default:
-                waypoints = new ArrayList<>();
                 break;
         }
         
@@ -2183,6 +2175,12 @@ public class GPXEditor implements Initializable {
     
     private void showSRTMData(final Event event) {
         SRTMDataViewer.getInstance().showSRTMData();
+    }
+    
+    private void heightForCoordinate(final Event event) {
+        // TODO: remove ugly hack to pass HostServices
+        FindSRTMHeight.getInstance().findSRTMHeight(
+            (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"));
     }
     
     private List<GPXFile> uniqueGPXFileListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {

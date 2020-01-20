@@ -79,13 +79,13 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
-import tf.helper.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.ShowAlerts;
 
 /**
  * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.
@@ -155,7 +155,7 @@ public class SRTMDataViewer {
         }
 
         // show all of it
-        showStage(latMin, lonMin, latMax, lonMax, gpxFile);
+        showStage(gpxFile.getName(), latMin, lonMin, latMax, lonMax, gpxFile);
     }
     
     public void showSRTMData() {
@@ -209,16 +209,17 @@ public class SRTMDataViewer {
             return;
         }
         
-        showStage(latMin, lonMin, latMax, lonMax, null);
+        showStage(hgtFiles.get(0).getName(), latMin, lonMin, latMax, lonMax, null);
     }
         
-    private void showStage(final int latMin, final int lonMin, final int latMax, final int lonMax, final GPXFile gpxFile) {
+    private void showStage(final String title, final int latMin, final int lonMin, final int latMax, final int lonMax, final GPXFile gpxFile) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 
         // finally, we have something to show!
         final Stage stage = new Stage();
-        stage.setTitle(SRTMDataViewer.class.getSimpleName());
+        // TFE, 20200120: add file name (srtm or gpx) to title
+        stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
         
         // Jzy3d
         final MyJavaFXChartFactory factory = new MyJavaFXChartFactory();

@@ -114,6 +114,7 @@
                       <MenuItem fx:id="assignSRTMheightsTracksMenu" mnemonicParsing="false" text="Selected Items" />
                     </items>
                   </Menu>
+                  <MenuItem fx:id="heightForCoordinateMenu" mnemonicParsing="false" text="Height for Coordinate" />
                 <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
                   <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>

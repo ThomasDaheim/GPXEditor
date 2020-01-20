@@ -36,7 +36,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -55,15 +54,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
+import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
+import tf.gpx.edit.helper.AbstractViewer;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.main.GPXEditorManager;
 
 /**
  * Show distributions for various waypoint values.
@@ -72,7 +71,7 @@ import tf.gpx.edit.main.GPXEditorManager;
  * 
  * @author thomas
  */
-public class DistributionViewer {
+public class DistributionViewer extends AbstractViewer{
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static DistributionViewer INSTANCE = new DistributionViewer();
@@ -80,7 +79,6 @@ public class DistributionViewer {
     private GPXEditor myGPXEditor;
     
     // UI elements used in various methods need to be class-wide
-    final Stage distributionsStage = new Stage();
     final ChoiceBox<String> dataBox = new ChoiceBox<>();
     private final Label minLbl = new Label("0");
     private final Label maxLbl = new Label("100");
@@ -93,11 +91,6 @@ public class DistributionViewer {
     private final CheckListView<GPXWaypoint> wayPointList = new CheckListView<>();
     
     private final DecimalFormat formater = new DecimalFormat("#.00"); 
-    private final Insets insetNone = new Insets(0, 0, 0, 0);
-    private final Insets insetSmall = new Insets(0, 10, 0, 10);
-    private final Insets insetTop = new Insets(10, 10, 0, 10);
-    private final Insets insetBottom = new Insets(0, 10, 10, 10);
-    private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
     
     private double minXValue;
     private double maxXValue;
@@ -126,8 +119,8 @@ public class DistributionViewer {
     
     private void initViewer() {
         // create new scene
-        distributionsStage.setTitle("Distributions");
-        distributionsStage.initModality(Modality.APPLICATION_MODAL); 
+        getStage().setTitle("Distributions");
+        getStage().initModality(Modality.APPLICATION_MODAL); 
         
         final GridPane gridPane = new GridPane();
         
@@ -139,7 +132,7 @@ public class DistributionViewer {
         // 1st row: select data to show
         final Label dataLbl = new Label("Data to show:");
         gridPane.add(dataLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(dataLbl, insetTopBottom);
+        GridPane.setMargin(dataLbl, INSET_TOP_BOTTOM);
         
         // add all possible values from GPXLineItemData
         for (GPXLineItemData value : GPXLineItemData.values()) {
@@ -158,7 +151,7 @@ public class DistributionViewer {
             }
         });
         gridPane.add(dataBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(dataBox, insetTopBottom);
+        GridPane.setMargin(dataBox, INSET_TOP_BOTTOM);
 
         rowNum++;
         // 2nd row: distribution plot as bar barChart
@@ -178,7 +171,7 @@ public class DistributionViewer {
         barChart.setLegendVisible(false);
         barChart.setAnimated(false);
         gridPane.add(barChart, 0, rowNum, 3, 1);
-        GridPane.setMargin(barChart, insetSmall);
+        GridPane.setMargin(barChart, INSET_SMALL);
 
         rowNum++;
         // 3rd row: min, max, range values in a hbox
@@ -186,7 +179,7 @@ public class DistributionViewer {
         
         minLbl.getStyleClass().add("small-text");
         lblBox.getChildren().add(minLbl);
-        HBox.setMargin(rangeLbl, insetNone);
+        HBox.setMargin(rangeLbl, INSET_NONE);
         
         final Region leftRgn = new Region();
         lblBox.getChildren().add(leftRgn);
@@ -194,7 +187,7 @@ public class DistributionViewer {
 
         rangeLbl.getStyleClass().add("small-text");
         lblBox.getChildren().add(rangeLbl);
-        HBox.setMargin(rangeLbl, insetNone);
+        HBox.setMargin(rangeLbl, INSET_NONE);
 
         final Region rightRgn = new Region();
         lblBox.getChildren().add(rightRgn);
@@ -203,10 +196,10 @@ public class DistributionViewer {
         maxLbl.getStyleClass().add("small-text");
         maxLbl.setAlignment(Pos.CENTER_RIGHT);
         lblBox.getChildren().add(maxLbl);
-        HBox.setMargin(maxLbl, insetNone);
+        HBox.setMargin(maxLbl, INSET_NONE);
 
         gridPane.add(lblBox, 0, rowNum, 3, 1);
-        GridPane.setMargin(lblBox, insetSmall);
+        GridPane.setMargin(lblBox, INSET_SMALL);
 
         rowNum++;
         // 4th row: min max slider
@@ -240,7 +233,7 @@ public class DistributionViewer {
             }
         });
         gridPane.add(minmaxSlider, 0, rowNum, 3, 1);
-        GridPane.setMargin(minmaxSlider, insetBottom);
+        GridPane.setMargin(minmaxSlider, INSET_BOTTOM);
 
         rowNum++;
         // 5th row: select button
@@ -264,7 +257,7 @@ public class DistributionViewer {
         });
         gridPane.add(selectButton, 0, rowNum, 3, 1);
         GridPane.setHalignment(selectButton, HPos.CENTER);
-        GridPane.setMargin(selectButton, insetBottom);
+        GridPane.setMargin(selectButton, INSET_BOTTOM);
 
         //
         // right columns
@@ -296,13 +289,13 @@ public class DistributionViewer {
         };     
         wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         gridPane.add(wayPointList, 3, rowNum, 1, 3);
-        GridPane.setMargin(wayPointList, insetTopBottom);
+        GridPane.setMargin(wayPointList, INSET_TOP_BOTTOM);
 
         rowNum = 3;
         // 5th row: number selected waypoints
         gridPane.add(countLbl, 3, rowNum, 1, 1);
         GridPane.setHalignment(countLbl, HPos.CENTER);
-        GridPane.setMargin(countLbl, insetBottom);
+        GridPane.setMargin(countLbl, INSET_BOTTOM);
 
         rowNum = 4;
         // 6th row: select button
@@ -318,18 +311,16 @@ public class DistributionViewer {
                 gpxTrackSegment.setGPXWaypoints(newWaypoints);
                 
                 // done, lets get out of here...
-                distributionsStage.close();
+                getStage().close();
                 
                 hasDeleted = true;
             }
         });
         gridPane.add(deleteButton, 3, rowNum, 1, 1);
         GridPane.setHalignment(deleteButton, HPos.CENTER);
-        GridPane.setMargin(deleteButton, insetBottom);
+        GridPane.setMargin(deleteButton, INSET_BOTTOM);
         
-        distributionsStage.setScene(new Scene(gridPane));
-        distributionsStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        distributionsStage.setResizable(false);
+        initStage(new Scene(gridPane));
     }
     
     public void setCallback(final GPXEditor gpxEditor) {
@@ -340,8 +331,12 @@ public class DistributionViewer {
         assert myGPXEditor != null;
         assert gpxWayPoints != null;
         
-        if (distributionsStage.isShowing()) {
-            distributionsStage.close();
+        if (getStage().isShowing()) {
+            getStage().close();
+        }
+        
+        if (CollectionUtils.isEmpty(gpxWayPoints)) {
+            return false;
         }
         
         hasDeleted = false;
@@ -350,7 +345,7 @@ public class DistributionViewer {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
-        distributionsStage.showAndWait();
+        getStage().showAndWait();
                 
         return hasDeleted;
     }

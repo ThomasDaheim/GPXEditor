@@ -3,9 +3,9 @@ package tf.gpx.edit.helper;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.IPreferencesStore;
 import tf.helper.RecentFiles;
-import tf.gpx.edit.main.GPXEditorManager;
 
 public class GPXEditorPreferences implements IPreferencesStore {
     // this is a singleton for everyones use

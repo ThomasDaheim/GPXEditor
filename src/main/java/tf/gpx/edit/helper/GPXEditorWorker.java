@@ -51,7 +51,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import tf.helper.ShowAlerts;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -65,6 +64,7 @@ import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
 import tf.gpx.edit.worker.GPXReduceWorker;
+import tf.helper.ShowAlerts;
 
 /**
  *

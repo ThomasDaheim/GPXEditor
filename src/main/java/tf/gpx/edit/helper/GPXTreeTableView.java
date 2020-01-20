@@ -63,9 +63,6 @@ import javafx.util.Callback;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
-import tf.helper.ColorSelectionMenu;
-import tf.helper.CopyPasteKeyCodes;
-import tf.helper.TableMenuUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMetadata;
@@ -76,6 +73,9 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
+import tf.helper.ColorSelectionMenu;
+import tf.helper.CopyPasteKeyCodes;
+import tf.helper.TableMenuUtils;
 
 /**
  *

@@ -38,7 +38,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
@@ -47,21 +46,20 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.helper.AbstractViewer;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.main.GPXEditorManager;
 
 /**
  *
  * @author thomas
  */
-public class StatisticsViewer {
+public class StatisticsViewer extends AbstractViewer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();
@@ -71,12 +69,6 @@ public class StatisticsViewer {
     private long breakDuration = BREAK_DURATION;
     
     private final ObservableList<StatisticValue> statisticsList = FXCollections.observableArrayList();
-    
-    private final Insets insetNone = new Insets(0, 0, 0, 0);
-    private final Insets insetSmall = new Insets(0, 10, 0, 10);
-    private final Insets insetTop = new Insets(10, 10, 0, 10);
-    private final Insets insetBottom = new Insets(0, 10, 10, 10);
-    private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
 
     // for what do we calc statistics
     private static enum StatisticData {
@@ -164,7 +156,6 @@ public class StatisticsViewer {
     }
     
     // UI elements used in various methods need to be class-wide
-    final Stage statisticsStage = new Stage();
     final TableView<StatisticValue> table = new TableView<>();
     
     private GPXFile myGPXFile;
@@ -187,8 +178,8 @@ public class StatisticsViewer {
         }
 
         // create new scene
-        statisticsStage.setTitle("Statistics");
-        statisticsStage.initModality(Modality.APPLICATION_MODAL); 
+        getStage().setTitle("Statistics");
+        getStage().initModality(Modality.APPLICATION_MODAL); 
 
         final GridPane gridPane = new GridPane();
 
@@ -236,17 +227,17 @@ public class StatisticsViewer {
         table.setMinHeight(750);
         
         gridPane.add(table, 0, rowNum, 2, 1);
-        GridPane.setMargin(table, insetTopBottom);
+        GridPane.setMargin(table, INSET_TOP_BOTTOM);
         
         rowNum++;
         // 2nd row: OK und Export buttons
         final Button OKButton = new Button("OK");
         OKButton.setOnAction((ActionEvent event) -> {
             // done, lets get out of here...
-            statisticsStage.close();
+            getStage().close();
         });      
         gridPane.add(OKButton, 0, rowNum, 1, 1);
-        GridPane.setMargin(OKButton, insetBottom);
+        GridPane.setMargin(OKButton, INSET_BOTTOM);
         GridPane.setHalignment(OKButton, HPos.CENTER);
 
         final Button exportButton = new Button("Export CSV");
@@ -254,7 +245,7 @@ public class StatisticsViewer {
             exportCSV();
         });      
         gridPane.add(exportButton, 1, rowNum, 1, 1);
-        GridPane.setMargin(exportButton, insetBottom);
+        GridPane.setMargin(exportButton, INSET_BOTTOM);
         GridPane.setHalignment(exportButton, HPos.CENTER);
         
         final ColumnConstraints col1 = new ColumnConstraints();
@@ -263,23 +254,21 @@ public class StatisticsViewer {
         col2.setPercentWidth(50);
         gridPane.getColumnConstraints().addAll(col1, col2);
         
-        statisticsStage.setScene(new Scene(gridPane));
-        statisticsStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        statisticsStage.setResizable(true);
+        initStage(new Scene(gridPane));
     }
     
     public boolean showStatistics(final GPXFile gpxFile) {
         assert gpxFile != null;
         
-        if (statisticsStage.isShowing()) {
-            statisticsStage.close();
+        if (getStage().isShowing()) {
+            getStage().close();
         }
         
         myGPXFile = gpxFile;
         // initialize the whole thing...
         initStatisticsViewer();
         
-        statisticsStage.showAndWait();
+        getStage().showAndWait();
                 
         return true;
     }
