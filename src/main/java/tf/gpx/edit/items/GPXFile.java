@@ -207,7 +207,7 @@ public class GPXFile extends GPXMeasurable {
     
     public final void setHeaderAndMeta() {
         // TODO: use variables from JAR
-        myGPX.setCreator("GPXEditor - v4.4");
+        myGPX.setCreator("GPXEditor - v4.5");
         myGPX.setVersion("1.1");
                 
         // extend gpx with garmin xmlns

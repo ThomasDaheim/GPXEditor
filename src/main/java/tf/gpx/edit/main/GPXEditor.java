@@ -388,7 +388,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.4", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v4.5", "https://github.com/ThomasDaheim/GPXEditor");
         
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
@@ -1694,7 +1694,6 @@ public class GPXEditor implements Initializable {
         gpxFileList.getSelectionModel().getSelectedItems().removeListener(gpxFileListSelectionListener);
         gpxFileList.getSelectionModel().clearSelection();
         showGPXWaypoints(null, true, true);
-        distributionsMenu.setDisable(true);
         gpxFileList.getSelectionModel().getSelectedItems().addListener(gpxFileListSelectionListener);
         refreshGPXFileList();
         

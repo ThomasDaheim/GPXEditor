@@ -86,13 +86,16 @@ import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
+import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
+import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
+import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -264,12 +267,20 @@ public class TrackMap extends LeafletMapView {
 //    private int originalMapLayers = 0;
     private boolean isLoaded = false;
     private boolean isInitialized = false;
+    
+    private GPXAssignSRTMHeightWorker heightWorker;
 
     private TrackMap() {
         super();
         
         currentMarker = null;
         currentGPXRoute = null;
+        
+        // TFE, 20200121: show height with coordinate in context menu
+        heightWorker = new GPXAssignSRTMHeightWorker(
+                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, ""), 
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())), 
+                GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
         
         setVisible(false);
         setCursor(Cursor.CROSSHAIR);
@@ -867,7 +878,13 @@ public class TrackMap extends LeafletMapView {
             }
             contextMenu.setUserData(latLong);
 
-            showCord.setText(LatLongHelper.LatLongToString(latLong));
+            // TFE, 20200121: show height with coordinate in context menu
+            final double elevation = heightWorker.getElevation(latLong);
+            if (elevation != SRTMDataStore.NODATA) {
+                showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + DOUBLE_FORMAT_2.format(elevation) + " m");
+            } else {
+                showCord.setText(LatLongHelper.LatLongToString(latLong));
+            }
 
             if (currentGPXWaypoint != null) {
                 addWaypoint.setText("Edit Waypoint");
