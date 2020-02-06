@@ -38,10 +38,10 @@ var searchControl = new L.Control.Search({
 }).addTo(myMap);
 
 searchControl.on('search:locationfound', function(e) {
-//    callback.log('search:locationfound');
-//    callback.log("e.latlng: " + e.latlng);
-//    callback.log("e.text: " + e.text);
-//    callback.log("e.layer: " + e.layer);
+//    jscallback.log('search:locationfound');
+//    jscallback.log("e.latlng: " + e.latlng);
+//    jscallback.log("e.text: " + e.text);
+//    jscallback.log("e.layer: " + e.layer);
 
     // create a marker of our own in search results layer
     // 
@@ -63,9 +63,6 @@ searchControl.on('search:locationfound', function(e) {
     //}
     //  ]
     //}
-    //
-    // iconName is "placemarkIcon"
-    // 
     
     // e.text contains the full description of the found position, separated by ","
     // we split that into name (up to first ",") and description (the rest) and pass it to our search function
@@ -82,6 +79,11 @@ searchControl.on('search:locationfound', function(e) {
     }
     
     var result = '{ "elements": [ { "type": "node", "lat": ' + e.latlng.lat + ', "lon": ' + e.latlng.lng + ', "tags": { "name": "' + name + '", "description": "' + description + '" } } ] }'
-    // TFE, 20190702: icon name here needs to be in sync with icon name from java - maybe we should add a parameter here...
-    showSearchResults("SearchResult", result, "SearchResult_Icon");
+    showSearchResults("SearchResult", result, searchResultIcon);
 });
+
+var searchResultIcon;
+function setSearchResultIcon(iconName) {
+    jscallback.log('setSearchResultIcon: ' + iconName);
+    searchResultIcon = iconName;
+}

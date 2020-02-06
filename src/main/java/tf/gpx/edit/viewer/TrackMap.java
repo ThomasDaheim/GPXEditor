@@ -401,6 +401,7 @@ public class TrackMap extends LeafletMapView {
             addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
+            // load search icon later after markers are initialized
             
             // support for autorouting
             // https://github.com/perliedman/leaflet-routing-machine
@@ -480,6 +481,9 @@ public class TrackMap extends LeafletMapView {
             
             // now we have loaded TrackMarker.js...
             MarkerManager.getInstance().loadSpecialIcons();
+
+            // now we can set the search icon to use
+            execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
             
             // TFE, 20190901: load preferences - now things are up & running
             loadPreferences();

@@ -47,8 +47,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -121,6 +123,7 @@ public class EditGPXWaypoint extends AbstractViewer {
         return INSTANCE;
     }
 
+    @SuppressWarnings("unchecked")
     private void initViewer() {
         // create new scene
         getStage().setTitle("Edit Waypoint Properties");
@@ -187,6 +190,18 @@ public class EditGPXWaypoint extends AbstractViewer {
                 symbolValue.setGraphic(new ImageView(image));
             }
         });
+        // focus dropdown on selected item - hacking needed
+        waypointSymTxt.showingProperty().addListener((obs, wasShowing, isNowShowing) -> {
+            if (isNowShowing) {
+                // set focus on selected item
+                if (waypointSymTxt.getSelectionModel().getSelectedIndex() > -1) {
+                    // https://stackoverflow.com/a/36548310
+                    // https://stackoverflow.com/a/47933342
+                    final ListView<String> lv = (ListView<String>) ((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent();
+                    lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
+                }
+            }
+        });        
 
         rowNum++;
         // 3rd row: desc
