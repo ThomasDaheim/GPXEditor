@@ -139,7 +139,7 @@ public class GPXRoute extends GPXMeasurable {
         
         // clone all my children
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren().setParent(myClone));
         }
         numberChildren(myClone.myGPXWaypoints);
 
@@ -157,22 +157,24 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXLineItem getParent() {
+    public GPXFile getParent() {
         return myGPXFile;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void setParent(final GPXLineItem parent) {
+    public GPXRoute setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override

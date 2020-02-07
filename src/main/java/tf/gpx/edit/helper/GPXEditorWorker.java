@@ -60,6 +60,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.values.EditSplitValues;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
@@ -400,5 +401,17 @@ public class GPXEditorWorker {
                             ex.getMessage(),
                             buttonOK);
         }
+    }
+    
+    public List<GPXLineItem> splitGPXLineItem(final GPXLineItem gpxLineItem, final EditSplitValues.SplitValue splitValue) {
+        final List<GPXLineItem> result = new ArrayList<>();
+        
+        // TODO: fill with life
+        result.add(gpxLineItem.cloneMeWithChildren());
+        result.add(gpxLineItem.cloneMeWithChildren());
+        
+        // go through list of waypoints and decide on split base on parameters
+        
+        return result;
     }
 }

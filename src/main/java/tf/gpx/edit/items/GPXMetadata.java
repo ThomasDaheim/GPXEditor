@@ -161,16 +161,20 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public GPXLineItem getParent() {
         return myGPXFile;
     }
 
     @Override
-    public void setParent(final GPXLineItem parent) {
+    @SuppressWarnings("unchecked")
+    public GPXMetadata setParent(final GPXLineItem parent) {
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+        
+        return this;
     }
 
     @Override

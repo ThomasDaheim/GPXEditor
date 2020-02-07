@@ -379,8 +379,8 @@ public abstract class GPXLineItem {
     }
  
     // getter & setter for my parent
-    public abstract GPXLineItem getParent();
-    public abstract <T extends GPXLineItem> void setParent(final T parent);
+    public abstract <T extends GPXLineItem> T getParent();
+    public abstract <T extends GPXLineItem, S extends GPXLineItem> S setParent(final T parent);
 
     // helper functions for child relations
     public abstract ObservableList<GPXLineItem> getChildren();

@@ -34,7 +34,7 @@ import tf.gpx.edit.main.GPXEditorManager;
  *
  * @author thomas
  */
-public abstract class AbstractViewer {
+public abstract class AbstractStage {
     private final Stage myStage = new Stage();
 
     public final static Insets INSET_NONE = new Insets(0, 0, 0, 0);

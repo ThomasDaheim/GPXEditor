@@ -49,7 +49,7 @@ import javafx.stage.Modality;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.helper.AbstractViewer;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -59,7 +59,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  *
  * @author thomas
  */
-public class StatisticsViewer extends AbstractViewer {
+public class StatisticsViewer extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();

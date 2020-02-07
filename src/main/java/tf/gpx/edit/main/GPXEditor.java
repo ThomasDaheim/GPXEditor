@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -127,6 +128,8 @@ import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditGPXWaypoint;
+import tf.gpx.edit.values.EditSplitValues;
+import tf.gpx.edit.values.EditSplitValues.SplitValue;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
@@ -1485,9 +1488,11 @@ public class GPXEditor implements Initializable {
         final List<GPXLineItem> uniqueItems = uniqueHierarchyGPXLineItems(lineItems);
         
         // TFE, 20200103: check if new lineitem <> old one - otherwise do nothing
-        if ((gpxWaypointsXML.getUserData() != null) && uniqueItems.equals(gpxWaypointsXML.getUserData())) {
-            return;
-        }
+        // TFE, 20200207: nope, don't do that! stops repaints in case of e.g. deletion of waypoints...
+        // EQUAL is more than equal itemlist - its deep equal
+//        if ((gpxWaypointsXML.getUserData() != null) && uniqueItems.equals(gpxWaypointsXML.getUserData())) {
+//            return;
+//        }
         
         // disable listener for checked changes since it fires for each waypoint...
         gpxWaypointsXML.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
@@ -1952,47 +1957,104 @@ public class GPXEditor implements Initializable {
         // TFE, 20180811: unset selection in list
         gpxFileList.getSelectionModel().clearSelection();
     }
+    
+    public void splitItems(final Event event) {
+        // open dialog for split values
+        final SplitValue splitValue = EditSplitValues.getInstance().editSplitValues();
+       
+        // iterate over selected items
+        final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
+        for (GPXLineItem item : selectedItems) {
+            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType()) || 
+                GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType()) ||
+                GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
+                // call worker to split item
+                List<GPXLineItem> newItems = myWorker.splitGPXLineItem(item, splitValue);
 
-    public void moveItem(final Event event, final MoveUpDown moveUpDown) {
-        assert (gpxFileList.getSelectionModel().getSelectedItems().size() == 1);
-        
-        final GPXLineItem selectedItem = gpxFileList.getSelectionModel().getSelectedItems().get(0).getValue();
-        
-        // check if it has treeSiblings
-        if ((selectedItem.getParent() != null) && (selectedItem.getParent().getChildren().size() > 1)) {
-            // now work on the actual GPXLineItem and not on the TreeItem<GPXLineItem>...
-            final GPXLineItem parent = selectedItem.getParent();
-            // clone list of treeSiblings for manipulation
-            final List<GPXLineItem> siblings = parent.getChildren();
-            
-            final int count = siblings.size();
-            final int index = siblings.indexOf(selectedItem);
-            boolean hasChanged = false;
-
-            // move up if not first, move down if not last
-            if (MoveUpDown.UP.equals(moveUpDown) && index > 0) {
-                // remove first since index changes when adding before
-                siblings.remove(index);
-                siblings.add(index-1, selectedItem);
-                hasChanged = true;
-            } else if (MoveUpDown.DOWN.equals(moveUpDown) && index < count-1) {
-                // add first since remove changes the index
-                siblings.add(index+2, selectedItem);
-                siblings.remove(index);
-                hasChanged = true;
-            }
-            
-            if (hasChanged) {
-                parent.setChildren(siblings);
-                parent.setHasUnsavedChanges();
+                // replace item by split result at the current position - need to work on concrete lists and not getChildren()
+                final GPXLineItem parent = item.getParent();
                 
-                gpxFileList.replaceGPXFile(selectedItem.getGPXFile());
-
-                gpxFileList.getSelectionModel().clearSelection();
-                refreshGPXFileList();
+                int itemPos;
+                // insert below current item - need to work on concrete lists and not getChildren()
+                switch (item.getType()) {
+                    case GPXTrack:
+                        // tracks of gpxfile
+                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
+                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
+                            // attach to new parent
+                            t.setParent(parent);
+                            return (GPXTrack) t;
+                        }).collect(Collectors.toList()));
+                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
+                        break;
+                    case GPXTrackSegment:
+                        // segments of gpxtrack
+                        itemPos = ((GPXTrack) parent).getGPXTrackSegments().indexOf(item);
+                        ((GPXTrack) parent).getGPXTrackSegments().addAll(itemPos, newItems.stream().map((t) -> {
+                            // attach to new parent
+                            t.setParent(parent);
+                            return (GPXTrackSegment) t;
+                        }).collect(Collectors.toList()));
+                        ((GPXTrack) parent).getGPXTrackSegments().remove((GPXTrackSegment) item);
+                        break;
+                    case GPXRoute:
+                        // routes of gpxfile
+                        itemPos = ((GPXFile) parent).getGPXRoutes().indexOf(item);
+                        ((GPXFile) parent).getGPXRoutes().addAll(itemPos, newItems.stream().map((t) -> {
+                            // attach to new parent
+                            t.setParent(parent);
+                            return (GPXRoute) t;
+                        }).collect(Collectors.toList()));
+                        ((GPXFile) parent).getGPXRoutes().remove((GPXRoute) item);
+                        break;
+                }
             }
         }
+
+        gpxFileList.getSelectionModel().clearSelection();
     }
+
+    // TFE, 20200207: not used anymore
+//    public void moveItem(final Event event, final MoveUpDown moveUpDown) {
+//        assert (gpxFileList.getSelectionModel().getSelectedItems().size() == 1);
+//        
+//        final GPXLineItem selectedItem = gpxFileList.getSelectionModel().getSelectedItems().get(0).getValue();
+//        
+//        // check if it has treeSiblings
+//        if ((selectedItem.getParent() != null) && (selectedItem.getParent().getChildren().size() > 1)) {
+//            // now work on the actual GPXLineItem and not on the TreeItem<GPXLineItem>...
+//            final GPXLineItem parent = selectedItem.getParent();
+//            // clone list of treeSiblings for manipulation
+//            final List<GPXLineItem> siblings = parent.getChildren();
+//            
+//            final int count = siblings.size();
+//            final int index = siblings.indexOf(selectedItem);
+//            boolean hasChanged = false;
+//
+//            // move up if not first, move down if not last
+//            if (MoveUpDown.UP.equals(moveUpDown) && index > 0) {
+//                // remove first since index changes when adding before
+//                siblings.remove(index);
+//                siblings.add(index-1, selectedItem);
+//                hasChanged = true;
+//            } else if (MoveUpDown.DOWN.equals(moveUpDown) && index < count-1) {
+//                // add first since remove changes the index
+//                siblings.add(index+2, selectedItem);
+//                siblings.remove(index);
+//                hasChanged = true;
+//            }
+//            
+//            if (hasChanged) {
+//                parent.setChildren(siblings);
+//                parent.setHasUnsavedChanges();
+//                
+//                gpxFileList.replaceGPXFile(selectedItem.getGPXFile());
+//
+//                gpxFileList.getSelectionModel().clearSelection();
+//                refreshGPXFileList();
+//            }
+//        }
+//    }
 
     private void preferences(final Event event) {
         PreferenceEditor.getInstance().showPreferencesDialogue();

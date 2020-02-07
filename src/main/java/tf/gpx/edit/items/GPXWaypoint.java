@@ -309,21 +309,25 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public GPXLineItem getParent() {
         return myGPXParent;
     }
 
     @Override
-    public void setParent(GPXLineItem parent) {
+    @SuppressWarnings("unchecked")
+    public GPXWaypoint setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXParent != null && myGPXParent.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
         
         myGPXParent = parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override
@@ -653,6 +657,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public double getSpeed() {
+        // TFE, 20200207: don't use gpxxx:speed even if available! track might have changed since recorded
         return EarthGeometry.speed(this, myPrevGPXWaypoint);
     }
     

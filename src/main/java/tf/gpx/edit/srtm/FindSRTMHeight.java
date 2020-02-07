@@ -42,7 +42,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
-import tf.gpx.edit.helper.AbstractViewer;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
@@ -55,7 +55,7 @@ import tf.helper.TooltipHelper;
  *
  * @author thomas
  */
-public class FindSRTMHeight extends AbstractViewer {
+public class FindSRTMHeight extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static FindSRTMHeight INSTANCE = new FindSRTMHeight();

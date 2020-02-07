@@ -151,16 +151,16 @@ public class GPXFile extends GPXMeasurable {
         
         // clone all my children
         for (GPXMetadata gpxMetadata : myGPXMetadata) {
-            myClone.myGPXMetadata.add(gpxMetadata.cloneMeWithChildren());
+            myClone.myGPXMetadata.add(gpxMetadata.cloneMeWithChildren().setParent(myClone));
         }
         for (GPXTrack gpxTrack : myGPXTracks) {
-            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren());
+            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren().setParent(myClone));
         }
         for (GPXRoute gpxRoute : myGPXRoutes) {
-            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren());
+            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren().setParent(myClone));
         }
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren().setParent(myClone));
         }
         numberChildren(myClone.myGPXTracks);
         numberChildren(myClone.myGPXRoutes);
@@ -268,14 +268,17 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public GPXLineItem getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    public void setParent(final GPXLineItem parent) {
+    @SuppressWarnings("unchecked")
+    public GPXFile setParent(final GPXLineItem parent) {
         // GPXFiles don't have a parent.
+        return this;
     }
 
     @Override

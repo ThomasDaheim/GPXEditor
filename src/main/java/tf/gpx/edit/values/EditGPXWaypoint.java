@@ -60,7 +60,7 @@ import jfxtras.scene.control.CalendarTextField;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.textfield.TextFields;
-import tf.gpx.edit.helper.AbstractViewer;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -73,7 +73,7 @@ import tf.helper.TooltipHelper;
  *
  * @author thomas
  */
-public class EditGPXWaypoint extends AbstractViewer {
+public class EditGPXWaypoint extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXWaypoint INSTANCE = new EditGPXWaypoint();

@@ -45,7 +45,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
-import tf.gpx.edit.helper.AbstractViewer;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
@@ -56,7 +56,7 @@ import tf.helper.EnumHelper;
  *
  * @author thomas
  */
-public class AssignSRTMHeight extends AbstractViewer  {
+public class AssignSRTMHeight extends AbstractStage  {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static AssignSRTMHeight INSTANCE = new AssignSRTMHeight();

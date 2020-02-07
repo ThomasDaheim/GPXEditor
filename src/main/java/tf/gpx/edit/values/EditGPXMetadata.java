@@ -46,7 +46,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import tf.gpx.edit.helper.AbstractViewer;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
@@ -55,7 +55,7 @@ import tf.gpx.edit.main.GPXEditor;
  *
  * @author thomas
  */
-public class EditGPXMetadata extends AbstractViewer {
+public class EditGPXMetadata extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXMetadata INSTANCE = new EditGPXMetadata();

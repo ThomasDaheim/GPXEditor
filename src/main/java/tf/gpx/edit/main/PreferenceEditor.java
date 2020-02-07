@@ -43,6 +43,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -53,7 +54,7 @@ import tf.helper.EnumHelper;
  *
  * @author Thomas
  */
-public class PreferenceEditor {
+public class PreferenceEditor extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static PreferenceEditor INSTANCE = new PreferenceEditor();
@@ -95,8 +96,8 @@ public class PreferenceEditor {
                 TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
 
         // create new scene with list of algos & parameter
-        final Stage settingsStage = new Stage();
-        settingsStage.setTitle("Preferences");
+        getStage().setTitle("Distributions");
+        getStage().initModality(Modality.APPLICATION_MODAL); 
         
         final GridPane gridPane = new GridPane();
 
@@ -106,7 +107,7 @@ public class PreferenceEditor {
         final Label fixLbl = new Label("Min. Distance for fixing:");
         fixLbl.setTooltip(t);
         gridPane.add(fixLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(fixLbl, new Insets(10));
+        GridPane.setMargin(fixLbl, INSET_TOP);
         
         final TextField fixText = new TextField();
         fixText.setMaxWidth(80);
@@ -114,7 +115,7 @@ public class PreferenceEditor {
         fixText.setText(decimalFormat.format(myFixEpsilon));
         fixText.setTooltip(t);
         gridPane.add(fixText, 1, rowNum, 1, 1);
-        GridPane.setMargin(fixText, new Insets(10));
+        GridPane.setMargin(fixText, INSET_TOP);
         
         rowNum++;
         // 2nd row: select reduce algorithm
@@ -123,12 +124,12 @@ public class PreferenceEditor {
         algoLbl.setTooltip(t);
         gridPane.add(algoLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(algoLbl, VPos.TOP);
-        GridPane.setMargin(algoLbl, new Insets(10));
+        GridPane.setMargin(algoLbl, INSET_TOP);
 
         final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
         reduceAlgoChoiceBox.setTooltip(t);
         gridPane.add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(reduceAlgoChoiceBox, new Insets(10));
+        GridPane.setMargin(reduceAlgoChoiceBox, INSET_TOP);
 
         rowNum++;
         // 3rd row: select reduce epsilon
@@ -137,7 +138,7 @@ public class PreferenceEditor {
         epsilonLbl.setTooltip(t);
         gridPane.add(epsilonLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(epsilonLbl, VPos.TOP);
-        GridPane.setMargin(epsilonLbl, new Insets(10));
+        GridPane.setMargin(epsilonLbl, INSET_TOP);
         
         final TextField epsilonText = new TextField();
         epsilonText.setMaxWidth(80);
@@ -145,7 +146,7 @@ public class PreferenceEditor {
         epsilonText.setText(decimalFormat.format(myReduceEpsilon));
         epsilonText.setTooltip(t);
         gridPane.add(epsilonText, 1, rowNum, 1, 1);
-        GridPane.setMargin(epsilonText, new Insets(10));        
+        GridPane.setMargin(epsilonText, INSET_TOP);        
 
         rowNum++;
         // 3rd row: auto assign height for new waypoints
@@ -154,13 +155,13 @@ public class PreferenceEditor {
         assignHeightLbl.setTooltip(t);
         gridPane.add(assignHeightLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(assignHeightLbl, VPos.TOP);
-        GridPane.setMargin(assignHeightLbl, new Insets(10));
+        GridPane.setMargin(assignHeightLbl, INSET_TOP);
         
         final CheckBox assignHeightChkBox = new CheckBox();
         assignHeightChkBox.setSelected(myAssignHeight);
         assignHeightChkBox.setTooltip(t);
         gridPane.add(assignHeightChkBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(assignHeightChkBox, new Insets(10));   
+        GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
 
         rowNum++;
         // separator
@@ -169,7 +170,7 @@ public class PreferenceEditor {
         GridPane.setConstraints(sepHor, 0, rowNum);
         GridPane.setColumnSpan(sepHor, 2);
         gridPane.getChildren().add(sepHor);
-        GridPane.setMargin(sepHor, new Insets(10));
+        GridPane.setMargin(sepHor, INSET_TOP);
 
         rowNum++;
         // 3rd row: alway show waypoints from file level in maps
@@ -178,13 +179,13 @@ public class PreferenceEditor {
         waypointLbl.setTooltip(t);
         gridPane.add(waypointLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(waypointLbl, VPos.TOP);
-        GridPane.setMargin(waypointLbl, new Insets(10));
+        GridPane.setMargin(waypointLbl, INSET_TOP);
         
         final CheckBox waypointChkBox = new CheckBox();
         waypointChkBox.setSelected(myAlwaysShowFileWaypoints);
         waypointChkBox.setTooltip(t);
         gridPane.add(waypointChkBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(waypointChkBox, new Insets(10));        
+        GridPane.setMargin(waypointChkBox, INSET_TOP);        
 
         rowNum++;
         // 3rd row: number of waypoints to show
@@ -193,7 +194,7 @@ public class PreferenceEditor {
         numShowLbl.setTooltip(t);
         gridPane.add(numShowLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(numShowLbl, VPos.TOP);
-        GridPane.setMargin(numShowLbl, new Insets(10));
+        GridPane.setMargin(numShowLbl, INSET_TOP);
         
         final TextField numShowText = new TextField();
         numShowText.setMaxWidth(80);
@@ -201,7 +202,7 @@ public class PreferenceEditor {
         numShowText.setText(decimalFormat.format(myMaxWaypointsToShow));
         numShowText.setTooltip(t);
         gridPane.add(numShowText, 1, rowNum, 1, 1);
-        GridPane.setMargin(numShowText, new Insets(10));        
+        GridPane.setMargin(numShowText, INSET_TOP);        
 
         rowNum++;
         // 3rd row: select search radius
@@ -210,7 +211,7 @@ public class PreferenceEditor {
         searchLbl.setTooltip(t);
         gridPane.add(searchLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(searchLbl, VPos.TOP);
-        GridPane.setMargin(searchLbl, new Insets(10));
+        GridPane.setMargin(searchLbl, INSET_TOP);
         
         final TextField searchText = new TextField();
         searchText.setMaxWidth(80);
@@ -218,7 +219,7 @@ public class PreferenceEditor {
         searchText.setText(decimalFormat.format(mySearchRadius));
         searchText.setTooltip(t);
         gridPane.add(searchText, 1, rowNum, 1, 1);
-        GridPane.setMargin(searchText, new Insets(10));        
+        GridPane.setMargin(searchText, INSET_TOP);        
 
         rowNum++;
         // 3rd row: select Break duration
@@ -227,7 +228,7 @@ public class PreferenceEditor {
         breakLbl.setTooltip(t);
         gridPane.add(breakLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(breakLbl, VPos.TOP);
-        GridPane.setMargin(breakLbl, new Insets(10));
+        GridPane.setMargin(breakLbl, INSET_TOP);
         
         final TextField breakText = new TextField();
         breakText.setMaxWidth(40);
@@ -235,7 +236,7 @@ public class PreferenceEditor {
         breakText.setText(decimalFormat.format(myBreakDuration));
         breakText.setTooltip(t);
         gridPane.add(breakText, 1, rowNum, 1, 1);
-        GridPane.setMargin(breakText, new Insets(10));        
+        GridPane.setMargin(breakText, INSET_TOP);        
 
         rowNum++;
         // 4th row: open cycle map api key
@@ -244,14 +245,15 @@ public class PreferenceEditor {
         openCycleMapApiKeyLbl.setTooltip(t);
         gridPane.add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
-        GridPane.setMargin(openCycleMapApiKeyLbl, new Insets(10));
+        GridPane.setMargin(openCycleMapApiKeyLbl, INSET_TOP);
         
         final TextField openCycleMapApiKeyText = new TextField();
-        openCycleMapApiKeyText.setMaxWidth(800);
+        openCycleMapApiKeyText.setPrefWidth(400);
+        openCycleMapApiKeyText.setMaxWidth(400);
         openCycleMapApiKeyText.setText(myOpenCycleMapApiKey);
         openCycleMapApiKeyText.setTooltip(t);
         gridPane.add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
-        GridPane.setMargin(openCycleMapApiKeyText, new Insets(10));
+        GridPane.setMargin(openCycleMapApiKeyText, INSET_TOP);
 
         rowNum++;
         // 4th row: routing api key
@@ -260,14 +262,15 @@ public class PreferenceEditor {
         routingApiKeyLbl.setTooltip(t);
         gridPane.add(routingApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(routingApiKeyLbl, VPos.TOP);
-        GridPane.setMargin(routingApiKeyLbl, new Insets(10));
+        GridPane.setMargin(routingApiKeyLbl, INSET_TOP);
         
         final TextField routingApiKeyText = new TextField();
-        routingApiKeyText.setMaxWidth(800);
+        routingApiKeyText.setPrefWidth(400);
+        routingApiKeyText.setMaxWidth(400);
         routingApiKeyText.setText(myRoutingApiKey);
         routingApiKeyText.setTooltip(t);
         gridPane.add(routingApiKeyText, 1, rowNum, 1, 1);
-        GridPane.setMargin(routingApiKeyText, new Insets(10));
+        GridPane.setMargin(routingApiKeyText, INSET_TOP);
 
         rowNum++;
         // 5th row: routing profile
@@ -276,36 +279,35 @@ public class PreferenceEditor {
         profileLbl.setTooltip(t);
         gridPane.add(profileLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(profileLbl, VPos.TOP);
-        GridPane.setMargin(profileLbl, new Insets(10));
+        GridPane.setMargin(profileLbl, INSET_TOP);
 
         final ChoiceBox profileChoiceBox = EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, myRoutingProfile);
         profileChoiceBox.setTooltip(t);
         gridPane.add(profileChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(profileChoiceBox, new Insets(10));
+        GridPane.setMargin(profileChoiceBox, INSET_TOP);
         
         rowNum++;
         // last row: save / cancel buttons
         Button saveBtn = new Button("Save");
         saveBtn.setOnAction((ActionEvent arg0) -> {
-            settingsStage.setTitle("Save");
-            settingsStage.close();
+            getStage().setTitle("Save");
+            getStage().close();
         });
         gridPane.add(saveBtn, 0, rowNum, 1, 1);
         GridPane.setMargin(saveBtn, new Insets(10));
         
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
-            settingsStage.setTitle("Cancel");
-            settingsStage.close();
+            getStage().setTitle("Cancel");
+            getStage().close();
         });
         gridPane.add(cancelBtn, 1, rowNum, 1, 1);
-        GridPane.setMargin(cancelBtn, new Insets(10));
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
         
-        settingsStage.setScene(new Scene(gridPane));
-        settingsStage.initModality(Modality.APPLICATION_MODAL); 
-        settingsStage.showAndWait();
+        getStage().setScene(new Scene(gridPane));
+        getStage().showAndWait();
         
-        if (saveBtn.getText().equals(settingsStage.getTitle())) {
+        if (saveBtn.getText().equals(getStage().getTitle())) {
             // read values from stage
             myAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
 
