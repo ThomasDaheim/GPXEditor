@@ -84,6 +84,6 @@ searchControl.on('search:locationfound', function(e) {
 
 var searchResultIcon;
 function setSearchResultIcon(iconName) {
-    jscallback.log('setSearchResultIcon: ' + iconName);
+//    jscallback.log('setSearchResultIcon: ' + iconName);
     searchResultIcon = iconName;
 }

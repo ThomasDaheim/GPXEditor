@@ -975,14 +975,19 @@ public class TrackMap extends LeafletMapView {
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
         final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
 
+        // TFE, 20200206: store number of filewaypoints for later use...
+        int fileWaypointCount = 0;
         for (GPXLineItem lineItem : myGPXLineItems) {
             // only files can have file waypoints
             if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
                 masterList.add(lineItem.getGPXWaypoints());
+                fileWaypointCount = masterList.get(0).size();
             } else if (alwayShowFileWaypoints) {
                 // TFE, 20190818: add file waypoints as well, even though file isn't selected
                 masterList.add(lineItem.getGPXFile().getGPXWaypoints());
+                fileWaypointCount = masterList.get(0).size();
             }
+            
             // TFE, 20180508: get waypoints from trackSegments ONLY if you're no tracksegment...
             // otherwise, we never only show points from a single tracksegment!
             // files and trackSegments can have trackSegments
@@ -1013,7 +1018,8 @@ public class TrackMap extends LeafletMapView {
             waypointCount += gpxWaypoints.size();
         }
         
-        double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints);
+        // TFE, 20200206: in case we have only file waypoints we need to include them in calculation of bounds - e.g. for new, empty tracksegment
+        double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount));
 
         // this is our new bounding box
         myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
