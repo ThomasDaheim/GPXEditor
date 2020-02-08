@@ -299,13 +299,16 @@ public class GPXTreeTableView {
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(deleteItems);
 
-                                final MenuItem splitItems = new MenuItem("Split Items");
-                                splitItems.setOnAction((ActionEvent event) -> {
-                                     myEditor.splitItems(event);
-                                });
-                                splitItems.disableProperty().bind(
-                                    Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
-                                fileMenu.getItems().add(splitItems);
+                                // TODO: figure out how to split tracks
+                                if (!GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                                    final MenuItem splitItems = new MenuItem("Split Items");
+                                    splitItems.setOnAction((ActionEvent event) -> {
+                                         myEditor.splitItems(event);
+                                    });
+                                    splitItems.disableProperty().bind(
+                                        Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                    fileMenu.getItems().add(splitItems);
+                                }
 
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");

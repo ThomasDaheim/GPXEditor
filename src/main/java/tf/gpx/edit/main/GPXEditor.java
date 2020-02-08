@@ -1964,6 +1964,9 @@ public class GPXEditor implements Initializable {
        
         // iterate over selected items
         final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
+        // clear selection to avoid listener updates on adding potentially many new items...
+        gpxFileList.getSelectionModel().clearSelection();
+        
         for (GPXLineItem item : selectedItems) {
             if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType()) ||
                 GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
@@ -2010,8 +2013,6 @@ public class GPXEditor implements Initializable {
                 }
             }
         }
-
-        gpxFileList.getSelectionModel().clearSelection();
     }
 
     // TFE, 20200207: not used anymore
