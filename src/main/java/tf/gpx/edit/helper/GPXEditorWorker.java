@@ -405,12 +405,41 @@ public class GPXEditorWorker {
     
     public List<GPXLineItem> splitGPXLineItem(final GPXLineItem gpxLineItem, final EditSplitValues.SplitValue splitValue) {
         final List<GPXLineItem> result = new ArrayList<>();
-        
-        // TODO: fill with life
-        result.add(gpxLineItem.cloneMeWithChildren());
-        result.add(gpxLineItem.cloneMeWithChildren());
+
+        // we can only split tracks, tracksegments, routes
+        if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(gpxLineItem.getType()) &&
+            !GPXLineItem.GPXLineItemType.GPXRoute.equals(gpxLineItem.getType())) {
+            result.add(gpxLineItem);
+            
+            return result;
+        }
         
         // go through list of waypoints and decide on split base on parameters
+        final EditSplitValues.SplitType type = splitValue.getType();
+        final double value = splitValue.getValue();
+        
+        double curValue = 0.0;
+        GPXLineItem curItem = gpxLineItem.cloneMe(false);
+        result.add(curItem);
+        GPXWaypoint lastSplit = null;
+        for (GPXWaypoint waypoint : gpxLineItem.getCombinedGPXWaypoints(null)) {
+            if (EditSplitValues.SplitType.SplitByDistance.equals(type)) {
+                curValue += waypoint.getDistance();
+            } else {
+                curValue += Double.valueOf(waypoint.getDuration()) / 1000.0;
+            }
+            
+            if (curValue > value) {
+                // split, clone, ... - whatever is necessary
+                
+                curValue = 0.0;
+                curItem = gpxLineItem.cloneMe(false);
+                result.add(curItem);
+                lastSplit = waypoint;
+            }
+            
+            curItem.getGPXWaypoints().add(waypoint.cloneMe(false));
+        }
         
         return result;
     }

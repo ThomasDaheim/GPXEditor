@@ -997,7 +997,7 @@ public class GPXEditor implements Initializable {
                         clipboardWayPoints.clear();
                         // TFE, 20190812: add clone to clipboardWayPoints
                         for (GPXWaypoint gpxWaypoint : gpxWaypointsXML.getSelectionModel().getSelectedItems()) {
-                            clipboardWayPoints.add(gpxWaypoint.cloneMeWithChildren());
+                            clipboardWayPoints.add(gpxWaypoint.cloneMe(true));
                         }
                     }
                     
@@ -1393,7 +1393,7 @@ public class GPXEditor implements Initializable {
         
         // TFE, 20190821: always clone and insert the clones! you might want to insert more than once...
         final List<GPXWaypoint> insertWaypoints = clipboardWayPoints.stream().map((t) -> {
-            return t.cloneMeWithChildren();
+            return t.cloneMe(true);
         }).collect(Collectors.toList());
         
         // add waypoints to parent of currently selected waypoint - or directly to parent
@@ -1965,8 +1965,7 @@ public class GPXEditor implements Initializable {
         // iterate over selected items
         final List<GPXLineItem> selectedItems = gpxFileList.getSelectedGPXLineItems();
         for (GPXLineItem item : selectedItems) {
-            if (GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType()) || 
-                GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType()) ||
+            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType()) ||
                 GPXLineItem.GPXLineItemType.GPXRoute.equals(item.getType())) {
                 // call worker to split item
                 List<GPXLineItem> newItems = myWorker.splitGPXLineItem(item, splitValue);
@@ -1977,16 +1976,17 @@ public class GPXEditor implements Initializable {
                 int itemPos;
                 // insert below current item - need to work on concrete lists and not getChildren()
                 switch (item.getType()) {
-                    case GPXTrack:
-                        // tracks of gpxfile
-                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
-                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
-                            // attach to new parent
-                            t.setParent(parent);
-                            return (GPXTrack) t;
-                        }).collect(Collectors.toList()));
-                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
-                        break;
+                    // TFE, 20200208: how should tracks be splitted???
+//                    case GPXTrack:
+//                        // tracks of gpxfile
+//                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
+//                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
+//                            // attach to new parent
+//                            t.setParent(parent);
+//                            return (GPXTrack) t;
+//                        }).collect(Collectors.toList()));
+//                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
+//                        break;
                     case GPXTrackSegment:
                         // segments of gpxtrack
                         itemPos = ((GPXTrack) parent).getGPXTrackSegments().indexOf(item);

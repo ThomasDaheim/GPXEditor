@@ -83,8 +83,6 @@ public class EditGPXWaypoint extends AbstractStage {
     private GPXEditor myGPXEditor;
     
     // UI elements used in various methods need to be class-wide
-    private final GridPane editWaypointPane = new GridPane();
-    
     private final TextField waypointNameTxt = new TextField();
     private final TextField waypointDescriptionTxt = new TextField();
     private final TextField waypointCommentTxt = new TextField();
@@ -158,16 +156,16 @@ public class EditGPXWaypoint extends AbstractStage {
         int rowNum = 0;
         // 1st row: name
         final Label nameLbl = new Label("Name:");
-        editWaypointPane.add(nameLbl, 0, rowNum);
+        getGridPane().add(nameLbl, 0, rowNum);
         GridPane.setMargin(nameLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointNameTxt, 1, rowNum, 3, 1);
+        getGridPane().add(waypointNameTxt, 1, rowNum, 3, 1);
         GridPane.setMargin(waypointNameTxt, INSET_TOP);
         
         rowNum++;
         // 2nd row: sym
         final Label symLbl = new Label("Symbol:");
-        editWaypointPane.add(symLbl, 0, rowNum);
+        getGridPane().add(symLbl, 0, rowNum);
         GridPane.setMargin(symLbl, INSET_TOP);
 
         waypointSymTxt.setEditable(true);
@@ -175,11 +173,11 @@ public class EditGPXWaypoint extends AbstractStage {
         waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getMarkerNames());
         // TFE, 20190721: filter while typing
         TextFields.bindAutoCompletion(waypointSymTxt.getEditor(), waypointSymTxt.getItems());
-        editWaypointPane.add(waypointSymTxt, 1, rowNum);
+        getGridPane().add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, INSET_TOP);
         
         final Label symbolValue = new Label("");
-        editWaypointPane.add(symbolValue, 2, rowNum);
+        getGridPane().add(symbolValue, 2, rowNum);
         GridPane.setMargin(symbolValue, INSET_TOP);
         
         // update label for any changes of combobox selection
@@ -206,64 +204,64 @@ public class EditGPXWaypoint extends AbstractStage {
         rowNum++;
         // 3rd row: desc
         final Label descLbl = new Label("Description:");
-        editWaypointPane.add(descLbl, 0, rowNum);
+        getGridPane().add(descLbl, 0, rowNum);
         GridPane.setMargin(descLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointDescriptionTxt, 1, rowNum, 3, 1);
+        getGridPane().add(waypointDescriptionTxt, 1, rowNum, 3, 1);
         GridPane.setMargin(waypointDescriptionTxt, INSET_TOP);
         
         rowNum++;
         // 4th row: comment
         final Label commentLbl = new Label("Comment:");
-        editWaypointPane.add(commentLbl, 0, rowNum);
+        getGridPane().add(commentLbl, 0, rowNum);
         GridPane.setMargin(commentLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointCommentTxt, 1, rowNum, 3, 1);
+        getGridPane().add(waypointCommentTxt, 1, rowNum, 3, 1);
         GridPane.setMargin(waypointCommentTxt, INSET_TOP);
         
         rowNum++;
         // 5th row: time
         final Label timeLbl = new Label("Time:");
-        editWaypointPane.add(timeLbl, 0, rowNum);
+        getGridPane().add(timeLbl, 0, rowNum);
         GridPane.setMargin(timeLbl, INSET_TOP);
 
         waypointTimeTxt.setAllowNull(Boolean.TRUE);
         waypointTimeTxt.setShowTime(Boolean.TRUE);
         waypointTimeTxt.setDateFormat(GPXLineItem.DATE_FORMAT);
-        editWaypointPane.add(waypointTimeTxt, 1, rowNum);
+        getGridPane().add(waypointTimeTxt, 1, rowNum);
         GridPane.setMargin(waypointTimeTxt, INSET_TOP);
         
         rowNum++;
         // 6th row: src & type
         final Label srcLbl = new Label("Source:");
-        editWaypointPane.add(srcLbl, 0, rowNum);
+        getGridPane().add(srcLbl, 0, rowNum);
         GridPane.setMargin(srcLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointSrcTxt, 1, rowNum);
+        getGridPane().add(waypointSrcTxt, 1, rowNum);
         GridPane.setMargin(waypointSrcTxt, INSET_TOP);
         
         final Label typeLbl = new Label("Type:");
-        editWaypointPane.add(typeLbl, 2, rowNum);
+        getGridPane().add(typeLbl, 2, rowNum);
         GridPane.setMargin(typeLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointTypeTxt, 3, rowNum);
+        getGridPane().add(waypointTypeTxt, 3, rowNum);
         GridPane.setMargin(waypointTypeTxt, INSET_TOP);
         
         rowNum++;
         // 8th row: links
         final Label linksLbl = new Label("Links:");
-        editWaypointPane.add(linksLbl, 0, rowNum);
+        getGridPane().add(linksLbl, 0, rowNum);
         GridPane.setMargin(linksLbl, INSET_TOP);
 
         rowNum++;
         waypointLinkTable = new LinkTable();
-        editWaypointPane.add(waypointLinkTable, 0, rowNum, 4, 1);
+        getGridPane().add(waypointLinkTable, 0, rowNum, 4, 1);
         GridPane.setMargin(waypointLinkTable, INSET_SMALL);
         
         rowNum++;
         // 10th row: latitude & longitude
         final Label latLbl = new Label("Latitude:");
-        editWaypointPane.add(latLbl, 0, rowNum);
+        getGridPane().add(latLbl, 0, rowNum);
         GridPane.setMargin(latLbl, INSET_TOP);
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
@@ -275,11 +273,11 @@ public class EditGPXWaypoint extends AbstractStage {
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
         waypointLatitudeTxt.setTooltip(latTooltip);
 
-        editWaypointPane.add(waypointLatitudeTxt, 1, rowNum);
+        getGridPane().add(waypointLatitudeTxt, 1, rowNum);
         GridPane.setMargin(waypointLatitudeTxt, INSET_TOP);
         
         final Label lonLbl = new Label("Longitude:");
-        editWaypointPane.add(lonLbl, 2, rowNum);
+        getGridPane().add(lonLbl, 2, rowNum);
         GridPane.setMargin(lonLbl, INSET_TOP);
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
@@ -291,94 +289,94 @@ public class EditGPXWaypoint extends AbstractStage {
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
         waypointLongitudeTxt.setTooltip(lonTooltip);
 
-        editWaypointPane.add(waypointLongitudeTxt, 3, rowNum);
+        getGridPane().add(waypointLongitudeTxt, 3, rowNum);
         GridPane.setMargin(waypointLongitudeTxt, INSET_TOP);
         
         rowNum++;
         // 11th row: Elevation & GeoIdHeight
         final Label elevLbl = new Label("Elevation:");
-        editWaypointPane.add(elevLbl, 0, rowNum);
+        getGridPane().add(elevLbl, 0, rowNum);
         GridPane.setMargin(elevLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointElevationTxt, 1, rowNum);
+        getGridPane().add(waypointElevationTxt, 1, rowNum);
         GridPane.setMargin(waypointElevationTxt, INSET_TOP);
         
         final Label geoIdHeightLbl = new Label("GeoIdHeight:");
-        editWaypointPane.add(geoIdHeightLbl, 2, rowNum);
+        getGridPane().add(geoIdHeightLbl, 2, rowNum);
         GridPane.setMargin(geoIdHeightLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointGeoIdHeightTxt, 3, rowNum);
+        getGridPane().add(waypointGeoIdHeightTxt, 3, rowNum);
         GridPane.setMargin(waypointGeoIdHeightTxt, INSET_TOP);
         
         rowNum++;
         // 12th row: hdop & vdop
         final Label hdopLbl = new Label("Hdop:");
-        editWaypointPane.add(hdopLbl, 0, rowNum);
+        getGridPane().add(hdopLbl, 0, rowNum);
         GridPane.setMargin(hdopLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointHdopTxt, 1, rowNum);
+        getGridPane().add(waypointHdopTxt, 1, rowNum);
         GridPane.setMargin(waypointHdopTxt, INSET_TOP);
         
         final Label vdopLbl = new Label("Vdop:");
-        editWaypointPane.add(vdopLbl, 2, rowNum);
+        getGridPane().add(vdopLbl, 2, rowNum);
         GridPane.setMargin(vdopLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointVdopTxt, 3, rowNum);
+        getGridPane().add(waypointVdopTxt, 3, rowNum);
         GridPane.setMargin(waypointVdopTxt, INSET_TOP);
         
         rowNum++;
         // 13th row: pdop & sat
         final Label pdopLbl = new Label("Pdop:");
-        editWaypointPane.add(pdopLbl, 0, rowNum);
+        getGridPane().add(pdopLbl, 0, rowNum);
         GridPane.setMargin(pdopLbl, INSET_TOP);
         
-        editWaypointPane.add(waypointPdopTxt, 1, rowNum);
+        getGridPane().add(waypointPdopTxt, 1, rowNum);
         GridPane.setMargin(waypointPdopTxt, INSET_TOP);
         
         final Label satLbl = new Label("Sat:");
-        editWaypointPane.add(satLbl, 2, rowNum);
+        getGridPane().add(satLbl, 2, rowNum);
         GridPane.setMargin(satLbl, INSET_TOP);
 
         waypointSatTxt.setMinValue(BigDecimal.ZERO);
         waypointSatTxt.setFormat(GPXLineItem.COUNT_FORMAT);
-        editWaypointPane.add(waypointSatTxt, 3, rowNum);
+        getGridPane().add(waypointSatTxt, 3, rowNum);
         GridPane.setMargin(waypointSatTxt, INSET_TOP);
         
         rowNum++;
         // 14th row: Fix & sat
         final Label fixLbl = new Label("Fix:");
-        editWaypointPane.add(fixLbl, 0, rowNum);
+        getGridPane().add(fixLbl, 0, rowNum);
         GridPane.setMargin(fixLbl, INSET_TOP);
 
         waypointFixTxt.getItems().addAll("", Fix.NONE.getValue(), Fix.TWO_D.getValue(), Fix.THREE_D.getValue(), Fix.DGPS.getValue(), Fix.PPS.getValue());
         waypointFixTxt.setEditable(false);
-        editWaypointPane.add(waypointFixTxt, 1, rowNum);
+        getGridPane().add(waypointFixTxt, 1, rowNum);
         GridPane.setMargin(waypointFixTxt, INSET_TOP);
         
         final Label magvarLbl = new Label("Magn. Variation:");
-        editWaypointPane.add(magvarLbl, 2, rowNum);
+        getGridPane().add(magvarLbl, 2, rowNum);
         GridPane.setMargin(magvarLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointMagneticVariationTxt, 3, rowNum);
+        getGridPane().add(waypointMagneticVariationTxt, 3, rowNum);
         GridPane.setMargin(waypointMagneticVariationTxt, INSET_TOP);
         
         rowNum++;
         // 15th row: AgeOfGPSData & dGpsStationId
         final Label ageLbl = new Label("Age GPS Data:");
-        editWaypointPane.add(ageLbl, 0, rowNum);
+        getGridPane().add(ageLbl, 0, rowNum);
         GridPane.setMargin(ageLbl, INSET_TOP);
 
-        editWaypointPane.add(waypointAgeOfGPSDataTxt, 1, rowNum);
+        getGridPane().add(waypointAgeOfGPSDataTxt, 1, rowNum);
         GridPane.setMargin(waypointAgeOfGPSDataTxt, INSET_TOP);
         
         final Label dgpsstatLbl = new Label("dGPS StationId:");
-        editWaypointPane.add(dgpsstatLbl, 2, rowNum);
+        getGridPane().add(dgpsstatLbl, 2, rowNum);
         GridPane.setMargin(dgpsstatLbl, INSET_TOP);
 
         waypointdGpsStationIdTxt.setMinValue(BigDecimal.ZERO);
         waypointdGpsStationIdTxt.setMaxValue(BigDecimal.valueOf(1023));
         waypointdGpsStationIdTxt.setFormat(GPXLineItem.COUNT_FORMAT);
-        editWaypointPane.add(waypointdGpsStationIdTxt, 3, rowNum);
+        getGridPane().add(waypointdGpsStationIdTxt, 3, rowNum);
         GridPane.setMargin(waypointdGpsStationIdTxt, INSET_TOP);
 
         rowNum++;
@@ -392,11 +390,11 @@ public class EditGPXWaypoint extends AbstractStage {
             // done, lets get out of here...
             getStage().close();
         });
-        editWaypointPane.add(saveButton, 0, rowNum, 4, 1);
+        getGridPane().add(saveButton, 0, rowNum, 4, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
 
-        initStage(new Scene(editWaypointPane));
+        initStage();
     }
 
     public void setCallback(final GPXEditor gpxEditor) {

@@ -122,8 +122,6 @@ public class DistributionViewer extends AbstractStage {
         getStage().setTitle("Distributions");
         getStage().initModality(Modality.APPLICATION_MODAL); 
         
-        final GridPane gridPane = new GridPane();
-        
         //
         // left columns
         //
@@ -131,7 +129,7 @@ public class DistributionViewer extends AbstractStage {
         int rowNum = 0;
         // 1st row: select data to show
         final Label dataLbl = new Label("Data to show:");
-        gridPane.add(dataLbl, 0, rowNum, 1, 1);
+        getGridPane().add(dataLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(dataLbl, INSET_TOP_BOTTOM);
         
         // add all possible values from GPXLineItemData
@@ -150,7 +148,7 @@ public class DistributionViewer extends AbstractStage {
                 }
             }
         });
-        gridPane.add(dataBox, 1, rowNum, 1, 1);
+        getGridPane().add(dataBox, 1, rowNum, 1, 1);
         GridPane.setMargin(dataBox, INSET_TOP_BOTTOM);
 
         rowNum++;
@@ -170,7 +168,7 @@ public class DistributionViewer extends AbstractStage {
         barChart.getStyleClass().add("unpad-chart");
         barChart.setLegendVisible(false);
         barChart.setAnimated(false);
-        gridPane.add(barChart, 0, rowNum, 3, 1);
+        getGridPane().add(barChart, 0, rowNum, 3, 1);
         GridPane.setMargin(barChart, INSET_SMALL);
 
         rowNum++;
@@ -198,7 +196,7 @@ public class DistributionViewer extends AbstractStage {
         lblBox.getChildren().add(maxLbl);
         HBox.setMargin(maxLbl, INSET_NONE);
 
-        gridPane.add(lblBox, 0, rowNum, 3, 1);
+        getGridPane().add(lblBox, 0, rowNum, 3, 1);
         GridPane.setMargin(lblBox, INSET_SMALL);
 
         rowNum++;
@@ -232,7 +230,7 @@ public class DistributionViewer extends AbstractStage {
                 setCountLbl();
             }
         });
-        gridPane.add(minmaxSlider, 0, rowNum, 3, 1);
+        getGridPane().add(minmaxSlider, 0, rowNum, 3, 1);
         GridPane.setMargin(minmaxSlider, INSET_BOTTOM);
 
         rowNum++;
@@ -255,7 +253,7 @@ public class DistributionViewer extends AbstractStage {
             // re-enable listener for checked changes
             wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         });
-        gridPane.add(selectButton, 0, rowNum, 3, 1);
+        getGridPane().add(selectButton, 0, rowNum, 3, 1);
         GridPane.setHalignment(selectButton, HPos.CENTER);
         GridPane.setMargin(selectButton, INSET_BOTTOM);
 
@@ -288,12 +286,12 @@ public class DistributionViewer extends AbstractStage {
             myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false);
         };     
         wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
-        gridPane.add(wayPointList, 3, rowNum, 1, 3);
+        getGridPane().add(wayPointList, 3, rowNum, 1, 3);
         GridPane.setMargin(wayPointList, INSET_TOP_BOTTOM);
 
         rowNum = 3;
         // 5th row: number selected waypoints
-        gridPane.add(countLbl, 3, rowNum, 1, 1);
+        getGridPane().add(countLbl, 3, rowNum, 1, 1);
         GridPane.setHalignment(countLbl, HPos.CENTER);
         GridPane.setMargin(countLbl, INSET_BOTTOM);
 
@@ -316,11 +314,11 @@ public class DistributionViewer extends AbstractStage {
                 hasDeleted = true;
             }
         });
-        gridPane.add(deleteButton, 3, rowNum, 1, 1);
+        getGridPane().add(deleteButton, 3, rowNum, 1, 1);
         GridPane.setHalignment(deleteButton, HPos.CENTER);
         GridPane.setMargin(deleteButton, INSET_BOTTOM);
         
-        initStage(new Scene(gridPane));
+        initStage();
     }
     
     public void setCallback(final GPXEditor gpxEditor) {

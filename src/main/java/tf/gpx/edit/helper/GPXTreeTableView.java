@@ -762,7 +762,7 @@ public class GPXTreeTableView {
         final GPXLineItem.GPXLineItemType locationType = location.getType();
         
         // TFE, 20190822: insert a clone since we might loose insert after we have removed it
-        final GPXLineItem insertReal = insert.cloneMeWithChildren();
+        final GPXLineItem insertReal = insert.cloneMe(true);
         if (doRemove) {
             // remove dragged item from treeitem and gpxlineitem
             // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...

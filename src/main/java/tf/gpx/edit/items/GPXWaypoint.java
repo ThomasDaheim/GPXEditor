@@ -101,7 +101,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public GPXWaypoint cloneMeWithChildren() {
+    public GPXWaypoint cloneMe(final boolean withChildren) {
         final GPXWaypoint myClone = new GPXWaypoint();
         
         // parent needs to be set initially - list functions use this for checking
@@ -309,13 +309,13 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXLineItem getParent() {
         return myGPXParent;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXWaypoint setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXParent != null && myGPXParent.equals(parent)) {

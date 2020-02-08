@@ -116,7 +116,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrack cloneMeWithChildren() {
+    public GPXTrack cloneMe(final boolean withChildren) {
         final GPXTrack myClone = new GPXTrack();
         
         // parent needs to be set initially - list functions use this for checking
@@ -127,7 +127,7 @@ public class GPXTrack extends GPXMeasurable {
         
         // clone all my children
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
-            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren().setParent(myClone));
+            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMe(withChildren).setParent(myClone));
         }
         numberChildren(myClone.myGPXTrackSegments);
 
@@ -168,13 +168,13 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXFile getParent() {
         return myGPXFile;
     }
     
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXTrack setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {

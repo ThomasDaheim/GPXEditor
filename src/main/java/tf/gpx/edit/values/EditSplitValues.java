@@ -25,8 +25,20 @@
  */
 package tf.gpx.edit.values;
 
+import java.text.DecimalFormat;
+import javafx.event.ActionEvent;
+import javafx.geometry.HPos;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
+import javafx.util.converter.DoubleStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
+import static tf.gpx.edit.helper.AbstractStage.INSET_TOP;
+import tf.helper.EnumHelper;
 
 /**
  *
@@ -36,10 +48,26 @@ public class EditSplitValues extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditSplitValues INSTANCE = new EditSplitValues();
+
+    private final DecimalFormat decimalFormat = new DecimalFormat("0");
+    
+    // UI elements used in various methods need to be class-wide
+    final ChoiceBox typeChoiceBox = EnumHelper.getInstance().createChoiceBox(SplitType.class, SplitType.SplitByDistance);
+    final TextField valueText = new TextField();
     
     public enum SplitType {
-        SplitByDistance,
-        SplitByTime
+        SplitByDistance("m"),
+        SplitByTime("sec");
+        
+        private final String myUnit;
+        
+        private SplitType(final String unit) {
+            myUnit = unit;
+        }
+        
+        public String getUnit() {
+            return myUnit;
+        }
     }
     
     public class SplitValue {
@@ -77,6 +105,8 @@ public class EditSplitValues extends AbstractStage {
     private EditSplitValues() {
         // Exists only to defeat instantiation.
         super();
+
+        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
         
         initViewer();
     }
@@ -88,14 +118,63 @@ public class EditSplitValues extends AbstractStage {
     @SuppressWarnings("unchecked")
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Edit SPlit Values");
+        getStage().setTitle("Edit Split Values");
         getStage().initModality(Modality.APPLICATION_MODAL); 
+        
+        int rowNum = 0;
+        // 1st row: split type
+        final Label typeLbl = new Label("Split by:");
+        getGridPane().add(typeLbl, 0, rowNum);
+        GridPane.setMargin(typeLbl, INSET_TOP);
+        
+        getGridPane().add(typeChoiceBox, 1, rowNum, 2, 1);
+        GridPane.setMargin(typeChoiceBox, INSET_TOP);
+        
+        rowNum++;
+        // 2nd row: split value
+        final Label valueLbl = new Label("Split each:");
+        getGridPane().add(valueLbl, 0, rowNum);
+        GridPane.setMargin(valueLbl, INSET_TOP);
+        
+        valueText.setMaxWidth(80);
+        valueText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        valueText.setText(decimalFormat.format(1000.0));
+        getGridPane().add(valueText, 1, rowNum, 1, 1);
+        GridPane.setMargin(valueText, INSET_TOP);
+        
+        final Label valueUnit = new Label(SplitType.SplitByDistance.getUnit());
+        getGridPane().add(valueUnit, 2, rowNum);
+        GridPane.setMargin(valueUnit, INSET_TOP);
+        
+        rowNum++;
+        // 3rd row: OK button
+        final Button splitButton = new Button("Split");
+        splitButton.setOnAction((ActionEvent event) -> {
+            // done, lets get out of here...
+            getStage().close();
+        });
+        getGridPane().add(splitButton, 0, rowNum, 3, 1);
+        GridPane.setHalignment(splitButton, HPos.CENTER);
+        GridPane.setMargin(splitButton, INSET_TOP_BOTTOM);
+
+        // update unit when type changes
+        typeChoiceBox.getSelectionModel().selectedIndexProperty().addListener((ov, oldValue, newValue) -> {
+            valueUnit.setText(SplitType.values()[newValue.intValue()].getUnit());
+        });
+
+        initStage();
     }
     
     public SplitValue editSplitValues() {
-        final SplitValue result = new SplitValue(SplitType.SplitByDistance, 1.0);
+        if (getStage().isShowing()) {
+            getStage().close();
+        }
         
-        return result;
+        getStage().showAndWait();
+        
+        final SplitType type = EnumHelper.getInstance().selectedEnumChoiceBox(SplitType.class, typeChoiceBox);
+        final double value = Math.max(Double.valueOf(valueText.getText().trim()), 1.0);
+        
+        return new SplitValue(type, value);
     }
-
 }

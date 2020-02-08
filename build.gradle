@@ -123,7 +123,7 @@ run {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx1024M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
     }
 }
 
@@ -139,7 +139,7 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
         ])
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx1024M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
     }
 }
 

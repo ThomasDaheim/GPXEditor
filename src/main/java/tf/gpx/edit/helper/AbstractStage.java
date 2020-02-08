@@ -27,6 +27,7 @@ package tf.gpx.edit.helper;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import tf.gpx.edit.main.GPXEditorManager;
 
@@ -36,6 +37,7 @@ import tf.gpx.edit.main.GPXEditorManager;
  */
 public abstract class AbstractStage {
     private final Stage myStage = new Stage();
+    private final GridPane myGridPane = new GridPane();
 
     public final static Insets INSET_NONE = new Insets(0, 0, 0, 0);
     public final static Insets INSET_SMALL = new Insets(0, 10, 0, 10);
@@ -47,8 +49,12 @@ public abstract class AbstractStage {
         return myStage;
     }
     
-    public void initStage(final Scene scene) {
-        myStage.setScene(scene);
+    public GridPane getGridPane() {
+        return myGridPane;
+    }
+    
+    public void initStage() {
+        myStage.setScene(new Scene(myGridPane));
         myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
         myStage.setResizable(false);
     }

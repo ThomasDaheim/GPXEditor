@@ -92,12 +92,10 @@ public class FindSRTMHeight extends AbstractStage {
         getStage().setTitle("Assign SRTM height values");
         getStage().initModality(Modality.WINDOW_MODAL);
        
-        final GridPane gridPane = new GridPane();
-
         int rowNum = 0;
         // 10th row: latitude & longitude
         final Label latLbl = new Label("Latitude:");
-        gridPane.add(latLbl, 0, rowNum);
+        getGridPane().add(latLbl, 0, rowNum);
         GridPane.setMargin(latLbl, INSET_TOP);
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
@@ -109,12 +107,12 @@ public class FindSRTMHeight extends AbstractStage {
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
         waypointLatitudeTxt.setTooltip(latTooltip);
 
-        gridPane.add(waypointLatitudeTxt, 1, rowNum);
+        getGridPane().add(waypointLatitudeTxt, 1, rowNum);
         GridPane.setMargin(waypointLatitudeTxt, INSET_TOP);
         
         rowNum++;
         final Label lonLbl = new Label("Longitude:");
-        gridPane.add(lonLbl, 0, rowNum);
+        getGridPane().add(lonLbl, 0, rowNum);
         GridPane.setMargin(lonLbl, INSET_TOP);
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
@@ -126,16 +124,16 @@ public class FindSRTMHeight extends AbstractStage {
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
         waypointLongitudeTxt.setTooltip(lonTooltip);
 
-        gridPane.add(waypointLongitudeTxt, 1, rowNum);
+        getGridPane().add(waypointLongitudeTxt, 1, rowNum);
         GridPane.setMargin(waypointLongitudeTxt, INSET_TOP);
 
         rowNum++;
         // elevationVal
         final Label elevLbl = new Label("Elevation:");
-        gridPane.add(elevLbl, 0, rowNum);
+        getGridPane().add(elevLbl, 0, rowNum);
         GridPane.setMargin(elevLbl, INSET_TOP);
         
-        gridPane.add(elevationVal, 1, rowNum);
+        getGridPane().add(elevationVal, 1, rowNum);
         GridPane.setMargin(elevationVal, INSET_TOP);
 
         rowNum++;
@@ -144,13 +142,13 @@ public class FindSRTMHeight extends AbstractStage {
         sepHor.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor, 0, rowNum);
         GridPane.setColumnSpan(sepHor, 2);
-        gridPane.getChildren().add(sepHor);
+        getGridPane().getChildren().add(sepHor);
         GridPane.setMargin(sepHor, INSET_TOP);
         
         rowNum++;
         // 1st row: path to srtm files
         final Label srtmLbl = new Label("Path to SRTM files:");
-        gridPane.add(srtmLbl, 0, rowNum, 1, 1);
+        getGridPane().add(srtmLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(srtmLbl, INSET_TOP);
 
         srtmPathLbl = new TextField(mySRTMDataPath);
@@ -182,18 +180,18 @@ public class FindSRTMHeight extends AbstractStage {
         final HBox srtmPathBox = new HBox();
         srtmPathBox.getChildren().addAll(srtmPathLbl, srtmPathBtn);
 
-        gridPane.add(srtmPathBox, 1, rowNum, 1, 1);
+        getGridPane().add(srtmPathBox, 1, rowNum, 1, 1);
         GridPane.setMargin(srtmPathBox, INSET_TOP);
 
         rowNum++;
         // 5th row: srtm averging mode
         final Label srtmAvgLbl = new Label("SRTM averaging mode:");
-        gridPane.add(srtmAvgLbl, 0, rowNum, 1, 1);
+        getGridPane().add(srtmAvgLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(srtmAvgLbl, INSET_TOP);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
         avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
-        gridPane.add(avgModeChoiceBox, 1, rowNum, 1, 1);
+        getGridPane().add(avgModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(avgModeChoiceBox, INSET_TOP);
 
         rowNum++;
@@ -216,11 +214,11 @@ public class FindSRTMHeight extends AbstractStage {
                 }
 //            }
         });
-        gridPane.add(assignButton, 0, rowNum, 2, 1);
+        getGridPane().add(assignButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(assignButton, HPos.CENTER);
         GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
 
-        initStage(new Scene(gridPane));
+        initStage();
    }
     
     public void findSRTMHeight(final HostServices hostServices) {

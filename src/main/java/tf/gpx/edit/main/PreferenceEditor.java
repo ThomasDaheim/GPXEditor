@@ -40,7 +40,6 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
@@ -99,14 +98,12 @@ public class PreferenceEditor extends AbstractStage {
         getStage().setTitle("Distributions");
         getStage().initModality(Modality.APPLICATION_MODAL); 
         
-        final GridPane gridPane = new GridPane();
-
         int rowNum = 0;
         // 1st row: select fixTrack distanceGPXWaypoints
         Tooltip t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
         final Label fixLbl = new Label("Min. Distance for fixing:");
         fixLbl.setTooltip(t);
-        gridPane.add(fixLbl, 0, rowNum, 1, 1);
+        getGridPane().add(fixLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(fixLbl, INSET_TOP);
         
         final TextField fixText = new TextField();
@@ -114,7 +111,7 @@ public class PreferenceEditor extends AbstractStage {
         fixText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
         fixText.setText(decimalFormat.format(myFixEpsilon));
         fixText.setTooltip(t);
-        gridPane.add(fixText, 1, rowNum, 1, 1);
+        getGridPane().add(fixText, 1, rowNum, 1, 1);
         GridPane.setMargin(fixText, INSET_TOP);
         
         rowNum++;
@@ -122,13 +119,13 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Reduction algorithm to use");
         final Label algoLbl = new Label("Reduction Algorithm:");
         algoLbl.setTooltip(t);
-        gridPane.add(algoLbl, 0, rowNum, 1, 1);
+        getGridPane().add(algoLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(algoLbl, VPos.TOP);
         GridPane.setMargin(algoLbl, INSET_TOP);
 
         final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
         reduceAlgoChoiceBox.setTooltip(t);
-        gridPane.add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
+        getGridPane().add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, INSET_TOP);
 
         rowNum++;
@@ -136,7 +133,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Minimum distance for track reduction algorithms");
         final Label epsilonLbl = new Label("Algorithm Epsilon:");
         epsilonLbl.setTooltip(t);
-        gridPane.add(epsilonLbl, 0, rowNum, 1, 1);
+        getGridPane().add(epsilonLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(epsilonLbl, VPos.TOP);
         GridPane.setMargin(epsilonLbl, INSET_TOP);
         
@@ -145,7 +142,7 @@ public class PreferenceEditor extends AbstractStage {
         epsilonText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
         epsilonText.setText(decimalFormat.format(myReduceEpsilon));
         epsilonText.setTooltip(t);
-        gridPane.add(epsilonText, 1, rowNum, 1, 1);
+        getGridPane().add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, INSET_TOP);        
 
         rowNum++;
@@ -153,14 +150,14 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Assign height values for new items automatically");
         final Label assignHeightLbl = new Label("Auto-assign height:");
         assignHeightLbl.setTooltip(t);
-        gridPane.add(assignHeightLbl, 0, rowNum, 1, 1);
+        getGridPane().add(assignHeightLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(assignHeightLbl, VPos.TOP);
         GridPane.setMargin(assignHeightLbl, INSET_TOP);
         
         final CheckBox assignHeightChkBox = new CheckBox();
         assignHeightChkBox.setSelected(myAssignHeight);
         assignHeightChkBox.setTooltip(t);
-        gridPane.add(assignHeightChkBox, 1, rowNum, 1, 1);
+        getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
         GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
 
         rowNum++;
@@ -169,7 +166,7 @@ public class PreferenceEditor extends AbstractStage {
         sepHor.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor, 0, rowNum);
         GridPane.setColumnSpan(sepHor, 2);
-        gridPane.getChildren().add(sepHor);
+        getGridPane().getChildren().add(sepHor);
         GridPane.setMargin(sepHor, INSET_TOP);
 
         rowNum++;
@@ -177,14 +174,14 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Always show waypoints from gpx file");
         final Label waypointLbl = new Label("Always show file waypoints:");
         waypointLbl.setTooltip(t);
-        gridPane.add(waypointLbl, 0, rowNum, 1, 1);
+        getGridPane().add(waypointLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(waypointLbl, VPos.TOP);
         GridPane.setMargin(waypointLbl, INSET_TOP);
         
         final CheckBox waypointChkBox = new CheckBox();
         waypointChkBox.setSelected(myAlwaysShowFileWaypoints);
         waypointChkBox.setTooltip(t);
-        gridPane.add(waypointChkBox, 1, rowNum, 1, 1);
+        getGridPane().add(waypointChkBox, 1, rowNum, 1, 1);
         GridPane.setMargin(waypointChkBox, INSET_TOP);        
 
         rowNum++;
@@ -192,7 +189,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Number of waypoints to show on map");
         final Label numShowLbl = new Label("No. waypoints to show:");
         numShowLbl.setTooltip(t);
-        gridPane.add(numShowLbl, 0, rowNum, 1, 1);
+        getGridPane().add(numShowLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(numShowLbl, VPos.TOP);
         GridPane.setMargin(numShowLbl, INSET_TOP);
         
@@ -201,7 +198,7 @@ public class PreferenceEditor extends AbstractStage {
         numShowText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
         numShowText.setText(decimalFormat.format(myMaxWaypointsToShow));
         numShowText.setTooltip(t);
-        gridPane.add(numShowText, 1, rowNum, 1, 1);
+        getGridPane().add(numShowText, 1, rowNum, 1, 1);
         GridPane.setMargin(numShowText, INSET_TOP);        
 
         rowNum++;
@@ -209,7 +206,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Radius in meter for searching on map");
         final Label searchLbl = new Label("Search radius (m):");
         searchLbl.setTooltip(t);
-        gridPane.add(searchLbl, 0, rowNum, 1, 1);
+        getGridPane().add(searchLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(searchLbl, VPos.TOP);
         GridPane.setMargin(searchLbl, INSET_TOP);
         
@@ -218,7 +215,7 @@ public class PreferenceEditor extends AbstractStage {
         searchText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
         searchText.setText(decimalFormat.format(mySearchRadius));
         searchText.setTooltip(t);
-        gridPane.add(searchText, 1, rowNum, 1, 1);
+        getGridPane().add(searchText, 1, rowNum, 1, 1);
         GridPane.setMargin(searchText, INSET_TOP);        
 
         rowNum++;
@@ -226,7 +223,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Duration in minutes between waypoints that counts as a break");
         final Label breakLbl = new Label("Break duration (mins):");
         breakLbl.setTooltip(t);
-        gridPane.add(breakLbl, 0, rowNum, 1, 1);
+        getGridPane().add(breakLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(breakLbl, VPos.TOP);
         GridPane.setMargin(breakLbl, INSET_TOP);
         
@@ -235,7 +232,7 @@ public class PreferenceEditor extends AbstractStage {
         breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
         breakText.setText(decimalFormat.format(myBreakDuration));
         breakText.setTooltip(t);
-        gridPane.add(breakText, 1, rowNum, 1, 1);
+        getGridPane().add(breakText, 1, rowNum, 1, 1);
         GridPane.setMargin(breakText, INSET_TOP);        
 
         rowNum++;
@@ -243,7 +240,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("API key for OpenCycleMap");
         final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
         openCycleMapApiKeyLbl.setTooltip(t);
-        gridPane.add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
+        getGridPane().add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
         GridPane.setMargin(openCycleMapApiKeyLbl, INSET_TOP);
         
@@ -252,7 +249,7 @@ public class PreferenceEditor extends AbstractStage {
         openCycleMapApiKeyText.setMaxWidth(400);
         openCycleMapApiKeyText.setText(myOpenCycleMapApiKey);
         openCycleMapApiKeyText.setTooltip(t);
-        gridPane.add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
+        getGridPane().add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
         GridPane.setMargin(openCycleMapApiKeyText, INSET_TOP);
 
         rowNum++;
@@ -260,7 +257,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("API key for OpenRouteService");
         final Label routingApiKeyLbl = new Label("Routing API key:");
         routingApiKeyLbl.setTooltip(t);
-        gridPane.add(routingApiKeyLbl, 0, rowNum, 1, 1);
+        getGridPane().add(routingApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(routingApiKeyLbl, VPos.TOP);
         GridPane.setMargin(routingApiKeyLbl, INSET_TOP);
         
@@ -269,7 +266,7 @@ public class PreferenceEditor extends AbstractStage {
         routingApiKeyText.setMaxWidth(400);
         routingApiKeyText.setText(myRoutingApiKey);
         routingApiKeyText.setTooltip(t);
-        gridPane.add(routingApiKeyText, 1, rowNum, 1, 1);
+        getGridPane().add(routingApiKeyText, 1, rowNum, 1, 1);
         GridPane.setMargin(routingApiKeyText, INSET_TOP);
 
         rowNum++;
@@ -277,13 +274,13 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Routing profile to use");
         final Label profileLbl = new Label("Routing:");
         profileLbl.setTooltip(t);
-        gridPane.add(profileLbl, 0, rowNum, 1, 1);
+        getGridPane().add(profileLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(profileLbl, VPos.TOP);
         GridPane.setMargin(profileLbl, INSET_TOP);
 
         final ChoiceBox profileChoiceBox = EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, myRoutingProfile);
         profileChoiceBox.setTooltip(t);
-        gridPane.add(profileChoiceBox, 1, rowNum, 1, 1);
+        getGridPane().add(profileChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(profileChoiceBox, INSET_TOP);
         
         rowNum++;
@@ -293,7 +290,7 @@ public class PreferenceEditor extends AbstractStage {
             getStage().setTitle("Save");
             getStage().close();
         });
-        gridPane.add(saveBtn, 0, rowNum, 1, 1);
+        getGridPane().add(saveBtn, 0, rowNum, 1, 1);
         GridPane.setMargin(saveBtn, new Insets(10));
         
         Button cancelBtn = new Button("Cancel");
@@ -301,10 +298,10 @@ public class PreferenceEditor extends AbstractStage {
             getStage().setTitle("Cancel");
             getStage().close();
         });
-        gridPane.add(cancelBtn, 1, rowNum, 1, 1);
+        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
         
-        getStage().setScene(new Scene(gridPane));
+        initStage();
         getStage().showAndWait();
         
         if (saveBtn.getText().equals(getStage().getTitle())) {

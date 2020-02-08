@@ -143,35 +143,37 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile cloneMeWithChildren() {
+    public GPXFile cloneMe(final boolean withChildren) {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
         myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
         
-        // clone all my children
-        for (GPXMetadata gpxMetadata : myGPXMetadata) {
-            myClone.myGPXMetadata.add(gpxMetadata.cloneMeWithChildren().setParent(myClone));
-        }
-        for (GPXTrack gpxTrack : myGPXTracks) {
-            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren().setParent(myClone));
-        }
-        for (GPXRoute gpxRoute : myGPXRoutes) {
-            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren().setParent(myClone));
-        }
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren().setParent(myClone));
-        }
-        numberChildren(myClone.myGPXTracks);
-        numberChildren(myClone.myGPXRoutes);
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXMetadata gpxMetadata : myGPXMetadata) {
+                myClone.myGPXMetadata.add(gpxMetadata.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXTrack gpxTrack : myGPXTracks) {
+                myClone.myGPXTracks.add(gpxTrack.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXRoute gpxRoute : myGPXRoutes) {
+                myClone.myGPXRoutes.add(gpxRoute.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            numberChildren(myClone.myGPXTracks);
+            numberChildren(myClone.myGPXRoutes);
+            numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXTracks.addListener(myClone.changeListener);
-        myClone.myGPXRoutes.addListener(myClone.changeListener);
-        myClone.myGPXWaypoints.addListener(myClone.changeListener);
+            myClone.myGPXTracks.addListener(myClone.changeListener);
+            myClone.myGPXRoutes.addListener(myClone.changeListener);
+            myClone.myGPXWaypoints.addListener(myClone.changeListener);
+        }
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -268,14 +270,14 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXLineItem getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXFile setParent(final GPXLineItem parent) {
         // GPXFiles don't have a parent.
         return this;

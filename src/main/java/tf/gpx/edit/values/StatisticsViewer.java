@@ -181,8 +181,6 @@ public class StatisticsViewer extends AbstractStage {
         getStage().setTitle("Statistics");
         getStage().initModality(Modality.APPLICATION_MODAL); 
 
-        final GridPane gridPane = new GridPane();
-
         int rowNum = 0;
 
         // data will be shown in a table
@@ -226,7 +224,7 @@ public class StatisticsViewer extends AbstractStage {
         table.setMinWidth(770);
         table.setMinHeight(750);
         
-        gridPane.add(table, 0, rowNum, 2, 1);
+        getGridPane().add(table, 0, rowNum, 2, 1);
         GridPane.setMargin(table, INSET_TOP_BOTTOM);
         
         rowNum++;
@@ -236,7 +234,7 @@ public class StatisticsViewer extends AbstractStage {
             // done, lets get out of here...
             getStage().close();
         });      
-        gridPane.add(OKButton, 0, rowNum, 1, 1);
+        getGridPane().add(OKButton, 0, rowNum, 1, 1);
         GridPane.setMargin(OKButton, INSET_BOTTOM);
         GridPane.setHalignment(OKButton, HPos.CENTER);
 
@@ -244,7 +242,7 @@ public class StatisticsViewer extends AbstractStage {
         exportButton.setOnAction((ActionEvent event) -> {
             exportCSV();
         });      
-        gridPane.add(exportButton, 1, rowNum, 1, 1);
+        getGridPane().add(exportButton, 1, rowNum, 1, 1);
         GridPane.setMargin(exportButton, INSET_BOTTOM);
         GridPane.setHalignment(exportButton, HPos.CENTER);
         
@@ -252,9 +250,9 @@ public class StatisticsViewer extends AbstractStage {
         col1.setPercentWidth(50);
         final ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(50);
-        gridPane.getColumnConstraints().addAll(col1, col2);
+        getGridPane().getColumnConstraints().addAll(col1, col2);
         
-        initStage(new Scene(gridPane));
+        initStage();
     }
     
     public boolean showStatistics(final GPXFile gpxFile) {

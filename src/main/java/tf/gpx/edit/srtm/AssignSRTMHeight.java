@@ -100,12 +100,10 @@ public class AssignSRTMHeight extends AbstractStage  {
         getStage().setTitle("Assign SRTM height values");
         getStage().initModality(Modality.WINDOW_MODAL);
        
-        final GridPane gridPane = new GridPane();
-
         int rowNum = 0;
         // 1st row: path to srtm files
         final Label srtmLbl = new Label("Path to SRTM files:");
-        gridPane.add(srtmLbl, 0, rowNum, 1, 1);
+        getGridPane().add(srtmLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(srtmLbl, INSET_TOP);
 
         srtmPathLbl = new TextField(mySRTMDataPath);
@@ -137,18 +135,18 @@ public class AssignSRTMHeight extends AbstractStage  {
         final HBox srtmPathBox = new HBox();
         srtmPathBox.getChildren().addAll(srtmPathLbl, srtmPathBtn);
 
-        gridPane.add(srtmPathBox, 1, rowNum, 1, 1);
+        getGridPane().add(srtmPathBox, 1, rowNum, 1, 1);
         GridPane.setMargin(srtmPathBox, INSET_TOP);
 
         rowNum++;
         // 2nd row: srtm file list
         final Label fileLbl = new Label("Required SRTM files:");
-        gridPane.add(fileLbl, 0, rowNum, 1, 1);
+        getGridPane().add(fileLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(fileLbl, INSET_TOP);
         GridPane.setValignment(fileLbl, VPos.TOP);
 
         fileList.setEditable(false);
-        gridPane.add(fileList, 1, rowNum, 1, 3);
+        getGridPane().add(fileList, 1, rowNum, 1, 3);
         GridPane.setMargin(fileList, INSET_TOP);
         
         rowNum++;
@@ -163,7 +161,7 @@ public class AssignSRTMHeight extends AbstractStage  {
                 myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
             }
         });
-        gridPane.add(download, 0, rowNum, 1, 1);
+        getGridPane().add(download, 0, rowNum, 1, 1);
         GridPane.setMargin(download, INSET_TOP);
         GridPane.setValignment(download, VPos.TOP);
 
@@ -177,30 +175,30 @@ public class AssignSRTMHeight extends AbstractStage  {
 
             checkSRTMFiles();
         });
-        gridPane.add(rescan, 0, rowNum, 1, 1);
+        getGridPane().add(rescan, 0, rowNum, 1, 1);
         GridPane.setMargin(rescan, INSET_TOP);
         GridPane.setValignment(rescan, VPos.TOP);
 
         rowNum++;
         // 5th row: srtm averging mode
         final Label srtmAvgLbl = new Label("SRTM averaging mode:");
-        gridPane.add(srtmAvgLbl, 0, rowNum, 1, 1);
+        getGridPane().add(srtmAvgLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(srtmAvgLbl, INSET_TOP);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
         avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
-        gridPane.add(avgModeChoiceBox, 1, rowNum, 1, 1);
+        getGridPane().add(avgModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(avgModeChoiceBox, INSET_TOP);
         
         rowNum++;
         // 6th row: height asigning mode
         final Label hghtAsgnLbl = new Label("Assign SRTM height:");
-        gridPane.add(hghtAsgnLbl, 0, rowNum, 1, 1);
+        getGridPane().add(hghtAsgnLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(hghtAsgnLbl, INSET_TOP);
         GridPane.setValignment(hghtAsgnLbl, VPos.TOP);
         
         asgnModeChoiceBox = EnumHelper.getInstance().createToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
-        gridPane.add(asgnModeChoiceBox, 1, rowNum, 1, 1);
+        getGridPane().add(asgnModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(asgnModeChoiceBox, INSET_TOP);
 
         rowNum++;
@@ -230,11 +228,11 @@ public class AssignSRTMHeight extends AbstractStage  {
                 getStage().close();
             }
         });
-        gridPane.add(assignButton, 0, rowNum, 2, 1);
+        getGridPane().add(assignButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(assignButton, HPos.CENTER);
         GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
 
-        initStage(new Scene(gridPane));
+        initStage();
     }
     
     public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {

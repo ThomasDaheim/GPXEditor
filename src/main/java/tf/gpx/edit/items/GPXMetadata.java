@@ -56,7 +56,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
     
     @Override
-    public GPXMetadata cloneMeWithChildren() {
+    public GPXMetadata cloneMe(final boolean withChildren) {
         final GPXMetadata myClone = new GPXMetadata();
         
         // parent needs to be set initially - list functions use this for checking
@@ -161,13 +161,13 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXLineItem getParent() {
         return myGPXFile;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public GPXMetadata setParent(final GPXLineItem parent) {
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         

@@ -109,7 +109,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrackSegment cloneMeWithChildren() {
+    public GPXTrackSegment cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
         
         // parent needs to be set initially - list functions use this for checking
@@ -126,14 +126,16 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myStartingTime = myStartingTime;
         myClone.myEndTime = myEndTime;
         
-        // clone all my children
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren().setParent(myClone));
-        }
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
+        }
 
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
@@ -146,13 +148,14 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
+    @SuppressWarnings("all")
     public GPXTrack getParent() {
         return myGPXTrack;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public GPXTrackSegment setParent(GPXLineItem parent) {
+    @SuppressWarnings("all")
+    public GPXTrackSegment setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXTrack != null && myGPXTrack.equals(parent)) {
             return this;
