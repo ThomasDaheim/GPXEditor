@@ -421,7 +421,6 @@ public class GPXEditorWorker {
         double curValue = 0.0;
         GPXLineItem curItem = gpxLineItem.cloneMe(false);
         result.add(curItem);
-        GPXWaypoint lastSplit = null;
         for (GPXWaypoint waypoint : gpxLineItem.getCombinedGPXWaypoints(null)) {
             if (EditSplitValues.SplitType.SplitByDistance.equals(type)) {
                 curValue += waypoint.getDistance();
@@ -435,7 +434,6 @@ public class GPXEditorWorker {
                 curValue = 0.0;
                 curItem = gpxLineItem.cloneMe(false);
                 result.add(curItem);
-                lastSplit = waypoint;
             }
             
             curItem.getGPXWaypoints().add(waypoint.cloneMe(false));
