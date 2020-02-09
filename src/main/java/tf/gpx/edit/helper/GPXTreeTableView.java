@@ -631,7 +631,7 @@ public class GPXTreeTableView {
             if (db.hasFiles()) {
                 for (File file:db.getFiles()) {
                     // accept only gpx files
-                    if (GPXEditorWorker.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                         event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                         break;
                     }
@@ -690,7 +690,7 @@ public class GPXTreeTableView {
                 final List<File> files = new ArrayList<>();
                 for (File file:db.getFiles()) {
                     // accept only gpx files
-                    if (GPXEditorWorker.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                         files.add(file);
                     }
                 }

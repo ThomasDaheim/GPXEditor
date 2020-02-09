@@ -55,23 +55,17 @@ import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.values.EditSplitValues;
-import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
-import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
-import tf.gpx.edit.worker.GPXReduceWorker;
 import tf.helper.ShowAlerts;
 
 /**
  *
  * @author Thomas
  */
-public class GPXEditorWorker {
+public class GPXFileHelper {
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
     public static final String CSV_EXT = "csv";
@@ -85,11 +79,11 @@ public class GPXEditorWorker {
     
     private GPXEditor myEditor;
     
-    public GPXEditorWorker() {
+    public GPXFileHelper() {
         super();
     }
     
-    public GPXEditorWorker(final GPXEditor editor) {
+    public GPXFileHelper(final GPXEditor editor) {
         super();
         
         myEditor = editor;
@@ -173,7 +167,7 @@ public class GPXEditorWorker {
                 // add timestamp to name for multipe runs
                 Files.copy(curFile, Paths.get(curFile + "." + DATE_FORMAT.format(new Date()) + BAK_EXT));
             } catch (IOException ex) {
-                Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
                 result = false;
                 return result;
             }
@@ -189,7 +183,7 @@ public class GPXEditorWorker {
 //                Files.deleteIfExists(curFile);
 //            }
 //        } catch (IOException ex) {
-//            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
 //            result = false;
 //        }
 
@@ -288,96 +282,19 @@ public class GPXEditorWorker {
                 try {
                     printer.printRecord((Object[]) t.toArray(new String[t.size()]));
                 } catch (IOException ex) {
-                    Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
             
             printer.close(true);
             out.close();
         } catch (IOException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return result;
     }
-        
-    
-    public void fixGPXLineItems(final List<GPXLineItem> gpxLineItems, final double distance) {
-        runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
-    }
 
-    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.Algorithm algorithm, final double epsilon) {
-        runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
-    }
-
-    public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
-        runVisitor(GPXLineItem.castToGPXLineItem(gpxFiles), new GPXDeleteEmptyLineItemsWorker(deleteCount));
-    }
-    
-    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
-        for (GPXLineItem gpxLineItem : gpxLineItems) {
-            gpxLineItem.acceptVisitor(visitor);
-        }
-    }
-
-    public GPXFile mergeGPXFiles(final List<GPXFile> gpxFiles) {
-        // take first, rename and add all other tracks to it
-        final GPXFile mergedGPXFile = gpxFiles.get(0);
-        mergedGPXFile.setName(MERGED_FILE_NAME);
-
-        final List<GPXTrack> mergedGPXTracks = mergedGPXFile.getGPXTracks();
-        // add routes and waypoints as well!
-        final List<GPXRoute> mergedGPXRoutes = mergedGPXFile.getGPXRoutes();
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXFile.getGPXWaypoints();
-        for (GPXFile gpxFile : gpxFiles.subList(1, gpxFiles.size())) {
-            mergedGPXTracks.addAll(gpxFile.getGPXTracks());
-            mergedGPXRoutes.addAll(gpxFile.getGPXRoutes());
-            mergedGPXWaypoints.addAll(gpxFile.getGPXWaypoints());
-        }
-        
-        return mergedGPXFile;
-    }
-
-    public void mergeGPXTracks(final List<GPXTrack> gpxTracks, final List<GPXTrack> gpxTracksToMerge) {
-        // merge all selected tracksegments into the first track
-        final GPXTrack mergedGPXTrack = gpxTracksToMerge.get(0);
-        mergedGPXTrack.setName(MERGED_TRACK_NAME);
-
-        final List<GPXTrackSegment> mergedGPXTrackegments = mergedGPXTrack.getGPXTrackSegments();
-        for (GPXTrack gpxTrack : gpxTracksToMerge.subList(1, gpxTracksToMerge.size())) {
-            // add track segments to new list
-            mergedGPXTrackegments.addAll(gpxTrack.getGPXTrackSegments());
-
-            gpxTracks.remove(gpxTrack);
-        }
-    }
-
-    public void mergeGPXRoutes(final List<GPXRoute> gpxRoutes, final List<GPXRoute> gpxRoutesToMerge) {
-        // merge all selected tracksegments into the first track
-        final GPXRoute mergedGPXRoute = gpxRoutesToMerge.get(0);
-        mergedGPXRoute.setName(MERGED_ROUTE_NAME);
-
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXRoute.getGPXWaypoints();
-        for (GPXRoute gpxGPXRoute : gpxRoutesToMerge.subList(1, gpxRoutesToMerge.size())) {
-            mergedGPXWaypoints.addAll(gpxGPXRoute.getGPXWaypoints());
-            
-            gpxRoutes.remove(gpxGPXRoute);
-        }
-    }
-
-    public void mergeGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
-        // merge all selected waypoints into the first segment
-        final GPXTrackSegment mergedGPXTrackSegment = gpxTrackSegmentsToMerge.get(0);
-        mergedGPXTrackSegment.setName(MERGED_TRACKSEGMENT_NAME);
-
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints();
-        for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
-            mergedGPXWaypoints.addAll(gpxTrackSegment.getGPXWaypoints());
-            
-            gpxTrackSegments.remove(gpxTrackSegment);
-        }
-    }
-    
     public static void verifyXMLFile(final File gpxFile) {
         try {
             final SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -390,7 +307,7 @@ public class GPXEditorWorker {
             parser.parse(gpxFile, handler);
             
         } catch(IOException | ParserConfigurationException | SAXException ex) {
-//            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             
             final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
             Optional<ButtonType> doAction = 
@@ -401,44 +318,5 @@ public class GPXEditorWorker {
                             ex.getMessage(),
                             buttonOK);
         }
-    }
-    
-    public List<GPXLineItem> splitGPXLineItem(final GPXLineItem gpxLineItem, final EditSplitValues.SplitValue splitValue) {
-        final List<GPXLineItem> result = new ArrayList<>();
-
-        // we can only split tracks, tracksegments, routes
-        if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(gpxLineItem.getType()) &&
-            !GPXLineItem.GPXLineItemType.GPXRoute.equals(gpxLineItem.getType())) {
-            result.add(gpxLineItem);
-            
-            return result;
-        }
-        
-        // go through list of waypoints and decide on split base on parameters
-        final EditSplitValues.SplitType type = splitValue.getType();
-        final double value = splitValue.getValue();
-        
-        double curValue = 0.0;
-        GPXLineItem curItem = gpxLineItem.cloneMe(false);
-        result.add(curItem);
-        for (GPXWaypoint waypoint : gpxLineItem.getCombinedGPXWaypoints(null)) {
-            if (EditSplitValues.SplitType.SplitByDistance.equals(type)) {
-                curValue += waypoint.getDistance();
-            } else {
-                curValue += Double.valueOf(waypoint.getDuration()) / 1000.0;
-            }
-            
-            if (curValue > value) {
-                // split, clone, ... - whatever is necessary
-                
-                curValue = 0.0;
-                curItem = gpxLineItem.cloneMe(false);
-                result.add(curItem);
-            }
-            
-            curItem.getGPXWaypoints().add(waypoint.cloneMe(false));
-        }
-        
-        return result;
     }
 }

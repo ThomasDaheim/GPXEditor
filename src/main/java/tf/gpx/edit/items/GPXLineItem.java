@@ -276,7 +276,7 @@ public abstract class GPXLineItem {
     
     // cloning for extended class hierarchies
     // https://dzone.com/articles/java-cloning-even-copy-constructors-are-not-suffic
-    public abstract GPXLineItem cloneMe(final boolean withChildren);
+    public abstract <T extends GPXLineItem> T cloneMe(final boolean withChildren);
     
     @Override
     public String toString() {

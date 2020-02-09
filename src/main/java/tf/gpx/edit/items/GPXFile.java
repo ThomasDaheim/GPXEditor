@@ -56,7 +56,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXEditorWorker;
+import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
@@ -197,10 +197,10 @@ public class GPXFile extends GPXMeasurable {
             writer.writeGPX(getGPX(), out);
             out.close();        
         } catch (FileNotFoundException | ParserConfigurationException | TransformerException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         } catch (IOException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         }
         

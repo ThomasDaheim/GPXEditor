@@ -38,6 +38,7 @@ import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
 import static tf.gpx.edit.helper.AbstractStage.INSET_TOP;
+import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.helper.EnumHelper;
 
 /**
@@ -54,53 +55,6 @@ public class EditSplitValues extends AbstractStage {
     // UI elements used in various methods need to be class-wide
     final ChoiceBox typeChoiceBox = EnumHelper.getInstance().createChoiceBox(SplitType.class, SplitType.SplitByDistance);
     final TextField valueText = new TextField();
-    
-    public enum SplitType {
-        SplitByDistance("m"),
-        SplitByTime("sec");
-        
-        private final String myUnit;
-        
-        private SplitType(final String unit) {
-            myUnit = unit;
-        }
-        
-        public String getUnit() {
-            return myUnit;
-        }
-    }
-    
-    public class SplitValue {
-        private SplitType myType;
-        private double myValue;
-        
-        public SplitValue() {
-            super();
-        }
-        
-        public SplitValue(final SplitType type, final double value) {
-            super();
-
-            setType(type);
-            setValue(value);
-        }
-
-        public SplitType getType() {
-            return myType;
-        }
-
-        public void setType(final SplitType type) {
-            myType = type;
-        }
-
-        public double getValue() {
-            return myValue;
-        }
-
-        public void setValue(final double value) {
-            myValue = value;
-        }
-    }
     
     private EditSplitValues() {
         // Exists only to defeat instantiation.
