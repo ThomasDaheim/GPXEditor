@@ -47,6 +47,7 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
+    private ChartsPane myChartsPane;
 
     private List<GPXLineItem> myGPXLineItems;
 
@@ -157,5 +158,15 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
+    }
+
+    @Override
+    public ChartsPane getChartsPane() {
+        return myChartsPane;
+    }
+    
+    @Override
+    public void setChartsPane(final ChartsPane pane) {
+        myChartsPane = pane;
     }
 }

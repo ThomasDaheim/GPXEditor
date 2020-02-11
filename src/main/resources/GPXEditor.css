@@ -305,6 +305,14 @@
     -fx-text-origin: top;
 }
 
+* .item-id {
+    -fx-fill: black;
+    -fx-font-size: 8;
+    -fx-text-alignment: right;
+    -fx-padding: 0px;
+    -fx-margin: 0px;
+}
+
 /*
     bin distribution chart
 */

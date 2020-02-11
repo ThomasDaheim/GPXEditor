@@ -85,12 +85,14 @@ public class ChartsPane extends StackPane {
         getChildren().clear();
 
         // set up margins, ... for xAxis depending on side of yAxis
+        baseChart.setChartsPane(this);
         final XYChart chart = baseChart.getChart();
         setFixedAxisWidth(chart);
         styleChart(chart, true);
         getChildren().add(resizeChart(chart, true));
         
         additionalCharts.stream().forEach((t) -> {
+            t.setChartsPane(this);
             final XYChart addChart = t.getChart();
             
             setFixedAxisWidth(addChart);
@@ -220,5 +222,9 @@ public class ChartsPane extends StackPane {
         charts.stream().forEach((t) -> {
             t.savePreferences();
         });
+    }
+    
+    public IChartBasics getBaseChart() {
+        return baseChart;
     }
 }

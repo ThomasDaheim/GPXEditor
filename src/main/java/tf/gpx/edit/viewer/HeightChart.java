@@ -65,6 +65,7 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     private final static HeightChart INSTANCE = new HeightChart();
 
     private GPXEditor myGPXEditor;
+    private ChartsPane myChartsPane;
 
     private List<GPXLineItem> myGPXLineItems;
 
@@ -342,6 +343,16 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
+    }
+
+    @Override
+    public ChartsPane getChartsPane() {
+        return myChartsPane;
+    }
+    
+    @Override
+    public void setChartsPane(final ChartsPane pane) {
+        myChartsPane = pane;
     }
     
     private void selectWaypointsInRange() {

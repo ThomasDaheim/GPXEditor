@@ -30,11 +30,23 @@ import java.util.List;
 import java.util.Set;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.chart.Axis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -50,6 +62,8 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 public interface IChartBasics {
+    public static String DATA_SEP = "-";
+    
     public static enum ChartType {
         HEIGHTCHART,
         SPEEDCHART;
@@ -122,6 +136,11 @@ public interface IChartBasics {
     public abstract void setMaximumYValue(final double value);
     public abstract List<Pair<GPXWaypoint, Double>> getPoints();
     public abstract XYChart getChart();
+    public abstract ChartsPane getChartsPane();
+    public abstract void setChartsPane(final ChartsPane pane);
+    public abstract Node lookup(String string);
+    public abstract Axis getXAxis();
+    public abstract Axis getYAxis();
     
     public abstract void setCallback(final GPXEditor gpxEditor);
     
@@ -155,19 +174,22 @@ public interface IChartBasics {
         setMinimumYValue(Double.MAX_VALUE);
         setMaximumYValue(Double.MIN_VALUE);
 
-        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        final boolean alwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
         
         boolean hasData = false;
         // TFE, 20191112: create series per track & route to be able to handle different colors
         final List<XYChart.Series<Double, Double>> seriesList = new ArrayList<>();
         
+        // show file waypoints only once
+        boolean fileShown = false;
         for (GPXLineItem lineItem : lineItems) {
             // only files can have file waypoints
             if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
                 hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
-            } else if (alwayShowFileWaypoints) {
+            } else if (alwaysShowFileWaypoints && !fileShown) {
                 // add file waypoints as well, even though file isn't selected
                 hasData = addXYChartSeriesToList(seriesList, lineItem.getGPXFile(), hasData);
+                fileShown = true;
             }
             if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
                 GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
@@ -178,7 +200,7 @@ public interface IChartBasics {
                     }
                 }
             }
-            // track segments can have track segments
+            // track segments can have waypoints
             if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
                 hasData = addXYChartSeriesToList(seriesList, lineItem, hasData);
             }
@@ -203,6 +225,7 @@ public interface IChartBasics {
         // hide heightchart of no waypoints have been set
         getChart().setVisible(hasData);
     }
+    
     @SuppressWarnings("unchecked")
     private void showData(final List<XYChart.Series<Double, Double>> seriesList, final int dataCount) {
         // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments get shown if already enough waypoints...
@@ -214,7 +237,7 @@ public interface IChartBasics {
                 Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
                 // might have no waypoints at all...
                 Math.max(dataCount, 1);
-
+        
         // TFE, 20191125: only show up to GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
         int count = 0, i = 0, j = 0;
@@ -238,11 +261,11 @@ public interface IChartBasics {
                     }
                }
 
-                getChart().getData().add(reducedSeries);        
-
+                getChart().getData().add(reducedSeries); 
+                
                 // and now color the series nodes according to lineitem color
                 // https://gist.github.com/jewelsea/2129306
-                final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(reducedSeries.getName());
+                final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
                 reducedSeries.getNode().pseudoClassStateChanged(color, true);
                 Set<Node> nodes = getChart().lookupAll(".series" + j);
                 for (Node n : nodes) {
@@ -252,21 +275,33 @@ public interface IChartBasics {
                 j++;
             }
         }
-        
-//        getChart().getData().addAll(seriesList);        
-//       
-//        // and now color the series nodes according to lineitem color
-//        // https://gist.github.com/jewelsea/2129306
-//        for (int j = 0; j < seriesList.size(); j++) {
-//            final XYChart.Series<Double, Double> series = seriesList.get(j);
-//            final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(series.getName());
-//            series.getNode().pseudoClassStateChanged(color, true);
-//            Set<Node> nodes = getChart().lookupAll(".series" + j);
-//            for (Node n : nodes) {
-//                n.pseudoClassStateChanged(color, true);
-//            }
-//        }
-        
+
+        if (getChartsPane().getBaseChart().equals(this)) {
+            for (XYChart.Series<Double, Double> series : seriesList) {
+                if (!series.getData().isEmpty()) {
+                    // add item ID as text "in the middle" of the waypoints above x-axis - for base chart
+                    final Text text = new Text(getSeriesID(series));
+                    text.getStyleClass().add("item-id");
+                    text.setFont(Font.font("Verdana", 9));
+                    text.setTextAlignment(TextAlignment.LEFT);
+                    text.setRotate(270.0);
+                    text.setVisible(true);
+                    text.setMouseTransparent(true);
+                    // calculate "middle" for x and 10% above lower for y
+                    final double xPosText = (series.getData().get(0).getXValue() + series.getData().get(series.getData().size()-1).getXValue()) / 2.0;
+                    if (xPosText > 0.0) {
+                        // add data point with this text as node
+                        final XYChart.Data<Double, Double> idLabel = new XYChart.Data<>(xPosText, getYAxis().getZeroPosition());
+                        idLabel.setNode(text);
+
+                        final XYChart.Series<Double, Double> idSeries = new XYChart.Series<>();
+                        idSeries.getData().add(idLabel);
+
+                        getChart().getData().add(idSeries); 
+                    }
+                }
+            }
+        }
     }
     
     @SuppressWarnings("unchecked")
@@ -306,9 +341,24 @@ public interface IChartBasics {
         final XYChart.Series<Double, Double> series = new XYChart.Series<>();
         series.getData().addAll(dataList);
         
-        series.setName(lineItem.getColor());
+        setSeriesUserData(series, lineItem);
         
         return series;
+    }
+    
+    private static void setSeriesUserData(final XYChart.Series<Double, Double> series, final GPXLineItem lineItem) {
+        String seriesID = lineItem.getCombinedID();
+        // add track id for track segments
+        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+            seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
+        }
+        series.setName(seriesID + DATA_SEP + lineItem.getColor());
+    }
+    private static String getSeriesID(final XYChart.Series<Double, Double> series) {
+        return series.getName().split(DATA_SEP)[0];
+    }
+    private static String getSeriesColor(final XYChart.Series<Double, Double> series) {
+        return series.getName().split(DATA_SEP)[1];
     }
 
     public abstract double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
