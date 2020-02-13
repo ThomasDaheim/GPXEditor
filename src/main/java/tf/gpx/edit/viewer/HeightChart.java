@@ -27,12 +27,14 @@ package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -61,7 +63,7 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
+public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChart> {
     private final static HeightChart INSTANCE = new HeightChart();
 
     private GPXEditor myGPXEditor;
@@ -271,8 +273,13 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     }
 
     @Override
-    public XYChart getChart() {
+    public AreaChart getChart() {
         return this;
+    }
+    
+    @Override
+    public Iterator<XYChart.Data<Double, Double>> getDataIterator(final XYChart.Series<Double, Double> series) {
+        return getDisplayedDataIterator(series);
     }
     
     @Override
@@ -353,6 +360,11 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
     @Override
     public void setChartsPane(final ChartsPane pane) {
         myChartsPane = pane;
+    }
+    
+    @Override
+    public boolean fileWaypointsInChart() {
+        return true;
     }
     
     private void selectWaypointsInRange() {
@@ -494,6 +506,9 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics {
         if (noLayout) return;
         
         super.layoutPlotChildren();
+        
+        // handle any fancy things that need to be done for labels
+        adaptLayout();
         
         // helper lists to speed things up - lineStart SET for fast contains() lineStart LIST for fast indexOf()
         final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {

@@ -26,6 +26,7 @@
 package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
@@ -43,7 +44,7 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
+public class SpeedChart<X,Y> extends LineChart implements IChartBasics<LineChart> {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
@@ -86,8 +87,13 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     }
     
     @Override
-    public XYChart getChart() {
+    public LineChart getChart() {
         return this;
+    }
+    
+    @Override
+    public Iterator<XYChart.Data<Double, Double>> getDataIterator(final XYChart.Series<Double, Double> series) {
+        return getDisplayedDataIterator(series);
     }
     
     @Override
