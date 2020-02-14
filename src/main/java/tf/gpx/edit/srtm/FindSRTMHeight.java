@@ -31,7 +31,6 @@ import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
@@ -73,6 +72,7 @@ public class FindSRTMHeight extends AbstractStage {
     private HostServices myHostServices;
 
     private FindSRTMHeight() {
+        super();
         // Exists only to defeat instantiation.
         
         initViewer();
@@ -217,8 +217,6 @@ public class FindSRTMHeight extends AbstractStage {
         getGridPane().add(assignButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(assignButton, HPos.CENTER);
         GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
-
-        initStage();
    }
     
     public void findSRTMHeight(final HostServices hostServices) {

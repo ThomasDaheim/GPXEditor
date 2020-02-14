@@ -26,7 +26,6 @@
 package tf.gpx.edit.helper;
 
 import com.rits.cloning.Cloner;
-import com.rits.cloning.FastClonerHashMap;
 import java.util.HashMap;
 
 /**

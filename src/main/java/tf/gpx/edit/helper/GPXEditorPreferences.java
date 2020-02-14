@@ -13,6 +13,8 @@ public class GPXEditorPreferences implements IPreferencesStore {
     private final static GPXEditorPreferences INSTANCE = new GPXEditorPreferences();
 
     private final static Preferences MYPREFERENCES = Preferences.userNodeForPackage(GPXEditorManager.class);
+    
+    // TODO: change to enum with key, classz, default
     public final static String RECENTWINDOWWIDTH = "recentWindowWidth";
     public final static String RECENTWINDOWHEIGTH = "recentWindowHeigth";
     public final static String RECENTLEFTDIVIDERPOS = "recentLeftDividerPos";
@@ -35,6 +37,15 @@ public class GPXEditorPreferences implements IPreferencesStore {
     public final static String OVERLAY_PREFIX = "overlay";
     public final static String SEPARATOR = "-";
     public final static String AUTO_ASSIGN_HEIGHT = "autoAssignHeight";
+    
+    // TFE, 20200214: some more options for chart pane
+    // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
+    public final static String CLICK_TO_CENTER = "clickToCenter";
+    public final static String CHARTSPANE_HEIGHT = "chartsPaneHeight";
+    public final static String WAYPOINT_ICON_SIZE = "waypointIconSize";
+    public final static String WAYPOINT_LABEL_SIZE = "waypointLabelSize";
+    public final static String WAYPOINT_LABEL_ANGLE = "waypointLabelAngle";
+    public final static String WAYPOINT_THRESHOLD = "waypointThreshold";
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
     

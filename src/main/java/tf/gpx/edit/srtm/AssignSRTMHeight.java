@@ -33,7 +33,6 @@ import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.VPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -79,6 +78,7 @@ public class AssignSRTMHeight extends AbstractStage  {
     private boolean hasUpdated = false;
 
     private AssignSRTMHeight() {
+        super();
         // Exists only to defeat instantiation.
         
         initViewer();
@@ -228,11 +228,18 @@ public class AssignSRTMHeight extends AbstractStage  {
                 getStage().close();
             }
         });
-        getGridPane().add(assignButton, 0, rowNum, 2, 1);
-        GridPane.setHalignment(assignButton, HPos.CENTER);
+        getGridPane().add(assignButton, 0, rowNum, 1, 1);
         GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
 
-        initStage();
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent arg0) -> {
+            getStage().setTitle("Cancel");
+            getStage().close();
+        });
+        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
+        
+        setCancelAccelerator(cancelBtn);
     }
     
     public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {

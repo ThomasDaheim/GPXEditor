@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -63,8 +62,11 @@ import tf.gpx.edit.main.GPXEditor;
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChart> {
+public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     private final static HeightChart INSTANCE = new HeightChart();
+    
+    private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
+    private final static String DIST_LABEL = new String(Character.toChars(8658));
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
@@ -106,7 +108,6 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChar
         
         initialize();
         setCreateSymbols(false);
-        setCursor(Cursor.DEFAULT);
 
         selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
@@ -119,6 +120,8 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChar
         // TODO: beautify code
         final Region plotArea = (Region) lookup(".chart-plot-background");
         final Pane chartContent = (Pane) lookup(".chart-content");
+
+        plotArea.setCursor(Cursor.CROSSHAIR);
         
         final Text text = new Text("");
         text.getStyleClass().add("track-popup");
@@ -147,7 +150,8 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChar
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
 
-                text.setText(String.format("  Elev. %.2fm", heightValue) + "\n" + String.format("  Dist. %.2fkm", x));
+                text.setText(String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", x));
+                text.applyCss();
                 
                 // we want to show the text at the elevation
                 double yHeight = yAxis.getDisplayPosition(heightValue);
@@ -162,9 +166,9 @@ public class HeightChart<X,Y> extends AreaChart implements IChartBasics<AreaChar
                 Point2D bTrans = chartContent.sceneToLocal(lineEnd);
                 Point2D cTrans = chartContent.sceneToLocal(dataPoint);
                 
-                text.setTranslateX(cTrans.getX());
-                text.setTranslateY(cTrans.getY());
-                // TODO: check if text still visible, otherwise show to the right of line
+                // align center-center
+                text.setTranslateX(cTrans.getX() - text.getBoundsInLocal().getWidth() / 2.0);
+                text.setTranslateY(cTrans.getY() - text.getBoundsInLocal().getHeight() / 2.0);
                 text.setVisible(true);
 
                 line.setStartX(aTrans.getX());

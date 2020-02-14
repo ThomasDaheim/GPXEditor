@@ -58,12 +58,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
@@ -283,7 +281,6 @@ public class TrackMap extends LeafletMapView {
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
         
         setVisible(false);
-        setCursor(Cursor.CROSSHAIR);
         mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
         final MapConfig myMapConfig = new MapConfig(mapLayers, 
                         new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
@@ -445,7 +442,28 @@ public class TrackMap extends LeafletMapView {
             // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
             // TFE, 20191119: show chart pane instead to support multiple charts (height, speed, ...)
             final Region chart = ChartsPane.getInstance();
-            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+            // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
+//            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+            final double percentage = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.CHARTSPANE_HEIGHT, "0.25"));
+            chart.setPrefHeight(parentPane.getHeight() * percentage);
+            chart.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                // store height in percentage as preference
+                if (newValue != null && newValue != oldValue) {
+                    GPXEditorPreferences.getInstance().put(GPXEditorPreferences.CHARTSPANE_HEIGHT, Double.toString(newValue.doubleValue() / parentPane.getHeight()));
+                }
+            });
+            parentPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                // resize chart with pane - not done via bind() anymore
+                if (newValue != null && newValue != oldValue) {
+                    // reload preference - might have changed in the meantime
+                    final double perc = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.CHARTSPANE_HEIGHT, "0.25"));
+                    final double newHeight = newValue.doubleValue() * perc;
+                    chart.setMinHeight(newHeight);
+                    chart.setMaxHeight(newHeight);
+                    chart.setPrefHeight(newHeight);
+//                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chart.getHeight());
+                }
+            });
             chart.prefWidthProperty().bind(parentPane.widthProperty());
             AnchorPane.setBottomAnchor(chart, 20.0);
             parentPane.getChildren().add(chart); 

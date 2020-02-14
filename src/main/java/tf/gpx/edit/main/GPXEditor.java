@@ -1255,8 +1255,8 @@ public class GPXEditor implements Initializable {
                 .map(gpxFile -> gpxFile.getName())
                 .collect(Collectors.joining(",\n"));
 
-        final ButtonType buttonMerge = new ButtonType("Merge", ButtonBar.ButtonData.OTHER);
-        final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+        final ButtonType buttonMerge = new ButtonType("Merge", ButtonBar.ButtonData.OK_DONE);
+        final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         Optional<ButtonType> saveChanges = 
                 ShowAlerts.getInstance().showAlert(
                         Alert.AlertType.CONFIRMATION,
@@ -1304,8 +1304,8 @@ public class GPXEditor implements Initializable {
         }
         headerText += commandText;
         headerText += " the following items?";
-        final ButtonType buttonMerge = new ButtonType(commandText.substring(0, 1).toUpperCase() + commandText.substring(1), ButtonBar.ButtonData.OTHER);
-        final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.OTHER);
+        final ButtonType buttonMerge = new ButtonType(commandText.substring(0, 1).toUpperCase() + commandText.substring(1), ButtonBar.ButtonData.OK_DONE);
+        final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         Optional<ButtonType> doAction = 
                 ShowAlerts.getInstance().showAlert(
                         Alert.AlertType.CONFIRMATION,

@@ -65,13 +65,12 @@ import javafx.util.converter.DefaultStringConverter;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
-import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.CopyPasteKeyCodes;
+import tf.helper.UsefulKeyCodes;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 
@@ -261,17 +260,17 @@ public class GPXTableView {
         // can't use clipboard, since GPXWaypoints can't be serialized...
         myTableView.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
             // any combination that removes entries
-            if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+            if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                    UsefulKeyCodes.CNTRL_X.match(event) ||
+                    UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                    UsefulKeyCodes.DEL.match(event)) {
                 //System.out.println("Control+C Control+V or pressed");
                 
                 if (!myTableView.getSelectionModel().getSelectedItems().isEmpty()) {
                     // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                            UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event)) {
                         clipboardWayPoints.clear();
                         // TFE, 20190812: add clone to clipboardWayPoints
                         for (GPXWaypoint gpxWaypoint : myTableView.getSelectionModel().getSelectedItems()) {
@@ -280,20 +279,20 @@ public class GPXTableView {
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                            UsefulKeyCodes.DEL.match(event)) {
                         myEditor.deleteSelectedWaypoints();
                     }
                 }
                 // any combination that adds entries
-            } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event)) {
+            } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
+                    UsefulKeyCodes.INSERT.match(event)) {
                 //System.out.println("Control+V pressed");
                 
                 myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
-            } else if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+            } else if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                 //System.out.println("Shift Control+V pressed");
                 
                 myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);

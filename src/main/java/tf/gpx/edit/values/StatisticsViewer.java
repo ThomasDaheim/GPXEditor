@@ -38,7 +38,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -161,6 +160,7 @@ public class StatisticsViewer extends AbstractStage {
     private GPXFile myGPXFile;
 
     private StatisticsViewer() {
+        super();
         // Exists only to defeat instantiation.
         
         initViewer();
@@ -251,8 +251,6 @@ public class StatisticsViewer extends AbstractStage {
         final ColumnConstraints col2 = new ColumnConstraints();
         col2.setPercentWidth(50);
         getGridPane().getColumnConstraints().addAll(col1, col2);
-        
-        initStage();
     }
     
     public boolean showStatistics(final GPXFile gpxFile) {

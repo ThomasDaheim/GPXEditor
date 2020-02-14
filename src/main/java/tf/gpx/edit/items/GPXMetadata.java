@@ -38,6 +38,7 @@ import tf.gpx.edit.helper.GPXCloner;
  *
  * @author thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXMetadata extends GPXMeasurable {
     public final static String HOME_LINK = "https://github.com/ThomasDaheim/GPXEditor";
             
@@ -161,13 +162,11 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    @SuppressWarnings("all")
-    public GPXLineItem getParent() {
+    public GPXFile getParent() {
         return myGPXFile;
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXMetadata setParent(final GPXLineItem parent) {
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         

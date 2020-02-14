@@ -224,6 +224,12 @@ public interface IChartBasics<T extends XYChart> {
         }
         
         if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
+            // get the required preferences
+            final int waypointIconSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(18)));
+            final int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(10)));
+            final int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(270)));
+            final int waypointThreshold = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(0)));
+
             // merge seriesList into one big series to iterate all in one loop
             XYChart.Series<Double, Double> flatSeries = new XYChart.Series<>();
             for (XYChart.Series<Double, Double> series : seriesList) {
@@ -244,29 +250,30 @@ public interface IChartBasics<T extends XYChart> {
                     }
                 }
                 
-                if (closest != null) {
+                if (closest != null && (mindistance < waypointThreshold || waypointThreshold == 0)) {
+//                    System.out.println(fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
                     data.setXValue(closest.getXValue());
+                
+                    // 2. add text & icon as label to node
+                    final Label text = new Label(fileWaypoint.getName());
+                    text.getStyleClass().add("item-id");
+                    text.setFont(Font.font("Verdana", waypointLabelSize));
+                    text.setRotate(360.0 - waypointLabelAngle);
+                    text.setBorder(Border.EMPTY);
+                    text.setBackground(Background.EMPTY);
+                    text.setVisible(true);
+                    text.setMouseTransparent(true);
+                    // nodes are shown center-center aligned, hack needed to avoid that
+                    text.setUserData(SHIFT_NODE);
+
+                    // add waypoint icon
+                    final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
+                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
+                    text.setGraphic(new ImageView(image));
+                    text.setGraphicTextGap(0);
+
+                    data.setNode(text);
                 }
-                
-                // 2. add text & icon as label to node
-                final Label text = new Label(fileWaypoint.getName());
-                text.getStyleClass().add("item-id");
-                text.setFont(Font.font("Verdana", 10));
-                text.setRotate(270.0);
-                text.setBorder(Border.EMPTY);
-                text.setBackground(Background.EMPTY);
-                text.setVisible(true);
-                text.setMouseTransparent(true);
-                // nodes are shown center-center aligned, hack needed to avoid that
-                text.setUserData(SHIFT_NODE);
-                
-                // add waypoint icon
-                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
-                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 18, 18, false, false);
-                text.setGraphic(new ImageView(image));
-                text.setGraphicTextGap(0);
-                
-                data.setNode(text);
 
                 // add each file waypoint as own series - we don't want to have aera or linees drawn...
                 final XYChart.Series<Double, Double> series = new XYChart.Series<>();
@@ -361,6 +368,7 @@ public interface IChartBasics<T extends XYChart> {
                     if (xPosText > 0.0) {
                         // add data point with this text as node
                         final XYChart.Data<Double, Double> idLabel = new XYChart.Data<>(xPosText, getChart().getYAxis().getZeroPosition());
+                        idLabel.setExtraValue((GPXWaypoint) series.getData().get(0).getExtraValue());
                         idLabel.setNode(text);
 
                         // add each label as own series - we don't want to have aera or linees drawn...
@@ -374,6 +382,7 @@ public interface IChartBasics<T extends XYChart> {
         }
     }
     
+    @SuppressWarnings("unchecked")
     default void adaptLayout() {
         // shift nodes to center-left from center-center
         // see https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java

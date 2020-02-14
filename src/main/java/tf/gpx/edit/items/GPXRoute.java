@@ -48,6 +48,7 @@ import tf.gpx.edit.helper.GPXListHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
@@ -159,13 +160,11 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    @SuppressWarnings("all")
     public GPXFile getParent() {
         return myGPXFile;
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXRoute setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {

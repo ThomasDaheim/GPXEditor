@@ -89,7 +89,7 @@ import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.helper.ColorConverter;
 import tf.helper.ColorSelectionMenu;
-import tf.helper.CopyPasteKeyCodes;
+import tf.helper.UsefulKeyCodes;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 
@@ -556,17 +556,17 @@ public class GPXTreeTableView {
             // UNFORTUNATELY TreeTableView and TableView don't have any common ancesstors except Control...
             
             // any combination that removes entries
-            if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+            if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                    UsefulKeyCodes.CNTRL_X.match(event) ||
+                    UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                    UsefulKeyCodes.DEL.match(event)) {
                 //System.out.println("Control+C Control+V or pressed");
                 
                 if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
                     // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                            UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event)) {
                         clipboardLineItems.clear();
                         // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
                         // no cloning done here since we store TreeItem<GPXLineItem> to have common code with drag & drop
@@ -574,23 +574,23 @@ public class GPXTreeTableView {
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                            UsefulKeyCodes.DEL.match(event)) {
                         myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
                     }
                 }
             // any combination that inserts entries
-            } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+            } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
+                    UsefulKeyCodes.INSERT.match(event) ||
+                    UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                 //System.out.println("Control+V pressed");
                 
                 if(!clipboardLineItems.isEmpty()) {
                     GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
-                    if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+                    if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                            UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                         position = GPXEditor.RelativePosition.BELOW;
                     }
                     

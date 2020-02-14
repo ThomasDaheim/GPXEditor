@@ -29,7 +29,6 @@ import java.text.DecimalFormat;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
@@ -48,6 +47,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.EnumHelper;
+import tf.helper.UsefulKeyCodes;
 
 /**
  *
@@ -62,13 +62,21 @@ public class PreferenceEditor extends AbstractStage {
     private final DecimalFormat decimalFormat = new DecimalFormat("0");
 
     private PreferenceEditor() {
+        super();
         // Exists only to defeat instantiation.
 
         decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
+        
+        initViewer();
     }
 
     public static PreferenceEditor getInstance() {
         return INSTANCE;
+    }
+    
+    private void initViewer() {
+        getStage().setTitle("Preferences");
+        getStage().initModality(Modality.APPLICATION_MODAL); 
     }
     
     @SuppressWarnings("unchecked")
@@ -94,14 +102,16 @@ public class PreferenceEditor extends AbstractStage {
         TrackMap.RoutingProfile myRoutingProfile =
                 TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
 
+        int waypointIconSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(18)));
+        int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(10)));
+        int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(90)));
+        int waypointThreshold = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(0)));
+
         // create new scene with list of algos & parameter
-        getStage().setTitle("Distributions");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
-        
         int rowNum = 0;
         // 1st row: select fixTrack distanceGPXWaypoints
         Tooltip t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
-        final Label fixLbl = new Label("Min. Distance for fixing:");
+        final Label fixLbl = new Label("Min. Distance for fixing (m):");
         fixLbl.setTooltip(t);
         getGridPane().add(fixLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(fixLbl, INSET_TOP);
@@ -162,12 +172,12 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
-        final Separator sepHor = new Separator();
-        sepHor.setValignment(VPos.CENTER);
-        GridPane.setConstraints(sepHor, 0, rowNum);
-        GridPane.setColumnSpan(sepHor, 2);
-        getGridPane().getChildren().add(sepHor);
-        GridPane.setMargin(sepHor, INSET_TOP);
+        final Separator sepHor1 = new Separator();
+        sepHor1.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor1, 0, rowNum);
+        GridPane.setColumnSpan(sepHor1, 2);
+        getGridPane().getChildren().add(sepHor1);
+        GridPane.setMargin(sepHor1, INSET_TOP);
 
         rowNum++;
         // 3rd row: alway show waypoints from file level in maps
@@ -282,6 +292,83 @@ public class PreferenceEditor extends AbstractStage {
         profileChoiceBox.setTooltip(t);
         getGridPane().add(profileChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(profileChoiceBox, INSET_TOP);
+
+        rowNum++;
+        // separator
+        final Separator sepHor2 = new Separator();
+        sepHor2.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor2, 0, rowNum);
+        GridPane.setColumnSpan(sepHor2, 2);
+        getGridPane().getChildren().add(sepHor2);
+        GridPane.setMargin(sepHor2, INSET_TOP);
+
+        rowNum++;
+        // waypointLabelSize
+        t = new Tooltip("Size of waypoint label on charts");
+        final Label wayLblSizeLbl = new Label("Size of waypoint label (pix):");
+        wayLblSizeLbl.setTooltip(t);
+        getGridPane().add(wayLblSizeLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(wayLblSizeLbl, VPos.TOP);
+        GridPane.setMargin(wayLblSizeLbl, INSET_TOP);
+        
+        final TextField wayLblSizeText = new TextField();
+        wayLblSizeText.setMaxWidth(80);
+        wayLblSizeText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayLblSizeText.setText(decimalFormat.format(waypointLabelSize));
+        wayLblSizeText.setTooltip(t);
+        getGridPane().add(wayLblSizeText, 1, rowNum, 1, 1);
+        GridPane.setMargin(wayLblSizeText, INSET_TOP);        
+        
+        rowNum++;
+        // waypointLabelAngle
+        t = new Tooltip("Angle of waypoint label on charts");
+        final Label wayLblAngleLbl = new Label("Angle of waypoint label (deg):");
+        wayLblAngleLbl.setTooltip(t);
+        getGridPane().add(wayLblAngleLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(wayLblAngleLbl, VPos.TOP);
+        GridPane.setMargin(wayLblAngleLbl, INSET_TOP);
+        
+        final TextField wayLblAngleText = new TextField();
+        wayLblAngleText.setMaxWidth(80);
+        wayLblAngleText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayLblAngleText.setText(decimalFormat.format(waypointLabelAngle));
+        wayLblAngleText.setTooltip(t);
+        getGridPane().add(wayLblAngleText, 1, rowNum, 1, 1);
+        GridPane.setMargin(wayLblAngleText, INSET_TOP);        
+        
+        rowNum++;
+        // waypointIconSize
+        t = new Tooltip("Size of waypoint label on charts");
+        final Label wayIcnSizeLbl = new Label("Size of waypoint icon (pix):");
+        wayIcnSizeLbl.setTooltip(t);
+        getGridPane().add(wayIcnSizeLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(wayIcnSizeLbl, VPos.TOP);
+        GridPane.setMargin(wayIcnSizeLbl, INSET_TOP);
+        
+        final TextField wayIcnSizeText = new TextField();
+        wayIcnSizeText.setMaxWidth(80);
+        wayIcnSizeText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayIcnSizeText.setText(decimalFormat.format(waypointIconSize));
+        wayIcnSizeText.setTooltip(t);
+        getGridPane().add(wayIcnSizeText, 1, rowNum, 1, 1);
+        GridPane.setMargin(wayIcnSizeText, INSET_TOP);        
+        
+        rowNum++;
+        // waypointThreshold
+        t = new Tooltip("Maxiumum distance to associate waypoint with track/route - 0 for always");
+        final Label wayThshldLbl = new Label("Max. dist to find track/route (m):");
+        wayThshldLbl.setTooltip(t);
+        getGridPane().add(wayThshldLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(wayThshldLbl, VPos.TOP);
+        GridPane.setMargin(wayThshldLbl, INSET_TOP);
+        
+        final TextField wayThshldText = new TextField();
+        wayThshldText.setMaxWidth(80);
+        wayThshldText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayThshldText.setText(decimalFormat.format(waypointThreshold));
+        wayThshldText.setTooltip(t);
+        getGridPane().add(wayThshldText, 1, rowNum, 1, 1);
+        GridPane.setMargin(wayThshldText, INSET_TOP);        
         
         rowNum++;
         // last row: save / cancel buttons
@@ -291,7 +378,8 @@ public class PreferenceEditor extends AbstractStage {
             getStage().close();
         });
         getGridPane().add(saveBtn, 0, rowNum, 1, 1);
-        GridPane.setMargin(saveBtn, new Insets(10));
+        GridPane.setMargin(saveBtn, INSET_TOP_BOTTOM);
+        setSaveAccelerator(saveBtn);
         
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
@@ -300,31 +388,36 @@ public class PreferenceEditor extends AbstractStage {
         });
         getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
-        
-        initStage();
+        setCancelAccelerator(cancelBtn);
+
         getStage().showAndWait();
         
         if (saveBtn.getText().equals(getStage().getTitle())) {
             // read values from stage
             myAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
 
-            myFixEpsilon = Double.valueOf(fixText.getText().trim());
-            myReduceEpsilon = Double.valueOf(epsilonText.getText().trim());
+            myFixEpsilon = Math.max(Double.valueOf(fixText.getText().trim()), 0);
+            myReduceEpsilon = Math.max(Double.valueOf(epsilonText.getText().trim()), 0);
             
             myAssignHeight = assignHeightChkBox.isSelected();
             
             myAlwaysShowFileWaypoints = waypointChkBox.isSelected();
 
-            myMaxWaypointsToShow = Integer.valueOf(numShowText.getText().trim());
+            myMaxWaypointsToShow = Math.max(Integer.valueOf(numShowText.getText().trim()), 0);
             
-            mySearchRadius = Integer.valueOf(searchText.getText().trim());
+            mySearchRadius = Math.max(Integer.valueOf(searchText.getText().trim()), 0);
             
-            myBreakDuration = Integer.valueOf(breakText.getText().trim());
+            myBreakDuration = Math.max(Integer.valueOf(breakText.getText().trim()), 0);
             
             myOpenCycleMapApiKey = openCycleMapApiKeyText.getText().trim();
             
             myRoutingApiKey = routingApiKeyText.getText().trim();
             myRoutingProfile = EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox);
+
+            waypointIconSize = Math.max(Integer.valueOf(wayIcnSizeText.getText().trim()), 0);
+            waypointLabelSize = Math.max(Integer.valueOf(wayLblSizeText.getText().trim()), 0);
+            waypointLabelAngle = Integer.valueOf(wayLblAngleText.getText().trim()) % 360;
+            waypointThreshold = Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0);
             
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
@@ -344,6 +437,11 @@ public class PreferenceEditor extends AbstractStage {
 
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
             GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_PROFILE, myRoutingProfile.name());
+
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(waypointIconSize));
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(waypointLabelSize));
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(waypointLabelAngle));
+            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(waypointThreshold));
         }
     }
 }

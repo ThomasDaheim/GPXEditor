@@ -38,7 +38,6 @@ import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -108,6 +107,7 @@ public class DistributionViewer extends AbstractStage {
     private ListChangeListener<GPXWaypoint> listenerCheckChanges;
 
     private DistributionViewer() {
+        super();
         // Exists only to defeat instantiation.
         
         initViewer();
@@ -317,8 +317,6 @@ public class DistributionViewer extends AbstractStage {
         getGridPane().add(deleteButton, 3, rowNum, 1, 1);
         GridPane.setHalignment(deleteButton, HPos.CENTER);
         GridPane.setMargin(deleteButton, INSET_BOTTOM);
-        
-        initStage();
     }
     
     public void setCallback(final GPXEditor gpxEditor) {

@@ -299,9 +299,9 @@
 
 .track-popup {
     -fx-fill: black;
-    -fx-font-size: 12;
+    -fx-font-size: 10;
     -fx-font-weight: bold;
-    -fx-text-alignment: left;
+    -fx-text-alignment: center;
     -fx-text-origin: top;
 }
 

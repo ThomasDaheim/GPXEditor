@@ -37,7 +37,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.values.SplitValue;

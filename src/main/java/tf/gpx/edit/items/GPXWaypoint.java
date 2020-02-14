@@ -49,6 +49,7 @@ import tf.gpx.edit.helper.LatLongHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXWaypoint extends GPXLineItem {
     // TFE, 20180214: waypoints can be in segments, routes and files
     private GPXLineItem myGPXParent;
@@ -101,6 +102,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
+    @SuppressWarnings("unchecked")
     public GPXWaypoint cloneMe(final boolean withChildren) {
         final GPXWaypoint myClone = new GPXWaypoint();
         
@@ -309,13 +311,11 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXLineItem getParent() {
         return myGPXParent;
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXWaypoint setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXParent != null && myGPXParent.equals(parent)) {

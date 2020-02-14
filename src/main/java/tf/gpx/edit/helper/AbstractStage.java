@@ -25,11 +25,16 @@
  */
 package tf.gpx.edit.helper;
 
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import tf.gpx.edit.main.GPXEditorManager;
+import tf.helper.UsefulKeyCodes;
 
 /**
  *
@@ -45,6 +50,10 @@ public abstract class AbstractStage {
     public final static Insets INSET_BOTTOM = new Insets(0, 10, 10, 10);
     public final static Insets INSET_TOP_BOTTOM = new Insets(10, 10, 10, 10);
     
+    public AbstractStage() {
+        initStage();
+    }
+    
     public Stage getStage() {
         return myStage;
     }
@@ -53,9 +62,25 @@ public abstract class AbstractStage {
         return myGridPane;
     }
     
-    public void initStage() {
+    private void initStage() {
         myStage.setScene(new Scene(myGridPane));
         myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
         myStage.setResizable(false);
+    }
+    
+    public void setSaveAccelerator(final Button button) {
+        final Runnable saveRN = () -> button.fire(); 
+
+        myStage.getScene().getAccelerators().put(UsefulKeyCodes.CNTRL_S.getKeyCodeCombination(), saveRN);
+    }
+    
+    public void setCancelAccelerator(final Button button) {
+        // can't be done via myStage.getScene().getAccelerators().put
+        // see https://stackoverflow.com/a/21670395
+        myStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, (KeyEvent evt) -> {
+            if (evt.getCode().equals(UsefulKeyCodes.ESCAPE.getKeyCodeCombination().getCode())) {
+                button.fire();
+            }
+        });
     }
 }

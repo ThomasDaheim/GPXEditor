@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -110,6 +109,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private List<GPXWaypoint> myGPXWaypoints;
     
     private EditGPXWaypoint() {
+        super();
         // Exists only to defeat instantiation.
         
         decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
@@ -393,8 +393,6 @@ public class EditGPXWaypoint extends AbstractStage {
         getGridPane().add(saveButton, 0, rowNum, 4, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
-
-        initStage();
     }
 
     public void setCallback(final GPXEditor gpxEditor) {

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javafx.geometry.Side;
-import javafx.scene.Cursor;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -40,11 +39,11 @@ import tf.gpx.edit.main.GPXEditor;
 
 /**
  * Show lineStart height chart for GPXWaypoints of lineStart GPXLineItem and highlight selected ones
- Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+ * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class SpeedChart<X,Y> extends LineChart implements IChartBasics<LineChart> {
+public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
@@ -79,7 +78,6 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics<LineChart
         
         initialize();
         setCreateSymbols(false);
-        setCursor(Cursor.NONE);
     }
     
     public static SpeedChart getInstance() {

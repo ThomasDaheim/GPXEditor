@@ -115,8 +115,6 @@ public class EditSplitValues extends AbstractStage {
         typeChoiceBox.getSelectionModel().selectedIndexProperty().addListener((ov, oldValue, newValue) -> {
             valueUnit.setText(SplitType.values()[newValue.intValue()].getUnit());
         });
-
-        initStage();
     }
     
     public SplitValue editSplitValues() {

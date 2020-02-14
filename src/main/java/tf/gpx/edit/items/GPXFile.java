@@ -64,6 +64,7 @@ import tf.gpx.edit.worker.GPXRenumberWorker;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
@@ -270,14 +271,12 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXLineItem getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    @SuppressWarnings("all")
     public GPXFile setParent(final GPXLineItem parent) {
         // GPXFiles don't have a parent.
         return this;

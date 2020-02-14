@@ -37,6 +37,7 @@ import javafx.scene.layout.StackPane;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.DragResizer;
 
 /**
  * Holder pane for various charts (height, speed, ...) to be placed on the map
@@ -101,6 +102,9 @@ public class ChartsPane extends StackPane {
             getChildren().add(node);
             node.toFront();
         });
+        
+        // TFE, 20200214: allow resizing on TOP border
+        DragResizer.makeResizable(this, DragResizer.ResizeArea.ALL);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
