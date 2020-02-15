@@ -70,9 +70,9 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.UsefulKeyCodes;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
+import tf.helper.UsefulKeyCodes;
 
 /**
  *

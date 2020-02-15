@@ -91,6 +91,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorParameters;
+import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -312,10 +313,8 @@ public class GPXEditor implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // TF, 20170720: store and read divider positions of panes
-        final Double recentLeftDividerPos = Double.valueOf(
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, "0.5"));
-        final Double recentCentralDividerPos = Double.valueOf(
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, "0.58"));
+        final Double recentLeftDividerPos = Double.valueOf(GPXEditorPreferences.RECENTLEFTDIVIDERPOS.get());
+        final Double recentCentralDividerPos = Double.valueOf(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.get());
 
         trackSplitPane.setDividerPosition(0, recentLeftDividerPos);
         splitPane.setDividerPosition(0, recentCentralDividerPos);
@@ -327,8 +326,8 @@ public class GPXEditor implements Initializable {
         initMenus();
         
         // load stored values for tableviews
-        TableViewPreferences.loadTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferences.getInstance());
-        TableViewPreferences.loadTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferences.getInstance());
+        TableViewPreferences.loadTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferenceStore.getInstance());
+        TableViewPreferences.loadTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferenceStore.getInstance());
         
         // they all need to be able to do something in the editor
         GPXTrackviewer.getInstance().setCallback(this);
@@ -374,12 +373,12 @@ public class GPXEditor implements Initializable {
 
     public void stop() {
         // TF, 20170720: store and read divider positions of panes
-        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.RECENTLEFTDIVIDERPOS, Double.toString(trackSplitPane.getDividerPositions()[0]));
-        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.RECENTCENTRALDIVIDERPOS, Double.toString(splitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.RECENTLEFTDIVIDERPOS.put(Double.toString(trackSplitPane.getDividerPositions()[0]));
+        GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.put(Double.toString(splitPane.getDividerPositions()[0]));
         
         // store values for tableviews
-        TableViewPreferences.saveTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferences.getInstance());
-        TableViewPreferences.saveTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferences.getInstance());
+        TableViewPreferences.saveTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferenceStore.getInstance());
+        TableViewPreferences.saveTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferenceStore.getInstance());
 
         // TFE, 20180901: store values for track & height map
         GPXTrackviewer.getInstance().savePreferences();
@@ -575,7 +574,7 @@ public class GPXEditor implements Initializable {
         recentFilesMenu.getItems().clear();
 
         // most recent file that was opened
-        final List<String> recentFiles = GPXEditorPreferences.getRecentFiles().getRecentFiles();
+        final List<String> recentFiles = GPXEditorPreferenceStore.getRecentFiles().getRecentFiles();
         
         if (recentFiles.size() > 0) {
             for (String file : recentFiles) {
@@ -897,7 +896,7 @@ public class GPXEditor implements Initializable {
                     gpxFileList.addGPXFile(new GPXFile(file));
 
                     // store last filename
-                    GPXEditorPreferences.getRecentFiles().addRecentFile(file.getAbsolutePath());
+                    GPXEditorPreferenceStore.getRecentFiles().addRecentFile(file.getAbsolutePath());
 
                     initRecentFilesMenu();
                 }
@@ -1489,13 +1488,11 @@ public class GPXEditor implements Initializable {
             final List<GPXTrackSegment> gpxTrackSegments = myStructureHelper.uniqueGPXTrackSegmentListFromGPXWaypointList(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                final boolean keep1[] = EarthGeometry.simplifyTrack(
-                        trackwaypoints, 
-                        EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())), 
-                        Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
-                final boolean keep2[] = EarthGeometry.fixTrack(
-                        trackwaypoints, 
-                        Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
+                final boolean keep1[] = EarthGeometry.simplifyTrack(trackwaypoints, 
+                        EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.ALGORITHM.get()), 
+                        Double.valueOf(GPXEditorPreferences.REDUCE_EPSILON.get()));
+                final boolean keep2[] = EarthGeometry.fixTrack(trackwaypoints, 
+                        Double.valueOf(GPXEditorPreferences.FIX_EPSILON.get()));
 
                 int index = 0;
                 for (GPXWaypoint gpxWaypoint : trackwaypoints) {
@@ -1564,9 +1561,8 @@ public class GPXEditor implements Initializable {
             gpxLineItems = myStructureHelper.uniqueGPXParentListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
         }
 
-        myStructureHelper.fixGPXLineItems(
-                gpxLineItems,
-                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000")));
+        myStructureHelper.fixGPXLineItems(gpxLineItems,
+                Double.valueOf(GPXEditorPreferences.FIX_EPSILON.get()));
         refreshGPXFileList();
         
         refillGPXWaypointList(true);
@@ -1581,10 +1577,9 @@ public class GPXEditor implements Initializable {
             gpxLineItems = myStructureHelper.uniqueGPXParentListFromGPXLineItemList(gpxFileList.getSelectionModel().getSelectedItems());
         }
 
-        myStructureHelper.reduceGPXLineItems(
-                gpxLineItems,
-                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name())),
-                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50")));
+        myStructureHelper.reduceGPXLineItems(gpxLineItems,
+                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.ALGORITHM.get()),
+                Double.valueOf(GPXEditorPreferences.REDUCE_EPSILON.get()));
         refreshGPXFileList();
         
         refillGPXWaypointList(true);

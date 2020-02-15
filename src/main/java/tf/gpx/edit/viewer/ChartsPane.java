@@ -168,7 +168,7 @@ public class ChartsPane extends StackPane {
         assert lineItems != null;
 
         final boolean isVisible = isVisible();
-        AtomicBoolean hasData = new AtomicBoolean(false);
+        final AtomicBoolean hasData = new AtomicBoolean(false);
         // show all chart
         charts.stream().forEach((t) -> {
             t.setGPXWaypoints(lineItems, doFitBounds);

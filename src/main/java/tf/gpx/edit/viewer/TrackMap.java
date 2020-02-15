@@ -81,6 +81,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -276,8 +277,8 @@ public class TrackMap extends LeafletMapView {
         
         // TFE, 20200121: show height with coordinate in context menu
         heightWorker = new GPXAssignSRTMHeightWorker(
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, ""), 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name())), 
+                GPXEditorPreferences.SRTM_DATA_PATH.get(), 
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.SRTM_DATA_AVERAGE.get()), 
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
         
         setVisible(false);
@@ -378,7 +379,7 @@ public class TrackMap extends LeafletMapView {
             // map helper functions for manipulating layer control entries
             addScriptFromPath(LEAFLET_PATH + "/LayerControl" + MIN_EXT + ".js");
             // set api key for open cycle map
-            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "") + "\");");
+            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.get() + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -412,7 +413,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
             // we need an api key
-            execScript("initRouting(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "") + "\");");
+            execScript("initRouting(\"" + GPXEditorPreferences.ROUTING_API_KEY.get() + "\");");
 
             // support for ruler
             // https://github.com/gokertanrisever/leaflet-ruler
@@ -444,19 +445,19 @@ public class TrackMap extends LeafletMapView {
             final Region chart = ChartsPane.getInstance();
             // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
 //            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
-            final double percentage = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.CHARTSPANE_HEIGHT, "0.25"));
+            final double percentage = Double.valueOf(GPXEditorPreferences.CHARTSPANE_HEIGHT.get());
             chart.setPrefHeight(parentPane.getHeight() * percentage);
             chart.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // store height in percentage as preference
                 if (newValue != null && newValue != oldValue) {
-                    GPXEditorPreferences.getInstance().put(GPXEditorPreferences.CHARTSPANE_HEIGHT, Double.toString(newValue.doubleValue() / parentPane.getHeight()));
+                    GPXEditorPreferences.CHARTSPANE_HEIGHT.put(Double.toString(newValue.doubleValue() / parentPane.getHeight()));
                 }
             });
             parentPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // resize chart with pane - not done via bind() anymore
                 if (newValue != null && newValue != oldValue) {
                     // reload preference - might have changed in the meantime
-                    final double perc = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.CHARTSPANE_HEIGHT, "0.25"));
+                    final double perc = Double.valueOf(GPXEditorPreferences.CHARTSPANE_HEIGHT.get());
                     final double newHeight = newValue.doubleValue() * perc;
                     chart.setMinHeight(newHeight);
                     chart.setMaxHeight(newHeight);
@@ -688,7 +689,7 @@ public class TrackMap extends LeafletMapView {
 
                 final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
                 newGPXWaypoint.setNumber(curGPXWaypoints.size());
-                if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+                if (Boolean.valueOf(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.get())) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(newGPXWaypoint));
                 }
@@ -776,7 +777,7 @@ public class TrackMap extends LeafletMapView {
                 gpxRoute.setName("New " + routeName);
 
                 myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
-                if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+                if (Boolean.valueOf(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.get())) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
                 }
@@ -793,8 +794,7 @@ public class TrackMap extends LeafletMapView {
                 // start autorouting on current gpxRoute
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
-                        TrackMap.RoutingProfile.valueOf(    
-                                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()))
+                        TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.ROUTING_PROFILE.get())
                                 .getProfileName() + "\");");
             }
         });
@@ -840,9 +840,8 @@ public class TrackMap extends LeafletMapView {
     }
     private void searchItems(final SearchItem searchItem, final LatLong latlong) {
         try {
-            final String searchParam = URLEncoder.encode(
-                    "[out:json];node(around:" + 
-                    GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000") + ".0," + 
+            final String searchParam = URLEncoder.encode("[out:json];node(around:" + 
+                    GPXEditorPreferences.SEARCH_RADIUS.get() + ".0," + 
                     latlong.getLatitude() + "," + latlong.getLongitude() + ")" + 
                     searchItem.getSearchString() + ";out;", "UTF-8");
 
@@ -991,7 +990,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
-        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.get());
 
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
@@ -1059,7 +1058,7 @@ public class TrackMap extends LeafletMapView {
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
-                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                Double.valueOf(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.get()) / 
                 // might have no waypoints at all...
                 Math.max(waypointCount, 1);
 
@@ -1417,7 +1416,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         gpxRoute.setGPXWaypoints(newGPXWaypoints);
-        if (Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)))) {
+        if (Boolean.valueOf(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.get())) {
             // assign height
             AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
         }
@@ -1531,19 +1530,19 @@ public class TrackMap extends LeafletMapView {
                 for (int i = 0; i < overlayNames.size(); i++) {
                     final String overlay = overlayNames.get(i);
                     final String defaultVal = defaultValues.get(i);
-                    preferenceValues.add(GPXEditorPreferences.getInstance().get(preferenceString(baselayer, overlay), defaultVal));
+                    preferenceValues.add(GPXEditorPreferenceStore.getInstance().get(preferenceString(baselayer, overlay), defaultVal));
                 }
                 
                 execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
             }
 
             // and now switch the baselayer
-            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.getInstance().get(GPXEditorPreferences.INITIAL_BASELAYER, "0") + "\");");
+            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.INITIAL_BASELAYER.get() + "\");");
         }
     }
     public void savePreferences() {
         Integer outVal = (Integer) execScript("getCurrentBaselayer();");
-        GPXEditorPreferences.getInstance().put(GPXEditorPreferences.INITIAL_BASELAYER, outVal.toString());
+        GPXEditorPreferences.INITIAL_BASELAYER.put(outVal.toString());
 
         // overlays per baselayer
         // first need to get the know names from js...
@@ -1565,16 +1564,16 @@ public class TrackMap extends LeafletMapView {
                 final String overlay = overlayNames.get(i);
                 final String overlayVal = overlayValues.get(i);
                 
-//                System.out.println("GPXEditorPreferences.getInstance().put: " + preferenceString(baselayer, overlay) + " to " + overlayVal);
-                GPXEditorPreferences.getInstance().put(preferenceString(baselayer, overlay), overlayVal);
+//                System.out.println("GPXEditorPreferenceStore.getInstance().put: " + preferenceString(baselayer, overlay) + " to " + overlayVal);
+                GPXEditorPreferenceStore.getInstance().put(preferenceString(baselayer, overlay), overlayVal);
             }
         }
     }
     private static String preferenceString(final String baselayer, final String overlay) {
         // no spaces in preference names, please
-        return GPXEditorPreferences.BASELAYER_PREFIX + GPXEditorPreferences.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
-                GPXEditorPreferences.SEPARATOR + 
-                GPXEditorPreferences.OVERLAY_PREFIX + GPXEditorPreferences.SEPARATOR + overlay.replaceAll("\\s+", "");
+        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
+                GPXEditorPreferenceStore.SEPARATOR + 
+                GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.replaceAll("\\s+", "");
     }
     private void transformToJavaList(final String jsScript, final List<String> result, final boolean appendTo) {
         if (!appendTo) {

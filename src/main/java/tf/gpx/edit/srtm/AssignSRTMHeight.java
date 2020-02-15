@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
-import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -90,11 +89,11 @@ public class AssignSRTMHeight extends AbstractStage  {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.SRTM_DATA_PATH.get();
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.SRTM_DATA_AVERAGE.get());
         myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.HEIGHT_ASSIGN_MODE.get());
         
         // create new scene
         getStage().setTitle("Assign SRTM height values");
@@ -218,9 +217,9 @@ public class AssignSRTMHeight extends AbstractStage  {
                 runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
+                GPXEditorPreferences.SRTM_DATA_PATH.put(mySRTMDataPath);
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.put(myAverageMode.name());
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(myAssignMode.name());
 
                 hasUpdated = true;
 

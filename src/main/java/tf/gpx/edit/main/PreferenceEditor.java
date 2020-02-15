@@ -27,7 +27,6 @@ package tf.gpx.edit.main;
 
 import java.text.DecimalFormat;
 import javafx.event.ActionEvent;
-import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -44,10 +43,8 @@ import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.EnumHelper;
-import tf.helper.UsefulKeyCodes;
 
 /**
  *
@@ -82,30 +79,30 @@ public class PreferenceEditor extends AbstractStage {
     @SuppressWarnings("unchecked")
     public void showPreferencesDialogue() {
         EarthGeometry.Algorithm myAlgorithm = 
-                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALGORITHM, EarthGeometry.Algorithm.ReumannWitkam.name()));
-        double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.REDUCE_EPSILON, "50"));
-        double myFixEpsilon = Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.FIX_EPSILON, "1000"));
+                EarthGeometry.Algorithm.valueOf(GPXEditorPreferences.ALGORITHM.get());
+        double myReduceEpsilon = Double.valueOf(GPXEditorPreferences.REDUCE_EPSILON.get());
+        double myFixEpsilon = Double.valueOf(GPXEditorPreferences.FIX_EPSILON.get());
 
-        boolean myAssignHeight = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(false)));
+        boolean myAssignHeight = Boolean.valueOf(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.get());
         
-        int myBreakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, "3"));
+        int myBreakDuration = Integer.valueOf(GPXEditorPreferences.BREAK_DURATION.get());
 
-        int mySearchRadius = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SEARCH_RADIUS, "5000"));
+        int mySearchRadius = Integer.valueOf(GPXEditorPreferences.SEARCH_RADIUS.get());
 
-        int myMaxWaypointsToShow = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS)));
+        int myMaxWaypointsToShow = Integer.valueOf(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.get());
 
-        boolean myAlwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        boolean myAlwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.get());
         
-        String myOpenCycleMapApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, "");
+        String myOpenCycleMapApiKey = GPXEditorPreferences.OPENCYCLEMAP_API_KEY.get();
 
-        String myRoutingApiKey = GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_API_KEY, "");
+        String myRoutingApiKey = GPXEditorPreferences.ROUTING_API_KEY.get();
         TrackMap.RoutingProfile myRoutingProfile =
-                TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ROUTING_PROFILE, TrackMap.RoutingProfile.DrivingCar.name()));
+                TrackMap.RoutingProfile.valueOf(GPXEditorPreferences.ROUTING_PROFILE.get());
 
-        int waypointIconSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(18)));
-        int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(10)));
-        int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(90)));
-        int waypointThreshold = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(0)));
+        int waypointIconSize = Integer.valueOf(GPXEditorPreferences.WAYPOINT_ICON_SIZE.get());
+        int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.get());
+        int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.get());
+        int waypointThreshold = Integer.valueOf(GPXEditorPreferences.WAYPOINT_THRESHOLD.get());
 
         // create new scene with list of algos & parameter
         int rowNum = 0;
@@ -419,29 +416,29 @@ public class PreferenceEditor extends AbstractStage {
             waypointLabelAngle = Integer.valueOf(wayLblAngleText.getText().trim()) % 360;
             waypointThreshold = Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0);
             
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALGORITHM, myAlgorithm.name());
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.REDUCE_EPSILON, Double.toString(myReduceEpsilon));
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.FIX_EPSILON, Double.toString(myFixEpsilon));
+            GPXEditorPreferences.ALGORITHM.put(myAlgorithm.name());
+            GPXEditorPreferences.REDUCE_EPSILON.put(Double.toString(myReduceEpsilon));
+            GPXEditorPreferences.FIX_EPSILON.put(Double.toString(myFixEpsilon));
             
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT, Boolean.toString(myAssignHeight));
+            GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(Boolean.toString(myAssignHeight));
             
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(myAlwaysShowFileWaypoints));
+            GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(Boolean.toString(myAlwaysShowFileWaypoints));
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(myMaxWaypointsToShow));
+            GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Integer.toString(myMaxWaypointsToShow));
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SEARCH_RADIUS, Integer.toString(mySearchRadius));
+            GPXEditorPreferences.SEARCH_RADIUS.put(Integer.toString(mySearchRadius));
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.BREAK_DURATION, Integer.toString(myBreakDuration));
+            GPXEditorPreferences.BREAK_DURATION.put(Integer.toString(myBreakDuration));
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.OPENCYCLEMAP_API_KEY, myOpenCycleMapApiKey);
+            GPXEditorPreferences.OPENCYCLEMAP_API_KEY.put(myOpenCycleMapApiKey);
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_API_KEY, myRoutingApiKey);
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.ROUTING_PROFILE, myRoutingProfile.name());
+            GPXEditorPreferences.ROUTING_API_KEY.put(myRoutingApiKey);
+            GPXEditorPreferences.ROUTING_PROFILE.put(myRoutingProfile.name());
 
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(waypointIconSize));
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(waypointLabelSize));
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(waypointLabelAngle));
-            GPXEditorPreferences.getInstance().put(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(waypointThreshold));
+            GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Integer.toString(waypointIconSize));
+            GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Integer.toString(waypointLabelSize));
+            GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.toString(waypointLabelAngle));
+            GPXEditorPreferences.WAYPOINT_THRESHOLD.put(Integer.toString(waypointThreshold));
         }
     }
 }

@@ -122,11 +122,11 @@ public class SRTMDataViewer {
     public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
         // get all required files
         final String mySRTMDataPath = 
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.SRTM_DATA_PATH.get();
         final SRTMDataStore.SRTMDataAverage myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.SRTM_DATA_AVERAGE.get());
         GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.HEIGHT_ASSIGN_MODE.get());
 
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
@@ -290,7 +290,7 @@ public class SRTMDataViewer {
         final List<String> extFilter = Arrays.asList("*." + SRTMDataStore.HGT_EXT);
         final List<String> extValues = Arrays.asList(SRTMDataStore.HGT_EXT);
 
-        final File curPath = new File(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, ""));
+        final File curPath = new File(GPXEditorPreferences.SRTM_DATA_PATH.get());
         final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
 
         FileChooser fileChooser = new FileChooser();

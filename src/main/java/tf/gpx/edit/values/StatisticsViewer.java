@@ -63,7 +63,7 @@ public class StatisticsViewer extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();
     
-    private final static long BREAK_DURATION = 3;
+    public final static long BREAK_DURATION = 3;
     
     private long breakDuration = BREAK_DURATION;
     
@@ -282,7 +282,7 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
         // get limits to identify a pause
-        breakDuration = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.BREAK_DURATION, String.valueOf(BREAK_DURATION)));
+        breakDuration = Integer.valueOf(GPXEditorPreferences.BREAK_DURATION.get());
         // minutes -> milliseconds
         breakDuration *= 60*1000;
         

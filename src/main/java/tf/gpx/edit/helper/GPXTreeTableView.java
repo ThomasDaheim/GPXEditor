@@ -89,9 +89,9 @@ import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.helper.ColorConverter;
 import tf.helper.ColorSelectionMenu;
-import tf.helper.UsefulKeyCodes;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
+import tf.helper.UsefulKeyCodes;
 
 /**
  *

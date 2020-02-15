@@ -84,9 +84,9 @@ public class FindSRTMHeight extends AbstractStage {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.SRTM_DATA_PATH.get();
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.SRTM_DATA_AVERAGE.get());
         
         // create new scene
         getStage().setTitle("Assign SRTM height values");

@@ -180,7 +180,7 @@ public interface IChartBasics<T extends XYChart> {
         setMinimumYValue(Double.MAX_VALUE);
         setMaximumYValue(Double.MIN_VALUE);
 
-        final boolean alwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS, Boolean.toString(false)));
+        final boolean alwaysShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.get());
         
         // TFE, 20191112: create series per track & route to be able to handle different colors
         final List<XYChart.Series<Double, Double>> seriesList = new ArrayList<>();
@@ -225,10 +225,10 @@ public interface IChartBasics<T extends XYChart> {
         
         if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
             // get the required preferences
-            final int waypointIconSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_ICON_SIZE, Integer.toString(18)));
-            final int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_SIZE, Integer.toString(10)));
-            final int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE, Integer.toString(270)));
-            final int waypointThreshold = Integer.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.WAYPOINT_THRESHOLD, Integer.toString(0)));
+            final int waypointIconSize = Integer.valueOf(GPXEditorPreferences.WAYPOINT_ICON_SIZE.get());
+            final int waypointLabelSize = Integer.valueOf(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.get());
+            final int waypointLabelAngle = Integer.valueOf(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.get());
+            final int waypointThreshold = Integer.valueOf(GPXEditorPreferences.WAYPOINT_THRESHOLD.get());
 
             // merge seriesList into one big series to iterate all in one loop
             XYChart.Series<Double, Double> flatSeries = new XYChart.Series<>();
@@ -251,7 +251,7 @@ public interface IChartBasics<T extends XYChart> {
                 }
                 
                 if (closest != null && (mindistance < waypointThreshold || waypointThreshold == 0)) {
-//                    System.out.println(fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
+//                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
                     data.setXValue(closest.getXValue());
                 
                     // 2. add text & icon as label to node
@@ -305,11 +305,11 @@ public interface IChartBasics<T extends XYChart> {
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
-                Double.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW, Integer.toString(GPXTrackviewer.MAX_WAYPOINTS))) / 
+                Double.valueOf(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.get()) / 
                 // might have no waypoints at all...
                 Math.max(dataCount, 1);
         
-        // TFE, 20191125: only show up to GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW wayoints
+        // TFE, 20191125: only show up to GPXEditorPreferenceStore.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
         int count = 0, i = 0, j = 0;
         for (XYChart.Series<Double, Double> series : seriesList) {
@@ -318,7 +318,7 @@ public interface IChartBasics<T extends XYChart> {
                 reducedSeries.setName(series.getName());
 
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
-                if (GPXLineItem.GPXLineItemType.GPXFile.equals(firstWaypoint.getType())) {
+                if (firstWaypoint.isGPXFileWaypoint()) {
                     // we show all file waypoints
                     reducedSeries.getData().addAll(series.getData());
                  } else {
@@ -380,6 +380,13 @@ public interface IChartBasics<T extends XYChart> {
                 }
             }
         }
+
+//        final AtomicInteger shownCount = new AtomicInteger(0);
+//        getChart().getData().forEach((t) -> {
+//            XYChart.Series<Double, Double> series = (XYChart.Series<Double, Double>) t;
+//            shownCount.set(shownCount.get() + series.getData().size());
+//        });
+//        System.out.println("Datapoints added: " + shownCount.get());
     }
     
     @SuppressWarnings("unchecked")
@@ -387,16 +394,17 @@ public interface IChartBasics<T extends XYChart> {
         // shift nodes to center-left from center-center
         // see https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java
         getChart().getData().forEach((t) -> {
-            XYChart.Series<Double, Double> series = (XYChart.Series<Double, Double>) t;
+            final XYChart.Series<Double, Double> series = (XYChart.Series<Double, Double>) t;
             for (Iterator<XYChart.Data<Double, Double>> it = getDataIterator(series); it.hasNext(); ) {
-                XYChart.Data<Double, Double> item = it.next();
-                final double xVal = getChart().getXAxis().getDisplayPosition(item.getXValue());
-                final double yVal = getChart().getYAxis().getDisplayPosition(item.getYValue());
+                XYChart.Data<Double, Double> data = it.next();
+                final double xVal = getChart().getXAxis().getDisplayPosition(data.getXValue());
+                final double yVal = getChart().getYAxis().getDisplayPosition(data.getYValue());
                 if (Double.isNaN(xVal) || Double.isNaN(yVal)) {
                     continue;
                 }
-                Node symbol = item.getNode();
+                Node symbol = data.getNode();
                 if (symbol != null && SHIFT_NODE.equals((String) symbol.getUserData())) {
+                    symbol.applyCss();
                     // inverse of relocate to get original x / y values
 //                    setLayoutX(x - getLayoutBounds().getMinX());
 //                    setLayoutY(y - getLayoutBounds().getMinY());                    
@@ -406,8 +414,15 @@ public interface IChartBasics<T extends XYChart> {
                     final double h = symbol.prefHeight(-1);
                     // shift h/2 against previous y value
 //                    symbol.resizeRelocate(x-(w/2), y-(h/2),w,h);
-//                    symbol.setLayoutX(symbol.getLayoutX()+(w/2));
-                    symbol.setLayoutY(symbol.getLayoutY()-(w/2));
+                    // factor in getRotate() to calculate vertical shift value!
+                    // 0 degrees: -(h/2)
+                    // 90 degrees: -(w/2)
+                    // 180 degrees: -(h/2)
+                    // 270 degrees: -(w/2)
+                    // => cos(getRotate()) * (-h/2) + sin(getRotate()) * (-w/2)
+                    // => - abs(cos(getRotate()) * h/2 + sin(getRotate()) * w/2)
+                    final double angle = symbol.getRotate() * Math.PI / 180.0;
+                    symbol.setLayoutY(symbol.getLayoutY() - shiftValue);
                 }
             }
         });
