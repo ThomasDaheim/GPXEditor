@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.main;
 
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -52,6 +53,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -59,6 +61,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -77,15 +80,18 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javax.imageio.ImageIO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -219,6 +225,8 @@ public class GPXEditor implements Initializable {
     private ProgressBar statusBar;
     @FXML
     private MenuItem clearFileMenu;
+    @FXML
+    private MenuItem saveMapMenu;
     @FXML
     private MenuItem switchMapMenu;
     @FXML
@@ -537,8 +545,30 @@ public class GPXEditor implements Initializable {
         });
 
         //
-        // Views
+        // Map
         //
+        saveMapMenu.setOnAction((ActionEvent event) -> {
+            // https://stackoverflow.com/a/38028893
+            final FileChooser fileChooser = new FileChooser();
+            //Set extension filter
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("png files (*.png)", "*.png"));
+            fileChooser.setInitialFileName("map.png");
+            //Prompt user to select a file
+            final File file = fileChooser.showSaveDialog(null);
+
+            if (file != null) {
+                final WritableImage snapshot = mapAnchorPane.snapshot(new SnapshotParameters(), null);
+                final RenderedImage renderedImage = SwingFXUtils.fromFXImage(snapshot, null);
+                try {
+                    //Write the snapshot to the chosen file
+                    ImageIO.write(renderedImage, "png", file);
+                } catch (IOException ex) {
+                    Logger.getLogger(GPXEditor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        saveMapMenu.disableProperty().bind(Bindings.not(TrackMap.getInstance().visibleProperty()));
+        
         // TFE, 20190828: is that really need after various performance improvements?
         switchMapMenu.setUserData("TRUE");
         switchMapMenu.setText("Disable Map");

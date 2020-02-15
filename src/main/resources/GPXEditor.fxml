@@ -119,9 +119,10 @@
                   <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="View">
+            <Menu mnemonicParsing="false" text="Map">
               <items>
-                <MenuItem fx:id="switchMapMenu" mnemonicParsing="false" text="Disable Map" />
+                  <MenuItem fx:id="saveMapMenu" mnemonicParsing="false" text="Save Map" />
+                <MenuItem fx:id="switchMapMenu" disable="true" mnemonicParsing="false" text="Disable Map" visible="false" />
               </items>
             </Menu>
             <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
