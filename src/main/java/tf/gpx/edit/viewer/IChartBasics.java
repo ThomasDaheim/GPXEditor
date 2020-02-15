@@ -422,6 +422,8 @@ public interface IChartBasics<T extends XYChart> {
                     // => cos(getRotate()) * (-h/2) + sin(getRotate()) * (-w/2)
                     // => - abs(cos(getRotate()) * h/2 + sin(getRotate()) * w/2)
                     final double angle = symbol.getRotate() * Math.PI / 180.0;
+                    final double shiftValue = Math.abs(Math.cos(angle) * h/2.0 + Math.sin(angle) * w/2.0);
+//                    System.out.println("Shifting node: " + ((GPXWaypoint) data.getExtraValue()).getName() + " by " + shiftValue + " instead " + w/2.0);
                     symbol.setLayoutY(symbol.getLayoutY() - shiftValue);
                 }
             }
