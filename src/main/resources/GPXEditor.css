@@ -150,10 +150,14 @@
 .chart {
     -fx-fill: transparent;
     -fx-background-color: transparent;
+    -fx-cursor: none;
 }
 .chart-content .chart-plot-background {
     -fx-fill: transparent;
     -fx-background-color: transparent;
+}
+.chart-plot-background {
+    -fx-cursor: crosshair;
 }
 .chart-vertical-grid-lines {
     -fx-stroke: transparent;
@@ -170,10 +174,12 @@
 }
 .chart-series-area-fill {
     -fx-opacity: 0.8;
+    -fx-cursor: crosshair;
 }
 .chart-series-area-line {    
     -fx-stroke-width: 0.1px;
     -fx-effect: null;
+    -fx-cursor: crosshair;
 }
 .chart-series-line {    
     -fx-stroke: #666;

@@ -39,7 +39,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
@@ -121,8 +120,6 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         final Region plotArea = (Region) lookup(".chart-plot-background");
         final Pane chartContent = (Pane) lookup(".chart-content");
 
-        plotArea.setCursor(Cursor.CROSSHAIR);
-        
         final Text text = new Text("");
         text.getStyleClass().add("track-popup");
         text.setVisible(true);

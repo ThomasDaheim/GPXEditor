@@ -104,7 +104,7 @@ public class ChartsPane extends StackPane {
         });
         
         // TFE, 20200214: allow resizing on TOP border
-        DragResizer.makeResizable(this, DragResizer.ResizeArea.ALL);
+        DragResizer.makeResizable(this, DragResizer.ResizeArea.TOP);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
