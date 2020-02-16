@@ -89,11 +89,11 @@ public class AssignSRTMHeight extends AbstractStage  {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.SRTM_DATA_PATH.get();
+                GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.SRTM_DATA_AVERAGE.get());
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
         myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.HEIGHT_ASSIGN_MODE.get());
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
         
         // create new scene
         getStage().setTitle("Assign SRTM height values");
@@ -223,7 +223,7 @@ public class AssignSRTMHeight extends AbstractStage  {
 
                 hasUpdated = true;
 
-                // done, lets get out of here...
+                // done, lets getAsString out of here...
                 getStage().close();
             }
         });

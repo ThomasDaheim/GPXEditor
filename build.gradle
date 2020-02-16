@@ -32,7 +32,7 @@ if (!hasProperty('mainClass')) {
 }
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
-group='GPXEditor'
+group='tf.GPXEditor'
 version='4.5'
 
 repositories {
@@ -58,7 +58,7 @@ dependencies {
     compile "org.openjfx:javafx-media:11.0.2:$platform"
 
     // TFE, 20191209: our own helper library
-    compile 'JavaHelper:JavaHelper:1.0'
+    compile 'tf.JavaHelper:JavaHelper:1.1'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'

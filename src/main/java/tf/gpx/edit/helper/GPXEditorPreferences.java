@@ -25,13 +25,14 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.function.Function;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 
-public enum GPXEditorPreferences {
+public enum GPXEditorPreferences  {
     RECENTWINDOWWIDTH("recentWindowWidth", Integer.toString(1200)),
     RECENTWINDOWHEIGTH("recentWindowHeigth", Integer.toString(600)),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5)),
@@ -68,11 +69,16 @@ public enum GPXEditorPreferences {
         myDefaultValue = defaultValue;
     }
     
-    public String get() {
+    public String getAsString() {
         return GPXEditorPreferenceStore.getInstance().get(myPrefKey, myDefaultValue);
     }
     
-    public void put(final String value) {
-        GPXEditorPreferenceStore.getInstance().put(myPrefKey, value);
+    public <T> T getAsType(final Function<String, T> converter) {
+        // see https://ideone.com/WtNDN2 for the general idea
+        return converter.apply(getAsString());
+    }
+    
+    public <T> void put(final T value) {
+        GPXEditorPreferenceStore.getInstance().put(myPrefKey, value.toString());
     }
 }

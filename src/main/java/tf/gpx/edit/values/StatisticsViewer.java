@@ -231,7 +231,7 @@ public class StatisticsViewer extends AbstractStage {
         // 2nd row: OK und Export buttons
         final Button OKButton = new Button("OK");
         OKButton.setOnAction((ActionEvent event) -> {
-            // done, lets get out of here...
+            // done, lets getAsString out of here...
             getStage().close();
         });      
         getGridPane().add(OKButton, 0, rowNum, 1, 1);
@@ -281,8 +281,8 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.Break3.ordinal()).setValue("");
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
-        // get limits to identify a pause
-        breakDuration = Integer.valueOf(GPXEditorPreferences.BREAK_DURATION.get());
+        // getAsString limits to identify a pause
+        breakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType(Integer::valueOf);
         // minutes -> milliseconds
         breakDuration *= 60*1000;
         

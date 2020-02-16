@@ -105,8 +105,8 @@ public class GPXEditorManager extends Application {
             }
 
             // TF, 20161103: store and read height, width of scene and divider positions of splitpane
-            Double recentWindowWidth = Double.valueOf(GPXEditorPreferences.RECENTWINDOWWIDTH.get());
-            Double recentWindowHeigth = Double.valueOf(GPXEditorPreferences.RECENTWINDOWHEIGTH.get());
+            Double recentWindowWidth = GPXEditorPreferences.RECENTWINDOWWIDTH.getAsType(Double::valueOf);
+            Double recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getAsType(Double::valueOf);
 
             myStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
             myStage.setTitle("GPX Editor"); 
@@ -124,8 +124,8 @@ public class GPXEditorManager extends Application {
     public void stop() {
         // TF, 20161103: store and read height, width of scene and divider positions of splitpane
         if (myStage != null) {
-            GPXEditorPreferences.RECENTWINDOWWIDTH.put(Double.toString(myStage.getScene().getWidth()));
-            GPXEditorPreferences.RECENTWINDOWHEIGTH.put(Double.toString(myStage.getScene().getHeight()));
+            GPXEditorPreferences.RECENTWINDOWWIDTH.put(myStage.getScene().getWidth());
+            GPXEditorPreferences.RECENTWINDOWHEIGTH.put(myStage.getScene().getHeight());
         }
         
         if (controller != null) {

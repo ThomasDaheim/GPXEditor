@@ -227,7 +227,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 //                dragStartDistance = Math.min(dragStartDistance, distValue);
 //                dragEndDistance = Math.max(dragEndDistance, distValue);
                     
-                    // compare against >=, <= to handle the case that we get called twice with same distValue
+                    // compare against >=, <= to handle the case that we getAsString called twice with same distValue
                     if (distValue <= dragStartDistance) {
 //                        System.out.println("new start distance");
                         dragStartDistance = distValue;
@@ -372,7 +372,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
         // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
-        final boolean alwayShowFileWaypoints = Boolean.valueOf(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.get());
+        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType(Boolean::valueOf);
         
         double distValue = 0.0;
         // TODO: replace with iteration over lineItems

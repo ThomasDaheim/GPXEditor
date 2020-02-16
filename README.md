@@ -19,16 +19,28 @@ Note on height data files: There are a number of data files with height data ava
 
 ## Following features are available via UI:
 
+### Update v4.5
+
+I had some spare time on my hands...
+
+* select multiple items from same gpx file, will all be shown on map
+* split items by distance or time between waypoints
+* get height for coordinate
+* show item ID and waypoint names in height chart; layout as preferences
+* added more layers to leaflet
+* export map to png
+* a lot of refactoring & bug fixes under the hood...
+
 ### Update v4.4
 
 * add/delete of metadata segment via context menu
-* Usage of JavaHelper repo, no changes to functionality
+* usage of JavaHelper repo, no changes to functionality
 
 ### Update v4.3
 
 * show track/route colors in table and height chart
 * show speeds together with hight chart
-* Performance: include various profiling improvements
+* performance: include various profiling improvements
 
 ### Update v4.2
 
@@ -285,7 +297,7 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
 * 'commons-cli:commons-cli:1.3.1'
 * 'commons-io:commons-io:2.4'
@@ -303,6 +315,7 @@ Explicit dependencies:
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'uk.com.robust-it:cloning:1.9.10'
 * 'org.apache.commons:commons-csv:1.6'
+* 'eu.hansolo.fx.formattedtextfield:formattedtextfield:1.0-SNAPSHOT': https://github.com/HanSolo/formattedtextfield, not available via maven
 
 Other things used internally:
 
