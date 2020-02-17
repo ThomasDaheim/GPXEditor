@@ -64,7 +64,8 @@ import tf.gpx.edit.main.GPXEditor;
  */
 public interface IChartBasics<T extends XYChart> {
     static String DATA_SEP = "-";
-    static String SHIFT_NODE = "ShiftNode";
+    static String SHIFT_LABEL = "ShiftNode";
+    static String SHIFT_TEXT = "ShiftText";
     
     public static enum ChartType {
         HEIGHTCHART,
@@ -265,7 +266,7 @@ public interface IChartBasics<T extends XYChart> {
                     text.setVisible(true);
                     text.setMouseTransparent(true);
                     // nodes are shown center-center aligned, hack needed to avoid that
-                    text.setUserData(SHIFT_NODE);
+                    text.setUserData(SHIFT_LABEL);
 
                     // add waypoint icon
                     final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
@@ -364,11 +365,14 @@ public interface IChartBasics<T extends XYChart> {
                     text.setRotate(270.0);
                     text.setVisible(true);
                     text.setMouseTransparent(true);
+                    // text should be just above yAxis, only possible after layout
+                    text.setUserData(SHIFT_TEXT);
+
                     // calculate "middle" for x and 10% above lower for y
                     final double xPosText = (series.getData().get(0).getXValue() + series.getData().get(series.getData().size()-1).getXValue()) / 2.0;
                     if (xPosText > 0.0) {
                         // add data point with this text as node
-                        final XYChart.Data<Double, Double> idLabel = new XYChart.Data<>(xPosText, getChart().getYAxis().getZeroPosition());
+                        final XYChart.Data<Double, Double> idLabel = new XYChart.Data<>(xPosText, getMinimumYValue());
                         idLabel.setExtraValue((GPXWaypoint) series.getData().get(0).getExtraValue());
                         idLabel.setNode(text);
 
@@ -406,53 +410,58 @@ public interface IChartBasics<T extends XYChart> {
                     continue;
                 }
                 Node symbol = data.getNode();
-                if (symbol != null && SHIFT_NODE.equals((String) symbol.getUserData())) {
+                if (symbol != null) {
                     symbol.applyCss();
-                    // https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java
-                    // shift done in AreaChart.layoutPlotChildren() is
-                    // final double w = symbol.prefWidth(-1);
-                    // final double h = symbol.prefHeight(-1);
-                    // symbol.resizeRelocate(x-(w/2), y-(h/2),w,h);  
-                    // https://github.com/shitapatilptc/java/blob/master/src/javafx.graphics/javafx/scene/Node.java
-                    // resize done in Node.relocate() is
-                    // setLayoutX(x - getLayoutBounds().getMinX());
-                    // setLayoutY(y - getLayoutBounds().getMinY());                    
+                    if (SHIFT_LABEL.equals((String) symbol.getUserData())) {
+                        // https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java
+                        // shift done in AreaChart.layoutPlotChildren() is
+                        // final double w = symbol.prefWidth(-1);
+                        // final double h = symbol.prefHeight(-1);
+                        // symbol.resizeRelocate(x-(w/2), y-(h/2),w,h);  
+                        // https://github.com/shitapatilptc/java/blob/master/src/javafx.graphics/javafx/scene/Node.java
+                        // resize done in Node.relocate() is
+                        // setLayoutX(x - getLayoutBounds().getMinX());
+                        // setLayoutY(y - getLayoutBounds().getMinY());                    
 
-                    final double w = symbol.prefWidth(-1);
-                    final double h = symbol.prefHeight(-1);
+                        final double w = symbol.prefWidth(-1);
+                        final double h = symbol.prefHeight(-1);
 
-                    // factor in getRotate() to calculate horizontal + vertical shift values
-                    // shift such that center of icon is on point
-                    
-                    // for horizontal
-                    // 0 degrees: w/2 - icon
-                    // 45 degrees: w/2 / sqrt(2) - icon / sqrt(2)
-                    // 90 degrees: 0
-                    // 135 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
-                    // 180 degrees: -w/2 + icon
-                    // 225 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
-                    // 270 degrees: 0
-                    // 315 degrees: w/2 / sqrt(2)
-                    // => cos(getRotate()) * w/2
-                    // for vertical
-                    // 0 degrees: 0
-                    // 45 degrees: w/2 / sqrt(2) - icon / sqrt(2)
-                    // 90 degrees: w/2 - icon
-                    // 135 degrees: w/2 / sqrt(2) - icon / sqrt(2)
-                    // 180 degrees: 0
-                    // 225 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
-                    // 270 degrees: -w/2
-                    // 315 degrees: -w/2 / sqrt(2)
-                    // => sin(getRotate()) * w/2
-                    
-                    final double angle = symbol.getRotate() * Math.PI / 180.0;
-                    final double shiftX = Math.cos(angle) * (w-waypointIconSize)/2.0;
-                    final double shiftY = Math.sin(angle) * (w-waypointIconSize)/2.0;
-//                    System.out.println("Shifting node: " + ((GPXWaypoint) data.getExtraValue()).getName() + " by " + shiftX + ", " + shiftY);
+                        // factor in getRotate() to calculate horizontal + vertical shift values
+                        // shift such that center of icon is on point
 
-                    // undo old shift and shift to center-center instead
-                    symbol.setLayoutX(symbol.getLayoutX() + shiftX);
-                    symbol.setLayoutY(symbol.getLayoutY() + shiftY);
+                        // for horizontal
+                        // 0 degrees: w/2 - icon
+                        // 45 degrees: w/2 / sqrt(2) - icon / sqrt(2)
+                        // 90 degrees: 0
+                        // 135 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
+                        // 180 degrees: -w/2 + icon
+                        // 225 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
+                        // 270 degrees: 0
+                        // 315 degrees: w/2 / sqrt(2)
+                        // => cos(getRotate()) * w/2
+                        // for vertical
+                        // 0 degrees: 0
+                        // 45 degrees: w/2 / sqrt(2) - icon / sqrt(2)
+                        // 90 degrees: w/2 - icon
+                        // 135 degrees: w/2 / sqrt(2) - icon / sqrt(2)
+                        // 180 degrees: 0
+                        // 225 degrees: -w/2 / sqrt(2) + icon / sqrt(2)
+                        // 270 degrees: -w/2
+                        // 315 degrees: -w/2 / sqrt(2)
+                        // => sin(getRotate()) * w/2
+
+                        final double angle = symbol.getRotate() * Math.PI / 180.0;
+                        final double shiftX = Math.cos(angle) * (w-waypointIconSize)/2.0;
+                        final double shiftY = Math.sin(angle) * (w-waypointIconSize)/2.0;
+    //                    System.out.println("Shifting node: " + ((GPXWaypoint) data.getExtraValue()).getName() + " by " + shiftX + ", " + shiftY);
+
+                        // undo old shift and shift to center-center instead
+                        symbol.setLayoutX(symbol.getLayoutX() + shiftX);
+                        symbol.setLayoutY(symbol.getLayoutY() + shiftY);
+                    } else if (SHIFT_TEXT.equals((String) symbol.getUserData())) {
+                        // now getYAxis().getZeroPosition() should yield something useful
+                        data.setYValue(getChart().getYAxis().getZeroPosition());
+                    }
                 }
             }
         });
