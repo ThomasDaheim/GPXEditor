@@ -370,6 +370,9 @@ public class GPXEditor implements Initializable {
         }
         // System.out.println("Processing " + gpxFileNames.size() + " files.");
         parseAndAddFiles(gpxFileNames);
+        
+        // set algorithm for distance calculation
+        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType(EarthGeometry.DistanceAlgorithm::valueOf));
     }
     
     public void lateInitialize() {
@@ -1519,7 +1522,7 @@ public class GPXEditor implements Initializable {
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 final boolean keep1[] = EarthGeometry.simplifyTrack(trackwaypoints, 
-                        GPXEditorPreferences.ALGORITHM.getAsType(EarthGeometry.Algorithm::valueOf),
+                        GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(EarthGeometry.ReductionAlgorithm::valueOf),
                         GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf));
                 final boolean keep2[] = EarthGeometry.fixTrack(trackwaypoints, 
                         GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf));
@@ -1608,7 +1611,7 @@ public class GPXEditor implements Initializable {
         }
 
         myStructureHelper.reduceGPXLineItems(gpxLineItems,
-                GPXEditorPreferences.ALGORITHM.getAsType(EarthGeometry.Algorithm::valueOf),
+                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(EarthGeometry.ReductionAlgorithm::valueOf),
                 GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf));
         refreshGPXFileList();
         

@@ -80,8 +80,10 @@ public class PreferenceEditor extends AbstractStage {
     public void showPreferencesDialogue() {
         // TODO: split into init(), initPreferences(), setPreferences like for all other viewers...
         
-        EarthGeometry.Algorithm myAlgorithm = 
-                GPXEditorPreferences.ALGORITHM.getAsType(EarthGeometry.Algorithm::valueOf);
+        EarthGeometry.DistanceAlgorithm myDistanceAlgorithm = 
+                GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType(EarthGeometry.DistanceAlgorithm::valueOf);
+        EarthGeometry.ReductionAlgorithm myReductionAlgorithm = 
+                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(EarthGeometry.ReductionAlgorithm::valueOf);
         double myReduceEpsilon = GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf);
         double myFixEpsilon = GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf);
 
@@ -110,8 +112,32 @@ public class PreferenceEditor extends AbstractStage {
 
         // create new scene with list of algos & parameter
         int rowNum = 0;
-        // 1st row: select fixTrack distanceGPXWaypoints
-        Tooltip t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
+
+        // select distance algorithm
+        Tooltip t = new Tooltip("Distance algorithm to use" + System.lineSeparator() + "Note: Vincenty is approx. 4x slower than Haversine" + System.lineSeparator() + "Vincenty is more accurate for long distances (> 100km) only.");
+        final Label distalgoLbl = new Label("Distance Algorithm:");
+        distalgoLbl.setTooltip(t);
+        getGridPane().add(distalgoLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(distalgoLbl, VPos.TOP);
+        GridPane.setMargin(distalgoLbl, INSET_TOP);
+        
+        final ChoiceBox distAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.DistanceAlgorithm.class, myDistanceAlgorithm);
+        distAlgoChoiceBox.setTooltip(t);
+        getGridPane().add(distAlgoChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(distAlgoChoiceBox, INSET_TOP);
+
+        rowNum++;
+        // separator
+        final Separator sepHor0 = new Separator();
+        sepHor0.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor0, 0, rowNum);
+        GridPane.setColumnSpan(sepHor0, 2);
+        getGridPane().getChildren().add(sepHor0);
+        GridPane.setMargin(sepHor0, INSET_TOP);
+
+        rowNum++;
+        // 1st row: select fixTrack distance
+        t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
         final Label fixLbl = new Label("Min. Distance for fixing (m):");
         fixLbl.setTooltip(t);
         getGridPane().add(fixLbl, 0, rowNum, 1, 1);
@@ -128,13 +154,13 @@ public class PreferenceEditor extends AbstractStage {
         rowNum++;
         // 2nd row: select reduce algorithm
         t = new Tooltip("Reduction algorithm to use");
-        final Label algoLbl = new Label("Reduction Algorithm:");
-        algoLbl.setTooltip(t);
-        getGridPane().add(algoLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(algoLbl, VPos.TOP);
-        GridPane.setMargin(algoLbl, INSET_TOP);
+        final Label redalgoLbl = new Label("Reduction Algorithm:");
+        redalgoLbl.setTooltip(t);
+        getGridPane().add(redalgoLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(redalgoLbl, VPos.TOP);
+        GridPane.setMargin(redalgoLbl, INSET_TOP);
 
-        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.Algorithm.class, myAlgorithm);
+        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.ReductionAlgorithm.class, myReductionAlgorithm);
         reduceAlgoChoiceBox.setTooltip(t);
         getGridPane().add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, INSET_TOP);
@@ -395,7 +421,9 @@ public class PreferenceEditor extends AbstractStage {
         
         if (saveBtn.getText().equals(getStage().getTitle())) {
             // read values from stage
-            myAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.Algorithm.class, reduceAlgoChoiceBox);
+            myDistanceAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox);
+
+            myReductionAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.ReductionAlgorithm.class, reduceAlgoChoiceBox);
 
             myFixEpsilon = Math.max(Double.valueOf(fixText.getText().trim()), 0);
             myReduceEpsilon = Math.max(Double.valueOf(epsilonText.getText().trim()), 0);
@@ -420,7 +448,8 @@ public class PreferenceEditor extends AbstractStage {
             waypointLabelAngle = Integer.valueOf(wayLblAngleText.getText().trim()) % 360;
             waypointThreshold = Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0);
             
-            GPXEditorPreferences.ALGORITHM.put(myAlgorithm.name());
+            GPXEditorPreferences.DISTANCE_ALGORITHM.put(myDistanceAlgorithm.name());
+            GPXEditorPreferences.REDUCTION_ALGORITHM.put(myReductionAlgorithm.name());
             GPXEditorPreferences.REDUCE_EPSILON.put(myReduceEpsilon);
             GPXEditorPreferences.FIX_EPSILON.put(myFixEpsilon);
             

@@ -44,19 +44,34 @@ public class TestPointTriple {
 
     public TestPointTriple(
             final String desc,
+            final double lat1, final double lon1, final double elev1,
+            final double lat2, final double lon2, final double elev2,
+            final double lat3, final double lon3, final double elev3,
+            final double area, final double distance) {
+        description = desc;
+        p1 = new Waypoint(lat1, lon1);
+        p1.setElevation(elev1);
+        p2 = new Waypoint(lat2, lon2);
+        p2.setElevation(elev2);
+        p3 = new Waypoint(lat3, lon3);
+        p3.setElevation(elev3);
+
+        areaRef = area;
+        distanceToGreatCircleRef = distance;
+    }
+
+    public TestPointTriple(
+            final String desc,
             final double lat1, final double lon1,
             final double lat2, final double lon2,
             final double lat3, final double lon3,
             final double area, final double distance) {
-        description = desc;
-        p1 = new Waypoint(lat1, lon1);
-        p1.setElevation(0.0);
-        p2 = new Waypoint(lat2, lon2);
-        p2.setElevation(0.0);
-        p3 = new Waypoint(lat3, lon3);
-        p3.setElevation(0.0);
-
-        areaRef = area;
-        distanceToGreatCircleRef = distance;
+        this(
+            desc,
+            lat1, lon1, 0.0,
+            lat2, lon2, 0.0,
+            lat3, lon3, 0.0,
+            area, distance
+        );
     }
 }

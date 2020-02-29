@@ -127,6 +127,11 @@ run {
     }
 }
 
+test {
+    // https://stackoverflow.com/a/35467005
+    testLogging.showStandardStreams true;   
+}
+
 // extend Netbeans Gradle "Debug" task
 task(debug, dependsOn: 'classes', type: JavaExec) {
     doFirst {

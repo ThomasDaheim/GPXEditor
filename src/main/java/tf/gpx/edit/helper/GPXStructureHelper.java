@@ -81,7 +81,7 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.Algorithm algorithm, final double epsilon) {
+    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 

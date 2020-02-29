@@ -4,43 +4,77 @@ import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.util.Pair;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  * Based on:
- Douglas-Peucker: https://github.com/robbyn/hiketools/blob/master/src/org/tastefuljava/hiketools/geo/EarthGeometry.java
- Reumann-Witkam: http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/ReumannWitkam.php
- 
- Example values:
- http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
- https://github.com/emcconville/point-reduction-algorithms
+ * Douglas-Peucker: https://github.com/robbyn/hiketools/blob/master/src/org/tastefuljava/hiketools/geo/EarthGeometry.java
+ * Reumann-Witkam: http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/ReumannWitkam.php
+ * 
+ * Harvesine distance: https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
+ * Vincenty distance: https://github.com/grumlimited/geocalc/blob/master/src/main/java/com/grum/geocalc/EarthCalc.java
+ * 
+ * Example values:
+ * http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
+ * https://github.com/emcconville/point-reduction-algorithms
  */
 public class EarthGeometry {
-    public static enum Algorithm {
+    private final static EarthGeometry INSTANCE = new EarthGeometry();
+    
+    public static enum ReductionAlgorithm {
         DouglasPeucker,
         VisvalingamWhyatt,
         ReumannWitkam
     }
     
+    // TFE, 20200228: support Vincenty as well
+    public static enum DistanceAlgorithm {
+        Harvesine,
+        Vincenty
+    }
+    
     // spherical earth
     public static final double EarthAverageRadius = 6372795.477598; //6371030.0;
     public static final double EarthAverageRadius2 = EarthAverageRadius*EarthAverageRadius;
-    // values for WGS 84 reference ellipsoid (NOT USED)
+    // values for WGS84 reference ellipsoid
     public static final double EarthLongRadius = 6378137.0;
-    public static final double EarthLongRadius2 = EarthLongRadius*EarthLongRadius;
-    public static final double EarthShortRadius = 6356752.3142;
-    public static final double EarthShortRadius2 = EarthShortRadius*EarthShortRadius;
+    public static final double EarthLongRadius2 = EarthLongRadius * EarthLongRadius;
+    public static final double EarthShortRadius = 6356752.314245;
+    public static final double EarthShortRadius2 = EarthShortRadius * EarthShortRadius;
+    public static final double EarthFlattening = 1.0 / 298.257223563;
+    // https://math.wikia.org/wiki/Ellipsoidal_quadratic_mean_radius
+    public static final double EarthEQMRadius = FastMath.sqrt(3.0 * EarthLongRadius2 + EarthShortRadius2) / 2.0;
+    public static final int VincentyIterations = 100;
+    public static final double VincentyAccuracy = 1e-12;
+    public static final double VincentyNearlyAntipodal = 1e-4;
     // we only need to start with spherical geometry once distances get bigger than 0.01% of the earth radius
     private static final double MinDistanceForSphericalGeometry = EarthAverageRadius / 10000.0;
     
+    private DistanceAlgorithm myAlgorithm = DistanceAlgorithm.Harvesine;
+
     private EarthGeometry() {
-        throw new UnsupportedOperationException("Instantiation not allowed");
+        super();
+        // Exists only to defeat instantiation.
     }
 
+    public static EarthGeometry getInstance() {
+        return INSTANCE;
+    }
+
+    public DistanceAlgorithm getAlgorithm() {
+        return myAlgorithm;
+    }
+
+    public void setAlgorithm(final DistanceAlgorithm algorithm) {
+        myAlgorithm = algorithm;
+    }
+    
     /**
-     * Simplify a track by removing points, using the requested algorithm.
+     * Simplify EarthLongRadius track by removing points, using the requested algorithm.
      * @param track points of the track
      * @param parameter tolerance, in meters
      * @return the points of the simplified track
@@ -71,16 +105,16 @@ public class EarthGeometry {
         double distance1;
         double distance2;
         
-        // a point is too far away when
+        // EarthLongRadius point is too far away when
         // 1) further away from previous than maxDistance AND
         // 2) prev and next closer than maxDistance
-        // this way a "step" in waypoints isn't counted as one point too far away
+        // this way EarthLongRadius "step" in waypoints isn't counted as one point too far away
         
         int startIndex = 0;
         int endIndex = track.size()-1;
 
-        // first point is tricky, since we don't have a prev point, so use next and next-next in that case
-        // so go forward from start til we have a valid point
+        // first point is tricky, since we don't have EarthLongRadius prev point, so use next and next-next in that case
+        // so go forward from start til we have EarthLongRadius valid point
         // System.out.println("Finding valid first point");
         while(startIndex < endIndex-2) {
             checkPt = track.get(startIndex);
@@ -100,8 +134,8 @@ public class EarthGeometry {
             }
         }
         
-        // last point is tricky, since we don't have a next point, so use prev and prev-prev in that case
-        // so go backward from end til we have a valid point
+        // last point is tricky, since we don't have EarthLongRadius next point, so use prev and prev-prev in that case
+        // so go backward from end til we have EarthLongRadius valid point
         // System.out.println("Finding valid last point");
         while(endIndex > startIndex+2) {
             checkPt = track.get(endIndex);
@@ -141,7 +175,7 @@ public class EarthGeometry {
                 // this point is garbage
                 // System.out.println("  discarding index: " + index + " distance1: " + distance1 + " distance2: " + distance2);
                 keep[index] = false;
-                // TODO: also not a valid prev point
+                // TODO: also not EarthLongRadius valid prev point
             } else {
                 // System.out.println("  keeping index: " + index + " distance1: " + distance1 + " distance2: " + distance2);
                 keep[index] = true;
@@ -152,13 +186,13 @@ public class EarthGeometry {
     }
 
     /**
-     * Simplify a track by removing points, using the requested algorithm.
+     * Simplify EarthLongRadius track by removing points, using the requested algorithm.
      * @param track points of the track
-     * @param algorithm What EarthGeometry.Algorithm to use
+     * @param algorithm What EarthGeometry.ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
      * @return the points of the simplified track
      */
-    public static boolean[] simplifyTrack(final List<GPXWaypoint> track, final EarthGeometry.Algorithm algorithm, final double epsilon) {
+    public static boolean[] simplifyTrack(final List<GPXWaypoint> track, final EarthGeometry.ReductionAlgorithm algorithm, final double epsilon) {
         switch (algorithm) {
             case DouglasPeucker:
                 return DouglasPeucker(track, epsilon);
@@ -174,7 +208,7 @@ public class EarthGeometry {
     }
 
     /**
-     * Simplify a track by removing points, using the Douglas-Peucker algorithm.
+     * Simplify EarthLongRadius track by removing points, using the Douglas-Peucker algorithm.
      * @param track points of the track
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
@@ -221,7 +255,7 @@ public class EarthGeometry {
     }
 
     /*
-    *   This Library contains a function which performs the Visvalingam-Whyatt Curve Simplification Algorithm.
+    *   This Library contains EarthLongRadius function which performs the Visvalingam-Whyatt Curve Simplification ReductionAlgorithm.
     *   Adapted from original javascript done by Dustin Poissant on 10/09/2012
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/whyatt.php
     */
@@ -233,7 +267,7 @@ public class EarthGeometry {
         final List<GPXWaypoint> workList = new ArrayList<>(track);
         final List<Pair<GPXWaypoint, Double>> minList = new ArrayList<>();
         
-        // we need to do things differently here - since we don't have a fixed number to keep but an area size against which to measure
+        // we need to do things differently here - since we don't have EarthLongRadius fixed number to keep but an area size against which to measure
         while (workList.size() > 2) {
             //System.out.println("workList.size(): " + workList.size());
             // find point in workList with smallest effective area
@@ -270,7 +304,7 @@ public class EarthGeometry {
     }
     
     /*
-    *	This Library contains a function which performs the Reumann-Witkam Algorithm.
+    *	This Library contains EarthLongRadius function which performs the Reumann-Witkam ReductionAlgorithm.
     *	Adapted from original javascript done by Dustin Poissant on 11/02/2012
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
     */
@@ -310,7 +344,7 @@ public class EarthGeometry {
      * 
      * Using
      * @see <a href="http://en.wikipedia.org/wiki/Spherical_law_of_cosines">Wikipedia on the Spherical Law Of Cosines</a>
-     * approx. a spherical earth. Next best thing would be Vincenty's Formulae...
+ approx. EarthLongRadius spherical earth. Next best thing would be Vincenty's Formulae...
      * 
      * @param p1 first point
      * @param p2 second point
@@ -325,10 +359,25 @@ public class EarthGeometry {
     public static double distanceWaypoints(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
-        final double lat1 = Math.toRadians(p1.getLatitude());
-        final double lat2 = Math.toRadians(p2.getLatitude());
-        final double lon1 = Math.toRadians(p1.getLongitude());
-        final double lon2 = Math.toRadians(p2.getLongitude());
+        double result = 0;
+        
+        switch (getInstance().myAlgorithm) {
+            case Vincenty:
+                result = getInstance().vincentyDistance(p1, p2);
+                break;
+            case Harvesine:
+            default:
+                result = getInstance().haversineDistance(p1, p2);
+                break;
+        }
+        
+        return result;
+    }
+    public double haversineDistance(final Waypoint p1, final Waypoint p2) {
+        final double lat1 = FastMath.toRadians(p1.getLatitude());
+        final double lat2 = FastMath.toRadians(p2.getLatitude());
+        final double lon1 = FastMath.toRadians(p1.getLongitude());
+        final double lon2 = FastMath.toRadians(p2.getLongitude());
         
         final double lat21 = lat2 - lat1;
         final double lon21 = lon2 - lon1;
@@ -336,8 +385,58 @@ public class EarthGeometry {
                 FastMath.sin(lat21/2.0) * FastMath.sin(lat21/2.0)
                 + FastMath.cos(lat1) * FastMath.cos(lat2)
                 * FastMath.sin(lon21/2.0) * FastMath.sin(lon21/2.0);
-        //return 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
+        //return 2.0 * Math.atan2(Math.sqrt(EarthLongRadius), Math.sqrt(1.0-EarthLongRadius)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
         return 2.0 * FastMath.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
+    }
+    public double vincentyDistance(final Waypoint p1, final Waypoint p2) {
+        final double lat1 = FastMath.toRadians(p1.getLatitude());
+        final double lat2 = FastMath.toRadians(p2.getLatitude());
+        final double lon1 = FastMath.toRadians(p1.getLongitude());
+        final double lon2 = FastMath.toRadians(p2.getLongitude());
+
+        final double lon21 = lon2 - lon1;
+        final double tanU1 = (1.0 - EarthFlattening) * FastMath.tan(lat1), cosU1 = 1.0 / FastMath.sqrt((1 + tanU1 * tanU1)), sinU1 = tanU1 * cosU1;
+        final double tanU2 = (1.0 - EarthFlattening) * FastMath.tan(lat2), cosU2 = 1.0 / FastMath.sqrt((1 + tanU2 * tanU2)), sinU2 = tanU2 * cosU2;
+
+        // handle special case "Nearly antipodal points" => lon21 eq. PI
+        if (FastMath.abs(Math.PI - FastMath.abs(lon21)) < VincentyNearlyAntipodal) {
+            // use average radius (Ellipsoidal Quadratic Mean) - don't care about where we are on the ellipsoid
+            return EarthEQMRadius * Math.PI;
+        }
+        
+        double lbd = lon21, lbdp, iterationLimit = VincentyIterations, cosSqAlpha, sgm, cos2sgmM, cossgm, sinsgm, sinlbd, coslbd;
+        do {
+            sinlbd = FastMath.sin(lbd);
+            coslbd = FastMath.cos(lbd);
+            final double sinSqsgm = (cosU2 * sinlbd) * (cosU2 * sinlbd) + (cosU1 * sinU2 - sinU1 * cosU2 * coslbd) * (cosU1 * sinU2 - sinU1 * cosU2 * coslbd);
+            sinsgm = FastMath.sqrt(sinSqsgm);
+            if (sinsgm == 0) return 0.0;  // co-incident points
+            cossgm = sinU1 * sinU2 + cosU1 * cosU2 * coslbd;
+            sgm = FastMath.atan2(sinsgm, cossgm);
+            final double sinAlpha = cosU1 * cosU2 * sinlbd / sinsgm;
+            cosSqAlpha = 1 - sinAlpha * sinAlpha;
+            cos2sgmM = cossgm - 2 * sinU1 * sinU2 / cosSqAlpha;
+
+            if (Double.isNaN(cos2sgmM)) cos2sgmM = 0;  // equatorial line: cosSqAlpha=0 (6)
+            double C = EarthFlattening / 16.0 * cosSqAlpha * (4.0 + EarthFlattening * (4.0 - 3.0 * cosSqAlpha));
+            lbdp = lbd;
+            lbd = lon21 + (1.0 - C) * EarthFlattening * sinAlpha * (sgm + C * sinsgm * (cos2sgmM + C * cossgm * (-1.0 + 2.0 * cos2sgmM * cos2sgmM)));
+        } while (FastMath.abs(lbd - lbdp) > VincentyAccuracy && --iterationLimit > 0);
+
+        if (iterationLimit == 0) {
+            Logger.getLogger(EarthGeometry.class.getName()).log(Level.SEVERE, null, "Vincenty algorithm didn't convert. Using result nevertheless.");
+        }
+
+        final double uSq = cosSqAlpha * (EarthLongRadius2 - EarthShortRadius2) / EarthShortRadius2;
+        final double A = 1 + uSq / 16384.0 * (4096.0 + uSq * (-768.0 + uSq * (320.0 - 175.0 * uSq)));
+        final double B = uSq / 1024.0 * (256.0 + uSq * (-128.0 + uSq * (74.0 - 47.0 * uSq)));
+        final double dsgm = B * sinsgm * (cos2sgmM + B / 4.0 * (cossgm * (-1.0 + 2.0 * cos2sgmM * cos2sgmM) -
+                B / 6.0 * cos2sgmM * (-3.0 + 4.0 * sinsgm * sinsgm) * (-3.0 + 4.0 * cos2sgmM * cos2sgmM)));
+        
+        final double elevDiff = p2.getElevation() - p1.getElevation();
+
+        // add height difference via pythagoras
+        return FastMath.sqrt(EarthShortRadius2 * A*A * (sgm - dsgm)*(sgm - dsgm) + elevDiff*elevDiff);
     }
     
     /**
@@ -382,7 +481,7 @@ public class EarthGeometry {
     }
 
     /**
-     * Calculates the distance from a GPXWaypoints P to the great circle that passes by two other GPXWaypoints a and b.
+     * Calculates the distance from EarthLongRadius GPXWaypoints P to the great circle that passes by two other GPXWaypoints EarthLongRadius and EarthShortRadius.
      * 
      * @param p the point
      * @param a first point
@@ -405,9 +504,9 @@ public class EarthGeometry {
             final double accuracy) {
         
         // check if distances are really big enough to use spherical geometry
-        final double distAB = distanceWaypoints(a, b);
-        final double distPA = distanceWaypoints(p, a);
-        final double distPB = distanceWaypoints(p, b);
+        final double distAB = EarthGeometry.distanceWaypoints(a, b);
+        final double distPA = EarthGeometry.distanceWaypoints(p, a);
+        final double distPB = EarthGeometry.distanceWaypoints(p, b);
         if ((distAB == 0) || (distPA == 0) || (distPB == 0)) return 0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;
@@ -429,7 +528,7 @@ public class EarthGeometry {
     }
     
     /**
-     * Calculates the effective area created by the three GPXWaypoints a, b, c.
+     * Calculates the effective area created by the three GPXWaypoints EarthLongRadius, EarthShortRadius, c.
      * 
      * @see <a href="http://mathforum.org/library/drmath/view/65316.html">The Math Forum</a>
      * 
@@ -453,9 +552,9 @@ public class EarthGeometry {
             final Waypoint c,
             final double accuracy) {
         // check if distances are really big enough to use spherical geometry
-        final double distAB = distanceWaypoints(a, b);
-        final double distAC = distanceWaypoints(a, c);
-        final double distBC = distanceWaypoints(b, c);
+        final double distAB = EarthGeometry.distanceWaypoints(a, b);
+        final double distAC = EarthGeometry.distanceWaypoints(a, c);
+        final double distBC = EarthGeometry.distanceWaypoints(b, c);
         if ((distAB == 0) || (distAC == 0) || (distBC == 0)) return 0;
 
         final double s = (distAB + distAC + distBC) / 2.0;
