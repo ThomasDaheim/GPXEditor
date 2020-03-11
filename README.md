@@ -299,23 +299,24 @@ Explicit dependencies:
 
 * 'tf.JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
-* 'commons-cli:commons-cli:1.3.1'
-* 'commons-io:commons-io:2.4'
-* 'org.apache.commons:commons-lang3:3.5'
+* 'commons-cli:commons-cli:1.4'
+* 'commons-io:commons-io:2.6'
+* 'org.apache.commons:commons-lang3:3.9'
+* 'org.apache.commons:commons-collections4:4.4'
+* 'org.apache.commons:commons-text:1.7'
+* 'org.apache.commons:commons-math3:3.6.1'
+* 'org.apache.commons:commons-csv:1.7'
 * 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
-* 'org.jzy3d:jzy3d-api:1.0.0'
-* 'org.jzy3d:jzy3d-javafx:1.0.0'
-* 'org.controlsfx:controlsfx:8.40.14'
+* 'org.jzy3d:jzy3d-api:1.0.2'
+* 'org.jzy3d:jzy3d-javafx:1.0.2'
+* 'org.controlsfx:controlsfx:11.0.0'
 * 'de.jensd:fontawesomefx:8.9'
 * 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-* 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-* 'org.jfxtras:jfxtras-controls:8.0-r6'
-* 'org.jfxtras:jfxtras-labs:8.0-r6'
-* 'org.apache.commons:commons-math3:3.6.1'
-* 'uk.com.robust-it:cloning:1.9.10'
-* 'org.apache.commons:commons-csv:1.6'
-* 'eu.hansolo.fx.formattedtextfield:formattedtextfield:1.0-SNAPSHOT': https://github.com/HanSolo/formattedtextfield, not available via maven
+* 'com.fasterxml.jackson.core:jackson-core:2.9.9'
+* 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
+* 'org.jfxtras:jfxtras-controls:10.0-r1'
+* 'org.jfxtras:jfxtras-labs:9.0-r1'
+* 'uk.com.robust-it:cloning:1.9.12'
 
 Other things used internally:
 
