@@ -15,18 +15,32 @@ Note on Java 10: This code itself requires only small changes in TooltipHelper t
 
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 
+Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
+
 ## Following features are available via UI:
+
+### Update v4.5
+
+I had some spare time on my hands...
+
+* select multiple items from same gpx file, will all be shown on map
+* split items by distance or time between waypoints
+* get height for coordinate
+* show item ID and waypoint names in height chart; layout as preferences
+* added more layers to leaflet
+* export map to png
+* a lot of refactoring & bug fixes under the hood...
 
 ### Update v4.4
 
 * add/delete of metadata segment via context menu
-* Usage of JavaHelper repo, no changes to functionality
+* usage of JavaHelper repo, no changes to functionality
 
 ### Update v4.3
 
 * show track/route colors in table and height chart
 * show speeds together with hight chart
-* Performance: include various profiling improvements
+* performance: include various profiling improvements
 
 ### Update v4.2
 
@@ -283,24 +297,26 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
-* 'commons-cli:commons-cli:1.3.1'
-* 'commons-io:commons-io:2.4'
-* 'org.apache.commons:commons-lang3:3.5'
+* 'commons-cli:commons-cli:1.4'
+* 'commons-io:commons-io:2.6'
+* 'org.apache.commons:commons-lang3:3.9'
+* 'org.apache.commons:commons-collections4:4.4'
+* 'org.apache.commons:commons-text:1.7'
+* 'org.apache.commons:commons-math3:3.6.1'
+* 'org.apache.commons:commons-csv:1.7'
 * 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
-* 'org.jzy3d:jzy3d-api:1.0.0'
-* 'org.jzy3d:jzy3d-javafx:1.0.0'
-* 'org.controlsfx:controlsfx:8.40.14'
+* 'org.jzy3d:jzy3d-api:1.0.2'
+* 'org.jzy3d:jzy3d-javafx:1.0.2'
+* 'org.controlsfx:controlsfx:11.0.0'
 * 'de.jensd:fontawesomefx:8.9'
 * 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-* 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-* 'org.jfxtras:jfxtras-controls:8.0-r6'
-* 'org.jfxtras:jfxtras-labs:8.0-r6'
-* 'org.apache.commons:commons-math3:3.6.1'
-* 'uk.com.robust-it:cloning:1.9.10'
-* 'org.apache.commons:commons-csv:1.6'
+* 'com.fasterxml.jackson.core:jackson-core:2.9.9'
+* 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
+* 'org.jfxtras:jfxtras-controls:10.0-r1'
+* 'org.jfxtras:jfxtras-labs:9.0-r1'
+* 'uk.com.robust-it:cloning:1.9.12'
 
 Other things used internally:
 

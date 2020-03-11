@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.worker;
 
+import de.saring.leafletmap.LatLong;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,5 +131,9 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
                 alreadyHeightCount++;
             }
         }
+    }
+    
+    public double getElevation(final LatLong latlong) {
+        return SRTMDataStore.getInstance().getValueForCoordinate(latlong.getLatitude(), latlong.getLongitude());        
     }
 }

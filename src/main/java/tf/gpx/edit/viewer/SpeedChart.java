@@ -26,9 +26,9 @@
 package tf.gpx.edit.viewer;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import javafx.geometry.Side;
-import javafx.scene.Cursor;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -39,16 +39,17 @@ import tf.gpx.edit.main.GPXEditor;
 
 /**
  * Show lineStart height chart for GPXWaypoints of lineStart GPXLineItem and highlight selected ones
- Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+ * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
 @SuppressWarnings("unchecked")
-public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
+public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
+    private ChartsPane myChartsPane;
 
-    private GPXLineItem myGPXLineItem;
+    private List<GPXLineItem> myGPXLineItems;
 
     private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
     
@@ -77,7 +78,6 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
         
         initialize();
         setCreateSymbols(false);
-        setCursor(Cursor.NONE);
     }
     
     public static SpeedChart getInstance() {
@@ -85,18 +85,23 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     }
     
     @Override
-    public XYChart getChart() {
+    public LineChart getChart() {
         return this;
     }
     
     @Override
-    public GPXLineItem getGPXLineItem() {
-        return myGPXLineItem;
+    public Iterator<XYChart.Data<Double, Double>> getDataIterator(final XYChart.Series<Double, Double> series) {
+        return getDisplayedDataIterator(series);
     }
     
     @Override
-    public void setGPXLineItem(final GPXLineItem gpxLineItem) {
-        myGPXLineItem = gpxLineItem;
+    public List<GPXLineItem> getGPXLineItems() {
+        return myGPXLineItems;
+    }
+    
+    @Override
+    public void setGPXLineItems(final List<GPXLineItem> lineItems) {
+        myGPXLineItems = lineItems;
     }
     
     @Override
@@ -157,5 +162,15 @@ public class SpeedChart<X,Y> extends LineChart implements IChartBasics {
     @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
+    }
+
+    @Override
+    public ChartsPane getChartsPane() {
+        return myChartsPane;
+    }
+    
+    @Override
+    public void setChartsPane(final ChartsPane pane) {
+        myChartsPane = pane;
     }
 }

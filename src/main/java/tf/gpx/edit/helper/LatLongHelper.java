@@ -39,8 +39,11 @@ public class LatLongHelper {
     public final static String MIN = "'";
     public final static String SEC = "\"";
     
-    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([NS][ ]?90" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")";
-    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([EW][ ]?180" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")";
+    // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
+    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([NS][ ]?90" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")" + "|" +
+                                            "(([0-8 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + "[ ]?[NS])|(90" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + "[ ]?[NS])";
+    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + ")|([EW][ ]?180" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + ")" + "|" +
+                                            "((1?[0-7 ]?[0-9]?)" + DEG + "([0-5 ]?[0-9]?)" + MIN + "([0-5 ]?[0-9]?[.,][0-9]{0,9})" + SEC + "[ ]?[EW])|(180" + DEG + "0{0,2}" + MIN + "0{0,2}[.,]0{0,9}" + SEC + "[ ]?[EW])";
     
     public final static String INVALID_LATITUDE = "INVALID LATITUDE";
     public final static String INVALID_LONGITUDE = "INVALID LONGITUDE";
@@ -118,14 +121,26 @@ public class LatLongHelper {
             }
 
             // 2) determine sign from N/S
-            final String dir = lat.substring(0, 1);
-            final int sign = "N".equals(dir) ? 1 : -1;
+            // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
+            String dir = lat.substring(0, 1);
+            if ("N".equals(dir) || "S".equals(dir)) {
+                final int sign = "N".equals(dir) ? 1 : -1;
 
-            // 3) determine double from rest of string
-            result = doubleFromString(lat.substring(1).trim());
+                // 3) determine double from rest of string
+                result = doubleFromString(lat.substring(1).trim());
 
-            // 4) add sign
-            result *= sign;
+                // 4) add sign
+                result *= sign;
+            } else {
+                dir = lat.substring(lat.length() - 1);
+                final int sign = "N".equals(dir) ? 1 : -1;
+
+                // 3) determine double from rest of string
+                result = doubleFromString(lat.substring(0, lat.length() - 1).trim());
+
+                // 4) add sign
+                result *= sign;
+            }
         } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }
@@ -143,14 +158,26 @@ public class LatLongHelper {
             }
 
             // 2) determine sign from N/S
-            final String dir = lon.substring(0, 1);
-            final int sign = "E".equals(dir) ? 1 : -1;
+            // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
+            String dir = lon.substring(0, 1);
+            if ("E".equals(dir) || "W".equals(dir)) {
+                final int sign = "E".equals(dir) ? 1 : -1;
 
-            // 3) determine double from rest of string
-            result = doubleFromString(lon.substring(1).trim());
+                // 3) determine double from rest of string
+                result = doubleFromString(lon.substring(1).trim());
 
-            // 4) add sign
-            result *= sign;
+                // 4) add sign
+                result *= sign;
+            } else {
+                dir = lon.substring(lon.length() - 1);
+                final int sign = "E".equals(dir) ? 1 : -1;
+
+                // 3) determine double from rest of string
+                result = doubleFromString(lon.substring(0, lon.length() - 1).trim());
+
+                // 4) add sign
+                result *= sign;
+            }
         } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }

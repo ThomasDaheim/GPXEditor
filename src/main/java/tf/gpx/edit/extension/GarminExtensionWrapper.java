@@ -66,7 +66,7 @@ public class GarminExtensionWrapper {
     }
     
     public enum GarminAttibute {
-        // Waypoint (covers Trackpoints) attributes
+        // Waypoint (partially covers Trackpoints) attributes
         Proximity,
         Temperature,
         Depth,
@@ -85,8 +85,11 @@ public class GarminExtensionWrapper {
         
         // Route & Track attributes
         IsAutoNamed,
-        DisplayColor;
+        DisplayColor,
         
+        // Trackpoints v2 attributes
+        speed;
+
         @Override
         public String toString() {
             return GARMIN_PREFIX + name();

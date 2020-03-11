@@ -37,7 +37,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -46,7 +45,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -168,16 +166,15 @@ public class MarkerManager {
                 myPath = Paths.get(uri);
             }
             
-            Stream<Path> walk = Files.walk(myPath, 1);
-            for (Iterator<Path> it = walk.iterator(); it.hasNext();){
-                final String iconName = it.next().toString();
-                if (FilenameUtils.isExtension(iconName, ICON_EXT)) {
-                    final String baseName = FilenameUtils.getBaseName(iconName);
-                    // add name without extension to list
-                    iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
-                    //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
-                }
-            }        
+            // use sorting since order is different in UI or JAR...
+            // https://stackoverflow.com/a/7199929
+            Files.list(myPath).filter(t -> FilenameUtils.isExtension(t.toString(), ICON_EXT)).sorted().forEach((t) -> {
+                final String iconName = t.toString();
+                final String baseName = FilenameUtils.getBaseName(iconName);
+                // add name without extension to list
+                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
+                //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
+            });
         } catch (URISyntaxException | IOException ex) {
             Logger.getLogger(MarkerManager.class.getName()).log(Level.SEVERE, null, ex);
         }

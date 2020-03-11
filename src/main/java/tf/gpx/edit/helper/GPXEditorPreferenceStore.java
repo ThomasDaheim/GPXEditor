@@ -25,35 +25,57 @@
  */
 package tf.gpx.edit.helper;
 
-import com.rits.cloning.Cloner;
-import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.prefs.Preferences;
+import tf.gpx.edit.main.GPXEditorManager;
+import tf.helper.IPreferencesStore;
+import tf.helper.RecentFiles;
 
 /**
- * Cloner wrapper for cloning of gpx-parser class
- * https://github.com/kostaskougios/cloning 
- * 
+ *
  * @author thomas
  */
-public class GPXCloner {
+public class GPXEditorPreferenceStore implements IPreferencesStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static GPXCloner INSTANCE = new GPXCloner();
-    
-    private static Cloner cloner;
-    
-    private GPXCloner() {
-        // Exists only to defeat instantiation.
-        
-        cloner = new Cloner();
-        // TFE, 20200207: cloning extension data of waypoints kills the JVM...
-        cloner.dontClone(HashMap.class);
-    }
+    private final static GPXEditorPreferenceStore INSTANCE = new GPXEditorPreferenceStore();
 
-    public static GPXCloner getInstance() {
+    private final static Preferences MYPREFERENCES = Preferences.userNodeForPackage(GPXEditorManager.class);
+
+    private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
+
+    public final static String BASELAYER_PREFIX = "baselayer";
+    public final static String OVERLAY_PREFIX = "overlay";
+    public final static String SEPARATOR = "-";
+
+    private GPXEditorPreferenceStore() {
+        // Exists only to defeat instantiation.
+    }
+    
+    public static GPXEditorPreferenceStore getInstance() {
         return INSTANCE;
     }
-    
-    public <T> T deepClone(final T o) {
-        return cloner.deepClone(o);
+
+    public static RecentFiles getRecentFiles() {
+        return MYRECENTFILES;
+    }
+
+    @Override
+    public String get(final String key, final String defaultValue) {
+        String result = defaultValue;
+
+        try {
+            result= MYPREFERENCES.get(key, defaultValue);
+        } catch (SecurityException ex) {
+            Logger.getLogger(GPXEditorManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void put(final String key, final String value) {
+        MYPREFERENCES.put(key, value);
     }
 }

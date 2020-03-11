@@ -53,6 +53,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jzy3d.chart.AWTChart;
 import org.jzy3d.chart.Chart;
@@ -78,13 +79,13 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
-import tf.helper.ShowAlerts;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.ShowAlerts;
 
 /**
  * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.
@@ -119,13 +120,13 @@ public class SRTMDataViewer {
     }
     
     public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
-        // get all required files
+        // getAsString all required files
         final String mySRTMDataPath = 
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         final SRTMDataStore.SRTMDataAverage myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
         GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
 
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
 
@@ -154,11 +155,11 @@ public class SRTMDataViewer {
         }
 
         // show all of it
-        showStage(latMin, lonMin, latMax, lonMax, gpxFile);
+        showStage(gpxFile.getName(), latMin, lonMin, latMax, lonMax, gpxFile);
     }
     
     public void showSRTMData() {
-        // show file selection dialogue to get SRTM data file
+        // show file selection dialogue to getAsString SRTM data file
         final List<File> hgtFiles = getFiles();
         if (hgtFiles.isEmpty()) {
             return;
@@ -208,16 +209,17 @@ public class SRTMDataViewer {
             return;
         }
         
-        showStage(latMin, lonMin, latMax, lonMax, null);
+        showStage(hgtFiles.get(0).getName(), latMin, lonMin, latMax, lonMax, null);
     }
         
-    private void showStage(final int latMin, final int lonMin, final int latMax, final int lonMax, final GPXFile gpxFile) {
+    private void showStage(final String title, final int latMin, final int lonMin, final int latMax, final int lonMax, final GPXFile gpxFile) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 
         // finally, we have something to show!
         final Stage stage = new Stage();
-        stage.setTitle(SRTMDataViewer.class.getSimpleName());
+        // TFE, 20200120: add file name (srtm or gpx) to title
+        stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
         
         // Jzy3d
         final MyJavaFXChartFactory factory = new MyJavaFXChartFactory();
@@ -288,7 +290,7 @@ public class SRTMDataViewer {
         final List<String> extFilter = Arrays.asList("*." + SRTMDataStore.HGT_EXT);
         final List<String> extValues = Arrays.asList(SRTMDataStore.HGT_EXT);
 
-        final File curPath = new File(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, ""));
+        final File curPath = new File(GPXEditorPreferences.SRTM_DATA_PATH.getAsString());
         final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
 
         FileChooser fileChooser = new FileChooser();
@@ -299,7 +301,7 @@ public class SRTMDataViewer {
             new FileChooser.ExtensionFilter("HGT-Files", extFilter));
         List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
 
-        if(selectedFiles != null && !selectedFiles.isEmpty()){
+        if(!CollectionUtils.isEmpty(selectedFiles)){
             for (File selectedFile : selectedFiles) {
                 if (!extValues.contains(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
                     showAlert(selectedFile.getName());

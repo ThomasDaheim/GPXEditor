@@ -45,6 +45,7 @@ import tf.gpx.edit.helper.GPXListHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
@@ -109,7 +110,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrackSegment cloneMeWithChildren() {
+    public GPXTrackSegment cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
         
         // parent needs to be set initially - list functions use this for checking
@@ -126,14 +127,16 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myStartingTime = myStartingTime;
         myClone.myEndTime = myEndTime;
         
-        // clone all my children
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
-        }
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
+        }
 
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
@@ -146,22 +149,23 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXLineItem getParent() {
+    public GPXTrack getParent() {
         return myGPXTrack;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void setParent(GPXLineItem parent) {
+    public GPXTrackSegment setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXTrack != null && myGPXTrack.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
         
         myGPXTrack = (GPXTrack) parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override

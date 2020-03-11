@@ -48,6 +48,7 @@ import tf.gpx.edit.helper.GPXListHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
@@ -128,7 +129,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXRoute cloneMeWithChildren() {
+    public GPXRoute cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
@@ -137,14 +138,16 @@ public class GPXRoute extends GPXMeasurable {
         // set route via cloner
         myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
         
-        // clone all my children
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
-        }
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
+        }
 
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
@@ -157,22 +160,23 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXLineItem getParent() {
+    public GPXFile getParent() {
         return myGPXFile;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void setParent(final GPXLineItem parent) {
+    public GPXRoute setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override

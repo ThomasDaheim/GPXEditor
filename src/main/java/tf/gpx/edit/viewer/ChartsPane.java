@@ -37,6 +37,7 @@ import javafx.scene.layout.StackPane;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.DragResizer;
 
 /**
  * Holder pane for various charts (height, speed, ...) to be placed on the map
@@ -85,12 +86,14 @@ public class ChartsPane extends StackPane {
         getChildren().clear();
 
         // set up margins, ... for xAxis depending on side of yAxis
+        baseChart.setChartsPane(this);
         final XYChart chart = baseChart.getChart();
         setFixedAxisWidth(chart);
         styleChart(chart, true);
         getChildren().add(resizeChart(chart, true));
         
         additionalCharts.stream().forEach((t) -> {
+            t.setChartsPane(this);
             final XYChart addChart = t.getChart();
             
             setFixedAxisWidth(addChart);
@@ -99,6 +102,9 @@ public class ChartsPane extends StackPane {
             getChildren().add(node);
             node.toFront();
         });
+        
+        // TFE, 20200214: allow resizing on TOP border
+        DragResizer.makeResizable(this, DragResizer.ResizeArea.TOP);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
@@ -157,15 +163,16 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem, final boolean doFitBounds) {
-        assert lineItem != null;
+    @SuppressWarnings("unchecked")
+    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+        assert lineItems != null;
 
         final boolean isVisible = isVisible();
-        AtomicBoolean hasData = new AtomicBoolean(false);
+        final AtomicBoolean hasData = new AtomicBoolean(false);
         // show all chart
         charts.stream().forEach((t) -> {
-            t.setGPXWaypoints(lineItem, doFitBounds);
-            hasData.set(hasData.get() | t.hasData());
+            t.setGPXWaypoints(lineItems, doFitBounds);
+            hasData.set(hasData.get() || t.hasData());
         });
         setVisible(isVisible && hasData.get());
 
@@ -220,5 +227,9 @@ public class ChartsPane extends StackPane {
         charts.stream().forEach((t) -> {
             t.savePreferences();
         });
+    }
+    
+    public IChartBasics getBaseChart() {
+        return baseChart;
     }
 }

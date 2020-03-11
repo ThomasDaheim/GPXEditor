@@ -44,6 +44,7 @@ import tf.gpx.edit.helper.GPXListHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
@@ -116,7 +117,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrack cloneMeWithChildren() {
+    public GPXTrack cloneMe(final boolean withChildren) {
         final GPXTrack myClone = new GPXTrack();
         
         // parent needs to be set initially - list functions use this for checking
@@ -127,7 +128,7 @@ public class GPXTrack extends GPXMeasurable {
         
         // clone all my children
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
-            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren());
+            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMe(withChildren).setParent(myClone));
         }
         numberChildren(myClone.myGPXTrackSegments);
 
@@ -168,21 +169,23 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public GPXLineItem getParent() {
+    public GPXFile getParent() {
         return myGPXFile;
     }
     
     @Override
-    public void setParent(final GPXLineItem parent) {
+    public GPXTrack setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override

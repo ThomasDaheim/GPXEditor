@@ -31,10 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
-import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.geometry.VPos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -44,20 +41,20 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
+import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
-import tf.helper.EnumHelper;
+import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
-import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.EnumHelper;
 
 /**
  *
  * @author thomas
  */
-public class AssignSRTMHeight {
+public class AssignSRTMHeight extends AbstractStage  {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static AssignSRTMHeight INSTANCE = new AssignSRTMHeight();
@@ -67,18 +64,11 @@ public class AssignSRTMHeight {
     private GPXAssignSRTMHeightWorker.AssignMode myAssignMode;
 
     // UI elements used in various methods need to be class-wide
-    final Stage assignHeightStage = new Stage();
     private final CheckListView<String> fileList = new CheckListView<>();
     private TextField srtmPathLbl;
     private VBox avgModeChoiceBox;
     private VBox asgnModeChoiceBox;
 
-    private final Insets insetNone = new Insets(0, 0, 0, 0);
-    private final Insets insetSmall = new Insets(0, 10, 0, 10);
-    private final Insets insetTop = new Insets(10, 10, 0, 10);
-    private final Insets insetBottom = new Insets(0, 10, 10, 10);
-    private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
-    
     private List<GPXLineItem> myGPXLineItems;
     
     // host services from main application
@@ -87,6 +77,7 @@ public class AssignSRTMHeight {
     private boolean hasUpdated = false;
 
     private AssignSRTMHeight() {
+        super();
         // Exists only to defeat instantiation.
         
         initViewer();
@@ -98,23 +89,21 @@ public class AssignSRTMHeight {
 
     private void initViewer() {
         mySRTMDataPath = 
-                GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_PATH, "");
+                GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         myAverageMode = 
-                SRTMDataStore.SRTMDataAverage.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.SRTM_DATA_AVERAGE, SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()));
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
         myAssignMode = 
-                GPXAssignSRTMHeightWorker.AssignMode.valueOf(GPXEditorPreferences.getInstance().get(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()));
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
         
         // create new scene
-        assignHeightStage.setTitle("Assign SRTM height values");
-        assignHeightStage.initModality(Modality.WINDOW_MODAL);
+        getStage().setTitle("Assign SRTM height values");
+        getStage().initModality(Modality.WINDOW_MODAL);
        
-        final GridPane gridPane = new GridPane();
-
         int rowNum = 0;
         // 1st row: path to srtm files
         final Label srtmLbl = new Label("Path to SRTM files:");
-        gridPane.add(srtmLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(srtmLbl, insetTop);
+        getGridPane().add(srtmLbl, 0, rowNum, 1, 1);
+        GridPane.setMargin(srtmLbl, INSET_TOP);
 
         srtmPathLbl = new TextField(mySRTMDataPath);
         srtmPathLbl.setEditable(false);
@@ -145,19 +134,19 @@ public class AssignSRTMHeight {
         final HBox srtmPathBox = new HBox();
         srtmPathBox.getChildren().addAll(srtmPathLbl, srtmPathBtn);
 
-        gridPane.add(srtmPathBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(srtmPathBox, insetTop);
+        getGridPane().add(srtmPathBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmPathBox, INSET_TOP);
 
         rowNum++;
         // 2nd row: srtm file list
         final Label fileLbl = new Label("Required SRTM files:");
-        gridPane.add(fileLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(fileLbl, insetTop);
+        getGridPane().add(fileLbl, 0, rowNum, 1, 1);
+        GridPane.setMargin(fileLbl, INSET_TOP);
         GridPane.setValignment(fileLbl, VPos.TOP);
 
         fileList.setEditable(false);
-        gridPane.add(fileList, 1, rowNum, 1, 3);
-        GridPane.setMargin(fileList, insetTop);
+        getGridPane().add(fileList, 1, rowNum, 1, 3);
+        GridPane.setMargin(fileList, INSET_TOP);
         
         rowNum++;
         // 3rd row: rescan button
@@ -168,11 +157,11 @@ public class AssignSRTMHeight {
             // open links in the default browser
             // https://stackoverflow.com/questions/36842025/javafx-htmleditor-hyperlinks/36844879#36844879
             if (myHostServices != null) {
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION);
+                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
             }
         });
-        gridPane.add(download, 0, rowNum, 1, 1);
-        GridPane.setMargin(download, insetTop);
+        getGridPane().add(download, 0, rowNum, 1, 1);
+        GridPane.setMargin(download, INSET_TOP);
         GridPane.setValignment(download, VPos.TOP);
 
         rowNum++;
@@ -185,31 +174,31 @@ public class AssignSRTMHeight {
 
             checkSRTMFiles();
         });
-        gridPane.add(rescan, 0, rowNum, 1, 1);
-        GridPane.setMargin(rescan, insetTop);
+        getGridPane().add(rescan, 0, rowNum, 1, 1);
+        GridPane.setMargin(rescan, INSET_TOP);
         GridPane.setValignment(rescan, VPos.TOP);
 
         rowNum++;
         // 5th row: srtm averging mode
         final Label srtmAvgLbl = new Label("SRTM averaging mode:");
-        gridPane.add(srtmAvgLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(srtmAvgLbl, insetTop);
+        getGridPane().add(srtmAvgLbl, 0, rowNum, 1, 1);
+        GridPane.setMargin(srtmAvgLbl, INSET_TOP);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
         avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
-        gridPane.add(avgModeChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(avgModeChoiceBox, insetTop);
+        getGridPane().add(avgModeChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(avgModeChoiceBox, INSET_TOP);
         
         rowNum++;
         // 6th row: height asigning mode
         final Label hghtAsgnLbl = new Label("Assign SRTM height:");
-        gridPane.add(hghtAsgnLbl, 0, rowNum, 1, 1);
-        GridPane.setMargin(hghtAsgnLbl, insetTop);
+        getGridPane().add(hghtAsgnLbl, 0, rowNum, 1, 1);
+        GridPane.setMargin(hghtAsgnLbl, INSET_TOP);
         GridPane.setValignment(hghtAsgnLbl, VPos.TOP);
         
         asgnModeChoiceBox = EnumHelper.getInstance().createToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
-        gridPane.add(asgnModeChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(asgnModeChoiceBox, insetTop);
+        getGridPane().add(asgnModeChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(asgnModeChoiceBox, INSET_TOP);
 
         rowNum++;
         // 7th row: assign height values
@@ -228,26 +217,36 @@ public class AssignSRTMHeight {
                 runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_PATH, mySRTMDataPath);
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.SRTM_DATA_AVERAGE, myAverageMode.name());
-                GPXEditorPreferences.getInstance().put(GPXEditorPreferences.HEIGHT_ASSIGN_MODE, myAssignMode.name());
+                GPXEditorPreferences.SRTM_DATA_PATH.put(mySRTMDataPath);
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.put(myAverageMode.name());
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(myAssignMode.name());
 
                 hasUpdated = true;
 
-                // done, lets get out of here...
-                assignHeightStage.close();
+                // done, lets getAsString out of here...
+                getStage().close();
             }
         });
-        gridPane.add(assignButton, 0, rowNum, 2, 1);
-        GridPane.setHalignment(assignButton, HPos.CENTER);
-        GridPane.setMargin(assignButton, insetTop);
+        getGridPane().add(assignButton, 0, rowNum, 1, 1);
+        GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
 
-        assignHeightStage.setScene(new Scene(gridPane));
-        assignHeightStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        assignHeightStage.setResizable(false);
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent arg0) -> {
+            getStage().setTitle("Cancel");
+            getStage().close();
+        });
+        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
+        
+        setCancelAccelerator(cancelBtn);
     }
     
     public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {
+        if (CollectionUtils.isEmpty(gpxLineItems)) {
+            // nothing to do
+            return false;
+        }
+        
         myHostServices = hostServices;
         myGPXLineItems = gpxLineItems;
         
@@ -256,12 +255,17 @@ public class AssignSRTMHeight {
         // first check if all data files are available
         checkSRTMFiles();
         
-        assignHeightStage.showAndWait();
+        getStage().showAndWait();
         
         return hasUpdated;
     }
     
     public boolean assignSRTMHeightNoUI(final List<GPXLineItem> gpxLineItems) {
+        if (CollectionUtils.isEmpty(gpxLineItems)) {
+            // nothing to do
+            return false;
+        }
+        
         myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;

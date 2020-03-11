@@ -56,7 +56,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXEditorWorker;
+import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 
@@ -64,6 +64,7 @@ import tf.gpx.edit.worker.GPXRenumberWorker;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
@@ -143,35 +144,37 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile cloneMeWithChildren() {
+    public GPXFile cloneMe(final boolean withChildren) {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
         myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
         
-        // clone all my children
-        for (GPXMetadata gpxMetadata : myGPXMetadata) {
-            myClone.myGPXMetadata.add(gpxMetadata.cloneMeWithChildren());
-        }
-        for (GPXTrack gpxTrack : myGPXTracks) {
-            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren());
-        }
-        for (GPXRoute gpxRoute : myGPXRoutes) {
-            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren());
-        }
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
-        }
-        numberChildren(myClone.myGPXTracks);
-        numberChildren(myClone.myGPXRoutes);
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXMetadata gpxMetadata : myGPXMetadata) {
+                myClone.myGPXMetadata.add(gpxMetadata.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXTrack gpxTrack : myGPXTracks) {
+                myClone.myGPXTracks.add(gpxTrack.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXRoute gpxRoute : myGPXRoutes) {
+                myClone.myGPXRoutes.add(gpxRoute.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            numberChildren(myClone.myGPXTracks);
+            numberChildren(myClone.myGPXRoutes);
+            numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXTracks.addListener(myClone.changeListener);
-        myClone.myGPXRoutes.addListener(myClone.changeListener);
-        myClone.myGPXWaypoints.addListener(myClone.changeListener);
+            myClone.myGPXTracks.addListener(myClone.changeListener);
+            myClone.myGPXRoutes.addListener(myClone.changeListener);
+            myClone.myGPXWaypoints.addListener(myClone.changeListener);
+        }
 
         // nothing else to clone, needs to be set by caller
         return myClone;
@@ -195,10 +198,10 @@ public class GPXFile extends GPXMeasurable {
             writer.writeGPX(getGPX(), out);
             out.close();        
         } catch (FileNotFoundException | ParserConfigurationException | TransformerException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         } catch (IOException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         }
         
@@ -206,8 +209,9 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public final void setHeaderAndMeta() {
-        myGPX.setCreator("GPXEditor");
-        myGPX.setVersion("4.4");
+        // TODO: use variables from JAR
+        myGPX.setCreator("GPXEditor - v4.5");
+        myGPX.setVersion("1.1");
                 
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
@@ -273,8 +277,9 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public void setParent(final GPXLineItem parent) {
+    public GPXFile setParent(final GPXLineItem parent) {
         // GPXFiles don't have a parent.
+        return this;
     }
 
     @Override

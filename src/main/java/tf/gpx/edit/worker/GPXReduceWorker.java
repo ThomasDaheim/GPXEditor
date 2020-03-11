@@ -36,13 +36,13 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author Thomas
  */
 public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
+    private EarthGeometry.ReductionAlgorithm myAlgorithm;
 
     private GPXReduceWorker() {
         super ();
     }
 
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
+    public GPXReduceWorker(final EarthGeometry.ReductionAlgorithm algorithm, final double parameter) {
         super (parameter);
         
         myAlgorithm = algorithm;

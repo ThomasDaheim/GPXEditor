@@ -66,8 +66,8 @@ public abstract class GPXLineItem {
         GPXMetadata("Meta"),
         GPXTrack("Track"),
         GPXTrackSegment("Sgmnt"),
-        GPXWaypoint("Waypt"),
-        GPXRoute("Route");
+        GPXRoute("Route"),
+        GPXWaypoint("Waypt");
 
         public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
             // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)
@@ -276,7 +276,7 @@ public abstract class GPXLineItem {
     
     // cloning for extended class hierarchies
     // https://dzone.com/articles/java-cloning-even-copy-constructors-are-not-suffic
-    public abstract GPXLineItem cloneMeWithChildren();
+    public abstract <T extends GPXLineItem> T cloneMe(final boolean withChildren);
     
     @Override
     public String toString() {
@@ -379,8 +379,8 @@ public abstract class GPXLineItem {
     }
  
     // getter & setter for my parent
-    public abstract GPXLineItem getParent();
-    public abstract <T extends GPXLineItem> void setParent(final T parent);
+    public abstract <T extends GPXLineItem> T getParent();
+    public abstract <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent);
 
     // helper functions for child relations
     public abstract ObservableList<GPXLineItem> getChildren();

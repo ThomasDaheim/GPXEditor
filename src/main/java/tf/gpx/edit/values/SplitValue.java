@@ -23,55 +23,55 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
-
-import com.hs.gpxparser.modal.Waypoint;
+package tf.gpx.edit.values;
 
 /**
  *
  * @author thomas
  */
-public class TestPointTriple {
-    public String description;
-    public Waypoint p1;
-    public Waypoint p2;
-    public Waypoint p3;
-    public double areaRef;
-    public double distanceToGreatCircleRef;
+public class SplitValue {
+    public enum SplitType {
+        SplitByDistance("m"),
+        SplitByTime("sec");
+        
+        private final String myUnit;
+        
+        private SplitType(final String unit) {
+            myUnit = unit;
+        }
+        
+        public String getUnit() {
+            return myUnit;
+        }
+    }
+    
+    private SplitType myType;
+    private double myValue;
 
-    private TestPointTriple() {
+    public SplitValue() {
+        super();
     }
 
-    public TestPointTriple(
-            final String desc,
-            final double lat1, final double lon1, final double elev1,
-            final double lat2, final double lon2, final double elev2,
-            final double lat3, final double lon3, final double elev3,
-            final double area, final double distance) {
-        description = desc;
-        p1 = new Waypoint(lat1, lon1);
-        p1.setElevation(elev1);
-        p2 = new Waypoint(lat2, lon2);
-        p2.setElevation(elev2);
-        p3 = new Waypoint(lat3, lon3);
-        p3.setElevation(elev3);
+    public SplitValue(final SplitType type, final double value) {
+        super();
 
-        areaRef = area;
-        distanceToGreatCircleRef = distance;
+        setType(type);
+        setValue(value);
     }
 
-    public TestPointTriple(
-            final String desc,
-            final double lat1, final double lon1,
-            final double lat2, final double lon2,
-            final double lat3, final double lon3,
-            final double area, final double distance) {
-        this(
-            desc,
-            lat1, lon1, 0.0,
-            lat2, lon2, 0.0,
-            lat3, lon3, 0.0,
-            area, distance
-        );
+    public SplitType getType() {
+        return myType;
+    }
+
+    public void setType(final SplitType type) {
+        myType = type;
+    }
+
+    public double getValue() {
+        return myValue;
+    }
+
+    public void setValue(final double value) {
+        myValue = value;
     }
 }

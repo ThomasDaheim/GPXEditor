@@ -39,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -47,6 +49,7 @@ import tf.gpx.edit.helper.LatLongHelper;
  *
  * @author Thomas
  */
+@SuppressWarnings("unchecked")
 public class GPXWaypoint extends GPXLineItem {
     // TFE, 20180214: waypoints can be in segments, routes and files
     private GPXLineItem myGPXParent;
@@ -99,7 +102,8 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public GPXWaypoint cloneMeWithChildren() {
+    @SuppressWarnings("unchecked")
+    public GPXWaypoint cloneMe(final boolean withChildren) {
         final GPXWaypoint myClone = new GPXWaypoint();
         
         // parent needs to be set initially - list functions use this for checking
@@ -312,16 +316,18 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public void setParent(GPXLineItem parent) {
+    public GPXWaypoint setParent(final GPXLineItem parent) {
         // performance: only do something in case of change
         if (myGPXParent != null && myGPXParent.equals(parent)) {
-            return;
+            return this;
         }
 
         assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
         
         myGPXParent = parent;
         setHasUnsavedChanges();
+
+        return this;
     }
 
     @Override
@@ -631,18 +637,18 @@ public class GPXWaypoint extends GPXLineItem {
     public String getTooltip() {
         StringBuilder result = new StringBuilder(128);
         
-        if ((getName() != null) && !getName().isEmpty()) {
+        if (!StringUtils.isEmpty(getName())) {
             result.append(getName());
         }
-        if ((getDescription() != null) && !getDescription().isEmpty()) {
+        if (!StringUtils.isEmpty(getDescription())) {
             result.append("\n");
             result.append(getDescription());
         }
-        if ((getComment() != null) && !getComment().isEmpty() && !getComment().equals(getDescription())) {
+        if (!StringUtils.isEmpty(getComment()) && !getComment().equals(getDescription())) {
             result.append("\n");
             result.append(getComment());
         }
-        if ((getLinks() != null) && !getLinks().isEmpty()) {
+        if (!CollectionUtils.isEmpty(getLinks())) {
             result.append("\n");
             result.append(getLinks().iterator().next().getHref());
         }
@@ -651,6 +657,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     public double getSpeed() {
+        // TFE, 20200207: don't use gpxxx:speed even if available! track might have changed since recorded
         return EarthGeometry.speed(this, myPrevGPXWaypoint);
     }
     

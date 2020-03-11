@@ -67,7 +67,8 @@ public class SRTMDataStore {
         }
     }
     
-    public final static String DOWNLOAD_LOCATION = "http://viewfinderpanoramas.org/dem3.html";
+    public final static String DOWNLOAD_LOCATION_SRTM1 = "https://step.esa.int/auxdata/dem/SRTMGL1";
+    public final static String DOWNLOAD_LOCATION_SRTM3 = "http://viewfinderpanoramas.org/dem3.html";
     
     private final Map<SRTMDataKey, SRTMData> srtmStore;
     private String myStorePath = "";

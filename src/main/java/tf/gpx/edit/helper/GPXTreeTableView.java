@@ -26,15 +26,23 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Metadata;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
@@ -47,11 +55,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeSortMode;
+import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
@@ -59,13 +70,13 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
+import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
-import tf.helper.ColorSelectionMenu;
-import tf.helper.CopyPasteKeyCodes;
-import tf.helper.TableMenuUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMetadata;
@@ -76,6 +87,11 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
+import tf.helper.ColorConverter;
+import tf.helper.ColorSelectionMenu;
+import tf.helper.TableMenuUtils;
+import tf.helper.TooltipHelper;
+import tf.helper.UsefulKeyCodes;
 
 /**
  *
@@ -298,6 +314,17 @@ public class GPXTreeTableView {
                                 deleteItems.disableProperty().bind(
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(deleteItems);
+
+                                // TODO: figure out how to split tracks
+                                if (!GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                                    final MenuItem splitItems = new MenuItem("Split Items");
+                                    splitItems.setOnAction((ActionEvent event) -> {
+                                         myEditor.splitItems(event);
+                                    });
+                                    splitItems.disableProperty().bind(
+                                        Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                    fileMenu.getItems().add(splitItems);
+                                }
 
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
@@ -529,17 +556,17 @@ public class GPXTreeTableView {
             // UNFORTUNATELY TreeTableView and TableView don't have any common ancesstors except Control...
             
             // any combination that removes entries
-            if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+            if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                    UsefulKeyCodes.CNTRL_X.match(event) ||
+                    UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                    UsefulKeyCodes.DEL.match(event)) {
                 //System.out.println("Control+C Control+V or pressed");
                 
                 if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
                     // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_C.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                            UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event)) {
                         clipboardLineItems.clear();
                         // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
                         // no cloning done here since we store TreeItem<GPXLineItem> to have common code with drag & drop
@@ -547,23 +574,23 @@ public class GPXTreeTableView {
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                    if (CopyPasteKeyCodes.KeyCodes.CNTRL_X.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_DEL.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.DEL.match(event)) {
+                    if (UsefulKeyCodes.CNTRL_X.match(event) ||
+                            UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                            UsefulKeyCodes.DEL.match(event)) {
                         myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
                     }
                 }
             // any combination that inserts entries
-            } else if (CopyPasteKeyCodes.KeyCodes.CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.INSERT.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                    CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+            } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
+                    UsefulKeyCodes.INSERT.match(event) ||
+                    UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                 //System.out.println("Control+V pressed");
                 
                 if(!clipboardLineItems.isEmpty()) {
                     GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
-                    if (CopyPasteKeyCodes.KeyCodes.SHIFT_CNTRL_V.match(event) ||
-                            CopyPasteKeyCodes.KeyCodes.SHIFT_INSERT.match(event)) {
+                    if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                            UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                         position = GPXEditor.RelativePosition.BELOW;
                     }
                     
@@ -596,6 +623,256 @@ public class GPXTreeTableView {
         
         myTreeTableView.setPlaceholder(new Label("Add or drag gpx-Files here"));
         myTreeTableView.setShowRoot(false);
+        
+        initColumns();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void initColumns() {
+        // iterate of columns and set accordingly
+        // cast column to concrete version to be able to set comparator
+        for (TreeTableColumn<GPXLineItem, ?> column : myTreeTableView.getColumns()) {
+            switch (column.getId()) {
+                case "idGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> idGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    idGPXCol.setCellValueFactory(
+                            // getID not working for GPXFile - is always 0...
+            //                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
+                    idGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
+                        @Override
+                        public void updateItem(String item, boolean empty) {
+                            super.updateItem(item, empty);
+                            if (!empty && item != null) {
+                                setText(item);
+
+                                // TFE, 20191118: text color to color of lineitem
+                                // https://stackoverflow.com/a/33393401
+                                Color color = null;
+                                final GPXLineItem lineItem = getTreeTableRow().getItem();
+                                if (lineItem != null) {
+                                    switch (lineItem.getType()) {
+                                        case GPXTrack:
+                                        // tracksegments havee color from their tracks
+                                        case GPXTrackSegment:
+                                        case GPXRoute:
+                                            color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                                if (color != null) {
+                                    final String cssColor = ColorConverter.JavaFXtoCSS(color);
+                                    // TODO: change text color instead of background
+            //                            setStyle("-fx-text-fill: " + cssColor + " !important;");
+                                    setStyle("-fx-background-color: " + cssColor + " !important;");
+                                } else {
+                                    setStyle(null);
+                                }
+                            } else {
+                                setStyle(null);
+                            }
+                        }
+                    });
+                    idGPXCol.setEditable(false);
+                    idGPXCol.setComparator(GPXLineItem.getSingleIDComparator());
+                    idGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
+                    idGPXCol.setUserData(TableMenuUtils.NO_HIDE_COLUMN);
+                    break;
+
+                case "typeGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> typeGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    typeGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
+                    typeGPXCol.setEditable(false);
+                    typeGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
+                    break;
+
+                case "nameGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> nameGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    nameGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Name)));
+                    // TF, 20170626: track segments don't have a name attribute
+                    nameGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
+                        @Override
+                        public void updateItem(String item, boolean empty) {
+                            super.updateItem(item, empty);
+                            if (!empty && item != null) {
+                                setText(item);
+
+                                // name can't be edited for TrackSegments
+                                final GPXLineItem lineItem = getTreeTableRow().getItem();
+                                if (lineItem == null || GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+                                    setEditable(false);
+                                } else {
+                                    setEditable(true);
+                                }
+
+                                // TFE, 20190819: add full path name to name tooltip for gpx files
+                                if (lineItem != null && GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                                    final Tooltip t = new Tooltip();
+                                    final StringBuilder tooltext = new StringBuilder();
+                                    if (((GPXFile) lineItem).getPath() == null) {
+                                        tooltext.append(new File(System.getProperty("user.home")).getAbsolutePath());
+                                    } else {
+                                        tooltext.append(((GPXFile) lineItem).getPath());
+                                    }
+                                    tooltext.append(((GPXFile) lineItem).getName());
+                                    t.setText(tooltext.toString());
+                                    setTooltip(t);
+                                } else {
+                                    setTooltip(null);
+                                }
+                            }
+                        }
+                    });
+                    nameGPXCol.setOnEditCommit((TreeTableColumn.CellEditEvent<GPXLineItem, String> t) -> {
+                        if (!t.getNewValue().equals(t.getOldValue())) {
+                            final GPXLineItem item = t.getRowValue().getValue();
+                            item.setName(t.getNewValue());
+                            // force refresh to show unsaved changes
+                            myEditor.refreshGPXFileList();
+                        }
+                    });
+                    nameGPXCol.setEditable(true);
+                    nameGPXCol.setPrefWidth(GPXEditor.LARGE_WIDTH);
+                    break;
+
+                case "startGPXCol":
+                    final TreeTableColumn<GPXLineItem, Date> startGPXCol = (TreeTableColumn<GPXLineItem, Date>) column;
+                    startGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, Date> p) -> new SimpleObjectProperty<>(p.getValue().getValue().getDate()));
+                    startGPXCol.setCellFactory(col -> new TreeTableCell<GPXLineItem, Date>() {
+                        @Override
+                        protected void updateItem(Date item, boolean empty) {
+
+                            super.updateItem(item, empty);
+                            if (empty || item == null)
+                                setText(null);
+                            else
+                                setText(GPXLineItem.DATE_FORMAT.format(item));
+                        }
+                    });
+                    startGPXCol.setEditable(false);
+                    startGPXCol.setPrefWidth(GPXEditor.LARGE_WIDTH);
+                    break;
+
+                case "durationGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> durationGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    durationGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
+                    durationGPXCol.setEditable(false);
+                    durationGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
+                    break;
+
+                case "lengthGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> lengthGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    lengthGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
+                    lengthGPXCol.setEditable(false);
+                    lengthGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
+                    lengthGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    break;
+
+                case "speedGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> speedGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    speedGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
+                    speedGPXCol.setEditable(false);
+                    speedGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
+                    speedGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    break;
+
+                case "cumAccGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> cumAccGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    cumAccGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
+                    cumAccGPXCol.setEditable(false);
+                    cumAccGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
+                    cumAccGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    break;
+
+                case "cumDescGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> cumDescGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    cumDescGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
+                    cumDescGPXCol.setEditable(false);
+                    cumDescGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
+                    cumDescGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    break;
+
+                case "noItemsGPXCol":
+                    final TreeTableColumn<GPXLineItem, String> noItemsGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    noItemsGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
+                    noItemsGPXCol.setEditable(false);
+                    noItemsGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
+                    noItemsGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    break;
+
+                case "extGPXCol":
+                    final TreeTableColumn<GPXLineItem, Boolean> extGPXCol = (TreeTableColumn<GPXLineItem, Boolean>) column;
+                    extGPXCol.setCellValueFactory(
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, Boolean> p) -> new SimpleBooleanProperty(
+                                            (p.getValue().getValue().getContent().getExtensionData() != null) &&
+                                            !p.getValue().getValue().getContent().getExtensionData().isEmpty()));
+                    extGPXCol.setCellFactory(col -> new TreeTableCell<GPXLineItem, Boolean>() {
+                        @Override
+                        protected void updateItem(Boolean item, boolean empty) {
+
+                            super.updateItem(item, empty);
+                            if (empty || item == null) {
+                                setText(null);
+                                setGraphic(null);
+                            } else {
+                                setText(null);
+
+                                if (item) {
+                                    // set the background image
+                                    // https://gist.github.com/jewelsea/1446612, FontAwesomeIcon.CUBES
+                                    final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
+
+                                    if (getTreeTableRow().getItem() != null &&
+                                        getTreeTableRow().getItem().getContent() != null &&
+                                        getTreeTableRow().getItem().getContent().getExtensionData() != null) {
+                                        // add the tooltext that contains the extension data we have parsed
+                                        final StringBuilder tooltext = new StringBuilder();
+                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getContent().getExtensionData();
+                                        for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
+                                            if (entry.getValue() instanceof DefaultExtensionHolder) {
+                                                if (tooltext.length() > 0) {
+                                                    tooltext.append(System.lineSeparator());
+                                                }
+                                                tooltext.append(((DefaultExtensionHolder) entry.getValue()).toString());
+                                            }
+                                        }
+                                        if (tooltext.length() > 0) {
+                                            final Tooltip t = new Tooltip(tooltext.toString());
+                                            t.getStyleClass().addAll("extension-popup");
+                                            TooltipHelper.updateTooltipBehavior(t, 0, 10000, 0, true);
+
+                                            Tooltip.install(fontAwesomeIcon, t);
+                                        }
+                                    }
+
+                                    setGraphic(fontAwesomeIcon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        }
+                    });
+                    extGPXCol.setEditable(false);
+                    extGPXCol.setPrefWidth(GPXEditor.TINY_WIDTH);
+                    break;
+
+                default:
+                    System.err.println("Unhandled ID in GPXTreeTableView: " + column.getId());
+                    break;
+            }
+            
+        }
     }
     
     private TreeTableRow<GPXLineItem> getRowToCheckForDragDrop(final TreeTableRow<GPXLineItem> row) {
@@ -620,7 +897,7 @@ public class GPXTreeTableView {
             if (db.hasFiles()) {
                 for (File file:db.getFiles()) {
                     // accept only gpx files
-                    if (GPXEditorWorker.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                         event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                         break;
                     }
@@ -679,7 +956,7 @@ public class GPXTreeTableView {
                 final List<File> files = new ArrayList<>();
                 for (File file:db.getFiles()) {
                     // accept only gpx files
-                    if (GPXEditorWorker.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                         files.add(file);
                     }
                 }
@@ -754,7 +1031,7 @@ public class GPXTreeTableView {
         final GPXLineItem.GPXLineItemType locationType = location.getType();
         
         // TFE, 20190822: insert a clone since we might loose insert after we have removed it
-        final GPXLineItem insertReal = insert.cloneMeWithChildren();
+        final GPXLineItem insertReal = insert.cloneMe(true);
         if (doRemove) {
             // remove dragged item from treeitem and gpxlineitem
             // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...

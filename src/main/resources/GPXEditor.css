@@ -150,10 +150,14 @@
 .chart {
     -fx-fill: transparent;
     -fx-background-color: transparent;
+    -fx-cursor: none;
 }
 .chart-content .chart-plot-background {
     -fx-fill: transparent;
     -fx-background-color: transparent;
+}
+.chart-plot-background {
+    -fx-cursor: crosshair;
 }
 .chart-vertical-grid-lines {
     -fx-stroke: transparent;
@@ -170,10 +174,12 @@
 }
 .chart-series-area-fill {
     -fx-opacity: 0.8;
+    -fx-cursor: crosshair;
 }
 .chart-series-area-line {    
     -fx-stroke-width: 0.1px;
     -fx-effect: null;
+    -fx-cursor: crosshair;
 }
 .chart-series-line {    
     -fx-stroke: #666;
@@ -299,10 +305,18 @@
 
 .track-popup {
     -fx-fill: black;
-    -fx-font-size: 12;
+    -fx-font-size: 10;
     -fx-font-weight: bold;
-    -fx-text-alignment: left;
+    -fx-text-alignment: center;
     -fx-text-origin: top;
+}
+
+* .item-id {
+    -fx-fill: black;
+    -fx-font-size: 8;
+    -fx-text-alignment: right;
+    -fx-padding: 0px;
+    -fx-margin: 0px;
 }
 
 /*
