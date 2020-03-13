@@ -336,6 +336,7 @@ Other things used internally:
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 * route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
+* heat map icon: https://icons8.com/icons/set/heat-map icon by Icons8
 
 ## Roadmap
 

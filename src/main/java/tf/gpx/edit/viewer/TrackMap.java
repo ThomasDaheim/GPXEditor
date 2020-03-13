@@ -199,11 +199,11 @@ public class TrackMap extends LeafletMapView {
     }
     private CurrentMarker currentMarker;
     
-    public enum ChartsButtonState {
+    public enum MapButtonState {
         ON,
         OFF;
         
-        public static ChartsButtonState fromBoolean(final Boolean state) {
+        public static MapButtonState fromBoolean(final Boolean state) {
             if (state) {
                 return ON;
             } else {
@@ -303,18 +303,7 @@ public class TrackMap extends LeafletMapView {
     private String myAddTrack(final List<LatLong> positions, final String color) {
         final String varName = "track" + varNameSuffix++;
 
-        final StringBuffer sb = new StringBuffer();
-        sb.append("[");
-        for (LatLong latlong : positions) {
-            sb.append("    [").append(latlong.getLatitude()).append(", ").append(latlong.getLongitude()).append("]").append(", \n");
-        }
-        if (sb.length() > 1) {
-            sb.replace(sb.length() - 3, sb.length(), "");
-        }
-        sb.append("]");
-        String jsPositions = sb.toString();
-        
-        execScript("var " + varName + " = L.polyline(" + jsPositions + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
+        execScript("var " + varName + " = L.polyline(" + transformToJavascriptArray(positions) + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
 
         return varName;
     }
@@ -430,6 +419,10 @@ public class TrackMap extends LeafletMapView {
             // support to re-center
             addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
+            
+            // TFE, 20200313: support for heat map
+            addScriptFromPath(LEAFLET_PATH + "/heat/leaflet-heat" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
             
             // add pane on top of me with same width & height
             // getParent returns Parent - which doesn't have any decent methods :-(
@@ -1130,6 +1123,12 @@ public class TrackMap extends LeafletMapView {
                 bounds[4] = 1d;
             }
         }
+                
+        // TFE, 20200313: now fill points for heatmap fom tracks ONLY
+        final List<LatLong> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
+            return new LatLong(t.getLatitude(), t.getLongitude());
+        }).collect(Collectors.toList());
+        execScript("setHeatMapPoints(" + transformToJavascriptArray(trackLatLongs) + ");");
 
         return bounds;
     }
@@ -1501,8 +1500,12 @@ public class TrackMap extends LeafletMapView {
         ChartsPane.getInstance().setViewLimits(newBoundingBox);
     }
     
-    public void setChartsPaneButtonState(final ChartsButtonState state) {
+    public void setChartsPaneButtonState(final MapButtonState state) {
         execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
+    }
+    
+    public void setHeatMapButtonState(final MapButtonState state) {
+        execScript("setHeatMapButtonState(\"" + state.toString() + "\");");
     }
     
     // TFE, 20190901: support to store & load overlay settings per baselayer
@@ -1608,6 +1611,19 @@ public class TrackMap extends LeafletMapView {
 
         sb.append("]");
 
+        return sb.toString();
+    }    
+    private static String transformToJavascriptArray(final List<LatLong> arr) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("[");
+
+        for (LatLong latlong : arr) {
+            sb.append("[").append(latlong.getLatitude()).append(", ").append(latlong.getLongitude()).append("]").append(", \n");
+        }
+        if (sb.length() > 1) {
+            sb.replace(sb.length() - 3, sb.length(), "");
+        }
+        sb.append("]");
         return sb.toString();
     }    
 

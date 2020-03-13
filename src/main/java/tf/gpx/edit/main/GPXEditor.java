@@ -684,10 +684,12 @@ public class GPXEditor implements Initializable {
         // TFE, 20200103: support multiple selection of lineitems in aypoint list & map
         gpxFileListSelectionListener = (ListChangeListener.Change<? extends TreeItem<GPXLineItem>> c) -> {
             final List<TreeItem<GPXLineItem>> selectedItems = new ArrayList<>(gpxFileList.getSelectionModel().getSelectedItems());
+//            System.out.println("Selection has changed to " + selectedItems.size() + " items");
             
             while (c.next()) {
                 if (c.wasRemoved()) {
                     for (TreeItem<GPXLineItem> item : c.getRemoved()) {
+//                        System.out.println("Item " + item + " was removed");
                         // reset any highlights from checking
                         final List<GPXWaypoint> waypoints = item.getValue().getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                         for (GPXWaypoint waypoint : waypoints) {
@@ -709,6 +711,7 @@ public class GPXEditor implements Initializable {
                     // to prevent selection of items across gpx files
                     // as first step to enable multi-selection of items from same gpx file
                     for (TreeItem<GPXLineItem> item : c.getAddedSubList()) {
+//                        System.out.println("Item " + item + " was added");
                         if (!selectedGPXFile.equals(item.getValue().getGPXFile())) {
 //                            System.out.println("toUnselect: " + item.getValue());
                             toUnselect.add(item);
@@ -731,6 +734,7 @@ public class GPXEditor implements Initializable {
                 }
             }
             
+//            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
             if (!selectedItems.isEmpty()) {
                 showGPXWaypoints(selectedItems.stream().map((t) -> {
                     return t.getValue();

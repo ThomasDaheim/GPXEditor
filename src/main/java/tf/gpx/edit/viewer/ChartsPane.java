@@ -177,7 +177,7 @@ public class ChartsPane extends StackPane {
         setVisible(isVisible && hasData.get());
 
         // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setChartsPaneButtonState(TrackMap.ChartsButtonState.fromBoolean(isVisible()));
+        TrackMap.getInstance().setChartsPaneButtonState(TrackMap.MapButtonState.fromBoolean(isVisible()));
     }
     
     public void clearSelectedGPXWaypoints() {
