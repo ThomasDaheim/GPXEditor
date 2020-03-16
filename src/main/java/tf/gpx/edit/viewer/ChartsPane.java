@@ -135,13 +135,13 @@ public class ChartsPane extends StackPane {
         hBox.maxWidthProperty().bind(widthProperty());
         hBox.setMouseTransparent(!isBase);
 
-        chart.minHeightProperty().bind(heightProperty());
-        chart.prefHeightProperty().bind(heightProperty());
-        chart.maxHeightProperty().bind(heightProperty());
+        chart.minHeightProperty().bind(hBox.heightProperty());
+        chart.prefHeightProperty().bind(hBox.heightProperty());
+        chart.maxHeightProperty().bind(hBox.heightProperty());
 
-        chart.minWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.prefWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.maxWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
+        chart.minWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
+        chart.prefWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
+        chart.maxWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
         
         if (!isBase) {
             chart.translateXProperty().bind(baseChart.getChart().getYAxis().widthProperty());

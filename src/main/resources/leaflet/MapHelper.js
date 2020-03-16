@@ -227,6 +227,27 @@ function getLatLngForPoint(x, y) {
 function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
+function getPointForLatLng(lat, lng) {
+    var latlng = L.latLng(lat, lng);
+    // take pane & zoom into account when transforming - therefore latLngToContainerPoint and not latLngToLayerPoint
+    var point = myMap.latLngToContainerPoint(latlng);
+    return [point.x, point.y];
+}
+function getPointsForLatLngs(latLngs) {
+    var points = [];
+
+    var arrayLength = latLngs.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var latlng = latLngs[i];
+//        jscallback.log('latlng: ' + latlng + ", lat: " + latlng[0] + ", lng: " + latlng[1]);
+        
+        var point = getPointForLatLng(latlng[0], latlng[1]);
+//        jscallback.log('point: ' + point + ", [0]: " + point[0] + ", [1]: " + point[1]);
+        points.push(L.point(point[0], point[1]));
+    }
+
+    return pointsToString(points);
+}
 /*
  * JSON.stringify doesn't work on LatLngs...
  */
@@ -235,15 +256,30 @@ function coordsToString(coords) {
     
     var arrayLength = coords.length;
     for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
+        var latlng = coords[i];
         
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+        coordsString = coordsString + "lat:" + latlng.lat + ", lon:" + latlng.lng;
         
         if (i < arrayLength-1) {
             coordsString = coordsString + " - "
         }
     }
     return coordsString;
+}
+function pointsToString(points) {
+    var pointString = "";
+    
+    var arrayLength = points.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var point = points[i];
+        
+        pointString = pointString + "x:" + point.x + ", y:" + point.y;
+        
+        if (i < arrayLength-1) {
+            pointString = pointString + " - "
+        }
+    }
+    return pointString;
 }
 
 /*

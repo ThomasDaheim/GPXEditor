@@ -32,6 +32,8 @@ var toggleHeatMapButton = L.easyButton({
             title:     'Show Heatmap',
             onClick: function(btn, map) {
                 heatMap.addTo(myMap);
+                myMap.invalidateSize();
+                heatMap.redraw();
                 btn.state('hide-heat-map');
             }
         }, {
@@ -55,12 +57,6 @@ function setHeatMapButtonState(state) {
     }
 }
 
-// TFE, 20200313: no way to remove all current latlangs :-(
-L.HeatLayer.prototype.clearLatLngs = function() {
-    //jscallback.log('clearLatLngs');
-    this._latlngs = [];
-    return this.redraw();
-}
 function setHeatMapPoints(latLngs) {
     //jscallback.log('setHeatMapPoints: ' + latLngs.length + ", " + latLngs);
     //for (var i = 0; i < latLngs.length; i++) {
@@ -72,4 +68,4 @@ function setHeatMapPoints(latLngs) {
     //jscallback.log('after setLatLngs');
 }
 
-var heatMap = L.heatLayer();
+var heatMap = L.heatLayer([]);

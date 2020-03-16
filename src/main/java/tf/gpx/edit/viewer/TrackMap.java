@@ -58,6 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
@@ -235,7 +236,7 @@ public class TrackMap extends LeafletMapView {
     // webview holds the leaflet map
     private WebView myWebView = null;
     // pane on top of LeafletMapView to draw selection rectangle
-    private Pane myPane;
+    private Pane myMapPane;
     // rectangle to select fileWaypointsCount
     private Rectangle selectRect = null;
     private Point2D startPoint;
@@ -255,7 +256,7 @@ public class TrackMap extends LeafletMapView {
     // store start/end fileWaypointsCount of trackSegments and routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> markers = new DualHashBidiMap<>();
 
-    private BoundingBox myBoundingBox;
+    private BoundingBox mapBounds;
     private JSObject window;
     // need to have instance variable for the jscallback to avoid garbage collection...
     // https://stackoverflow.com/a/41908133
@@ -318,7 +319,6 @@ public class TrackMap extends LeafletMapView {
     
     /**
      * Enables Firebug Lite for debugging a webEngine.
-     * @param engine the webEngine for which debugging is to be enabled.
      */
     private void enableFirebug() {
         execScript("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}"); 
@@ -421,17 +421,11 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
             
             // TFE, 20200313: support for heat map
-            addScriptFromPath(LEAFLET_PATH + "/heat/leaflet-heat" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/heat/simpleheat" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/heat/HeatLayer" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton.js");
             
-            // add pane on top of me with same width & height
-            // getParent returns Parent - which doesn't have any decent methods :-(
-            final Pane parentPane = (Pane) getParent();
-            myPane = new Pane();
-            myPane.getStyleClass().add("canvasPane");
-            myPane.setPrefSize(0, 0);
-            parentPane.getChildren().add(myPane);
-            myPane.toFront();
+            myMapPane = (Pane) getParent();
             
             // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
             // TFE, 20191119: show chart pane instead to support multiple charts (height, speed, ...)
@@ -439,14 +433,14 @@ public class TrackMap extends LeafletMapView {
             // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
 //            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType(Double::valueOf);
-            chart.setPrefHeight(parentPane.getHeight() * percentage);
+            chart.setPrefHeight(myMapPane.getHeight() * percentage);
             chart.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // store height in percentage as preference
                 if (newValue != null && newValue != oldValue) {
-                    GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / parentPane.getHeight());
+                    GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
                 }
             });
-            parentPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // resize chart with pane - not done via bind() anymore
                 if (newValue != null && newValue != oldValue) {
                     // reload preference - might have changed in the meantime
@@ -458,9 +452,10 @@ public class TrackMap extends LeafletMapView {
 //                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chart.getHeight());
                 }
             });
-            chart.prefWidthProperty().bind(parentPane.widthProperty());
+            chart.prefWidthProperty().bind(myMapPane.prefWidthProperty());
+            // TODO: scale chart in x direction - not happening automatically ???
             AnchorPane.setBottomAnchor(chart, 20.0);
-            parentPane.getChildren().add(chart); 
+            myMapPane.getChildren().add(chart); 
             chart.toFront();
             chart.setVisible(false);
 
@@ -575,7 +570,7 @@ public class TrackMap extends LeafletMapView {
     private void handleMouseCntrlPressed(final MouseEvent event) {
         // if coords of rectangle: reset all and select fileWaypointsCount
         if (selectRect != null) {
-            myPane.getChildren().remove(selectRect);
+            myMapPane.getChildren().remove(selectRect);
             selectRect = null;
         }
         initSelectRectangle(event);
@@ -614,22 +609,22 @@ public class TrackMap extends LeafletMapView {
         }
         
         if (selectRect != null) {
-            myPane.getChildren().remove(selectRect);
+            myMapPane.getChildren().remove(selectRect);
             selectRect = null;
         }
     }
     private void initSelectRectangle(final MouseEvent event) {
         if (selectRect == null) {
-            startPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
+            startPoint = myMapPane.screenToLocal(event.getScreenX(), event.getScreenY());
             selectRect = new Rectangle(startPoint.getX(), startPoint.getY(), 0.01, 0.01);
             selectRect.getStyleClass().add("selectRect");
-            myPane.getChildren().add(selectRect);
+            myMapPane.getChildren().add(selectRect);
         }
     }
     private void resizeSelectRectangle(final MouseEvent event) {
         if (selectRect != null) {
             // move & extend rectangle
-            final Point2D curPoint = myPane.screenToLocal(event.getScreenX(), event.getScreenY());
+            final Point2D curPoint = myMapPane.screenToLocal(event.getScreenX(), event.getScreenY());
             selectRect.setX(startPoint.getX());
             selectRect.setY(startPoint.getY());
             selectRect.setWidth(curPoint.getX() - startPoint.getX()) ;
@@ -870,12 +865,30 @@ public class TrackMap extends LeafletMapView {
         }
     }
     private LatLong pointToLatLong(double x, double y) {
-        final Point2D point = myPane.screenToLocal(x, y);
+        final Point2D point = myMapPane.screenToLocal(x, y);
+//        System.out.println("Point: x  : " + point.getX() + ", y  : " + point.getY());
         final JSObject latlng = (JSObject) execScript("getLatLngForPoint(" +
-                Math.round(point.getX()) + ", " +
-                Math.round(point.getY()) + ");");
+                point.getX() + ", " +
+                point.getY() + ");");
         final Double pointlat = (Double) latlng.getSlot(0);
         final Double pointlng = (Double) latlng.getSlot(1);
+        
+//        // and now reverse for testing
+//        final JSObject altpoint = (JSObject) execScript("getPointForLatLng(" +
+//                pointlat + ", " +
+//                pointlng + ");");
+//        final Double pointx = (Double) altpoint.getSlot(0);
+//        final Double pointy = (Double) altpoint.getSlot(1);
+//        System.out.println("Point: x  : " + point.getX() + ", y  : " + point.getY());
+//        System.out.println("JS   : lat: " + pointlat + ", lon: " + pointlng);
+//        System.out.println("Inv. : x  : " + pointx + ", y  : " + pointy);
+        
+        // TFE, 20200316: attempt to calculate lat / lon from within Java - not working due to non-linear stuff somewhere, wrapping, ...
+//        final Pane parent = (Pane) myMapPane.getParent();
+//        final Point2D altpoint = parent.screenToLocal(x, y);
+//        final double altlon = mapBounds.getMaxY() - mapBounds.getHeight() * altpoint.getY() / parent.getHeight();
+//        final double altlat = mapBounds.getMinX() + mapBounds.getWidth()* altpoint.getX() / parent.getWidth();
+//        System.out.println("Java: lat: " + altlat + ", lon: " + altlon);
         
         return new LatLong(pointlat, pointlng);
     }
@@ -883,7 +896,8 @@ public class TrackMap extends LeafletMapView {
             final String coord,
             final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue,
             final ContextMenu contextMenu, final MenuItem showCord, final MenuItem addWaypoint, final MenuItem addRoute) {
-        if (newValue != null) {
+        // TFE, 20200316: first time not all values are set...
+        if (newValue != null && !Double. isNaN(contextMenu.getAnchorX()) && !Double. isNaN(contextMenu.getAnchorY())) {
             LatLong latLong;
             if ("X".equals(coord)) {
                 latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
@@ -1031,9 +1045,6 @@ public class TrackMap extends LeafletMapView {
         // TFE, 20200206: in case we have only file waypoints we need to include them in calculation of bounds - e.g. for new, empty tracksegment
         double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount));
 
-        // this is our new bounding box
-        myBoundingBox = new BoundingBox(bounds[0], bounds[2], bounds[1]-bounds[0], bounds[3]-bounds[2]);
-
         // TFE, 20190822: setMapBounds fails for no waypoints...
         if (bounds[4] > 0d && waypointCount > 0) {
 //            setView(getCenter(), getZoom());
@@ -1125,10 +1136,14 @@ public class TrackMap extends LeafletMapView {
         }
                 
         // TFE, 20200313: now fill points for heatmap fom tracks ONLY
-        final List<LatLong> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
-            return new LatLong(t.getLatitude(), t.getLongitude());
-        }).collect(Collectors.toList());
-        execScript("setHeatMapPoints(" + transformToJavascriptArray(trackLatLongs) + ");");
+        Platform.runLater(() -> {
+            final List<LatLong> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
+                return new LatLong(t.getLatitude(), t.getLongitude());
+            }).collect(Collectors.toList());
+            execScript("setHeatMapPoints(" + transformToJavascriptArray(trackLatLongs) + ");");
+            
+//            final String points = (String) execScript("getPointsForLatLngs(" + transformToJavascriptArray(trackLatLongs) + ");");
+        });
 
         return bounds;
     }
@@ -1497,7 +1512,8 @@ public class TrackMap extends LeafletMapView {
     }
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
-        ChartsPane.getInstance().setViewLimits(newBoundingBox);
+        mapBounds = newBoundingBox;
+        ChartsPane.getInstance().setViewLimits(mapBounds);
     }
     
     public void setChartsPaneButtonState(final MapButtonState state) {
