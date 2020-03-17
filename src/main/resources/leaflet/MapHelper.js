@@ -72,6 +72,15 @@ myMap.on('zoomend', mapViewChanged);
 myMap.on('moveend', mapViewChanged);
 myMap.on('resize', mapViewChanged);
 
+// TFE, 2020317: add callbacks for move & zoom start to disable heatmap
+function mapViewChanging(e) {
+    var bounds = getMapBounds();
+//    jscallback.log('mapViewChanging: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
+    jscallback.mapViewChanging(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
+} 
+myMap.on('zoomstart', mapViewChanging);
+myMap.on('movestart', mapViewChanging);
+
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
 function setMapBounds(latMin, latMax, lngMin, lngMax, doFitBounds) {

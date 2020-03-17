@@ -58,7 +58,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
@@ -72,7 +71,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
@@ -415,49 +413,70 @@ public class TrackMap extends LeafletMapView {
             addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
+            // TFE, 20200313: support for heat map
+            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
 
             // support to re-center
             addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
             
-            // TFE, 20200313: support for heat map
-            addScriptFromPath(LEAFLET_PATH + "/heat/simpleheat" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/heat/HeatLayer" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton.js");
             
             myMapPane = (Pane) getParent();
             
+            // TFE, 20200317: add heat map
+            final HeatMapPane heatMapPane = HeatMapPane.getInstance();
+            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                if (newValue != null && newValue != oldValue) {
+                    heatMapPane.setSize(myMapPane.getWidth(), newValue.doubleValue());
+                    if (heatMapPane.isVisible()) {
+                        updateHeatMapPane();
+                    }
+                }
+            });
+            myMapPane.prefWidthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                if (newValue != null && newValue != oldValue) {
+                    heatMapPane.setSize(newValue.doubleValue(), myMapPane.getHeight());
+                    if (heatMapPane.isVisible()) {
+                        updateHeatMapPane();
+                    }
+                }
+            });
+            heatMapPane.setSize(myMapPane.getWidth(), myMapPane.getHeight());
+            myMapPane.getChildren().add(heatMapPane); 
+            heatMapPane.toFront();
+            heatMapPane.setVisible(false);
+            
             // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
-            // TFE, 20191119: show chart pane instead to support multiple charts (height, speed, ...)
-            final Region chart = ChartsPane.getInstance();
+            // TFE, 20191119: show chartsPane pane instead to support multiple charts (height, speed, ...)
+            final ChartsPane chartsPane = ChartsPane.getInstance();
             // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
-//            chart.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+//            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType(Double::valueOf);
-            chart.setPrefHeight(myMapPane.getHeight() * percentage);
-            chart.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+            chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
+            chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // store height in percentage as preference
                 if (newValue != null && newValue != oldValue) {
                     GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
                 }
             });
             myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                // resize chart with pane - not done via bind() anymore
+                // resize chartsPane with pane - not done via bind() anymore
                 if (newValue != null && newValue != oldValue) {
                     // reload preference - might have changed in the meantime
                     final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType(Double::valueOf);
                     final double newHeight = newValue.doubleValue() * perc;
-                    chart.setMinHeight(newHeight);
-                    chart.setMaxHeight(newHeight);
-                    chart.setPrefHeight(newHeight);
-//                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chart.getHeight());
+                    chartsPane.setMinHeight(newHeight);
+                    chartsPane.setMaxHeight(newHeight);
+                    chartsPane.setPrefHeight(newHeight);
+//                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
                 }
             });
-            chart.prefWidthProperty().bind(myMapPane.prefWidthProperty());
-            // TODO: scale chart in x direction - not happening automatically ???
-            AnchorPane.setBottomAnchor(chart, 20.0);
-            myMapPane.getChildren().add(chart); 
-            chart.toFront();
-            chart.setVisible(false);
+            chartsPane.prefWidthProperty().bind(myMapPane.prefWidthProperty());
+            // TODO: scale chartsPane in x direction - not happening automatically ???
+            AnchorPane.setBottomAnchor(chartsPane, 20.0);
+            myMapPane.getChildren().add(chartsPane); 
+            chartsPane.toFront();
+            chartsPane.setVisible(false);
 
             // support drawing rectangle with mouse + cntrl
             // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
@@ -479,6 +498,8 @@ public class TrackMap extends LeafletMapView {
                     event.consume();
                 }
             });
+            
+//            // TODO: disable heatmap while dragging
             
             // we want our own context menu!
             myWebView.setContextMenuEnabled(false);
@@ -739,7 +760,7 @@ public class TrackMap extends LeafletMapView {
                 // refresh fileWaypointsCount list without refreshing map...
                 myGPXEditor.refresh();
 
-                // redraw height chart
+                // redraw height chartsPane
                 ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
             } else {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
@@ -1135,16 +1156,6 @@ public class TrackMap extends LeafletMapView {
             }
         }
                 
-        // TFE, 20200313: now fill points for heatmap fom tracks ONLY
-        Platform.runLater(() -> {
-            final List<LatLong> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
-                return new LatLong(t.getLatitude(), t.getLongitude());
-            }).collect(Collectors.toList());
-            execScript("setHeatMapPoints(" + transformToJavascriptArray(trackLatLongs) + ");");
-            
-//            final String points = (String) execScript("getPointsForLatLngs(" + transformToJavascriptArray(trackLatLongs) + ");");
-        });
-
         return bounds;
     }
     private double[] extendBounds(final double[] bounds, final LatLong latLong) {
@@ -1513,15 +1524,63 @@ public class TrackMap extends LeafletMapView {
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {
         mapBounds = newBoundingBox;
+        HeatMapPane.getInstance().restore();
+        if (HeatMapPane.getInstance().isVisible()) {
+            updateHeatMapPane();
+        }
         ChartsPane.getInstance().setViewLimits(mapBounds);
+    }
+    
+    public void mapViewChanging(final BoundingBox newBoundingBox) {
+        HeatMapPane.getInstance().hide();
     }
     
     public void setChartsPaneButtonState(final MapButtonState state) {
         execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
     }
+    public void toggleChartsPane(final Boolean visible) {
+        ChartsPane.getInstance().setVisible(visible);
+    }
     
     public void setHeatMapButtonState(final MapButtonState state) {
         execScript("setHeatMapButtonState(\"" + state.toString() + "\");");
+    }
+    public void toggleHeatMapPane(final Boolean visible) {
+        if (visible) {
+            updateHeatMapPane();
+        } else {
+            HeatMapPane.getInstance().clearHeatMap();
+        }
+        HeatMapPane.getInstance().setVisible(visible);
+    }
+    private void updateHeatMapPane() {
+//        System.out.println("trackWaypoints: " + trackWaypoints.size());
+        final List<LatLong> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
+            return new LatLong(t.getLatitude(), t.getLongitude());
+        }).collect(Collectors.toList());
+
+        final String points = (String) execScript("getPointsForLatLngs(" + transformToJavascriptArray(trackLatLongs) + ");");
+        final List<Point2D> point2Ds = new ArrayList<>();
+        // parse point string back into Point2Ds
+        int i = 0;
+        for (String pointsstring : points.split(" - ")) {
+            final String[] temp = pointsstring.split(", ");
+            assert temp.length == 2;
+
+            final Double x = Double.parseDouble(temp[0].substring(2));
+            final Double y = Double.parseDouble(temp[1].substring(2));
+            // only add visible points
+            if (x >= 0 && y >= 0 && x <= myMapPane.getWidth() && y <= myMapPane.getHeight()) {
+//                System.out.println("Point added: " + x + ", " + y + ", latlon: " + trackLatLongs.get(i));
+                point2Ds.add(new Point2D(x, y));
+            } else {
+//                System.out.println("Point skipped: " + x + ", " + y + ", latlon: " + trackLatLongs.get(i));
+            }
+            i++;
+        }
+
+        HeatMapPane.getInstance().clearHeatMap();
+        HeatMapPane.getInstance().addEvents(point2Ds);
     }
     
     // TFE, 20190901: support to store & load overlay settings per baselayer
@@ -1720,10 +1779,20 @@ public class TrackMap extends LeafletMapView {
             myTrackMap.mapViewChanged(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
 //            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
         }
+
+        public void mapViewChanging(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
+            myTrackMap.mapViewChanging(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
+//            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
+        }
         
         public void toggleChartsPane(final Boolean visible) {
 //            System.out.println("toggleChartsPane: " + visible);
-            ChartsPane.getInstance().setVisible(visible);
+            myTrackMap.toggleChartsPane(visible);
+        }
+        
+        public void toggleHeatMap(final Boolean visible) {
+//            System.out.println("toggleHeatMap: " + visible);
+            myTrackMap.toggleHeatMapPane(visible);
         }
     }
 }

@@ -31,9 +31,7 @@ var toggleHeatMapButton = L.easyButton({
             icon:      '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAABmJLR0QA/wD/AP+gvaeTAAADA0lEQVRYhe2Wz2sTQRTH385mza+a/oihCZWmxLRaW4UKaaXgWYQexJMXPSsI3sS/ojdBPHj1IEiLB28iLdJiacQ2obRNaforuzU2v5rdze7OzniQanY3G21sIUq+t/3Mm/e+uzNvdgBaauk/E1NvMBodCWCsDRGkO06iGAVUdCJlKZVKKcc21H/x6uNI2P8gFuvDiAEKAIAlrLArJa85dkuV2OiNXt3MSyIub1eo6+hZkRWUWtzUyznp7tZWYqVW3ZpvHo2OBCLhjgfvph5equb57SL/9flKqKfNY4h/840X7j+5GTTnmV/cXl9rD/QbTB4c4mePXk4CwK1atVEtqFJ1YDTWR828zesk59zOWlNqKtjtw2bm8591OL1Oi/m6hiihCCHGspwZocgmDvJ/bOjD7HpbLc6ANXddQyel8bGIeNw5tt0jy5jdyxQMjFIK3R438KJk4HlZscQCAMx92vSWes9bOCXU9kPYGioleGbjxbyhMqY6dl3wSObYQlmkO7sFC19I8npGQRYuU2y7ZLaG/G5Oj/V0GtopU64c5hyM51rEb4jdzEql66N9xtYDgJmljCINhCycAWQ5Io50rD1EiA46sTTfiepUN3UjajpDtnsonZfQ6+VdoZplZUWV3Exugy+r1Xx+LQvSq0UBTIrHd9yFnGLhVCe2dW0Hwi4fuRPsN5yovCjBHluQxgKdXdVcyyoCil22nL6ejLTqGY/2mnn6bXzfrm7TLVnL0O/UdIZsN7VKiJg4yKcCbheeE7JeAIArXe0VBVMyvSy4dPrrgFzI5ByR6Y+WC1cxyTvdLE1akjfSZRxCnmF/ZxQA4HbkR6PwogQu0QkTwR5DrCaxwr3R0KAlh6yudkzEhsw8ORX/Yle36Zbs3zCECBVFTSOnVZRQYrna1jXEcVpyNrOP9+WK7cRG9fl9QqiUK7N247YXpXB4eNDn4ibdDhRigEEAABTAQXSKWJYx/MswpRznYjRzDhlTjpzhfnJCCVYldUaTC0/T6XSlsVdqqaWW/k7fAZwmQir4hegTAAAAAElFTkSuQmCC">',
             title:     'Show Heatmap',
             onClick: function(btn, map) {
-                heatMap.addTo(myMap);
-                myMap.invalidateSize();
-                heatMap.redraw();
+                jscallback.toggleHeatMap(true);
                 btn.state('hide-heat-map');
             }
         }, {
@@ -41,7 +39,7 @@ var toggleHeatMapButton = L.easyButton({
             icon:      '<span class="cross">&cross;</span>',
             title:     'Hide Heatmap',
             onClick: function(btn, map) {
-                heatMap.remove();
+                jscallback.toggleHeatMap(false);
                 btn.state('show-heat-map');
             }
     }]
@@ -56,16 +54,3 @@ function setHeatMapButtonState(state) {
         toggleHeatMapButton.state('show-heat-map');
     }
 }
-
-function setHeatMapPoints(latLngs) {
-    //jscallback.log('setHeatMapPoints: ' + latLngs.length + ", " + latLngs);
-    //for (var i = 0; i < latLngs.length; i++) {
-    //    jscallback.log("item: " + latLngs[i] + ", index: " + i);
-    //}
-
-    heatMap.clearLatLngs();
-    heatMap.setLatLngs(latLngs);
-    //jscallback.log('after setLatLngs');
-}
-
-var heatMap = L.heatLayer([]);
