@@ -37,6 +37,7 @@ public class HeatMapPane extends HeatMap {
     private final static HeatMapPane INSTANCE = new HeatMapPane();
     
     private boolean wasVisible = false;
+    private int hiddenCount = 0;
     
     private HeatMapPane() {
         super();
@@ -54,17 +55,26 @@ public class HeatMapPane extends HeatMap {
         setColorMapping(ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED);
         setOpacityDistribution(OpacityDistribution.CUSTOM);
         updateMonochromeMap(OpacityDistribution.CUSTOM);
+        setEventRadius(20.0);
+        
         // pass mouse clicks to parent
         setMouseTransparent(true);
         setVisible(false);
     }
     
     public void hide() {
-        wasVisible = isVisible();
-        setVisible(false);
+        // don't call me twice, bugger!
+        if (hiddenCount == 0) {
+            wasVisible = isVisible();
+            setVisible(false);
+        }
+        hiddenCount++;
     }
     
     public void restore() {
-        setVisible(wasVisible);
+        hiddenCount--;
+        if (hiddenCount == 0) {
+            setVisible(wasVisible);
+        }
     }
 }
