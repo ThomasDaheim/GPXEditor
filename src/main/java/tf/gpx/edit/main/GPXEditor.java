@@ -71,7 +71,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
@@ -219,10 +218,6 @@ public class GPXEditor implements Initializable {
     private MenuItem addFileMenu;
     @FXML
     private HBox statusBox;
-    @FXML
-    private Label statusLabel;
-    @FXML
-    private ProgressBar statusBar;
     @FXML
     private MenuItem clearFileMenu;
     @FXML
@@ -908,7 +903,7 @@ public class GPXEditor implements Initializable {
         statusBox.setPadding(new Insets(5, 5, 5, 5));
         statusBox.setSpacing(5);
 
-        statusBar.setVisible(false);
+        statusBox.getChildren().setAll(StatusBar.getInstance());
     }
 
     private void newFileAction(final ActionEvent event) {
@@ -976,6 +971,9 @@ public class GPXEditor implements Initializable {
             gpxWaypoints.setUserData(null);
         }
         gpxWaypoints.getSelectionModel().clearSelection();
+            
+        // TFE, 20200319: update statusbar as well
+        StatusBar.getInstance().setStatusFromWaypoints(new ArrayList<>());
 
         if (updateViewer) {
             GPXTrackviewer.getInstance().setGPXWaypoints(uniqueItems, doFitBounds);

@@ -86,6 +86,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -1357,7 +1358,7 @@ public class TrackMap extends LeafletMapView {
         // TFE, 20200104: for list of lineitems we need to collect waypoints from all of them
         final Set<GPXWaypoint> waypoints = new LinkedHashSet<>();
         for (GPXLineItem lineItem : myGPXLineItems) {
-            waypoints.addAll(lineItem.getGPXWaypointsInBoundingBox(boundingBox));
+            waypoints.addAll(GPXLineItemHelper.getGPXWaypointsInBoundingBox(lineItem, boundingBox));
         }
         addGPXWaypointsToSelection(waypoints, addToSelection);
     }

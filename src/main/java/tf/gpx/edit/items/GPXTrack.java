@@ -130,7 +130,7 @@ public class GPXTrack extends GPXMeasurable {
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
             myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMe(withChildren).setParent(myClone));
         }
-        numberChildren(myClone.myGPXTrackSegments);
+        GPXLineItemHelper.numberChildren(myClone.myGPXTrackSegments);
 
         myClone.myGPXTrackSegments.addListener(myClone.changeListener);
 
@@ -195,7 +195,7 @@ public class GPXTrack extends GPXMeasurable {
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
-        setGPXTrackSegments(castChildren(GPXTrackSegment.class, children));
+        setGPXTrackSegments(GPXLineItemHelper.castChildren(this, GPXTrackSegment.class, children));
     }
 
     @Override
@@ -282,7 +282,7 @@ public class GPXTrack extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<TrackSegment> trackSegments = numberExtensions(myGPXTrackSegments);
+            final Set<TrackSegment> trackSegments = GPXLineItemHelper.numberExtensions(myGPXTrackSegments);
             myTrack.setTrackSegments(new ArrayList<>(trackSegments));
         }
     }

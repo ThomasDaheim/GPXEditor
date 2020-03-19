@@ -30,6 +30,7 @@ import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.StatusBar;
 
 
 /**
@@ -100,6 +101,9 @@ public class GPXTrackviewer {
         Platform.runLater(() -> {
             ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
         });
+            
+        // TFE, 20200319: update statusbar as well
+        StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints);
     }
     
     public void updateLineColor(final GPXLineItem lineItem) {

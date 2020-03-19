@@ -37,6 +37,7 @@ import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -280,7 +281,7 @@ public class GPXStructureHelper {
                 boolean isChild = false;
 
                 for (GPXLineItem uniqueItem : uniqueItems) {
-                    if (lineItem.isChildOf(uniqueItem)) {
+                    if (GPXLineItemHelper.isChildOf(lineItem, uniqueItem)) {
                         isChild = true;
                         break;
                     }

@@ -370,7 +370,7 @@ public class GPXWaypoint extends GPXLineItem {
                 }
             case Duration:
                 if (myPrevGPXWaypoint != null) {
-                    return getDurationAsString();
+                    return GPXLineItemHelper.getDurationAsString(this);
                 } else {
                     return NO_DATA;
                 }

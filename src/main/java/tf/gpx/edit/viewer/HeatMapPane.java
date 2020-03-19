@@ -42,8 +42,6 @@ public class HeatMapPane extends HeatMap {
     private HeatMapPane() {
         super();
         
-        getStyleClass().add("heat-map-pane");
-        
         initialize();
     }
     
@@ -52,6 +50,8 @@ public class HeatMapPane extends HeatMap {
     }
     
     private void initialize() {
+        getStyleClass().add("heat-map-pane");
+
         setColorMapping(ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED);
         setOpacityDistribution(OpacityDistribution.CUSTOM);
         updateMonochromeMap(OpacityDistribution.CUSTOM);

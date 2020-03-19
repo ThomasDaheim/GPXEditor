@@ -164,9 +164,9 @@ public class GPXFile extends GPXMeasurable {
             for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
                 myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
             }
-            numberChildren(myClone.myGPXTracks);
-            numberChildren(myClone.myGPXRoutes);
-            numberChildren(myClone.myGPXWaypoints);
+            GPXLineItemHelper.numberChildren(myClone.myGPXTracks);
+            GPXLineItemHelper.numberChildren(myClone.myGPXRoutes);
+            GPXLineItemHelper.numberChildren(myClone.myGPXWaypoints);
 
             // init prev/next waypoints
             myClone.updatePrevNextGPXWaypoints();
@@ -301,14 +301,14 @@ public class GPXFile extends GPXMeasurable {
     public void setChildren(final List<? extends GPXLineItem> children) {
         // children can be any of waypoints, tracks, routes, metadata...
         myGPXMetadata.clear();
-        final List<GPXMetadata> metaList = castChildren(GPXMetadata.class, children);
+        final List<GPXMetadata> metaList = GPXLineItemHelper.castChildren(this, GPXMetadata.class, children);
         if (!metaList.isEmpty()) {
             myGPXMetadata.add(metaList.get(0));
         }
 
-        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
-        setGPXTracks(castChildren(GPXTrack.class, children));
-        setGPXRoutes(castChildren(GPXRoute.class, children));
+        setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
+        setGPXTracks(GPXLineItemHelper.castChildren(this, GPXTrack.class, children));
+        setGPXRoutes(GPXLineItemHelper.castChildren(this, GPXRoute.class, children));
     }
 
     @Override
@@ -318,7 +318,7 @@ public class GPXFile extends GPXMeasurable {
         myGPXWaypoints.addAll(gpxGPXWaypoints);
         myGPXWaypoints.addListener(changeListener);
 
-        numberChildren(myGPXWaypoints);
+        GPXLineItemHelper.numberChildren(myGPXWaypoints);
         
         // TFE, 20190812: update Extension manually
         updateListValues(myGPXWaypoints);
@@ -478,7 +478,7 @@ public class GPXFile extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
+            final Set<Waypoint> waypoints = GPXLineItemHelper.numberExtensions(myGPXWaypoints);
             myGPX.setWaypoints(new LinkedHashSet<>(waypoints));
         }
         if (myGPXRoutes.equals(list)) {
@@ -486,7 +486,7 @@ public class GPXFile extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Route> routes = numberExtensions(myGPXRoutes);
+            final Set<Route> routes = GPXLineItemHelper.numberExtensions(myGPXRoutes);
             myGPX.setRoutes(new LinkedHashSet<>(routes));
         }
         if (myGPXTracks.equals(list)) {
@@ -494,7 +494,7 @@ public class GPXFile extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Track> tracks = numberExtensions(myGPXTracks);
+            final Set<Track> tracks = GPXLineItemHelper.numberExtensions(myGPXTracks);
             myGPX.setTracks(new LinkedHashSet<>(tracks));
         }
     }

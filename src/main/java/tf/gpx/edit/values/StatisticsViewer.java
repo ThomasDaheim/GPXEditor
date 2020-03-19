@@ -52,6 +52,7 @@ import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -292,7 +293,7 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
         // format duration as in getDurationAsString
-        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(myGPXFile.getDurationAsString());
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getDurationAsString(myGPXFile));
         double totalLength = myGPXFile.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
@@ -419,16 +420,16 @@ public class StatisticsViewer extends AbstractStage {
         avgSlopeAsc /= gpxWaypoints.size();
         avgSlopeDesc /= gpxWaypoints.size();
         
-        statisticsList.get(StatisticData.DurationActive.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAsc+durationDesc));
-        statisticsList.get(StatisticData.DurationNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAscNoPause+durationDescNoPause));
+        statisticsList.get(StatisticData.DurationActive.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationAsc+durationDesc));
+        statisticsList.get(StatisticData.DurationNoPause.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationAscNoPause+durationDescNoPause));
         
         statisticsList.get(StatisticData.LengthAscent.ordinal()).setValue(lengthAsc/1000d);
         statisticsList.get(StatisticData.LengthDescent.ordinal()).setValue(lengthDesc/1000d);
         
-        statisticsList.get(StatisticData.DurationAscent.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAsc));
-        statisticsList.get(StatisticData.DurationAscentNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationAscNoPause));
-        statisticsList.get(StatisticData.DurationDescent.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationDesc));
-        statisticsList.get(StatisticData.DurationDescentNoPause.ordinal()).setValue(GPXLineItem.formatDurationAsString(durationDescNoPause));
+        statisticsList.get(StatisticData.DurationAscent.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationAsc));
+        statisticsList.get(StatisticData.DurationAscentNoPause.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationAscNoPause));
+        statisticsList.get(StatisticData.DurationDescent.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationDesc));
+        statisticsList.get(StatisticData.DurationDescentNoPause.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationDescNoPause));
 
         statisticsList.get(StatisticData.AvgHeight.ordinal()).setValue(avgHeight);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setValue(maxSlopeAsc);

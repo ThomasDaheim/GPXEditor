@@ -64,7 +64,7 @@ public abstract class GPXMeasurable extends GPXLineItem {
                     return NO_DATA;
                 }
             case Duration:
-                return getDurationAsString();
+                return GPXLineItemHelper.getDurationAsString(this);
             case Length:
                 return gpxLineItemData.getFormat().format(getLength()/1000d);
             case Speed:

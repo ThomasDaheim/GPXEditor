@@ -61,17 +61,9 @@ public class ChartsPane extends StackPane {
 
     private ChartsPane() {
         super();
-        
-        getStyleClass().add("charts-pane");
-        
+
         baseChart = HeightChart.getInstance();
         additionalCharts.add(SpeedChart.getInstance());
-        totalYAxisWidth *= additionalCharts.size();
-        // n charts only have n-1 separators between them ;-)
-        totalYAxisWidth -= YAXIS_SEP;
-        
-        charts.add(baseChart);
-        charts.addAll(additionalCharts);
         
         initialize();
     }
@@ -81,6 +73,15 @@ public class ChartsPane extends StackPane {
     }
     
     private void initialize() {
+        getStyleClass().add("charts-pane");
+        
+        totalYAxisWidth *= additionalCharts.size();
+        // n charts only have n-1 separators between them ;-)
+        totalYAxisWidth -= YAXIS_SEP;
+        
+        charts.add(baseChart);
+        charts.addAll(additionalCharts);
+        
         setAlignment(Pos.CENTER_LEFT);
         
         getChildren().clear();

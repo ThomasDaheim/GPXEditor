@@ -143,7 +143,7 @@ public class GPXRoute extends GPXMeasurable {
             for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
                 myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
             }
-            numberChildren(myClone.myGPXWaypoints);
+            GPXLineItemHelper.numberChildren(myClone.myGPXWaypoints);
 
             // init prev/next waypoints
             myClone.updatePrevNextGPXWaypoints();
@@ -186,7 +186,7 @@ public class GPXRoute extends GPXMeasurable {
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
-        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
+        setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
     }
     
     @Override
@@ -197,7 +197,7 @@ public class GPXRoute extends GPXMeasurable {
         myGPXWaypoints.addAll(gpxWaypoints);
         myGPXWaypoints.addListener(changeListener);
 
-        numberChildren(myGPXWaypoints);
+        GPXLineItemHelper.numberChildren(myGPXWaypoints);
 
         // init prev/next waypoints
         updatePrevNextGPXWaypoints();
@@ -474,7 +474,7 @@ public class GPXRoute extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
+            final Set<Waypoint> waypoints = GPXLineItemHelper.numberExtensions(myGPXWaypoints);
             myRoute.setRoutePoints(new ArrayList<>(waypoints));
 
             updatePrevNextGPXWaypoints();
