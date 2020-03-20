@@ -272,6 +272,20 @@ public class GPXTrackSegment extends GPXMeasurable {
         return myTrackSegment;
     }
 
+    /**
+     * @return the overall duration as difference between first & last waypoint
+     */
+    @Override
+    public long getCumulativeDuration() {
+        long result = 0;
+
+        for (GPXWaypoint waypoint : myGPXWaypoints) {
+            result += waypoint.getCumulativeDuration();
+        }
+
+        return result;
+    }
+
     @Override
     public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
         ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();

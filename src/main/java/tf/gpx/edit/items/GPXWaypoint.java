@@ -368,9 +368,15 @@ public class GPXWaypoint extends GPXLineItem {
                 } else {
                     return NO_DATA;
                 }
-            case Duration:
+            case CumulativeDuration:
                 if (myPrevGPXWaypoint != null) {
-                    return GPXLineItemHelper.getDurationAsString(this);
+                    return GPXLineItemHelper.getCumulativeDurationAsString(this);
+                } else {
+                    return NO_DATA;
+                }
+            case OverallDuration:
+                if (myPrevGPXWaypoint != null) {
+                    return GPXLineItemHelper.getOverallDurationAsString(this);
                 } else {
                     return NO_DATA;
                 }
@@ -381,7 +387,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_DATA;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
                     return gpxLineItemData.getFormat().format(getSpeed());
                 } else {
                     return NO_DATA;
@@ -520,9 +526,15 @@ public class GPXWaypoint extends GPXLineItem {
     
     public Double getDataAsDouble(final GPXLineItemData gpxLineItemData) {
         switch (gpxLineItemData) {
-            case Duration:
+            case CumulativeDuration:
                 if (myPrevGPXWaypoint != null) {
-                    return Double.valueOf(getDuration()) / 1000.0;
+                    return Double.valueOf(getCumulativeDuration()) / 1000.0;
+                } else {
+                    return NO_VALUE;
+                }
+            case OverallDuration:
+                if (myPrevGPXWaypoint != null) {
+                    return Double.valueOf(getOverallDuration()) / 1000.0;
                 } else {
                     return NO_VALUE;
                 }
@@ -533,7 +545,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_VALUE;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
                     return getSpeed();
                 } else {
                     return NO_VALUE;
@@ -624,8 +636,13 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public long getDuration() {
+    public long getCumulativeDuration() {
         return EarthGeometry.duration(this, myPrevGPXWaypoint);
+    }
+
+    @Override
+    public long getOverallDuration() {
+        return getCumulativeDuration();
     }
 
     @Override

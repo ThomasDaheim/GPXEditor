@@ -26,6 +26,7 @@
 package tf.gpx.edit.main;
 
 import java.util.List;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
@@ -47,13 +48,13 @@ public class StatusBar extends VBox {
     private final static StatusBar INSTANCE = new StatusBar();
     
     private static final String FORMAT_WAYPOINT_STRING = "Waypoint: %s";
-    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, direct Distance: %s, Duration: %s";
+    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: overall: %s, cumul.: %s, Duration: overall: %s, cumul.: %s, Speed [km/h]: overall: %s, cumul.: %s";
     
     private final Label myLabel = new Label();
-    private final ProgressBar myProgressBar = new ProgressBar();
+    private final ProgressBar myTaskProgress = new ProgressBar();
     
     private final StringProperty myStatusText = new SimpleStringProperty();
-    private final StringProperty myActionText = new SimpleStringProperty();
+    private final StringProperty myTaskText = new SimpleStringProperty();
     
     private StatusBar() {
         super();
@@ -70,63 +71,88 @@ public class StatusBar extends VBox {
         getStyleClass().add("status-bar");
 
         // progressbar only visible if action is running
-        myProgressBar.visibleProperty().bind(myActionText.isNotEmpty());
+        myTaskProgress.visibleProperty().bind(myTaskText.isNotEmpty());
         
         setSpacing(5.0);
-        getChildren().setAll(myLabel, myProgressBar);
+        getChildren().setAll(myLabel, myTaskProgress);
     }
     
-    public void setActionText(final String text) {
-        setActionProgress(0);
-        myActionText.setValue(text);
+    public void setTaskText(final String text) {
+        clearTaskProgress();
+        myTaskText.setValue(text);
         myLabel.setText(text);
     }
     
-    public void clearActionText() {
-        myActionText.setValue("");
+    public void clearTaskText() {
+        myTaskText.setValue("");
+        clearTaskProgress();
         myLabel.setText(myStatusText.getValue());
     }
     
-    public void setActionProgress(final double value) {
-        myProgressBar.setProgress(value);
+    public void setTaskProgress(final double value) {
+        myTaskProgress.setProgress(value);
     }
 
-    public void clearActionProgress() {
-        myProgressBar.setProgress(0.0);
+    public void clearTaskProgress() {
+        myTaskProgress.setProgress(0.0);
     }
     
     public void setStatusFromWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        String statusText = "";
-        
-        // set status text (count, dist, duration, ...) from waypoints
-        switch (gpxWaypoints.size()) {
-            case 0:
-                break;
-            case 1:
-                final GPXWaypoint gpxWayoint = gpxWaypoints.get(0);
-                statusText = String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint));
-                break;
-            default:
-                final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
-                final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
+        Platform.runLater(() -> {
+            String statusText = "";
 
-                final String distance = GPXLineItem.GPXLineItemData.Length.getFormat().format(EarthGeometry.distanceGPXWaypoints(start, end)/1000d);
+            // set status text (count, dist, directDuration, ...) from waypoints
+            switch (gpxWaypoints.size()) {
+                case 0:
+                    break;
+                case 1:
+                    final GPXWaypoint gpxWayoint = gpxWaypoints.get(0);
+                    statusText = String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint));
+                    break;
+                default:
+                    final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
+                    final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
 
-                String duration;
-                if (start.getDate() != null && end.getDate() != null) {
-                    duration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
-                } else {
-                    duration = GPXLineItemHelper.formatDurationAsString(0);
-                }
+                    // calculate direct & track distances
+                    double trackDistance = 0;
+                    long trackDurationValue = 0;
+                    for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+                        trackDistance += gpxWaypoint.getDistance();
+                        trackDurationValue += gpxWaypoint.getCumulativeDuration();
+                    }
+                    final String trackDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(trackDistance/1000d);
+                    String trackDuration;
+                    String trackSpeed;
+                    if (trackDurationValue > 0) {
+                        trackDuration = GPXLineItemHelper.formatDurationAsString(trackDurationValue);
+                        trackSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(trackDistance/trackDurationValue*1000d*3.6d);
+                    } else {
+                        trackDuration = GPXLineItem.NO_DATA;
+                        trackSpeed = GPXLineItem.NO_DATA;
+                    }
 
-                statusText = String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), distance, duration);
-                break;
-        }
-        
-        myStatusText.setValue(statusText);
-        if (myActionText.isEmpty().getValue()) {
-            // no action running...
-            myLabel.setText(myStatusText.getValue());
-        }
+                    final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
+                    final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
+                    String directSpeed;
+                    String directDuration;
+                    if (start.getDate() != null && end.getDate() != null) {
+                        final double durationValue = end.getDate().getTime() - start.getDate().getTime();
+                        directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
+                        directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
+                    } else {
+                        directDuration = GPXLineItem.NO_DATA;
+                        directSpeed = GPXLineItem.NO_DATA;
+                    }
+
+                    statusText = String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed);
+                    break;
+            }
+
+            myStatusText.setValue(statusText);
+            if (myTaskText.isEmpty().getValue()) {
+                // no action running...
+                myLabel.setText(myStatusText.getValue());
+            }
+        });
     }
 }

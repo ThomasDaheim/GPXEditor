@@ -189,7 +189,8 @@ public abstract class GPXLineItem {
         Type(false, "Type", GPXLineItemDataType.Single, null),
         Name(false, "Name", GPXLineItemDataType.Single, null),
         Start(false, "Start", GPXLineItemDataType.Single, DATE_FORMAT),
-        Duration(true, "Duration", GPXLineItemDataType.Double, null),
+        CumulativeDuration(true, "Cumulative Duration", GPXLineItemDataType.Double, null),
+        OverallDuration(true, "Overall Duration", GPXLineItemDataType.Double, null),
         Length(false, "Length", GPXLineItemDataType.Double, DOUBLE_FORMAT_3),
         Speed(true, "Speed", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         CumulativeAscent(false, "Cumulative Ascent", GPXLineItemDataType.Multiple, DOUBLE_FORMAT_2),
@@ -410,7 +411,10 @@ public abstract class GPXLineItem {
     }
     
     // getter functions
-    protected abstract long getDuration();
+    // duration as sum of all waypoint durations
+    protected abstract long getCumulativeDuration();
+    // duration as difference last - first waypoint
+    protected abstract long getOverallDuration();
     protected abstract Bounds getBounds();
     
     // TFE, 20180517: you know how your tooltip should look like

@@ -33,6 +33,8 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.CumulativeDescent;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.OverallDuration;
 
 /**
  *
@@ -79,14 +81,14 @@ public class GPXMetadata extends GPXMeasurable {
                 return getName();
             case Start:
                 return NO_DATA;
-            case Duration:
+            case CumulativeDuration:
+            case OverallDuration:
                 return NO_DATA;
             case Length:
                 return NO_DATA;
             case Speed:
                 return NO_DATA;
             case CumulativeAscent:
-                return NO_DATA;
             case CumulativeDescent:
                 return NO_DATA;
             case NoItems:

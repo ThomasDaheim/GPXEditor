@@ -108,7 +108,7 @@ public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Position),
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Start),
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Name),
-                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Duration),
+                gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration),
                 length,
                 lengthUnit,
                 gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Speed),

@@ -49,9 +49,13 @@ public class GPXLineItemHelper {
         return INSTANCE;
     }
     
-    public static String getDurationAsString(final GPXLineItem lineItem) {
+    public static String getCumulativeDurationAsString(final GPXLineItem lineItem) {
         // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
-        return formatDurationAsString(lineItem.getDuration());
+        return formatDurationAsString(lineItem.getCumulativeDuration());
+    }
+    public static String getOverallDurationAsString(final GPXLineItem lineItem) {
+        // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
+        return formatDurationAsString(lineItem.getOverallDuration());
     }
     public static String formatDurationAsString(final long diff) {
         String result = GPXLineItem.NO_DATA;

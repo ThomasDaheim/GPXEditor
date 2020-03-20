@@ -761,7 +761,7 @@ public class GPXTreeTableView {
                 case "durationGPXCol":
                     final TreeTableColumn<GPXLineItem, String> durationGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
                     durationGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
+                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationGPXCol.setEditable(false);
                     durationGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     break;

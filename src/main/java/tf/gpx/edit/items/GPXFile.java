@@ -445,21 +445,6 @@ public class GPXFile extends GPXMeasurable {
     public Extension getContent() {
         return myGPX;
     }
-
-    /**
-     * @return the duration
-     */
-    @Override
-    public long getDuration() {
-        long result = 0;
-
-        // duration isn't end-start for a complet file BUT the sum of its track durations...
-        for (int i = 0; i < myGPXTracks.size(); i++) {
-            result += myGPXTracks.get(i).getDuration();
-        }
-
-        return result;
-    }
     
     @Override
     public String getCombinedID() {

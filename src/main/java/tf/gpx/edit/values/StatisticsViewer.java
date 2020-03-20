@@ -73,14 +73,15 @@ public class StatisticsViewer extends AbstractStage {
     // for what do we calc statistics
     private static enum StatisticData {
         // overall
-        Start("Start", "", Date.class, GPXLineItem.DATE_FORMAT),
-        End("End", "", Date.class, GPXLineItem.DATE_FORMAT),
+        Start("Start", "", Date.class, GPXLineItem.GPXLineItemData.Date.getFormat()),
+        End("End", "", Date.class, GPXLineItem.GPXLineItemData.Date.getFormat()),
         Count("Waypoints", "", Integer.class, GPXLineItem.COUNT_FORMAT),
         
         Break1("", "", String.class, null),
 
         // duration
         DurationOverall("Duration overall", "hhh:mm:ss", String.class, null),
+        DurationCumulative("Duration of waypoints", "hhh:mm:ss", String.class, null),
         DurationActive("Duration active", "hhh:mm:ss", String.class, null),
         DurationNoPause("Duration w/o pause", "hhh:mm:ss", String.class, null),
         DurationAscent("Duration asc.", "hhh:mm:ss", String.class, null),
@@ -93,37 +94,37 @@ public class StatisticsViewer extends AbstractStage {
         Break2("", "", String.class, null),
 
         // length
-        Length("Length", "km", Double.class, GPXLineItem.DOUBLE_FORMAT_3),
-        LengthAscent("Length ascending", "km", Double.class, GPXLineItem.DOUBLE_FORMAT_3),
-        LengthDescent("Length descending", "km", Double.class, GPXLineItem.DOUBLE_FORMAT_3),
+        Length("Length", "km", Double.class, GPXLineItem.GPXLineItemData.Length.getFormat()),
+        LengthAscent("Length ascending", "km", Double.class, GPXLineItem.GPXLineItemData.Length.getFormat()),
+        LengthDescent("Length descending", "km", Double.class, GPXLineItem.GPXLineItemData.Length.getFormat()),
 
         Break3("", "", String.class, null),
 
         // height & slope
-        StartHeight("Initial Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        EndHeight("Final Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MinHeight("Min. Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxHeight("Max. Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgHeight("Avg. Height", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        CumulativeAscent("Total Ascent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        CumulativeDescent("Total Descent", "m", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSlopeAscent("Max. Slope asc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        MaxSlopeDescent("Max. Slope desc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        AvgSlopeAscent("Avg. Slope asc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
-        AvgSlopeDescent("Avg. Slope desc.", "%", Double.class, GPXLineItem.DOUBLE_FORMAT_1),
+        StartHeight("Initial Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        EndHeight("Final Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        MinHeight("Min. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        MaxHeight("Max. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        AvgHeight("Avg. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        CumulativeAscent("Total Ascent", "m", Double.class, GPXLineItem.GPXLineItemData.CumulativeAscent.getFormat()),
+        CumulativeDescent("Total Descent", "m", Double.class, GPXLineItem.GPXLineItemData.CumulativeDescent.getFormat()),
+        MaxSlopeAscent("Max. Slope asc.", "%", Double.class, GPXLineItem.GPXLineItemData.Slope.getFormat()),
+        MaxSlopeDescent("Max. Slope desc.", "%", Double.class, GPXLineItem.GPXLineItemData.Slope.getFormat()),
+        AvgSlopeAscent("Avg. Slope asc.", "%", Double.class, GPXLineItem.GPXLineItemData.Slope.getFormat()),
+        AvgSlopeDescent("Avg. Slope desc.", "%", Double.class, GPXLineItem.GPXLineItemData.Slope.getFormat()),
 
         Break4("", "", String.class, null),
 
         // speed
-        MaxSpeed("Max. Speed", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeed("Avg. Speed", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedNoPause("Avg. Speed w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSpeedAscent("Max. Speed asc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedAscent("Avg. Speed asc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedAscentNoPause("Avg. Speed asc. w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        MaxSpeedDescent("Max. Speed desc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedDescent("Avg. Speed desc.", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
-        AvgSpeeedDescentNoPause("Avg. Speed desc. w/o pause", "km/h", Double.class, GPXLineItem.DOUBLE_FORMAT_2),
+        MaxSpeed("Max. Speed", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeed("Avg. Speed", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeedNoPause("Avg. Speed w/o pause", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        MaxSpeedAscent("Max. Speed asc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeedAscent("Avg. Speed asc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeedAscentNoPause("Avg. Speed asc. w/o pause", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        MaxSpeedDescent("Max. Speed desc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeedDescent("Avg. Speed desc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        AvgSpeeedDescentNoPause("Avg. Speed desc. w/o pause", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
         ;
         
         private final String description;
@@ -292,8 +293,9 @@ public class StatisticsViewer extends AbstractStage {
         // set values that don't need calculation
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
-        // format duration as in getDurationAsString
-        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getDurationAsString(myGPXFile));
+        // format duration as in getCumulativeDurationAsString
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXFile));
+        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXFile));
         double totalLength = myGPXFile.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
@@ -305,7 +307,7 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXFile.getCumulativeAscent());
         statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXFile.getCumulativeDescent());
         
-        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getDuration()*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getCumulativeDuration()*1000d*3.6d);
 
         Date startDate = gpxWaypoints.get(0).getDate();
         Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();
@@ -356,7 +358,7 @@ public class StatisticsViewer extends AbstractStage {
             // do we have a break?
             boolean isBreak = false;
             if (prevGPXWaypoint != null && !waypoint.getGPXTrackSegments().get(0).equals(prevGPXWaypoint.getGPXTrackSegments().get(0)) ||
-                    (waypoint.getDuration() > breakDuration)) {
+                    (waypoint.getCumulativeDuration() > breakDuration)) {
                 isBreak = true;
 //                System.out.println("prevGPXWaypoint: " + prevGPXWaypoint);
 //                System.out.println("waypoint: " + waypoint);
@@ -379,9 +381,9 @@ public class StatisticsViewer extends AbstractStage {
             
             if (heightDiff > 0.0) {
                 lengthAsc += waypoint.getDistance();
-                durationAsc += waypoint.getDuration();
+                durationAsc += waypoint.getCumulativeDuration();
                 if (!isBreak) {
-                    durationAscNoPause += waypoint.getDuration();
+                    durationAscNoPause += waypoint.getCumulativeDuration();
                 }
                 if (slope > maxSlopeAsc) {
                     maxSlopeAsc = slope;
@@ -394,9 +396,9 @@ public class StatisticsViewer extends AbstractStage {
                 }
             } else {
                 lengthDesc += waypoint.getDistance();
-                durationDesc += waypoint.getDuration();
+                durationDesc += waypoint.getCumulativeDuration();
                 if (!isBreak) {
-                    durationDescNoPause += waypoint.getDuration();
+                    durationDescNoPause += waypoint.getCumulativeDuration();
                 }
                 if (slope < maxSlopeDesc) {
                     maxSlopeDesc = slope;

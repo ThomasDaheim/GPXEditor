@@ -901,7 +901,7 @@ public class GPXEditor implements Initializable {
 
     private void initBottomPane() {
         statusBox.setPadding(new Insets(5, 5, 5, 5));
-        statusBox.setSpacing(5);
+        statusBox.setAlignment(Pos.CENTER_LEFT);
 
         statusBox.getChildren().setAll(StatusBar.getInstance());
     }
@@ -1740,6 +1740,7 @@ public class GPXEditor implements Initializable {
 //            System.out.println("End select:   " + Instant.now());
     
             gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+            
         });
         
         GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker);

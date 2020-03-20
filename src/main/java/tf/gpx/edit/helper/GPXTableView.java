@@ -396,7 +396,7 @@ public class GPXTableView {
                 case "durationTrackCol":
                     final TableColumn<GPXWaypoint, String> durationTrackCol = (TableColumn<GPXWaypoint, String>) column;
                     durationTrackCol.setCellValueFactory(
-                            (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
+                            (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationTrackCol.setEditable(false);
                     durationTrackCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     break;

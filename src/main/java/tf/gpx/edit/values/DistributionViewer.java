@@ -138,7 +138,7 @@ public class DistributionViewer extends AbstractStage {
                 dataBox.getItems().add(value.getDescription());
             }
         }
-        dataBox.setValue(GPXLineItemData.Duration.getDescription());
+        dataBox.setValue(GPXLineItemData.CumulativeDuration.getDescription());
         dataBox.setTooltip(new Tooltip("Data value to use."));
         dataBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override

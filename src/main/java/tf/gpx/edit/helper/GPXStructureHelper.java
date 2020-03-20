@@ -176,7 +176,7 @@ public class GPXStructureHelper {
             if (SplitType.SplitByDistance.equals(type)) {
                 curValue += waypoint.getDistance();
             } else {
-                curValue += Double.valueOf(waypoint.getDuration()) / 1000.0;
+                curValue += Double.valueOf(waypoint.getCumulativeDuration()) / 1000.0;
             }
             
             if (curValue > value) {

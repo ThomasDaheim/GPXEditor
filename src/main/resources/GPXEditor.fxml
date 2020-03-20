@@ -153,7 +153,7 @@
                                     <TreeTableColumn fx:id="typeGPXCol" prefWidth="55.0" text="Type" />
                                   <TreeTableColumn fx:id="nameGPXCol" prefWidth="220.0" styleClass="nameCol" text="Name" />
                                     <TreeTableColumn fx:id="startGPXCol" prefWidth="200.0" styleClass="startCol" text="Start" />
-                                    <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration" />
+                                    <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration&#10;Waypoints" />
                                     <TreeTableColumn fx:id="lengthGPXCol" prefWidth="70.0" styleClass="lengthCol" text="Length&#10;[km]" />
                                     <TreeTableColumn fx:id="speedGPXCol" prefWidth="70.0" styleClass="speedCol" text="Speed&#10;[km/h]" />
                                     <TreeTableColumn fx:id="cumAccGPXCol" prefWidth="70.0" styleClass="cumAccCol" text="+dH&#10;[m]" />
