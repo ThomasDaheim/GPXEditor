@@ -295,13 +295,13 @@ public class HeatMap extends ImageView {
      */
     public void saveAsPng(final Node NODE, final String FILE_NAME) {
         new Thread(() ->
-                       Platform.runLater(() -> {
-                           final String TARGET = System.getProperty("user.home") + "/Desktop/" + FILE_NAME + ".png";
-                           try {
-                               ImageIO.write(SwingFXUtils.fromFXImage(NODE.snapshot(SNAPSHOT_PARAMETERS, null), null), "png", new File(TARGET));
-                           } catch (IOException exception) {
-                               // handle exception here
-                           }
+            Platform.runLater(() -> {
+                final String TARGET = System.getProperty("user.home") + "/Desktop/" + FILE_NAME + ".png";
+                try {
+                    ImageIO.write(SwingFXUtils.fromFXImage(NODE.snapshot(SNAPSHOT_PARAMETERS, null), null), "png", new File(TARGET));
+                } catch (IOException exception) {
+                    // handle exception here
+                }
                        })
         ).start();    
     }

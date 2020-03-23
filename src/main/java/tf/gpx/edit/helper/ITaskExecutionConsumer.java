@@ -23,35 +23,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.worker;
+package tf.gpx.edit.helper;
 
-import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
-import tf.gpx.edit.helper.GPXAlgorithms;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
+import java.util.function.Consumer;
 
 /**
- *
- * @author Thomas
+ * Interface required by TaskExecutor.executeTask for communication
+ * 
+ * @author thomas
  */
-public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
-    private GPXFixGarminCrapWorker() {
-        super ();
-    }
-
-    public GPXFixGarminCrapWorker(final double parameter) {
-        super (parameter);
-    }
-
-    @Override
-    public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
-        // AND distanceGPXWaypoints prev - next below epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
-
-        final boolean keep[] = GPXAlgorithms.fixTrack(waypoints, myParameter);
-        
-        removeGPXWaypoint(waypoints, keep);
-    }
+public interface ITaskExecutionConsumer {
+    public abstract Consumer<String> getMessageConsumer();
+    public abstract Consumer<Number> getProgressConsumer();
+    public abstract Runnable getInitTaskConsumer();
+    public abstract <T> Consumer<T> getFinalizeTaskConsumer();
 }

@@ -244,6 +244,23 @@ public class TestGeometry {
         if (doSystemOut) System.out.println("Done.");
         if (doSystemOut) System.out.println("");
     }
+    
+    @Test
+    public void distanceSmallDistanceApproximationWaypoints() {
+        if (doSystemOut) System.out.println("Test: distanceSmallDistanceApproximationWaypoints()");
+        
+        for (TestPointPair pair : testPointPairs) {
+            System.out.println("Pair: " + pair.description);
+            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+            System.out.println("  SDApprox:  " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
+            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
+            System.out.println("  Harvesine: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
+            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Vincenty);
+            System.out.println("  Vincenty:  " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
+        }
+        if (doSystemOut) System.out.println("Done.");
+        if (doSystemOut) System.out.println("");
+    }
 
     @Test
     public void distanceWaypointsPerformance() {

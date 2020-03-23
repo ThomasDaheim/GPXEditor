@@ -37,7 +37,7 @@ public enum GPXEditorPreferences  {
     RECENTWINDOWHEIGTH("recentWindowHeigth", Integer.toString(600)),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5)),
     RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58)),
-    REDUCTION_ALGORITHM("algorithm", EarthGeometry.ReductionAlgorithm.ReumannWitkam.name()),
+    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name()),
     DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Harvesine.name()),
     REDUCE_EPSILON("epsilon", Integer.toString(50)),
     FIX_EPSILON("fixDistance", Integer.toString(1000)),

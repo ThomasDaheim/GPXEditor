@@ -28,7 +28,7 @@ package tf.gpx.edit.helper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -82,7 +82,7 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.ReductionAlgorithm algorithm, final double epsilon) {
+    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 
@@ -220,7 +220,7 @@ public class GPXStructureHelper {
 
     public List<GPXTrackSegment> uniqueGPXTrackSegmentListFromGPXWaypointList(final List<GPXWaypoint> gpxWaypoints) {
         // get selected files uniquely from selected items
-        Set<GPXTrackSegment> trackSet = new HashSet<>();
+        Set<GPXTrackSegment> trackSet = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             trackSet.addAll(gpxWaypoint.getGPXTrackSegments());
         }

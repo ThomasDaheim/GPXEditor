@@ -1,38 +1,21 @@
 package tf.gpx.edit.helper;
 
 import com.hs.gpxparser.modal.Waypoint;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.Pair;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- * Based on:
- * Douglas-Peucker: https://github.com/robbyn/hiketools/blob/master/src/org/tastefuljava/hiketools/geo/EarthGeometry.java
- * Reumann-Witkam: http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/ReumannWitkam.php
- * 
- * Harvesine distance: https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
- * Vincenty distance: https://github.com/grumlimited/geocalc/blob/master/src/main/java/com/grum/geocalc/EarthCalc.java
- * 
- * Example values:
- * http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
- * https://github.com/emcconville/point-reduction-algorithms
+ * Basic functions to calculate distances, angles, bearings, areas on a globe
+ * Distances can be calculated using Harvesine or Vincenty algorithms
  */
 public class EarthGeometry {
     private final static EarthGeometry INSTANCE = new EarthGeometry();
     
-    public static enum ReductionAlgorithm {
-        DouglasPeucker,
-        VisvalingamWhyatt,
-        ReumannWitkam
-    }
-    
     // TFE, 20200228: support Vincenty as well
     public static enum DistanceAlgorithm {
+        SmallDistanceApproximation,
         Harvesine,
         Vincenty
     }
@@ -40,6 +23,7 @@ public class EarthGeometry {
     // spherical earth
     public static final double EarthAverageRadius = 6372795.477598; //6371030.0;
     public static final double EarthAverageRadius2 = EarthAverageRadius*EarthAverageRadius;
+    public static final double LengthOfADegree = EarthAverageRadius / 180.0 * Math.PI;
     // values for WGS84 reference ellipsoid
     public static final double EarthLongRadius = 6378137.0;
     public static final double EarthLongRadius2 = EarthLongRadius * EarthLongRadius;
@@ -74,272 +58,6 @@ public class EarthGeometry {
     }
     
     /**
-     * Simplify EarthLongRadius track by removing points, using the requested algorithm.
-     * @param track points of the track
-     * @param parameter tolerance, in meters
-     * @return the points of the simplified track
-     */
-    public static boolean[] fixTrack(final List<GPXWaypoint> track, final double parameter) {
-        return removeSingleTooFarAway(track, parameter);
-    }
-
-    private static boolean[] removeSingleTooFarAway(List<GPXWaypoint> track, double maxDistance) {
-        final boolean[] keep = new boolean[track.size()];
-        
-        if (track.isEmpty()) {
-            // nothing to do
-            return keep;
-        } else if (track.size() < 3) {
-            // need at least 3 points for algorithm to work
-            for (int index = 0; index < track.size(); index++) {
-                keep[index] = true;
-            }            
-            return keep;
-        }
-
-        GPXWaypoint checkPt;
-        GPXWaypoint prevPt;
-        GPXWaypoint prevprevPt;
-        GPXWaypoint nextPt;
-        GPXWaypoint nextnextPt;
-        double distance1;
-        double distance2;
-        
-        // EarthLongRadius point is too far away when
-        // 1) further away from previous than maxDistance AND
-        // 2) prev and next closer than maxDistance
-        // this way EarthLongRadius "step" in waypoints isn't counted as one point too far away
-        
-        int startIndex = 0;
-        int endIndex = track.size()-1;
-
-        // first point is tricky, since we don't have EarthLongRadius prev point, so use next and next-next in that case
-        // so go forward from start til we have EarthLongRadius valid point
-        // System.out.println("Finding valid first point");
-        while(startIndex < endIndex-2) {
-            checkPt = track.get(startIndex);
-            nextPt = track.get(startIndex+1);
-            nextnextPt = track.get(startIndex+2);
-            distance1 = distanceGPXWaypoints(checkPt, nextPt);
-            distance2 = distanceGPXWaypoints(nextPt, nextnextPt);
-            if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
-                // startIndex point is garbage, take next one
-                // System.out.println("  discarding startIndex: " + startIndex + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[startIndex] = false;
-                startIndex++;
-            } else {
-                // System.out.println("  using startIndex: " + startIndex + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[startIndex] = true;
-                break;
-            }
-        }
-        
-        // last point is tricky, since we don't have EarthLongRadius next point, so use prev and prev-prev in that case
-        // so go backward from end til we have EarthLongRadius valid point
-        // System.out.println("Finding valid last point");
-        while(endIndex > startIndex+2) {
-            checkPt = track.get(endIndex);
-            prevPt = track.get(endIndex-1);
-            prevprevPt = track.get(endIndex-2);
-            distance1 = distanceGPXWaypoints(checkPt, prevPt);
-            distance2 = distanceGPXWaypoints(prevPt, prevprevPt);
-            if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
-                // endIndex point is garbage, take prev one
-                // System.out.println("  discarding endIndex: " + endIndex + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[endIndex] = false;
-                endIndex--;
-            } else {
-                // System.out.println("  using endIndex: " + endIndex + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[endIndex] = true;
-                break;
-            }
-        }
-        
-        // anything left todo? we need 3 remaining points!
-        if (startIndex > endIndex-2) {
-            for (int index = startIndex+1; index < endIndex; index++) {
-                keep[index] = true;
-            }
-            return keep;
-        }
-        
-        // System.out.println("Iterate between start and end");
-        for (int index = startIndex+1; index < endIndex; index++) {
-            checkPt = track.get(index);
-            prevPt = track.get(index-1);
-            nextPt = track.get(index+1);
-            
-            distance1 = distanceGPXWaypoints(checkPt, prevPt);
-            distance2 = distanceGPXWaypoints(prevPt, nextPt);
-            if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
-                // this point is garbage
-                // System.out.println("  discarding index: " + index + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[index] = false;
-                // TODO: also not EarthLongRadius valid prev point
-            } else {
-                // System.out.println("  keeping index: " + index + " distance1: " + distance1 + " distance2: " + distance2);
-                keep[index] = true;
-            }
-        }
-        
-        return keep;
-    }
-
-    /**
-     * Simplify EarthLongRadius track by removing points, using the requested algorithm.
-     * @param track points of the track
-     * @param algorithm What EarthGeometry.ReductionAlgorithm to use
-     * @param epsilon tolerance, in meters
-     * @return the points of the simplified track
-     */
-    public static boolean[] simplifyTrack(final List<GPXWaypoint> track, final EarthGeometry.ReductionAlgorithm algorithm, final double epsilon) {
-        switch (algorithm) {
-            case DouglasPeucker:
-                return DouglasPeucker(track, epsilon);
-            case VisvalingamWhyatt:
-                return VisvalingamWhyatt(track, epsilon);
-            case ReumannWitkam:
-                return ReumannWitkam(track, epsilon);
-            default:
-                boolean[] keep = new boolean[track.size()];
-                Arrays.fill(keep, true);
-                return keep;
-        }
-    }
-
-    /**
-     * Simplify EarthLongRadius track by removing points, using the Douglas-Peucker algorithm.
-     * @param track points of the track
-     * @param epsilon tolerance, in meters
-     * @return the points to keep from the original track
-     */
-    private static boolean[] DouglasPeucker(
-            final List<GPXWaypoint> track, 
-            final double epsilon) {
-        final boolean[] keep = new boolean[track.size()];
-        DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, keep);
-        return keep;
-    }
-
-    private static void DouglasPeuckerImpl(
-            final List<GPXWaypoint> track, 
-            final int first, 
-            final int last,
-            final double epsilon, 
-            final boolean[] keep) {
-        if (last < first) {
-            // empty
-        } else if (last == first) {
-            keep[first] = true;
-        } else {
-            keep[first] = true;
-            double max = 0;
-            int index = first;
-            final GPXWaypoint startPt = track.get(first);
-            final GPXWaypoint endPt = track.get(last);
-            for (int i = first+1; i < last; ++i) {
-                double dist = distanceToGreatCircleGPXWaypoints(track.get(i), startPt, endPt, epsilon);
-                if (dist > max) {
-                    max = dist;
-                    index = i;
-                }
-            }
-            if (max > epsilon) {
-                keep[index] = true;
-                DouglasPeuckerImpl(track, first, index, epsilon, keep);
-                DouglasPeuckerImpl(track, index, last, epsilon, keep);
-            } else if (EarthGeometry.distanceGPXWaypoints(startPt, endPt) > epsilon) {
-                keep[last] = true;
-            }
-        }
-    }
-
-    /*
-    *   This Library contains EarthLongRadius function which performs the Visvalingam-Whyatt Curve Simplification ReductionAlgorithm.
-    *   Adapted from original javascript done by Dustin Poissant on 10/09/2012
-    *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/whyatt.php
-    */
-    private static boolean[] VisvalingamWhyatt(List<GPXWaypoint> track, double epsilon) {
-        final boolean[] keep = new boolean[track.size()];
-        keep[0] = true;
-        keep[track.size()-1] = true;
-        
-        final List<GPXWaypoint> workList = new ArrayList<>(track);
-        final List<Pair<GPXWaypoint, Double>> minList = new ArrayList<>();
-        
-        // we need to do things differently here - since we don't have EarthLongRadius fixed number to keep but an area size against which to measure
-        while (workList.size() > 2) {
-            //System.out.println("workList.size(): " + workList.size());
-            // find point in workList with smallest effective area
-            final double[] effectiveArea = new double[workList.size()];
-            effectiveArea[0] = 0.0;
-            effectiveArea[workList.size()-1] = 0.0;
-            double minArea = Double.MAX_VALUE;
-            int minIndex = 0;
-            for (int index = 1; index < workList.size()-2; index++) {
-                effectiveArea[index] = triangleAreaGPXWaypoints(workList.get(index-1), workList.get(index), workList.get(index+1), epsilon);
-                //System.out.println("effectiveArea[" + index + "]: " + effectiveArea[index]);
-                if (effectiveArea[index] < minArea) {
-                    //System.out.println("  new minimum value found!");
-                    minArea = effectiveArea[index];
-                    minIndex = index;
-                }
-            }
-            // add point to minList and remove from workList
-            minList.add(new Pair<>(workList.get(minIndex), minArea));
-            workList.remove(minIndex);
-            //System.out.println("Removing waypoint: " + minIndex);
-        }
-        
-        for (Pair<GPXWaypoint, Double> pair : minList) {
-            final int index = track.indexOf(pair.getKey());
-            if (pair.getValue() < epsilon) {
-                keep[index] = false;
-            } else {
-                keep[index] = true;
-            }
-        }
-        
-    	return keep;
-    }
-    
-    /*
-    *	This Library contains EarthLongRadius function which performs the Reumann-Witkam ReductionAlgorithm.
-    *	Adapted from original javascript done by Dustin Poissant on 11/02/2012
-    *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
-    */
-    public static boolean[] ReumannWitkam(final List<GPXWaypoint> track, final double epsilon){
-        // http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/reumann.php
-        final List<GPXWaypoint> list = new ArrayList<>(track);
-    	int index=0;
-    	while( index < list.size()-3 ){
-            // System.out.println("index: " + index);
-            int firstOut= index+2;
-            // System.out.println("firstOut: " + firstOut);
-            // go forward til outside tolerance area
-            while ( firstOut < list.size() && distanceToGreatCircleGPXWaypoints(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
-                // System.out.println("firstOut: " + firstOut);
-                firstOut++;
-            }
-            // remove all inside tolerance
-            for (int i=index+1; i<firstOut-1; i++){
-                // System.out.println("i: " + i);
-                list.remove(index+1);
-            }
-            index++;
-    	}
-
-        // check which points are left - compare both lists
-        final boolean[] keep = new boolean[track.size()];
-    	index=0;
-        for (GPXWaypoint waypoint : track) {
-            keep[index] = list.contains(waypoint);
-            index++;
-        }
-    	return keep;
-    }
-     
-    /**
      * Returns the distance between two GPXWaypoints, on the great circle.
      * 
      * Using
@@ -359,9 +77,17 @@ public class EarthGeometry {
     public static double distanceWaypoints(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
-        double result = 0;
+        return distanceWaypointsForAlgorithm(p1, p2, getInstance().myAlgorithm);
+    }
+    public static double distanceWaypointsForAlgorithm(final Waypoint p1, final Waypoint p2, final DistanceAlgorithm algorithm) {
+        if ((p1 == null) || (p2 == null)) return 0;
         
-        switch (getInstance().myAlgorithm) {
+        double result;
+        
+        switch (algorithm) {
+            case SmallDistanceApproximation:
+                result = getInstance().smallDistanceApproximationDistance(p1, p2);
+                break;
             case Vincenty:
                 result = getInstance().vincentyDistance(p1, p2);
                 break;
@@ -372,6 +98,22 @@ public class EarthGeometry {
         }
         
         return result;
+    }
+    public double smallDistanceApproximationDistance (final Waypoint p1, final Waypoint p2) {
+        // https://jonisalonen.com/2014/computing-distance-between-coordinates-can-be-simple-and-fast/
+        final double lat1 = FastMath.toRadians(p1.getLatitude());
+        final double lat2 = FastMath.toRadians(p2.getLatitude());
+        final double lon1 = FastMath.toRadians(p1.getLongitude());
+        final double lon2 = FastMath.toRadians(p2.getLongitude());
+        
+        final double lat21 = lat2 - lat1;
+        final double lon21 = lon2 - lon1;
+
+        final double xDiff = EarthShortRadius * lat21;
+        final double yDiff = EarthLongRadius * lon21 * FastMath.cos((lat2 + lat1) / 2.0);
+        final double zDiff = p2.getElevation() - p1.getElevation();
+                
+        return FastMath.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
     }
     public double haversineDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());
@@ -386,7 +128,7 @@ public class EarthGeometry {
                 + FastMath.cos(lat1) * FastMath.cos(lat2)
                 * FastMath.sin(lon21/2.0) * FastMath.sin(lon21/2.0);
         //return 2.0 * Math.atan2(Math.sqrt(EarthLongRadius), Math.sqrt(1.0-EarthLongRadius)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
-        return 2.0 * FastMath.atan2(Math.sqrt(a), Math.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
+        return 2.0 * FastMath.atan2(FastMath.sqrt(a), FastMath.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
     }
     public double vincentyDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());

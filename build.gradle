@@ -49,14 +49,15 @@ repositories {
 
 dependencies {
     // JavaFX11 explicit dependencies
-    compile "org.openjfx:javafx-base:11.0.2:$platform"
-    compile "org.openjfx:javafx-graphics:11.0.2:$platform"
-    compile "org.openjfx:javafx-controls:11.0.2:$platform"
-    compile "org.openjfx:javafx-fxml:11.0.2:$platform"
-    compile "org.openjfx:javafx-swing:11.0.2:$platform"
-    compile "org.openjfx:javafx-web:11.0.2:$platform"
-    compile "org.openjfx:javafx-media:11.0.2:$platform"
-
+    def javafx_version='11.0.2'
+    compile "org.openjfx:javafx-base:$javafx_version:$platform"
+    compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
+    compile "org.openjfx:javafx-controls:$javafx_version:$platform"
+    compile "org.openjfx:javafx-fxml:$javafx_version:$platform"
+    compile "org.openjfx:javafx-swing:$javafx_version:$platform"
+    compile "org.openjfx:javafx-web:$javafx_version:$platform"
+    compile "org.openjfx:javafx-media:$javafx_version:$platform"
+    
     // TFE, 20191209: our own helper library
     compile 'tf.JavaHelper:JavaHelper:1.1'
 
@@ -72,7 +73,7 @@ dependencies {
     compile 'gpx-parser:gpx-parser:1.2'
     compile 'org.jzy3d:jzy3d-api:1.0.2'
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
-    compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.0'
+    compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
     compile 'de.jensd:fontawesomefx:8.9'
     compile 'de.saring:leafletmap:1.0.5-SNAPSHOT'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.9'
@@ -81,7 +82,7 @@ dependencies {
     compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
     compile 'uk.com.robust-it:cloning:1.9.12'
     
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.5.1'
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.1'
 }
 
 compileJava {

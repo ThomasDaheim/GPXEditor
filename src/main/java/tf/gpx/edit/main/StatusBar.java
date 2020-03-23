@@ -26,23 +26,34 @@
 package tf.gpx.edit.main;
 
 import java.util.List;
-import javafx.application.Platform;
+import java.util.function.Consumer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.ITaskExecutionConsumer;
 import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- *
+ * StatusBar to show messages, ... at the bottom
+ * 
+ * It can be used in two ways:
+ * 
+ * 1) pass set of waypoints to update standard text (showing, count, length, duration, speed)
+ * 2) use as "output window" of TaskExecutor to show message & progress of a task
+ * 
+ * In case of #2 the text from #1 is stored and st back once the task has been completed
+ * 
  * @author thomas
  */
-public class StatusBar extends VBox {
+public class StatusBar extends VBox implements ITaskExecutionConsumer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatusBar INSTANCE = new StatusBar();
@@ -77,15 +88,21 @@ public class StatusBar extends VBox {
         getChildren().setAll(myLabel, myTaskProgress);
     }
     
+    public void setStatusText(final String text) {
+        myStatusText.setValue(text);
+        if (myTaskText.getValue().isEmpty()) {
+            myLabel.setText(text);
+        }
+    }
+    
+    // to be used as parameter for TaskExecutor.executeTask
     public void setTaskText(final String text) {
-        clearTaskProgress();
         myTaskText.setValue(text);
         myLabel.setText(text);
     }
     
     public void clearTaskText() {
-        myTaskText.setValue("");
-        clearTaskProgress();
+        setTaskText("");
         myLabel.setText(myStatusText.getValue());
     }
     
@@ -93,66 +110,108 @@ public class StatusBar extends VBox {
         myTaskProgress.setProgress(value);
     }
 
+    // to be used as parameter for TaskExecutor.executeTask
+    public void setTaskProgressFromNumber(final Number value) {
+        setTaskProgress(value.doubleValue());
+    }
+
     public void clearTaskProgress() {
         myTaskProgress.setProgress(0.0);
     }
-    
+
+    @Override
+    public Consumer<String> getMessageConsumer() {
+        return this::setTaskText;
+    }
+
+    @Override
+    public Consumer<Number> getProgressConsumer() {
+        return this::setTaskProgressFromNumber;
+    }
+
+    @Override
+    public Runnable getInitTaskConsumer() {
+        return () -> {
+            // task is about to be started - reset progress
+            clearTaskProgress();
+        };
+    }
+
+    @Override
+    public <T> Consumer<T> getFinalizeTaskConsumer() {
+        return (T result) -> {
+            // task is done - reset string & progress
+            clearTaskText();
+            clearTaskProgress();
+        };
+    }
+
     public void setStatusFromWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        Platform.runLater(() -> {
-            String statusText = "";
+        // set status text (count, dist, directDuration, ...) from waypoints
+        switch (gpxWaypoints.size()) {
+            case 0:
+                break;
+            case 1:
+                final GPXWaypoint gpxWayoint = gpxWaypoints.get(0);
+                setStatusText(String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint)));
+                break;
+            default:
+                // eat your own dog food :-)
+                TaskExecutor.executeTask(new Task<Void>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        final int workLoad = gpxWaypoints.size();
 
-            // set status text (count, dist, directDuration, ...) from waypoints
-            switch (gpxWaypoints.size()) {
-                case 0:
-                    break;
-                case 1:
-                    final GPXWaypoint gpxWayoint = gpxWaypoints.get(0);
-                    statusText = String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint));
-                    break;
-                default:
-                    final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
-                    final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
+                        updateMessage("Updating StatusBar");
+                        updateProgress(0, workLoad);
 
-                    // calculate direct & track distances
-                    double trackDistance = 0;
-                    long trackDurationValue = 0;
-                    for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-                        trackDistance += gpxWaypoint.getDistance();
-                        trackDurationValue += gpxWaypoint.getCumulativeDuration();
+                        final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
+                        final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
+
+                        // calculate direct & track distances
+                        double trackDistance = 0;
+                        long trackDurationValue = 0;
+                        int i = 0;
+                        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+                            trackDistance += gpxWaypoint.getDistance();
+                            trackDurationValue += gpxWaypoint.getCumulativeDuration();
+
+                            i++;
+                            updateProgress(i, workLoad);
+                        }
+                        final String trackDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(trackDistance/1000d);
+                        String trackDuration;
+                        String trackSpeed;
+                        if (trackDurationValue > 0) {
+                            trackDuration = GPXLineItemHelper.formatDurationAsString(trackDurationValue);
+                            trackSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(trackDistance/trackDurationValue*1000d*3.6d);
+                        } else {
+                            trackDuration = GPXLineItem.NO_DATA;
+                            trackSpeed = GPXLineItem.NO_DATA;
+                        }
+
+                        final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
+                        final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
+                        String directSpeed;
+                        String directDuration;
+                        if (start.getDate() != null && end.getDate() != null) {
+                            final double durationValue = end.getDate().getTime() - start.getDate().getTime();
+                            directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
+                            directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
+                        } else {
+                            directDuration = GPXLineItem.NO_DATA;
+                            directSpeed = GPXLineItem.NO_DATA;
+                        }
+
+                        // label will be filled in getFinalizeTaskConsumer - so we can avoid "Platform.runlater" here
+                        myStatusText.setValue(String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed));
+
+                        updateProgress(workLoad, workLoad);
+
+                        return (Void) null;
                     }
-                    final String trackDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(trackDistance/1000d);
-                    String trackDuration;
-                    String trackSpeed;
-                    if (trackDurationValue > 0) {
-                        trackDuration = GPXLineItemHelper.formatDurationAsString(trackDurationValue);
-                        trackSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(trackDistance/trackDurationValue*1000d*3.6d);
-                    } else {
-                        trackDuration = GPXLineItem.NO_DATA;
-                        trackSpeed = GPXLineItem.NO_DATA;
-                    }
-
-                    final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
-                    final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
-                    String directSpeed;
-                    String directDuration;
-                    if (start.getDate() != null && end.getDate() != null) {
-                        final double durationValue = end.getDate().getTime() - start.getDate().getTime();
-                        directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
-                        directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
-                    } else {
-                        directDuration = GPXLineItem.NO_DATA;
-                        directSpeed = GPXLineItem.NO_DATA;
-                    }
-
-                    statusText = String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed);
-                    break;
-            }
-
-            myStatusText.setValue(statusText);
-            if (myTaskText.isEmpty().getValue()) {
-                // no action running...
-                myLabel.setText(myStatusText.getValue());
-            }
-        });
+                }, this);
+                break;
+        }
     }
 }

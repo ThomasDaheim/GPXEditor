@@ -102,6 +102,7 @@
                       <MenuItem fx:id="reduceFilesMenu" mnemonicParsing="false" text="Files of selected Items" />
                     </items>
                   </Menu>
+                  <MenuItem fx:id="findStopsMenu" mnemonicParsing="false" text="Find Stops" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="SRTM">

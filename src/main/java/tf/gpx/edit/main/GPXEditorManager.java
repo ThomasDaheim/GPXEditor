@@ -39,6 +39,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.TaskExecutor;
 
 /**
  *
@@ -132,5 +133,8 @@ public class GPXEditorManager extends Application {
             // TF, 20161103: call controller to store window values
             controller.stop();
         }
+        
+        // TFE, 20200321: stop executor - just in case
+        TaskExecutor.shutDown();
     }
 }

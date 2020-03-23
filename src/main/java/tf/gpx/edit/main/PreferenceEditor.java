@@ -42,6 +42,7 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.EnumHelper;
@@ -82,8 +83,8 @@ public class PreferenceEditor extends AbstractStage {
         
         EarthGeometry.DistanceAlgorithm myDistanceAlgorithm = 
                 GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType(EarthGeometry.DistanceAlgorithm::valueOf);
-        EarthGeometry.ReductionAlgorithm myReductionAlgorithm = 
-                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(EarthGeometry.ReductionAlgorithm::valueOf);
+        GPXAlgorithms.ReductionAlgorithm myReductionAlgorithm = 
+                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(GPXAlgorithms.ReductionAlgorithm::valueOf);
         double myReduceEpsilon = GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf);
         double myFixEpsilon = GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf);
 
@@ -160,7 +161,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(redalgoLbl, VPos.TOP);
         GridPane.setMargin(redalgoLbl, INSET_TOP);
 
-        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.ReductionAlgorithm.class, myReductionAlgorithm);
+        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, myReductionAlgorithm);
         reduceAlgoChoiceBox.setTooltip(t);
         getGridPane().add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, INSET_TOP);
@@ -423,7 +424,7 @@ public class PreferenceEditor extends AbstractStage {
             // read values from stage
             myDistanceAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox);
 
-            myReductionAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.ReductionAlgorithm.class, reduceAlgoChoiceBox);
+            myReductionAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, reduceAlgoChoiceBox);
 
             myFixEpsilon = Math.max(Double.valueOf(fixText.getText().trim()), 0);
             myReduceEpsilon = Math.max(Double.valueOf(epsilonText.getText().trim()), 0);

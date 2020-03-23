@@ -27,6 +27,7 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
@@ -70,6 +72,8 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.StatusBar;
+import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 import tf.helper.UsefulKeyCodes;
@@ -101,7 +105,6 @@ public class GPXTableView {
     }
 
     private void initTableView() {
-        
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTableViewMenu(myTableView);
         });
@@ -296,6 +299,11 @@ public class GPXTableView {
                 //System.out.println("Shift Control+V pressed");
                 
                 myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+            }
+            
+            if (UsefulKeyCodes.CNTRL_A.match(event)) {
+//                System.out.println("Ctrl+A pressed: " + Instant.now());
+                // TODO: horribly slow for a few thousand waypoints...
             }
             
             // track SHIFT key pressed - without CNTRL or ALT
@@ -577,5 +585,13 @@ public class GPXTableView {
     
     public ReadOnlyObjectProperty<Comparator<GPXWaypoint>> comparatorProperty() {
         return myTableView.comparatorProperty();
+    }
+    
+    public void setDisable(final boolean disable) {
+        myTableView.setDisable(disable);
+    }
+    
+    public void setVisible(final boolean visible) {
+        myTableView.setVisible(visible);
     }
 }
