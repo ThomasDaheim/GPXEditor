@@ -16,6 +16,7 @@
 
 package eu.hansolo.fx.heatmap;
 
+import java.util.HashMap;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -24,8 +25,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Dimension2D;
-
-import java.util.HashMap;
 
 
 /**

@@ -26,7 +26,6 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;

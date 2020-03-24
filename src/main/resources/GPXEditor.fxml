@@ -102,7 +102,12 @@
                       <MenuItem fx:id="reduceFilesMenu" mnemonicParsing="false" text="Files of selected Items" />
                     </items>
                   </Menu>
-                  <MenuItem fx:id="findStopsMenu" mnemonicParsing="false" text="Find Stops" />
+                  <Menu mnemonicParsing="false" text="Clusters">
+                    <items>
+                        <MenuItem fx:id="findClustersMenu" mnemonicParsing="false" text="Find Clusters" />
+                        <MenuItem fx:id="replaceClustersMenu" mnemonicParsing="false" text="Replace by Center" />
+                    </items>
+                  </Menu>
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="SRTM">

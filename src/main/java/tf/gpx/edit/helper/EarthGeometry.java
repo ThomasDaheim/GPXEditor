@@ -352,7 +352,7 @@ public class EarthGeometry {
     }
 
     private static boolean useSphericalGeometry(final double distAB, final double distAP, final double distBP, final double accuracy) {
-        // distances under 1km don't show differences to planar calculation
+        // distances under 1 km don't show differences to planar calculation
         // https://www.mkompf.com/gps/distcalc.html
         // http://www.cs.nyu.edu/visual/home/proj/tiger/gisfaq.html:
         // "flat-Earth formulas for calculating the distanceGPXWaypoints between two points start showing noticeable errors

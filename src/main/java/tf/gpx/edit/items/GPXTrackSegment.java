@@ -37,7 +37,6 @@ import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 
@@ -308,15 +307,8 @@ public class GPXTrackSegment extends GPXMeasurable {
         
         double length = 0.0;
 
-        GPXWaypoint previousWaypoint = null;
-        /* Only attempt to calculate the distanceGPXWaypoints if we are not
-         * on the first way point of the segment. */
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            if (previousWaypoint != null) {
-                length += EarthGeometry.distanceGPXWaypoints(gpxWaypoint, previousWaypoint);
-            }
-            
-            previousWaypoint = gpxWaypoint;
+            length += gpxWaypoint.getDistance();
         }
 
         myLength = length;

@@ -92,7 +92,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javax.imageio.ImageIO;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -140,8 +139,6 @@ public class GPXEditor implements Initializable {
     public final static double SMALL_WIDTH = 50.0;
     public final static double NORMAL_WIDTH = 70.0;
     public final static double LARGE_WIDTH = 185.0;
-    @FXML
-    private MenuItem findStopsMenu;
 
     public static enum MergeDeleteItems {
         MERGE,
@@ -167,6 +164,11 @@ public class GPXEditor implements Initializable {
     public static enum RelativePosition {
         ABOVE,
         BELOW
+    }
+    
+    private static enum FindReplaceClusters {
+        FIND,
+        REPLACE
     }
 
     private final GPXFileHelper myFileHelper = new GPXFileHelper(this);
@@ -318,6 +320,10 @@ public class GPXEditor implements Initializable {
     private MenuItem onlineHelpMenu;
     @FXML
     private MenuItem heightForCoordinateMenu;
+    @FXML
+    private MenuItem findClustersMenu;
+    @FXML
+    private MenuItem replaceClustersMenu;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -520,10 +526,16 @@ public class GPXEditor implements Initializable {
         reduceMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        findStopsMenu.setOnAction((ActionEvent event) -> {
-            findStops(event);
+        findClustersMenu.setOnAction((ActionEvent event) -> {
+            findReplaceClusters(event, FindReplaceClusters.FIND);
         });
-        findStopsMenu.disableProperty().bind(
+        findClustersMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
+
+        replaceClustersMenu.setOnAction((ActionEvent event) -> {
+            findReplaceClusters(event, FindReplaceClusters.REPLACE);
+        });
+        replaceClustersMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
 
         //
@@ -1570,26 +1582,70 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    private void findStops(final Event event) {
+    private void findReplaceClusters(final Event event, final FindReplaceClusters action) {
         if (gpxWaypoints.getItems().size() > 0) {
+            gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
+
             // waypoints can be from different tracksegments!
             final List<GPXTrackSegment> gpxTrackSegments = myStructureHelper.uniqueGPXTrackSegmentListFromGPXWaypointList(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
                 
-                final Map<GPXWaypoint, Integer> neighbours = GPXAlgorithms.findClusters(trackwaypoints, 50.0);
+                final List<GPXAlgorithms.GPXWaypointNeighbours> clusters = 
+                        GPXAlgorithms.getInstance().findClusters(
+                                trackwaypoints, 
+                                GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf),
+                                GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf), 
+                                GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf));
 
-                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
-                String content = neighbours.entrySet()
-                                    .stream()
-                                    .map(e -> "@ " + LatLongHelper.LatLongToString(e.getKey().getLatitude(), e.getKey().getLongitude()) + " - " + e.getValue())
-                                    .collect(Collectors.joining("\n"));
+//                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
+//                String content = clusters.stream()
+//                                    .map(e -> 
+//                                            LatLongHelper.LatLongToString(e.getCenterPoint().getLatitude(), e.getCenterPoint().getLongitude()) +
+//                                                    ";" + e.getTotalCount() +
+//                                                    ";" + e.getBackwardCount() +
+//                                                    ";" + e.getForwardCount())
+//                                    .collect(Collectors.joining("\n"));
+//                System.out.println(content);
 
-                System.out.println(content);
-                System.out.println("\n");
+                // use set for faster processing
+                final Set<GPXWaypoint> affectedGPXWaypoints = new LinkedHashSet<>();
+                for (GPXAlgorithms.GPXWaypointNeighbours cluster : clusters) {
+                    final int index = cluster.getCenterIndex();
+                    
+                    if (FindReplaceClusters.FIND.equals(action)) {
+                        // highlighting is done for center as well - rplaceing not
+                        affectedGPXWaypoints.add(cluster.getCenterPoint());
+                    }
+
+                    for (int i = index - cluster.getBackwardCount(); i < index; i++) {
+                        affectedGPXWaypoints.add(trackwaypoints.get(i));
+                    }
+
+                    for (int i = index + cluster.getForwardCount(); i > index; i--) {
+                        affectedGPXWaypoints.add(trackwaypoints.get(i));
+                    }
+                }
+                
+                // and now what to do?
+                if (FindReplaceClusters.FIND.equals(action)) {
+                    for (GPXWaypoint gpxWaypoint : affectedGPXWaypoints) {
+                        // point would be removed if any of algorithms flagged it
+                        gpxWaypoint.setHighlight(true);
+                    }
+                } else {
+                    // TODO: delete those suckers!
+                    //gpxTrackSegment.getGPXWaypoints().removeAll(affectedGPXWaypoints);
+                }
+                
             }
 
-            gpxWaypoints.refresh();
+            gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+
+            // show remaining waypoints
+            showGPXWaypoints(getShownGPXLineItems(), true, false);
+            // force repaint of gpxFileList to show unsaved items
+            refreshGPXFileList();
         }
     }
     

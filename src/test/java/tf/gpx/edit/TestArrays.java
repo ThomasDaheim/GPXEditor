@@ -75,7 +75,7 @@ public class TestArrays extends Application {
     }
 
     private String transformToJavascriptArray(List<String> arr) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("[");
 
         for (String str : arr)

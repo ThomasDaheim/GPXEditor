@@ -60,7 +60,13 @@ public enum GPXEditorPreferences  {
     WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18)),
     WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10)),
     WAYPOINT_LABEL_ANGLE("waypointLabelAngle", Integer.toString(90)),
-    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0));
+    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0)),
+    
+    // TFE, 20200324: options for algorithm to find "stops" in tracks with no movement
+    CLUSTER_RADIUS("clusterRadius", Double.toString(50.0)),
+    CLUSTER_COUNT("clusterCount", Integer.toString(30)),
+    CLUSTER_DURATION("clusterDuration", Integer.toString(15));
+    
 
     private final String myPrefKey;
     private final String myDefaultValue;

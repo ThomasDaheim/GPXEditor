@@ -2,10 +2,8 @@ package tf.gpx.edit.helper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -24,6 +22,46 @@ import tf.gpx.edit.items.GPXWaypoint;
  */
 public class GPXAlgorithms {
     private final static GPXAlgorithms INSTANCE = new GPXAlgorithms();
+    
+    // storage class for results of countNeighbours
+    public class GPXWaypointNeighbours {
+        private GPXWaypoint myCenterPoint;
+        private int myCenterIndex;
+        private int myBackwardCount;
+        private int myForwardCount;
+        
+        private GPXWaypointNeighbours() {
+            super();
+            // Exists only to defeat instantiation.
+        }
+        
+        public GPXWaypointNeighbours(final GPXWaypoint center, final int index, final int backward, final int forward) {
+            myCenterPoint = center;
+            myCenterIndex = index;
+            myBackwardCount = backward;
+            myForwardCount = forward;
+        }
+        
+        public GPXWaypoint getCenterPoint() {
+            return myCenterPoint;
+        }
+        
+        public int getCenterIndex() {
+            return myCenterIndex;
+        }
+        
+        public int getBackwardCount() {
+            return myBackwardCount;
+        }
+        
+        public int getForwardCount() {
+            return myForwardCount;
+        }
+        
+        public int getTotalCount() {
+            return myBackwardCount + myForwardCount;
+        }
+    }
     
     public static enum ReductionAlgorithm {
         DouglasPeucker,
@@ -262,7 +300,7 @@ public class GPXAlgorithms {
                 }
             }
             // add point to minList and remove from workList
-            minList.add(new Pair<>(workList.get(minIndex), minArea));
+            minList.add(Pair.of(workList.get(minIndex), minArea));
             workList.remove(minIndex);
             //System.out.println("Removing waypoint: " + minIndex);
         }
@@ -317,13 +355,12 @@ public class GPXAlgorithms {
     
     /**
      * Find points where "nothing happened":
-     * When e.g. sitting down for a while and keeping the GPS on you will get a cluster of nearby points.
-     * Including those points in calculation of e.g. distances leads to wrong values since they oscilate around
-     * (approx. 30m x 30m for Garmin indoors) instead of being in the same spot.
-     * 
-     * IDEA:
-     *   1) go over each point and find all repv + next points within a given bounding box
-     *   2) if this count is > limit than add to list of locations where "nothing happened"
+     * When e.g.sitting down for a while and keeping the GPS on you will get a cluster of nearby points.Including those points in calculation of e.g. distances leads to wrong values since they oscilate around
+ (approx. 30m x 30m for Garmin indoors) instead of being in the same spot.
+ 
+ IDEA:
+   1) go over each point and find all repv + next points within a given bounding box
+   2) if this count is > limit than add to list of locations where "nothing happened"
      *   3) Optional: use this list to replace all prev + next point locations by the center
      * 
      * There might be other approaches to do this but this is the simple one I came up with :-)
@@ -333,16 +370,107 @@ public class GPXAlgorithms {
      *       would also find clusters when goign to the same place each day for a year
      * 
      * @param track points of the track
-     * @param radius tolerance, in meters
+     * @param radius radius to find neighbours
+     * @param size count of neighbours to count as stop
+     * @param duration duration to count as stop
      * @return the number of points in radius for each waypoint
      */
-    public static Map<GPXWaypoint, Integer> findClusters(final List<GPXWaypoint> track, final double radius) {
-        Map<GPXWaypoint, Integer> result = new LinkedHashMap<>();
+    public List<GPXWaypointNeighbours> findClusters(final List<GPXWaypoint> track, final double radius, final int size, final int duration) {
+        final List<GPXWaypointNeighbours> result = new ArrayList<>();
         
-        // use linear distance approximation and not full EarthGeometry - algorithm only meaningful for < 100m
+        if (track.size() < size) {
+            // can't have a cluster if not enough waypoints...
+            return result;
+        }
+
+        // minutes -> milliseconds
+        final long clusterDuration = duration*60*1000;
+        
+        // 1) count backward and forward neighbours
+        final List<GPXWaypointNeighbours> neighboursList = countNeighboures(track, radius);
+        int waypointNum = neighboursList.size();
+        
+        // 2) find clusters based on neighbour count and duration
+        // 3) determine center of cluster by comparing backward + forward count of each waypoint
+        int clusterStart = -1;
+        int clusterCenter = -1;
+        int clusterEnd = -1;
+        
+        int i = 0;
+        do {
+            final GPXWaypointNeighbours neighbours = neighboursList.get(i);
+            
+            // every point has 4 options:
+            // 1) be the start of a new cluster
+            // 2) be the center of a cluster (backwards > forwards)
+            // 3) be the end of a new cluster
+            // 4) be nothing
+            
+            // 1) are you the start?
+            if (clusterStart == -1 && neighbours.getTotalCount() >= size) {
+                // we have the start of a potential new cluster!
+                clusterStart = i;
+//                System.out.println("Cluster Start: " + clusterStart);
+            } else {
+                // do we have an active cluster?
+                if (clusterStart != -1) {
+                    // 2) are you the center?
+                    if (clusterCenter == -1 && neighbours.getBackwardCount() > neighbours.getForwardCount()) {
+                        clusterCenter = i;
+//                        System.out.println("Cluster Center: " + clusterCenter);
+                    }
+
+                    // 3) are you the end? OR the end of the list?
+                    if (neighbours.getTotalCount() < size || i == waypointNum-1) {
+                        if (neighbours.getTotalCount() < size) {
+                            // last point is the actual end
+                            clusterEnd = i-1;
+                        } else {
+                            // this point is the last of the list - and bY DEFINITION also the end
+                            clusterEnd = i;
+                        }
+//                        System.out.println("Cluster End: " + clusterEnd);
+                        
+                        // now check duration of cluster candidate
+                        if (EarthGeometry.duration(
+                                neighboursList.get(clusterEnd).getCenterPoint(), 
+                                neighboursList.get(clusterStart).getCenterPoint()) >= clusterDuration && clusterCenter != -1) {
+                            result.add(new GPXWaypointNeighbours(
+                                    neighboursList.get(clusterCenter).getCenterPoint(), 
+                                    clusterCenter,
+                                    clusterCenter-clusterStart, 
+                                    clusterEnd-clusterCenter));
+//                            System.out.println("Its a Cluster!!!");
+                        } else {
+//                            System.out.println("To short...");
+                        }
+                        
+                        // reset values in any case...
+                        clusterStart = -1;
+                        clusterEnd = -1;
+                        clusterCenter = -1;
+                    }
+                }
+            }
+            
+            i++;
+        } while (i < waypointNum);
+        
+        return result;
+    }
+    
+    // count backwards and forwards neighbours inside radius of each point
+    private List<GPXWaypointNeighbours> countNeighboures(final List<GPXWaypoint> track, final double radius) {
+        final List<GPXWaypointNeighbours> result = new ArrayList<>();
+        
         int waypointNum = track.size();
 //        System.out.println("Waypoints: " + waypointNum);
-        
+        int cacheHits = 0;
+        int distCals = 0;
+
+        // cache distances - only calculate once
+        double distances[][] = new double[waypointNum][waypointNum];
+
         for (int i = 0; i < waypointNum; i++) {
             GPXWaypoint centerPoint = track.get(i);
             
@@ -350,10 +478,22 @@ public class GPXAlgorithms {
             int backwards = 0;
             for (int j = 1; j <= i; j++) {
 //                System.out.println("Backwards: i: " + i + ", j: " + j);
-                if (EarthGeometry.distanceWaypointsForAlgorithm(
+                double distance;
+                if (distances[i][i-j] > 0.0) {
+                    distance = distances[i][i-j];
+                    cacheHits++;
+                } else {
+                    distance = EarthGeometry.distanceWaypointsForAlgorithm(
                         centerPoint.getWaypoint(), 
                         track.get(i-j).getWaypoint(), 
-                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) > radius) {
+                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+                    
+                    // cache new value
+                    distances[i][i-j] = distance;
+                    distances[i-j][i] = distance;
+                    distCals++;
+                }
+                if (distance > radius) {
                     break;
                 }
                 backwards++;
@@ -362,17 +502,31 @@ public class GPXAlgorithms {
             int forwards = 0;
             for (int j = 1; j < waypointNum - i; j++) {
 //                System.out.println("Forwards: i: " + i + ", j: " + j);
-                if (EarthGeometry.distanceWaypointsForAlgorithm(
+                double distance;
+                if (distances[i][i+j] > 0.0) {
+                    distance = distances[i][i+j];
+                    cacheHits++;
+                } else {
+                    distance = EarthGeometry.distanceWaypointsForAlgorithm(
                         centerPoint.getWaypoint(), 
                         track.get(i+j).getWaypoint(), 
-                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) > radius) {
+                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+                    
+                    // cache new value
+                    distances[i][i+j] = distance;
+                    distances[i+j][i] = distance;
+                    distCals++;
+                }
+                if (distance > radius) {
                     break;
                 }
                 forwards++;
             }
             
-            result.put(centerPoint, backwards+forwards);
+            result.add(new GPXWaypointNeighbours(centerPoint, i, backwards, forwards));
         }
+        
+//        System.out.println("Calcs: " + distCals + ", Cached: " + cacheHits);
 
         return result;
     }
