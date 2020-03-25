@@ -108,10 +108,18 @@ public class EarthGeometry {
         
         final double lat21 = lat2 - lat1;
         final double lon21 = lon2 - lon1;
+        final double latAverage = (lat2 + lat1) / 2.0;
 
-        final double xDiff = EarthShortRadius * lat21;
-        final double yDiff = EarthLongRadius * lon21 * FastMath.cos((lat2 + lat1) / 2.0);
+        // https://github.com/mapbox/cheap-ruler but only first correction term
+        final double xDiff = EarthShortRadius * (1.0 - 0.00509 * FastMath.cos(2.0 * latAverage)) * lat21;
+        final double yDiff = EarthLongRadius * (FastMath.cos(latAverage) - 0.00085 * FastMath.cos(3.0 * latAverage)) * lon21;
         final double zDiff = p2.getElevation() - p1.getElevation();
+        
+//        System.out.println("xDiff: " + xDiff + ", " + EarthShortRadius * lat21);
+//        System.out.println("yDiff: " + yDiff + ", " + EarthLongRadius * FastMath.cos(latAverage) * lon21);
+//        System.out.println("dist.: " + 
+//                FastMath.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff) + ", " + 
+//                FastMath.sqrt(EarthShortRadius * lat21*EarthShortRadius * lat21 + EarthLongRadius * FastMath.cos(latAverage) * lon21*EarthLongRadius * FastMath.cos(latAverage) * lon21 + zDiff*zDiff));
                 
         return FastMath.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
     }
@@ -188,7 +196,7 @@ public class EarthGeometry {
      * 
      * @param p1 first point
      * @param p2 second point
-     * @return the bearingGPXWaypoints, in degrees
+     * @return the bearing, in degrees
      * 
      * @example
      *     p1 = (52.205, 0.119);

@@ -430,19 +430,77 @@ public class GPXAlgorithms {
                             clusterEnd = i;
                         }
 //                        System.out.println("Cluster End: " + clusterEnd);
-                        
-                        // now check duration of cluster candidate
-                        if (EarthGeometry.duration(
-                                neighboursList.get(clusterEnd).getCenterPoint(), 
-                                neighboursList.get(clusterStart).getCenterPoint()) >= clusterDuration && clusterCenter != -1) {
-                            result.add(new GPXWaypointNeighbours(
-                                    neighboursList.get(clusterCenter).getCenterPoint(), 
-                                    clusterCenter,
-                                    clusterCenter-clusterStart, 
-                                    clusterEnd-clusterCenter));
-//                            System.out.println("Its a Cluster!!!");
+                        if (clusterCenter < clusterStart || clusterCenter > clusterEnd) {
+                            clusterCenter = (clusterEnd + clusterStart) / 2;
+                        }
+
+                        // reduce candidate further by checking bearing between points
+                        // cuts of "smooth" tracks @ beginning and end
+                        // count how often bearing changes > 135 deg between waypoints as we go along the track piece
+                        int changeCount = 0;
+                        double prevBearing = Double.NaN;
+                        double diffBearing = Double.NaN;
+                        int newStart = -1;
+                        int newEnd = -1;
+                        for (int j = clusterStart; j < clusterEnd; j++) {
+                            final double curBearing = EarthGeometry.bearingGPXWaypoints(
+                                    neighboursList.get(j).getCenterPoint(), 
+                                    neighboursList.get(j+1).getCenterPoint());
+
+                            if (Double.NaN != prevBearing) {
+                                // tricky: change in bearing since we have mod 360 in here...
+                                // e.g. 357 deg to 72 deg is only 75 deg and NOT 285 deg
+                                diffBearing = Math.abs(curBearing - prevBearing) % 180;
+                                if (diffBearing > 135.0) {
+                                    changeCount++;
+
+                                    // we want to include these points into the cluster
+                                    newEnd = j+1;
+                                }
+                            }
+                            if (changeCount == 0) {
+                                // no sudden change yet...
+                                newStart = j+1;
+                            }
+                            prevBearing = curBearing;
+//                            System.out.println("ID: " + neighboursList.get(j).getCenterPoint().getCombinedID() + ", bearing: " + curBearing + ", diff: " + diffBearing);
+                        }
+                        System.out.println("ID: " + neighboursList.get(clusterCenter).getCenterPoint().getCombinedID() + ", # of turns: " + changeCount + " in " + (clusterEnd-clusterStart+1) + " points or " + (newEnd-newStart+1) + " new points");
+//                        System.out.println("old start/end: " + clusterStart + ", " + clusterEnd + ", new start/end: " + newStart + ", " + newEnd);
+
+                        if (newStart != -1 && newEnd != -1) {
+                            clusterStart = newStart;
+                            clusterEnd = newEnd;
+                            // for the paranoid: we might have excluded the center...
+                            if (clusterCenter < clusterStart || clusterCenter > clusterEnd) {
+                                clusterCenter = (clusterEnd + clusterStart) / 2;
+                            }
+
+                            // now check cluster candidate
+                            final GPXWaypoint startPoint = neighboursList.get(clusterStart).getCenterPoint();
+                            final GPXWaypoint endPoint = neighboursList.get(clusterEnd).getCenterPoint();
+                            if (
+                                    // is duration long enough?
+                                    EarthGeometry.duration(endPoint, startPoint) >= clusterDuration && 
+                                    // is overall distance small enough?
+                                    EarthGeometry.distanceWaypointsForAlgorithm(
+                                            startPoint.getWaypoint(), 
+                                            endPoint.getWaypoint(), 
+                                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) <= 2.0*radius &&
+                                    // do we have a center? should always be true...
+                                    clusterCenter != -1) {
+
+                                result.add(new GPXWaypointNeighbours(
+                                        neighboursList.get(clusterCenter).getCenterPoint(), 
+                                        clusterCenter,
+                                        clusterCenter-clusterStart, 
+                                        clusterEnd-clusterCenter));
+    //                            System.out.println("Its a Cluster!!!");
+                            } else {
+    //                            System.out.println("To short...");
+                            }
                         } else {
-//                            System.out.println("To short...");
+//                            System.out.println("Not enough twists and turns...");
                         }
                         
                         // reset values in any case...

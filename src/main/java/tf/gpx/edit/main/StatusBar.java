@@ -173,8 +173,11 @@ public class StatusBar extends VBox implements ITaskExecutionConsumer {
                         long trackDurationValue = 0;
                         int i = 0;
                         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-                            trackDistance += gpxWaypoint.getDistance();
-                            trackDurationValue += gpxWaypoint.getCumulativeDuration();
+                            if (i > 0) {
+                                // don't use for first - values are "to previous"
+                                trackDistance += gpxWaypoint.getDistance();
+                                trackDurationValue += gpxWaypoint.getCumulativeDuration();
+                            }
 
                             i++;
                             updateProgress(i, workLoad);

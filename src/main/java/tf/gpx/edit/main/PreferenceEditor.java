@@ -513,6 +513,10 @@ public class PreferenceEditor extends AbstractStage {
             waypointLabelAngle = Integer.valueOf(wayLblAngleText.getText().trim()) % 360;
             waypointThreshold = Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0);
             
+            myClusterRadius = Math.max(Double.valueOf(radiusText.getText().trim()), 0);
+            myClusterCount = Math.max(Integer.valueOf(neighbourText.getText().trim()), 0);
+            myClusterDuration = Math.max(Integer.valueOf(durationText.getText().trim()), 0);
+            
             GPXEditorPreferences.DISTANCE_ALGORITHM.put(myDistanceAlgorithm.name());
             GPXEditorPreferences.REDUCTION_ALGORITHM.put(myReductionAlgorithm.name());
             GPXEditorPreferences.REDUCE_EPSILON.put(myReduceEpsilon);
