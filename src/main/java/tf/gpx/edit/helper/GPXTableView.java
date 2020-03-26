@@ -156,6 +156,14 @@ public class GPXTableView {
             });
             waypointMenu.getItems().add(deleteWaypoints);
             
+            final MenuItem replaceWaypoints = new MenuItem("Replace selected by Center");
+            replaceWaypoints.setOnAction((ActionEvent event) -> {
+                myEditor.replaceByCenter();
+            });
+            replaceWaypoints.disableProperty().bind(
+                    Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
+            waypointMenu.getItems().add(replaceWaypoints);
+
             final Menu deleteAttr = new Menu("Delete attribute(s)");
             // TFE, 20190715: support for deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date(s)");

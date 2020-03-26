@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,7 +105,7 @@ import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -321,9 +322,9 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem heightForCoordinateMenu;
     @FXML
-    private MenuItem findClustersMenu;
+    private MenuItem findStationariesMenu;
     @FXML
-    private MenuItem replaceClustersMenu;
+    private MenuItem replaceStationariesMenu;
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -526,16 +527,16 @@ public class GPXEditor implements Initializable {
         reduceMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        findClustersMenu.setOnAction((ActionEvent event) -> {
-            findReplaceClusters(event, FindReplaceClusters.FIND);
+        findStationariesMenu.setOnAction((ActionEvent event) -> {
+            findReplaceStationaries(event, FindReplaceClusters.FIND);
         });
-        findClustersMenu.disableProperty().bind(
+        findStationariesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
 
-        replaceClustersMenu.setOnAction((ActionEvent event) -> {
-            findReplaceClusters(event, FindReplaceClusters.REPLACE);
+        replaceStationariesMenu.setOnAction((ActionEvent event) -> {
+            findReplaceStationaries(event, FindReplaceClusters.REPLACE);
         });
-        replaceClustersMenu.disableProperty().bind(
+        replaceStationariesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
 
         //
@@ -862,6 +863,7 @@ public class GPXEditor implements Initializable {
 //            waypoint.getParent().getGPXWaypoints().remove(waypoint);
 //        }
         gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+        StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         // show remaining waypoints
         showGPXWaypoints(getShownGPXLineItems(), true, false);
@@ -895,6 +897,7 @@ public class GPXEditor implements Initializable {
             getShownGPXLineItems().get(0).getGPXWaypoints().addAll(insertWaypoints);
         }
         gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+        StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         // show remaining waypoints
         showGPXWaypoints(getShownGPXLineItems(), true, false);
@@ -928,6 +931,7 @@ public class GPXEditor implements Initializable {
         }
 
         gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+        StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         refresh();
     }
@@ -1029,11 +1033,9 @@ public class GPXEditor implements Initializable {
                 }
 
                 gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+                StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
             }),
             StatusBar.getInstance());
-
-        // TFE, 20200319: update statusbar as well
-        StatusBar.getInstance().setStatusFromWaypoints(new ArrayList<>());
     }
 
     public void refillGPXWaypointList(final boolean updateViewer) {
@@ -1582,24 +1584,25 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    private void findReplaceClusters(final Event event, final FindReplaceClusters action) {
-        if (gpxWaypoints.getItems().size() > 0) {
-            gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
+    private void findReplaceStationaries(final Event event, final FindReplaceClusters action) {
+        if (gpxWaypoints.getItems().size() < GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf)) {
+            return;
+        }
+        
+        // waypoints can be from different tracksegments!
+        final List<GPXTrackSegment> gpxTrackSegments = myStructureHelper.uniqueGPXTrackSegmentListFromGPXWaypointList(gpxWaypoints.getItems());
+        for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
+            final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
 
-            // waypoints can be from different tracksegments!
-            final List<GPXTrackSegment> gpxTrackSegments = myStructureHelper.uniqueGPXTrackSegmentListFromGPXWaypointList(gpxWaypoints.getItems());
-            for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
-                final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-                
-                final List<GPXAlgorithms.GPXWaypointNeighbours> clusters = 
-                        GPXAlgorithms.getInstance().findClusters(
-                                trackwaypoints, 
-                                GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf),
-                                GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf), 
-                                GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf));
+            final List<GPXWaypointNeighbours> clusters = 
+                    GPXAlgorithms.getInstance().findStationaries(
+                            trackwaypoints, 
+                            GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf),
+                            GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf), 
+                            GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf));
 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
-//                String content = clusters.stream()
+//                String content = clusterMap.stream()
 //                                    .map(e -> 
 //                                            LatLongHelper.LatLongToString(e.getCenterPoint().getLatitude(), e.getCenterPoint().getLongitude()) +
 //                                                    ";" + e.getTotalCount() +
@@ -1608,91 +1611,189 @@ public class GPXEditor implements Initializable {
 //                                    .collect(Collectors.joining("\n"));
 //                System.out.println(content);
 
-                // use set for faster processing
-                final Set<GPXWaypoint> affectedGPXWaypoints = new LinkedHashSet<>();
-                for (GPXAlgorithms.GPXWaypointNeighbours cluster : clusters) {
-                    final int index = cluster.getCenterIndex();
-                    
-                    if (FindReplaceClusters.FIND.equals(action)) {
-                        // highlighting is done for center as well - rplaceing not
-                        affectedGPXWaypoints.add(cluster.getCenterPoint());
-                    }
+            doFindReplaceStationaries(clusters, trackwaypoints, action);
+        }
 
-                    for (int i = index - cluster.getBackwardCount(); i < index; i++) {
-                        affectedGPXWaypoints.add(trackwaypoints.get(i));
-                    }
+        // show remaining waypoints
+        showGPXWaypoints(getShownGPXLineItems(), true, false);
+        // force repaint of gpxFileList to show unsaved items
+        refreshGPXFileList();
+    }
+    private void doFindReplaceStationaries(final List<GPXWaypointNeighbours> clusters, final List<GPXWaypoint> wayPoints, final FindReplaceClusters action) {
+        if (clusters.isEmpty()) {
+            return;
+        }
+                
+        gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
 
-                    for (int i = index + cluster.getForwardCount(); i > index; i--) {
-                        affectedGPXWaypoints.add(trackwaypoints.get(i));
-                    }
-                }
-                
-                // and now what to do?
-                if (FindReplaceClusters.FIND.equals(action)) {
-                    for (GPXWaypoint gpxWaypoint : affectedGPXWaypoints) {
-                        // point would be removed if any of algorithms flagged it
-                        gpxWaypoint.setHighlight(true);
-                    }
-                } else {
-                    // TODO: delete those suckers!
-                    //gpxTrackSegment.getGPXWaypoints().removeAll(affectedGPXWaypoints);
-                }
-                
+        // use set for faster processing
+        final Set<GPXWaypoint> affectedGPXWaypoints = new LinkedHashSet<>();
+        for (GPXWaypointNeighbours cluster : clusters) {
+            final int index = cluster.getCenterIndex();
+
+            if (FindReplaceClusters.FIND.equals(action)) {
+                // highlighting is done for center as well - replacing not
+                affectedGPXWaypoints.add(cluster.getCenterPoint());
             }
 
-            gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+            for (int i = index - cluster.getBackwardCount(); i < index; i++) {
+                affectedGPXWaypoints.add(wayPoints.get(i));
+            }
 
-            // show remaining waypoints
-            showGPXWaypoints(getShownGPXLineItems(), true, false);
-            // force repaint of gpxFileList to show unsaved items
-            refreshGPXFileList();
+            for (int i = index + cluster.getForwardCount(); i > index; i--) {
+                affectedGPXWaypoints.add(wayPoints.get(i));
+            }
         }
+
+        // and now what to do?
+        if (FindReplaceClusters.FIND.equals(action)) {
+            for (GPXWaypoint gpxWaypoint : affectedGPXWaypoints) {
+                gpxWaypoint.setHighlight(true);
+            }
+        } else {
+            wayPoints.removeAll(affectedGPXWaypoints);
+        }
+
+        gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+        StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
+    }
+    
+    public void replaceByCenter() {
+        // get seleced waypoint indices
+        final List<Integer> selectedIndices = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedIndices());
+        final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
+        // just to be on the safe side...
+        Collections.sort(selectedIndices);
+
+        if (selectedIndices.size() < 3) {
+            return;
+        }
+
+        TaskExecutor.executeTask(
+            TaskExecutor.taskFromRunnableForLater(() -> {
+                // make sure we only include waypoints from track segments
+                final List<Integer> trackIndices = selectedIndices.stream().filter((t) -> {
+                    return GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(selectedWaypoints.get(t).getParent().getType());
+                }).collect(Collectors.toList());        
+
+                // find start & end of selected clusterMap AND determine center
+                // AND keep in mind that track segment might change during the loop
+                final Map<GPXTrackSegment, List<GPXWaypointNeighbours>> clusterMap = new HashMap<>();
+
+                // https://stackoverflow.com/a/39873051
+                int start = trackIndices.get(0);
+                int end = trackIndices.get(0);
+                int last = trackIndices.get(trackIndices.size()-1);
+                GPXTrackSegment prevTrackSegment = (GPXTrackSegment) selectedWaypoints.get(start).getParent();
+                GPXTrackSegment trackSegment;
+
+                for (int rev : trackIndices) {
+                    trackSegment = (GPXTrackSegment) selectedWaypoints.get(rev).getParent();
+
+                    if (rev - end > 1 || rev == last || !trackSegment.equals(prevTrackSegment)) {
+                        // break in range OR end of list OR break in track segment
+
+                        int endIndex = end;
+                        // and there is always a spcial case... in the case of the end of the list end hasn't been incremented yet
+                        if (rev == last) {
+                            endIndex = last;
+                        }
+                        // it takes three for a cluster
+                        if (endIndex > start + 1) {
+                            final GPXWaypoint centerPoint = GPXAlgorithms.closestToCenter(selectedWaypoints.subList(start, endIndex));
+                            // need to re-base all posiions to start of track segment...
+                            final int centerPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(centerPoint);
+                            // don't use width or similar here, since rounding will kill you for an even number of points in range
+                            final int startPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(selectedWaypoints.get(start));
+                            final int endPointIndex = startPointIndex - start + endIndex;
+
+                            // add to existing list for track segment or create new one
+                            final GPXWaypointNeighbours neighbours = new GPXWaypointNeighbours(centerPoint, centerPointIndex, centerPointIndex-startPointIndex, endPointIndex-centerPointIndex);
+                            if (clusterMap.containsKey(prevTrackSegment)) {
+                                clusterMap.get(prevTrackSegment).add(neighbours);
+                            } else {
+                                final List<GPXWaypointNeighbours> clusters = new ArrayList<>(List.of(neighbours));
+                                clusterMap.put(prevTrackSegment, clusters);
+                            }
+                        }
+                        start = rev;
+                        prevTrackSegment = trackSegment;
+                    }
+                    end = rev;
+                }
+
+                // replace all that are not center
+                for (Map.Entry<GPXTrackSegment, List<GPXWaypointNeighbours>> entry : clusterMap.entrySet()) {
+                    doFindReplaceStationaries(
+                            entry.getValue(), 
+                            entry.getKey().getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment), 
+                            FindReplaceClusters.REPLACE);
+                }
+
+                // show remaining waypoints
+                showGPXWaypoints(getShownGPXLineItems(), true, false);
+                // force repaint of gpxFileList to show unsaved items
+                refreshGPXFileList();
+            }),
+            StatusBar.getInstance());
     }
     
     public void selectHighlightedWaypoints() {
-        // disable listener for checked changes since it fires for each waypoint...
-        // TODO: use something fancy like LibFX ListenerHandle...
-        gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
+        TaskExecutor.executeTask(
+            TaskExecutor.taskFromRunnableForLater(() -> {
+                // disable listener for checked changes since it fires for each waypoint...
+                // TODO: use something fancy like LibFX ListenerHandle...
+                gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
 
-        gpxWaypoints.getSelectionModel().clearSelection();
+                gpxWaypoints.getSelectionModel().clearSelection();
 
-        int index = 0;
-        final List<Integer> selectedList = new ArrayList<>();
-        for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
-            if (waypoint.isHighlight()) {
-                selectedList.add(index);
-            }
-            index++;
-        }
-        gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
-        
-        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
-        gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+                int index = 0;
+                final List<Integer> selectedList = new ArrayList<>();
+                for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
+                    if (waypoint.isHighlight()) {
+                        selectedList.add(index);
+                    }
+                    index++;
+                }
+                // fastest way to select a number of indices... but still slow for many
+                gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
+
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+
+                gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+                StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
+            }),
+            StatusBar.getInstance());
     }
     
     public void invertSelectedWaypoints() {
-//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - start:" + LocalDateTime.now());
-        // disable listener for checked changes since it fires for each waypoint...
-        // TODO: use something fancy like LibFX ListenerHandle...
-        gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
+        TaskExecutor.executeTask(
+            TaskExecutor.taskFromRunnableForLater(() -> {
+                // disable listener for checked changes since it fires for each waypoint...
+                // TODO: use something fancy like LibFX ListenerHandle...
+                gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
 
-        // performance: convert to hashset since its contains() is way faster
-        final Set<GPXWaypoint> selectedGPXWaypoints = gpxWaypoints.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
-        gpxWaypoints.getSelectionModel().clearSelection();
+                // performance: convert to hashset since its contains() is way faster
+                final Set<GPXWaypoint> selectedGPXWaypoints = gpxWaypoints.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
+                gpxWaypoints.getSelectionModel().clearSelection();
 
-        int index = 0;
-        final List<Integer> selectedList = new ArrayList<>();
-        for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
-            if (!selectedGPXWaypoints.contains(waypoint)) {
-                selectedList.add(index);
-            }
-            index++;
-        }
-        gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
-        
-        GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
-        gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
-//        System.out.println("tf.gpx.edit.main.GPXEditor.invertSelectedWaypoints() - stop:" + LocalDateTime.now());
+                int index = 0;
+                final List<Integer> selectedList = new ArrayList<>();
+                for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
+                    if (!selectedGPXWaypoints.contains(waypoint)) {
+                        selectedList.add(index);
+                    }
+                    index++;
+                }
+                // fastest way to select a number of indices... but still slow for many
+                gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
+
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+                
+                gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
+                StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
+            }),
+            StatusBar.getInstance());
     }
 
     private void fixGPXLineItems(final Event event, final boolean fileLevel) {
@@ -1848,12 +1949,9 @@ public class GPXEditor implements Initializable {
                 }
     //            System.out.println("End select:   " + Instant.now());
 
-                gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
-
-
                 GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker);
 
-                // TFE, 20200312: update statusbar as well
+                gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
                 StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
             }),
             StatusBar.getInstance());
