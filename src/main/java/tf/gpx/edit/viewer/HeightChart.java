@@ -513,12 +513,13 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 //                + "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
 //        }
 //        System.out.println("=====================");
-        if (noLayout) return;
+        // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
+        if (noLayout || !isVisible()) {
+//            System.out.println("HeighChart: sorry, no layout pass");
+            return;
+        }
 
         super.layoutPlotChildren();
-        
-        // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
-        if (isDisabled()) return;
         
         // handle any fancy things that need to be done for labels
         adaptLayout();

@@ -1511,7 +1511,7 @@ public class TrackMap extends LeafletMapView {
 //                + "{title: '" + title + "', icon: " + marker.getIconName() + ", zIndexOffset: " + zIndexOffset + "}).addTo(myMap);");
                 
         execScript("var " + varName + " = L.circleMarker([" + position.getLatitude() + ", " + position.getLongitude() + "], "
-                + "{radius: 4, fillOpacity: 1, color: 'red', fillColor: 'yellow', weight: 1}).addTo(myMap);");
+                + "{radius: 4, fillOpacity: 1, color: 'red', fillColor: 'yellow', weight: 1, renderer: myMap.options.renderer}).addTo(myMap);");
 
         return varName;
     }
@@ -1540,7 +1540,7 @@ public class TrackMap extends LeafletMapView {
         execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
     }
     public void toggleChartsPane(final Boolean visible) {
-        ChartsPane.getInstance().setVisible(visible);
+        ChartsPane.getInstance().doSetVisible(visible);
     }
     
     public void setHeatMapButtonState(final MapButtonState state) {

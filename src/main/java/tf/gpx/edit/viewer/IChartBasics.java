@@ -159,6 +159,10 @@ public interface IChartBasics<T extends XYChart> {
         getChart().toFront();
     }
     
+    default void setVisible(final boolean visible) {
+        getChart().setVisible(visible);
+    }
+    
     @SuppressWarnings("unchecked")
     default void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
         setGPXLineItems(lineItems);

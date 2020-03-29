@@ -233,4 +233,15 @@ public class ChartsPane extends StackPane {
     public IChartBasics getBaseChart() {
         return baseChart;
     }
+    
+    public void doSetVisible(final boolean visible) {
+        setVisible(visible);
+        charts.stream().forEach((t) -> {
+            t.setVisible(visible);
+            if (visible) {
+                t.getChart().layout();
+            }
+        });
+        layout();
+    }
 }

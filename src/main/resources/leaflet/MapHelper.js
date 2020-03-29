@@ -39,6 +39,7 @@
 myMap.options.worldCopyJump = true;
 myMap.options.zoomAnimation = false;
 myMap.options.preferCanvas = true;
+myMap.options.renderer = L.canvas();
 
 // disable drag & zoom for events with control key
 function disableCntrlDrag(e) {
