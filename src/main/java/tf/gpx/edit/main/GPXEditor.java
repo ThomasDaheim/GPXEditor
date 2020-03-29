@@ -106,6 +106,7 @@ import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
+import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -1565,17 +1566,25 @@ public class GPXEditor implements Initializable {
             // waypoints can be from different tracksegments!
             final List<GPXTrackSegment> gpxTrackSegments = myStructureHelper.uniqueGPXTrackSegmentListFromGPXWaypointList(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
-                final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+                final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
                 final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
                         GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(GPXAlgorithms.ReductionAlgorithm::valueOf),
                         GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf));
                 final boolean keep2[] = GPXAlgorithms.fixTrack(trackwaypoints, 
                         GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf));
+                
+                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
+                System.out.println("keep1: " + keep1.length + ", " + Arrays.toString(keep1));
 
                 int index = 0;
                 for (GPXWaypoint gpxWaypoint : trackwaypoints) {
                     // point would be removed if any of algorithms flagged it
                     gpxWaypoint.setHighlight(!keep1[index] || !keep2[index]);
+                    
+//                    if (keep1[index]) {
+//                        System.out.println(index);
+//                    }
+
                     index++;
                 }
             }
@@ -1602,7 +1611,7 @@ public class GPXEditor implements Initializable {
                             GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf));
 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
-//                String content = clusterMap.stream()
+//                String content = clusters.stream()
 //                                    .map(e -> 
 //                                            LatLongHelper.LatLongToString(e.getCenterPoint().getLatitude(), e.getCenterPoint().getLongitude()) +
 //                                                    ";" + e.getTotalCount() +
