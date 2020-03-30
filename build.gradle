@@ -33,7 +33,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='4.6'
+version='4.7'
 
 repositories {
     mavenLocal()
@@ -49,8 +49,8 @@ repositories {
 
 dependencies {
     // JavaFX11 explicit dependencies
-    def javafx_version='11.0.2'
-//    def javafx_version='14'
+//    def javafx_version='11.0.2'
+    def javafx_version='14'
     compile "org.openjfx:javafx-base:$javafx_version:$platform"
     compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
     compile "org.openjfx:javafx-controls:$javafx_version:$platform"
