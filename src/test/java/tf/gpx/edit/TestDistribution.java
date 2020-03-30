@@ -69,8 +69,6 @@ public class TestDistribution {
     
     @Test
     public void linearDistributions() {
-        System.out.println("Test: linearDistributions()");
-
         //
         // list with 300 elements 1...300
         //
@@ -126,16 +124,11 @@ public class TestDistribution {
                 Assert.assertEquals(1.0 / 150.0, myBinValues.get(i).right, 0.01);
             }
         }
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     
     @Test
     public void otherDistributions() {
-        System.out.println("Test: otherDistributions()");
-        
         //
         // list with 300*301/2 elements 1x1, 2x2, 3x3, 4x4, 5x5, ... 300x300
         //
@@ -180,8 +173,5 @@ public class TestDistribution {
         for (int i = 0; i < 300; i++) {
             Assert.assertEquals(0.0, myBinValues.get(i).right % (1.0/300.0), 0.01);
         }
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 }

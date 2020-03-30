@@ -37,7 +37,6 @@ import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 
@@ -132,7 +131,7 @@ public class GPXTrackSegment extends GPXMeasurable {
             for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
                 myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
             }
-            numberChildren(myClone.myGPXWaypoints);
+            GPXLineItemHelper.numberChildren(myClone.myGPXWaypoints);
 
             // init prev/next waypoints
             myClone.updatePrevNextGPXWaypoints();
@@ -175,7 +174,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
-        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
+        setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
     }
     
     @Override
@@ -186,7 +185,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myGPXWaypoints.addAll(gpxWaypoints);
         myGPXWaypoints.addListener(changeListener);
 
-        numberChildren(myGPXWaypoints);
+        GPXLineItemHelper.numberChildren(myGPXWaypoints);
 
         // init prev/next waypoints
         updatePrevNextGPXWaypoints();
@@ -272,6 +271,20 @@ public class GPXTrackSegment extends GPXMeasurable {
         return myTrackSegment;
     }
 
+    /**
+     * @return the overall duration as difference between first & last waypoint
+     */
+    @Override
+    public long getCumulativeDuration() {
+        long result = 0;
+
+        for (GPXWaypoint waypoint : myGPXWaypoints) {
+            result += waypoint.getCumulativeDuration();
+        }
+
+        return result;
+    }
+
     @Override
     public ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItemType itemType) {
         ObservableList<GPXWaypoint> result = FXCollections.observableArrayList();
@@ -294,15 +307,8 @@ public class GPXTrackSegment extends GPXMeasurable {
         
         double length = 0.0;
 
-        GPXWaypoint previousWaypoint = null;
-        /* Only attempt to calculate the distanceGPXWaypoints if we are not
-         * on the first way point of the segment. */
         for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            if (previousWaypoint != null) {
-                length += EarthGeometry.distanceGPXWaypoints(gpxWaypoint, previousWaypoint);
-            }
-            
-            previousWaypoint = gpxWaypoint;
+            length += gpxWaypoint.getDistance();
         }
 
         myLength = length;
@@ -493,7 +499,7 @@ public class GPXTrackSegment extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
+            final Set<Waypoint> waypoints = GPXLineItemHelper.numberExtensions(myGPXWaypoints);
             myTrackSegment.setWaypoints(new ArrayList<>(waypoints));
 
             updatePrevNextGPXWaypoints();

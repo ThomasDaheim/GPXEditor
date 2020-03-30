@@ -34,6 +34,14 @@
     line-height: 36px;
 }
 
+#toggleHeatMapButton {
+    margin: 0px;
+    padding: 0px;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+}
+
 .cross{
     font-size: 1.5em;
     font-weight: bold;

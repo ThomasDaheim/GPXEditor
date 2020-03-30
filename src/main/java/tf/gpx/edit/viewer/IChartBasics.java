@@ -122,6 +122,7 @@ public interface IChartBasics<T extends XYChart> {
         getChart().setCacheHint(CacheHint.SPEED);
         getChart().setLegendVisible(false);
         getChart().setCursor(Cursor.DEFAULT);
+        getChart().setSnapToPixel(true);
         
         getChart().getXAxis().setAnimated(false);
         getChart().getYAxis().setAnimated(false);
@@ -156,6 +157,10 @@ public interface IChartBasics<T extends XYChart> {
         getChart().setDisable(!enabled);
         getChart().setVisible(enabled);
         getChart().toFront();
+    }
+    
+    default void setVisible(final boolean visible) {
+        getChart().setVisible(visible);
     }
     
     @SuppressWarnings("unchecked")

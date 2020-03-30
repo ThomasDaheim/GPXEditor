@@ -15,9 +15,25 @@ Note on Java 10: This code itself requires only small changes in TooltipHelper t
 
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 
+Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
+
 Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
 
+Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
+
 ## Following features are available via UI:
+
+### Update v4.6
+
+Corona-Time...
+
+* added a heat map using JavaFX; leaflet heatmaps are not working with JavaFX11, seem to work with JavaFX14 so waiting for the next LTR...
+* added a StatusBar that shows summary info on currently selected waypoints
+* introduced tasks for longe running achtions to un-freeze UI (ongoing, will add more in the feature)
+* general ability to replace selected waypoints by their weighted center (the one closest to average lat/lon of the selected waypoints)
+* added algorithm to find "Stationaries" iun tracks: places without "real" movement but only jumping of coordinates due to GPS accuracy; can be found or replaced by weighted center of the cluster
+* various performance improvements in UI (reduce number of layoutPlotChildren() calls) and algorithms (speed up Haversine and Visvalingam-Whyatt)
+* test cases for Algorithms
 
 ### Update v4.5
 
@@ -336,6 +352,7 @@ Other things used internally:
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 * route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
+* heat map icon: https://icons8.com/icons/set/heat-map icon by Icons8
 
 ## Roadmap
 

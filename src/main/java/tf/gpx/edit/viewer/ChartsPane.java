@@ -61,17 +61,9 @@ public class ChartsPane extends StackPane {
 
     private ChartsPane() {
         super();
-        
-        getStyleClass().add("charts-pane");
-        
+
         baseChart = HeightChart.getInstance();
         additionalCharts.add(SpeedChart.getInstance());
-        totalYAxisWidth *= additionalCharts.size();
-        // n charts only have n-1 separators between them ;-)
-        totalYAxisWidth -= YAXIS_SEP;
-        
-        charts.add(baseChart);
-        charts.addAll(additionalCharts);
         
         initialize();
     }
@@ -81,6 +73,15 @@ public class ChartsPane extends StackPane {
     }
     
     private void initialize() {
+        getStyleClass().add("charts-pane");
+        
+        totalYAxisWidth *= additionalCharts.size();
+        // n charts only have n-1 separators between them ;-)
+        totalYAxisWidth -= YAXIS_SEP;
+        
+        charts.add(baseChart);
+        charts.addAll(additionalCharts);
+        
         setAlignment(Pos.CENTER_LEFT);
         
         getChildren().clear();
@@ -135,13 +136,13 @@ public class ChartsPane extends StackPane {
         hBox.maxWidthProperty().bind(widthProperty());
         hBox.setMouseTransparent(!isBase);
 
-        chart.minHeightProperty().bind(heightProperty());
-        chart.prefHeightProperty().bind(heightProperty());
-        chart.maxHeightProperty().bind(heightProperty());
+        chart.minHeightProperty().bind(hBox.heightProperty());
+        chart.prefHeightProperty().bind(hBox.heightProperty());
+        chart.maxHeightProperty().bind(hBox.heightProperty());
 
-        chart.minWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.prefWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
-        chart.maxWidthProperty().bind(widthProperty().subtract(totalYAxisWidth));
+        chart.minWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
+        chart.prefWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
+        chart.maxWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
         
         if (!isBase) {
             chart.translateXProperty().bind(baseChart.getChart().getYAxis().widthProperty());
@@ -177,7 +178,7 @@ public class ChartsPane extends StackPane {
         setVisible(isVisible && hasData.get());
 
         // if visible changes to false, also the button needs to be pressed
-        TrackMap.getInstance().setChartsPaneButtonState(TrackMap.ChartsButtonState.fromBoolean(isVisible()));
+        TrackMap.getInstance().setChartsPaneButtonState(TrackMap.MapButtonState.fromBoolean(isVisible()));
     }
     
     public void clearSelectedGPXWaypoints() {
@@ -231,5 +232,16 @@ public class ChartsPane extends StackPane {
     
     public IChartBasics getBaseChart() {
         return baseChart;
+    }
+    
+    public void doSetVisible(final boolean visible) {
+        setVisible(visible);
+        charts.stream().forEach((t) -> {
+            t.setVisible(visible);
+            if (visible) {
+                t.getChart().layout();
+            }
+        });
+        layout();
     }
 }

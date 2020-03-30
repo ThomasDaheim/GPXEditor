@@ -42,6 +42,7 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.EnumHelper;
@@ -82,8 +83,8 @@ public class PreferenceEditor extends AbstractStage {
         
         EarthGeometry.DistanceAlgorithm myDistanceAlgorithm = 
                 GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType(EarthGeometry.DistanceAlgorithm::valueOf);
-        EarthGeometry.ReductionAlgorithm myReductionAlgorithm = 
-                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(EarthGeometry.ReductionAlgorithm::valueOf);
+        GPXAlgorithms.ReductionAlgorithm myReductionAlgorithm = 
+                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(GPXAlgorithms.ReductionAlgorithm::valueOf);
         double myReduceEpsilon = GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf);
         double myFixEpsilon = GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf);
 
@@ -108,6 +109,10 @@ public class PreferenceEditor extends AbstractStage {
         int waypointLabelAngle = GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType(Integer::valueOf);
         int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType(Integer::valueOf);
         
+        double myClusterRadius = GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf);
+        int myClusterCount = GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf);
+        int myClusterDuration = GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf);
+
         getGridPane().getChildren().clear();
 
         // create new scene with list of algos & parameter
@@ -160,7 +165,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(redalgoLbl, VPos.TOP);
         GridPane.setMargin(redalgoLbl, INSET_TOP);
 
-        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(EarthGeometry.ReductionAlgorithm.class, myReductionAlgorithm);
+        final ChoiceBox reduceAlgoChoiceBox = EnumHelper.getInstance().createChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, myReductionAlgorithm);
         reduceAlgoChoiceBox.setTooltip(t);
         getGridPane().add(reduceAlgoChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(reduceAlgoChoiceBox, INSET_TOP);
@@ -196,6 +201,83 @@ public class PreferenceEditor extends AbstractStage {
         assignHeightChkBox.setTooltip(t);
         getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
         GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
+
+        rowNum++;
+        // separator
+        final Separator sepHor2 = new Separator();
+        sepHor2.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor2, 0, rowNum);
+        GridPane.setColumnSpan(sepHor2, 2);
+        getGridPane().getChildren().add(sepHor2);
+        GridPane.setMargin(sepHor2, INSET_TOP);
+
+        rowNum++;
+        // 3rd row: select Break duration
+        t = new Tooltip("Duration in minutes between waypoints that counts as a break");
+        final Label breakLbl = new Label("Break duration (mins):");
+        breakLbl.setTooltip(t);
+        getGridPane().add(breakLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(breakLbl, VPos.TOP);
+        GridPane.setMargin(breakLbl, INSET_TOP);
+        
+        final TextField breakText = new TextField();
+        breakText.setMaxWidth(40);
+        breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        breakText.setText(decimalFormat.format(myBreakDuration));
+        breakText.setTooltip(t);
+        getGridPane().add(breakText, 1, rowNum, 1, 1);
+        GridPane.setMargin(breakText, INSET_TOP);
+        
+        rowNum++;
+        // row: radius for cluster search
+        t = new Tooltip("Radius to include waypoints for cluster search");
+        final Label radiusLbl = new Label("Cluster radius (m):");
+        radiusLbl.setTooltip(t);
+        getGridPane().add(radiusLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(radiusLbl, VPos.TOP);
+        GridPane.setMargin(radiusLbl, INSET_TOP);
+        
+        final TextField radiusText = new TextField();
+        radiusText.setMaxWidth(40);
+        radiusText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        radiusText.setText(decimalFormat.format(myClusterRadius));
+        radiusText.setTooltip(t);
+        getGridPane().add(radiusText, 1, rowNum, 1, 1);
+        GridPane.setMargin(radiusText, INSET_TOP);
+
+        rowNum++;
+        // row: duration for cluster search
+        t = new Tooltip("Duration in minutes to count as cluster");
+        final Label durationLbl = new Label("Cluster duration (mins):");
+        durationLbl.setTooltip(t);
+        getGridPane().add(durationLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(durationLbl, VPos.TOP);
+        GridPane.setMargin(durationLbl, INSET_TOP);
+        
+        final TextField durationText = new TextField();
+        durationText.setMaxWidth(40);
+        durationText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        durationText.setText(decimalFormat.format(myClusterDuration));
+        durationText.setTooltip(t);
+        getGridPane().add(durationText, 1, rowNum, 1, 1);
+        GridPane.setMargin(durationText, INSET_TOP);
+
+        rowNum++;
+        // row: neighbour count for cluster search
+        t = new Tooltip("Minimum neighbours to count as cluster point");
+        final Label neighbourLbl = new Label("Neighbour count:");
+        neighbourLbl.setTooltip(t);
+        getGridPane().add(neighbourLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(neighbourLbl, VPos.TOP);
+        GridPane.setMargin(neighbourLbl, INSET_TOP);
+        
+        final TextField neighbourText = new TextField();
+        neighbourText.setMaxWidth(40);
+        neighbourText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        neighbourText.setText(decimalFormat.format(myClusterCount));
+        neighbourText.setTooltip(t);
+        getGridPane().add(neighbourText, 1, rowNum, 1, 1);
+        GridPane.setMargin(neighbourText, INSET_TOP);
 
         rowNum++;
         // separator
@@ -256,23 +338,6 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(searchText, INSET_TOP);        
 
         rowNum++;
-        // 3rd row: select Break duration
-        t = new Tooltip("Duration in minutes between waypoints that counts as a break");
-        final Label breakLbl = new Label("Break duration (mins):");
-        breakLbl.setTooltip(t);
-        getGridPane().add(breakLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(breakLbl, VPos.TOP);
-        GridPane.setMargin(breakLbl, INSET_TOP);
-        
-        final TextField breakText = new TextField();
-        breakText.setMaxWidth(40);
-        breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
-        breakText.setText(decimalFormat.format(myBreakDuration));
-        breakText.setTooltip(t);
-        getGridPane().add(breakText, 1, rowNum, 1, 1);
-        GridPane.setMargin(breakText, INSET_TOP);        
-
-        rowNum++;
         // 4th row: open cycle map api key
         t = new Tooltip("API key for OpenCycleMap");
         final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
@@ -322,12 +387,12 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
-        final Separator sepHor2 = new Separator();
-        sepHor2.setValignment(VPos.CENTER);
-        GridPane.setConstraints(sepHor2, 0, rowNum);
-        GridPane.setColumnSpan(sepHor2, 2);
-        getGridPane().getChildren().add(sepHor2);
-        GridPane.setMargin(sepHor2, INSET_TOP);
+        final Separator sepHor3 = new Separator();
+        sepHor3.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor3, 0, rowNum);
+        GridPane.setColumnSpan(sepHor3, 2);
+        getGridPane().getChildren().add(sepHor3);
+        GridPane.setMargin(sepHor3, INSET_TOP);
 
         rowNum++;
         // waypointLabelSize
@@ -423,7 +488,7 @@ public class PreferenceEditor extends AbstractStage {
             // read values from stage
             myDistanceAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox);
 
-            myReductionAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.ReductionAlgorithm.class, reduceAlgoChoiceBox);
+            myReductionAlgorithm = EnumHelper.getInstance().selectedEnumChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, reduceAlgoChoiceBox);
 
             myFixEpsilon = Math.max(Double.valueOf(fixText.getText().trim()), 0);
             myReduceEpsilon = Math.max(Double.valueOf(epsilonText.getText().trim()), 0);
@@ -447,6 +512,10 @@ public class PreferenceEditor extends AbstractStage {
             waypointLabelSize = Math.max(Integer.valueOf(wayLblSizeText.getText().trim()), 0);
             waypointLabelAngle = Integer.valueOf(wayLblAngleText.getText().trim()) % 360;
             waypointThreshold = Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0);
+            
+            myClusterRadius = Math.max(Double.valueOf(radiusText.getText().trim()), 0);
+            myClusterCount = Math.max(Integer.valueOf(neighbourText.getText().trim()), 0);
+            myClusterDuration = Math.max(Integer.valueOf(durationText.getText().trim()), 0);
             
             GPXEditorPreferences.DISTANCE_ALGORITHM.put(myDistanceAlgorithm.name());
             GPXEditorPreferences.REDUCTION_ALGORITHM.put(myReductionAlgorithm.name());
@@ -472,6 +541,10 @@ public class PreferenceEditor extends AbstractStage {
             GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(waypointLabelSize);
             GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(waypointLabelAngle);
             GPXEditorPreferences.WAYPOINT_THRESHOLD.put(waypointThreshold);
+
+            GPXEditorPreferences.CLUSTER_COUNT.put(myClusterCount);
+            GPXEditorPreferences.CLUSTER_DURATION.put(myClusterDuration);
+            GPXEditorPreferences.CLUSTER_RADIUS.put(myClusterRadius);
         }
     }
 }

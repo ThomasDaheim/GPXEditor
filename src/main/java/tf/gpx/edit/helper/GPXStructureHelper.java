@@ -28,7 +28,7 @@ package tf.gpx.edit.helper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,6 +37,7 @@ import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -81,7 +82,7 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final EarthGeometry.ReductionAlgorithm algorithm, final double epsilon) {
+    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 
@@ -175,7 +176,7 @@ public class GPXStructureHelper {
             if (SplitType.SplitByDistance.equals(type)) {
                 curValue += waypoint.getDistance();
             } else {
-                curValue += Double.valueOf(waypoint.getDuration()) / 1000.0;
+                curValue += Double.valueOf(waypoint.getCumulativeDuration()) / 1000.0;
             }
             
             if (curValue > value) {
@@ -219,7 +220,7 @@ public class GPXStructureHelper {
 
     public List<GPXTrackSegment> uniqueGPXTrackSegmentListFromGPXWaypointList(final List<GPXWaypoint> gpxWaypoints) {
         // get selected files uniquely from selected items
-        Set<GPXTrackSegment> trackSet = new HashSet<>();
+        Set<GPXTrackSegment> trackSet = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
             trackSet.addAll(gpxWaypoint.getGPXTrackSegments());
         }
@@ -280,7 +281,7 @@ public class GPXStructureHelper {
                 boolean isChild = false;
 
                 for (GPXLineItem uniqueItem : uniqueItems) {
-                    if (lineItem.isChildOf(uniqueItem)) {
+                    if (GPXLineItemHelper.isChildOf(lineItem, uniqueItem)) {
                         isChild = true;
                         break;
                     }

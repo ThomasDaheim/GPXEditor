@@ -37,8 +37,8 @@ public enum GPXEditorPreferences  {
     RECENTWINDOWHEIGTH("recentWindowHeigth", Integer.toString(600)),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5)),
     RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58)),
-    REDUCTION_ALGORITHM("algorithm", EarthGeometry.ReductionAlgorithm.ReumannWitkam.name()),
-    DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Harvesine.name()),
+    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name()),
+    DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name()),
     REDUCE_EPSILON("epsilon", Integer.toString(50)),
     FIX_EPSILON("fixDistance", Integer.toString(1000)),
     SRTM_DATA_PATH("SRTMDataPath", ""),
@@ -60,7 +60,13 @@ public enum GPXEditorPreferences  {
     WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18)),
     WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10)),
     WAYPOINT_LABEL_ANGLE("waypointLabelAngle", Integer.toString(90)),
-    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0));
+    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0)),
+    
+    // TFE, 20200324: options for algorithm to find "stops" in tracks with no movement
+    CLUSTER_RADIUS("clusterRadius", Double.toString(50.0)),
+    CLUSTER_COUNT("clusterCount", Integer.toString(30)),
+    CLUSTER_DURATION("clusterDuration", Integer.toString(15));
+    
 
     private final String myPrefKey;
     private final String myDefaultValue;

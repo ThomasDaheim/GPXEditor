@@ -101,7 +101,6 @@ public class GPXTableView {
     }
 
     private void initTableView() {
-        
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTableViewMenu(myTableView);
         });
@@ -157,6 +156,14 @@ public class GPXTableView {
             });
             waypointMenu.getItems().add(deleteWaypoints);
             
+            final MenuItem replaceWaypoints = new MenuItem("Replace selected by Center");
+            replaceWaypoints.setOnAction((ActionEvent event) -> {
+                myEditor.replaceByCenter();
+            });
+            replaceWaypoints.disableProperty().bind(
+                    Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
+            waypointMenu.getItems().add(replaceWaypoints);
+
             final Menu deleteAttr = new Menu("Delete attribute(s)");
             // TFE, 20190715: support for deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date(s)");
@@ -298,6 +305,11 @@ public class GPXTableView {
                 myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
             }
             
+            if (UsefulKeyCodes.CNTRL_A.match(event)) {
+//                System.out.println("Ctrl+A pressed: " + Instant.now());
+                // TODO: horribly slow for a few thousand waypoints...
+            }
+            
             // track SHIFT key pressed - without CNTRL or ALT
             onlyShiftPressed = event.isShiftDown() && !event.isAltDown() && !event.isControlDown() && !event.isMetaDown();
         });
@@ -396,7 +408,7 @@ public class GPXTableView {
                 case "durationTrackCol":
                     final TableColumn<GPXWaypoint, String> durationTrackCol = (TableColumn<GPXWaypoint, String>) column;
                     durationTrackCol.setCellValueFactory(
-                            (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Duration)));
+                            (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationTrackCol.setEditable(false);
                     durationTrackCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     break;
@@ -577,5 +589,13 @@ public class GPXTableView {
     
     public ReadOnlyObjectProperty<Comparator<GPXWaypoint>> comparatorProperty() {
         return myTableView.comparatorProperty();
+    }
+    
+    public void setDisable(final boolean disable) {
+        myTableView.setDisable(disable);
+    }
+    
+    public void setVisible(final boolean visible) {
+        myTableView.setVisible(visible);
     }
 }

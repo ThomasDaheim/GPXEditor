@@ -63,11 +63,15 @@ public class LatLongHelper {
     }
 
     public static String GPXWaypointToString(final GPXWaypoint waypoint) {
-        return latToString(waypoint.getWaypoint().getLatitude()) + " " + lonToString(waypoint.getWaypoint().getLongitude());
+        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
     }
             
     public static String LatLongToString(final LatLong waypoint) {
-        return latToString(waypoint.getLatitude()) + " " + lonToString(waypoint.getLongitude());
+        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
+    }
+            
+    public static String LatLongToString(final double lat, final double lon) {
+        return latToString(lat) + " " + lonToString(lon);
     }
             
     public static String latToString(final double lat) {

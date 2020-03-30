@@ -65,8 +65,6 @@ public class TestLatLon {
     
     @Test
     public void testToString() {
-        System.out.println("Test: testToString()");
-        
         // 0 lat -> N 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         Assert.assertTrue(("N 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0" + dS + "00" + LatLongHelper.SEC).equals(LatLongHelper.latToString(0)));
         // 0 lon -> E 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
@@ -98,15 +96,10 @@ public class TestLatLon {
         Assert.assertTrue(LatLongHelper.INVALID_LONGITUDE.equals(LatLongHelper.lonToString(180.00000001)));
         // -180.01 lat -> INVALID_LONGITUDE
         Assert.assertTrue(LatLongHelper.INVALID_LONGITUDE.equals(LatLongHelper.lonToString(-180.00000001)));
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testFromString() {
-        System.out.println("Test: testFromString()");
-        
         // 0 lat <- N 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         Assert.assertEquals(0.0, LatLongHelper.latFromString("N 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0" + dS + "00" + LatLongHelper.SEC), 0.0);
         // 0 lat <- N" + LatLongHelper.DEG + "" + LatLongHelper.MIN + "."
@@ -141,14 +134,10 @@ public class TestLatLon {
         Assert.assertEquals(-179.99999999999, LatLongHelper.lonFromString("W 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
         // -180.0 lon <- W 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         //Assert.assertEquals(-180.0, LatLongHelper.lonFromString("W 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00" + LatLongHelper.SEC), 0.0);
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testRoundtrip() {
-        System.out.println("Test: testRoundtrip()");
         String testLatLon = "";
         
         // 0 lat <-> N 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
@@ -170,8 +159,5 @@ public class TestLatLon {
         testLatLon = "W 5" + LatLongHelper.DEG + "5" + LatLongHelper.MIN + "5" + dS + "50" + LatLongHelper.SEC;
         Assert.assertTrue(testLatLon.equals(LatLongHelper.lonToString(LatLongHelper.lonFromString(testLatLon))));
         Assert.assertEquals(-5.08486, LatLongHelper.lonFromString(LatLongHelper.lonToString(-5.08486)), 0.0001);
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
 }

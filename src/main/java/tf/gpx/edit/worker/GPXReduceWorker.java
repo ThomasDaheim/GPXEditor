@@ -26,7 +26,7 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -36,13 +36,13 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author Thomas
  */
 public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.ReductionAlgorithm myAlgorithm;
+    private GPXAlgorithms.ReductionAlgorithm myAlgorithm;
 
     private GPXReduceWorker() {
         super ();
     }
 
-    public GPXReduceWorker(final EarthGeometry.ReductionAlgorithm algorithm, final double parameter) {
+    public GPXReduceWorker(final GPXAlgorithms.ReductionAlgorithm algorithm, final double parameter) {
         super (parameter);
         
         myAlgorithm = algorithm;
@@ -61,7 +61,7 @@ public class GPXReduceWorker extends GPXEmptyWorker  {
     }
     
     private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final boolean keep[] = EarthGeometry.simplifyTrack(waypoints, myAlgorithm, myParameter);
+        final boolean keep[] = GPXAlgorithms.simplifyTrack(waypoints, myAlgorithm, myParameter);
         
         removeGPXWaypoint(waypoints, keep);
     }

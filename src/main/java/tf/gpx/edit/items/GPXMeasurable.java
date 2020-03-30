@@ -63,14 +63,16 @@ public abstract class GPXMeasurable extends GPXLineItem {
                 } else {
                     return NO_DATA;
                 }
-            case Duration:
-                return getDurationAsString();
+            case CumulativeDuration:
+                return GPXLineItemHelper.getCumulativeDurationAsString(this);
+            case OverallDuration:
+                return GPXLineItemHelper.getOverallDurationAsString(this);
             case Length:
                 return gpxLineItemData.getFormat().format(getLength()/1000d);
             case Speed:
-                final double duration = getDuration();
+                final double duration = getCumulativeDuration();
                 if (duration > 0.0) {
-                    return gpxLineItemData.getFormat().format(getLength()/getDuration()*1000d*3.6d);
+                    return gpxLineItemData.getFormat().format(getLength()/getCumulativeDuration()*1000d*3.6d);
                 } else {
                     return NO_DATA;
                 }
@@ -225,10 +227,24 @@ public abstract class GPXMeasurable extends GPXLineItem {
     }
 
     /**
-     * @return the duration
+     * @return the overall duration as difference between first & last waypoint
      */
     @Override
-    public long getDuration() {
+    public long getCumulativeDuration() {
+        long result = 0;
+
+        for (GPXMeasurable measurable : getGPXMeasurables()) {
+            result += measurable.getCumulativeDuration();
+        }
+
+        return result;
+    }
+
+    /**
+     * @return the overall duration as difference between first & last waypoint
+     */
+    @Override
+    public long getOverallDuration() {
         if (getEndTime() != null && getStartTime() != null) {
             return getEndTime().getTime() - getStartTime().getTime();
         } else {

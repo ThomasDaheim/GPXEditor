@@ -115,7 +115,6 @@ public class TestSRTM {
     
     @Test
     public void createSRTMData() {
-        System.out.println("Test: createSRTMData()");
         mySRTMDataReader.setUseInstance(false);
         Assert.assertTrue(mySRTMDataReader.checkSRTMDataFile("Test", "Test"));
         
@@ -128,14 +127,10 @@ public class TestSRTM {
         Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.equals(testData.getKey().getValue()));
         Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() == testData.getNumberRows());
         Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() == testData.getNumberColumns());
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void getSingleValues() {
-        System.out.println("Test: getSingleValues()");
         mySRTMDataReader.setUseInstance(false);
         SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.NEAREST_ONLY);
         
@@ -171,14 +166,10 @@ public class TestSRTM {
         heightValue = SRTMDataStore.getInstance().getValueForCoordinate(45.5, 10.5);
         Assert.assertFalse(SRTMDataStore.NODATA == heightValue);
         Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void getAverageValues() {
-        System.out.println("Test: getAverageValues()");
         mySRTMDataReader.setUseInstance(false);
         SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.AVERAGE_NEIGHBOURS);
         
@@ -240,14 +231,10 @@ public class TestSRTM {
         heightValue = SRTMDataStore.getInstance().getValueForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0);
         Assert.assertFalse(SRTMDataStore.NODATA == heightValue);
         Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void checkRealValues() {
-        System.out.println("Test: checkRealValues()");
         mySRTMDataReader.setUseInstance(true);
         mySRTMDataReader.setFilePath(testpath.toString());
         SRTMDataStore.getInstance().setDataAverage(SRTMDataStore.SRTMDataAverage.NEAREST_ONLY);
@@ -272,9 +259,6 @@ public class TestSRTM {
         heightValue = SRTMDataStore.getInstance().getValueForCoordinate(-32.6532, -70.0109);
 //        System.out.println("ACONGAGUA: " + heightValue);
         Assert.assertTrue(isCloseEnough(6929, heightValue));
-        
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     private boolean isCloseEnough(final double val1, final double val2) {

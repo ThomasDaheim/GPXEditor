@@ -129,11 +129,19 @@
     -fx-fill: transparent;
     -fx-stroke: transparent;
     -fx-stroke-width: 0;
+    -fx-padding: 0;
+    -fx-margin: 0;
 }
 .selectRect {
     -fx-fill: transparent;
     -fx-stroke: black;
     -fx-stroke-width: 2;
+}
+
+/*
+    the heatmap
+*/
+.heat-map-pane {
 }
 
 /*

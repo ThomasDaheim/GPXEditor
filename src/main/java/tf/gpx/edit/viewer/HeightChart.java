@@ -504,8 +504,21 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     @Override
     @SuppressWarnings("unchecked")
     protected void layoutPlotChildren() {
-        if (noLayout) return;
-        
+//        System.out.println("layoutPlotChildren: " + noLayout);
+//        System.out.println("Printing stack trace:");
+//        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+//        for (int i = 1; i < elements.length; i++) {
+//            StackTraceElement s = elements[i];
+//            System.out.println("\tat " + s.getClassName() + "." + s.getMethodName()
+//                + "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
+//        }
+//        System.out.println("=====================");
+        // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
+        if (noLayout || !isVisible()) {
+//            System.out.println("HeighChart: sorry, no layout pass");
+            return;
+        }
+
         super.layoutPlotChildren();
         
         // handle any fancy things that need to be done for labels

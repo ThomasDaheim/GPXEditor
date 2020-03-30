@@ -33,15 +33,11 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import org.apache.commons.lang3.math.NumberUtils;
 
 /**
@@ -193,7 +189,8 @@ public abstract class GPXLineItem {
         Type(false, "Type", GPXLineItemDataType.Single, null),
         Name(false, "Name", GPXLineItemDataType.Single, null),
         Start(false, "Start", GPXLineItemDataType.Single, DATE_FORMAT),
-        Duration(true, "Duration", GPXLineItemDataType.Double, null),
+        CumulativeDuration(true, "Cumulative Duration", GPXLineItemDataType.Double, null),
+        OverallDuration(true, "Overall Duration", GPXLineItemDataType.Double, null),
         Length(false, "Length", GPXLineItemDataType.Double, DOUBLE_FORMAT_3),
         Speed(true, "Speed", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         CumulativeAscent(false, "Cumulative Ascent", GPXLineItemDataType.Multiple, DOUBLE_FORMAT_2),
@@ -368,16 +365,6 @@ public abstract class GPXLineItem {
     // either for a specific itemtype or for all (itemType = null)
     public abstract ObservableList<GPXWaypoint> getCombinedGPXWaypoints(final GPXLineItem.GPXLineItemType itemType);
     
-    // find points in a given bounding box
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return filterGPXWaypointsInBoundingBox(getCombinedGPXWaypoints(null), boundingBox);
-    }
-    private static List<GPXWaypoint> filterGPXWaypointsInBoundingBox(final List<GPXWaypoint> gpxWaypoints, final BoundingBox boundingBox) {
-        return gpxWaypoints.stream().filter((t) -> {
-                        return boundingBox.contains(t.getLatitude(), t.getLongitude());
-                    }).collect(Collectors.toList());
-    }
- 
     // getter & setter for my parent
     public abstract <T extends GPXLineItem> T getParent();
     public abstract <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent);
@@ -403,60 +390,7 @@ public abstract class GPXLineItem {
         }
     }
     public abstract void setChildren(final List<? extends GPXLineItem> children);
-    @SuppressWarnings("unchecked")
-    protected <T extends GPXLineItem> List<T> castChildren(final Class<T> clazz, final List<? extends GPXLineItem> children) {
-        // TFE, 20180215: don't assert that child.getClass().equals(clazz)
-        // instead filter out such not matching children and return only matching class childs
-        final List<T> gpxChildren = children.stream().
-                map((GPXLineItem child) -> {
-                    if (child.getClass().equals(clazz)) {
-                        child.setParent(this);
-                        return (T) child;
-                    } else {
-                        return null;
-                    }
-                }).filter(out -> out!=null).
-                collect(Collectors.toList());
-        
-        return gpxChildren;
-    }
-    public boolean isChildOf(final GPXLineItem lineitem) {
-        boolean result = false;
-        
-        // can't be child of a waypoint
-        if (GPXLineItemType.GPXWaypoint.equals(lineitem.getType())) {
-            return result;
-        }
-        
-        // can't be child if same or upper type...
-        if (GPXLineItemType.isSameTypeAs(this.getType(), lineitem.getType()) || GPXLineItemType.isUpperTypeThan(this.getType(), lineitem.getType())) {
-            return result;
-        }
-        
-        // first check if it a direct child
-        if (isDirectChildOf(lineitem)) {
-            result = true;
-        } else {
-            // if not, check the children
-            for (GPXLineItem child : lineitem.getChildren()) {
-                if (isChildOf(child)) {
-                    result = true;
-                    break;
-                }
-            }
-        }
-        
-        return result;
-    }
-    public boolean isDirectChildOf(final GPXLineItem lineitem) {
-        boolean result = false;
-        
-        if (GPXLineItemType.isChildTypeOf(this.getType(), lineitem.getType())) {
-            result = lineitem.getChildren().contains(this);
-        }
-        
-        return result;
-    }
+
     public void invert() {
         //System.out.println("inverting " + toString());
         // nothing to invert for waypoints...
@@ -475,43 +409,12 @@ public abstract class GPXLineItem {
             }
         }
     }
-    @SuppressWarnings("unchecked")
-    protected <T extends Extension, U extends GPXLineItem> Set<T> numberExtensions(final List<U> children) {
-        AtomicInteger counter = new AtomicInteger(1);
-        return children.stream().
-                map((U child) -> {
-                    child.setNumber(counter.getAndIncrement());
-                    return (T) child.getContent();
-                // need to collect into a set that contains the order
-                }).collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-    protected <T extends GPXLineItem> void numberChildren(final List<T> children) {
-        AtomicInteger counter = new AtomicInteger(1);
-        children.stream().
-                forEach((T child) -> {
-                    child.setNumber(counter.getAndIncrement());
-                });
-    }
     
     // getter functions
-    protected abstract long getDuration();
-    public String getDurationAsString() {
-        // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
-        return formatDurationAsString(getDuration());
-    }
-    public static String formatDurationAsString(final long diff) {
-        String result = NO_DATA;
-        
-        if (diff > 0) {
-            // TFE, 20170716: negative differences are only shown for hours
-            final long diffSeconds = Math.abs(diff / 1000 % 60);
-            final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
-            final long diffHours = diff / (60 * 60 * 1000);
-            result = DURATION_FORMAT.format(diffHours) + ":" + DURATION_FORMAT.format(diffMinutes) + ":" + DURATION_FORMAT.format(diffSeconds);
-        }
-        
-        return result;
-    }
+    // duration as sum of all waypoint durations
+    protected abstract long getCumulativeDuration();
+    // duration as difference last - first waypoint
+    protected abstract long getOverallDuration();
     protected abstract Bounds getBounds();
     
     // TFE, 20180517: you know how your tooltip should look like

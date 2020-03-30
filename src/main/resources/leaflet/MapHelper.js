@@ -39,6 +39,7 @@
 myMap.options.worldCopyJump = true;
 myMap.options.zoomAnimation = false;
 myMap.options.preferCanvas = true;
+myMap.options.renderer = L.canvas();
 
 // disable drag & zoom for events with control key
 function disableCntrlDrag(e) {
@@ -71,6 +72,15 @@ function mapViewChanged(e) {
 myMap.on('zoomend', mapViewChanged);
 myMap.on('moveend', mapViewChanged);
 myMap.on('resize', mapViewChanged);
+
+// TFE, 2020317: add callbacks for move & zoom start to disable heatmap
+function mapViewChanging(e) {
+    var bounds = getMapBounds();
+//    jscallback.log('mapViewChanging: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
+    jscallback.mapViewChanging(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
+} 
+myMap.on('zoomstart', mapViewChanging);
+myMap.on('movestart', mapViewChanging);
 
 // alternative to use setView - avoids calculating center and zoom from bounds manually
 var mapBounds;
@@ -227,6 +237,27 @@ function getLatLngForPoint(x, y) {
 function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
+function getPointForLatLng(lat, lng) {
+    var latlng = L.latLng(lat, lng);
+    // take pane & zoom into account when transforming - therefore latLngToContainerPoint and not latLngToLayerPoint
+    var point = myMap.latLngToContainerPoint(latlng);
+    return [point.x, point.y];
+}
+function getPointsForLatLngs(latLngs) {
+    var points = [];
+
+    var arrayLength = latLngs.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var latlng = latLngs[i];
+//        jscallback.log('latlng: ' + latlng + ", lat: " + latlng[0] + ", lng: " + latlng[1]);
+        
+        var point = getPointForLatLng(latlng[0], latlng[1]);
+//        jscallback.log('point: ' + point + ", [0]: " + point[0] + ", [1]: " + point[1]);
+        points.push(L.point(point[0], point[1]));
+    }
+
+    return pointsToString(points);
+}
 /*
  * JSON.stringify doesn't work on LatLngs...
  */
@@ -235,15 +266,30 @@ function coordsToString(coords) {
     
     var arrayLength = coords.length;
     for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
+        var latlng = coords[i];
         
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+        coordsString = coordsString + "lat:" + latlng.lat + ", lon:" + latlng.lng;
         
         if (i < arrayLength-1) {
             coordsString = coordsString + " - "
         }
     }
     return coordsString;
+}
+function pointsToString(points) {
+    var pointString = "";
+    
+    var arrayLength = points.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var point = points[i];
+        
+        pointString = pointString + "x:" + point.x + ", y:" + point.y;
+        
+        if (i < arrayLength-1) {
+            pointString = pointString + " - "
+        }
+    }
+    return pointString;
 }
 
 /*
