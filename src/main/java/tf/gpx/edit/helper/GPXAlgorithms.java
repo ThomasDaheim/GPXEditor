@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -192,6 +193,14 @@ public class GPXAlgorithms {
             final List<GPXWaypoint> track, 
             final double epsilon) {
         final boolean[] keep = new boolean[track.size()];
+
+        keep[0] = true;
+        keep[track.size()-1] = true;
+        
+        if (track.size() <= 2) {
+            return keep;
+        }
+
         DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, keep);
         return keep;
     }
@@ -239,36 +248,54 @@ public class GPXAlgorithms {
         keep[0] = true;
         keep[track.size()-1] = true;
         
+        if (track.size() <= 2) {
+            return keep;
+        }
+        
+        // TFE, 20200330: initialize area for all points - later on only recalc for points next to a removed point
+        // use ArrayList for set() method
+        final ArrayList<Double> effectiveArea = new ArrayList<>();
+        effectiveArea.add(0.0);
+        for (int index = 1; index < track.size()-2; index++) {
+            effectiveArea.add(EarthGeometry.triangleAreaGPXWaypoints(track.get(index-1), track.get(index), track.get(index+1), epsilon));
+//            System.out.println("effectiveArea[" + index + "]: " + effectiveArea.get(index));
+        }
+        effectiveArea.add(0.0);
+        
         final List<GPXWaypoint> workList = new ArrayList<>(track);
         final List<Pair<GPXWaypoint, Double>> minList = new ArrayList<>();
         
         // we need to do things differently here - since we don't have fixed number to keep but an area size against which to measure
         while (workList.size() > 2) {
-            //System.out.println("workList.size(): " + workList.size());
+//            System.out.println("workList.size(): " + workList.size());
             // find point in workList with smallest effective area
-            final double[] effectiveArea = new double[workList.size()];
-            effectiveArea[0] = 0.0;
-            effectiveArea[workList.size()-1] = 0.0;
             double minArea = Double.MAX_VALUE;
             int minIndex = 0;
             for (int index = 1; index < workList.size()-2; index++) {
-                effectiveArea[index] = EarthGeometry.triangleAreaGPXWaypoints(workList.get(index-1), workList.get(index), workList.get(index+1), epsilon);
-                //System.out.println("effectiveArea[" + index + "]: " + effectiveArea[index]);
-                if (effectiveArea[index] < minArea) {
-                    //System.out.println("  new minimum value found!");
-                    minArea = effectiveArea[index];
+                if (effectiveArea.get(index) < minArea) {
+                    minArea = effectiveArea.get(index);
                     minIndex = index;
+//                    System.out.println("  new minimum value found: " + minIndex + ", " + minArea);
                 }
             }
             // add point to minList and remove from workList
             minList.add(Pair.of(workList.get(minIndex), minArea));
             workList.remove(minIndex);
-            //System.out.println("Removing waypoint: " + minIndex);
+            effectiveArea.remove(minIndex);
+//            System.out.println("Removing waypoint: " + minIndex);
+
+            // recalc for neighbouring points ONLY
+            for (int index = Math.max(minIndex - 1, 1) ; index <= Math.min(minIndex, workList.size()-2); index++) {
+                effectiveArea.set(index, EarthGeometry.triangleAreaGPXWaypoints(workList.get(index-1), workList.get(index), workList.get(index+1), epsilon));
+//                System.out.println("effectiveArea[" + index + "]: " + effectiveArea.get(index));
+            }
         }
         
+        // where checking areas here...
+        final double checkEpsilon = epsilon*epsilon;
         for (Pair<GPXWaypoint, Double> pair : minList) {
             final int index = track.indexOf(pair.getKey());
-            if (pair.getValue() < epsilon) {
+            if (pair.getValue() < checkEpsilon) {
                 keep[index] = false;
             } else {
                 keep[index] = true;
@@ -284,6 +311,14 @@ public class GPXAlgorithms {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
     */
     public static boolean[] ReumannWitkam(final List<GPXWaypoint> track, final double epsilon){
+        final boolean[] keep = new boolean[track.size()];
+        keep[0] = true;
+        keep[track.size()-1] = true;
+        
+        if (track.size() <= 2) {
+            return keep;
+        }
+
         // http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/reumann.php
         final List<GPXWaypoint> list = new ArrayList<>(track);
     	int index=0;
@@ -305,7 +340,6 @@ public class GPXAlgorithms {
     	}
 
         // check which points are left - compare both lists
-        final boolean[] keep = new boolean[track.size()];
     	index=0;
         for (GPXWaypoint waypoint : track) {
             keep[index] = list.contains(waypoint);

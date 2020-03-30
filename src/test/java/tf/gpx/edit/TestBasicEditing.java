@@ -66,8 +66,6 @@ public class TestBasicEditing {
     
     @Test
     public void testCheckGPXFile() {
-        System.out.println("Test: testCheckGPXFile()");
-        
         // structure
         // gpxfile
         //    gpxmetadata
@@ -93,15 +91,10 @@ public class TestBasicEditing {
         Assert.assertEquals(1, gpxfile.getGPXTracks().size());
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(135, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testAddDeleteWaypoint() {
-        System.out.println("Test: testAddDeleteWaypoint()");
-        
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testbasicediting.gpx"));
 
         // gpxfile
@@ -112,9 +105,6 @@ public class TestBasicEditing {
 
         // gpxtracksegment
         addDeleteWaypoint(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0));
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     private void addDeleteWaypoint(final GPXLineItem parent) {
@@ -144,8 +134,6 @@ public class TestBasicEditing {
     
     @Test
     public void testAddDeleteRoute() {
-        System.out.println("Test: testAddDeleteRoute()");
-        
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testbasicediting.gpx"));
 
         // remove route
@@ -167,15 +155,10 @@ public class TestBasicEditing {
         Assert.assertEquals(added, gpxfile.getGPXRoutes().get(1));
         // check renumbering
         Assert.assertEquals(2, gpxfile.getGPXRoutes().get(1).getNumber().intValue());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testAddDeleteTrack() {
-        System.out.println("Test: testAddDeleteTrack()");
-        
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testbasicediting.gpx"));
 
         // remove route
@@ -197,15 +180,10 @@ public class TestBasicEditing {
         Assert.assertEquals(added, gpxfile.getGPXTracks().get(1));
         // check renumbering
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(1).getNumber().intValue());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testAddDeleteTrackSegment() {
-        System.out.println("Test: testAddDeleteTrack()");
-        
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testbasicediting.gpx"));
 
         // remove route
@@ -227,8 +205,5 @@ public class TestBasicEditing {
         Assert.assertEquals(added, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1));
         // check renumbering
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getNumber().intValue());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 }

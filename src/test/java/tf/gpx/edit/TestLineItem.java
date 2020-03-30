@@ -63,8 +63,6 @@ public class TestLineItem {
     
     @Test
     public void testBooleanMethods() {
-        System.out.println("Test: testIsChildOf()");
-        
         // isParentTypeOf
         // file is parent of track and route and waypoint...
         // track is parent of segment
@@ -239,15 +237,10 @@ public class TestLineItem {
         Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
         Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
         Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testIsChildOf() {
-        System.out.println("Test: testIsChildOf()");
-
         //
         // Our gpx set consists of
         //
@@ -303,15 +296,10 @@ public class TestLineItem {
         // relations to other gpxtracksegment
         Assert.assertFalse(GPXLineItemHelper.isChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0), gpxfile1.getGPXTracks().get(1)));
         Assert.assertFalse(GPXLineItemHelper.isDirectChildOf(gpxfile1.getGPXTracks().get(0).getGPXTrackSegments().get(0).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack).get(0), gpxfile1.getGPXTracks().get(1)));
-
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void testInvert() {
-        System.out.println("Test: testInvert()");
-
         //
         // Our gpx consists of
         //
@@ -334,9 +322,5 @@ public class TestLineItem {
         
         Assert.assertTrue(name2.equals(gpxfile1.getGPXTracks().get(0).getName()));
         Assert.assertTrue(name1.equals(gpxfile1.getGPXTracks().get(1).getName()));
-        
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 }

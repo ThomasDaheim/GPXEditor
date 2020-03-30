@@ -8,7 +8,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  * Basic functions to calculate distances, angles, bearings, areas on a globe
- * Distances can be calculated using Harvesine or Vincenty algorithms
+ Distances can be calculated using Haversine or Vincenty algorithms
  */
 public class EarthGeometry {
     private final static EarthGeometry INSTANCE = new EarthGeometry();
@@ -16,29 +16,34 @@ public class EarthGeometry {
     // TFE, 20200228: support Vincenty as well
     public static enum DistanceAlgorithm {
         SmallDistanceApproximation,
-        Harvesine,
+        Haversine,
         Vincenty
     }
     
     // spherical earth
-    public static final double EarthAverageRadius = 6372795.477598; //6371030.0;
+//    public static final double EarthAverageRadius = FastMath.sqrt(3.0 * EarthLongRadius2 + EarthShortRadius2) / 2.0; // Ellipsoidal quadratic mean radius
+//    public static final double EarthAverageRadius = 6371030.0; // authalic radius based on/extracted from surface area
+    public static final double EarthAverageRadius = 6372795.477598; // linear approximation of the radius of the average circumference
     public static final double EarthAverageRadius2 = EarthAverageRadius*EarthAverageRadius;
     public static final double LengthOfADegree = EarthAverageRadius / 180.0 * Math.PI;
+
     // values for WGS84 reference ellipsoid
     public static final double EarthLongRadius = 6378137.0;
     public static final double EarthLongRadius2 = EarthLongRadius * EarthLongRadius;
     public static final double EarthShortRadius = 6356752.314245;
     public static final double EarthShortRadius2 = EarthShortRadius * EarthShortRadius;
     public static final double EarthFlattening = 1.0 / 298.257223563;
+    
     // https://math.wikia.org/wiki/Ellipsoidal_quadratic_mean_radius
     public static final double EarthEQMRadius = FastMath.sqrt(3.0 * EarthLongRadius2 + EarthShortRadius2) / 2.0;
     public static final int VincentyIterations = 100;
     public static final double VincentyAccuracy = 1e-12;
     public static final double VincentyNearlyAntipodal = 1e-4;
+
     // we only need to start with spherical geometry once distances get bigger than 0.01% of the earth radius
     private static final double MinDistanceForSphericalGeometry = EarthAverageRadius / 10000.0;
     
-    private DistanceAlgorithm myAlgorithm = DistanceAlgorithm.Harvesine;
+    private DistanceAlgorithm myAlgorithm = DistanceAlgorithm.Haversine;
 
     private EarthGeometry() {
         super();
@@ -91,7 +96,7 @@ public class EarthGeometry {
             case Vincenty:
                 result = getInstance().vincentyDistance(p1, p2);
                 break;
-            case Harvesine:
+            case Haversine:
             default:
                 result = getInstance().haversineDistance(p1, p2);
                 break;
@@ -129,12 +134,12 @@ public class EarthGeometry {
         final double lon1 = FastMath.toRadians(p1.getLongitude());
         final double lon2 = FastMath.toRadians(p2.getLongitude());
         
-        final double lat21 = lat2 - lat1;
-        final double lon21 = lon2 - lon1;
+        final double sinlat212 = FastMath.sin((lat2 - lat1) / 2.0);
+        final double sinlon212 = FastMath.sin((lon2 - lon1) / 2.0);
+        
         final double a =
-                FastMath.sin(lat21/2.0) * FastMath.sin(lat21/2.0)
-                + FastMath.cos(lat1) * FastMath.cos(lat2)
-                * FastMath.sin(lon21/2.0) * FastMath.sin(lon21/2.0);
+                sinlat212 * sinlat212
+                + FastMath.cos(lat1) * FastMath.cos(lat2) * sinlon212 * sinlon212;
         //return 2.0 * Math.atan2(Math.sqrt(EarthLongRadius), Math.sqrt(1.0-EarthLongRadius)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
         return 2.0 * FastMath.atan2(FastMath.sqrt(a), FastMath.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
     }

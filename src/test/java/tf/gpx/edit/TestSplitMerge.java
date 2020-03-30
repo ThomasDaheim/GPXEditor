@@ -70,8 +70,6 @@ public class TestSplitMerge {
     
     @Test
     public void testCheckGPXFile() {
-        System.out.println("Test: testCheckGPXFile()");
-        
         // structure
         // gpxfile
         //    gpxroute 1
@@ -110,15 +108,10 @@ public class TestSplitMerge {
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(1).getGPXTrackSegments().size());
         Assert.assertEquals(432, gpxfile.getGPXTracks().get(1).getGPXTrackSegments().get(0).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
     public void testMergeTrackSegments() {
-        System.out.println("Test: testMergeTrackSegments()");
-
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
@@ -129,15 +122,10 @@ public class TestSplitMerge {
 
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(364 + 758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
     public void testMergeRoutes() {
-        System.out.println("Test: testMergeRoutes()");
-
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
         Assert.assertEquals(2, gpxfile.getGPXRoutes().size());
@@ -148,15 +136,10 @@ public class TestSplitMerge {
 
         Assert.assertEquals(1, gpxfile.getGPXRoutes().size());
         Assert.assertEquals(14, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
     public void testMergeTracks() {
-        System.out.println("Test: testMergeTracks()");
-
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
         Assert.assertEquals(2, gpxfile.getGPXTracks().size());
@@ -170,9 +153,6 @@ public class TestSplitMerge {
         Assert.assertEquals(364, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         Assert.assertEquals(432, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(2).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
@@ -202,16 +182,11 @@ public class TestSplitMerge {
         Assert.assertEquals(758, mergedFile.getGPXTracks().get(2).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         Assert.assertEquals(1, mergedFile.getGPXTracks().get(3).getGPXTrackSegments().size());
         Assert.assertEquals(432, mergedFile.getGPXTracks().get(3).getGPXTrackSegments().get(0).getGPXWaypoints().size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void testSplitTrackSegments() {
-        System.out.println("Test: testSplitTrackSegments()");
-
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
@@ -231,15 +206,10 @@ public class TestSplitMerge {
 
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 
     @Test
     public void testSplitRoutes() {
-        System.out.println("Test: testSplitRoutes()");
-
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
         Assert.assertEquals(2, gpxfile.getGPXRoutes().size());
@@ -259,8 +229,5 @@ public class TestSplitMerge {
 
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());
-
-        System.out.println("Done.");
-        System.out.println("");
     }
 }

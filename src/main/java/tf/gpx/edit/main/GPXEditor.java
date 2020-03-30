@@ -1573,8 +1573,8 @@ public class GPXEditor implements Initializable {
                 final boolean keep2[] = GPXAlgorithms.fixTrack(trackwaypoints, 
                         GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf));
                 
-                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
-                System.out.println("keep1: " + keep1.length + ", " + Arrays.toString(keep1));
+//                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
+//                System.out.println("keep1: " + keep1.length + ", " + Arrays.toString(keep1));
 
                 int index = 0;
                 for (GPXWaypoint gpxWaypoint : trackwaypoints) {

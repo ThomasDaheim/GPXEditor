@@ -199,72 +199,63 @@ public class TestGeometry {
     
     @Test
     public void bearingWaypoints() {
-        if (doSystemOut) System.out.println("Test: bearingWaypoints()");
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
+        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Bearing: " + EarthGeometry.bearingWaypoints(pair.p1, pair.p2) + " - " + pair.bearingRef);
             Assert.assertEquals(EarthGeometry.bearingWaypoints(pair.p1, pair.p2), pair.bearingRef, DELTA_ANGLE);
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
     }
     
     @Test
     public void distanceHaversineWaypoints() {
-        if (doSystemOut) System.out.println("Test: distanceHaversineWaypoints()");
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
-        
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2) + " - " + pair.distanceHaversineRef);
-            Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p1, pair.p2), pair.distanceHaversineRef, DELTA_DISTANCE);
+            Assert.assertEquals(EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
             // should be same for other way around
             //System.out.println("Distance: " + EarthGeometry.distanceWaypoints(pair.p2, pair.p1) + " - " + pair.distanceHaversineRef);
-            Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p2, pair.p1), pair.distanceHaversineRef, DELTA_DISTANCE);
+            Assert.assertEquals(EarthGeometry.distanceWaypointsForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
     }
     
     @Test
     public void distanceVincentyWaypoints() {
-        if (doSystemOut) System.out.println("Test: distanceVincentyWaypoints()");
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Vincenty);
-        
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2) + " - " + pair.distanceVincentyRef);
-            Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p1, pair.p2), pair.distanceVincentyRef, DELTA_DISTANCE);
+            Assert.assertEquals(EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
             // should be same for other way around
 //            if (doSystemOut) System.out.println("Distance: " + EarthGeometry.distanceWaypoints(pair.p2, pair.p1) + " - " + pair.distanceVincentyRef);
-            Assert.assertEquals(EarthGeometry.distanceWaypoints(pair.p2, pair.p1), pair.distanceVincentyRef, DELTA_DISTANCE);
+            Assert.assertEquals(EarthGeometry.distanceWaypointsForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
     }
     
     @Test
     public void distanceSmallDistanceApproximationWaypoints() {
-        if (doSystemOut) System.out.println("Test: distanceSmallDistanceApproximationWaypoints()");
-        
         for (TestPointPair pair : testPointPairs) {
-            System.out.println("Pair: " + pair.description);
-            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
-            System.out.println("  SDApprox:  " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
-            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
-            System.out.println("  Harvesine: " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
-            EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Vincenty);
-            System.out.println("  Vincenty:  " + EarthGeometry.distanceWaypoints(pair.p1, pair.p2));
+            final double dist12 = EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+            final double dist21 = EarthGeometry.distanceWaypointsForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+            Assert.assertEquals(dist12, dist21, DELTA_DISTANCE);
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
+    }
+    
+    @Test
+    public void distanceWaypointsComparison() {
+        for (TestPointPair pair : testPointPairs) {
+            if (doSystemOut) System.out.println("Pair: " + pair.description);
+            final double vincentyDist = EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Vincenty);
+            if (doSystemOut) System.out.println("  Vincenty:  " + vincentyDist);
+            final double haversineDist = EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Haversine);
+            if (doSystemOut) System.out.println("  Harvesine: " + haversineDist + ", Difference: " + (vincentyDist - haversineDist));
+            final double smallDist = EarthGeometry.distanceWaypointsForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+            if (doSystemOut) System.out.println("  SDApprox:  " + smallDist + ", Difference: " + (vincentyDist - smallDist));
+        }
     }
 
     @Test
     public void distanceWaypointsPerformance() {
-        System.out.println("Test: distanceWaypointsPerformance()");
         doSystemOut = false;
 
         Instant startTime = Instant.now();
@@ -281,15 +272,19 @@ public class TestGeometry {
         final Duration vincenty = Duration.between(startTime, Instant.now());
         System.out.println("Duration Vincenty: " + DurationFormatUtils.formatDurationHMS(vincenty.toMillis()));
         
+        startTime = Instant.now();
+        for (int i = 0; i < 10000; i++) {
+            distanceSmallDistanceApproximationWaypoints();
+        }
+        final Duration SmallDistanceApproximation = Duration.between(startTime, Instant.now());
+        System.out.println("Duration SmallDistanceApproximation: " + DurationFormatUtils.formatDurationHMS(SmallDistanceApproximation.toMillis()));
+        
         doSystemOut = true;
-        System.out.println("Done.");
-        System.out.println("");
     }
     
     @Test
     public void distanceToGreatCircleWaypoints() {
-        if (doSystemOut) System.out.println("Test: distanceToGreatCircleWaypoints()");
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
+        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);
@@ -299,14 +294,11 @@ public class TestGeometry {
             //System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
             Assert.assertEquals(EarthGeometry.distanceToGreatCircleWaypoints(triple.p1, triple.p3, triple.p2, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
     }
     
     @Test
     public void triangleAreaWaypoints() {
-        if (doSystemOut) System.out.println("Test: triangleAreaWaypoints()");
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Harvesine);
+        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);
@@ -319,7 +311,5 @@ public class TestGeometry {
             Assert.assertEquals(EarthGeometry.triangleAreaWaypoints(triple.p2, triple.p3, triple.p1, 0.0), triple.areaRef, DELTA_DISTANCE);
             //System.out.println("");
         }
-        if (doSystemOut) System.out.println("Done.");
-        if (doSystemOut) System.out.println("");
     }
 }
