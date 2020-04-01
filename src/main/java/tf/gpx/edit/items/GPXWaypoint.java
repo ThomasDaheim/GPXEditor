@@ -322,7 +322,7 @@ public class GPXWaypoint extends GPXLineItem {
             return this;
         }
 
-        assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
+        assert GPXLineItemHelper.isParentTypeOf(parent, this);
         
         myGPXParent = parent;
         setHasUnsavedChanges();

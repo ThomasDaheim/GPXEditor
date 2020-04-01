@@ -66,6 +66,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     
     private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
     private final static String DIST_LABEL = new String(Character.toChars(8658));
+    private final static String SPEED_LABEL = "";
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
@@ -147,7 +148,11 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
                 final Double distValue = data.XValueProperty().getValue();
                 final Double heightValue = data.YValueProperty().getValue();
 
-                text.setText(String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", x));
+                String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
+                if (SpeedChart.getInstance().hasData()) {
+                    waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
+                }
+                text.setText(waypointText);
                 text.applyCss();
                 
                 // we want to show the text at the elevation
@@ -165,7 +170,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
                 
                 // align center-center
                 text.setTranslateX(cTrans.getX() - text.getBoundsInLocal().getWidth() / 2.0);
-                text.setTranslateY(cTrans.getY() - text.getBoundsInLocal().getHeight() / 2.0);
+                text.setTranslateY(cTrans.getY() - text.getBoundsInLocal().getHeight() / 3.0);
                 text.setVisible(true);
 
                 line.setStartX(aTrans.getX());
@@ -381,8 +386,8 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             for (GPXWaypoint gpxWaypoint: lineItem.getCombinedGPXWaypoints(null)) {
                 distValue += gpxWaypoint.getDistance() / 1000.0;
 
-                if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
-                     GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                if (!gpxWaypoint.isGPXFile() ||
+                     lineItem.isGPXFile() ||
                      alwayShowFileWaypoints) {
                     if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
                         selectedWaypointsInRange.add(gpxWaypoint);

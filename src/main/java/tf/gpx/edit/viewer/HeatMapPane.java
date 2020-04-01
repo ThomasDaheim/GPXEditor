@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.HeatMap;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
  *
@@ -51,15 +52,19 @@ public class HeatMapPane extends HeatMap {
     
     private void initialize() {
         getStyleClass().add("heat-map-pane");
-
-        setColorMapping(ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED);
-        setOpacityDistribution(OpacityDistribution.CUSTOM);
-        updateMonochromeMap(OpacityDistribution.CUSTOM);
-        setEventRadius(20.0);
         
+        updateSettings();
+
         // pass mouse clicks to parent
         setMouseTransparent(true);
         setVisible(false);
+    }
+    
+    public void updateSettings() {
+        setColorMapping(GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType(ColorMapping::valueOf));
+        setOpacityDistribution(GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType(OpacityDistribution::valueOf));
+        updateMonochromeMap(getOpacityDistribution());
+        setEventRadius(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType(Double::valueOf));
     }
     
     public void hide() {

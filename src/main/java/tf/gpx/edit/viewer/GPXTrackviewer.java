@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import java.util.List;
 import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -66,7 +67,7 @@ public class GPXTrackviewer {
         ChartsPane.getInstance().setEnable(enabled);
     }
     
-    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert myGPXEditor != null;
         assert lineItems != null;
 

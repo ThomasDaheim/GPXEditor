@@ -38,6 +38,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -78,20 +79,20 @@ public class GPXStructureHelper {
         myEditor = editor;
     }
 
-    public void fixGPXLineItems(final List<GPXLineItem> gpxLineItems, final double distance) {
+    public void fixGPXMeasurables(final List<GPXMeasurable> gpxLineItems, final double distance) {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXLineItems(final List<GPXLineItem> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
+    public void reduceGPXMeasurables(final List<GPXMeasurable> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 
     public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
-        runVisitor(GPXLineItem.castToGPXLineItem(gpxFiles), new GPXDeleteEmptyLineItemsWorker(deleteCount));
+        runVisitor(GPXLineItemHelper.castToGPXMeasurables(gpxFiles), new GPXDeleteEmptyLineItemsWorker(deleteCount));
     }
     
-    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
-        for (GPXLineItem gpxLineItem : gpxLineItems) {
+    private void runVisitor(final List<GPXMeasurable> gpxLineItems, final IGPXLineItemVisitor visitor) {
+        for (GPXMeasurable gpxLineItem : gpxLineItems) {
             gpxLineItem.acceptVisitor(visitor);
         }
     }
@@ -154,12 +155,11 @@ public class GPXStructureHelper {
         }
     }
     
-    public <T extends GPXLineItem> List<T> splitGPXLineItem(final T gpxLineItem, final SplitValue splitValue) {
+    public <T extends GPXMeasurable> List<T> splitGPXLineItem(final T gpxLineItem, final SplitValue splitValue) {
         final List<T> result = new ArrayList<>();
 
         // we can only split tracks, tracksegments, routes
-        if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(gpxLineItem.getType()) &&
-            !GPXLineItem.GPXLineItemType.GPXRoute.equals(gpxLineItem.getType())) {
+        if (!gpxLineItem.isGPXTrackSegment() && !gpxLineItem.isGPXRoute()) {
             result.add(gpxLineItem);
             
             return result;
@@ -193,26 +193,26 @@ public class GPXStructureHelper {
         return result;
     }
     
-    public List<GPXFile> uniqueGPXFileListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
+    public List<GPXFile> uniqueGPXFileListFromGPXMeasurableList(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         // get selected files uniquely from selected items
         return selectedItems.stream().map((item) -> {
             return item.getValue().getGPXFile();
         }).distinct().collect(Collectors.toList());
     }
 
-    public List<GPXTrack> uniqueGPXTrackListFromGPXLineItemList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
+    public List<GPXTrack> uniqueGPXTrackListFromGPXMeasurableList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         // get selected tracks uniquely from selected items for a specific file
         return selectedItems.stream().filter((item) -> {
-            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getValue().getType());
+            return gpxFile.equals(item.getValue().getGPXFile()) && item.getValue().isGPXTrackSegment();
         }).map((item) -> {
             return item.getValue().getGPXTracks().get(0);
         }).distinct().collect(Collectors.toList());
     }
 
-    public List<GPXRoute> uniqueGPXRouteListFromGPXLineItemList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
+    public List<GPXRoute> uniqueGPXRouteListFromGPXMeasurableList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         // get selected tracks uniquely from selected items for a specific file
         return selectedItems.stream().filter((item) -> {
-            return gpxFile.equals(item.getValue().getGPXFile()) && GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getValue().getType());
+            return gpxFile.equals(item.getValue().getGPXFile()) && item.getValue().isGPXTrack();
         }).map((item) -> {
             return item.getValue().getGPXRoutes().get(0);
         }).distinct().collect(Collectors.toList());
@@ -228,8 +228,8 @@ public class GPXStructureHelper {
         return trackSet.stream().collect(Collectors.toList());
     }
     
-    public List<GPXLineItem> uniqueGPXParentListFromGPXLineItemList(final ObservableList<TreeItem<GPXLineItem>> selectedItems) {
-        final List<GPXLineItem> result = new ArrayList<>();
+    public List<GPXMeasurable> uniqueGPXParentListFromGPXMeasurableList(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
+        final List<GPXMeasurable> result = new ArrayList<>();
 
         // look out for a few special cases:
         // file is selected and track as well -> don't add track
@@ -241,15 +241,15 @@ public class GPXStructureHelper {
         // 1) items are sorted "ascending"
         // 2) add "upper" ids first
         // 3) check per item if parent or parents parent is in the list, add only if not
-        final List<GPXLineItem> sortedItems = 
+        final List<GPXMeasurable> sortedItems = 
                 selectedItems.stream().map((item) -> {
                     return item.getValue();
                 }).collect(Collectors.toList());
         
-        for (GPXLineItem item : sortedItems) {
+        for (GPXMeasurable item : sortedItems) {
             // iterate over all parents and check if they're already in the list
             boolean doAdd = true;
-            GPXLineItem parent = item.getParent();
+            GPXMeasurable parent = item.getParent();
             while (parent != null) {
                 if (result.contains(parent)) {
                     doAdd = false;
@@ -265,11 +265,11 @@ public class GPXStructureHelper {
         return result;
     }
     
-    public List<GPXLineItem> uniqueHierarchyGPXLineItems(final List<GPXLineItem> lineItems) {
+    public List<GPXMeasurable> uniqueHierarchyGPXMeasurables(final List<GPXMeasurable> lineItems) {
         // only use "highest" node in hierarchy and discard all child nodes in list - this is required
         // 1) to avoid to show waypoints twice in case parent and child items are selected
         // 2) when inverting selected items in order to avoid invertion of parent and child items waypoints
-        final List<GPXLineItem> uniqueItems = new ArrayList<>();
+        final List<GPXMeasurable> uniqueItems = new ArrayList<>();
         
         if(!CollectionUtils.isEmpty(lineItems)) {
             // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
@@ -277,7 +277,7 @@ public class GPXStructureHelper {
             lineItems.sort(Comparator.comparing(o -> o.getType()));
 
             // add all items that are not childs of previous items to result
-            for (GPXLineItem lineItem : lineItems) {
+            for (GPXMeasurable lineItem : lineItems) {
                 boolean isChild = false;
 
                 for (GPXLineItem uniqueItem : uniqueItems) {

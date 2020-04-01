@@ -35,6 +35,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.helper.DragResizer;
@@ -165,7 +166,7 @@ public class ChartsPane extends StackPane {
     }
     
     @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert lineItems != null;
 
         final boolean isVisible = isVisible();

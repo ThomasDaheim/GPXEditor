@@ -189,13 +189,18 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXTrackSegments);
+    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+        return GPXListHelper.asGPXMeasurableList(myGPXTrackSegments);
     }
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXTrackSegments(GPXLineItemHelper.castChildren(this, GPXTrackSegment.class, children));
+    }
+
+    @Override
+    public ObservableList<GPXLineItem> getChildren() {
+        return GPXListHelper.asGPXLineItemList(myGPXTrackSegments);
     }
 
     @Override

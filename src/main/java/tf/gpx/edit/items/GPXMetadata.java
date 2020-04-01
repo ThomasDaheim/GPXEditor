@@ -188,6 +188,11 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
+    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
+    }
+
+    @Override
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
     }
 

@@ -317,6 +317,7 @@
     -fx-font-weight: bold;
     -fx-text-alignment: center;
     -fx-text-origin: top;
+    -fx-line-spacing: -4;
 }
 
 * .item-id {

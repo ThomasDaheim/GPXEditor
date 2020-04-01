@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.helper;
 
+import eu.hansolo.fx.heatmap.ColorMapping;
+import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.util.function.Function;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;
@@ -65,7 +67,12 @@ public enum GPXEditorPreferences  {
     // TFE, 20200324: options for algorithm to find "stops" in tracks with no movement
     CLUSTER_RADIUS("clusterRadius", Double.toString(50.0)),
     CLUSTER_COUNT("clusterCount", Integer.toString(30)),
-    CLUSTER_DURATION("clusterDuration", Integer.toString(15));
+    CLUSTER_DURATION("clusterDuration", Integer.toString(15)),
+    
+    // TFE, 20200401: preferences for heatmap
+    HEATMAP_COLORMAPPING("heatMapColorMapping", ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED.name()),
+    HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name()),
+    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0));
     
 
     private final String myPrefKey;

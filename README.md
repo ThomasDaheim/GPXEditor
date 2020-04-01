@@ -25,6 +25,10 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ### Update v4.6
 
+* preferences for heatmap
+
+### Update v4.6
+
 Corona-Time...
 
 * added a heat map using JavaFX; leaflet heatmaps are not working with JavaFX11, seem to work with JavaFX14 so waiting for the next LTR...
@@ -335,6 +339,8 @@ Explicit dependencies:
 * 'uk.com.robust-it:cloning:1.9.12'
 
 Other things used internally:
+
+* heatmap: https://github.com/HanSolo/FxHeatMap
 
 * leaflet: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord

@@ -309,6 +309,7 @@ public class HeatMap extends ImageView {
      * Create an image that contains a circle filled with a
      * radial gradient from white to transparent
      * @param RADIUS
+     * @param OPACITY_DISTRIBUTION
      * @return an image that contains a filled circle
      */
     public Image createEventImage(final double RADIUS, final OpacityDistribution OPACITY_DISTRIBUTION) {
@@ -354,7 +355,7 @@ public class HeatMap extends ImageView {
         ctx.clearRect(0, 0, monochrome.getWidth(), monochrome.getHeight());
         eventList.forEach(event -> {
             event.setOpacityDistribution(OPACITY_GRADIENT);
-            ctx.drawImage(createEventImage(event.getRadius(), event.getOpacityDistribution()), event.getX() - event.getRadius() * 0.5, event.getY() - event.getRadius() * 0.5);
+            ctx.drawImage(createEventImage(event.getRadius(), event.getOpacityDistribution()), event.getX() - event.getRadius(), event.getY() - event.getRadius());
         });
         updateHeatMap();
     }

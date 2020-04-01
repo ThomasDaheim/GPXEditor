@@ -177,7 +177,7 @@ public interface IChartBasics<T extends XYChart> {
         getChart().getData().clear();
         
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
-        if (CollectionUtils.isEmpty(lineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(lineItems.get(0).getType())) {
+        if (CollectionUtils.isEmpty(lineItems) || lineItems.get(0).isGPXMetadata()) {
             // nothing more todo...
             return;
         }
@@ -200,7 +200,7 @@ public interface IChartBasics<T extends XYChart> {
         for (GPXLineItem lineItem : lineItems) {
             // only files can have file waypoints
             if (fileWaypointsInChart()) {
-                if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                if (lineItem.isGPXFile()) {
                     fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem);
                 } else if (alwaysShowFileWaypoints && !fileShown) {
                     // add file waypoints as well, even though file isn't selected
@@ -208,8 +208,7 @@ public interface IChartBasics<T extends XYChart> {
                     fileShown = true;
                 }
             }
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-                GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
+            if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
                 for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
                     // add track segments individually
                     for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
@@ -218,12 +217,11 @@ public interface IChartBasics<T extends XYChart> {
                 }
             }
             // track segments can have waypoints
-            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+            if (lineItem.isGPXTrackSegment()) {
                 seriesList.add(getXYChartSeriesForGPXLineItem(lineItem));
             }
             // files and routes can have routes
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-                GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
+            if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
                 for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
                     seriesList.add(getXYChartSeriesForGPXLineItem(gpxRoute));
                 }
@@ -341,7 +339,7 @@ public interface IChartBasics<T extends XYChart> {
 
                 getChart().getData().add(reducedSeries); 
                 
-                if (!GPXLineItem.GPXLineItemType.GPXFile.equals(firstWaypoint.getType())) {
+                if (!firstWaypoint.isGPXFile()) {
                     // and now color the series nodes according to lineitem color
                     // https://gist.github.com/jewelsea/2129306
                     final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
@@ -512,7 +510,7 @@ public interface IChartBasics<T extends XYChart> {
     private static void setSeriesUserData(final XYChart.Series<Double, Double> series, final GPXLineItem lineItem) {
         String seriesID = lineItem.getCombinedID();
         // add track id for track segments
-        if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+        if (lineItem.isGPXTrackSegment()) {
             seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
         }
         series.setName(seriesID + DATA_SEP + lineItem.getColor());

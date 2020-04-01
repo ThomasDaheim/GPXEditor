@@ -53,6 +53,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -159,7 +160,7 @@ public class StatisticsViewer extends AbstractStage {
     // UI elements used in various methods need to be class-wide
     final TableView<StatisticValue> table = new TableView<>();
     
-    private GPXFile myGPXFile;
+    private GPXMeasurable myGPXMeasurable;
 
     private StatisticsViewer() {
         super();
@@ -255,14 +256,14 @@ public class StatisticsViewer extends AbstractStage {
         getGridPane().getColumnConstraints().addAll(col1, col2);
     }
     
-    public boolean showStatistics(final GPXFile gpxFile) {
-        assert gpxFile != null;
+    public boolean showStatistics(final GPXMeasurable gpxMeasurable) {
+        assert gpxMeasurable != null && !gpxMeasurable.isGPXRoute();
         
         if (getStage().isShowing()) {
             getStage().close();
         }
         
-        myGPXFile = gpxFile;
+        myGPXMeasurable = gpxMeasurable;
         // initialize the whole thing...
         initStatisticsViewer();
         
@@ -288,26 +289,26 @@ public class StatisticsViewer extends AbstractStage {
         // minutes -> milliseconds
         breakDuration *= 60*1000;
         
-        final List<GPXWaypoint> gpxWaypoints = myGPXFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        final List<GPXWaypoint> gpxWaypoints = myGPXMeasurable.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         // set values that don't need calculation
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
         // format duration as in getCumulativeDurationAsString
-        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXFile));
-        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXFile));
-        double totalLength = myGPXFile.getLength();
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXMeasurable));
+        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXMeasurable));
+        double totalLength = myGPXMeasurable.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
         statisticsList.get(StatisticData.StartHeight.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
         statisticsList.get(StatisticData.EndHeight.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
-        statisticsList.get(StatisticData.MinHeight.ordinal()).setValue(myGPXFile.getMinHeight());
-        statisticsList.get(StatisticData.MaxHeight.ordinal()).setValue(myGPXFile.getMaxHeight());
+        statisticsList.get(StatisticData.MinHeight.ordinal()).setValue(myGPXMeasurable.getMinHeight());
+        statisticsList.get(StatisticData.MaxHeight.ordinal()).setValue(myGPXMeasurable.getMaxHeight());
 
-        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXFile.getCumulativeAscent());
-        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXFile.getCumulativeDescent());
+        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXMeasurable.getCumulativeAscent());
+        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXMeasurable.getCumulativeDescent());
         
-        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getCumulativeDuration()*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXMeasurable.getCumulativeDuration()*1000d*3.6d);
 
         Date startDate = gpxWaypoints.get(0).getDate();
         Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();

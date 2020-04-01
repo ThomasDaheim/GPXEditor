@@ -188,6 +188,11 @@ public class GPXRoute extends GPXMeasurable {
     public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
     }
+
+    @Override
+    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
+    }
     
     @Override
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {

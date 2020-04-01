@@ -25,6 +25,9 @@
  */
 package tf.gpx.edit.main;
 
+import eu.hansolo.fx.heatmap.ColorMapping;
+import eu.hansolo.fx.heatmap.HeatMap;
+import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.text.DecimalFormat;
 import javafx.event.ActionEvent;
 import javafx.geometry.VPos;
@@ -37,6 +40,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
@@ -44,6 +48,7 @@ import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.EnumHelper;
 
@@ -112,12 +117,29 @@ public class PreferenceEditor extends AbstractStage {
         double myClusterRadius = GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf);
         int myClusterCount = GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf);
         int myClusterDuration = GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf);
+        
+        ColorMapping myColorMapping = GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType(ColorMapping::valueOf);
+        OpacityDistribution myOpacityDistribution = GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType(OpacityDistribution::valueOf);
+        double myEventRadius = GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType(Double::valueOf);
 
         getGridPane().getChildren().clear();
 
         // create new scene with list of algos & parameter
         int rowNum = 0;
 
+        // separator
+        final Label lblHor5 = new Label("Distance & Area calculation");
+        lblHor5.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor5, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor5, INSET_TOP);
+
+        final Separator sepHor5 = new Separator();
+        sepHor5.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor5, 0, rowNum);
+        getGridPane().add(sepHor5, 1, rowNum, 1, 1);
+        GridPane.setMargin(sepHor5, INSET_TOP);
+
+        rowNum++;
         // select distance algorithm
         Tooltip t = new Tooltip("Distance algorithm to use" + System.lineSeparator() + "Note: Vincenty is approx. 4x slower than Haversine" + System.lineSeparator() + "Vincenty is more accurate for long distances (> 100km) only.");
         final Label distalgoLbl = new Label("Distance Algorithm:");
@@ -133,11 +155,15 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
+        final Label lblHor0 = new Label("Fix & Reduce algorithms");
+        lblHor0.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor0, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor0, INSET_TOP);
+
         final Separator sepHor0 = new Separator();
         sepHor0.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor0, 0, rowNum);
-        GridPane.setColumnSpan(sepHor0, 2);
-        getGridPane().getChildren().add(sepHor0);
+        getGridPane().add(sepHor0, 1, rowNum, 1, 1);
         GridPane.setMargin(sepHor0, INSET_TOP);
 
         rowNum++;
@@ -204,11 +230,15 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
+        final Label lblHor2 = new Label("Breaks & Stationaries");
+        lblHor2.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor2, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor2, INSET_TOP);
+
         final Separator sepHor2 = new Separator();
         sepHor2.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor2, 0, rowNum);
-        GridPane.setColumnSpan(sepHor2, 2);
-        getGridPane().getChildren().add(sepHor2);
+        getGridPane().add(sepHor2, 1, rowNum, 1, 1);
         GridPane.setMargin(sepHor2, INSET_TOP);
 
         rowNum++;
@@ -230,8 +260,8 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // row: radius for cluster search
-        t = new Tooltip("Radius to include waypoints for cluster search");
-        final Label radiusLbl = new Label("Cluster radius (m):");
+        t = new Tooltip("Radius to include waypoints for stationary search");
+        final Label radiusLbl = new Label("Stationary radius (m):");
         radiusLbl.setTooltip(t);
         getGridPane().add(radiusLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(radiusLbl, VPos.TOP);
@@ -247,8 +277,8 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // row: duration for cluster search
-        t = new Tooltip("Duration in minutes to count as cluster");
-        final Label durationLbl = new Label("Cluster duration (mins):");
+        t = new Tooltip("Duration in minutes to count as stationary cluster");
+        final Label durationLbl = new Label("Stationary duration (mins):");
         durationLbl.setTooltip(t);
         getGridPane().add(durationLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(durationLbl, VPos.TOP);
@@ -264,8 +294,8 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // row: neighbour count for cluster search
-        t = new Tooltip("Minimum neighbours to count as cluster point");
-        final Label neighbourLbl = new Label("Neighbour count:");
+        t = new Tooltip("Minimum neighbours to count as stationary point");
+        final Label neighbourLbl = new Label("Stationary neighbour count:");
         neighbourLbl.setTooltip(t);
         getGridPane().add(neighbourLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(neighbourLbl, VPos.TOP);
@@ -281,11 +311,15 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
+        final Label lblHor1 = new Label("TrackMap");
+        lblHor1.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor1, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor1, INSET_TOP);
+
         final Separator sepHor1 = new Separator();
         sepHor1.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor1, 0, rowNum);
-        GridPane.setColumnSpan(sepHor1, 2);
-        getGridPane().getChildren().add(sepHor1);
+        getGridPane().add(sepHor1, 1, rowNum, 1, 1);
         GridPane.setMargin(sepHor1, INSET_TOP);
 
         rowNum++;
@@ -387,11 +421,15 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
+        final Label lblHor3 = new Label("HeightChart");
+        lblHor3.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor3, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor3, INSET_TOP);
+
         final Separator sepHor3 = new Separator();
         sepHor3.setValignment(VPos.CENTER);
         GridPane.setConstraints(sepHor3, 0, rowNum);
-        GridPane.setColumnSpan(sepHor3, 2);
-        getGridPane().getChildren().add(sepHor3);
+        getGridPane().add(sepHor3, 1, rowNum, 1, 1);
         GridPane.setMargin(sepHor3, INSET_TOP);
 
         rowNum++;
@@ -460,7 +498,97 @@ public class PreferenceEditor extends AbstractStage {
         wayThshldText.setText(decimalFormat.format(waypointThreshold));
         wayThshldText.setTooltip(t);
         getGridPane().add(wayThshldText, 1, rowNum, 1, 1);
-        GridPane.setMargin(wayThshldText, INSET_TOP);        
+        GridPane.setMargin(wayThshldText, INSET_TOP);
+
+        rowNum++;
+        // separator
+        final Label lblHor4 = new Label("HeatMap");
+        lblHor4.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor4, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor4, INSET_TOP);
+
+        final Separator sepHor4 = new Separator();
+        sepHor4.setValignment(VPos.CENTER);
+        GridPane.setConstraints(sepHor4, 0, rowNum);
+        getGridPane().add(sepHor4, 1, rowNum, 1, 1);
+        GridPane.setMargin(sepHor4, INSET_TOP);
+        
+        rowNum++;
+        // heat map colormapping
+        t = new Tooltip("Color mapping to use in heat map");
+        final Label heatColorLbl = new Label("Color mapping:");
+        heatColorLbl.setTooltip(t);
+        getGridPane().add(heatColorLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(heatColorLbl, VPos.TOP);
+        GridPane.setMargin(heatColorLbl, INSET_TOP);
+
+        final ChoiceBox heatColorChoiceBox = EnumHelper.getInstance().createChoiceBox(ColorMapping.class, myColorMapping);
+        heatColorChoiceBox.setTooltip(t);
+        getGridPane().add(heatColorChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(heatColorChoiceBox, INSET_TOP);
+        
+        rowNum++;
+        // heat map colormapping
+        t = new Tooltip("Opacity distribution to use in heat map");
+        final Label opacDistLbl = new Label("Opacity distribution:");
+        opacDistLbl.setTooltip(t);
+        getGridPane().add(opacDistLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(opacDistLbl, VPos.TOP);
+        GridPane.setMargin(opacDistLbl, INSET_TOP);
+
+        // this one is special! lets show a small heat map to visualize the changes online...
+        final HBox heatMapBox = new HBox(200);
+        
+        final ChoiceBox opacDistChoiceBox = EnumHelper.getInstance().createChoiceBox(OpacityDistribution.class, myOpacityDistribution);
+        opacDistChoiceBox.setTooltip(t);
+        
+        final HeatMap heatMap = new HeatMap(22.0, 22.0);
+        heatMap.setColorMapping(myColorMapping);
+        heatMap.setOpacityDistribution(myOpacityDistribution);
+        heatMap.setEventRadius(myEventRadius);
+        for (int i = 0; i < 5; i++) {
+            heatMap.addEvent(11.0, 11.0);
+        }
+        
+        heatMapBox.getChildren().addAll(opacDistChoiceBox, heatMap);
+        
+        getGridPane().add(heatMapBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(heatMapBox, INSET_TOP);
+
+        rowNum++;
+        // heat map event radius
+        t = new Tooltip("Radius around waypoint to fill");
+        final Label eventLbl = new Label("Point radius:");
+        eventLbl.setTooltip(t);
+        getGridPane().add(eventLbl, 0, rowNum, 1, 1);
+        GridPane.setMargin(eventLbl, INSET_TOP);
+        
+        final TextField eventText = new TextField();
+        eventText.setMaxWidth(80);
+        eventText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        eventText.setText(decimalFormat.format(myEventRadius));
+        eventText.setTooltip(t);
+        getGridPane().add(eventText, 1, rowNum, 1, 1);
+        GridPane.setMargin(eventText, INSET_TOP);
+        
+        // and now the listeners to update the heat map
+        heatColorChoiceBox.addEventHandler(ActionEvent.ACTION, (event) -> {
+            heatMap.setColorMapping(ColorMapping.valueOf(heatColorChoiceBox.getSelectionModel().getSelectedItem().toString()));
+        });
+        opacDistChoiceBox.addEventHandler(ActionEvent.ACTION, (event) -> {
+            heatMap.setOpacityDistribution(OpacityDistribution.valueOf(opacDistChoiceBox.getSelectionModel().getSelectedItem().toString()));
+            heatMap.updateMonochromeMap(heatMap.getOpacityDistribution());
+        });
+        eventText.textProperty().addListener((ov, newValue, oldValue) -> {
+            if (newValue != null) {
+                heatMap.setEventRadius(Math.max(Double.valueOf(eventText.getText().trim()), 0));
+                heatMap.clearHeatMap();
+                for (int i = 0; i < 5; i++) {
+                    heatMap.addEvent(11.0, 11.0);
+                }
+            }
+        });
+        
         
         rowNum++;
         // last row: save / cancel buttons
@@ -517,6 +645,10 @@ public class PreferenceEditor extends AbstractStage {
             myClusterCount = Math.max(Integer.valueOf(neighbourText.getText().trim()), 0);
             myClusterDuration = Math.max(Integer.valueOf(durationText.getText().trim()), 0);
             
+            myColorMapping = EnumHelper.getInstance().selectedEnumChoiceBox(ColorMapping.class, heatColorChoiceBox);
+            myOpacityDistribution = EnumHelper.getInstance().selectedEnumChoiceBox(OpacityDistribution.class, opacDistChoiceBox);
+            myEventRadius = Math.max(Double.valueOf(eventText.getText().trim()), 0);
+
             GPXEditorPreferences.DISTANCE_ALGORITHM.put(myDistanceAlgorithm.name());
             GPXEditorPreferences.REDUCTION_ALGORITHM.put(myReductionAlgorithm.name());
             GPXEditorPreferences.REDUCE_EPSILON.put(myReduceEpsilon);
@@ -545,6 +677,11 @@ public class PreferenceEditor extends AbstractStage {
             GPXEditorPreferences.CLUSTER_COUNT.put(myClusterCount);
             GPXEditorPreferences.CLUSTER_DURATION.put(myClusterDuration);
             GPXEditorPreferences.CLUSTER_RADIUS.put(myClusterRadius);
+
+            GPXEditorPreferences.HEATMAP_COLORMAPPING.put(myColorMapping);
+            GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.put(myOpacityDistribution);
+            GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(myEventRadius);
+            HeatMapPane.getInstance().updateSettings();
         }
     }
 }

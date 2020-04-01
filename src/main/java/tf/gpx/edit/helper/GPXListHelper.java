@@ -33,6 +33,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 
 /**
  * Concatenate into observable list that keeps track of changes of sublists.
@@ -57,7 +59,7 @@ public class GPXListHelper {
                         for (T waypoint : c.getAddedSubList()) {
                             final T lastT = 
                                     list.stream().filter((t) -> {
-                                        return waypoint.getParent().getType().equals(t.getParent().getType());
+                                        return GPXLineItemHelper.isSameTypeAs(waypoint.getParent(), t.getParent());
                                     }).reduce((a, b) -> b).orElse(null);
                             int addIndex;
                             if (lastT != null) {
@@ -84,6 +86,27 @@ public class GPXListHelper {
     public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemList(ObservableList<T> input) {
         final ObservableList<GPXLineItem> result = input.stream().
                 map(t -> { return (GPXLineItem) t; }).
+                collect(Collectors.toCollection(FXCollections::observableArrayList));
+        
+        input.addListener((ListChangeListener.Change<? extends T> c) -> {
+            while (c.next()) {
+                if (c.wasAdded()) {
+                    result.addAll(c.getFrom(), c.getAddedSubList());
+                }
+                if (c.wasRemoved()) {
+                    // performance: convert to hashset since its contains() is way faster
+                    result.removeAll(new LinkedHashSet<>(c.getRemoved()));
+                }
+            }
+        });
+        
+        return result;
+    }
+    
+    // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
+    public static <T extends GPXMeasurable> ObservableList<GPXMeasurable> asGPXMeasurableList(ObservableList<T> input) {
+        final ObservableList<GPXMeasurable> result = input.stream().
+                map(t -> { return (GPXMeasurable) t; }).
                 collect(Collectors.toCollection(FXCollections::observableArrayList));
         
         input.addListener((ListChangeListener.Change<? extends T> c) -> {

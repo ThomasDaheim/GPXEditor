@@ -43,10 +43,10 @@ public abstract class AbstractStage {
     private final GridPane myGridPane = new GridPane();
 
     public final static Insets INSET_NONE = new Insets(0, 0, 0, 0);
-    public final static Insets INSET_SMALL = new Insets(0, 10, 0, 10);
-    public final static Insets INSET_TOP = new Insets(10, 10, 0, 10);
-    public final static Insets INSET_BOTTOM = new Insets(0, 10, 10, 10);
-    public final static Insets INSET_TOP_BOTTOM = new Insets(10, 10, 10, 10);
+    public final static Insets INSET_SMALL = new Insets(0, 8, 0, 8);
+    public final static Insets INSET_TOP = new Insets(8, 8, 0, 8);
+    public final static Insets INSET_BOTTOM = new Insets(0, 8, 8, 8);
+    public final static Insets INSET_TOP_BOTTOM = new Insets(8, 8, 8, 8);
     
     public AbstractStage() {
         initStage();

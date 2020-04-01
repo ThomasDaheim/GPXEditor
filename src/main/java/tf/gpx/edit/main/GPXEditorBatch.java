@@ -40,6 +40,7 @@ import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
 
 /**
  *
@@ -112,11 +113,11 @@ public class GPXEditorBatch {
                 }
                 if(GPXEditorParameters.CmdOps.reduceTracks.toString().equals(arg) && myParameters.doReduceTracks()) {
                     System.out.println("Reducing Tracks in Files");
-                    myStructureHelper.reduceGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
+                    myStructureHelper.reduceGPXMeasurables(GPXLineItemHelper.castToGPXMeasurables(gpxFiles), myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
                 }
                 if(GPXEditorParameters.CmdOps.fixTracks.toString().equals(arg) && myParameters.doFixTracks()) {
                     System.out.println("Fixing Tracks in Files");
-                    myStructureHelper.fixGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getFixDistance());
+                    myStructureHelper.fixGPXMeasurables(GPXLineItemHelper.castToGPXMeasurables(gpxFiles), myParameters.getFixDistance());
                 }
                 if(GPXEditorParameters.CmdOps.deleteEmpty.toString().equals(arg) && myParameters.doDeleteEmpty()) {
                     System.out.println("Deleting empty line items in Files");

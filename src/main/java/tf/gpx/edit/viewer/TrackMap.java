@@ -86,6 +86,7 @@ import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -242,7 +243,7 @@ public class TrackMap extends LeafletMapView {
 
     private GPXEditor myGPXEditor;
 
-    private List<GPXLineItem> myGPXLineItems;
+    private List<GPXMeasurable> myGPXLineItems;
 
     // store gpxlineitem fileWaypointsCount, trackSegments, routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> fileWaypoints = new DualHashBidiMap<>();
@@ -989,7 +990,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor = gpxEditor;
     }
     
-   public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+   public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         myGPXLineItems = lineItems;
 
         if (isDisabled()) {
@@ -1013,7 +1014,7 @@ public class TrackMap extends LeafletMapView {
         execScript("stopRouting(false);");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
-        if (CollectionUtils.isEmpty(myGPXLineItems) || GPXLineItem.GPXLineItemType.GPXMetadata.equals(myGPXLineItems.get(0).getType())) {
+        if (CollectionUtils.isEmpty(myGPXLineItems) || myGPXLineItems.get(0).isGPXMetadata()) {
             // nothing more todo...
             return;
         }
@@ -1025,7 +1026,7 @@ public class TrackMap extends LeafletMapView {
         int fileWaypointCount = 0;
         for (GPXLineItem lineItem : myGPXLineItems) {
             // only files can have file waypoints
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+            if (lineItem.isGPXFile()) {
                 masterList.add(lineItem.getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
             } else if (alwayShowFileWaypoints) {
@@ -1037,8 +1038,7 @@ public class TrackMap extends LeafletMapView {
             // TFE, 20180508: getAsString waypoints from trackSegments ONLY if you're no tracksegment...
             // otherwise, we never only show points from a single tracksegment!
             // files and trackSegments can have trackSegments
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-                GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
+            if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
                 for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
                     // add track segments individually
                     for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
@@ -1047,12 +1047,11 @@ public class TrackMap extends LeafletMapView {
                 }
             }
             // track segments can have track segments
-            if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+            if (lineItem.isGPXTrackSegment()) {
                 masterList.add(lineItem.getGPXWaypoints());
             }
             // files and routes can have routes
-            if (GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
-                GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType())) {
+            if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
                 for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
                     masterList.add(gpxRoute.getGPXWaypoints());
                 }
@@ -1495,7 +1494,7 @@ public class TrackMap extends LeafletMapView {
 
                 // TFE, 20190905: pass line marker name as well - if any
                 final GPXLineItem parent = gpxWaypoint.getParent();
-                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(parent.getType())) {
+                if (parent.isGPXTrackSegment()) {
                     execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
                 }
             }
