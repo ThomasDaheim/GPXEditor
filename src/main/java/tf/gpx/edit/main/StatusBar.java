@@ -25,14 +25,24 @@
  */
 package tf.gpx.edit.main;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.util.Duration;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.ITaskExecutionConsumer;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -53,16 +63,23 @@ import tf.gpx.edit.items.GPXWaypoint;
  * 
  * @author thomas
  */
-public class StatusBar extends VBox implements ITaskExecutionConsumer {
+public class StatusBar extends HBox implements ITaskExecutionConsumer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatusBar INSTANCE = new StatusBar();
     
+    private static final String SEPERATOR = "|";
+    
     private static final String FORMAT_WAYPOINT_STRING = "Waypoint: %s";
     private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: overall: %s, cumul.: %s, Duration: overall: %s, cumul.: %s, Speed [km/h]: overall: %s, cumul.: %s";
+    private static final String CNTRL_TEXT = "CNTRL";
+    private static final DateTimeFormatter DATETIMEFORMATTER = DateTimeFormatter.ofPattern("EEE dd.MM.yyyy HH:mm");
     
     private final Label myLabel = new Label();
     private final ProgressBar myTaskProgress = new ProgressBar();
+    private final Label myCntrlPressed = new Label();
+    private final Label myCntrlPressedSeperator = new Label();
+    private final Label myClock = new Label();
     
     private final StringProperty myStatusText = new SimpleStringProperty();
     private final StringProperty myTaskText = new SimpleStringProperty();
@@ -84,8 +101,17 @@ public class StatusBar extends VBox implements ITaskExecutionConsumer {
         // progressbar only visible if action is running
         myTaskProgress.visibleProperty().bind(myTaskText.isNotEmpty());
         
+        final Region region = new Region();
+        HBox.setHgrow(region, Priority.ALWAYS);
+
+        final Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), (ActionEvent event) -> {
+            myClock.setText(LocalDateTime.now().format(DATETIMEFORMATTER));
+        }));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+
         setSpacing(5.0);
-        getChildren().setAll(myLabel, myTaskProgress);
+        getChildren().setAll(myLabel, myTaskProgress, region, myCntrlPressed, myCntrlPressedSeperator, myClock);
     }
     
     public void setStatusText(final String text) {
@@ -117,6 +143,20 @@ public class StatusBar extends VBox implements ITaskExecutionConsumer {
 
     public void clearTaskProgress() {
         myTaskProgress.setProgress(0.0);
+    }
+    
+    public void setCntrlPressedProvider(final BooleanProperty cntrlPressed) {
+        cntrlPressed.addListener((ov, oldValue, newValue) -> {
+            if (newValue != null) {
+                if (newValue) {
+                    myCntrlPressed.setText(CNTRL_TEXT);
+                    myCntrlPressedSeperator.setText(SEPERATOR);
+                } else {
+                    myCntrlPressed.setText("");
+                    myCntrlPressedSeperator.setText("");
+                }
+            }
+        });
     }
 
     @Override

@@ -50,6 +50,8 @@ import java.util.stream.Collectors;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -206,7 +208,7 @@ public class GPXEditor implements Initializable {
 //    private ChangeListener<TreeItem<GPXLineItem>> gpxFileListSelectedItemListener;
     private ListChangeListener<TreeItem<GPXMeasurable>> gpxFileListSelectionListener;
 
-    private boolean cntrlPressed = false;
+    private SimpleBooleanProperty cntrlPressedProperty = new SimpleBooleanProperty(false);
     
     @FXML
     private MenuItem exportKMLMenu;
@@ -421,12 +423,12 @@ public class GPXEditor implements Initializable {
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
             if (KeyCode.CONTROL.equals(event.getCode())) {
-                cntrlPressed = true;
+                cntrlPressedProperty.setValue(Boolean.TRUE);
             }
         });
         getWindow().getScene().setOnKeyReleased(event -> {
             if (KeyCode.CONTROL.equals(event.getCode())) {
-                cntrlPressed = false;
+                cntrlPressedProperty.setValue(Boolean.FALSE);
             }
         });
         
@@ -451,7 +453,11 @@ public class GPXEditor implements Initializable {
     }
     
     public boolean isCntrlPressed() {
-        return cntrlPressed;
+        return cntrlPressedProperty.getValue();
+    }
+
+    public BooleanProperty cntrlPressedProperty() {
+        return cntrlPressedProperty;
     }
 
     private void initMenus() {
@@ -1002,7 +1008,12 @@ public class GPXEditor implements Initializable {
         statusBox.setPadding(new Insets(5, 5, 5, 5));
         statusBox.setAlignment(Pos.CENTER_LEFT);
 
+        StatusBar.getInstance().prefHeightProperty().bind(statusBox.heightProperty());
+        StatusBar.getInstance().prefWidthProperty().bind(statusBox.widthProperty());
+
         statusBox.getChildren().setAll(StatusBar.getInstance());
+        
+        StatusBar.getInstance().setCntrlPressedProvider(cntrlPressedProperty);
     }
 
     private void newFileAction(final ActionEvent event) {
