@@ -187,6 +187,9 @@ public class GPXFileHelper {
 //            result = false;
 //        }
 
+        // store last filename - might have been renamed
+        GPXEditorPreferenceStore.getRecentFiles().addRecentFile(curFile.toFile().getAbsolutePath());
+
         // TFE, 20191024 add warning for format issues
         verifyXMLFile(curFile.toFile());
         

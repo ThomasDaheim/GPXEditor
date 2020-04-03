@@ -106,6 +106,16 @@
 .table-view .table-cell {
     -fx-padding: 0 5 0 5;
 }
+.table-row-cell:drop-target-above {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: black transparent transparent transparent;
+}
+.table-row-cell:drop-target-below {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: transparent transparent black transparent;
+}
 
 .hasUnsavedChanges {
     -fx-font-style: italic;

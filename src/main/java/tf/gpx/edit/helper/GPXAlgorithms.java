@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**

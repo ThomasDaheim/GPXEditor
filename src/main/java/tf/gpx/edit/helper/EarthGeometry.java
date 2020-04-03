@@ -392,8 +392,13 @@ public class EarthGeometry {
         if ((p1 == null) || (p2 == null)) return 0;
         
         final double diffSeconds = duration(p1, p2) / 1000.0;
+        if (diffSeconds == 0.0) {
+            // TFE, 2020403: avoid infinity...
+            return 0.0;
+        }
         final double diffMeters = distanceGPXWaypoints(p1, p2);
-        return diffMeters / diffSeconds * 3.6;
+        // TFE, 20200402: speed is alsways positive - even if timestamps in waypoints might be crazy
+        return Math.abs(diffMeters / diffSeconds * 3.6);
     }
     
     public static double elevationDiff(final GPXWaypoint p1, final GPXWaypoint p2) {

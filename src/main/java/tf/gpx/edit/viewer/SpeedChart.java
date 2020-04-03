@@ -60,6 +60,8 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
+    
+    private boolean nonZeroData = false;
 
     @SuppressWarnings("unchecked")
     private SpeedChart() {
@@ -172,5 +174,15 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     @Override
     public void setChartsPane(final ChartsPane pane) {
         myChartsPane = pane;
+    }
+
+    @Override
+    public boolean hasNonZeroData() {
+        return nonZeroData;
+    }
+
+    @Override
+    public void setNonZeroData(final boolean value) {
+        nonZeroData = value;
     }
 }

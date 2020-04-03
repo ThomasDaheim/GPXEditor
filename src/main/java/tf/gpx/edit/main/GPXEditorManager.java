@@ -115,10 +115,10 @@ public class GPXEditorManager extends Application {
             myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
             myStage.initStyle(StageStyle.UNIFIED);
             
-            controller.lateInitialize();
-
             myStage.show();
-        }
+
+            controller.lateInitialize();
+       }
     }
     
     @Override

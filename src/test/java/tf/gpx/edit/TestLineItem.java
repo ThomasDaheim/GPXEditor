@@ -34,7 +34,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
 import tf.gpx.edit.items.GPXLineItemHelper;
 
 /**

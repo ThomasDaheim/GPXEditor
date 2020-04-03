@@ -82,7 +82,7 @@ public class GPXLineItemHelper {
     }
 
     public static boolean isChildTypeOf(final GPXLineItem child, final GPXLineItem item) {
-        return isParentTypeOf(child.getType(), item.getType());
+        return isChildTypeOf(child.getType(), item.getType());
     }
     public static boolean isChildTypeOf(final GPXLineItem.GPXLineItemType child, final GPXLineItem.GPXLineItemType item) {
         // file is child of no one
@@ -110,7 +110,7 @@ public class GPXLineItemHelper {
     }
 
     public static boolean isLowerTypeThan(final GPXLineItem lower, final GPXLineItem item) {
-        return isParentTypeOf(lower.getType(), item.getType());
+        return isLowerTypeThan(lower.getType(), item.getType());
     }
     public static boolean isLowerTypeThan(final GPXLineItem.GPXLineItemType lower, final GPXLineItem.GPXLineItemType item) {
         // file is lower nothing
@@ -138,7 +138,7 @@ public class GPXLineItemHelper {
     }
 
     public static boolean isUpperTypeThan(final GPXLineItem upper, final GPXLineItem item) {
-        return isParentTypeOf(upper.getType(), item.getType());
+        return isUpperTypeThan(upper.getType(), item.getType());
     }
     public static boolean isUpperTypeThan(final GPXLineItem.GPXLineItemType upper, final GPXLineItem.GPXLineItemType item) {
         // file is upper everything BUT not itself
@@ -166,7 +166,7 @@ public class GPXLineItemHelper {
     }
 
     public static boolean isSameTypeAs(final GPXLineItem item1, final GPXLineItem item2) {
-        return isParentTypeOf(item1.getType(), item2.getType());
+        return isSameTypeAs(item1.getType(), item2.getType());
     }
     public static boolean isSameTypeAs(final GPXLineItem.GPXLineItemType item1, final GPXLineItem.GPXLineItemType item2) {
         return item1.ordinal() == item2.ordinal();
@@ -183,7 +183,7 @@ public class GPXLineItemHelper {
     public static String formatDurationAsString(final long diff) {
         String result = GPXLineItem.NO_DATA;
         
-        if (diff > 0) {
+        if (diff != 0) {
             // TFE, 20170716: negative differences are only shown for hours
             final long diffSeconds = Math.abs(diff / 1000 % 60);
             final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);

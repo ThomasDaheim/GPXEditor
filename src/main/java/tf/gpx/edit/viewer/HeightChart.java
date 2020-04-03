@@ -90,6 +90,8 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
+    
+    private boolean nonZeroData = false;
 
     @SuppressWarnings("unchecked")
     private HeightChart() {
@@ -149,7 +151,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
                 final Double heightValue = data.YValueProperty().getValue();
 
                 String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
-                if (SpeedChart.getInstance().hasData()) {
+                if (SpeedChart.getInstance().hasNonZeroData()) {
                     waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
                 }
                 text.setText(waypointText);
@@ -504,6 +506,16 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         
         noLayout = false;
         layoutPlotChildren();
+    }
+
+    @Override
+    public boolean hasNonZeroData() {
+        return nonZeroData;
+    }
+
+    @Override
+    public void setNonZeroData(final boolean value) {
+        nonZeroData = value;
     }
 
     @Override

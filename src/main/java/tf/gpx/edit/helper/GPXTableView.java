@@ -27,11 +27,13 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -58,7 +60,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.ResizeFeatures;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
@@ -70,6 +78,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.StatusBar;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 import tf.helper.UsefulKeyCodes;
@@ -79,7 +88,11 @@ import tf.helper.UsefulKeyCodes;
  * @author thomas
  */
 public class GPXTableView {
+    public static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/gpxeditor-tableview");
+
     private TableView<GPXWaypoint> myTableView;
+    // need to store last non-empty row for drag & drop support
+    private TableRow<GPXWaypoint> lastRow;
     private GPXEditor myEditor;
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
@@ -133,6 +146,17 @@ public class GPXTableView {
                     } else {
                         getStyleClass().removeAll("highlightedRow", "firstRow");
                         setTooltip(null);
+                    }
+                }
+                
+                @Override
+                public void updateIndex(int i) {
+                    super.updateIndex(i);
+                    
+//                    System.out.println("updateIndex: " + i + ", " + this + ", " + this.getItem());
+                    if (!this.isEmpty() && ((lastRow == null) || i > lastRow.getIndex())) {
+                        lastRow = this;
+//                        System.out.println("lastRow: " + lastRow.getItem());
                     }
                 }
             };
@@ -191,13 +215,13 @@ public class GPXTableView {
             final Menu insertItems = new Menu("Insert");
             final MenuItem insertAbove = new MenuItem("above");
             insertAbove.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
+                myEditor.insertWaypointsAtPosition(row.getItem(), clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
             });
             insertItems.getItems().add(insertAbove);
             
             final MenuItem insertBelow = new MenuItem("below");
             insertBelow.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+                myEditor.insertWaypointsAtPosition(row.getItem(), clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
             });
             insertItems.getItems().add(insertBelow);
             insertItems.disableProperty().bind(Bindings.isEmpty(clipboardWayPoints));
@@ -244,7 +268,7 @@ public class GPXTableView {
                     }
                 }
                 
-                // TODO: refresh gpxFileList (length, ... per track)
+                myEditor.refresh();
             });
             splitWaypoints.disableProperty().bind(row.emptyProperty());
             waypointMenu.getItems().add(splitWaypoints);
@@ -259,6 +283,73 @@ public class GPXTableView {
             waypointMenu.getItems().add(editWaypoints);
 
             row.setContextMenu(waypointMenu);
+            
+            // TFE, 20200402: drag & drop for all!
+            // drag is started inside the list
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+                    final ClipboardContent cc = new ClipboardContent();
+
+                    // use info from statusbar
+//                    db.setDragView(row.snapshot(null, null));
+                    db.setDragView(StatusBar.getInstance().snapshot(null, null));
+                    final ArrayList<Integer> selection = new ArrayList<>();
+                    selection.addAll(myTableView.getSelectionModel().getSelectedIndices());
+                    cc.put(SERIALIZED_MIME_TYPE, selection);
+                    db.setContent(cc);
+                    event.consume();
+                }
+            });
+           
+            // drag enters this row
+            row.setOnDragEntered(event -> {
+                final Dragboard db = event.getDragboard();
+                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                    final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                    GPXEditor.RelativePosition relativePosition;
+                    if (!row.isEmpty()) {
+                        relativePosition = GPXEditor.RelativePosition.ABOVE;
+                    } else {
+                        relativePosition = GPXEditor.RelativePosition.BELOW;
+                    }
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.getPseudoClassForRelativePosition(relativePosition), true);
+                }
+            });
+
+            // drag exits this row
+            row.setOnDragExited(event -> {
+                final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                if (checkRow != null) {
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass(), false);
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.BELOW.getPseudoClass(), false);
+                }
+            });
+   
+            // and here is the drop
+            row.setOnDragDropped(event -> {
+                final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                if (checkRow != null) {
+                    if (checkRow.getPseudoClassStates().contains(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass())) {
+                        onDragDropped(event, checkRow, GPXEditor.RelativePosition.ABOVE);
+                    } else {
+                        onDragDropped(event, checkRow, GPXEditor.RelativePosition.BELOW);
+                    }
+                    event.consume();
+                }
+            });
+
+            // dragging something over the list
+            row.setOnDragOver(event -> {
+                Dragboard db = event.getDragboard();
+                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                    event.consume();
+                }
+            });
 
             return row;
         });
@@ -297,12 +388,18 @@ public class GPXTableView {
                     UsefulKeyCodes.INSERT.match(event)) {
                 //System.out.println("Control+V pressed");
                 
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
+                myEditor.insertWaypointsAtPosition(
+                        myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
+                        clipboardWayPoints, 
+                        GPXEditor.RelativePosition.ABOVE);
             } else if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                     UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                 //System.out.println("Shift Control+V pressed");
                 
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+                myEditor.insertWaypointsAtPosition(
+                        myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
+                        clipboardWayPoints, 
+                        GPXEditor.RelativePosition.BELOW);
             }
             
             if (UsefulKeyCodes.CNTRL_A.match(event)) {
@@ -521,8 +618,62 @@ public class GPXTableView {
         }
     }
     
+    private TableRow<GPXWaypoint> getRowToCheckForDragDrop(final TableRow<GPXWaypoint> row) {
+        TableRow<GPXWaypoint> result;
+        
+        if (!row.isEmpty()) {
+            result = row;
+        } else {
+            result = lastRow;
+        }
+        
+        return result;
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void onDragDropped(final DragEvent event, final TableRow<GPXWaypoint> row, final GPXEditor.RelativePosition relativePosition) {
+        Dragboard db = event.getDragboard();
+        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+            final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+            
+            // get dragged item and item drop on to
+            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+
+            final GPXWaypoint target = checkRow.getItem();
+
+            final ObservableList<GPXWaypoint> allItems = myTableView.getItems();
+            final ObservableList<GPXWaypoint> items =
+                selection.stream().map((t) -> {
+                        return allItems.get(t);
+                    }).collect(Collectors.toCollection(FXCollections::observableArrayList));
+
+            myEditor.insertWaypointsAtPosition(
+                    target,
+                    items, 
+                    relativePosition);
+            
+            if (!myEditor.isCntrlPressed()) {
+                myEditor.deleteSelectedWaypoints();
+            }
+
+            // clear copy&paste list since it might have been invalidated
+            clearClipBoard();
+            
+            event.setDropCompleted(true);
+            event.consume();
+        }
+    }
+    
+    public void insertItemAtLocation(final GPXWaypoint insert, final GPXWaypoint location, final GPXEditor.RelativePosition position, final boolean doRemove) {
+        
+    }
+    
     public boolean onlyShiftPressed() {
         return onlyShiftPressed;
+    }
+    
+    public void clearClipBoard() {
+        clipboardWayPoints.clear();
     }
     
     /* Required getter and setter methods are forwarded to internal TreeTableView */

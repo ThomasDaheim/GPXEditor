@@ -61,6 +61,7 @@ import tf.gpx.edit.main.GPXEditor;
 /**
  * Helper class to hold stuff required by both HeightChart and LineChart
  * @author thomas
+ * @param <T>
  */
 public interface IChartBasics<T extends XYChart> {
     static String DATA_SEP = "-";
@@ -128,7 +129,7 @@ public interface IChartBasics<T extends XYChart> {
         getChart().getYAxis().setAnimated(false);
     }
     
-    // what any decent CHart needs to implement
+    // what any decent Chart needs to implement
     public abstract List<GPXLineItem> getGPXLineItems();
     public void setGPXLineItems(final List<GPXLineItem> lineItems);
     public abstract double getMinimumDistance();
@@ -153,6 +154,10 @@ public interface IChartBasics<T extends XYChart> {
     
     public abstract void setCallback(final GPXEditor gpxEditor);
     
+    // optimization: set hasNonZeroData during setGPXWaypoints() since we iterate over all data there anyways...
+    public abstract boolean hasNonZeroData();
+    public abstract void setNonZeroData(final boolean value);
+    
     default void setEnable(final boolean enabled) {
         getChart().setDisable(!enabled);
         getChart().setVisible(enabled);
@@ -175,6 +180,8 @@ public interface IChartBasics<T extends XYChart> {
         getChart().setVisible(false);
         getPoints().clear();
         getChart().getData().clear();
+        
+        setNonZeroData(false);
         
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(lineItems) || lineItems.get(0).isGPXMetadata()) {
@@ -470,27 +477,16 @@ public interface IChartBasics<T extends XYChart> {
         });
     }
     
-    @SuppressWarnings("unchecked")
-    default boolean hasData() {
-        boolean result = false;
-        
-        final List<XYChart.Series<Double, Double>> seriesList = (List<XYChart.Series<Double, Double>>) getChart().getData();
-        for (XYChart.Series<Double, Double> series: seriesList) {
-            if (!series.getData().isEmpty()) {
-                result = true;
-                break;
-            }
-        }
-
-        return result;
-    }
-    
     private XYChart.Series<Double, Double> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
         final List<XYChart.Data<Double, Double>> dataList = new ArrayList<>();
         
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
             setMaximumDistance(getMaximumDistance() + gpxWaypoint.getDistance());
             final double yValue = getYValueAndSetMinMax(gpxWaypoint);
+            
+            if (yValue != 0.0) {
+                setNonZeroData(true);
+            }
             
             XYChart.Data<Double, Double> data = new XYChart.Data<>(getMaximumDistance() / 1000.0, yValue);
             data.setExtraValue(gpxWaypoint);

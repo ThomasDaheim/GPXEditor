@@ -174,7 +174,7 @@ public class ChartsPane extends StackPane {
         // show all chart
         charts.stream().forEach((t) -> {
             t.setGPXWaypoints(lineItems, doFitBounds);
-            hasData.set(hasData.get() || t.hasData());
+            hasData.set(hasData.get() || t.hasNonZeroData());
         });
         setVisible(isVisible && hasData.get());
 

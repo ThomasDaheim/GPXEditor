@@ -43,7 +43,7 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
 
     private final static Preferences MYPREFERENCES = Preferences.userNodeForPackage(GPXEditorManager.class);
 
-    private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 5);
+    private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 10);
 
     public final static String BASELAYER_PREFIX = "baselayer";
     public final static String OVERLAY_PREFIX = "overlay";

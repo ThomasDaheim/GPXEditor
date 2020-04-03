@@ -59,6 +59,7 @@ import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
+import tf.helper.AppInfo;
 
 /**
  *
@@ -209,8 +210,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public final void setHeaderAndMeta() {
-        // TODO: use variables from JAR
-        myGPX.setCreator("GPXEditor - v4.5");
+        myGPX.setCreator(AppInfo.getInstance().getAppName() + " - " + AppInfo.getInstance().getAppVersion());
         myGPX.setVersion("1.1");
                 
         // extend gpx with garmin xmlns

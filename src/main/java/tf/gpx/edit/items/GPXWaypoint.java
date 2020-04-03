@@ -387,7 +387,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_DATA;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() != 0.0) {
                     return gpxLineItemData.getFormat().format(getSpeed());
                 } else {
                     return NO_DATA;
@@ -545,7 +545,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_VALUE;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() != 0.0) {
                     return getSpeed();
                 } else {
                     return NO_VALUE;
