@@ -60,11 +60,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.ResizeFeatures;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
@@ -79,6 +77,7 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.StatusBar;
+import tf.helper.AppClipboard;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 import tf.helper.UsefulKeyCodes;
@@ -88,7 +87,8 @@ import tf.helper.UsefulKeyCodes;
  * @author thomas
  */
 public class GPXTableView {
-    public static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/gpxeditor-tableview");
+    public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-tableview-dnd");
+    public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-tableview-cnp");
 
     private TableView<GPXWaypoint> myTableView;
     // need to store last non-empty row for drag & drop support
@@ -289,15 +289,14 @@ public class GPXTableView {
             row.setOnDragDetected(event -> {
                 if (!row.isEmpty()) {
                     final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
-                    final ClipboardContent cc = new ClipboardContent();
 
                     // use info from statusbar
 //                    db.setDragView(row.snapshot(null, null));
                     db.setDragView(StatusBar.getInstance().snapshot(null, null));
                     final ArrayList<Integer> selection = new ArrayList<>();
                     selection.addAll(myTableView.getSelectionModel().getSelectedIndices());
-                    cc.put(SERIALIZED_MIME_TYPE, selection);
-                    db.setContent(cc);
+                    AppClipboard.getInstance().setContent(DRAG_AND_DROP, selection);
+                    db.setContent(AppClipboard.getInstance().getContentAsMap(DRAG_AND_DROP));
                     event.consume();
                 }
             });
@@ -305,7 +304,7 @@ public class GPXTableView {
             // drag enters this row
             row.setOnDragEntered(event -> {
                 final Dragboard db = event.getDragboard();
-                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                if (db.hasContent(DRAG_AND_DROP)) {
                     final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
 
                     GPXEditor.RelativePosition relativePosition;
@@ -345,7 +344,7 @@ public class GPXTableView {
             // dragging something over the list
             row.setOnDragOver(event -> {
                 Dragboard db = event.getDragboard();
-                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                if (db.hasContent(DRAG_AND_DROP)) {
                     event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                     event.consume();
                 }
@@ -365,7 +364,7 @@ public class GPXTableView {
                 //System.out.println("Control+C Control+V or pressed");
                 
                 if (!myTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL copy entries, DEL doesn't
                     if (UsefulKeyCodes.CNTRL_C.match(event) ||
                             UsefulKeyCodes.CNTRL_X.match(event) ||
                             UsefulKeyCodes.SHIFT_DEL.match(event)) {
@@ -633,11 +632,11 @@ public class GPXTableView {
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TableRow<GPXWaypoint> row, final GPXEditor.RelativePosition relativePosition) {
         Dragboard db = event.getDragboard();
-        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+        if (db.hasContent(DRAG_AND_DROP)) {
             final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
             
             // get dragged item and item drop on to
-            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(DRAG_AND_DROP);
 
             final GPXWaypoint target = checkRow.getItem();
 

@@ -74,8 +74,6 @@
             <Menu mnemonicParsing="false" text="Values">
               <items>
                 <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
-                  <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="statisticsMenu" mnemonicParsing="false" text="Statistics" />
               </items>
             </Menu>

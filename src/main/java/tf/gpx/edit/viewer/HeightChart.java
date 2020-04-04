@@ -125,11 +125,11 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 
         final Text text = new Text("");
         text.getStyleClass().add("track-popup");
-        text.setVisible(true);
+        text.setVisible(false);
         text.setMouseTransparent(true);
 
         final Line line = new Line();
-        line.setVisible(true);
+        line.setVisible(false);
         line.setMouseTransparent(true);
 
         chartContent.getChildren().addAll(line, text);

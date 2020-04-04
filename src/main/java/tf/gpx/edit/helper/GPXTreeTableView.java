@@ -62,11 +62,9 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.paint.Color;
@@ -89,6 +87,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
+import tf.helper.AppClipboard;
 import tf.helper.ColorConverter;
 import tf.helper.ColorSelectionMenu;
 import tf.helper.TableMenuUtils;
@@ -100,8 +99,9 @@ import tf.helper.UsefulKeyCodes;
  * @author Thomas
  */
 public class GPXTreeTableView {
-//    private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-    public static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/gpxeditor-treetableview");
+//    private static final DataFormat DRAG_AND_DROP = new DataFormat("application/x-java-serialized-object");
+    public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-treetableview-dnd");
+    public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-treetableview-cnp");
 
     private TreeTableView<GPXMeasurable> myTreeTableView;
     // need to store last non-empty row for drag & drop support
@@ -452,13 +452,12 @@ public class GPXTreeTableView {
                 if (!row.isEmpty() && !row.getItem().isGPXMetadata()) {
                     // check if we're trying to drag a GPXFile item and not a track in it
                     final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
-                    final ClipboardContent cc = new ClipboardContent();
 
                     db.setDragView(row.snapshot(null, null));
                     final ArrayList<Integer> selection = new ArrayList<>();
                     selection.addAll(myTreeTableView.getSelectionModel().getSelectedIndices());
-                    cc.put(SERIALIZED_MIME_TYPE, selection);
-                    db.setContent(cc);
+                    AppClipboard.getInstance().setContent(DRAG_AND_DROP, selection);
+                    db.setContent(AppClipboard.getInstance().getContentAsMap(DRAG_AND_DROP));
                     event.consume();
                 }
             });
@@ -466,7 +465,7 @@ public class GPXTreeTableView {
             // drag enters this row
             row.setOnDragEntered(event -> {
                 final Dragboard db = event.getDragboard();
-                if (db.hasContent(SERIALIZED_MIME_TYPE) || db.hasContent(GPXTableView.SERIALIZED_MIME_TYPE)) {
+                if (db.hasContent(DRAG_AND_DROP) || db.hasContent(GPXTableView.DRAG_AND_DROP)) {
                     final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
 
                     GPXEditor.RelativePosition relativePosition;
@@ -902,11 +901,11 @@ public class GPXTreeTableView {
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TreeTableRow<GPXMeasurable> row, final GPXEditor.RelativePosition relativePosition) {
         Dragboard db = event.getDragboard();
-        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+        if (db.hasContent(DRAG_AND_DROP)) {
             final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
             if (!TargetForDragDrop.NONE.equals(acceptableDragboard(db, checkRow, relativePosition))) {
                 // get dragged item and item drop on to
-                final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+                final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(DRAG_AND_DROP);
                 // work from bottom to top - otherwise delete will mess up things
                 Collections.reverse(selection);
 
@@ -937,11 +936,11 @@ public class GPXTreeTableView {
                 
                 event.consume();
             }           
-        } else if (db.hasContent(GPXTableView.SERIALIZED_MIME_TYPE)) {
+        } else if (db.hasContent(GPXTableView.DRAG_AND_DROP)) {
             final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
             
             // get dragged item and item drop on to
-            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(GPXTableView.SERIALIZED_MIME_TYPE);
+            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(GPXTableView.DRAG_AND_DROP);
 
             final GPXMeasurable target = checkRow.getTreeItem().getValue();
 
@@ -986,8 +985,8 @@ public class GPXTreeTableView {
     private TargetForDragDrop acceptableDragboard(final Dragboard db, final TreeTableRow<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
         TargetForDragDrop result = TargetForDragDrop.NONE;
         
-        if (db.hasContent(SERIALIZED_MIME_TYPE) && !target.isEmpty()) {
-            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+        if (db.hasContent(DRAG_AND_DROP) && !target.isEmpty()) {
+            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(DRAG_AND_DROP);
             final List<TreeItem<GPXMeasurable>> items =
                 selection.stream().map((t) -> {
                         return myTreeTableView.getTreeItem(t);
@@ -995,7 +994,7 @@ public class GPXTreeTableView {
             
             result = acceptableItems(items, target.getTreeItem(), position);
             // TFE, 2020403: allow dragging of waypoints as well
-        } else if (db.hasContent(GPXTableView.SERIALIZED_MIME_TYPE) && !target.isEmpty()) {
+        } else if (db.hasContent(GPXTableView.DRAG_AND_DROP) && !target.isEmpty()) {
             // waypoints can be dropped on files, track segments & routes
             final GPXMeasurable targeItem= target.getTreeItem().getValue();
             if (targeItem.isGPXFile() || targeItem.isGPXRoute() || targeItem.isGPXTrackSegment()) {

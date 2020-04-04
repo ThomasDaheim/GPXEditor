@@ -335,8 +335,6 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem distributionsMenu;
     @FXML
-    private MenuItem specialValuesMenu;
-    @FXML
     private MenuItem downloadSRTMDataMenu;
     @FXML
     private MenuItem invertItemsMenu;
@@ -542,10 +540,6 @@ public class GPXEditor implements Initializable {
             showDistributions(event);
         });
         distributionsMenu.disableProperty().bind(
-                Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
-        specialValuesMenu.setOnAction((ActionEvent event) -> {
-        });
-        specialValuesMenu.disableProperty().bind(
                 Bindings.notEqual(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         statisticsMenu.setOnAction((ActionEvent event) -> {
             showStatistics(event);
