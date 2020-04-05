@@ -225,7 +225,7 @@ public class GPXTableView {
                 myEditor.insertWaypointsAtPosition(row.getItem(), (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), GPXEditor.RelativePosition.BELOW);
             });
             insertItems.getItems().add(insertBelow);
-            insertItems.disableProperty().bind(Bindings.isEmpty((ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE)));
+            insertItems.disableProperty().bind(Bindings.isEmpty(bindingsHelper()));
             
             waypointMenu.getItems().add(insertItems);
             
@@ -412,6 +412,15 @@ public class GPXTableView {
         });
         
         initColumns();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private ObservableList<GPXWaypoint> bindingsHelper() {
+        if (AppClipboard.getInstance().hasContent(COPY_AND_PASTE)) {
+            return (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE);
+        } else {
+            return FXCollections.emptyObservableList();
+        }
     }
    
     @SuppressWarnings("unchecked")

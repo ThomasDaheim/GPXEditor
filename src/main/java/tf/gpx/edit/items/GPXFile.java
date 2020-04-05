@@ -215,12 +215,29 @@ public class GPXFile extends GPXMeasurable {
                 
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
+        // TFE, 20200405: url changed for extensions xsd... so sync with authentic garmin header
+//<gpx xmlns="http://www.topografix.com/GPX/1/1" 
+//xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" 
+//xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1" 
+//xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1" 
+//xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
+//xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+//xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd 
+//  http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd 
+//  http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd 
+//  http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd 
+//  http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">      
         myGPX.addXmlns("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
-        // others currently not used...
-//        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
-//        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
-//        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
-//        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        final String schemaLocation = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd";
+        myGPX.addXmlns("xsi:schemaLocation", schemaLocation);
         
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
