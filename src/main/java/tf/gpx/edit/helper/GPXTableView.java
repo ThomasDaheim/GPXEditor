@@ -96,7 +96,7 @@ public class GPXTableView {
     private GPXEditor myEditor;
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
-    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
+//    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
     private boolean onlyShiftPressed = false;
     
@@ -112,7 +112,8 @@ public class GPXTableView {
         
         initTableView();
     }
-
+    
+    @SuppressWarnings("unchecked")
     private void initTableView() {
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTableViewMenu(myTableView);
@@ -215,16 +216,16 @@ public class GPXTableView {
             final Menu insertItems = new Menu("Insert");
             final MenuItem insertAbove = new MenuItem("above");
             insertAbove.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(row.getItem(), clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
+                myEditor.insertWaypointsAtPosition(row.getItem(), (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), GPXEditor.RelativePosition.ABOVE);
             });
             insertItems.getItems().add(insertAbove);
             
             final MenuItem insertBelow = new MenuItem("below");
             insertBelow.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(row.getItem(), clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+                myEditor.insertWaypointsAtPosition(row.getItem(), (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), GPXEditor.RelativePosition.BELOW);
             });
             insertItems.getItems().add(insertBelow);
-            insertItems.disableProperty().bind(Bindings.isEmpty(clipboardWayPoints));
+            insertItems.disableProperty().bind(Bindings.isEmpty((ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE)));
             
             waypointMenu.getItems().add(insertItems);
             
@@ -295,16 +296,15 @@ public class GPXTableView {
                     db.setDragView(StatusBar.getInstance().snapshot(null, null));
                     final ArrayList<Integer> selection = new ArrayList<>();
                     selection.addAll(myTableView.getSelectionModel().getSelectedIndices());
-                    AppClipboard.getInstance().setContent(DRAG_AND_DROP, selection);
-                    db.setContent(AppClipboard.getInstance().getContentAsMap(DRAG_AND_DROP));
+                    AppClipboard.getInstance().addContent(DRAG_AND_DROP, selection);
+                    db.setContent(AppClipboard.getInstance().getAsClipboardContent(DRAG_AND_DROP));
                     event.consume();
                 }
             });
            
             // drag enters this row
             row.setOnDragEntered(event -> {
-                final Dragboard db = event.getDragboard();
-                if (db.hasContent(DRAG_AND_DROP)) {
+                if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
                     final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
 
                     GPXEditor.RelativePosition relativePosition;
@@ -343,8 +343,7 @@ public class GPXTableView {
 
             // dragging something over the list
             row.setOnDragOver(event -> {
-                Dragboard db = event.getDragboard();
-                if (db.hasContent(DRAG_AND_DROP)) {
+                if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
                     event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                     event.consume();
                 }
@@ -368,11 +367,13 @@ public class GPXTableView {
                     if (UsefulKeyCodes.CNTRL_C.match(event) ||
                             UsefulKeyCodes.CNTRL_X.match(event) ||
                             UsefulKeyCodes.SHIFT_DEL.match(event)) {
-                        clipboardWayPoints.clear();
                         // TFE, 20190812: add clone to clipboardWayPoints
-                        for (GPXWaypoint gpxWaypoint : myTableView.getSelectionModel().getSelectedItems()) {
-                            clipboardWayPoints.add(gpxWaypoint.cloneMe(true));
-                        }
+                        // TFE, 20200405: clever cloning :-)
+                        final ObservableList<GPXWaypoint> items =
+                            myTableView.getSelectionModel().getSelectedItems().stream().map((t) -> {
+                                    return t.cloneMe(true);
+                                }).collect(Collectors.toCollection(FXCollections::observableArrayList));
+                        AppClipboard.getInstance().setContent(COPY_AND_PASTE, items);
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
@@ -389,7 +390,7 @@ public class GPXTableView {
                 
                 myEditor.insertWaypointsAtPosition(
                         myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
-                        clipboardWayPoints, 
+                        (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), 
                         GPXEditor.RelativePosition.ABOVE);
             } else if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                     UsefulKeyCodes.SHIFT_INSERT.match(event)) {
@@ -397,7 +398,7 @@ public class GPXTableView {
                 
                 myEditor.insertWaypointsAtPosition(
                         myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
-                        clipboardWayPoints, 
+                        (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), 
                         GPXEditor.RelativePosition.BELOW);
             }
             
@@ -631,19 +632,18 @@ public class GPXTableView {
     
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TableRow<GPXWaypoint> row, final GPXEditor.RelativePosition relativePosition) {
-        Dragboard db = event.getDragboard();
-        if (db.hasContent(DRAG_AND_DROP)) {
+        if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
             final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
             
             // get dragged item and item drop on to
-            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(DRAG_AND_DROP);
+            final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(DRAG_AND_DROP);
 
             final GPXWaypoint target = checkRow.getItem();
 
             final ObservableList<GPXWaypoint> allItems = myTableView.getItems();
             final ObservableList<GPXWaypoint> items =
                 selection.stream().map((t) -> {
-                        return allItems.get(t);
+                        return allItems.get(t).cloneMe(true);
                     }).collect(Collectors.toCollection(FXCollections::observableArrayList));
 
             myEditor.insertWaypointsAtPosition(
@@ -655,24 +655,16 @@ public class GPXTableView {
                 myEditor.deleteSelectedWaypoints();
             }
 
-            // clear copy&paste list since it might have been invalidated
-            clearClipBoard();
+            // non need to clear copy&paste list since its a clone
+            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
             
             event.setDropCompleted(true);
             event.consume();
         }
     }
     
-    public void insertItemAtLocation(final GPXWaypoint insert, final GPXWaypoint location, final GPXEditor.RelativePosition position, final boolean doRemove) {
-        
-    }
-    
     public boolean onlyShiftPressed() {
         return onlyShiftPressed;
-    }
-    
-    public void clearClipBoard() {
-        clipboardWayPoints.clear();
     }
     
     /* Required getter and setter methods are forwarded to internal TreeTableView */

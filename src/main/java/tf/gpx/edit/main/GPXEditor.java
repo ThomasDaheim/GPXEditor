@@ -919,9 +919,6 @@ public class GPXEditor implements Initializable {
         showGPXWaypoints(getShownGPXMeasurables(), true, false);
         // force repaint of gpxFileList to show unsaved items
         refreshGPXFileList();
-        
-        // any clipboard might be invalidated...
-        gpxWaypoints.clearClipBoard();
     }
     
     public void insertWaypointsAtPosition(final GPXLineItem target, final ObservableList<GPXWaypoint> wayPoints, final RelativePosition position) {
