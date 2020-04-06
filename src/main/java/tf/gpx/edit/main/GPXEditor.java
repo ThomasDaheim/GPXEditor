@@ -1445,7 +1445,8 @@ public class GPXEditor implements Initializable {
         
         // confirmation dialogue
         final String gpxItemNames = selectedItems.stream()
-                .map(item -> item.getName())
+                // TFE, 20200406: a bit more info, please
+                .map(item -> item.getCombinedID()+ " - " + item.getName())
                 .collect(Collectors.joining(",\n"));
 
         String headerText = "Do you want to ";

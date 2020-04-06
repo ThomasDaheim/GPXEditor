@@ -474,7 +474,7 @@ public class GPXTreeTableView {
                     } else {
                         relativePosition = GPXEditor.RelativePosition.BELOW;
                     }
-                    final TargetForDragDrop accetable = acceptableClipboard(checkRow, relativePosition);
+                    final TargetForDragDrop accetable = acceptableClipboardForTreeTableRow(DRAG_AND_DROP, checkRow, relativePosition);
                     if (!TargetForDragDrop.NONE.equals(accetable)) {
                         if (TargetForDragDrop.DROP_ON_ME.equals(accetable)) {
                             relativePosition = GPXEditor.RelativePosition.BELOW;
@@ -567,7 +567,7 @@ public class GPXTreeTableView {
                                 UsefulKeyCodes.SHIFT_DEL.match(event)) {
                             // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
                             // no cloning done here since we store TreeItem<GPXMeasurable> to be able to do "isParent" check on paste
-                            AppClipboard.getInstance().setContent(COPY_AND_PASTE, myTreeTableView.getSelectionModel().getSelectedItems());
+                            AppClipboard.getInstance().addContent(COPY_AND_PASTE, myTreeTableView.getSelectionModel().getSelectedItems());
                         }
                         
                         // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
@@ -583,38 +583,36 @@ public class GPXTreeTableView {
                         UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                         UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                     //System.out.println("Control+V pressed");
+                    GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
+                    if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                            UsefulKeyCodes.SHIFT_INSERT.match(event)) {
+                        position = GPXEditor.RelativePosition.BELOW;
+                    }
                     
-                    if(AppClipboard.getInstance().hasContent(COPY_AND_PASTE)) {
-                        GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
-                        if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
-                                UsefulKeyCodes.SHIFT_INSERT.match(event)) {
-                            position = GPXEditor.RelativePosition.BELOW;
-                        }
-                        
-                        // go through clipboardLineItems
-                        TreeItem<GPXMeasurable> target = myTreeTableView.getSelectionModel().getSelectedItem();
-                        
+                    TreeItem<GPXMeasurable> target = myTreeTableView.getSelectionModel().getSelectedItem();
+                    TargetForDragDrop acceptable = acceptableClipboardForTreeItem(COPY_AND_PASTE, target, position);
+                    if (AppClipboard.getInstance().hasContent(COPY_AND_PASTE)) {
                         boolean canInsert = false;
-                        if (!TargetForDragDrop.NONE.equals(acceptableItems((List<TreeItem<GPXMeasurable>>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), target, position))){
+                        if (TargetForDragDrop.DROP_ON_ME.equals(acceptable)){
                             canInsert = true;
                         } else {
                             // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
                             if (!target.getValue().isGPXFile()) {
                                 target = target.getParent();
-                                canInsert = !TargetForDragDrop.NONE.equals(acceptableItems((List<TreeItem<GPXMeasurable>>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), target, position));
+                                canInsert = !TargetForDragDrop.NONE.equals(acceptableClipboardForTreeItem(COPY_AND_PASTE, target, position));
                             }
                         }
                         
                         if (canInsert) {
-                            final List<TreeItem<GPXMeasurable>> clipboardLineItems = (List<TreeItem<GPXMeasurable>>) AppClipboard.getInstance().getContent(COPY_AND_PASTE);
-                            Collections.reverse(clipboardLineItems);
-                            for (TreeItem<GPXMeasurable> draggedItem : clipboardLineItems) {
-                                insertItemAtLocation(draggedItem.getValue(), target.getValue(), position, false);
-                            }
+                            onDragDroppedOrPaste(target, position);
                         }
                         
                         // force repaint of gpxFileList to show unsaved items
                         myEditor.refreshGPXFileList();
+                    } else if (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE)) {
+                        if (TargetForDragDrop.DROP_ON_ME.equals(acceptable)){
+                            onDragDroppedOrPaste(target, position);
+                        }
                     }
                 }
             }
@@ -902,7 +900,7 @@ public class GPXTreeTableView {
             relativePosition = GPXEditor.RelativePosition.ABOVE;
         }
 
-        final TargetForDragDrop accetable = acceptableClipboard(checkRow, relativePosition);
+        final TargetForDragDrop accetable = acceptableClipboardForTreeTableRow(DRAG_AND_DROP, checkRow, relativePosition);
         if (!TargetForDragDrop.NONE.equals(accetable)) {
             event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             event.consume();
@@ -911,49 +909,54 @@ public class GPXTreeTableView {
     
     @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TreeTableRow<GPXMeasurable> row, final GPXEditor.RelativePosition relativePosition) {
+        // TFE, 2020406: we allow drop only when its valid - so no need to check here all over again
+        final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
+        if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP) || AppClipboard.getInstance().hasContent(GPXTableView.DRAG_AND_DROP)) {
+            onDragDroppedOrPaste(checkRow.getTreeItem(), relativePosition);
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            onDragDroppedOrPaste(null, relativePosition);
+        }
+
+        event.setDropCompleted(true);
+        event.consume();
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void onDragDroppedOrPaste(final TreeItem<GPXMeasurable> item, final GPXEditor.RelativePosition relativePosition) {
         if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
-            final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
-            if (!TargetForDragDrop.NONE.equals(acceptableClipboard(checkRow, relativePosition))) {
-                // get dragged item and item drop on to
-                final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(DRAG_AND_DROP);
-                // work from bottom to top - otherwise delete will mess up things
-                Collections.reverse(selection);
+            final GPXMeasurable target = item.getValue();
 
-                final GPXMeasurable target = checkRow.getTreeItem().getValue();
+            // get dragged item and item drop on to
+            final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(DRAG_AND_DROP);
+            // work from bottom to top - otherwise delete will mess up things
+            Collections.reverse(selection);
 
-                final List<GPXMeasurable> items =
-                selection.stream().map((t) -> {
-                        return myTreeTableView.getTreeItem(t).getValue();
-                    }).collect(Collectors.toList());
-                
-                for (GPXMeasurable draggedItem : items) {
-                    // TFE, 2020402: support CNTRL + DRAG
-                    insertItemAtLocation(draggedItem, target, relativePosition, !myEditor.isCntrlPressed());
-                }
+            final List<GPXMeasurable> items =
+            selection.stream().map((t) -> {
+                    return myTreeTableView.getTreeItem(t).getValue();
+                }).collect(Collectors.toList());
 
-                // clear copy&paste list as well since it might have been invalidated
-                AppClipboard.getInstance().clearContent(COPY_AND_PASTE);
-                AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
-                
-                event.setDropCompleted(true);
-                
-                myTreeTableView.getSelectionModel().clearSelection();
-                if (!selection.isEmpty()) {
-                    myTreeTableView.getSelectionModel().select(myTreeTableView.getTreeItem(selection.get(selection.size()-1)));
-                }
-                // TFE, 20190822: trigger re-sort manually
-                myTreeTableView.sort(); 
-                myTreeTableView.refresh(); 
-                
-                event.consume();
-            }           
+            for (GPXMeasurable draggedItem : items) {
+                // TFE, 2020402: support CNTRL + DRAG
+                insertItemAtLocation(draggedItem, target, relativePosition, !myEditor.isCntrlPressed());
+            }
+
+            // clear copy&paste list as well since it might have been invalidated
+            AppClipboard.getInstance().clearContent(COPY_AND_PASTE);
+            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
+
+            myTreeTableView.getSelectionModel().clearSelection();
+            if (!selection.isEmpty()) {
+                myTreeTableView.getSelectionModel().select(myTreeTableView.getTreeItem(selection.get(selection.size()-1)));
+            }
+            // TFE, 20190822: trigger re-sort manually
+            myTreeTableView.sort(); 
+            myTreeTableView.refresh(); 
         } else if (AppClipboard.getInstance().hasContent(GPXTableView.DRAG_AND_DROP)) {
-            final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
-            
+            final GPXMeasurable target = item.getValue();
+
             // get dragged item and item drop on to
             final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(GPXTableView.DRAG_AND_DROP);
-
-            final GPXMeasurable target = checkRow.getTreeItem().getValue();
 
             final ObservableList<GPXWaypoint> items = myEditor.getGPXWaypointsForIndices(selection);
 
@@ -962,48 +965,59 @@ public class GPXTreeTableView {
                     items, 
                     // always insert @ start of waypoints
                     GPXEditor.RelativePosition.ABOVE);
-            
+
             if (!myEditor.isCntrlPressed()) {
                 myEditor.deleteSelectedWaypoints();
             }
-
-            event.setDropCompleted(true);
-            event.consume();
-        } else {
-            boolean success = false;
-            if (AppClipboard.getInstance().hasFiles()) {
-                success = true;
-                final List<File> files = new ArrayList<>();
-                for (File file: AppClipboard.getInstance().getFiles()) {
-                    // accept only gpx files
-                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
-                        files.add(file);
-                    }
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            final List<File> files = new ArrayList<>();
+            for (File file: AppClipboard.getInstance().getFiles()) {
+                // accept only gpx files
+                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    files.add(file);
                 }
-                // read and add to list
-                myEditor.parseAndAddFiles(files);
             }
-            event.setDropCompleted(success);
-            event.consume();
+            // read and add to list
+            myEditor.parseAndAddFiles(files);
         }
     }
     
     @SuppressWarnings("unchecked")
-    private TargetForDragDrop acceptableClipboard(final TreeTableRow<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
+    private TargetForDragDrop acceptableClipboardForTreeTableRow(final DataFormat dataFormat, final TreeTableRow<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
         TargetForDragDrop result = TargetForDragDrop.NONE;
         
-        if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP) && !target.isEmpty()) {
+        DataFormat tableViewFormat = GPXTableView.DRAG_AND_DROP;
+        if (COPY_AND_PASTE.equals(dataFormat)) {
+            tableViewFormat = GPXTableView.COPY_AND_PASTE;
+        }
+        if (AppClipboard.getInstance().hasContent(dataFormat) && !target.isEmpty()) {
+            result = acceptableClipboardForTreeItem(dataFormat, target.getTreeItem(), position);
+            // TFE, 2020403: allow dragging of waypoints as well
+        } else if (AppClipboard.getInstance().hasContent(tableViewFormat) && !target.isEmpty()) {
+            // waypoints can be dropped on files, track segments & routes
+            result = acceptableClipboardForTreeItem(tableViewFormat, target.getTreeItem(), position);
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            result = acceptableClipboardForTreeItem(dataFormat, null, position);
+        }
+        
+        return result;
+    }
+    @SuppressWarnings("unchecked")
+    private TargetForDragDrop acceptableClipboardForTreeItem(final DataFormat dataFormat, final TreeItem<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.NONE;
+        
+        if (AppClipboard.getInstance().hasContent(dataFormat)) {
             final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(DRAG_AND_DROP);
             final List<TreeItem<GPXMeasurable>> items =
                 selection.stream().map((t) -> {
                         return myTreeTableView.getTreeItem(t);
                     }).collect(Collectors.toList());
             
-            result = acceptableItems(items, target.getTreeItem(), position);
+            result = acceptableItems(items, target, position);
             // TFE, 2020403: allow dragging of waypoints as well
-        } else if (AppClipboard.getInstance().hasContent(GPXTableView.DRAG_AND_DROP) && !target.isEmpty()) {
+        } else if (AppClipboard.getInstance().hasContent(dataFormat)) {
             // waypoints can be dropped on files, track segments & routes
-            final GPXMeasurable targeItem= target.getTreeItem().getValue();
+            final GPXMeasurable targeItem= target.getValue();
             if (targeItem.isGPXFile() || targeItem.isGPXRoute() || targeItem.isGPXTrackSegment()) {
                 result = TargetForDragDrop.DROP_ON_ME;
             }

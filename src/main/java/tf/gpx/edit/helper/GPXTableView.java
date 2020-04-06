@@ -373,7 +373,7 @@ public class GPXTableView {
                             myTableView.getSelectionModel().getSelectedItems().stream().map((t) -> {
                                     return t.cloneMe(true);
                                 }).collect(Collectors.toCollection(FXCollections::observableArrayList));
-                        AppClipboard.getInstance().setContent(COPY_AND_PASTE, items);
+                        AppClipboard.getInstance().addContent(COPY_AND_PASTE, items);
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
@@ -383,23 +383,22 @@ public class GPXTableView {
                         myEditor.deleteSelectedWaypoints();
                     }
                 }
-                // any combination that adds entries
+            // any combination that adds entries
             } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
-                    UsefulKeyCodes.INSERT.match(event)) {
-                //System.out.println("Control+V pressed");
-                
-                myEditor.insertWaypointsAtPosition(
-                        myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
-                        (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), 
-                        GPXEditor.RelativePosition.ABOVE);
-            } else if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    UsefulKeyCodes.INSERT.match(event) ||
+                    UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                     UsefulKeyCodes.SHIFT_INSERT.match(event)) {
-                //System.out.println("Shift Control+V pressed");
-                
+                //System.out.println("Control+V pressed");
+                GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
+                if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                        UsefulKeyCodes.SHIFT_INSERT.match(event)) {
+                    position = GPXEditor.RelativePosition.BELOW;
+                }
+
                 myEditor.insertWaypointsAtPosition(
                         myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
                         (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), 
-                        GPXEditor.RelativePosition.BELOW);
+                        position);
             }
             
             if (UsefulKeyCodes.CNTRL_A.match(event)) {
