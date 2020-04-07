@@ -133,12 +133,14 @@ public class DistributionViewer extends AbstractStage {
         GridPane.setMargin(dataLbl, INSET_TOP_BOTTOM);
         
         // add all possible values from GPXLineItemData
+        // TFE, 20200407: not all - by now we have a few more values...
         for (GPXLineItemData value : GPXLineItemData.values()) {
-            if (value.hasDoubleValue()) {
+            if (value.showDistribution()) {
                 dataBox.getItems().add(value.getDescription());
             }
         }
-        dataBox.setValue(GPXLineItemData.CumulativeDuration.getDescription());
+        
+        dataBox.setValue(GPXLineItemData.Speed.getDescription());
         dataBox.setTooltip(new Tooltip("Data value to use."));
         dataBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -235,7 +237,7 @@ public class DistributionViewer extends AbstractStage {
 
         rowNum++;
         // 5th row: select button
-        final Button selectButton = new Button("Select points in marked area");
+        final Button selectButton = new Button("Select points outside range");
         selectButton.setOnAction((ActionEvent event) -> {
             // disable listener for checked changes since it fires for each waypoint...
             // TODO: use something fancy like LibFX ListenerHandle...
@@ -300,13 +302,9 @@ public class DistributionViewer extends AbstractStage {
         final Button deleteButton = new Button("Delete selected points");
         deleteButton.setOnAction((ActionEvent event) -> {
             if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
-                final GPXTrackSegment gpxTrackSegment = myGPXWaypoints.get(0).getGPXTrackSegments().get(0);
-                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-
-                // performance: convert to hashset since its contains() is way faster
-                newWaypoints.removeAll(new LinkedHashSet<>(wayPointList.getCheckModel().getCheckedItems()));
-                gpxTrackSegment.setGPXWaypoints(newWaypoints);
+                // now more complex - can be waypoints of various track segements...
+                // luckily, we already have a method for that :-)
+                myGPXEditor.deleteWaypoints(wayPointList.getCheckModel().getCheckedItems());
                 
                 // done, lets get out of here...
                 getStage().close();
@@ -384,10 +382,10 @@ public class DistributionViewer extends AbstractStage {
         minmaxSlider.setBlockIncrement(binSize);
         minmaxSlider.setMinorTickCount(10);
         minmaxSlider.setMajorTickUnit(10.0 * binSize);
-        minmaxSlider.setMin(minXValue - binSize / 10.0);
-        minmaxSlider.setMax(maxXValue + binSize / 10.0);
-        minmaxSlider.setLowValue(minXValue - binSize / 10.0);
-        minmaxSlider.setHighValue(maxXValue + binSize / 10.0);
+        minmaxSlider.setMin(minXValue);
+        minmaxSlider.setMax(maxXValue);
+        minmaxSlider.setLowValue(minXValue);
+        minmaxSlider.setHighValue(maxXValue);
         
         // set labels
         minLbl.setText(formater.format(minXValue));

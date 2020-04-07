@@ -84,8 +84,8 @@ public abstract class GPXLineItem {
         Type(false, "Type", GPXLineItemDataType.Single, null),
         Name(false, "Name", GPXLineItemDataType.Single, null),
         Start(false, "Start", GPXLineItemDataType.Single, DATE_FORMAT),
-        CumulativeDuration(true, "Cumulative Duration", GPXLineItemDataType.Double, null),
-        OverallDuration(true, "Overall Duration", GPXLineItemDataType.Double, null),
+        CumulativeDuration(false, "Cumulative Duration", GPXLineItemDataType.Double, null),
+        OverallDuration(false, "Overall Duration", GPXLineItemDataType.Double, null),
         Length(false, "Length", GPXLineItemDataType.Double, DOUBLE_FORMAT_3),
         Speed(true, "Speed", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         CumulativeAscent(false, "Cumulative Ascent", GPXLineItemDataType.Multiple, DOUBLE_FORMAT_2),
@@ -100,20 +100,20 @@ public abstract class GPXLineItem {
         ID(false, "ID", GPXLineItemDataType.Integer, null),
         CombinedID(false, "CombinedID", GPXLineItemDataType.Integer, null);
         
-        private final boolean hasDoubleValue;
+        private final boolean showDistribution;
         private final String description;
         private final GPXLineItemDataType dataType;
         private final Format format;
         
-        GPXLineItemData(final boolean doubleValue, final String desc, final GPXLineItemDataType type, final Format form) {
-            hasDoubleValue = doubleValue;
+        GPXLineItemData(final boolean showDist, final String desc, final GPXLineItemDataType type, final Format form) {
+            showDistribution = showDist;
             description = desc;
             dataType = type;
             format = form;
         }
         
-        public boolean hasDoubleValue() {
-            return hasDoubleValue;
+        public boolean showDistribution() {
+            return showDistribution;
         }
         
         public String getDescription() {

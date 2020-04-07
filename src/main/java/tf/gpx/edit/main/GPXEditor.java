@@ -380,6 +380,7 @@ public class GPXEditor implements Initializable {
         DistributionViewer.getInstance().setCallback(this);
         EditGPXMetadata.getInstance().setCallback(this);
         EditGPXWaypoint.getInstance().setCallback(this);
+        StatisticsViewer.getInstance().setCallback(this);
 
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
@@ -884,19 +885,21 @@ public class GPXEditor implements Initializable {
     
     public void deleteSelectedWaypoints() {
         // all waypoints to remove - as copy since otherwise observablelist getAsString messed up by deletes
-        final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
-
+        deleteWaypoints(new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems()));
+    }
+    
+    public void deleteWaypoints(final List<GPXWaypoint> wayPoints) {
         gpxWaypoints.getSelectionModel().getSelectedItems().removeListener(gpxWaypointSelectionListener);
         // now loop through all the waypoints and try to remove them
         // can be waypoints from file, track, route
-
+        
         // performance: cluster waypoints by parents
         final Map<GPXLineItem, List<GPXWaypoint>> waypointCluster = new HashMap<>();
-        for (GPXWaypoint waypoint : selectedWaypoints) {
+        for (GPXWaypoint waypoint : wayPoints) {
             final GPXLineItem parent = waypoint.getParent();
             
             if (!waypointCluster.containsKey(parent)) {
-                final List<GPXWaypoint> parentWaypoints = selectedWaypoints.stream().filter((t) -> {
+                final List<GPXWaypoint> parentWaypoints = wayPoints.stream().filter((t) -> {
                     return parent.equals(t.getParent());
                 }).collect(Collectors.toList());
                 waypointCluster.put(parent, parentWaypoints);
@@ -910,9 +913,6 @@ public class GPXEditor implements Initializable {
             parent.setGPXWaypoints(parentWaypoints);
         }
 
-//        for (GPXWaypoint waypoint : selectedWaypoints) {
-//            waypoint.getParent().getGPXWaypoints().remove(waypoint);
-//        }
         gpxWaypoints.getSelectionModel().getSelectedItems().addListener(gpxWaypointSelectionListener);
         StatusBar.getInstance().setStatusFromWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
 
