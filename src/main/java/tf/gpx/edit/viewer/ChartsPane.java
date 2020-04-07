@@ -53,11 +53,11 @@ public class ChartsPane extends StackPane {
     private final static double YAXIS_SEP = 20;
     
     // TFE, 20191119: hold a list of IChartBasics for height, speed, ...
-    private final List<IChartBasics> charts = new ArrayList<>();
+    private final List<IChartBasics<?>> charts = new ArrayList<>();
 
     // base is the one with yAxis to the right & mouse interaction
-    private final IChartBasics baseChart;
-    private final List<IChartBasics> additionalCharts = new ArrayList<>();
+    private final IChartBasics<?> baseChart;
+    private final List<IChartBasics<?>> additionalCharts = new ArrayList<>();
     private double totalYAxisWidth = YAXIS_WIDTH + YAXIS_SEP;
 
     private ChartsPane() {
@@ -165,7 +165,6 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    @SuppressWarnings("unchecked")
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert lineItems != null;
 
@@ -189,14 +188,12 @@ public class ChartsPane extends StackPane {
         });
     }
 
-    @SuppressWarnings("unchecked")
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         charts.stream().forEach((t) -> {
             t.updateGPXWaypoints(gpxWaypoints);
         });
     }
 
-    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         assert gpxWaypoints != null;
 

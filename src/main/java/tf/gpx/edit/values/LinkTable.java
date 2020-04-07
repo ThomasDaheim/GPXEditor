@@ -49,7 +49,6 @@ public class LinkTable extends TableView<Link> {
         initTableView();
     }
     
-    @SuppressWarnings("unchecked")
     private void initTableView() {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setEditable(true);
@@ -100,7 +99,10 @@ public class LinkTable extends TableView<Link> {
         });
         typeCol.setEditable(true);
         
-        getColumns().addAll(hrefCol, textCol, typeCol);
+        // addAll() leads to unchecked cast - and we don't want that
+        getColumns().add(hrefCol);
+        getColumns().add(textCol);
+        getColumns().add(typeCol);
         
         // add, remove via context menu
         setRowFactory((TableView<Link> tableView) -> {

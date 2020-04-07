@@ -83,14 +83,12 @@ public class GPXTrackviewer {
         });
     }
 
-    @SuppressWarnings("unchecked")
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         TrackMap.getInstance().updateGPXWaypoints(gpxWaypoints);
         
         ChartsPane.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
-    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;

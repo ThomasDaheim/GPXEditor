@@ -39,12 +39,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
@@ -109,7 +109,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrackSegment cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
         
         // parent needs to be set initially - list functions use this for checking
@@ -140,7 +140,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected TrackSegment getTrackSegment() {
@@ -148,15 +148,15 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrack getParent() {
-        return myGPXTrack;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXTrack);
     }
 
     @Override
-    public GPXTrackSegment setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXTrack != null && myGPXTrack.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
@@ -164,7 +164,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myGPXTrack = (GPXTrack) parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override

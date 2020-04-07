@@ -133,6 +133,7 @@ import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.AboutMenu;
+import tf.helper.ObjectsHelper;
 import tf.helper.ShowAlerts;
 import tf.helper.TableViewPreferences;
 
@@ -932,7 +933,7 @@ public class GPXEditor implements Initializable {
         
         // TFE, 20190821: always clone and insert the clones! you might want to insert more than once...
         final List<GPXWaypoint> insertWaypoints = wayPoints.stream().map((t) -> {
-            return t.cloneMe(true);
+            return t.<GPXWaypoint>cloneMe(true);
         }).collect(Collectors.toList());
         
         // be prepared for any bullshit
@@ -2048,9 +2049,8 @@ public class GPXEditor implements Initializable {
             StatusBar.getInstance());
     }
     
-    @SuppressWarnings("unchecked")
     private List<GPXMeasurable> getShownGPXMeasurables () {
-        return (List<GPXMeasurable>) gpxWaypoints.getUserData();
+        return ObjectsHelper.uncheckedCast(gpxWaypoints.getUserData());
     }
     
     public ObservableList<GPXWaypoint> getGPXWaypointsForIndices(final List<Integer> indices) {

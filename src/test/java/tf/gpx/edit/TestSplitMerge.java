@@ -185,7 +185,6 @@ public class TestSplitMerge {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testSplitTrackSegments() {
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 

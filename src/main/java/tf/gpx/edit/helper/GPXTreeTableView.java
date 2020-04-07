@@ -85,13 +85,13 @@ import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.helper.AppClipboard;
 import tf.helper.ColorConverter;
 import tf.helper.ColorSelectionMenu;
+import tf.helper.ObjectsHelper;
 import tf.helper.TableMenuUtils;
 import tf.helper.TooltipHelper;
 import tf.helper.UsefulKeyCodes;
@@ -130,7 +130,6 @@ public class GPXTreeTableView {
         initTreeTableView();
     }
     
-    @SuppressWarnings("unchecked")
     private void initTreeTableView() {
         // start with normal root since its only a holder for the gpx files
         TreeItem<GPXMeasurable> root = myTreeTableView.getRoot();
@@ -630,14 +629,13 @@ public class GPXTreeTableView {
         initColumns();
     }
     
-    @SuppressWarnings("unchecked")
     private void initColumns() {
         // iterate of columns and set accordingly
         // cast column to concrete version to be able to set comparator
         for (TreeTableColumn<GPXMeasurable, ?> column : myTreeTableView.getColumns()) {
             switch (column.getId()) {
                 case "idGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> idGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> idGPXCol = ObjectsHelper.uncheckedCast(column);
                     idGPXCol.setCellValueFactory(
                             // getID not working for GPXFile - is always 0...
             //                (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
@@ -685,7 +683,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "typeGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> typeGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> typeGPXCol = ObjectsHelper.uncheckedCast(column);
                     typeGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
                     typeGPXCol.setEditable(false);
@@ -693,7 +691,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "nameGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> nameGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> nameGPXCol = ObjectsHelper.uncheckedCast(column);
                     nameGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Name)));
                     // TF, 20170626: track segments don't have a name attribute
@@ -743,7 +741,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "startGPXCol":
-                    final TreeTableColumn<GPXMeasurable, Date> startGPXCol = (TreeTableColumn<GPXMeasurable, Date>) column;
+                    final TreeTableColumn<GPXMeasurable, Date> startGPXCol = ObjectsHelper.uncheckedCast(column);
                     startGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, Date> p) -> new SimpleObjectProperty<>(p.getValue().getValue().getDate()));
                     startGPXCol.setCellFactory(col -> new TreeTableCell<GPXMeasurable, Date>() {
@@ -762,7 +760,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "durationGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> durationGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> durationGPXCol = ObjectsHelper.uncheckedCast(column);
                     durationGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationGPXCol.setEditable(false);
@@ -770,7 +768,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "lengthGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> lengthGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> lengthGPXCol = ObjectsHelper.uncheckedCast(column);
                     lengthGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
                     lengthGPXCol.setEditable(false);
@@ -779,7 +777,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "speedGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> speedGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> speedGPXCol = ObjectsHelper.uncheckedCast(column);
                     speedGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
                     speedGPXCol.setEditable(false);
@@ -788,7 +786,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "cumAccGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> cumAccGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> cumAccGPXCol = ObjectsHelper.uncheckedCast(column);
                     cumAccGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
                     cumAccGPXCol.setEditable(false);
@@ -797,7 +795,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "cumDescGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> cumDescGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> cumDescGPXCol = ObjectsHelper.uncheckedCast(column);
                     cumDescGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
                     cumDescGPXCol.setEditable(false);
@@ -806,7 +804,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "noItemsGPXCol":
-                    final TreeTableColumn<GPXMeasurable, String> noItemsGPXCol = (TreeTableColumn<GPXMeasurable, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> noItemsGPXCol = ObjectsHelper.uncheckedCast(column);
                     noItemsGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
                     noItemsGPXCol.setEditable(false);
@@ -815,7 +813,7 @@ public class GPXTreeTableView {
                     break;
 
                 case "extGPXCol":
-                    final TreeTableColumn<GPXMeasurable, Boolean> extGPXCol = (TreeTableColumn<GPXMeasurable, Boolean>) column;
+                    final TreeTableColumn<GPXMeasurable, Boolean> extGPXCol = ObjectsHelper.uncheckedCast(column);
                     extGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, Boolean> p) -> new SimpleBooleanProperty(
                                             (p.getValue().getValue().getContent().getExtensionData() != null) &&
@@ -913,7 +911,6 @@ public class GPXTreeTableView {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private void onDragDropped(final DragEvent event, final TreeTableRow<GPXMeasurable> row, final GPXEditor.RelativePosition relativePosition) {
         // TFE, 2020406: we allow drop only when its valid - so no need to check here all over again
         final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
@@ -935,7 +932,6 @@ public class GPXTreeTableView {
         event.consume();
     }
     
-    @SuppressWarnings("unchecked")
     private void onDroppedOrPasted(final DataFormat dataFormat, final TreeItem<GPXMeasurable> item, final GPXEditor.RelativePosition relativePosition) {
         DataFormat tableViewFormat = GPXTableView.DRAG_AND_DROP;
         if (COPY_AND_PASTE.equals(dataFormat)) {
@@ -946,7 +942,7 @@ public class GPXTreeTableView {
             final GPXMeasurable target = item.getValue();
 
             // get dragged item and item drop on to
-            final List<TreeItem<GPXMeasurable>> selection = (List<TreeItem<GPXMeasurable>>) AppClipboard.getInstance().getContent(dataFormat);
+            final List<TreeItem<GPXMeasurable>> selection = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
             // work from bottom to top - otherwise delete will mess up things
             Collections.reverse(selection);
 
@@ -972,7 +968,7 @@ public class GPXTreeTableView {
 
             myEditor.insertWaypointsAtPosition(
                     target,
-                    (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(tableViewFormat), 
+                    ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(tableViewFormat)), 
                     // always insert @ start of waypoints
                     GPXEditor.RelativePosition.ABOVE);
 
@@ -992,7 +988,6 @@ public class GPXTreeTableView {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private TargetForDragDrop acceptableClipboardForTreeTableRow(final DataFormat dataFormat, final TreeTableRow<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
         TargetForDragDrop result = TargetForDragDrop.NONE;
         
@@ -1012,7 +1007,7 @@ public class GPXTreeTableView {
         
         return result;
     }
-    @SuppressWarnings("unchecked")
+
     private TargetForDragDrop acceptableClipboardForTreeItem(final DataFormat dataFormat, final TreeItem<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
         TargetForDragDrop result = TargetForDragDrop.NONE;
         
@@ -1022,7 +1017,7 @@ public class GPXTreeTableView {
         }
         if (AppClipboard.getInstance().hasContent(dataFormat)) {
             // get dragged item and item drop on to
-            final List<TreeItem<GPXMeasurable>> selection = (List<TreeItem<GPXMeasurable>>) AppClipboard.getInstance().getContent(dataFormat);
+            final List<TreeItem<GPXMeasurable>> selection = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
             // work from bottom to top - otherwise delete will mess up things
             Collections.reverse(selection);
 

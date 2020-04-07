@@ -65,6 +65,7 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.viewer.MarkerManager;
+import tf.helper.ObjectsHelper;
 import tf.helper.RestrictiveTextField;
 import tf.helper.TooltipHelper;
 
@@ -121,7 +122,6 @@ public class EditGPXWaypoint extends AbstractStage {
         return INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     private void initViewer() {
         // create new scene
         getStage().setTitle("Edit Waypoint Properties");
@@ -195,7 +195,7 @@ public class EditGPXWaypoint extends AbstractStage {
                 if (waypointSymTxt.getSelectionModel().getSelectedIndex() > -1) {
                     // https://stackoverflow.com/a/36548310
                     // https://stackoverflow.com/a/47933342
-                    final ListView<String> lv = (ListView<String>) ((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent();
+                    final ListView<String> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
                     lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
                 }
             }

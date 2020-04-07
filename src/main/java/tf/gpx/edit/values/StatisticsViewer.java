@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.Format;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -74,6 +75,74 @@ public class StatisticsViewer extends AbstractStage {
     private final List<GPXWaypoint> extremePoints = new ArrayList<>();
     
     private GPXEditor myGPXEditor;
+    
+    private class StatisticValue {
+        private final StatisticData myData;
+        private Object myValue = null;
+        private GPXWaypoint myGPXWaypoint = null;
+        
+        StatisticValue (final StatisticData data) {
+            myData = data;
+        }
+        
+        private Object getValue() {
+            return myValue;
+        }
+        
+        private void setValue(final Object value) {
+            myValue = value;
+        }
+
+        /**
+         * @return the myGPXWaypoint
+         */
+        public GPXWaypoint getGPXWaypoint() {
+            return myGPXWaypoint;
+        }
+
+        /**
+         * @param myGPXWaypoint the myGPXWaypoint to set
+         */
+        public void setGPXWaypoint(final GPXWaypoint waypoint) {
+            myGPXWaypoint = waypoint;
+        }
+        
+        private String getDescription() {
+            return myData.getDescription();
+        }
+        
+        private String getUnit() {
+            return myData.getUnit();
+        }
+        
+        private String getLocation() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position);
+            }
+        }
+        
+        private String getTime() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Date);
+            }
+        }
+
+        private String getStringValue() {
+            if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
+                return GPXLineItem.NO_DATA;
+            } else {
+                if (myData.getFormat() != null) {
+                    return myData.getFormat().format(myValue);
+                } else {
+                    return myValue.toString();
+                }
+            }
+        }
+    }
 
     // for what do we calc statistics
     private static enum StatisticData {
@@ -181,7 +250,6 @@ public class StatisticsViewer extends AbstractStage {
         myGPXEditor = gpxEditor;
     }
     
-    @SuppressWarnings("unchecked")
     private void initViewer() {
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
@@ -227,7 +295,7 @@ public class StatisticsViewer extends AbstractStage {
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getTime()));
         timeCol.setSortable(false);
         
-        table.getColumns().addAll(descCol, valueCol, unitCol, locCol, timeCol);
+        table.getColumns().addAll(Arrays.asList(descCol, valueCol, unitCol, locCol, timeCol));
         // automatically adjust width of columns depending on their content
         table.setColumnResizePolicy((param) -> true );
         
@@ -291,7 +359,6 @@ public class StatisticsViewer extends AbstractStage {
         return true;
     }
     
-    @SuppressWarnings("unchecked")
     private void initStatisticsViewer() {
         // reset all previous values
         for (StatisticValue value : statisticsList) {
@@ -509,74 +576,6 @@ public class StatisticsViewer extends AbstractStage {
                 });  
             } catch (IOException ex) {
                 Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    private class StatisticValue<T> {
-        private final StatisticData myData;
-        private T myValue = null;
-        private GPXWaypoint myGPXWaypoint = null;
-        
-        StatisticValue (final StatisticData data) {
-            myData = data;
-        }
-        
-        private T getValue() {
-            return myValue;
-        }
-        
-        private void setValue(final T value) {
-            myValue = value;
-        }
-
-        /**
-         * @return the myGPXWaypoint
-         */
-        public GPXWaypoint getGPXWaypoint() {
-            return myGPXWaypoint;
-        }
-
-        /**
-         * @param myGPXWaypoint the myGPXWaypoint to set
-         */
-        public void setGPXWaypoint(final GPXWaypoint waypoint) {
-            myGPXWaypoint = waypoint;
-        }
-        
-        private String getDescription() {
-            return myData.getDescription();
-        }
-        
-        private String getUnit() {
-            return myData.getUnit();
-        }
-        
-        private String getLocation() {
-            if (myGPXWaypoint == null) {
-                return "";
-            } else {
-                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position);
-            }
-        }
-        
-        private String getTime() {
-            if (myGPXWaypoint == null) {
-                return "";
-            } else {
-                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Date);
-            }
-        }
-
-        private String getStringValue() {
-            if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
-                return GPXLineItem.NO_DATA;
-            } else {
-                if (myData.getFormat() != null) {
-                    return myData.getFormat().format(myValue);
-                } else {
-                    return myValue.toString();
-                }
             }
         }
     }

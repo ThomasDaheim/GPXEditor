@@ -28,7 +28,6 @@ package tf.gpx.edit.values;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.value.ChangeListener;
@@ -57,9 +56,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
 import tf.gpx.edit.helper.AbstractStage;
-import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
-import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -85,7 +82,7 @@ public class DistributionViewer extends AbstractStage {
     private final RangeSlider minmaxSlider = new RangeSlider();
     private CategoryAxis xAxis = new CategoryAxis();
     private NumberAxis yAxis = new NumberAxis();
-    private BarChart barChart;
+    private BarChart<String, Number> barChart;
     private final Label countLbl = new Label("0 from 100 points selected");
     private final CheckListView<GPXWaypoint> wayPointList = new CheckListView<>();
     
@@ -166,7 +163,7 @@ public class DistributionViewer extends AbstractStage {
         yAxis.setAutoRanging(false);
         yAxis.setOpacity(0);
 
-        barChart = new BarChart<String, Number>(xAxis, yAxis);
+        barChart = new BarChart<>(xAxis, yAxis);
         barChart.getStyleClass().add("unpad-chart");
         barChart.setLegendVisible(false);
         barChart.setAnimated(false);
@@ -344,7 +341,6 @@ public class DistributionViewer extends AbstractStage {
         return hasDeleted;
     }
     
-    @SuppressWarnings("unchecked")
     private void initDistributionViewer(final GPXLineItemData dataType) {
         // calculate distribution to have inputs for nodes
         GPXWaypointDistribution.getInstance().setValues(myGPXWaypoints);
@@ -366,12 +362,12 @@ public class DistributionViewer extends AbstractStage {
         
         barChart.setVisible(false);
         barChart.getData().clear();
-        final List<XYChart.Data<String, Double>> dataList = new ArrayList<>();
+        final List<XYChart.Data<String, Number>> dataList = new ArrayList<>();
         for (BinValue value : binValues) {
             dataList.add(new XYChart.Data<>(value.left.toString(), value.right));
         }
 
-        XYChart.Series<String, Double> series = new XYChart.Series<>();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.getData().addAll(dataList);
         barChart.getData().add(series);
         barChart.lookupAll(".default-color0.chart-bar")

@@ -60,12 +60,12 @@ import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 import tf.helper.AppInfo;
+import tf.helper.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
@@ -145,7 +145,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
@@ -178,7 +178,7 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     public boolean writeToFile(final File gpxFile) {
@@ -288,15 +288,15 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public GPXLineItem getParent() {
+    public <T extends GPXLineItem> T getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    public GPXFile setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // GPXFiles don't have a parent.
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override

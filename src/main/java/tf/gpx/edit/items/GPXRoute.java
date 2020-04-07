@@ -43,12 +43,12 @@ import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
@@ -129,7 +129,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXRoute cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
@@ -152,7 +152,7 @@ public class GPXRoute extends GPXMeasurable {
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected Route getRoute() {
@@ -160,15 +160,15 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile getParent() {
-        return myGPXFile;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
 
     @Override
-    public GPXRoute setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
@@ -176,7 +176,7 @@ public class GPXRoute extends GPXMeasurable {
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override

@@ -37,6 +37,7 @@ import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
+import tf.helper.ObjectsHelper;
 
 /**
  *
@@ -206,7 +207,6 @@ public class GPXLineItemHelper {
                     }).collect(Collectors.toList());
     }
  
-    @SuppressWarnings("unchecked")
     public static <T extends GPXLineItem> List<T> castChildren(final GPXLineItem lineItem, final Class<T> clazz, final List<? extends GPXLineItem> children) {
         // TFE, 20180215: don't assert that child.getClass().equals(clazz)
         // instead filter out such not matching children and return only matching class childs
@@ -214,7 +214,7 @@ public class GPXLineItemHelper {
                 map((GPXLineItem child) -> {
                     if (child.getClass().equals(clazz)) {
                         child.setParent(lineItem);
-                        return (T) child;
+                        return ObjectsHelper.<T>uncheckedCast(child);
                     } else {
                         return null;
                     }
@@ -264,13 +264,12 @@ public class GPXLineItemHelper {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T extends Extension, U extends GPXLineItem> Set<T> numberExtensions(final List<U> children) {
         AtomicInteger counter = new AtomicInteger(1);
         return children.stream().
                 map((U child) -> {
                     child.setNumber(counter.getAndIncrement());
-                    return (T) child.getContent();
+                    return ObjectsHelper.<T>uncheckedCast(child.getContent());
                 // need to collect into a set that contains the order
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
     }

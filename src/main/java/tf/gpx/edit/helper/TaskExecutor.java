@@ -36,6 +36,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
+import tf.helper.ObjectsHelper;
 
 /**
  *
@@ -67,7 +68,6 @@ public class TaskExecutor {
         }        
     }
     
-    @SuppressWarnings("unchecked")
     public static <T> void executeTask(final Task<T> task, final ITaskExecutionConsumer consumer) {
         // bind properties
         final ChangeListener<String> messageListener = (ObservableValue<? extends String> ov, String oldValue, String newValue) -> {
@@ -82,7 +82,7 @@ public class TaskExecutor {
 
         // schedule task
         consumer.getInitTaskConsumer().run();
-        Future<T> future = (Future<T>) executorService.submit(task);
+        Future<T> future = ObjectsHelper.uncheckedCast(executorService.submit(task));
 
         // wait for result
         T result = null;

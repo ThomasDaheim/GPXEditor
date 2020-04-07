@@ -82,7 +82,6 @@ public class PreferenceEditor extends AbstractStage {
         getStage().initModality(Modality.APPLICATION_MODAL); 
     }
     
-    @SuppressWarnings("unchecked")
     public void showPreferencesDialogue() {
         // TODO: split into init(), initPreferences(), setPreferences like for all other viewers...
         
@@ -176,7 +175,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField fixText = new TextField();
         fixText.setMaxWidth(80);
-        fixText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        fixText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         fixText.setText(decimalFormat.format(myFixEpsilon));
         fixText.setTooltip(t);
         getGridPane().add(fixText, 1, rowNum, 1, 1);
@@ -207,7 +206,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField epsilonText = new TextField();
         epsilonText.setMaxWidth(80);
-        epsilonText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        epsilonText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         epsilonText.setText(decimalFormat.format(myReduceEpsilon));
         epsilonText.setTooltip(t);
         getGridPane().add(epsilonText, 1, rowNum, 1, 1);
@@ -252,7 +251,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField breakText = new TextField();
         breakText.setMaxWidth(40);
-        breakText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        breakText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         breakText.setText(decimalFormat.format(myBreakDuration));
         breakText.setTooltip(t);
         getGridPane().add(breakText, 1, rowNum, 1, 1);
@@ -269,7 +268,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField radiusText = new TextField();
         radiusText.setMaxWidth(40);
-        radiusText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        radiusText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         radiusText.setText(decimalFormat.format(myClusterRadius));
         radiusText.setTooltip(t);
         getGridPane().add(radiusText, 1, rowNum, 1, 1);
@@ -286,7 +285,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField durationText = new TextField();
         durationText.setMaxWidth(40);
-        durationText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        durationText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         durationText.setText(decimalFormat.format(myClusterDuration));
         durationText.setTooltip(t);
         getGridPane().add(durationText, 1, rowNum, 1, 1);
@@ -303,7 +302,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField neighbourText = new TextField();
         neighbourText.setMaxWidth(40);
-        neighbourText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        neighbourText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         neighbourText.setText(decimalFormat.format(myClusterCount));
         neighbourText.setTooltip(t);
         getGridPane().add(neighbourText, 1, rowNum, 1, 1);
@@ -348,7 +347,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField numShowText = new TextField();
         numShowText.setMaxWidth(80);
-        numShowText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        numShowText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         numShowText.setText(decimalFormat.format(myMaxWaypointsToShow));
         numShowText.setTooltip(t);
         getGridPane().add(numShowText, 1, rowNum, 1, 1);
@@ -365,7 +364,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField searchText = new TextField();
         searchText.setMaxWidth(80);
-        searchText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        searchText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         searchText.setText(decimalFormat.format(mySearchRadius));
         searchText.setTooltip(t);
         getGridPane().add(searchText, 1, rowNum, 1, 1);
@@ -443,7 +442,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField wayLblSizeText = new TextField();
         wayLblSizeText.setMaxWidth(80);
-        wayLblSizeText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayLblSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         wayLblSizeText.setText(decimalFormat.format(waypointLabelSize));
         wayLblSizeText.setTooltip(t);
         getGridPane().add(wayLblSizeText, 1, rowNum, 1, 1);
@@ -460,7 +459,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField wayLblAngleText = new TextField();
         wayLblAngleText.setMaxWidth(80);
-        wayLblAngleText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayLblAngleText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         wayLblAngleText.setText(decimalFormat.format(waypointLabelAngle));
         wayLblAngleText.setTooltip(t);
         getGridPane().add(wayLblAngleText, 1, rowNum, 1, 1);
@@ -477,7 +476,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField wayIcnSizeText = new TextField();
         wayIcnSizeText.setMaxWidth(80);
-        wayIcnSizeText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayIcnSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         wayIcnSizeText.setText(decimalFormat.format(waypointIconSize));
         wayIcnSizeText.setTooltip(t);
         getGridPane().add(wayIcnSizeText, 1, rowNum, 1, 1);
@@ -494,7 +493,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField wayThshldText = new TextField();
         wayThshldText.setMaxWidth(80);
-        wayThshldText.textFormatterProperty().setValue(new TextFormatter(new IntegerStringConverter()));
+        wayThshldText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         wayThshldText.setText(decimalFormat.format(waypointThreshold));
         wayThshldText.setTooltip(t);
         getGridPane().add(wayThshldText, 1, rowNum, 1, 1);
@@ -565,7 +564,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final TextField eventText = new TextField();
         eventText.setMaxWidth(80);
-        eventText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        eventText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         eventText.setText(decimalFormat.format(myEventRadius));
         eventText.setTooltip(t);
         getGridPane().add(eventText, 1, rowNum, 1, 1);

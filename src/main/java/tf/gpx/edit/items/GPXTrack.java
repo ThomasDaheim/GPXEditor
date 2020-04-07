@@ -39,12 +39,12 @@ import javafx.collections.ObservableList;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
@@ -117,7 +117,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrack cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrack myClone = new GPXTrack();
         
         // parent needs to be set initially - list functions use this for checking
@@ -135,7 +135,7 @@ public class GPXTrack extends GPXMeasurable {
         myClone.myGPXTrackSegments.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected Track getTrack() {
@@ -169,15 +169,15 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public GPXFile getParent() {
-        return myGPXFile;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
     
     @Override
-    public GPXTrack setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
         assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
@@ -185,7 +185,7 @@ public class GPXTrack extends GPXMeasurable {
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override

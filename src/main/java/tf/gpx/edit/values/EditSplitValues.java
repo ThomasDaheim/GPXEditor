@@ -69,7 +69,6 @@ public class EditSplitValues extends AbstractStage {
         return INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     private void initViewer() {
         // create new scene
         getStage().setTitle("Edit Split Values");
@@ -91,7 +90,7 @@ public class EditSplitValues extends AbstractStage {
         GridPane.setMargin(valueLbl, INSET_TOP);
         
         valueText.setMaxWidth(80);
-        valueText.textFormatterProperty().setValue(new TextFormatter(new DoubleStringConverter()));
+        valueText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         valueText.setText(decimalFormat.format(1000.0));
         getGridPane().add(valueText, 1, rowNum, 1, 1);
         GridPane.setMargin(valueText, INSET_TOP);
