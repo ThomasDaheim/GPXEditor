@@ -27,7 +27,6 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -60,6 +59,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.ResizeFeatures;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -294,10 +294,17 @@ public class GPXTableView {
                     // use info from statusbar
 //                    db.setDragView(row.snapshot(null, null));
                     db.setDragView(StatusBar.getInstance().snapshot(null, null));
-                    final ArrayList<Integer> selection = new ArrayList<>();
-                    selection.addAll(myTableView.getSelectionModel().getSelectedIndices());
-                    AppClipboard.getInstance().addContent(DRAG_AND_DROP, selection);
-                    db.setContent(AppClipboard.getInstance().getAsClipboardContent(DRAG_AND_DROP));
+                    final ObservableList<GPXWaypoint> items =
+                        myTableView.getSelectionModel().getSelectedItems().stream().map((t) -> {
+                                return t.cloneMe(true);
+                            }).collect(Collectors.toCollection(FXCollections::observableArrayList));
+                    AppClipboard.getInstance().addContent(DRAG_AND_DROP, items);
+                    
+                    // dragboard needs dummy content...
+                    final ClipboardContent cc = new ClipboardContent();
+                    cc.put(DRAG_AND_DROP, "DRAG_AND_DROP");
+                    db.setContent(cc);
+                    
                     event.consume();
                 }
             });
@@ -394,11 +401,8 @@ public class GPXTableView {
                         UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                     position = GPXEditor.RelativePosition.BELOW;
                 }
-
-                myEditor.insertWaypointsAtPosition(
-                        myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())),
-                        (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(COPY_AND_PASTE), 
-                        position);
+                
+                onDroppedOrPasted(COPY_AND_PASTE, myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())), position);
             }
             
             if (UsefulKeyCodes.CNTRL_A.match(event)) {
@@ -643,31 +647,27 @@ public class GPXTableView {
         if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
             final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
             
-            // get dragged item and item drop on to
-            final ArrayList<Integer> selection = (ArrayList<Integer>) AppClipboard.getInstance().getContent(DRAG_AND_DROP);
-
-            final GPXWaypoint target = checkRow.getItem();
-
-            final ObservableList<GPXWaypoint> allItems = myTableView.getItems();
-            final ObservableList<GPXWaypoint> items =
-                selection.stream().map((t) -> {
-                        return allItems.get(t).cloneMe(true);
-                    }).collect(Collectors.toCollection(FXCollections::observableArrayList));
-
+            onDroppedOrPasted(DRAG_AND_DROP, checkRow.getItem(), relativePosition);
+            
+            // DnD is done, throw away board
+            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
+            
+            event.setDropCompleted(true);
+            event.consume();
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void onDroppedOrPasted(final DataFormat dataFormat, final GPXWaypoint target, final GPXEditor.RelativePosition relativePosition) {
+        if (AppClipboard.getInstance().hasContent(dataFormat)) {
             myEditor.insertWaypointsAtPosition(
                     target,
-                    items, 
+                    (ObservableList<GPXWaypoint>) AppClipboard.getInstance().getContent(dataFormat), 
                     relativePosition);
             
             if (!myEditor.isCntrlPressed()) {
                 myEditor.deleteSelectedWaypoints();
             }
-
-            // non need to clear copy&paste list since its a clone
-            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
-            
-            event.setDropCompleted(true);
-            event.consume();
         }
     }
     

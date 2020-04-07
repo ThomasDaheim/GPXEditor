@@ -193,14 +193,14 @@ public class GPXStructureHelper {
         return result;
     }
     
-    public List<GPXFile> uniqueGPXFileListFromGPXMeasurableList(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
+    public List<GPXFile> uniqueGPXFilesFromGPXMeasurables(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         // get selected files uniquely from selected items
         return selectedItems.stream().map((item) -> {
             return item.getValue().getGPXFile();
         }).distinct().collect(Collectors.toList());
     }
 
-    public List<GPXTrack> uniqueGPXTrackListFromGPXMeasurableList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
+    public List<GPXTrack> uniqueGPXTracksFromGPXTrackSegements(final GPXFile gpxFile, final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         // get selected tracks uniquely from selected items for a specific file
         return selectedItems.stream().filter((item) -> {
             return gpxFile.equals(item.getValue().getGPXFile()) && item.getValue().isGPXTrackSegment();
@@ -209,16 +209,7 @@ public class GPXStructureHelper {
         }).distinct().collect(Collectors.toList());
     }
 
-    public List<GPXRoute> uniqueGPXRouteListFromGPXMeasurableList(final GPXFile gpxFile, final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
-        // get selected tracks uniquely from selected items for a specific file
-        return selectedItems.stream().filter((item) -> {
-            return gpxFile.equals(item.getValue().getGPXFile()) && item.getValue().isGPXTrack();
-        }).map((item) -> {
-            return item.getValue().getGPXRoutes().get(0);
-        }).distinct().collect(Collectors.toList());
-    }
-
-    public List<GPXTrackSegment> uniqueGPXTrackSegmentListFromGPXWaypointList(final List<GPXWaypoint> gpxWaypoints) {
+    public List<GPXTrackSegment> uniqueGPXTrackSegmentsFromGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         // get selected files uniquely from selected items
         Set<GPXTrackSegment> trackSet = new LinkedHashSet<>();
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
@@ -228,7 +219,7 @@ public class GPXStructureHelper {
         return trackSet.stream().collect(Collectors.toList());
     }
     
-    public List<GPXMeasurable> uniqueGPXParentListFromGPXMeasurableList(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
+    public List<GPXMeasurable> uniqueGPXParentsFromGPXMeasurables(final ObservableList<TreeItem<GPXMeasurable>> selectedItems) {
         final List<GPXMeasurable> result = new ArrayList<>();
 
         // look out for a few special cases:
