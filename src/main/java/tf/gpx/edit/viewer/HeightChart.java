@@ -93,6 +93,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     private boolean nonZeroData = false;
 
+    final Text mouseText = new Text("");
+    final Line mouseLine = new Line();
+
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
@@ -117,25 +120,23 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
     
     private void installMousePointer() {
-        // TFE, 20190712: install overall text & line instead as node tooltips
+        // TFE, 20190712: install overall mouseText & mouseLine instead as node tooltips
         // TODO: beautify code
         final Region plotArea = (Region) lookup(".chart-plot-background");
         final Pane chartContent = (Pane) lookup(".chart-content");
 
-        final Text text = new Text("");
-        text.getStyleClass().add("track-popup");
-        text.setVisible(false);
-        text.setMouseTransparent(true);
+        mouseText.getStyleClass().add("track-popup");
+        mouseText.setVisible(false);
+        mouseText.setMouseTransparent(true);
 
-        final Line line = new Line();
-        line.setVisible(false);
-        line.setMouseTransparent(true);
+        mouseLine.setVisible(false);
+        mouseLine.setMouseTransparent(true);
 
-        chartContent.getChildren().addAll(line, text);
+        chartContent.getChildren().addAll(mouseLine, mouseText);
 
         setOnMouseMoved(e -> {
             // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
             Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
             double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
             double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
@@ -153,14 +154,14 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 if (SpeedChart.getInstance().hasNonZeroData()) {
                     waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
                 }
-                text.setText(waypointText);
-                text.applyCss();
+                mouseText.setText(waypointText);
+                mouseText.applyCss();
                 
-                // we want to show the text at the elevation
+                // we want to show the mouseText at the elevation
                 double yHeight = yAxis.getDisplayPosition(heightValue);
                 
-                // and we want to show lineStart line at this distance from top to bottom
-                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-line/40730299#40730299
+                // and we want to show lineStart mouseLine at this distance from top to bottom
+                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-mouseLine/40730299#40730299
                 Point2D lineStart = plotArea.localToScene(new Point2D(xPosInAxis, 0));
                 Point2D lineEnd = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
                 Point2D dataPoint = plotArea.localToScene(new Point2D(xPosInAxis, yHeight));
@@ -170,21 +171,21 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 Point2D cTrans = chartContent.sceneToLocal(dataPoint);
                 
                 // align center-center
-                text.setTranslateX(cTrans.getX() - text.getBoundsInLocal().getWidth() / 2.0);
-                text.setTranslateY(cTrans.getY() - text.getBoundsInLocal().getHeight() / 3.0);
-                text.setVisible(true);
+                mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
+                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 3.0);
+                mouseText.setVisible(true);
 
-                line.setStartX(aTrans.getX());
-                line.setStartY(aTrans.getY());
-                line.setEndX(bTrans.getX());
-                line.setEndY(bTrans.getY());
-                line.setVisible(true);
+                mouseLine.setStartX(aTrans.getX());
+                mouseLine.setStartY(aTrans.getY());
+                mouseLine.setEndX(bTrans.getX());
+                mouseLine.setEndY(bTrans.getY());
+                mouseLine.setVisible(true);
                 
                 // callback to highlight waypoint in TrackMap
                 myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true);
             } else {
-                line.setVisible(false);
-                text.setVisible(false);
+                mouseLine.setVisible(false);
+                mouseText.setVisible(false);
                 
                 // unset selected waypoint
                 myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
@@ -193,8 +194,8 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         
         setOnMouseExited(e -> {
             // TFE, 20191127 - don't reset everything
-//            line.setVisible(false);
-//            text.setVisible(false);
+//            mouseLine.setVisible(false);
+//            mouseText.setVisible(false);
 //                
 //            // unset selected waypoint
 //            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
@@ -212,7 +213,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
             }
             
             // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
             Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
             double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
             double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
@@ -297,6 +298,12 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     @Override
     public void setGPXMeasurables(final List<GPXMeasurable> lineItems) {
         myGPXLineItems = lineItems;
+    }
+    
+    @Override
+    public void initForNewGPXWaypoints() {
+        mouseLine.setVisible(false);
+        mouseText.setVisible(false);
     }
     
     @Override

@@ -153,6 +153,10 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
     default boolean fileWaypointsInChart() {
         return false;
     }
+
+    // whatever might need to be done in each chart...
+    default void initForNewGPXWaypoints() {
+    }
     
     public abstract void setCallback(final GPXEditor gpxEditor);
     
@@ -177,12 +181,14 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
             return;
         }
         
-        // invisble update - much faster
+        // invisible update - much faster
         getChart().setVisible(false);
         getPoints().clear();
         getChart().getData().clear();
         
         setNonZeroData(false);
+        
+        initForNewGPXWaypoints();
         
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(lineItems) || lineItems.get(0).isGPXMetadata()) {
@@ -311,7 +317,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
     }
     
     private void showData(final List<XYChart.Series<Number, Number>> seriesList, final int dataCount) {
-        // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...
+        // TFE, 20180516: ignore fileWaypointsCount in count of waypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...
         // file fileWaypointsCount don't count into MAX_WAYPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
