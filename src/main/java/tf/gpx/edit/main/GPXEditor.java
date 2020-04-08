@@ -1743,7 +1743,7 @@ public class GPXEditor implements Initializable {
     public void replaceByCenter() {
         // get seleced waypoint indices
         final List<Integer> selectedIndices = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedIndices());
-        final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
+        final List<GPXWaypoint> waypoints = new ArrayList<>(gpxWaypoints.getItems());
         // just to be on the safe side...
         Collections.sort(selectedIndices);
 
@@ -1751,11 +1751,10 @@ public class GPXEditor implements Initializable {
             return;
         }
 
-        TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+        TaskExecutor.executeTask(TaskExecutor.taskFromRunnableForLater(() -> {
                 // make sure we only include waypoints from track segments
                 final List<Integer> trackIndices = selectedIndices.stream().filter((t) -> {
-                    return selectedWaypoints.get(t).getParent().isGPXTrackSegment();
+                    return waypoints.get(t).getParent().isGPXTrackSegment();
                 }).collect(Collectors.toList());        
 
                 // find start & end of selected clusterMap AND determine center
@@ -1766,11 +1765,11 @@ public class GPXEditor implements Initializable {
                 int start = trackIndices.get(0);
                 int end = trackIndices.get(0);
                 int last = trackIndices.get(trackIndices.size()-1);
-                GPXTrackSegment prevTrackSegment = (GPXTrackSegment) selectedWaypoints.get(start).getParent();
+                GPXTrackSegment prevTrackSegment = (GPXTrackSegment) waypoints.get(start).getParent();
                 GPXTrackSegment trackSegment;
 
                 for (int rev : trackIndices) {
-                    trackSegment = (GPXTrackSegment) selectedWaypoints.get(rev).getParent();
+                    trackSegment = (GPXTrackSegment) waypoints.get(rev).getParent();
 
                     if (rev - end > 1 || rev == last || !trackSegment.equals(prevTrackSegment)) {
                         // break in range OR end of list OR break in track segment
@@ -1782,11 +1781,11 @@ public class GPXEditor implements Initializable {
                         }
                         // it takes three for a cluster
                         if (endIndex > start + 1) {
-                            final GPXWaypoint centerPoint = GPXAlgorithms.closestToCenter(selectedWaypoints.subList(start, endIndex));
+                            final GPXWaypoint centerPoint = GPXAlgorithms.closestToCenter(waypoints.subList(start, endIndex));
                             // need to re-base all posiions to start of track segment...
                             final int centerPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(centerPoint);
                             // don't use width or similar here, since rounding will kill you for an even number of points in range
-                            final int startPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(selectedWaypoints.get(start));
+                            final int startPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(waypoints.get(start));
                             final int endPointIndex = startPointIndex - start + endIndex;
 
                             // add to existing list for track segment or create new one
