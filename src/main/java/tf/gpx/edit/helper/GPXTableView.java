@@ -46,6 +46,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
@@ -115,6 +116,9 @@ public class GPXTableView {
     }
     
     private void initTableView() {
+        myTableView.setCache(true);
+        myTableView.setCacheHint(CacheHint.SPEED);
+
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTableViewMenu(myTableView);
         });

@@ -177,6 +177,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
     default void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         setGPXMeasurables(lineItems);
         
+        initForNewGPXWaypoints();
+        
         if (getChart().isDisabled()) {
             return;
         }
@@ -187,8 +189,6 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         getChart().getData().clear();
         
         setNonZeroData(false);
-        
-        initForNewGPXWaypoints();
         
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(lineItems) || lineItems.get(0).isGPXMetadata()) {

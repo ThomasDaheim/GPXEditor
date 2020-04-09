@@ -49,6 +49,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.CacheHint;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -141,6 +142,9 @@ public class GPXTreeTableView {
         myTreeTableView.getSortOrder().clear();
         myTreeTableView.getSortOrder().add(myTreeTableView.getColumns().get(0));
         myTreeTableView.setSortMode(TreeSortMode.ALL_DESCENDANTS);
+        
+        myTreeTableView.setCache(true);
+        myTreeTableView.setCacheHint(CacheHint.SPEED);
         
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTreeTableViewMenu(myTreeTableView);
