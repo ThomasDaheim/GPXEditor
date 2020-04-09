@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,6 +143,35 @@ public class GPXFile extends GPXMeasurable {
         myGPXTracks.addListener(changeListener);
         myGPXRoutes.addListener(changeListener);
         myGPXWaypoints.addListener(changeListener);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 11 * hash + Objects.hashCode(this.myGPXFilePath);
+        hash = 11 * hash + Objects.hashCode(this.myGPXFileName);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final GPXFile other = (GPXFile) obj;
+        if (!Objects.equals(this.myGPXFilePath, other.myGPXFilePath)) {
+            return false;
+        }
+        if (!Objects.equals(this.myGPXFileName, other.myGPXFileName)) {
+            return false;
+        }
+        return true;
     }
     
     @Override

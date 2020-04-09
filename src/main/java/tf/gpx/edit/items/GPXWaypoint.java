@@ -37,6 +37,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.commons.collections4.CollectionUtils;
@@ -99,6 +100,41 @@ public class GPXWaypoint extends GPXLineItem {
         myGPXParent = gpxParent;
         myWaypoint = waypoint;
         setNumber(number);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 89 * hash + (this.myHighlight ? 1 : 0);
+        hash = 89 * hash + Objects.hashCode(this.myMarker);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final GPXWaypoint other = (GPXWaypoint) obj;
+        if (this.myHighlight != other.myHighlight) {
+            return false;
+        }
+        if (!Objects.equals(this.myMarker, other.myMarker)) {
+            return false;
+        }
+        if (!Objects.equals(this.myPrevGPXWaypoint, other.myPrevGPXWaypoint)) {
+            return false;
+        }
+        if (!Objects.equals(this.myNextGPXWaypoint, other.myNextGPXWaypoint)) {
+            return false;
+        }
+        return true;
     }
     
     @Override

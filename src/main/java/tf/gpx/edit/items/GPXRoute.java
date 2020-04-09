@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -110,6 +111,51 @@ public class GPXRoute extends GPXMeasurable {
         }
         
         myGPXWaypoints.addListener(changeListener);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 19 * hash + Objects.hashCode(this.color);
+        hash = 19 * hash + Objects.hashCode(this.myLength);
+        hash = 19 * hash + Objects.hashCode(this.myCumulativeAscent);
+        hash = 19 * hash + Objects.hashCode(this.myCumulativeDescent);
+        hash = 19 * hash + Objects.hashCode(this.myMinHeight);
+        hash = 19 * hash + Objects.hashCode(this.myMaxHeight);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final GPXRoute other = (GPXRoute) obj;
+        if (!Objects.equals(this.color, other.color)) {
+            return false;
+        }
+        if (!Objects.equals(this.myLength, other.myLength)) {
+            return false;
+        }
+        if (!Objects.equals(this.myCumulativeAscent, other.myCumulativeAscent)) {
+            return false;
+        }
+        if (!Objects.equals(this.myCumulativeDescent, other.myCumulativeDescent)) {
+            return false;
+        }
+        if (!Objects.equals(this.myMinHeight, other.myMinHeight)) {
+            return false;
+        }
+        if (!Objects.equals(this.myMaxHeight, other.myMaxHeight)) {
+            return false;
+        }
+        return true;
     }
     
     @Override
