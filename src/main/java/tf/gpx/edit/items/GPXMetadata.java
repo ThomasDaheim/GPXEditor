@@ -30,7 +30,6 @@ import com.hs.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
@@ -59,31 +58,6 @@ public class GPXMetadata extends GPXMeasurable {
         myMetadata = metadata;
     }
     
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 79 * hash + Objects.hashCode(this.myMetadata);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GPXMetadata other = (GPXMetadata) obj;
-        if (!Objects.equals(this.myMetadata, other.myMetadata)) {
-            return false;
-        }
-        return true;
-    }
-
     @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXMetadata myClone = new GPXMetadata();

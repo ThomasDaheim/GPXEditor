@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -99,35 +98,6 @@ public class GPXTrack extends GPXMeasurable {
         }
 
         myGPXTrackSegments.addListener(changeListener);
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 97 * hash + Objects.hashCode(this.myGPXTrackSegments);
-        hash = 97 * hash + Objects.hashCode(this.color);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GPXTrack other = (GPXTrack) obj;
-        if (!Objects.equals(this.color, other.color)) {
-            return false;
-        }
-        if (!Objects.equals(this.myGPXTrackSegments, other.myGPXTrackSegments)) {
-            return false;
-        }
-        return true;
     }
     
     @Override

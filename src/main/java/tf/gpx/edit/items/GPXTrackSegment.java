@@ -103,55 +103,6 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 29 * hash + Objects.hashCode(this.myLength);
-        hash = 29 * hash + Objects.hashCode(this.myCumulativeAscent);
-        hash = 29 * hash + Objects.hashCode(this.myCumulativeDescent);
-        hash = 29 * hash + Objects.hashCode(this.myMinHeight);
-        hash = 29 * hash + Objects.hashCode(this.myMaxHeight);
-        hash = 29 * hash + Objects.hashCode(this.myStartingTime);
-        hash = 29 * hash + Objects.hashCode(this.myEndTime);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GPXTrackSegment other = (GPXTrackSegment) obj;
-        if (!Objects.equals(this.myLength, other.myLength)) {
-            return false;
-        }
-        if (!Objects.equals(this.myCumulativeAscent, other.myCumulativeAscent)) {
-            return false;
-        }
-        if (!Objects.equals(this.myCumulativeDescent, other.myCumulativeDescent)) {
-            return false;
-        }
-        if (!Objects.equals(this.myMinHeight, other.myMinHeight)) {
-            return false;
-        }
-        if (!Objects.equals(this.myMaxHeight, other.myMaxHeight)) {
-            return false;
-        }
-        if (!Objects.equals(this.myStartingTime, other.myStartingTime)) {
-            return false;
-        }
-        if (!Objects.equals(this.myEndTime, other.myEndTime)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     public String getColor() {
         // tracksegments have the color of their tracks
         return getParent().getColor();
