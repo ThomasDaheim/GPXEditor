@@ -31,6 +31,7 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javafx.collections.FXCollections;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -468,14 +469,16 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
                         final double angle = symbol.getRotate() * Math.PI / 180.0;
                         final double shiftX = Math.cos(angle) * (w-waypointIconSize)/2.0;
                         final double shiftY = Math.sin(angle) * (w-waypointIconSize)/2.0;
-    //                    System.out.println("Shifting node: " + ((GPXWaypoint) data.getExtraValue()).getName() + " by " + shiftX + ", " + shiftY);
+//                        System.out.println("Shifting label: " + ((GPXWaypoint) data.getExtraValue()).getName() + " by " + shiftX + ", " + shiftY);
 
                         // undo old shift and shift to center-center instead
                         symbol.setLayoutX(symbol.getLayoutX() + shiftX);
                         symbol.setLayoutY(symbol.getLayoutY() + shiftY);
                     } else if (SHIFT_TEXT.equals((String) symbol.getUserData())) {
-                        // now getYAxis().getZeroPosition() should yield something useful
-                        data.setYValue(getChart().getYAxis().getZeroPosition());
+//                        System.out.println("Shifting text: " + ((GPXWaypoint) data.getExtraValue()).getName() + " to " + getMaximumYValue() / 2.0);
+
+                        // TFE, 2020413: set text lables to half height of chart
+                        data.setYValue(getMaximumYValue() / 2.0);
                     }
                 }
             }

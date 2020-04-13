@@ -72,6 +72,7 @@ import javafx.util.converter.DefaultStringConverter;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -412,7 +413,18 @@ public class GPXTableView {
                     position = GPXEditor.RelativePosition.BELOW;
                 }
                 
-                onDroppedOrPasted(COPY_AND_PASTE, myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())), position);
+                // we might not have any waypoint at all here...
+                if (!myTableView.getItems().isEmpty()) {
+                    onDroppedOrPasted(COPY_AND_PASTE, myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())), position);
+                } else {
+                    // use first target from getUserData - if any
+                    final List<GPXMeasurable> measurables = ObjectsHelper.uncheckedCast(myTableView.getUserData());
+                    if (measurables != null && !measurables.isEmpty()) {
+                        onDroppedOrPasted(COPY_AND_PASTE, measurables.get(0), position);
+                    } else {
+                        System.out.println("Paste of wapoints on empty list without parent item!");
+                    }
+                }
             }
             
             if (UsefulKeyCodes.CNTRL_A.match(event)) {
@@ -641,7 +653,7 @@ public class GPXTableView {
     private TableRow<GPXWaypoint> getRowToCheckForDragDrop(final TableRow<GPXWaypoint> row) {
         TableRow<GPXWaypoint> result;
         
-        if (!row.isEmpty()) {
+        if (row != null && !row.isEmpty()) {
             result = row;
         } else {
             result = lastRow;
@@ -664,7 +676,7 @@ public class GPXTableView {
         }
     }
     
-    private void onDroppedOrPasted(final DataFormat dataFormat, final GPXWaypoint target, final GPXEditor.RelativePosition relativePosition) {
+    private void onDroppedOrPasted(final DataFormat dataFormat, final GPXLineItem target, final GPXEditor.RelativePosition relativePosition) {
         if (AppClipboard.getInstance().hasContent(dataFormat)) {
             myEditor.insertWaypointsAtPosition(
                     target,

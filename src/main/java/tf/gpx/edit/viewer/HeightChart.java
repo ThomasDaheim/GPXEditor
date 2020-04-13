@@ -93,8 +93,11 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     private boolean nonZeroData = false;
 
-    final Text mouseText = new Text("");
-    final Line mouseLine = new Line();
+    private final Region plotArea = (Region) lookup(".chart-plot-background");
+    private final Pane chartContent = (Pane) lookup(".chart-content");
+
+    private final Text mouseText = new Text("");
+    private final Line mouseLine = new Line();
 
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
@@ -122,9 +125,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private void installMousePointer() {
         // TFE, 20190712: install overall mouseText & mouseLine instead as node tooltips
         // TODO: beautify code
-        final Region plotArea = (Region) lookup(".chart-plot-background");
-        final Pane chartContent = (Pane) lookup(".chart-content");
-
         mouseText.getStyleClass().add("track-popup");
         mouseText.setVisible(false);
         mouseText.setMouseTransparent(true);
@@ -184,8 +184,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 // callback to highlight waypoint in TrackMap
                 myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true);
             } else {
-                mouseLine.setVisible(false);
-                mouseText.setVisible(false);
+                hideMousePointer();
                 
                 // unset selected waypoint
                 myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
@@ -276,6 +275,18 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         });
     }
     
+    private void hideMousePointer() {
+        mouseLine.setStartX(0.0);
+        mouseLine.setStartY(0.0);
+        mouseLine.setEndX(0.0);
+        mouseLine.setEndY(0.0);
+        mouseLine.setVisible(false);
+
+        mouseText.setTranslateX(0.0);
+        mouseText.setTranslateY(0.0);
+        mouseText.setVisible(false);
+    }
+    
     public static HeightChart getInstance() {
         return INSTANCE;
     }
@@ -302,8 +313,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     @Override
     public void initForNewGPXWaypoints() {
-        mouseLine.setVisible(false);
-        mouseText.setVisible(false);
+        hideMousePointer();
     }
     
     @Override
@@ -536,7 +546,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
 //        System.out.println("=====================");
         // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
         if (noLayout || !isVisible()) {
-//            System.out.println("HeighChart: sorry, no layout pass");
+//            System.out.println("HeighChart: sorry, no layout pass @" + Instant.now());
             return;
         }
 
@@ -550,6 +560,11 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
             return t.getLeft();
         }).collect(Collectors.toList()));
         final List<GPXWaypoint> selectedWaypointsList = new ArrayList<>(selectedWaypointsSet);
+        
+        if (selectedWaypointsSet.isEmpty()) {
+            // nothing to do here
+            return;
+        }
 
         Pair<GPXWaypoint, Number> prevPair = null;
         boolean prevSelected = false;

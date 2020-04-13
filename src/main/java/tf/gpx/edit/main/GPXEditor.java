@@ -1076,7 +1076,7 @@ public class GPXEditor implements Initializable {
                     // show beginning of list
                     gpxWaypoints.scrollTo(0);
                 } else {
-                    gpxWaypoints.setItems(FXCollections.observableList(new ArrayList<GPXWaypoint>()));
+                    gpxWaypoints.setItems(FXCollections.observableList(new ArrayList<>()));
                     gpxWaypoints.setUserData(null);
                 }
                 gpxWaypoints.getSelectionModel().clearSelection();

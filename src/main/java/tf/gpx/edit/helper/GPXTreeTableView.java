@@ -518,6 +518,9 @@ public class GPXTreeTableView {
 
             // dragging something over the list
             row.setOnDragOver(event -> {
+                if (event.getDragboard().hasContent(DataFormat.FILES)) {
+                    AppClipboard.getInstance().addContent(DataFormat.FILES, event.getDragboard().getContent(DataFormat.FILES));
+                }
                 onDragOver(event, row);
                 event.consume();
             });
