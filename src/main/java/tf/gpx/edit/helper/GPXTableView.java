@@ -27,11 +27,14 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -168,31 +171,99 @@ public class GPXTableView {
             };
             
             final ContextMenu waypointMenu = new ContextMenu();
-            final MenuItem selectWaypoints = new MenuItem("Select highlighted");
-            selectWaypoints.setOnAction((ActionEvent event) -> {
+            
+            // sub menu for highlighted items
+
+            final Menu highlighted = new Menu("Highlighted");
+
+            final MenuItem selectHighlighted = new MenuItem("Select");
+            selectHighlighted.setOnAction((ActionEvent event) -> {
                 myEditor.selectHighlightedWaypoints();
             });
-            waypointMenu.getItems().add(selectWaypoints);
+            highlighted.getItems().add(selectHighlighted);
 
-            final MenuItem invertSelection = new MenuItem("Invert selection");
+            final MenuItem nextHighlighted = new MenuItem("Next");
+            nextHighlighted.setOnAction((ActionEvent event) -> {
+                List<GPXWaypoint> checkItems = new ArrayList<>(myTableView.getItems());
+                        
+                int skipRows = checkItems.indexOf(row.getItem());
+                // find next non-highlight
+                Optional<GPXWaypoint> nextNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+                if (nextNonHi.isPresent()) {
+                    skipRows = checkItems.indexOf(nextNonHi.get());
+                    
+                    // search for any highlight after that one
+                    Optional<GPXWaypoint> nextHi = checkItems.stream().skip(skipRows).filter(t -> t.isHighlight()).findFirst();
+                    if (nextHi.isPresent()) {
+                        scrollTo(nextHi.get());
+                    }
+                }
+            });
+            nextHighlighted.setAccelerator(UsefulKeyCodes.F3.getKeyCodeCombination());
+            highlighted.getItems().add(nextHighlighted);
+
+            final MenuItem prevHighlighted = new MenuItem("Prev");
+            prevHighlighted.setOnAction((ActionEvent event) -> {
+                List<GPXWaypoint> checkItems = new ArrayList<>(myTableView.getItems());
+                // do everything the other way around
+                Collections.reverse(checkItems);
+                        
+                int skipRows = checkItems.indexOf(row.getItem());
+                // find prev non-highlight
+                Optional<GPXWaypoint> nextNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+                if (nextNonHi.isPresent()) {
+                    skipRows = checkItems.indexOf(nextNonHi.get());
+                    
+                    // search for any highlight before that one
+                    Optional<GPXWaypoint> nextHi = checkItems.stream().skip(skipRows).filter(t -> t.isHighlight()).findFirst();
+                    if (nextHi.isPresent()) {
+                        skipRows = checkItems.indexOf(nextHi.get());
+
+                        // search for any non-highlight before that one <- we want to move to the beginning of the list of highlighted waypoints!
+                        Optional<GPXWaypoint> firstNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+
+                        if (firstNonHi.isPresent()) {
+                            // its one after that we want to be...
+                            scrollTo(myTableView.getItems().indexOf(firstNonHi.get())+1);
+                        } else {
+                            // its the beginning we want to be
+                            scrollTo(0);
+                        }
+                    }
+                }
+            });
+            prevHighlighted.setAccelerator(UsefulKeyCodes.SHIFT_F3.getKeyCodeCombination());
+            highlighted.getItems().add(prevHighlighted);
+            
+//            highlighted.disableProperty().bind(GPXListHelper.none(myTableView.getItems(), (t) -> {
+//                return t.isHighlight();
+//            }));
+
+            waypointMenu.getItems().add(highlighted);
+
+            // sub menu for selected items
+
+            final Menu selected = new Menu("Selected");
+
+            final MenuItem invertSelection = new MenuItem("Invert");
             invertSelection.setOnAction((ActionEvent event) -> {
                 myEditor.invertSelectedWaypoints();
             });
-            waypointMenu.getItems().add(invertSelection);
+            selected.getItems().add(invertSelection);
             
-            final MenuItem deleteWaypoints = new MenuItem("Delete selected");
+            final MenuItem deleteWaypoints = new MenuItem("Delete");
             deleteWaypoints.setOnAction((ActionEvent event) -> {
                 myEditor.deleteSelectedWaypoints();
             });
-            waypointMenu.getItems().add(deleteWaypoints);
+            selected.getItems().add(deleteWaypoints);
             
-            final MenuItem replaceWaypoints = new MenuItem("Replace selected by Center");
+            final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
             replaceWaypoints.setOnAction((ActionEvent event) -> {
                 myEditor.replaceByCenter();
             });
             replaceWaypoints.disableProperty().bind(
                     Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
-            waypointMenu.getItems().add(replaceWaypoints);
+            selected.getItems().add(replaceWaypoints);
 
             final Menu deleteAttr = new Menu("Delete attribute(s)");
             // TFE, 20190715: support for deletion of date & name...
@@ -214,9 +285,11 @@ public class GPXTableView {
             });
             deleteAttr.getItems().add(deleteExtensions);
             
-            waypointMenu.getItems().add(deleteAttr);
+            selected.getItems().add(deleteAttr);
             
-            waypointMenu.getItems().add(new SeparatorMenuItem());
+            waypointMenu.getItems().add(selected);
+            
+            // sub menu for insert items & split
 
             final Menu insertItems = new Menu("Insert");
             final MenuItem insertAbove = new MenuItem("above");
@@ -236,7 +309,8 @@ public class GPXTableView {
                         GPXEditor.RelativePosition.BELOW);
             });
             insertItems.getItems().add(insertBelow);
-            insertItems.disableProperty().bind(Bindings.isEmpty(bindingsHelper()));
+            
+//            insertItems.disableProperty().bind(Bindings.isEmpty(bindingsHelper()));
             
             waypointMenu.getItems().add(insertItems);
             
