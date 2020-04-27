@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.items;
 
+import tf.gpx.edit.main.GPXEditor;
+
 /**
  *
  * @author Thomas
@@ -37,4 +39,6 @@ public interface IGPXLineItemVisitor {
     public abstract void visitGPXWaypoint(final GPXWaypoint gpxWayPoint);
     public abstract void visitGPXRoute(final GPXRoute gpxRoute);
     public abstract boolean deepthFirst();
+    
+    public abstract void setCallback(final GPXEditor editor);
 }

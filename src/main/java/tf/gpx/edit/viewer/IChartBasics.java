@@ -31,7 +31,6 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javafx.collections.FXCollections;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -59,7 +58,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  * Helper class to hold stuff required by both HeightChart and LineChart

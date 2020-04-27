@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.worker;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
@@ -33,6 +35,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  *
@@ -41,6 +44,8 @@ import tf.gpx.edit.items.IGPXLineItemVisitor;
 public class GPXEmptyWorker implements IGPXLineItemVisitor {
     protected double myParameter = Double.MIN_VALUE;
     protected boolean deepthFirst = true;
+    
+    private GPXEditor myGPXEditor;
 
     public GPXEmptyWorker() {
         super ();
@@ -87,17 +92,26 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         return deepthFirst;
     }
     
-    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+    protected void removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
         assert gpxWayPoints.size() == keep.length;
+        assert myGPXEditor != null;
+        
+        final List<GPXWaypoint> waypointsToDelete = new ArrayList<>();
         
         // go through keep[] backwards and remove the waypoints with FALSE
         final int size = keep.length;
         for (int i = size - 1; i >= 0; i--) {
             if (!keep[i]) {
-                gpxWayPoints.remove(i);
+                waypointsToDelete.add(gpxWayPoints.get(i));
             }
         }
+        Collections.reverse(waypointsToDelete);
         
-        return gpxWayPoints;
+        myGPXEditor.deleteWaypoints(waypointsToDelete);
+    }
+
+    @Override
+    public void setCallback(final GPXEditor editor) {
+        myGPXEditor = editor;
     }
 }

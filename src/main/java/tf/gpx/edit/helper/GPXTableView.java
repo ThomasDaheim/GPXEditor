@@ -82,11 +82,11 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.StatusBar;
-import tf.helper.AppClipboard;
-import tf.helper.ObjectsHelper;
-import tf.helper.TableMenuUtils;
-import tf.helper.TooltipHelper;
-import tf.helper.UsefulKeyCodes;
+import tf.helper.general.AppClipboard;
+import tf.helper.general.ObjectsHelper;
+import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TooltipHelper;
+import tf.helper.general.UsefulKeyCodes;
 
 /**
  *
@@ -154,7 +154,7 @@ public class GPXTableView {
 //                        }
                     } else {
                         getStyleClass().removeAll("highlightedRow", "firstRow");
-                        setTooltip(null);
+//                        setTooltip(null);
                     }
                 }
                 
@@ -171,6 +171,54 @@ public class GPXTableView {
             };
             
             final ContextMenu waypointMenu = new ContextMenu();
+            
+            // sub menu for selected items
+
+            final Menu selected = new Menu("Selected");
+
+            final MenuItem invertSelection = new MenuItem("Invert");
+            invertSelection.setOnAction((ActionEvent event) -> {
+                myEditor.invertSelectedWaypoints();
+            });
+            selected.getItems().add(invertSelection);
+            
+            final MenuItem deleteWaypoints = new MenuItem("Delete");
+            deleteWaypoints.setOnAction((ActionEvent event) -> {
+                myEditor.deleteSelectedWaypoints();
+            });
+            selected.getItems().add(deleteWaypoints);
+            
+            final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
+            replaceWaypoints.setOnAction((ActionEvent event) -> {
+                myEditor.replaceByCenter();
+            });
+            replaceWaypoints.disableProperty().bind(
+                    Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
+            selected.getItems().add(replaceWaypoints);
+
+            final Menu deleteAttr = new Menu("Delete attribute(s)");
+            // TFE, 20190715: support for deletion of date & name...
+            final MenuItem deleteDates = new MenuItem("Date(s)");
+            deleteDates.setOnAction((ActionEvent event) -> {
+                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.DATE);
+            });
+            deleteAttr.getItems().add(deleteDates);
+            
+            final MenuItem deleteNames = new MenuItem("Name(s)");
+            deleteNames.setOnAction((ActionEvent event) -> {
+                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.NAME);
+            });
+            deleteAttr.getItems().add(deleteNames);
+
+            final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
+            deleteExtensions.setOnAction((ActionEvent event) -> {
+                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.EXTENSION);
+            });
+            deleteAttr.getItems().add(deleteExtensions);
+            
+            selected.getItems().add(deleteAttr);
+            
+            waypointMenu.getItems().add(selected);
             
             // sub menu for highlighted items
 
@@ -241,54 +289,6 @@ public class GPXTableView {
 
             waypointMenu.getItems().add(highlighted);
 
-            // sub menu for selected items
-
-            final Menu selected = new Menu("Selected");
-
-            final MenuItem invertSelection = new MenuItem("Invert");
-            invertSelection.setOnAction((ActionEvent event) -> {
-                myEditor.invertSelectedWaypoints();
-            });
-            selected.getItems().add(invertSelection);
-            
-            final MenuItem deleteWaypoints = new MenuItem("Delete");
-            deleteWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypoints();
-            });
-            selected.getItems().add(deleteWaypoints);
-            
-            final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
-            replaceWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.replaceByCenter();
-            });
-            replaceWaypoints.disableProperty().bind(
-                    Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
-            selected.getItems().add(replaceWaypoints);
-
-            final Menu deleteAttr = new Menu("Delete attribute(s)");
-            // TFE, 20190715: support for deletion of date & name...
-            final MenuItem deleteDates = new MenuItem("Date(s)");
-            deleteDates.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.DATE);
-            });
-            deleteAttr.getItems().add(deleteDates);
-            
-            final MenuItem deleteNames = new MenuItem("Name(s)");
-            deleteNames.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.NAME);
-            });
-            deleteAttr.getItems().add(deleteNames);
-
-            final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
-            deleteExtensions.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.EXTENSION);
-            });
-            deleteAttr.getItems().add(deleteExtensions);
-            
-            selected.getItems().add(deleteAttr);
-            
-            waypointMenu.getItems().add(selected);
-            
             // sub menu for insert items & split
 
             final Menu insertItems = new Menu("Insert");

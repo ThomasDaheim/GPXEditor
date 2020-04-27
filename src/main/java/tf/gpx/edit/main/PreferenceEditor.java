@@ -50,7 +50,7 @@ import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
-import tf.helper.EnumHelper;
+import tf.helper.general.EnumHelper;
 
 /**
  *

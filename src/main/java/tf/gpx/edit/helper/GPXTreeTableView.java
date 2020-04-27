@@ -89,13 +89,13 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
-import tf.helper.AppClipboard;
-import tf.helper.ColorConverter;
-import tf.helper.ColorSelectionMenu;
-import tf.helper.ObjectsHelper;
-import tf.helper.TableMenuUtils;
-import tf.helper.TooltipHelper;
-import tf.helper.UsefulKeyCodes;
+import tf.helper.general.AppClipboard;
+import tf.helper.general.ColorConverter;
+import tf.helper.javafx.ColorSelectionMenu;
+import tf.helper.general.ObjectsHelper;
+import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TooltipHelper;
+import tf.helper.general.UsefulKeyCodes;
 
 /**
  *

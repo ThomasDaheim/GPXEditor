@@ -37,7 +37,7 @@ import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

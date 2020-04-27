@@ -48,7 +48,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.EnumHelper;
+import tf.helper.general.EnumHelper;
 
 /**
  *

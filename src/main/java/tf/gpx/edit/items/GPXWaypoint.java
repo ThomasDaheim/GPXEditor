@@ -44,7 +44,7 @@ import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

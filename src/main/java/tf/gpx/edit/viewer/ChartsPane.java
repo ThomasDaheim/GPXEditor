@@ -38,7 +38,7 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.DragResizer;
+import tf.helper.javafx.DragResizer;
 
 /**
  * Holder pane for various charts (height, speed, ...) to be placed on the map

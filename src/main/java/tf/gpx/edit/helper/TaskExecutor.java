@@ -36,7 +36,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

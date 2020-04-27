@@ -25,7 +25,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Dimension2D;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 
 /**

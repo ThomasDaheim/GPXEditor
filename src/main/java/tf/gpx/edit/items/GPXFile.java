@@ -59,8 +59,8 @@ import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
-import tf.helper.AppInfo;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.AppInfo;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

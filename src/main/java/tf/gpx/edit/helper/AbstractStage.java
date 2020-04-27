@@ -32,7 +32,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import tf.gpx.edit.main.GPXEditorManager;
-import tf.helper.UsefulKeyCodes;
+import tf.helper.general.UsefulKeyCodes;
 
 /**
  *

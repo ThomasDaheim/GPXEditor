@@ -38,10 +38,13 @@ import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXTableView;
@@ -52,7 +55,9 @@ import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.helper.AppClipboard;
+import tf.helper.doundo.DoUndoManager;
+import tf.helper.general.AppClipboard;
+import tf.helper.javafx.TooltipHelper;
 
 /**
  * StatusBar to show messages, ... at the bottom
@@ -71,6 +76,8 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatusBar INSTANCE = new StatusBar();
     
+    private GPXEditor myGPXEditor;
+    
     private static final String SEPERATOR = "|";
     
     private static final String FORMAT_WAYPOINT_STRING = "Waypoint: %s";
@@ -79,10 +86,14 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     private static final String CLIPBOARD_TEXT = "CLPB: ";
     private static final String WAYPOINT_TEXT = "WPTS";
     private static final String ITEM_TEXT = "ITMS";
+    private static final String DO_TEXT = "REDO";
+    private static final String UNDO_TEXT = "UNDO";
     private static final DateTimeFormatter DATETIMEFORMATTER = DateTimeFormatter.ofPattern("EEE dd.MM.yyyy HH:mm");
     
     private final Label myLabel = new Label();
     private final ProgressBar myTaskProgress = new ProgressBar();
+    private final Label myDoUndoContent = new Label("");
+    private final Label myDoUndoContentSeperator = new Label("");
     private final Label myCntrlPressed = new Label();
     private final Label myCntrlPressedSeperator = new Label();
     private final Label myClipboardContent = new Label();
@@ -112,6 +123,21 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         final Region region = new Region();
         HBox.setHgrow(region, Priority.ALWAYS);
         
+        // update do/undo stack changes
+        // show stack list in tooltip
+        final Tooltip tooltip = new Tooltip();
+        tooltip.setTextAlignment(TextAlignment.LEFT);
+        tooltip.setTextOverrun(OverrunStyle.ELLIPSIS);
+        tooltip.activatedProperty().addListener((ov, oldValue, newValue) -> {
+             if (newValue != null && newValue && myGPXEditor != null && myGPXEditor.getCurrentGPXFileName() != null) {
+                 tooltip.setText(DoUndoManager.getInstance().getActionDescription(myGPXEditor.getCurrentGPXFileName()));
+             } else {
+                 tooltip.setText("");
+             }
+        });
+        TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+        myDoUndoContent.setTooltip(tooltip);
+        
         // update with any content from clipboard
         AppClipboard.getInstance().putCountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
@@ -129,7 +155,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                     myClipboardContent.setText(newText);
                     myClipboardContentSeperator.setText(SEPERATOR);
                 } else {
-                    myCntrlPressed.setText("");
+                    myClipboardContent.setText("");
                     myClipboardContentSeperator.setText("");
                 }
             }
@@ -142,7 +168,11 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         timeline.play();
 
         setSpacing(5.0);
-        getChildren().setAll(myLabel, myTaskProgress, region, myCntrlPressed, myCntrlPressedSeperator, myClipboardContent, myClipboardContentSeperator, myClock);
+        getChildren().setAll(myLabel, myTaskProgress, region, myDoUndoContent, myDoUndoContentSeperator, myCntrlPressed, myCntrlPressedSeperator, myClipboardContent, myClipboardContentSeperator, myClock);
+    }
+    
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
     }
     
     public void setStatusText(final String text) {
@@ -286,6 +316,20 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                     }
                 }, this);
                 break;
+        }
+    }
+    
+    public void setStatusFromFile(final String file) {
+        // check canDo() / can Undo() for current gpxfile
+        if (DoUndoManager.getInstance().canUndo(file)) {
+            myDoUndoContent.setText(UNDO_TEXT);
+            myDoUndoContentSeperator.setText(SEPERATOR);
+        } else if (DoUndoManager.getInstance().canDo(file)) {
+            myDoUndoContent.setText(DO_TEXT);
+            myDoUndoContentSeperator.setText(SEPERATOR);
+        } else {
+            myDoUndoContent.setText("");
+            myDoUndoContentSeperator.setText("");
         }
     }
 }

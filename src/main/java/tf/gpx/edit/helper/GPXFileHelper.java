@@ -59,7 +59,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
-import tf.helper.ShowAlerts;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  *
@@ -321,5 +321,9 @@ public class GPXFileHelper {
                             ex.getMessage(),
                             buttonOK);
         }
+    }
+    
+    public static String getNameForGPXFile(final GPXFile gpxfile) {
+        return gpxfile.getGPXFile().getPath() + gpxfile.getGPXFile().getName();
     }
 }

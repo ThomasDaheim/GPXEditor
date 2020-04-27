@@ -65,9 +65,9 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.viewer.MarkerManager;
-import tf.helper.ObjectsHelper;
-import tf.helper.RestrictiveTextField;
-import tf.helper.TooltipHelper;
+import tf.helper.general.ObjectsHelper;
+import tf.helper.javafx.RestrictiveTextField;
+import tf.helper.javafx.TooltipHelper;
 
 /**
  *

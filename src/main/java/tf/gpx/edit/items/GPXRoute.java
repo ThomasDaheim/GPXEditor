@@ -43,7 +43,7 @@ import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

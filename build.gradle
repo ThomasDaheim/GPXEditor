@@ -36,7 +36,14 @@ group='tf.GPXEditor'
 version='4.7'
 
 repositories {
-    mavenLocal()
+    mavenLocal() {
+        // breaking change in gradle 6.*: doesn't find jar files automatically when no pom.xml is present...
+        // https://discuss.gradle.org/t/how-to-fetch-maven-artifact-without-pom-file-in-gradle-6-0/33836
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
     mavenCentral()
     jcenter()
     // You may define additional repositories, or even remove "mavenCentral()".
@@ -60,7 +67,7 @@ dependencies {
     compile "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.3'
+    compile 'tf.JavaHelper:JavaHelper:1.5'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
@@ -128,6 +135,7 @@ run {
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
         jvmArgs = jvmArgs.plus('-Xmx4096M')
+        enableAssertions = true
     }
 }
 

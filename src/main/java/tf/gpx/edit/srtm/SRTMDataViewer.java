@@ -85,7 +85,7 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.ShowAlerts;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.

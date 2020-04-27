@@ -92,6 +92,8 @@ public class GPXStructureHelper {
     }
     
     private void runVisitor(final List<GPXMeasurable> gpxLineItems, final IGPXLineItemVisitor visitor) {
+        // TFE, 20200427: for do/undo all changes must run over central location
+        visitor.setCallback(myEditor);
         for (GPXMeasurable gpxLineItem : gpxLineItems) {
             gpxLineItem.acceptVisitor(visitor);
         }

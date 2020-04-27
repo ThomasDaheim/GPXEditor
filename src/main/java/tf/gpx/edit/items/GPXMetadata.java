@@ -35,7 +35,7 @@ import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.CumulativeDescent;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.OverallDuration;
-import tf.helper.ObjectsHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *

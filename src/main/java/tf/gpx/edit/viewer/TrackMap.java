@@ -1159,7 +1159,7 @@ public class TrackMap extends LeafletMapView {
         return bounds;
     }
     private double[] extendBounds(final double[] bounds, final LatLong latLong) {
-        assert bounds.length == 4;
+        assert bounds.length == 5;
         
         bounds[0] = Math.min(bounds[0], latLong.getLatitude());
         bounds[1] = Math.max(bounds[1], latLong.getLatitude());

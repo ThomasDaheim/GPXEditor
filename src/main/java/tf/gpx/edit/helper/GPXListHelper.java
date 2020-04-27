@@ -42,7 +42,6 @@ import javafx.collections.ObservableList;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
-import tf.helper.ObjectsHelper;
 
 /**
  * Concatenate into observable list that keeps track of changes of sublists.
