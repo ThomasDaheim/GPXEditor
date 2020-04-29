@@ -320,13 +320,19 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     }
     
     public void setStatusFromFile(final String file) {
-        // check canDo() / can Undo() for current gpxfile
-        if (DoUndoManager.getInstance().canUndo(file)) {
-            myDoUndoContent.setText(UNDO_TEXT);
-            myDoUndoContentSeperator.setText(SEPERATOR);
-        } else if (DoUndoManager.getInstance().canDo(file)) {
-            myDoUndoContent.setText(DO_TEXT);
-            myDoUndoContentSeperator.setText(SEPERATOR);
+        // This can happen! e.g. when deleting the selected line item...
+        if (file != null) {
+            // check canDo() / can Undo() for current gpxfile
+            if (DoUndoManager.getInstance().canUndo(file)) {
+                myDoUndoContent.setText(UNDO_TEXT);
+                myDoUndoContentSeperator.setText(SEPERATOR);
+            } else if (DoUndoManager.getInstance().canDo(file)) {
+                myDoUndoContent.setText(DO_TEXT);
+                myDoUndoContentSeperator.setText(SEPERATOR);
+            } else {
+                myDoUndoContent.setText("");
+                myDoUndoContentSeperator.setText("");
+            }
         } else {
             myDoUndoContent.setText("");
             myDoUndoContentSeperator.setText("");

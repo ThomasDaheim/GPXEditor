@@ -41,32 +41,38 @@ import tf.helper.doundo.AbstractDoUndoAction;
  *
  * @author thomas
  */
-public abstract class InsertDeleteWaypointsAbstractAction extends AbstractDoUndoAction {
-    public enum InsertDeleteAction {
-        INSERT,
-        DELETE;
+public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
+    public enum WaypointsAction {
+        INSERT_WAYPOINTS,
+        DELETE_WAYPOINTS,
+        DELETE_INFORMATION;
         
         @Override
         public String toString() {
-            if (INSERT.equals(this)) {
-                return "InsertWaypointsAction";
-            } else {
-                return "DeleteWaypointsAction";
+            switch (this) {
+                case INSERT_WAYPOINTS:
+                    return "InsertWaypointsAction";
+                case DELETE_WAYPOINTS:
+                    return "DeleteWaypointsAction";
+                case DELETE_INFORMATION:
+                    return "DeleteWaypointsInformationAction";
+                default:
+                    return "";
             }
         }
     }
     
-    private InsertDeleteAction myAction = null;
+    private WaypointsAction myAction = null;
     
     protected GPXEditor myEditor = null;
     // store for deleted waypoint info: from which lineitem, @which position
     protected final Map<GPXLineItem, List<Pair<Integer, GPXWaypoint>>> waypointCluster = new HashMap<>();
 
-    private InsertDeleteWaypointsAbstractAction() {
+    private WaypointsAbstractAction() {
         super();
     }
     
-    protected InsertDeleteWaypointsAbstractAction(final InsertDeleteAction action, final GPXEditor editor) {
+    protected WaypointsAbstractAction(final WaypointsAction action, final GPXEditor editor) {
         myAction = action;
     }
     
@@ -89,7 +95,8 @@ public abstract class InsertDeleteWaypointsAbstractAction extends AbstractDoUndo
         return myAction.toString() + " for " + waypointCluster.values().size() + " waypoints in state " + getState().name();
     }
     
-    private boolean doDelete() {
+    // default implementation for Delete/Insert Waypoints
+    protected boolean doDelete() {
         boolean result = true;
         
         myEditor.removeGPXWaypointListListener();
@@ -119,7 +126,8 @@ public abstract class InsertDeleteWaypointsAbstractAction extends AbstractDoUndo
         return result;
     }
     
-    private boolean doInsert() {
+    // default implementation for Delete/Insert Waypoints
+    protected boolean doInsert() {
         boolean result = true;
         
         myEditor.removeGPXWaypointListListener();
@@ -143,7 +151,7 @@ public abstract class InsertDeleteWaypointsAbstractAction extends AbstractDoUndo
 
     @Override
     public boolean doHook() {
-        if (InsertDeleteAction.INSERT.equals(myAction)) {
+        if (WaypointsAction.INSERT_WAYPOINTS.equals(myAction)) {
             return doInsert();
         } else {
             return doDelete();
@@ -152,7 +160,7 @@ public abstract class InsertDeleteWaypointsAbstractAction extends AbstractDoUndo
 
     @Override
     public boolean undoHook() {
-        if (InsertDeleteAction.INSERT.equals(myAction)) {
+        if (WaypointsAction.INSERT_WAYPOINTS.equals(myAction)) {
             return doDelete();
         } else {
             return doInsert();

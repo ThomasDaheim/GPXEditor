@@ -170,7 +170,15 @@ public class GPXMetadata extends GPXMeasurable {
 
     @Override
     public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return ObjectsHelper.uncheckedCast(this);
+        }
+
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();

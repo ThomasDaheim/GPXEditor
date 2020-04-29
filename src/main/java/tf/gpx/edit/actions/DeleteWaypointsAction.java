@@ -39,15 +39,15 @@ import tf.gpx.edit.main.GPXEditor;
  *
  * @author thomas
  */
-public class DeleteWaypointsAction extends InsertDeleteWaypointsAbstractAction {
+public class DeleteWaypointsAction extends WaypointsAbstractAction {
     private List<GPXWaypoint> myWaypoints = null;
     
     private DeleteWaypointsAction() {
-        super(InsertDeleteAction.DELETE, null);
+        super(WaypointsAction.DELETE_WAYPOINTS, null);
     }
     
     public DeleteWaypointsAction(final GPXEditor editor, final List<GPXWaypoint> waypoints) {
-        super(InsertDeleteAction.DELETE, editor);
+        super(WaypointsAction.DELETE_WAYPOINTS, editor);
         
         myEditor = editor;
         myWaypoints = new ArrayList<>(waypoints);

@@ -180,7 +180,10 @@ public class GPXTrack extends GPXMeasurable {
             return ObjectsHelper.uncheckedCast(this);
         }
 
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();

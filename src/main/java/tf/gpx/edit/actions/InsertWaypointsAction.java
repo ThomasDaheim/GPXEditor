@@ -37,17 +37,17 @@ import tf.gpx.edit.main.GPXEditor;
  *
  * @author thomas
  */
-public class InsertWaypointsAction extends InsertDeleteWaypointsAbstractAction {
+public class InsertWaypointsAction extends WaypointsAbstractAction {
     private GPXLineItem myTarget = null;
     private List<GPXWaypoint> myWaypoints = null;
     private GPXEditor.RelativePosition myPosition = null;
     
     private InsertWaypointsAction() {
-        super(InsertDeleteAction.INSERT, null);
+        super(WaypointsAction.INSERT_WAYPOINTS, null);
     }
     
     public InsertWaypointsAction(final GPXEditor editor, final GPXLineItem target, final List<GPXWaypoint> waypoints, final GPXEditor.RelativePosition position) {
-        super(InsertDeleteAction.INSERT, editor);
+        super(WaypointsAction.INSERT_WAYPOINTS, editor);
         
         myEditor = editor;
         myTarget = target;

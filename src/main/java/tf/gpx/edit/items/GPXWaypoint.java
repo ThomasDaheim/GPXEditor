@@ -321,7 +321,10 @@ public class GPXWaypoint extends GPXLineItem {
             return ObjectsHelper.uncheckedCast(this);
         }
 
-        assert GPXLineItemHelper.isParentTypeOf(parent, this);
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItemHelper.isParentTypeOf(parent, this);
+        }
         
         myGPXParent = parent;
         setHasUnsavedChanges();

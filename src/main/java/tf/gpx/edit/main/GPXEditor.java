@@ -101,6 +101,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
+import tf.gpx.edit.actions.DeleteWaypointsInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
@@ -1043,31 +1044,41 @@ public class GPXEditor implements Initializable {
         // all waypoints to remove - as copy since otherwise observablelist getAsString messed up by deletes
         final List<GPXWaypoint> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
 
-        removeGPXWaypointListListener();
-
-        for (GPXWaypoint waypoint : selectedWaypoints){
-            switch (info) {
-                case DATE:
-                    waypoint.setDate(null);
-                    break;
-                case NAME:
-                    waypoint.setName(null);
-                    break;
-                case EXTENSION:
-                    if (waypoint.getWaypoint().getExtensionData() != null) {
-                        waypoint.getWaypoint().getExtensionData().clear();
-                        waypoint.setHasUnsavedChanges();
-                    }
-                    break;
-                default:
-                    break;
-            }
+        if(selectedWaypoints.isEmpty()) {
+            // nothing to copy...
+            return;
         }
-        
-        addGPXWaypointListListener();
-        setStatusFromWaypoints();
 
-        refresh();
+        final IDoUndoAction deleteAction = new DeleteWaypointsInformationAction(this, selectedWaypoints, info);
+        deleteAction.doAction();
+        
+        DoUndoManager.getInstance().addDoneAction(deleteAction, GPXFileHelper.getNameForGPXFile(selectedWaypoints.get(0).getGPXFile()));
+        
+//        removeGPXWaypointListListener();
+//
+//        for (GPXWaypoint waypoint : selectedWaypoints){
+//            switch (info) {
+//                case DATE:
+//                    waypoint.setDate(null);
+//                    break;
+//                case NAME:
+//                    waypoint.setName(null);
+//                    break;
+//                case EXTENSION:
+//                    if (waypoint.getWaypoint().getExtensionData() != null) {
+//                        waypoint.getWaypoint().getExtensionData().clear();
+//                        waypoint.setHasUnsavedChanges();
+//                    }
+//                    break;
+//                default:
+//                    break;
+//            }
+//        }
+//        
+//        addGPXWaypointListListener();
+//        setStatusFromWaypoints();
+//
+//        refresh();
     }
 
     private void initBottomPane() {
@@ -1793,7 +1804,7 @@ public class GPXEditor implements Initializable {
         removeGPXWaypointListListener();
 
         // use set for faster processing
-        final Set<GPXWaypoint> affectedGPXWaypoints = new LinkedHashSet<>();
+        final List<GPXWaypoint> affectedGPXWaypoints = new ArrayList<>();
         for (GPXWaypointNeighbours cluster : clusters) {
             final int index = cluster.getCenterIndex();
 
@@ -1817,7 +1828,8 @@ public class GPXEditor implements Initializable {
                 gpxWaypoint.setHighlight(true);
             }
         } else {
-            wayPoints.removeAll(affectedGPXWaypoints);
+            // delegate so that do/undo can be used
+            deleteWaypoints(affectedGPXWaypoints);
         }
 
         addGPXWaypointListListener();
