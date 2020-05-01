@@ -107,11 +107,31 @@ public class GPXTrack extends GPXMeasurable {
     
     @Override
     public void setColor(final String col) {
+        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
+            setDefaultColor();
+            return;
+        }
+
         color = col;
         GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
                 this,
                 GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+                GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+
+        setHasUnsavedChanges();
+    }
+    
+    @Override
+    public void setDefaultColor() {
+        color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
+        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
+            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                    this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        }
 
         setHasUnsavedChanges();
     }
@@ -192,8 +212,8 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXMeasurable> getMeasurableChildren() {
-        return GPXListHelper.asGPXMeasurableList(myGPXTrackSegments);
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return myGPXTrackSegments;
     }
     
     @Override
@@ -202,8 +222,8 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXTrackSegments);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXTrackSegments;
     }
 
     @Override

@@ -39,15 +39,15 @@ import tf.gpx.edit.main.GPXEditor;
  *
  * @author thomas
  */
-public class DeleteWaypointsAction extends WaypointsAbstractAction {
+public class DeleteWaypointsAction extends InsertDeleteWaypointsAction {
     private List<GPXWaypoint> myWaypoints = null;
     
     private DeleteWaypointsAction() {
-        super(WaypointsAction.DELETE_WAYPOINTS, null);
+        super(LineItemAction.DELETE_WAYPOINTS, null);
     }
     
     public DeleteWaypointsAction(final GPXEditor editor, final List<GPXWaypoint> waypoints) {
-        super(WaypointsAction.DELETE_WAYPOINTS, editor);
+        super(LineItemAction.DELETE_WAYPOINTS, editor);
         
         myEditor = editor;
         myWaypoints = new ArrayList<>(waypoints);
@@ -61,20 +61,25 @@ public class DeleteWaypointsAction extends WaypointsAbstractAction {
         for (GPXWaypoint waypoint : myWaypoints) {
             final GPXLineItem parent = waypoint.getParent();
             
-            if (!waypointCluster.containsKey(parent)) {
+            if (!lineItemCluster.containsKey(parent)) {
                 final List<GPXWaypoint> parentWaypoints = myWaypoints.stream().filter((t) -> {
                     return parent.equals(t.getParent());
                 }).collect(Collectors.toList());
                 
                 final List<Pair<Integer, GPXWaypoint>> parentPairs = new ArrayList<>();
                 for (GPXWaypoint pairWaypoint : parentWaypoints) {
-                    // store each waypoint with its position in the list of parent's waypoints
-                    parentPairs.add(Pair.of(parent.getGPXWaypoints().indexOf(pairWaypoint), pairWaypoint));
+                    final int waypointIndex = parent.getGPXWaypoints().indexOf(pairWaypoint);
+
+                    // only delete if really present
+                    if (waypointIndex != -1) {
+                        // store each waypoint with its position in the list of parent's waypoints
+                        parentPairs.add(Pair.of(parent.getGPXWaypoints().indexOf(pairWaypoint), pairWaypoint));
+                    }
                 }
                 // sort by index to make sure undo works
                 Collections.sort(parentPairs, new SortByIndex());
                 
-                waypointCluster.put(parent, parentPairs);
+                lineItemCluster.put(parent, parentPairs);
             }
         }
     }

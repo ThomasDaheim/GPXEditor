@@ -104,7 +104,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
 
@@ -196,7 +196,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
         return FXCollections.observableArrayList();
     }
 

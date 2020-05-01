@@ -93,6 +93,14 @@ dependencies {
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.1'
 }
 
+task unzip(type: Copy) {
+    def zipFile = file("${buildDir}/distributions/GPXEditor-${version}.zip")
+    def outputDir = file("dist")
+ 
+    from zipTree(zipFile)
+    into outputDir
+}
+
 compileJava {
     doFirst {
         options.compilerArgs = [

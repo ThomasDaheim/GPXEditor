@@ -26,73 +26,25 @@
 package tf.gpx.edit.actions;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.doundo.AbstractDoUndoAction;
 
 /**
  *
  * @author thomas
  */
-public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
-    public enum WaypointsAction {
-        INSERT_WAYPOINTS,
-        DELETE_WAYPOINTS,
-        DELETE_INFORMATION;
-        
-        @Override
-        public String toString() {
-            switch (this) {
-                case INSERT_WAYPOINTS:
-                    return "InsertWaypointsAction";
-                case DELETE_WAYPOINTS:
-                    return "DeleteWaypointsAction";
-                case DELETE_INFORMATION:
-                    return "DeleteWaypointsInformationAction";
-                default:
-                    return "";
-            }
-        }
+public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXWaypoint> {
+    private InsertDeleteWaypointsAction() {
+        super(null, null);
     }
     
-    private WaypointsAction myAction = null;
-    
-    protected GPXEditor myEditor = null;
-    // store for deleted waypoint info: from which lineitem, @which position
-    protected final Map<GPXLineItem, List<Pair<Integer, GPXWaypoint>>> waypointCluster = new HashMap<>();
-
-    private WaypointsAbstractAction() {
-        super();
-    }
-    
-    protected WaypointsAbstractAction(final WaypointsAction action, final GPXEditor editor) {
-        myAction = action;
-    }
-    
-    protected abstract void initAction();
-
-    @Override
-    public boolean canDo() {
-        // we need all data and no multiple do's without undo's
-        return (myEditor != null) && !waypointCluster.isEmpty() && (doneCount() == undoneCount());
-    }
-
-    @Override
-    public boolean canUndo() {
-        // we need all data and no multiple undo's without do's
-        return (myEditor != null) && !waypointCluster.isEmpty() && (doneCount() == undoneCount()+1);
-    }
-
-    @Override
-    public String getDescription() {
-        return myAction.toString() + " for " + waypointCluster.values().size() + " waypoints in state " + getState().name();
+    protected InsertDeleteWaypointsAction(final LineItemAction action, final GPXEditor editor) {
+        super(action, editor);
     }
     
     // default implementation for Delete/Insert Waypoints
@@ -101,11 +53,11 @@ public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
         
         myEditor.removeGPXWaypointListListener();
         
-        for (GPXLineItem parent : waypointCluster.keySet()) {
+        for (GPXLineItem parent : lineItemCluster.keySet()) {
             // performance: do mass remove on List and not on ObservableList
             final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
             
-            final List<Pair<Integer, GPXWaypoint>> parentPairs = waypointCluster.get(parent);
+            final List<Pair<Integer, GPXWaypoint>> parentPairs = lineItemCluster.get(parent);
             final LinkedHashSet<GPXWaypoint> waypointsToDelete = parentPairs.stream().map((t) -> {
                 return t.getRight();
             }).collect(Collectors.toCollection(LinkedHashSet::new));
@@ -132,10 +84,13 @@ public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
         
         myEditor.removeGPXWaypointListListener();
 
-        for (GPXLineItem parent : waypointCluster.keySet()) {
-            for (Pair<Integer, GPXWaypoint> pairs : waypointCluster.get(parent)) {
-                parent.getGPXWaypoints().add(pairs.getLeft(), pairs.getRight());
+        for (GPXLineItem parent : lineItemCluster.keySet()) {
+            // performance: work normal list and set it
+            final List<GPXWaypoint> worklist = parent.getGPXWaypoints().stream().collect(Collectors.toList());
+            for (Pair<Integer, GPXWaypoint> pairs : lineItemCluster.get(parent)) {
+                worklist.add(pairs.getLeft(), pairs.getRight());
             }
+            parent.getGPXWaypoints().setAll(worklist);
         }
 
         myEditor.addGPXWaypointListListener();
@@ -151,7 +106,7 @@ public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
 
     @Override
     public boolean doHook() {
-        if (WaypointsAction.INSERT_WAYPOINTS.equals(myAction)) {
+        if (LineItemAction.INSERT_WAYPOINTS.equals(myAction)) {
             return doInsert();
         } else {
             return doDelete();
@@ -160,7 +115,7 @@ public abstract class WaypointsAbstractAction extends AbstractDoUndoAction {
 
     @Override
     public boolean undoHook() {
-        if (WaypointsAction.INSERT_WAYPOINTS.equals(myAction)) {
+        if (LineItemAction.INSERT_WAYPOINTS.equals(myAction)) {
             return doDelete();
         } else {
             return doInsert();

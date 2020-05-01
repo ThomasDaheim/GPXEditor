@@ -300,18 +300,16 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    // children of different typs! so we can only return list of GPXLineItem
-    public ObservableList<GPXLineItem> getChildren() {
+    public ObservableList<? extends GPXLineItem> getChildren() {
         // iterate over my segments
-        List<ObservableList<GPXLineItem>> children = new ArrayList<>();
+        ObservableList<GPXLineItem> children = FXCollections.observableArrayList();
 
-        // need to down-cast everything to GPXLineItem
-        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
-        children.add(GPXListHelper.asGPXLineItemList(myGPXWaypoints));
-        children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
-        children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));
+        children.addAll(myGPXMetadata);
+        children.addAll(myGPXWaypoints);
+        children.addAll(myGPXTracks);
+        children.addAll(myGPXRoutes);
         
-        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
+        return children;
     }
     
     @Override
@@ -329,17 +327,16 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    // children of different typs! so we can only return list of GPXLineItem
-    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
         // iterate over my segments
-        List<ObservableList<GPXMeasurable>> children = new ArrayList<>();
+        ObservableList<GPXMeasurable> children = FXCollections.observableArrayList();
 
         // need to down-cast everything to GPXLineItem
-        children.add(GPXListHelper.asGPXMeasurableList(myGPXMetadata));
-        children.add(GPXListHelper.asGPXMeasurableList(myGPXTracks));
-        children.add(GPXListHelper.asGPXMeasurableList(myGPXRoutes));
+        children.addAll(myGPXMetadata);
+        children.addAll(myGPXTracks);
+        children.addAll(myGPXRoutes);
         
-        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
+        return children;
     }
 
     @Override
@@ -408,7 +405,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>(myGPXTracks);
     }
 

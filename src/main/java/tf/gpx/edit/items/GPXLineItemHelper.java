@@ -319,14 +319,4 @@ public class GPXLineItemHelper {
         
         return result;
     }
-    
-    // TFE, 20190808: general list converter from anywhere to List<GPXMeasurable>
-    public static List<GPXMeasurable> castToGPXMeasurables(final List<? extends GPXMeasurable> gpxAnyList) {
-        return gpxAnyList.stream().collect(Collectors.toList());
-    }
-    
-    // TFE, 20190808: general list converter from anywhere to List<GPXLineItem>
-    public static List<GPXLineItem> castToGPXLineItems(final List<? extends GPXLineItem> gpxAnyList) {
-        return gpxAnyList.stream().collect(Collectors.toList());
-    }
 }

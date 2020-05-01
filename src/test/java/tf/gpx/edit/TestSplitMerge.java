@@ -39,6 +39,7 @@ import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.SplitValue.SplitType;
 
@@ -46,10 +47,9 @@ import tf.gpx.edit.values.SplitValue.SplitType;
  *
  * @author thomas
  */
-public class TestSplitMerge {
-    private final static GPXStructureHelper helper = new GPXStructureHelper();
-    
+public class TestSplitMerge extends GPXEditor {
     public TestSplitMerge() {
+        super(false);
     }
     
     @BeforeClass
@@ -118,7 +118,7 @@ public class TestSplitMerge {
         Assert.assertEquals(364, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         
-        helper.mergeGPXTrackSegments(gpxfile.getGPXTracks().get(0).getGPXTrackSegments(), gpxfile.getGPXTracks().get(0).getGPXTrackSegments());
+        GPXStructureHelper.getInstance().mergeGPXTrackSegments(gpxfile.getGPXTracks().get(0).getGPXTrackSegments(), gpxfile.getGPXTracks().get(0).getGPXTrackSegments());
 
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(364 + 758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
@@ -132,7 +132,7 @@ public class TestSplitMerge {
         Assert.assertEquals(7, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
         Assert.assertEquals(7, gpxfile.getGPXRoutes().get(1).getGPXWaypoints().size());
         
-        helper.mergeGPXRoutes(gpxfile.getGPXRoutes(), gpxfile.getGPXRoutes());
+        GPXStructureHelper.getInstance().mergeGPXRoutes(gpxfile.getGPXRoutes(), gpxfile.getGPXRoutes());
 
         Assert.assertEquals(1, gpxfile.getGPXRoutes().size());
         Assert.assertEquals(14, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
@@ -146,7 +146,7 @@ public class TestSplitMerge {
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(1).getGPXTrackSegments().size());
         
-        helper.mergeGPXTracks(gpxfile.getGPXTracks(), gpxfile.getGPXTracks());
+        GPXStructureHelper.getInstance().mergeGPXTracks(gpxfile.getGPXTracks(), gpxfile.getGPXTracks());
 
         Assert.assertEquals(1, gpxfile.getGPXTracks().size());
         Assert.assertEquals(3, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
@@ -162,7 +162,7 @@ public class TestSplitMerge {
         final GPXFile gpxfile1 = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
         final GPXFile gpxfile2 = new GPXFile(new File("src/test/resources/testsplitmerge.gpx"));
 
-        final GPXFile mergedFile = helper.mergeGPXFiles(Arrays.asList(gpxfile1, gpxfile2));
+        final GPXFile mergedFile = GPXStructureHelper.getInstance().mergeGPXFiles(Arrays.asList(gpxfile1, gpxfile2));
 
         Assert.assertNull(mergedFile.getGPXMetadata());
         Assert.assertEquals(0, mergedFile.getGPXWaypoints().size());
@@ -193,7 +193,7 @@ public class TestSplitMerge {
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         
         // track 1, segment 2: 36,088 km, split each 1000 m
-        List<GPXTrackSegment> result = helper.splitGPXLineItem(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1), new SplitValue(SplitType.SplitByDistance, 1000.0));
+        List<GPXTrackSegment> result = GPXStructureHelper.getInstance().splitGPXLineItem(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1), new SplitValue(SplitType.SplitByDistance, 1000.0));
 
         // only 36 new segments since "loss" of distance due to cutting into multiple items - no distance measured between end of on item and start of next
         Assert.assertEquals(36, result.size());
@@ -201,7 +201,7 @@ public class TestSplitMerge {
         final List<GPXTrackSegment> merged = new ArrayList<>();
         merged.add(new GPXTrackSegment(gpxfile.getGPXTracks().get(0)));
         
-        helper.mergeGPXTrackSegments(merged, result);
+        GPXStructureHelper.getInstance().mergeGPXTrackSegments(merged, result);
 
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());
@@ -216,7 +216,7 @@ public class TestSplitMerge {
         Assert.assertEquals(7, gpxfile.getGPXRoutes().get(1).getGPXWaypoints().size());
         
         // route 1: 204,905 km, split each 1000 m
-        List<GPXRoute> result = helper.splitGPXLineItem(gpxfile.getGPXRoutes().get(0), new SplitValue(SplitType.SplitByDistance, 1000.0));
+        List<GPXRoute> result = GPXStructureHelper.getInstance().splitGPXLineItem(gpxfile.getGPXRoutes().get(0), new SplitValue(SplitType.SplitByDistance, 1000.0));
         
         // only 7 segments since only 7 waypoints!!!
         Assert.assertEquals(7, result.size());
@@ -224,7 +224,7 @@ public class TestSplitMerge {
         final List<GPXRoute> merged = new ArrayList<>();
         merged.add(new GPXRoute(gpxfile));
         
-        helper.mergeGPXRoutes(merged, result);
+        GPXStructureHelper.getInstance().mergeGPXRoutes(merged, result);
 
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());

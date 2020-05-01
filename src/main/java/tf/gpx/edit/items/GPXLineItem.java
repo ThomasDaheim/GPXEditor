@@ -289,7 +289,7 @@ public abstract class GPXLineItem {
     public abstract <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent);
 
     // helper functions for child relations
-    public abstract ObservableList<GPXLineItem> getChildren();
+    public abstract ObservableList<? extends GPXLineItem> getChildren();
     public ObservableList<? extends GPXLineItem> getChildrenOfType(final GPXLineItem.GPXLineItemType itemType) {
         switch (itemType) {
             case GPXFile:
@@ -423,5 +423,7 @@ public abstract class GPXLineItem {
         return "Black";
     }
     public void setColor(final String col) {
+    }
+    public void setDefaultColor() {
     }
 }

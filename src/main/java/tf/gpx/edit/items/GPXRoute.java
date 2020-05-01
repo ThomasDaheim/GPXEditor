@@ -119,11 +119,31 @@ public class GPXRoute extends GPXMeasurable {
     
     @Override
     public void setColor(final String col) {
+        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
+            setDefaultColor();
+            return;
+        }
+
         color = col;
         GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
                 this,
                 GarminExtensionWrapper.GarminExtension.RouteExtension, 
                 GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+
+        setHasUnsavedChanges();
+    }
+    
+    @Override
+    public void setDefaultColor() {
+        color = GarminExtensionWrapper.GarminDisplayColor.Blue.name();
+        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
+            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                    this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        }
 
         setHasUnsavedChanges();
     }
@@ -183,8 +203,8 @@ public class GPXRoute extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
@@ -193,7 +213,7 @@ public class GPXRoute extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
         return FXCollections.observableArrayList();
     }
     
@@ -261,7 +281,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
     

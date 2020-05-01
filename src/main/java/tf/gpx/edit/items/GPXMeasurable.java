@@ -35,8 +35,8 @@ import javafx.collections.ObservableList;
  * @author Thomas
  */
 public abstract class GPXMeasurable extends GPXLineItem {
-    public abstract List<GPXMeasurable> getGPXMeasurables();
-    public abstract ObservableList<GPXMeasurable> getMeasurableChildren();
+    public abstract List<? extends GPXMeasurable> getGPXMeasurables();
+    public abstract ObservableList<? extends GPXMeasurable> getMeasurableChildren();
     
     private GPXMeasurable() {
         super(null);

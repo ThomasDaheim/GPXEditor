@@ -171,8 +171,8 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
@@ -181,7 +181,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
         return FXCollections.observableArrayList();
     }
     
@@ -235,7 +235,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
     

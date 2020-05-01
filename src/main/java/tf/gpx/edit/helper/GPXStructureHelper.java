@@ -56,6 +56,8 @@ import tf.gpx.edit.worker.GPXReduceWorker;
  * @author Thomas
  */
 public class GPXStructureHelper {
+    private final static GPXStructureHelper INSTANCE = new GPXStructureHelper();
+    
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
     public static final String CSV_EXT = "csv";
@@ -69,32 +71,34 @@ public class GPXStructureHelper {
     
     private GPXEditor myEditor;
     
-    public GPXStructureHelper() {
+    private GPXStructureHelper() {
         super();
     }
-    
-    public GPXStructureHelper(final GPXEditor editor) {
-        super();
-        
+
+    public static GPXStructureHelper getInstance() {
+        return INSTANCE;
+    }
+
+    public void setCallback(final GPXEditor editor) {
         myEditor = editor;
     }
 
-    public void fixGPXMeasurables(final List<GPXMeasurable> gpxLineItems, final double distance) {
+    public void fixGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final double distance) {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXMeasurables(final List<GPXMeasurable> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
+    public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 
     public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
-        runVisitor(GPXLineItemHelper.castToGPXMeasurables(gpxFiles), new GPXDeleteEmptyLineItemsWorker(deleteCount));
+        runVisitor(gpxFiles, new GPXDeleteEmptyLineItemsWorker(deleteCount));
     }
     
-    private void runVisitor(final List<GPXMeasurable> gpxLineItems, final IGPXLineItemVisitor visitor) {
+    public void runVisitor(final List<? extends GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
         // TFE, 20200427: for do/undo all changes must run over central location
         visitor.setCallback(myEditor);
-        for (GPXMeasurable gpxLineItem : gpxLineItems) {
+        for (GPXLineItem gpxLineItem : gpxLineItems) {
             gpxLineItem.acceptVisitor(visitor);
         }
     }

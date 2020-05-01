@@ -141,7 +141,8 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         // update with any content from clipboard
         AppClipboard.getInstance().putCountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                if (newValue.intValue() > 0) {
+                if (newValue.intValue() > 0 &&
+                        (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE) || AppClipboard.getInstance().hasContent(GPXTreeTableView.COPY_AND_PASTE))) {
                     String newText = CLIPBOARD_TEXT;
                     if (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE)) {
                         newText += WAYPOINT_TEXT;

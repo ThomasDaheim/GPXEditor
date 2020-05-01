@@ -26,10 +26,12 @@
 package tf.gpx.edit.worker;
 
 import de.saring.leafletmap.LatLong;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.srtm.SRTMDataStore;
 
@@ -122,7 +124,8 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
                 final double elevation = SRTMDataStore.getInstance().getValueForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude());
 
                 if (elevation != SRTMDataStore.NODATA) {
-                    gpxWayPoint.setElevation(elevation);
+//                    gpxWayPoint.setElevation(elevation);
+                    myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation);
                     assignedHeightCount++;
                 } else {
                     noHeightCount++;

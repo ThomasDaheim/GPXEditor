@@ -44,7 +44,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -75,6 +74,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
@@ -86,6 +86,7 @@ import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
+import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -313,7 +314,7 @@ public class GPXTreeTableView {
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
                                 deleteExtensions.setOnAction((ActionEvent event) -> {
-                                    deleteSelectedItemsInformation(GPXEditor.DeleteInformation.EXTENSION);
+                                    myEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null);
                                 });
                                 deleteAttr.getItems().add(deleteExtensions);
                                 fileMenu.getItems().add(deleteAttr);
@@ -576,7 +577,7 @@ public class GPXTreeTableView {
                         if (UsefulKeyCodes.CNTRL_C.match(event) ||
                                 UsefulKeyCodes.CNTRL_X.match(event) ||
                                 UsefulKeyCodes.SHIFT_DEL.match(event)) {
-                            // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
+                            // filter out file & metadata - those can't be copy & paste - is done in insertMeasureablesAtPosition
                             // no cloning done here since we store TreeItem<GPXMeasurable> to be able to do "isParent" check on paste
                             // TFE, 20200405: clever cloning :-)
                             AppClipboard.getInstance().addContent(COPY_AND_PASTE, FXCollections.observableArrayList(myTreeTableView.getSelectionModel().getSelectedItems()));
@@ -950,36 +951,29 @@ public class GPXTreeTableView {
 
             // get dragged item and item drop on to
             final List<TreeItem<GPXMeasurable>> selection = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
-            // work from bottom to top - otherwise delete will mess up things
-            Collections.reverse(selection);
-
-            final List<GPXMeasurable> items =
-            selection.stream().map((t) -> {
-                    return t.getValue();
-                }).collect(Collectors.toList());
-
-            for (GPXMeasurable draggedItem : items) {
-                // TFE, 2020402: support CNTRL + DRAG
-                insertItemAtLocation(draggedItem, target, relativePosition, !myEditor.isCntrlPressed());
-            }
-
-            myTreeTableView.getSelectionModel().clearSelection();
             if (!selection.isEmpty()) {
-                myTreeTableView.getSelectionModel().select(selection.get(selection.size()-1));
+                // work from bottom to top - otherwise delete will mess up things
+                Collections.reverse(selection);
+
+                final List<GPXMeasurable> items =
+                selection.stream().map((t) -> {
+                        return t.getValue();
+                    }).collect(Collectors.toList());
+
+                // TFE, 2020402: support CNTRL + DRAG
+                myEditor.insertMeasureablesAtPosition(target, items, relativePosition, !myEditor.isCntrlPressed(), myTreeTableView.getRow(selection.get(selection.size()-1)));
             }
-            // TFE, 20190822: trigger re-sort manually
-            myTreeTableView.sort(); 
-            myEditor.refreshGPXFileList();
         } else if (AppClipboard.getInstance().hasContent(tableViewFormat)) {
             final GPXMeasurable target = item.getValue();
 
+            final List<GPXWaypoint> waypoints = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(tableViewFormat));
             myEditor.insertWaypointsAtPosition(
                     target,
-                    ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(tableViewFormat)), 
+                    waypoints, 
                     // always insert @ start of waypoints
                     GPXEditor.RelativePosition.ABOVE);
 
-            if (!myEditor.isCntrlPressed()) {
+            if (GPXTableView.DRAG_AND_DROP.equals(tableViewFormat) && !myEditor.isCntrlPressed()) {
                 myEditor.deleteSelectedWaypoints();
             }
         } else if (AppClipboard.getInstance().hasFiles()) {
@@ -1093,62 +1087,6 @@ public class GPXTreeTableView {
         node.getChildren().forEach(GPXTreeTableView::collapseNodeAndChildren);
         node.setExpanded(false);
     }
-    
-    public void insertItemAtLocation(final GPXMeasurable insert, final GPXMeasurable location, final GPXEditor.RelativePosition position, final boolean doRemove) {
-        final GPXLineItem.GPXLineItemType insertType = insert.getType();
-        final GPXLineItem.GPXLineItemType locationType = location.getType();
-        
-        // TFE, 20190822: insert a clone since we might loose insert after we have removed it
-        final GPXMeasurable insertReal = insert.cloneMe(true);
-        if (doRemove) {
-            // remove dragged item from treeitem and gpxlineitem
-            // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...
-            // so we need to get the concret list of children of type :-(
-            // same is true for target later one, so lets have a common method :-)
-            insert.getParent().getChildrenOfType(insertType).remove(insert);
-        }
-
-        GPXMeasurable locationReal;
-        if (GPXLineItemHelper.isSameTypeAs(location, insert)) {
-            locationReal = location.getParent();
-        } else {
-            locationReal = location;
-        }
-
-        final ObservableList childList = locationReal.getChildrenOfType(insertType);
-        // TFE, 20190822: extend for insert above & below
-        int insertIndex = childList.indexOf(location);
-        if (insertIndex > -1) {
-            if (GPXEditor.RelativePosition.BELOW.equals(position)) {
-                insertIndex++;
-            }
-        } else {
-            // location not found - insert upfront or at the end
-            if (GPXEditor.RelativePosition.ABOVE.equals(position)) {
-                insertIndex = 0;
-            } else {
-                insertIndex = childList.size();
-            }
-        }
-        switch (insertType) {
-            case GPXFile:
-                // can't drag files into files
-                break;
-            case GPXMetadata:
-                // can't drag metadata
-                break;
-            case GPXTrack:
-                locationReal.getGPXTracks().add(insertIndex, (GPXTrack) insertReal);
-                break;
-            case GPXTrackSegment:
-                locationReal.getGPXTrackSegments().add(insertIndex, (GPXTrackSegment) insertReal);
-                break;
-            case GPXRoute:
-                locationReal.getGPXRoutes().add(insertIndex, (GPXRoute) insertReal);
-                break;
-            default:
-        }
-    }
 
     // prevent loops in the tree
     // TFE, 20200407: change to testing GPXMeasurable instead of treeitem - allows to unify GPXTreeTableView handling with that for GPXTableView
@@ -1225,26 +1163,6 @@ public class GPXTreeTableView {
                     return t.getValue();
                 }).collect(Collectors.toList());
     }
-    
-    private void deleteSelectedItemsInformation(final GPXEditor.DeleteInformation info) {
-        // all waypoints to remove - as copy since otherwise observablelist get messed up by deletes
-        final List<GPXMeasurable> selectedItems = getSelectedGPXMeasurables();
-
-        for (GPXMeasurable waypoint : selectedItems){
-            switch (info) {
-                case EXTENSION:
-                    if (waypoint.getContent().getExtensionData() != null) {
-                        waypoint.getContent().getExtensionData().clear();
-                        waypoint.setHasUnsavedChanges();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        myEditor.refresh();
-    }
 
     /* Required getter and setter methods are forwarded to internal TreeTableView */
 
@@ -1254,6 +1172,10 @@ public class GPXTreeTableView {
 
     public  TreeTableView.TreeTableViewSelectionModel<GPXMeasurable> getSelectionModel() {
         return myTreeTableView.getSelectionModel();
+    }
+    
+    public void sort() {
+        myTreeTableView.sort();
     }
 
     public void refresh() {

@@ -45,7 +45,7 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     protected double myParameter = Double.MIN_VALUE;
     protected boolean deepthFirst = true;
     
-    private GPXEditor myGPXEditor;
+    protected GPXEditor myEditor;
 
     public GPXEmptyWorker() {
         super ();
@@ -94,7 +94,7 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     
     protected void removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
         assert gpxWayPoints.size() == keep.length;
-        assert myGPXEditor != null;
+        assert myEditor != null;
         
         final List<GPXWaypoint> waypointsToDelete = new ArrayList<>();
         
@@ -107,11 +107,11 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         }
         Collections.reverse(waypointsToDelete);
         
-        myGPXEditor.deleteWaypoints(waypointsToDelete);
+        myEditor.deleteWaypoints(waypointsToDelete);
     }
 
     @Override
     public void setCallback(final GPXEditor editor) {
-        myGPXEditor = editor;
+        myEditor = editor;
     }
 }

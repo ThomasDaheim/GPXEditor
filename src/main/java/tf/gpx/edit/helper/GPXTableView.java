@@ -72,6 +72,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -196,23 +197,29 @@ public class GPXTableView {
                     Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
             selected.getItems().add(replaceWaypoints);
 
-            final Menu deleteAttr = new Menu("Delete attribute(s)");
+            final Menu deleteAttr = new Menu("Delete attributes");
             // TFE, 20190715: support for deletion of date & name...
-            final MenuItem deleteDates = new MenuItem("Date(s)");
+            final MenuItem deleteDates = new MenuItem("Date");
             deleteDates.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.DATE);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null);
             });
             deleteAttr.getItems().add(deleteDates);
             
-            final MenuItem deleteNames = new MenuItem("Name(s)");
+            final MenuItem deleteNames = new MenuItem("Name");
             deleteNames.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.NAME);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null);
             });
             deleteAttr.getItems().add(deleteNames);
+            
+            final MenuItem deleteHeights = new MenuItem("Height");
+            deleteHeights.setOnAction((ActionEvent event) -> {
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0));
+            });
+            deleteAttr.getItems().add(deleteHeights);
 
-            final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
+            final MenuItem deleteExtensions = new MenuItem("Extension");
             deleteExtensions.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.EXTENSION);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null);
             });
             deleteAttr.getItems().add(deleteExtensions);
             
@@ -752,12 +759,14 @@ public class GPXTableView {
     
     private void onDroppedOrPasted(final DataFormat dataFormat, final GPXLineItem target, final GPXEditor.RelativePosition relativePosition) {
         if (AppClipboard.getInstance().hasContent(dataFormat)) {
+            final List<GPXWaypoint> waypoints = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
+
             myEditor.insertWaypointsAtPosition(
                     target,
-                    ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat)), 
+                    waypoints, 
                     relativePosition);
             
-            if (!myEditor.isCntrlPressed()) {
+            if (DRAG_AND_DROP.equals(dataFormat) && !myEditor.isCntrlPressed()) {
                 myEditor.deleteSelectedWaypoints();
             }
         }

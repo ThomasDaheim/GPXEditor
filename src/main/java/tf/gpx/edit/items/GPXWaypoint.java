@@ -333,7 +333,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
+    public ObservableList<? extends GPXLineItem> getChildren() {
         return FXCollections.observableArrayList();
     }
     

@@ -66,6 +66,8 @@ import tf.helper.javafx.ShowAlerts;
  * @author Thomas
  */
 public class GPXFileHelper {
+    private final static GPXFileHelper INSTANCE = new GPXFileHelper();
+    
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
     public static final String CSV_EXT = "csv";
@@ -79,13 +81,15 @@ public class GPXFileHelper {
     
     private GPXEditor myEditor;
     
-    public GPXFileHelper() {
+    private GPXFileHelper() {
         super();
     }
-    
-    public GPXFileHelper(final GPXEditor editor) {
-        super();
-        
+
+    public static GPXFileHelper getInstance() {
+        return INSTANCE;
+    }
+
+    public void setCallback(final GPXEditor editor) {
         myEditor = editor;
     }
     
