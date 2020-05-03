@@ -359,6 +359,7 @@ Other things used internally:
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 * route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 * heat map icon: https://icons8.com/icons/set/heat-map icon by Icons8
+* undo/redo icons: https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/undo-16.png, https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/redo-16.png by Ivan Boyko under https://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 
 ## Roadmap
 

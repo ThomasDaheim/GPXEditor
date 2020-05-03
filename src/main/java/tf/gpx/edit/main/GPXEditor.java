@@ -693,16 +693,12 @@ public class GPXEditor implements Initializable {
         borderPane.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
             if (UsefulKeyCodes.CNTRL_Z.match(event)) {
 //                System.out.println("UNDO pressed");
-                if (DoUndoManager.getInstance().canUndo(getCurrentGPXFileName())) {
-                    DoUndoManager.getInstance().singleUndo(getCurrentGPXFileName());
-                }
+                undoAction();
             }
 
             if (UsefulKeyCodes.CNTRL_Y.match(event)) {
 //                System.out.println("REDO pressed");
-                if (DoUndoManager.getInstance().canDo(getCurrentGPXFileName())) {
-                    DoUndoManager.getInstance().singleDo(getCurrentGPXFileName());
-                }
+                redoAction();
             }
         });
 
@@ -710,6 +706,20 @@ public class GPXEditor implements Initializable {
         DoUndoManager.getInstance().changeCountProperty().addListener((ov, oldValue, newValue) -> {
             StatusBar.getInstance().setStatusFromFile(getCurrentGPXFileName());
         });
+    }
+    public boolean undoAction() {
+        if (DoUndoManager.getInstance().canUndo(getCurrentGPXFileName())) {
+            return DoUndoManager.getInstance().singleUndo(getCurrentGPXFileName());
+        } else {
+            return false;
+        }
+    }
+    public boolean redoAction() {
+        if (DoUndoManager.getInstance().canDo(getCurrentGPXFileName())) {
+            return DoUndoManager.getInstance().singleDo(getCurrentGPXFileName());
+        } else {
+            return false;
+        }
     }
     
     private void initRecentFilesMenu(){

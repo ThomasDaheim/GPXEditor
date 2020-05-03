@@ -38,7 +38,6 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
 
 /**

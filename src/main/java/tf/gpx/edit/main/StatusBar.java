@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.main;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -37,14 +38,15 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXTableView;
@@ -57,7 +59,7 @@ import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.helper.doundo.DoUndoManager;
 import tf.helper.general.AppClipboard;
-import tf.helper.javafx.TooltipHelper;
+import tf.helper.general.UsefulKeyCodes;
 
 /**
  * StatusBar to show messages, ... at the bottom
@@ -76,7 +78,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatusBar INSTANCE = new StatusBar();
     
-    private GPXEditor myGPXEditor;
+    private GPXEditor myEditor;
     
     private static final String SEPERATOR = "|";
     
@@ -92,8 +94,9 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     
     private final Label myLabel = new Label();
     private final ProgressBar myTaskProgress = new ProgressBar();
-    private final Label myDoUndoContent = new Label("");
-    private final Label myDoUndoContentSeperator = new Label("");
+    private final Label myDoUndoContentSeperator = new Label(SEPERATOR);
+    private final Button myUndoButton = new Button("");
+    private final Button myRedoButton = new Button("");
     private final Label myCntrlPressed = new Label();
     private final Label myCntrlPressedSeperator = new Label();
     private final Label myClipboardContent = new Label();
@@ -125,18 +128,23 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         
         // update do/undo stack changes
         // show stack list in tooltip
-        final Tooltip tooltip = new Tooltip();
-        tooltip.setTextAlignment(TextAlignment.LEFT);
-        tooltip.setTextOverrun(OverrunStyle.ELLIPSIS);
-        tooltip.activatedProperty().addListener((ov, oldValue, newValue) -> {
-             if (newValue != null && newValue && myGPXEditor != null && myGPXEditor.getCurrentGPXFileName() != null) {
-                 tooltip.setText(DoUndoManager.getInstance().getActionDescription(myGPXEditor.getCurrentGPXFileName()));
-             } else {
-                 tooltip.setText("");
-             }
+        InputStream iconStream = StatusBar.class.getResourceAsStream("/redo.png");
+        Image image = new Image(iconStream, 16, 16, false, false);
+        myRedoButton.setGraphic(new ImageView(image));
+        myRedoButton.setDisable(true);
+        myRedoButton.getStyleClass().add("redo-button");
+        myRedoButton.setOnAction((ActionEvent arg0) -> {
+            myEditor.redoAction();
         });
-        TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
-        myDoUndoContent.setTooltip(tooltip);
+        
+        iconStream = StatusBar.class.getResourceAsStream("/undo.png");
+        image = new Image(iconStream, 16, 16, false, false);
+        myUndoButton.setGraphic(new ImageView(image));
+        myUndoButton.setDisable(true);
+        myUndoButton.getStyleClass().add("undo-button");
+        myUndoButton.setOnAction((ActionEvent arg0) -> {
+            myEditor.undoAction();
+        });
         
         // update with any content from clipboard
         AppClipboard.getInstance().putCountProperty().addListener((ov, oldValue, newValue) -> {
@@ -169,11 +177,11 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         timeline.play();
 
         setSpacing(5.0);
-        getChildren().setAll(myLabel, myTaskProgress, region, myDoUndoContent, myDoUndoContentSeperator, myCntrlPressed, myCntrlPressedSeperator, myClipboardContent, myClipboardContentSeperator, myClock);
+        getChildren().setAll(myLabel, myTaskProgress, region, myUndoButton, myRedoButton, myDoUndoContentSeperator, myCntrlPressed, myCntrlPressedSeperator, myClipboardContent, myClipboardContentSeperator, myClock);
     }
     
     public void setCallback(final GPXEditor gpxEditor) {
-        myGPXEditor = gpxEditor;
+        myEditor = gpxEditor;
     }
     
     public void setStatusText(final String text) {
@@ -324,19 +332,17 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         // This can happen! e.g. when deleting the selected line item...
         if (file != null) {
             // check canDo() / can Undo() for current gpxfile
-            if (DoUndoManager.getInstance().canUndo(file)) {
-                myDoUndoContent.setText(UNDO_TEXT);
-                myDoUndoContentSeperator.setText(SEPERATOR);
-            } else if (DoUndoManager.getInstance().canDo(file)) {
-                myDoUndoContent.setText(DO_TEXT);
-                myDoUndoContentSeperator.setText(SEPERATOR);
-            } else {
-                myDoUndoContent.setText("");
-                myDoUndoContentSeperator.setText("");
-            }
+            myUndoButton.setDisable(!DoUndoManager.getInstance().canUndo(file));
+            myUndoButton.setTooltip(new Tooltip(DoUndoManager.getInstance().getUndoActionDescription(file)));
+            
+            myRedoButton.setDisable(!DoUndoManager.getInstance().canDo(file));
+            myRedoButton.setTooltip(new Tooltip(DoUndoManager.getInstance().getDoActionDescription(file)));
         } else {
-            myDoUndoContent.setText("");
-            myDoUndoContentSeperator.setText("");
+            myUndoButton.setDisable(true);
+            myUndoButton.setTooltip(null);
+            
+            myRedoButton.setDisable(true);
+            myRedoButton.setTooltip(null);
         }
     }
 }

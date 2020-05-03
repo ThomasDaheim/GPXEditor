@@ -48,11 +48,24 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         public String toString() {
             switch (this) {
                 case INSERT_WAYPOINTS:
-                    return "InsertWaypoints";
+                    return "Insert";
                 case DELETE_WAYPOINTS:
-                    return "DeleteWaypoints";
+                    return "Delete";
                 case UPDATE_LINEITEM_INFORMATION:
-                    return "UpdateLineItemInformation";
+                    return "Update";
+                default:
+                    return "";
+            }
+        }
+        
+        public String itemType() {
+            switch (this) {
+                case INSERT_WAYPOINTS:
+                    return "waypoints";
+                case DELETE_WAYPOINTS:
+                    return "waypoints";
+                case UPDATE_LINEITEM_INFORMATION:
+                    return "items";
                 default:
                     return "";
             }
@@ -89,7 +102,11 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
 
     @Override
     public String getDescription() {
-        return myAction.toString() + " for " + lineItemCluster.values().size() + " items in state " + getState().name();
+        int itemCount = 0;
+        for (List<Pair<Integer, T>> items : lineItemCluster.values()) {
+            itemCount += items.size();
+        }
+        return myAction.toString() + " for " + itemCount + " " + myAction.itemType();
     }
 
     @Override
