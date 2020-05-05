@@ -301,15 +301,14 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public ObservableList<? extends GPXLineItem> getChildren() {
-        // iterate over my segments
-        ObservableList<GPXLineItem> children = FXCollections.observableArrayList();
-
-        children.addAll(myGPXMetadata);
-        children.addAll(myGPXWaypoints);
-        children.addAll(myGPXTracks);
-        children.addAll(myGPXRoutes);
+        final List<ObservableList<GPXLineItem>> children = new ArrayList<>();
         
-        return children;
+        // need to down-cast everything to GPXMeasurable
+        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
+        children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
+        children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));
+        
+        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
     }
     
     @Override
@@ -328,15 +327,14 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
-        // iterate over my segments
-        ObservableList<GPXMeasurable> children = FXCollections.observableArrayList();
-
-        // need to down-cast everything to GPXLineItem
-        children.addAll(myGPXMetadata);
-        children.addAll(myGPXTracks);
-        children.addAll(myGPXRoutes);
+        final List<ObservableList<GPXMeasurable>> children = new ArrayList<>();
         
-        return children;
+        // need to down-cast everything to GPXMeasurable
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXMetadata));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXTracks));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXRoutes));
+        
+        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
     }
 
     @Override

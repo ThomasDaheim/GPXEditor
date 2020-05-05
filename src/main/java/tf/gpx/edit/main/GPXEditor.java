@@ -100,6 +100,7 @@ import javax.imageio.ImageIO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
@@ -1448,58 +1449,68 @@ public class GPXEditor implements Initializable {
     }
     
     public void convertItems(final Event event) {
-        TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
-                removeGPXWaypointListListener();
-                
-                for (GPXMeasurable item : gpxFileList.getSelectedGPXMeasurables()) {
-                    if (item.isGPXRoute()) {
-                        // new track & segment
-                        final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
-                        final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
-                        gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
+        if(gpxFileList.getSelectedGPXMeasurables().isEmpty()) {
+            // nothing to delete...
+            return;
+        }
 
-                        gpxTrack.setName(item.getName());
-                        gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
+        final IDoUndoAction convertAction = new ConvertMeasurableAction(this, gpxFileList.getSelectedGPXMeasurables());
+        convertAction.doAction();
+        
+        addDoneAction(convertAction, getCurrentGPXFileName());
 
-                        // move waypoints
-                        gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
-                        item.getGPXWaypoints().clear();
-
-                        // replace route with track
-                        item.getGPXFile().getGPXTracks().add(gpxTrack);
-                        item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
-                    } else if (item.isGPXTrack() || item.isGPXTrackSegment()) {
-                        // new route
-                        final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
-
-                        gpxRoute.setName(item.getName());
-                        gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
-
-                        // move waypoints
-                        if (item.isGPXTrack()) {
-                            gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
-                        } else {
-                            gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
-                        }
-                        item.getGPXWaypoints().clear();
-
-                        // replace track with route
-                        item.getGPXFile().getGPXRoutes().add(gpxRoute);
-                        if (item.isGPXTrack()) {
-                            item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
-                        } else {
-                            item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
-                        }
-                    }
-                }
-
-                addGPXWaypointListListener();
-                setStatusFromWaypoints();
-
-                refresh();
-            }),
-            StatusBar.getInstance());
+//        TaskExecutor.executeTask(
+//            TaskExecutor.taskFromRunnableForLater(() -> {
+//                removeGPXWaypointListListener();
+//                
+//                for (GPXMeasurable item : gpxFileList.getSelectedGPXMeasurables()) {
+//                    if (item.isGPXRoute()) {
+//                        // new track & segment
+//                        final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
+//                        final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
+//                        gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
+//
+//                        gpxTrack.setName(item.getName());
+//                        gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
+//
+//                        // move waypoints
+//                        gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
+//                        item.getGPXWaypoints().clear();
+//
+//                        // replace route with track
+//                        item.getGPXFile().getGPXTracks().add(gpxTrack);
+//                        item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
+//                    } else if (item.isGPXTrack() || item.isGPXTrackSegment()) {
+//                        // new route
+//                        final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
+//
+//                        gpxRoute.setName(item.getName());
+//                        gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
+//
+//                        // move waypoints
+//                        if (item.isGPXTrack()) {
+//                            gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
+//                        } else {
+//                            gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
+//                        }
+//                        item.getGPXWaypoints().clear();
+//
+//                        // replace track with route
+//                        item.getGPXFile().getGPXRoutes().add(gpxRoute);
+//                        if (item.isGPXTrack()) {
+//                            item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
+//                        } else {
+//                            item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
+//                        }
+//                    }
+//                }
+//
+//                addGPXWaypointListListener();
+//                setStatusFromWaypoints();
+//
+//                refresh();
+//            }),
+//            StatusBar.getInstance());
     }
     
     public void mergeFiles(final ActionEvent event) {

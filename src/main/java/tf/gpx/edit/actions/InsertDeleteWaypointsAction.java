@@ -30,9 +30,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.StatusBar;
 
 /**
  *
@@ -51,29 +53,33 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
     protected boolean doDelete() {
         boolean result = true;
         
-        myEditor.removeGPXWaypointListListener();
-        
-        for (GPXLineItem parent : lineItemCluster.keySet()) {
-            // performance: do mass remove on List and not on ObservableList
-            final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
-            
-            final List<Pair<Integer, GPXWaypoint>> parentPairs = lineItemCluster.get(parent);
-            final LinkedHashSet<GPXWaypoint> waypointsToDelete = parentPairs.stream().map((t) -> {
-                return t.getRight();
-            }).collect(Collectors.toCollection(LinkedHashSet::new));
-            
-            // performance: convert to hashset since its contains() is way faster
-            parentWaypoints.removeAll(waypointsToDelete);
-            parent.setGPXWaypoints(parentWaypoints);
-        }
+        TaskExecutor.executeTask(
+            TaskExecutor.taskFromRunnableForLater(() -> {
+                myEditor.removeGPXWaypointListListener();
 
-        myEditor.addGPXWaypointListListener();
-        myEditor.setStatusFromWaypoints();
-        
-        // show remaining waypoints
-        myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
-        // force repaint of gpxFileList to show unsaved items
-        myEditor.refreshGPXFileList();
+                for (GPXLineItem parent : lineItemCluster.keySet()) {
+                    // performance: do mass remove on List and not on ObservableList
+                    final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
+
+                    final List<Pair<Integer, GPXWaypoint>> parentPairs = lineItemCluster.get(parent);
+                    final LinkedHashSet<GPXWaypoint> waypointsToDelete = parentPairs.stream().map((t) -> {
+                        return t.getRight();
+                    }).collect(Collectors.toCollection(LinkedHashSet::new));
+
+                    // performance: convert to hashset since its contains() is way faster
+                    parentWaypoints.removeAll(waypointsToDelete);
+                    parent.setGPXWaypoints(parentWaypoints);
+                }
+
+                myEditor.addGPXWaypointListListener();
+                myEditor.setStatusFromWaypoints();
+
+                // show remaining waypoints
+                myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
+                // force repaint of gpxFileList to show unsaved items
+                myEditor.refreshGPXFileList();
+            }),
+            StatusBar.getInstance());
 
         return result;
     }
@@ -82,24 +88,28 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
     protected boolean doInsert() {
         boolean result = true;
         
-        myEditor.removeGPXWaypointListListener();
+        TaskExecutor.executeTask(
+            TaskExecutor.taskFromRunnableForLater(() -> {
+                myEditor.removeGPXWaypointListListener();
 
-        for (GPXLineItem parent : lineItemCluster.keySet()) {
-            // performance: work normal list and set it
-            final List<GPXWaypoint> worklist = parent.getGPXWaypoints().stream().collect(Collectors.toList());
-            for (Pair<Integer, GPXWaypoint> pairs : lineItemCluster.get(parent)) {
-                worklist.add(pairs.getLeft(), pairs.getRight());
-            }
-            parent.getGPXWaypoints().setAll(worklist);
-        }
+                for (GPXLineItem parent : lineItemCluster.keySet()) {
+                    // performance: work normal list and set it
+                    final List<GPXWaypoint> worklist = parent.getGPXWaypoints().stream().collect(Collectors.toList());
+                    for (Pair<Integer, GPXWaypoint> pairs : lineItemCluster.get(parent)) {
+                        worklist.add(pairs.getLeft(), pairs.getRight());
+                    }
+                    parent.getGPXWaypoints().setAll(worklist);
+                }
 
-        myEditor.addGPXWaypointListListener();
-        myEditor.setStatusFromWaypoints();
-        
-        // show remaining waypoints
-        myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
-        // force repaint of gpxFileList to show unsaved items
-        myEditor.refreshGPXFileList();
+                myEditor.addGPXWaypointListListener();
+                myEditor.setStatusFromWaypoints();
+
+                // show remaining waypoints
+                myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
+                // force repaint of gpxFileList to show unsaved items
+                myEditor.refreshGPXFileList();
+            }),
+            StatusBar.getInstance());
 
         return result;
     }

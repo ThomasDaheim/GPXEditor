@@ -42,7 +42,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     public enum LineItemAction {
         INSERT_WAYPOINTS,
         DELETE_WAYPOINTS,
-        UPDATE_LINEITEM_INFORMATION;
+        UPDATE_LINEITEM_INFORMATION,
+        CONVERT_MEASURABLES;
         
         @Override
         public String toString() {
@@ -53,6 +54,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                     return "Delete";
                 case UPDATE_LINEITEM_INFORMATION:
                     return "Update";
+                case CONVERT_MEASURABLES:
+                    return "Convert";
                 default:
                     return "";
             }
@@ -66,6 +69,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                     return "waypoints";
                 case UPDATE_LINEITEM_INFORMATION:
                     return "items";
+                case CONVERT_MEASURABLES:
+                    return "measurables";
                 default:
                     return "";
             }
