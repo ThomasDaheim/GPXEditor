@@ -104,6 +104,8 @@ import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
+import tf.gpx.edit.actions.InvertMeasurablesAction;
+import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -151,7 +153,7 @@ import tf.helper.javafx.TableViewPreferences;
  * @author Thomas
  */
 public class GPXEditor implements Initializable {
-    private static final Integer[] NO_INTS = new Integer[0];
+    public static final Integer[] NO_INTS = new Integer[0];
     
     public final static double TINY_WIDTH = 35.0;
     public final static double SMALL_WIDTH = 50.0;
@@ -1427,25 +1429,37 @@ public class GPXEditor implements Initializable {
     }
 
     public void invertItems(final ActionEvent event) {
-        TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
-                removeGPXWaypointListListener();
-                final List<GPXMeasurable> selectedItems = gpxFileList.getSelectedGPXMeasurables();
+        if(gpxFileList.getSelectedGPXMeasurables().isEmpty()) {
+            // nothing to delete...
+            return;
+        }
 
-                // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
-                // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
-                for (GPXMeasurable invertItem : GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(gpxFileList.getSelectedGPXMeasurables())) {
-                    invertItem.invert();
-                }
+        // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
+        // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
+        final IDoUndoAction invertAction = new InvertMeasurablesAction(this, GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(gpxFileList.getSelectedGPXMeasurables()));
+        invertAction.doAction();
+        
+        addDoneAction(invertAction, getCurrentGPXFileName());
 
-                gpxFileList.getSelectionModel().clearSelection();
-                
-                addGPXWaypointListListener();
-                setStatusFromWaypoints();
 
-                refresh();
-            }),
-            StatusBar.getInstance());
+//        TaskExecutor.executeTask(
+//            TaskExecutor.taskFromRunnableForLater(() -> {
+//                removeGPXWaypointListListener();
+//
+//                // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
+//                // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
+//                for (GPXMeasurable invertItem : GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(gpxFileList.getSelectedGPXMeasurables())) {
+//                    invertItem.invert();
+//                }
+//
+//                gpxFileList.getSelectionModel().clearSelection();
+//                
+//                addGPXWaypointListListener();
+//                setStatusFromWaypoints();
+//
+//                refresh();
+//            }),
+//            StatusBar.getInstance());
     }
     
     public void convertItems(final Event event) {
@@ -1454,7 +1468,7 @@ public class GPXEditor implements Initializable {
             return;
         }
 
-        final IDoUndoAction convertAction = new ConvertMeasurableAction(this, gpxFileList.getSelectedGPXMeasurables());
+        final IDoUndoAction convertAction = new ConvertMeasurableAction(this, GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(gpxFileList.getSelectedGPXMeasurables()));
         convertAction.doAction();
         
         addDoneAction(convertAction, getCurrentGPXFileName());
@@ -1967,32 +1981,37 @@ public class GPXEditor implements Initializable {
     }
     
     public void invertSelectedWaypoints() {
-        TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
-                // disable listener for checked changes since it fires for each waypoint...
-                removeGPXWaypointListListener();
+        final IDoUndoAction invertAction = new InvertSelectedWaypointsAction(this, gpxWaypoints.getItems(), gpxWaypoints.getSelectionModel());
+        invertAction.doAction();
+        
+        addDoneAction(invertAction, getCurrentGPXFileName());
 
-                // performance: convert to hashset since its contains() is way faster
-                final Set<GPXWaypoint> selectedGPXWaypoints = gpxWaypoints.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
-                gpxWaypoints.getSelectionModel().clearSelection();
-
-                int index = 0;
-                final List<Integer> selectedList = new ArrayList<>();
-                for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
-                    if (!selectedGPXWaypoints.contains(waypoint)) {
-                        selectedList.add(index);
-                    }
-                    index++;
-                }
-                // fastest way to select a number of indices... but still slow for many
-                gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
-
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
-                
-                addGPXWaypointListListener();
-                setStatusFromWaypoints();
-            }),
-            StatusBar.getInstance());
+//        TaskExecutor.executeTask(
+//            TaskExecutor.taskFromRunnableForLater(() -> {
+//                // disable listener for checked changes since it fires for each waypoint...
+//                removeGPXWaypointListListener();
+//
+//                // performance: convert to hashset since its contains() is way faster
+//                final Set<GPXWaypoint> selectedGPXWaypoints = gpxWaypoints.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
+//                gpxWaypoints.getSelectionModel().clearSelection();
+//
+//                int index = 0;
+//                final List<Integer> selectedList = new ArrayList<>();
+//                for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
+//                    if (!selectedGPXWaypoints.contains(waypoint)) {
+//                        selectedList.add(index);
+//                    }
+//                    index++;
+//                }
+//                // fastest way to select a number of indices... but still slow for many
+//                gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
+//
+//                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+//                
+//                addGPXWaypointListListener();
+//                setStatusFromWaypoints();
+//            }),
+//            StatusBar.getInstance());
     }
 
     private void fixGPXMeasurables(final Event event, final boolean fileLevel) {
