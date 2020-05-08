@@ -70,7 +70,9 @@ public class GPXFileHelper {
     
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
+    public static final String XML_EXT = "xml";
     public static final String CSV_EXT = "csv";
+    public static final String PNG_EXT = "png";
     public static final String BAK_EXT = ".bak";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 

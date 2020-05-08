@@ -28,7 +28,10 @@ package tf.gpx.edit.main;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.HeatMap;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
+import java.io.File;
 import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
@@ -41,6 +44,9 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
@@ -48,6 +54,8 @@ import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.GPXFileHelper;
+import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.general.EnumHelper;
@@ -60,6 +68,11 @@ public class PreferenceEditor extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static PreferenceEditor INSTANCE = new PreferenceEditor();
+    
+    private enum ExportImport {
+        EXPORT,
+        IMPORT;
+    }
 
     // TFE, 20181005: we also need our own decimalformat to have proper output
     private final DecimalFormat decimalFormat = new DecimalFormat("0");
@@ -93,6 +106,10 @@ public class PreferenceEditor extends AbstractStage {
         double myFixEpsilon = GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf);
 
         boolean myAssignHeight = GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf);
+        
+        String mySRTMDataPath = GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
+        SRTMDataStore.SRTMDataAverage mySRTMDataAverage = 
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
         
         int myBreakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType(Integer::valueOf);
 
@@ -226,6 +243,46 @@ public class PreferenceEditor extends AbstractStage {
         assignHeightChkBox.setTooltip(t);
         getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
         GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
+
+
+        // TFE, 20200508: also add SRTM settings to have all in one place (for export/import)
+        rowNum++;
+        // separator
+        final Label lblHor6 = new Label("SRTM");
+        lblHor6.setStyle("-fx-font-weight: bold");
+        getGridPane().add(lblHor6, 0, rowNum, 1, 1);
+        GridPane.setMargin(lblHor6, INSET_TOP);
+        
+        rowNum++;
+        // srtm file path
+        t = new Tooltip("SRTM data file path");
+        final Label srtmPathLbl = new Label("SRTM data path:");
+        srtmPathLbl.setTooltip(t);
+        getGridPane().add(srtmPathLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(srtmPathLbl, VPos.TOP);
+        GridPane.setMargin(srtmPathLbl, INSET_TOP);
+        
+        final TextField srtmPathText = new TextField();
+        srtmPathText.setPrefWidth(400);
+        srtmPathText.setMaxWidth(400);
+        srtmPathText.setText(mySRTMDataPath);
+        srtmPathText.setTooltip(t);
+        getGridPane().add(srtmPathText, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmPathText, INSET_TOP);
+
+        rowNum++;
+        // srtm file path
+        t = new Tooltip("SRTM averaging mode");
+        final Label srtmAvrgLbl = new Label("SRTM data average:");
+        srtmAvrgLbl.setTooltip(t);
+        getGridPane().add(srtmAvrgLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(srtmAvrgLbl, VPos.TOP);
+        GridPane.setMargin(srtmAvrgLbl, INSET_TOP);
+
+        final ChoiceBox srtmAvrgChoiceBox = EnumHelper.getInstance().createChoiceBox(SRTMDataStore.SRTMDataAverage.class, mySRTMDataAverage);
+        srtmAvrgChoiceBox.setTooltip(t);
+        getGridPane().add(srtmAvrgChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmAvrgChoiceBox, INSET_TOP);
 
         rowNum++;
         // separator
@@ -588,26 +645,51 @@ public class PreferenceEditor extends AbstractStage {
             }
         });
         
-        
         rowNum++;
-        // last row: save / cancel buttons
-        Button saveBtn = new Button("Save");
+        // last row: save / cancel / export / import buttons
+        final HBox buttonBox = new HBox();
+        
+        final Button saveBtn = new Button("Save");
         saveBtn.setOnAction((ActionEvent arg0) -> {
             getStage().setTitle("Save");
             getStage().close();
         });
-        getGridPane().add(saveBtn, 0, rowNum, 1, 1);
-        GridPane.setMargin(saveBtn, INSET_TOP_BOTTOM);
         setSaveAccelerator(saveBtn);
+        buttonBox.getChildren().add(saveBtn);
+        HBox.setMargin(saveBtn, INSET_SMALL);
         
-        Button cancelBtn = new Button("Cancel");
+        final Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
             getStage().setTitle("Cancel");
             getStage().close();
         });
         getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
-        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
         setCancelAccelerator(cancelBtn);
+        buttonBox.getChildren().add(cancelBtn);
+        HBox.setMargin(cancelBtn, INSET_SMALL);
+        
+        final Region spacer = new Region();
+        buttonBox.getChildren().add(spacer);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+    
+        final Button exportBtn = new Button("Export");
+        exportBtn.setOnAction((ActionEvent arg0) -> {
+            exportPreferences(getExportImportFileName(ExportImport.EXPORT));
+        });
+        setSaveAccelerator(exportBtn);
+        buttonBox.getChildren().add(exportBtn);
+        HBox.setMargin(exportBtn, INSET_SMALL);
+        
+        final Button importBtn = new Button("Import");
+        importBtn.setOnAction((ActionEvent arg0) -> {
+            exportPreferences(getExportImportFileName(ExportImport.EXPORT));
+        });
+        setSaveAccelerator(importBtn);
+        buttonBox.getChildren().add(importBtn);
+        HBox.setMargin(importBtn, INSET_SMALL);
+
+        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
+        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
 
         getStage().showAndWait();
         
@@ -619,6 +701,9 @@ public class PreferenceEditor extends AbstractStage {
 
             myFixEpsilon = Math.max(Double.valueOf(fixText.getText().trim()), 0);
             myReduceEpsilon = Math.max(Double.valueOf(epsilonText.getText().trim()), 0);
+            
+            mySRTMDataPath = srtmPathText.getText().trim();
+            mySRTMDataAverage = EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataStore.SRTMDataAverage.class, srtmAvrgChoiceBox);
             
             myAssignHeight = assignHeightChkBox.isSelected();
             
@@ -652,6 +737,9 @@ public class PreferenceEditor extends AbstractStage {
             GPXEditorPreferences.REDUCTION_ALGORITHM.put(myReductionAlgorithm.name());
             GPXEditorPreferences.REDUCE_EPSILON.put(myReduceEpsilon);
             GPXEditorPreferences.FIX_EPSILON.put(myFixEpsilon);
+
+            GPXEditorPreferences.SRTM_DATA_PATH.put(mySRTMDataPath);
+            GPXEditorPreferences.SRTM_DATA_AVERAGE.put(mySRTMDataAverage.name());
             
             GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(myAssignHeight);
             
@@ -682,5 +770,54 @@ public class PreferenceEditor extends AbstractStage {
             GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(myEventRadius);
             HeatMapPane.getInstance().updateSettings();
         }
+    }
+    
+    private File getExportImportFileName(final ExportImport expImp) {
+        final List<String> extFilter = Arrays.asList("*." + GPXFileHelper.XML_EXT);
+        final List<String> extValues = Arrays.asList(GPXFileHelper.XML_EXT);
+
+        // https://stackoverflow.com/a/38028893
+        final FileChooser fileChooser = new FileChooser();
+        //Set extension filter
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("XML-Files", extFilter));
+        fileChooser.setInitialFileName("preferences.xml");
+        
+        File file = null;
+        if (ExportImport.EXPORT.equals(expImp)) {
+            fileChooser.setTitle("Export preferences to");
+            file = fileChooser.showSaveDialog(null);
+        } else {
+            fileChooser.setTitle("Import preferences from");
+            file = fileChooser.showOpenDialog(null);
+        }
+
+        if (file != null) {
+            return file;
+        } else {
+            return null;
+        }
+    }
+    
+    private boolean exportPreferences(final File fileName) {
+        if (fileName == null) {
+            return false;
+        }
+        if (fileName.exists() && (!fileName.isFile() || !fileName.canWrite())) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private boolean importPreferences(final File fileName) {
+        if (fileName == null) {
+            return false;
+        }
+        if (!fileName.isFile() || !fileName.canRead()) {
+            return false;
+        }
+
+        return true;
     }
 }
