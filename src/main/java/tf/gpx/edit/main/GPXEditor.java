@@ -374,8 +374,8 @@ public class GPXEditor implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // TF, 20170720: store and read divider positions of panes
-        final Double recentLeftDividerPos = GPXEditorPreferences.RECENTLEFTDIVIDERPOS.getAsType(Double::valueOf);
-        final Double recentCentralDividerPos = GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.getAsType(Double::valueOf);
+        final Double recentLeftDividerPos = GPXEditorPreferences.RECENTLEFTDIVIDERPOS.getAsType();
+        final Double recentCentralDividerPos = GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.getAsType();
 
         trackSplitPane.setDividerPosition(0, recentLeftDividerPos);
         splitPane.setDividerPosition(0, recentCentralDividerPos);
@@ -431,7 +431,7 @@ public class GPXEditor implements Initializable {
         parseAndAddFiles(gpxFileNames);
         
         // set algorithm for distance calculation
-        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType(EarthGeometry.DistanceAlgorithm::valueOf));
+        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
     }
     
     public void lateInitialize() {
@@ -1772,10 +1772,10 @@ public class GPXEditor implements Initializable {
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
                 final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
-                        GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(GPXAlgorithms.ReductionAlgorithm::valueOf),
-                        GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf));
+                        GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                        GPXEditorPreferences.REDUCE_EPSILON.getAsType());
                 final boolean keep2[] = GPXAlgorithms.fixTrack(trackwaypoints, 
-                        GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf));
+                        GPXEditorPreferences.FIX_EPSILON.getAsType());
                 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
 //                System.out.println("keep1: " + keep1.length + ", " + Arrays.toString(keep1));
@@ -1798,7 +1798,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void findReplaceStationaries(final Event event, final FindReplaceClusters action) {
-        if (gpxWaypoints.getItems().size() < GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf)) {
+        if (gpxWaypoints.getItems().size() < (Integer) GPXEditorPreferences.CLUSTER_COUNT.getAsType()) {
             return;
         }
         
@@ -1810,9 +1810,9 @@ public class GPXEditor implements Initializable {
             final List<GPXWaypointNeighbours> clusters = 
                     GPXAlgorithms.getInstance().findStationaries(
                             trackwaypoints, 
-                            GPXEditorPreferences.CLUSTER_RADIUS.getAsType(Double::valueOf),
-                            GPXEditorPreferences.CLUSTER_COUNT.getAsType(Integer::valueOf), 
-                            GPXEditorPreferences.CLUSTER_DURATION.getAsType(Integer::valueOf));
+                            GPXEditorPreferences.CLUSTER_RADIUS.getAsType(),
+                            GPXEditorPreferences.CLUSTER_COUNT.getAsType(), 
+                            GPXEditorPreferences.CLUSTER_DURATION.getAsType());
 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
 //                String content = clusters.stream()
@@ -2031,7 +2031,7 @@ public class GPXEditor implements Initializable {
 
         startAction();
         GPXStructureHelper.getInstance().fixGPXMeasurables(gpxLineItems,
-                GPXEditorPreferences.FIX_EPSILON.getAsType(Double::valueOf));
+                GPXEditorPreferences.FIX_EPSILON.getAsType());
         endAction(true);
 
         refreshGPXFileList();
@@ -2049,8 +2049,8 @@ public class GPXEditor implements Initializable {
 
         startAction();
         GPXStructureHelper.getInstance().reduceGPXMeasurables(gpxLineItems,
-                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(GPXAlgorithms.ReductionAlgorithm::valueOf),
-                GPXEditorPreferences.REDUCE_EPSILON.getAsType(Double::valueOf));
+                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                GPXEditorPreferences.REDUCE_EPSILON.getAsType());
         endAction(true);
 
         refreshGPXFileList();

@@ -61,10 +61,10 @@ public class HeatMapPane extends HeatMap {
     }
     
     public void updateSettings() {
-        setColorMapping(GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType(ColorMapping::valueOf));
-        setOpacityDistribution(GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType(OpacityDistribution::valueOf));
+        setColorMapping(GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
+        setOpacityDistribution(GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
         updateMonochromeMap(getOpacityDistribution());
-        setEventRadius(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType(Double::valueOf));
+        setEventRadius(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType());
     }
     
     public void hide() {

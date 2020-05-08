@@ -124,9 +124,9 @@ public class SRTMDataViewer {
         final String mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         final SRTMDataStore.SRTMDataAverage myAverageMode = 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
         GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
-                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType();
 
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
 

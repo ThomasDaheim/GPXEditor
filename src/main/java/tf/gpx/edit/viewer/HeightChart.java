@@ -395,7 +395,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
         // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
-        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType(Boolean::valueOf);
+        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
         
         double distValue = 0.0;
         // TODO: replace with iteration over lineItems

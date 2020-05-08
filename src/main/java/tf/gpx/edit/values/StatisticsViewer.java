@@ -67,9 +67,9 @@ public class StatisticsViewer extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();
     
-    public final static long BREAK_DURATION = 3;
+    public final static int BREAK_DURATION = 3;
     
-    private long breakDuration = BREAK_DURATION;
+    private int breakDuration = BREAK_DURATION;
     
     private final ObservableList<StatisticValue> statisticsList = FXCollections.observableArrayList();
     private final List<GPXWaypoint> extremePoints = new ArrayList<>();
@@ -371,7 +371,7 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
         // getAsString limits to identify a pause
-        breakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType(Integer::valueOf);
+        breakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType();
         // minutes -> milliseconds
         breakDuration *= 60*1000;
         

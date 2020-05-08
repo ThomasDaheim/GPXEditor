@@ -279,7 +279,7 @@ public class TrackMap extends LeafletMapView {
         // TFE, 20200121: show height with coordinate in context menu
         heightWorker = new GPXAssignSRTMHeightWorker(
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString(), 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf), 
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(), 
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS,
                 false);
         
@@ -454,7 +454,7 @@ public class TrackMap extends LeafletMapView {
             final ChartsPane chartsPane = ChartsPane.getInstance();
             // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
 //            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
-            final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType(Double::valueOf);
+            final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
             chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
             chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // store height in percentage as preference
@@ -466,7 +466,7 @@ public class TrackMap extends LeafletMapView {
                 // resize chartsPane with pane - not done via bind() anymore
                 if (newValue != null && newValue != oldValue) {
                     // reload preference - might have changed in the meantime
-                    final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType(Double::valueOf);
+                    final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
                     final double newHeight = newValue.doubleValue() * perc;
                     chartsPane.setMinHeight(newHeight);
                     chartsPane.setMaxHeight(newHeight);
@@ -697,7 +697,7 @@ public class TrackMap extends LeafletMapView {
                 }
 
                 final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
-                if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
+                if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(newGPXWaypoint));
                 }
@@ -781,7 +781,7 @@ public class TrackMap extends LeafletMapView {
                 final GPXRoute gpxRoute = new GPXRoute(myGPXLineItems.get(0).getGPXFile());
                 gpxRoute.setName("New " + routeName);
 
-                if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
+                if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
                 }
@@ -800,7 +800,7 @@ public class TrackMap extends LeafletMapView {
                 // start autorouting on current gpxRoute
                 execScript("startRouting(\"" + 
                         routes.getKey(curRoute) + "\", \"" + 
-                        GPXEditorPreferences.ROUTING_PROFILE.getAsType(TrackMap.RoutingProfile::valueOf)
+                        ((TrackMap.RoutingProfile) GPXEditorPreferences.ROUTING_PROFILE.getAsType())
                                 .getProfileName() + "\");");
             }
         });
@@ -1015,7 +1015,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         final List<List<GPXWaypoint>> masterList = new ArrayList<>();
-        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType(Boolean::valueOf);
+        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
 
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
@@ -1078,9 +1078,9 @@ public class TrackMap extends LeafletMapView {
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
-                GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType(Double::valueOf) / 
+                (Integer) GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType() / 
                 // might have no waypoints at all...
-                Math.max(waypointCount, 1);
+                Math.max(waypointCount * 1.0, 1.0);
 
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
@@ -1435,7 +1435,7 @@ public class TrackMap extends LeafletMapView {
             }
         }
         
-        if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
+        if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
             // assign height
             AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
         }

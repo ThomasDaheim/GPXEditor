@@ -201,7 +201,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         setMinimumYValue(Double.MAX_VALUE);
         setMaximumYValue(Double.MIN_VALUE);
 
-        final boolean alwaysShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType(Boolean::valueOf);
+        final boolean alwaysShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
         
         // TFE, 20191112: create series per track & route to be able to handle different colors
         final List<XYChart.Series<Number, Number>> seriesList = new ArrayList<>();
@@ -243,10 +243,10 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         }
         
         if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
-            int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType(Integer::valueOf);
-            int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType(Integer::valueOf);
-            int waypointLabelAngle = GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType(Integer::valueOf);
-            int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType(Integer::valueOf);
+            int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
+            int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType();
+            int waypointLabelAngle = GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType();
+            int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType();
 
             // merge seriesList into one big series to iterate all in one loop
             XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
@@ -323,9 +323,9 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         //final double ratio = (GPXTrackviewer.MAX_WAYPOINTS - fileWaypointsCount) / (lineItem.getCombinedGPXWaypoints(null).size() - fileWaypointsCount);
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
-                GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType(Double::valueOf) / 
+                (Integer) GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType() / 
                 // might have no waypoints at all...
-                Math.max(dataCount, 1);
+                Math.max(dataCount * 1.0, 1.0);
         
         // TFE, 20191125: only show up to GPXEditorPreferenceStore.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
@@ -411,7 +411,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
     }
     
     default void adaptLayout() {
-        final int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType(Integer::valueOf);
+        final int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
 
         // shift nodes to center-left from center-center
         // see https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java

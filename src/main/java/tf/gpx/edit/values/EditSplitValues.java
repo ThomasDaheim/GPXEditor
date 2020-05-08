@@ -53,7 +53,7 @@ public class EditSplitValues extends AbstractStage {
     private final DecimalFormat decimalFormat = new DecimalFormat("0");
     
     // UI elements used in various methods need to be class-wide
-    final ChoiceBox typeChoiceBox = EnumHelper.getInstance().createChoiceBox(SplitType.class, SplitType.SplitByDistance);
+    final ChoiceBox<SplitType> typeChoiceBox = EnumHelper.getInstance().createChoiceBox(SplitType.class, SplitType.SplitByDistance);
     final TextField valueText = new TextField();
     
     private EditSplitValues() {
