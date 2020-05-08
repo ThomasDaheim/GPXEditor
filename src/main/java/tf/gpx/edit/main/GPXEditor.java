@@ -991,7 +991,7 @@ public class GPXEditor implements Initializable {
         addDoneAction(insertAction, GPXFileHelper.getNameForGPXFile(target.getGPXFile()));
     }
     
-    public void updateSelectedWaypointsInformation(final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue) {
+    public void updateSelectedWaypointsInformation(final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue, final boolean doUndo) {
         // all waypoints to remove - as copy since otherwise observablelist getAsString messed up by deletes
         final List<GPXLineItem> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
 
@@ -1000,10 +1000,14 @@ public class GPXEditor implements Initializable {
             return;
         }
         
-        updateLineItemInformation(selectedWaypoints, info, newValue);
+        updateLineItemInformation(selectedWaypoints, info, newValue, doUndo);
     }
     
-    public void updateLineItemInformation(final List<? extends GPXLineItem> lineItems, final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue) {
+    public void updateLineItemInformation(
+            final List<? extends GPXLineItem> lineItems, 
+            final UpdateLineItemInformationAction.UpdateInformation info, 
+            final Object newValue, 
+            final boolean doUndo) {
         if(lineItems.isEmpty()) {
             // nothing to delete...
             return;
@@ -1012,7 +1016,9 @@ public class GPXEditor implements Initializable {
         final IDoUndoAction updateAction = new UpdateLineItemInformationAction(this, lineItems, info, newValue);
         updateAction.doAction();
         
-        addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(lineItems.get(0).getGPXFile()));
+        if (doUndo) {
+            addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(lineItems.get(0).getGPXFile()));
+        }
     }
     
     public void insertMeasureablesAtPosition(

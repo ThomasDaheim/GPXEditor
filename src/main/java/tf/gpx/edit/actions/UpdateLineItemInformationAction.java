@@ -90,7 +90,6 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
     public UpdateLineItemInformationAction(final GPXEditor editor, final List<? extends GPXLineItem> lineItems, final UpdateInformation info, final Object newValue) {
         super(LineItemAction.UPDATE_LINEITEM_INFORMATION, editor);
         
-        myEditor = editor;
         myLineItems = new ArrayList<>(lineItems);
         myInfo = info;
         myValue = newValue;

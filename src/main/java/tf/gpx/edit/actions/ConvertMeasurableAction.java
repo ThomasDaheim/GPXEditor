@@ -55,8 +55,6 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
     public ConvertMeasurableAction(final GPXEditor editor, final List<GPXMeasurable> lineItems) {
         super(LineItemAction.UPDATE_LINEITEM_INFORMATION, editor);
         
-        myEditor = editor;
-        
         myLineItems = new ArrayList<>();
         for (GPXMeasurable item: lineItems) {
             myLineItems.add(MutablePair.of(item, null));

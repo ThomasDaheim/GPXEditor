@@ -201,25 +201,25 @@ public class GPXTableView {
             // TFE, 20190715: support for deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date");
             deleteDates.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null, true);
             });
             deleteAttr.getItems().add(deleteDates);
             
             final MenuItem deleteNames = new MenuItem("Name");
             deleteNames.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null, true);
             });
             deleteAttr.getItems().add(deleteNames);
             
             final MenuItem deleteHeights = new MenuItem("Height");
             deleteHeights.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0));
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0), true);
             });
             deleteAttr.getItems().add(deleteHeights);
 
             final MenuItem deleteExtensions = new MenuItem("Extension");
             deleteExtensions.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
             });
             deleteAttr.getItems().add(deleteExtensions);
             

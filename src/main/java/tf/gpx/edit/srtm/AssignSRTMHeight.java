@@ -212,7 +212,7 @@ public class AssignSRTMHeight extends AbstractStage  {
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
-                final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+                final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, true);
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
                 GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
                 
@@ -270,7 +270,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         
         hasUpdated = false;
         if (checkSRTMFiles()) {
-            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
             visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
             GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
 
@@ -281,7 +281,7 @@ public class AssignSRTMHeight extends AbstractStage  {
     }
 
     private boolean checkSRTMFiles() {
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
         GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);

@@ -314,7 +314,7 @@ public class GPXTreeTableView {
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
                                 deleteExtensions.setOnAction((ActionEvent event) -> {
-                                    myEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null);
+                                    myEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
                                 });
                                 deleteAttr.getItems().add(deleteExtensions);
                                 fileMenu.getItems().add(deleteAttr);
