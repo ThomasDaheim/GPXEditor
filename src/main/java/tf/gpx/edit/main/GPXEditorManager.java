@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -113,7 +114,12 @@ public class GPXEditorManager extends Application {
             myStage.setTitle("GPX Editor"); 
             myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
             myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-            myStage.initStyle(StageStyle.UNIFIED);
+            if (Platform.isSupported(ConditionalFeature.UNIFIED_WINDOW)) {
+                // TFE, 20200508: not working in some environments!
+                // https://stackoverflow.com/a/58406995
+                // https://bugs.openjdk.java.net/browse/JDK-8154847
+//                myStage.initStyle(StageStyle.UNIFIED);
+            }
             
             myStage.show();
 

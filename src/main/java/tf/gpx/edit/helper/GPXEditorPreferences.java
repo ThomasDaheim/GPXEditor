@@ -43,7 +43,8 @@ public enum GPXEditorPreferences  {
     DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name()),
     REDUCE_EPSILON("epsilon", Integer.toString(50)),
     FIX_EPSILON("fixDistance", Integer.toString(1000)),
-    SRTM_DATA_PATH("SRTMDataPath", ""),
+    // TFE, 20200508: empty string is not a good default...
+    SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home")),
     SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()),
     HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()),
     OPENCYCLEMAP_API_KEY("openCycleMapApiKey", ""),
