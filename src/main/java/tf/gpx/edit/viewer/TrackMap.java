@@ -280,7 +280,8 @@ public class TrackMap extends LeafletMapView {
         heightWorker = new GPXAssignSRTMHeightWorker(
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString(), 
                 GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf), 
-                GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
+                GPXAssignSRTMHeightWorker.AssignMode.ALWAYS,
+                false);
         
         setVisible(false);
         mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
@@ -688,9 +689,6 @@ public class TrackMap extends LeafletMapView {
                 assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
                 LatLong latlong = (LatLong) contextMenu.getUserData();
 
-                // add a new waypoint to the list of gpxwaypoints from the gpxfile of the gpxlineitem - piece of cake ;-)
-                final List<GPXWaypoint> curGPXWaypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
-
                 // check if a marker is under the cursor in leaflet - if yes, use its values
                 CurrentMarker curMarker = null;
                 if (userData != null && (userData instanceof CurrentMarker)) {
@@ -699,7 +697,6 @@ public class TrackMap extends LeafletMapView {
                 }
 
                 final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
-                newGPXWaypoint.setNumber(curGPXWaypoints.size());
                 if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(newGPXWaypoint));
@@ -748,8 +745,6 @@ public class TrackMap extends LeafletMapView {
                     execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
                 }
 
-                curGPXWaypoints.add(newGPXWaypoint);
-
                 final String waypoint = addMarkerAndCallback(
                                 newGPXWaypoint, 
                                 "", 
@@ -759,8 +754,7 @@ public class TrackMap extends LeafletMapView {
                                 true);
                 fileWaypoints.put(waypoint, newGPXWaypoint);
 
-                // refresh fileWaypointsCount list without refreshing map...
-                myGPXEditor.refresh();
+                myGPXEditor.insertWaypointsAtPosition(myGPXLineItems.get(0).getGPXFile(), Arrays.asList(newGPXWaypoint), GPXEditor.RelativePosition.BELOW);
 
                 // redraw height chartsPane
                 ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
@@ -787,11 +781,12 @@ public class TrackMap extends LeafletMapView {
                 final GPXRoute gpxRoute = new GPXRoute(myGPXLineItems.get(0).getGPXFile());
                 gpxRoute.setName("New " + routeName);
 
-                myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
                 if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
                     // assign height
                     AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
                 }
+
+                myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
 
                 execScript("var " + routeName + " = myMap.editTools.startPolyline();");
                 execScript("updateMarkerColor(\"" + routeName + "\", \"blue\");");
@@ -1440,11 +1435,12 @@ public class TrackMap extends LeafletMapView {
             }
         }
         
-        gpxRoute.setGPXWaypoints(newGPXWaypoints);
         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType(Boolean::valueOf)) {
             // assign height
             AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
         }
+
+        gpxRoute.setGPXWaypoints(newGPXWaypoints);
         
         if (!newGPXWaypoints.isEmpty()) {
             // add new start / end markers

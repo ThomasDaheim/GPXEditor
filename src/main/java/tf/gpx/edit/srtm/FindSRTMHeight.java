@@ -204,7 +204,7 @@ public class FindSRTMHeight extends AbstractStage {
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 
-                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
+                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS, false);
                 final double elevation = worker.getElevation(latLong);
                 
                 if (elevation != SRTMDataStore.NODATA) {

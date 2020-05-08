@@ -66,6 +66,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
     
     private WorkMode myWorkMode = WorkMode.CHECK_DATA_FILES;
     private AssignMode myAssignMode = AssignMode.ALWAYS;
+    private boolean myDoUndo;
     private Set<String> requiredDataFiles = new LinkedHashSet<>();
     
     private int assignedHeightCount = 0;
@@ -76,12 +77,13 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
         super ();
     }
 
-    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final AssignMode assignMode) {
+    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final AssignMode assignMode, final boolean doUndo) {
         super ();
         
         SRTMDataStore.getInstance().setStorePath(path);
         SRTMDataStore.getInstance().setDataAverage(averageMode);
         myAssignMode = assignMode;
+        myDoUndo = doUndo;
     }
     
     public WorkMode getWorkMode() {
@@ -125,7 +127,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
 
                 if (elevation != SRTMDataStore.NODATA) {
 //                    gpxWayPoint.setElevation(elevation);
-                    myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation);
+                    myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
                     assignedHeightCount++;
                 } else {
                     noHeightCount++;

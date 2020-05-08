@@ -26,6 +26,7 @@
 package tf.gpx.edit.actions;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,6 +64,8 @@ public class InvertSelectedWaypointsAction extends GPXLineItemAction<GPXWaypoint
         
         myWaypoints = new ArrayList<>(waypoints);
         mySelectionModel = selectionModel;
+        
+        initAction();
     }
 
     @Override

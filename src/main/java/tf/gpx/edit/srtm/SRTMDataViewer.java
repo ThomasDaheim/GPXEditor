@@ -128,7 +128,7 @@ public class SRTMDataViewer {
         GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
                 GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
 
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
         gpxFile.acceptVisitor(visitor);

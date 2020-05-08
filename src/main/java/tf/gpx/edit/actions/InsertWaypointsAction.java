@@ -64,25 +64,33 @@ public class InsertWaypointsAction extends InsertDeleteWaypointsAction {
             return t.<GPXWaypoint>cloneMe(true);
         }).collect(Collectors.toList());
 
-        // be prepared for any bullshit
         GPXLineItem realTarget = myTarget;
-        if (myTarget.isGPXWaypoint()) {
-            realTarget = myTarget.getParent();
-        }
         GPXEditor.RelativePosition realPosition = myPosition;
+        int waypointIndex;
+        if (myTarget.isGPXWaypoint()) {
+            // target is a waypoint => we should insert below or above this waypoint
+            realTarget = myTarget.getParent();
 
-        // add waypoints to parent of currently selected target - or directly to parent
-        int waypointIndex = realTarget.getGPXWaypoints().indexOf(myTarget);
-        if (waypointIndex == -1) {
-            // bummer! we can only insert at the beginning
-            waypointIndex = 0;
-            realPosition = GPXEditor.RelativePosition.ABOVE;
+            // get position of target waypoint
+            waypointIndex = realTarget.getGPXWaypoints().indexOf(myTarget);
+            if (waypointIndex == -1) {
+                // bummer! we can only insert at the beginning
+                waypointIndex = 0;
+                realPosition = GPXEditor.RelativePosition.ABOVE;
+            }
+
+            if (GPXEditor.RelativePosition.BELOW.equals(realPosition)) {
+                waypointIndex++;
+            }
+        } else {
+            // target is a lineitem => we sould insert @beginning or end of its waypoint list
+            if (GPXEditor.RelativePosition.ABOVE.equals(realPosition)) {
+                waypointIndex = 0;
+            } else {
+                waypointIndex = realTarget.getGPXWaypoints().size();
+            }
         }
-        
-        if (GPXEditor.RelativePosition.BELOW.equals(realPosition)) {
-            waypointIndex++;
-        }
-        
+
         final List<Pair<Integer, GPXWaypoint>> pairs = new ArrayList<>();
         for (GPXWaypoint waypoint : insertWaypoints) {
             pairs.add(Pair.of(waypointIndex, waypoint));

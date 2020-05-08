@@ -65,6 +65,8 @@ public class InvertMeasurablesAction extends GPXLineItemAction<GPXMeasurable> {
 
                 myEditor.addGPXWaypointListListener();
                 myEditor.setStatusFromWaypoints();
+                
+                myEditor.refillGPXWaypointList(true);
 
                 myEditor.refresh();
             }),

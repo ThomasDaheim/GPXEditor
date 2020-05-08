@@ -99,6 +99,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     
     protected GPXLineItemAction(final LineItemAction action, final GPXEditor editor) {
         myAction = action;
+        myEditor = editor;
     }
     
     protected abstract void initAction();
@@ -106,13 +107,13 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     @Override
     public boolean canDo() {
         // we need all data and no multiple do's without undo's
-        return (myEditor != null) && !lineItemCluster.isEmpty() && (doneCount() == undoneCount()) && !getState().isStuck();
+        return (myEditor != null) && (doneCount() == undoneCount()) && !getState().isStuck();
     }
 
     @Override
     public boolean canUndo() {
         // we need all data and no multiple undo's without do's
-        return (myEditor != null) && !lineItemCluster.isEmpty() && (doneCount() == undoneCount()+1) && !getState().isStuck();
+        return (myEditor != null) && (doneCount() == undoneCount()+1) && !getState().isStuck();
     }
 
     @Override
