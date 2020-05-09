@@ -57,7 +57,18 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
         
         myLineItems = new ArrayList<>();
         for (GPXMeasurable item: lineItems) {
-            myLineItems.add(MutablePair.of(item, null));
+            // attention, we could have been passed a file!!!
+            if (GPXLineItem.GPXLineItemType.GPXFile.equals(item.getType())) {
+                // convert all its tracks & routes
+                for (GPXTrack track : item.getGPXTracks()) {
+                    myLineItems.add(MutablePair.of(track, null));
+               }
+                for (GPXRoute route : item.getGPXRoutes()) {
+                    myLineItems.add(MutablePair.of(route, null));
+               }
+            } else {
+                myLineItems.add(MutablePair.of(item, null));
+            }
         }
 
         initAction();
@@ -69,7 +80,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
 
         // performance: cluster items by parents
         for (Pair<GPXMeasurable, GPXMeasurable> pair : myLineItems) {
-            GPXLineItem lineItem = pair.getLeft();
+            final GPXLineItem lineItem = pair.getLeft();
             final GPXLineItem parent = lineItem.getParent();
             
             if (!lineItemCluster.containsKey(parent)) {
@@ -110,11 +121,10 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
 
         TaskExecutor.executeTask(
             TaskExecutor.taskFromRunnableForLater(() -> {
+                myEditor.removeGPXFileListListener();
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXLineItem parent : lineItemCluster.keySet()) {
-                    final List<GPXLineItem> parentLineItems = new ArrayList<>(parent.getChildren());
-
                     final List<Pair<Integer, GPXMeasurable>> parentPairs = lineItemCluster.get(parent);
                     for (Pair<Integer, GPXMeasurable> pair : parentPairs) {
                         final GPXMeasurable item = pair.getRight();
@@ -183,9 +193,11 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                 }
 
                 myEditor.addGPXWaypointListListener();
+                myEditor.addGPXFileListListener();
                 myEditor.setStatusFromWaypoints();
 
                 myEditor.refresh();
+                myEditor.refillGPXWaypointList(true);
             }),
             StatusBar.getInstance());
 
@@ -200,8 +212,6 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXLineItem parent : lineItemCluster.keySet()) {
-                    final List<GPXLineItem> parentLineItems = new ArrayList<>(parent.getChildren());
-
                     final List<Pair<Integer, GPXMeasurable>> parentPairs = lineItemCluster.get(parent);
                     for (Pair<Integer, GPXMeasurable> pair : parentPairs) {
                         final GPXMeasurable item = pair.getRight();

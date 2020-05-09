@@ -46,6 +46,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -986,6 +987,7 @@ public class TrackMap extends LeafletMapView {
     }
     
    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
+        System.out.println("setGPXWaypoints Start: " + Instant.now());
         myGPXLineItems = lineItems;
 
         if (isDisabled()) {
@@ -1020,6 +1022,8 @@ public class TrackMap extends LeafletMapView {
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
         for (GPXLineItem lineItem : myGPXLineItems) {
+            System.out.println("Processing item: " + lineItem);
+            
             // only files can have file waypoints
             if (lineItem.isGPXFile()) {
                 masterList.add(lineItem.getGPXWaypoints());
@@ -1070,6 +1074,7 @@ public class TrackMap extends LeafletMapView {
 //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
         setVisible(bounds[4] > 0d);
+        System.out.println("setGPXWaypoints End:  " + Instant.now());
     }
     private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final int waypointCount, final boolean ignoreFileWayPointsInBounds) {
         // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...

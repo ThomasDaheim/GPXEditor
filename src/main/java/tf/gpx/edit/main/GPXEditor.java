@@ -806,12 +806,12 @@ public class GPXEditor implements Initializable {
         // TFE, 20200103: support multiple selection of lineitems in aypoint list & map
         gpxFileListSelectionListener = (ListChangeListener.Change<? extends TreeItem<GPXMeasurable>> c) -> {
             final List<TreeItem<GPXMeasurable>> selectedItems = new ArrayList<>(gpxFileList.getSelectionModel().getSelectedItems());
-//            System.out.println("Selection has changed to " + selectedItems.size() + " items");
+            System.out.println("Selection has changed to " + selectedItems.size() + " items");
             
             while (c.next()) {
                 if (c.wasRemoved()) {
                     for (TreeItem<GPXMeasurable> item : c.getRemoved()) {
-//                        System.out.println("Item " + item + " was removed");
+                        System.out.println("Item was removed: " + item.getValue());
                         // reset any highlights from checking
                         // TFE, 2020403: item can be null - e.g. after mergeItems
                         if (item != null && item.getValue() != null) {
@@ -836,7 +836,7 @@ public class GPXEditor implements Initializable {
                     // to prevent selection of items across gpx files
                     // as first step to enable multi-selection of items from same gpx file
                     for (TreeItem<GPXMeasurable> item : c.getAddedSubList()) {
-//                        System.out.println("Item " + item + " was added");
+                        System.out.println("Item was added: " + item.getValue());
                         if (!selectedGPXFile.equals(item.getValue().getGPXFile())) {
 //                            System.out.println("toUnselect: " + item.getValue());
                             toUnselect.add(item);
@@ -844,7 +844,7 @@ public class GPXEditor implements Initializable {
                     }
                     
                     if (!toUnselect.isEmpty()) {
-//                        System.out.println("Selction size before unselect: " + selectedItems.size());
+                        System.out.println("Selection size before unselect: " + selectedItems.size());
                         removeGPXFileListListener();
                         for (TreeItem<GPXMeasurable> item : toUnselect) {
                             gpxFileList.getSelectionModel().clearSelection(gpxFileList.getSelectionModel().getSelectedItems().indexOf(item));
@@ -854,12 +854,12 @@ public class GPXEditor implements Initializable {
                         gpxFileList.refresh();
                         
                         selectedItems.removeAll(toUnselect);
-//                        System.out.println("Selction size after unselect:  " + selectedItems.size());
+                        System.out.println("Selection size after unselect:  " + selectedItems.size());
                     }
                 }
             }
             
-//            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
+            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
             if (!selectedItems.isEmpty()) {
                 showGPXWaypoints(selectedItems.stream().map((t) -> {
                     return t.getValue();

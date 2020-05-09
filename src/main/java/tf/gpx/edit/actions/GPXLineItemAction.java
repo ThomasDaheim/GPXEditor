@@ -90,7 +90,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     protected LineItemAction myAction = null;
     
     protected GPXEditor myEditor = null;
-    // store for worked item info: from which lineitem, @which position
+    // store for worked item info: for each parent: from which lineitem, @which position
     protected final Map<GPXLineItem, List<Pair<Integer, T>>> lineItemCluster = new HashMap<>();
 
     private GPXLineItemAction() {
