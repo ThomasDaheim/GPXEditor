@@ -36,6 +36,8 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
+import javafx.scene.Cursor;
+import javafx.scene.Scene;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -111,12 +113,14 @@ public class TaskExecutor {
         };
     }
 
-    public static Task<Void> taskFromRunnableForLater(final Runnable runnable) {
+    public static Task<Void> taskFromRunnableForLater(final Scene scene, final Runnable runnable) {
         return new Task<Void>() {
                 @Override
                 protected Void call() throws Exception {
                     Platform.runLater(() -> {
+                        scene.setCursor(Cursor.WAIT); //Change cursor to wait style
                         runnable.run();
+                        scene.setCursor(Cursor.DEFAULT); //Change cursor to wait style
                     });
 
                     return (Void) null;

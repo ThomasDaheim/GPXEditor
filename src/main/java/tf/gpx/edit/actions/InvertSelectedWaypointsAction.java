@@ -79,7 +79,7 @@ public class InvertSelectedWaypointsAction extends GPXLineItemAction<GPXWaypoint
         boolean result = true;
         
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
                 // disable listener for checked changes since it fires for each waypoint...
                 myEditor.removeGPXWaypointListListener();
 

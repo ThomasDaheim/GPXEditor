@@ -36,6 +36,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -54,12 +56,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
+import javafx.stage.WindowEvent;
+import javafx.util.StringConverter;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.textfield.TextFields;
 import tf.gpx.edit.helper.AbstractStage;
+import static tf.gpx.edit.helper.AbstractStage.INSET_SMALL;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -87,7 +91,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private final TextField waypointDescriptionTxt = new TextField();
     private final TextField waypointCommentTxt = new TextField();
     private final TextField waypointSrcTxt = new TextField();
-    private final ComboBox<String> waypointSymTxt = new ComboBox<>();
+    private final ComboBox<Label> waypointSymTxt = new ComboBox<>();
     private final TextField waypointTypeTxt = new TextField();
     private final CalendarTextField waypointTimeTxt = new CalendarTextField();
     private LinkTable waypointLinkTable;
@@ -170,24 +174,48 @@ public class EditGPXWaypoint extends AbstractStage {
 
         waypointSymTxt.setEditable(true);
         waypointSymTxt.setVisibleRowCount(10);
-        waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getMarkerNames());
+        // https://stackoverflow.com/a/58286816
+        waypointSymTxt.setConverter(new StringConverter<Label>() {
+            @Override
+            public String toString(Label label) {
+                return label.getText();
+            }
+
+            @Override
+            public Label fromString(String string) {
+                 return waypointSymbolLabelForText(string);
+            }
+        });
+        for (String markerName : MarkerManager.getInstance().getMarkerNames()) {
+            final Label label = new Label(markerName);
+            final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(markerName).getIconName());
+            final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
+            label.setGraphic(new ImageView(image));
+            waypointSymTxt.getItems().add(label);
+        }
         // TFE, 20190721: filter while typing
-        TextFields.bindAutoCompletion(waypointSymTxt.getEditor(), waypointSymTxt.getItems());
+        // TFE; 20200510: minor modification since we now show labels with images
+        waypointSymTxt.getEditor().textProperty().addListener((ov, t, t1) -> {
+            if (t1 != null && !t1.equals(t)) {
+                setWaypointSymTxt(t1);
+            }
+        });
         getGridPane().add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, INSET_TOP);
-        
+  
         final Label symbolValue = new Label("");
         getGridPane().add(symbolValue, 2, rowNum);
         GridPane.setMargin(symbolValue, INSET_TOP);
-        
+  
         // update label for any changes of combobox selection
-        waypointSymTxt.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
+        waypointSymTxt.valueProperty().addListener((ObservableValue<? extends Label> observable, Label oldValue, Label newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
-                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
+                // can't use graphics from newValue since it removes it from the combobox
+                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue.getText()).getIconName());
                 final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
-                symbolValue.setGraphic(new ImageView(image));
-            }
+                symbolValue.setGraphic(new ImageView(image));            }
         });
+
         // focus dropdown on selected item - hacking needed
         waypointSymTxt.showingProperty().addListener((obs, wasShowing, isNowShowing) -> {
             if (isNowShowing) {
@@ -195,7 +223,7 @@ public class EditGPXWaypoint extends AbstractStage {
                 if (waypointSymTxt.getSelectionModel().getSelectedIndex() > -1) {
                     // https://stackoverflow.com/a/36548310
                     // https://stackoverflow.com/a/47933342
-                    final ListView<String> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
+                    final ListView<Label> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
                     lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
                 }
             }
@@ -390,9 +418,23 @@ public class EditGPXWaypoint extends AbstractStage {
             // done, lets get out of here...
             getStage().close();
         });
-        getGridPane().add(saveButton, 0, rowNum, 4, 1);
+        setSaveAccelerator(saveButton);
+        getGridPane().add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
+        
+        final Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent arg0) -> {
+            getStage().close();
+        });
+        setCancelAccelerator(cancelBtn);
+        getGridPane().add(cancelBtn, 2, rowNum, 2, 1);
+        GridPane.setHalignment(cancelBtn, HPos.CENTER);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
+        
+        getStage().addEventFilter(WindowEvent.WINDOW_HIDING, (t) -> {
+            t.consume();
+        });
     }
 
     public void setCallback(final GPXEditor gpxEditor) {
@@ -415,7 +457,14 @@ public class EditGPXWaypoint extends AbstractStage {
         
         initProperties();
 
-        getStage().showAndWait();
+        try {
+            getStage().showAndWait();
+            // TFE; 20200510: ugly hack!
+            // when hiding the stage an update event is fired when the symbol of the waypoint has been changed
+            // ComboBox tries to set to the text, when instead it shows labels =>
+            // Exception in thread "JavaFX Application Thread" java.lang.ClassCastException: class java.lang.String cannot be cast to class javafx.scene.control.Label (java.lang.String is in module java.base of loader 'bootstrap'; javafx.scene.control.Label is in module javafx.controls of loader 'app')
+        } catch (ClassCastException ex) {
+        }
     }
     
     private void initProperties() {
@@ -426,11 +475,36 @@ public class EditGPXWaypoint extends AbstractStage {
         }
     }
     
+    private Label waypointSymbolLabelForText(final String labelText) {
+        final Optional<Label> label = waypointSymTxt.getItems().stream().filter((t) -> {
+            return t.getText().equals(labelText);
+        }).findFirst();
+        
+        if (label.isPresent()) {
+            return label.get();
+        } else {
+            return null;
+        }
+    }
+    
+    private void setWaypointSymTxt(final String labelText) {
+        final Label label = waypointSymbolLabelForText(labelText);
+        
+        if (label != null) {
+            waypointSymTxt.getSelectionModel().select(label);
+
+            if (waypointSymTxt.getSkin() != null) {
+                final ListView<Label> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
+                lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
+            }
+        }
+    }
+    
     private void initSingleProperties() {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(setNullStringToEmpty(waypoint.getName()));
-        waypointSymTxt.setValue(setNullStringToEmpty(waypoint.getSym()));
+        setWaypointSymTxt(setNullStringToEmpty(waypoint.getSym()));
         waypointDescriptionTxt.setText(setNullStringToEmpty(waypoint.getDescription()));
         waypointCommentTxt.setText(setNullStringToEmpty(waypoint.getComment()));
         waypointTimeTxt.setText(setNullDateToEmpty(waypoint.getDate()));
@@ -477,7 +551,7 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(MULTIPLE_VALUES);
-        waypointSymTxt.setValue(setNullStringToEmpty(waypoint.getSym()));
+        setWaypointSymTxt(setNullStringToEmpty(waypoint.getSym()));
         waypointDescriptionTxt.setText(MULTIPLE_VALUES);
         waypointCommentTxt.setText(MULTIPLE_VALUES);
         waypointTimeTxt.setText(MULTIPLE_VALUES);
@@ -528,7 +602,7 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
-        waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
+        waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue().getText()));
         waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
         waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
         if (!waypointTimeTxt.getText().isEmpty()) {
@@ -577,8 +651,8 @@ public class EditGPXWaypoint extends AbstractStage {
         if (!MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
             setMultipleStringValues(setEmptyToNullString(waypointNameTxt.getText()), GPXWaypoint::setName);
         }
-        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(waypointSymTxt.getValue())) {
-            setMultipleStringValues(setEmptyToNullString(waypointSymTxt.getValue()), GPXWaypoint::setSym);
+        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(waypointSymTxt.getValue().getText())) {
+            setMultipleStringValues(setEmptyToNullString(waypointSymTxt.getValue().getText()), GPXWaypoint::setSym);
         }
         if (!MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
             setMultipleStringValues(setEmptyToNullString(waypointDescriptionTxt.getText()), GPXWaypoint::setDescription);

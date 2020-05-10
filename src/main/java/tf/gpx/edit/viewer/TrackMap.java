@@ -376,8 +376,16 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/hiasinho/Leaflet.vector-markers
             addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
 
+//            // https://github.com/Leaflet/Leaflet.Editable
+//            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            // TFE, 20200510: draw instead of editable
+            // since we have an optimization for many waypoints here...
             // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
             // add support for lat / lon lines
@@ -570,7 +578,7 @@ public class TrackMap extends LeafletMapView {
             final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
 
             addScript(script);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -987,7 +995,7 @@ public class TrackMap extends LeafletMapView {
     }
     
    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
-        System.out.println("setGPXWaypoints Start: " + Instant.now());
+//        System.out.println("setGPXWaypoints Start: " + Instant.now());
         myGPXLineItems = lineItems;
 
         if (isDisabled()) {
@@ -1009,6 +1017,7 @@ public class TrackMap extends LeafletMapView {
         clearMarkersAndTracks();
         execScript("clearSearchResults();");
         execScript("stopRouting(false);");
+        execScript("clearEditable();");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(myGPXLineItems) || myGPXLineItems.get(0).isGPXMetadata()) {
@@ -1022,7 +1031,7 @@ public class TrackMap extends LeafletMapView {
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
         for (GPXLineItem lineItem : myGPXLineItems) {
-            System.out.println("Processing item: " + lineItem);
+//            System.out.println("Processing item: " + lineItem);
             
             // only files can have file waypoints
             if (lineItem.isGPXFile()) {
@@ -1074,7 +1083,7 @@ public class TrackMap extends LeafletMapView {
 //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
         setVisible(bounds[4] > 0d);
-        System.out.println("setGPXWaypoints End:  " + Instant.now());
+//        System.out.println("setGPXWaypoints End:  " + Instant.now());
     }
     private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final int waypointCount, final boolean ignoreFileWayPointsInBounds) {
         // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...
@@ -1726,7 +1735,7 @@ public class TrackMap extends LeafletMapView {
         }
         
         public void updateRoute(final String event, final String route, final String coords) {
-//            System.out.println(event + ", " + gpxRoute + ", " + coords);
+//            System.out.println(event + ", " + route + ", " + coords);
             
             final List<LatLong> latlongs = new ArrayList<>();
             // parse coords string back into LatLongs

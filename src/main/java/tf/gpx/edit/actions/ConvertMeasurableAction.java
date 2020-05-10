@@ -120,7 +120,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
         boolean result = true;
 
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
                 myEditor.removeGPXFileListListener();
                 myEditor.removeGPXWaypointListListener();
 
@@ -208,7 +208,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
         boolean result = true;
 
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXLineItem parent : lineItemCluster.keySet()) {

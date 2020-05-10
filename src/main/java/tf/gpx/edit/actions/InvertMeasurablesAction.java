@@ -56,7 +56,7 @@ public class InvertMeasurablesAction extends GPXLineItemAction<GPXMeasurable> {
         boolean result = true;
         
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXMeasurable invertItem : myLineItems) {

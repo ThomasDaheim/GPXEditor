@@ -806,12 +806,12 @@ public class GPXEditor implements Initializable {
         // TFE, 20200103: support multiple selection of lineitems in aypoint list & map
         gpxFileListSelectionListener = (ListChangeListener.Change<? extends TreeItem<GPXMeasurable>> c) -> {
             final List<TreeItem<GPXMeasurable>> selectedItems = new ArrayList<>(gpxFileList.getSelectionModel().getSelectedItems());
-            System.out.println("Selection has changed to " + selectedItems.size() + " items");
+//            System.out.println("Selection has changed to " + selectedItems.size() + " items");
             
             while (c.next()) {
                 if (c.wasRemoved()) {
                     for (TreeItem<GPXMeasurable> item : c.getRemoved()) {
-                        System.out.println("Item was removed: " + item.getValue());
+//                        System.out.println("Item was removed: " + item.getValue());
                         // reset any highlights from checking
                         // TFE, 2020403: item can be null - e.g. after mergeItems
                         if (item != null && item.getValue() != null) {
@@ -836,7 +836,7 @@ public class GPXEditor implements Initializable {
                     // to prevent selection of items across gpx files
                     // as first step to enable multi-selection of items from same gpx file
                     for (TreeItem<GPXMeasurable> item : c.getAddedSubList()) {
-                        System.out.println("Item was added: " + item.getValue());
+//                        System.out.println("Item was added: " + item.getValue());
                         if (!selectedGPXFile.equals(item.getValue().getGPXFile())) {
 //                            System.out.println("toUnselect: " + item.getValue());
                             toUnselect.add(item);
@@ -844,7 +844,7 @@ public class GPXEditor implements Initializable {
                     }
                     
                     if (!toUnselect.isEmpty()) {
-                        System.out.println("Selection size before unselect: " + selectedItems.size());
+//                        System.out.println("Selection size before unselect: " + selectedItems.size());
                         removeGPXFileListListener();
                         for (TreeItem<GPXMeasurable> item : toUnselect) {
                             gpxFileList.getSelectionModel().clearSelection(gpxFileList.getSelectionModel().getSelectedItems().indexOf(item));
@@ -854,12 +854,12 @@ public class GPXEditor implements Initializable {
                         gpxFileList.refresh();
                         
                         selectedItems.removeAll(toUnselect);
-                        System.out.println("Selection size after unselect:  " + selectedItems.size());
+//                        System.out.println("Selection size after unselect:  " + selectedItems.size());
                     }
                 }
             }
             
-            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
+//            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
             if (!selectedItems.isEmpty()) {
                 showGPXWaypoints(selectedItems.stream().map((t) -> {
                     return t.getValue();
@@ -934,7 +934,7 @@ public class GPXEditor implements Initializable {
             }
             
             TaskExecutor.executeTask(
-                TaskExecutor.taskFromRunnableForLater(() -> {
+                TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
                     GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
                 }),
                 StatusBar.getInstance());
@@ -1124,7 +1124,7 @@ public class GPXEditor implements Initializable {
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
                     TaskExecutor.executeTask(
-                        TaskExecutor.taskFromRunnableForLater(() -> {
+                        TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
                             // TFE, 20191024 add warning for format issues
                             GPXFileHelper.verifyXMLFile(file);
 
@@ -1143,7 +1143,7 @@ public class GPXEditor implements Initializable {
     
     public void showGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean updateViewer, final boolean doFitBounds) {
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
                 // TFE, 20200103: we don't show waypoints twice - so if a tracksegment and its track are selected only the track is relevant
                 final List<GPXMeasurable> uniqueItems = GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(lineItems);
 
@@ -1883,7 +1883,7 @@ public class GPXEditor implements Initializable {
         }
 
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
                 // make sure we only include waypoints from track segments
                 final List<Integer> trackIndices = selectedIndices.stream().filter((t) -> {
                     return waypoints.get(t).getParent().isGPXTrackSegment();
@@ -1953,7 +1953,7 @@ public class GPXEditor implements Initializable {
     
     public void selectHighlightedWaypoints() {
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
 //                System.out.println("selectHighlightedWaypoints: " + Instant.now());
                 // disable listener for checked changes since it fires for each waypoint...
                 // TODO: use something fancy like LibFX ListenerHandle...
@@ -2141,7 +2141,7 @@ public class GPXEditor implements Initializable {
 //        System.out.println("selectGPXWaypoints: " + waypoints.size() + ", " + Instant.now());
 
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(() -> {
+            TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
     //            System.out.println("========================================================");
     //            System.out.println("Start select: " + Instant.now());
 
@@ -2263,5 +2263,9 @@ public class GPXEditor implements Initializable {
         }
 
         return true;
+    }
+    
+    public Scene getScene() {
+        return getWindow().getScene();
     }
 }

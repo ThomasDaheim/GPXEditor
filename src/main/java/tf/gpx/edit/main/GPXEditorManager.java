@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.main;
 
+import com.sun.javafx.util.Logging;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,6 +121,7 @@ public class GPXEditorManager extends Application {
                 // https://bugs.openjdk.java.net/browse/JDK-8154847
 //                myStage.initStyle(StageStyle.UNIFIED);
             }
+            Logging.getCSSLogger().disableLogging();
             
             myStage.show();
 
