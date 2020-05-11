@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -68,6 +67,7 @@ import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.MarkerIcon;
 import tf.gpx.edit.viewer.MarkerManager;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.RestrictiveTextField;
@@ -186,11 +186,17 @@ public class EditGPXWaypoint extends AbstractStage {
                  return waypointSymbolLabelForText(string);
             }
         });
-        for (String markerName : MarkerManager.getInstance().getMarkerNames()) {
-            final Label label = new Label(markerName);
-            final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(markerName).getIconName());
+        for (MarkerIcon marker : MarkerManager.getInstance().getAllMarkers()) {
+            final Label label = new Label(marker.getMarkerName());
+            
+            final String iconBase64 = MarkerManager.getInstance().getIcon(marker.getIconName());
             final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
             label.setGraphic(new ImageView(image));
+            
+            final Tooltip tooltip = new Tooltip(marker.getMarkerName());
+            TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+            label.setTooltip(tooltip);
+            
             waypointSymTxt.getItems().add(label);
         }
         // TFE, 20190721: filter while typing
