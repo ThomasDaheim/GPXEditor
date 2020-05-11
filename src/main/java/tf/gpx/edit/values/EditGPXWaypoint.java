@@ -178,7 +178,7 @@ public class EditGPXWaypoint extends AbstractStage {
         waypointSymTxt.setConverter(new StringConverter<Label>() {
             @Override
             public String toString(Label label) {
-                return label.getText();
+                return (label == null) ? "" : label.getText();
             }
 
             @Override
@@ -476,6 +476,11 @@ public class EditGPXWaypoint extends AbstractStage {
     }
     
     private Label waypointSymbolLabelForText(final String labelText) {
+        if (labelText == null) {
+            // default label is a placemark
+            return waypointSymbolLabelForText("Placemark");
+        }
+        
         final Optional<Label> label = waypointSymTxt.getItems().stream().filter((t) -> {
             return t.getText().equals(labelText);
         }).findFirst();
@@ -504,7 +509,7 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(setNullStringToEmpty(waypoint.getName()));
-        setWaypointSymTxt(setNullStringToEmpty(waypoint.getSym()));
+        setWaypointSymTxt(waypoint.getSym());
         waypointDescriptionTxt.setText(setNullStringToEmpty(waypoint.getDescription()));
         waypointCommentTxt.setText(setNullStringToEmpty(waypoint.getComment()));
         waypointTimeTxt.setText(setNullDateToEmpty(waypoint.getDate()));
@@ -551,7 +556,7 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(MULTIPLE_VALUES);
-        setWaypointSymTxt(setNullStringToEmpty(waypoint.getSym()));
+        setWaypointSymTxt(waypoint.getSym());
         waypointDescriptionTxt.setText(MULTIPLE_VALUES);
         waypointCommentTxt.setText(MULTIPLE_VALUES);
         waypointTimeTxt.setText(MULTIPLE_VALUES);

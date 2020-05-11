@@ -303,7 +303,8 @@ public class GPXFile extends GPXMeasurable {
     public ObservableList<? extends GPXLineItem> getChildren() {
         final List<ObservableList<GPXLineItem>> children = new ArrayList<>();
         
-        // need to down-cast everything to GPXMeasurable
+        // need to down-cast everything to GPXLineItem
+        children.add(GPXListHelper.asGPXLineItemList(myGPXWaypoints));
         children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
         children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
         children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));

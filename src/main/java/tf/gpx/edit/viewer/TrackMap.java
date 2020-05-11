@@ -59,6 +59,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
@@ -706,10 +707,6 @@ public class TrackMap extends LeafletMapView {
                 }
 
                 final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
-                if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
-                    // assign height
-                    AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(newGPXWaypoint));
-                }
 
                 if (curMarker != null) {
                     // set name / description / comment from search result marker options (if any)
@@ -764,6 +761,17 @@ public class TrackMap extends LeafletMapView {
                 fileWaypoints.put(waypoint, newGPXWaypoint);
 
                 myGPXEditor.insertWaypointsAtPosition(myGPXLineItems.get(0).getGPXFile(), Arrays.asList(newGPXWaypoint), GPXEditor.RelativePosition.BELOW);
+
+                // TODO: wouldn't it be better to enable UpdateLineItemInformationAction to work on non-assigned items?
+                // TFE, 20200511: with do/undo this needs to be done after adding to gpxfile
+                // which itself is done as runlater...
+                Platform.runLater(() -> {
+                    if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
+                        // assign height - but to clone that has been inserted
+                        final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
+                        AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
+                    }
+                });
 
                 // redraw height chartsPane
                 ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
