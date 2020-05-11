@@ -92,6 +92,8 @@ public class MarkerManager {
     public final static String DEFAULT_ICON_SIZE = "24";
     private final static String SMALL_ICON_SIZE = "8";
     
+    public final static String SPECIAL_GROUP = "Special";
+    
     // keys are jsNames
     // pair keys are icon names as in garmin
     // pair values are base64 png strings
@@ -266,12 +268,13 @@ public class MarkerManager {
         final LinkedHashSet<MarkerIcon> result = new LinkedHashSet<>();
         
         // add our special values upfront...
-        result.add(SpecialMarker.PlaceMarkIcon.getMarkerIcon());
-        result.add(SpecialMarker.LodgingIcon.getMarkerIcon());
-        result.add(SpecialMarker.RestaurantIcon.getMarkerIcon());
-        result.add(SpecialMarker.WineryIcon.getMarkerIcon());
-        result.add(SpecialMarker.FastFoodIcon.getMarkerIcon());
-        result.add(SpecialMarker.BarIcon.getMarkerIcon());
+        // can't use .getMarkerIcon() here since loadSpecialIcons() hasn't run yet...
+        result.add(getMarkerForSymbol(SpecialMarker.PlaceMarkIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.LodgingIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.RestaurantIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.WineryIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.FastFoodIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.BarIcon.getIconName()));
         
         // garmin names are the marker names
         result.addAll(iconMap.entrySet().stream().map((t) -> {

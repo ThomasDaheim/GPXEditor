@@ -432,3 +432,11 @@
     -fx-background-radius: 3px;
     -fx-background-insets: 0px;
 }
+
+/* TFE, 20200511: disabled items in waypoint icon combobox */
+.combo-box-popup .list-cell:disabled,
+.groupname-label {
+    -fx-background-color: darkgrey;
+    -fx-font-weight: bold;
+    -fx-underline: true;
+}
