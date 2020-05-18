@@ -76,7 +76,7 @@ import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
-import tf.helper.general.EnumHelper;
+import tf.helper.javafx.EnumHelper;
 
 /**
  *

@@ -144,7 +144,7 @@ import tf.helper.doundo.DoUndoManager;
 import tf.helper.doundo.IDoUndoAction;
 import tf.helper.javafx.AboutMenu;
 import tf.helper.general.ObjectsHelper;
-import tf.helper.general.UsefulKeyCodes;
+import tf.helper.javafx.UsefulKeyCodes;
 import tf.helper.javafx.ShowAlerts;
 import tf.helper.javafx.TableViewPreferences;
 

@@ -46,7 +46,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.general.EnumHelper;
+import tf.helper.javafx.EnumHelper;
 import tf.helper.javafx.RestrictiveTextField;
 import tf.helper.javafx.TooltipHelper;
 

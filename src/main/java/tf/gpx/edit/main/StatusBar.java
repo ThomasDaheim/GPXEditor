@@ -58,8 +58,8 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.helper.doundo.DoUndoManager;
-import tf.helper.general.AppClipboard;
-import tf.helper.general.UsefulKeyCodes;
+import tf.helper.javafx.AppClipboard;
+import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  * StatusBar to show messages, ... at the bottom

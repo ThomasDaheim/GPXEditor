@@ -48,7 +48,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.viewer.MarkerManager;
-import tf.helper.general.ColorConverter;
+import tf.helper.javafx.ColorConverter;
 
 /**
  * Writer for KML Files

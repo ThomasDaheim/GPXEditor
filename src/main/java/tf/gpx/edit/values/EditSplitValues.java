@@ -39,7 +39,7 @@ import javafx.util.converter.DoubleStringConverter;
 import tf.gpx.edit.helper.AbstractStage;
 import static tf.gpx.edit.helper.AbstractStage.INSET_TOP;
 import tf.gpx.edit.values.SplitValue.SplitType;
-import tf.helper.general.EnumHelper;
+import tf.helper.javafx.EnumHelper;
 
 /**
  *
