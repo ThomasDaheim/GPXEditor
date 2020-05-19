@@ -192,6 +192,7 @@ public class EditGPXWaypoint extends AbstractStage {
         // disable: https://stackoverflow.com/a/32373721 - BUT can still select with arrows
         // multicolumn: https://stackoverflow.com/a/58286816 - BUT not for our case: mutliple items in one row
         // https://stackoverflow.com/a/37190344 - seems to be the way to go have a gridpane as popup
+        // https://github.com/controlsfx/controlsfx/blob/master/controlsfx/src/main/java/org/controlsfx/control/GridView.java - might be useful here too - NON, no selection model
 //        waypointSymTxt.setCellFactory(lv -> new ListCell<Label>() {
 //            @Override
 //            public void updateItem(Label item, boolean empty) {
