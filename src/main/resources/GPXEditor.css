@@ -439,4 +439,5 @@
     -fx-background-color: darkgrey;
     -fx-font-weight: bold;
     -fx-underline: true;
+    -fx-opacity: 1.0;
 }
