@@ -52,7 +52,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.RowConstraints;
 import javafx.stage.Modality;
 import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
@@ -82,7 +85,8 @@ public class EditGPXWaypoint extends AbstractStage {
     private final static EditGPXWaypoint INSTANCE = new EditGPXWaypoint();
     
     private final static String MULTIPLE_VALUES = "<Multiple>";
-    private final static int COLS_PER_ROW = 4;
+    private final static int SYMBOL_SIZE = 32;
+    private final static int COLS_PER_ROW = 5;
 
     private GPXEditor myGPXEditor;
     
@@ -172,8 +176,14 @@ public class EditGPXWaypoint extends AbstractStage {
         getGridPane().add(symLbl, 0, rowNum);
         GridPane.setMargin(symLbl, INSET_TOP);
 
+        // set group labels disabled & show icons in multicolumn layout
+        // disable: https://stackoverflow.com/a/32373721 - BUT can still select with arrows
+        // multicolumn: https://stackoverflow.com/a/58286816 - BUT not for our case: mutliple items in one row
+        // https://stackoverflow.com/a/37190344 - seems to be the way to go have a gridpane as popup
+        // https://github.com/controlsfx/controlsfx/blob/master/controlsfx/src/main/java/org/controlsfx/control/GridView.java - might be useful here too - NON, no selection model
+        // FINALLY: build your own GridComboBox :-)
         waypointSymTxt.setEditable(true);
-        waypointSymTxt.setVisibleRowCount(10);
+        waypointSymTxt.setVisibleRowCount(8);
         waypointSymTxt.setHgap(0.0);
         waypointSymTxt.setVgap(0.0);
         // handle non-string combobox content properly
@@ -197,21 +207,7 @@ public class EditGPXWaypoint extends AbstractStage {
                  return waypointSymbolLabelForText(string);
             }
         });
-        // TODO: set group labels disabled & show icons in multicolumn layout
-        // disable: https://stackoverflow.com/a/32373721 - BUT can still select with arrows
-        // multicolumn: https://stackoverflow.com/a/58286816 - BUT not for our case: mutliple items in one row
-        // https://stackoverflow.com/a/37190344 - seems to be the way to go have a gridpane as popup
-        // https://github.com/controlsfx/controlsfx/blob/master/controlsfx/src/main/java/org/controlsfx/control/GridView.java - might be useful here too - NON, no selection model
-//        waypointSymTxt.setCellFactory(lv -> new ListCell<Label>() {
-//            @Override
-//            public void updateItem(Label item, boolean empty) {
-//                super.updateItem(item, empty);
-//                if (!empty) {
-//                    // items without graphics => group labels
-//                    setDisable(item.getGraphic() == null);
-//                }
-//            }
-//        });
+
         // add icons and group labels
         int gridRowNum = 0;
         int gridColNum = 0;
@@ -229,8 +225,11 @@ public class EditGPXWaypoint extends AbstractStage {
                     actGroupName = marker.getGroupName();
                     
                     gridRowNum++;
-                    gridRowNum++;
-                    gridColNum = 0;
+                    // only add new line in case we didn't just finish one
+                    if (gridColNum != 0) {
+                        gridRowNum++;
+                        gridColNum = 0;
+                    }
                 }
                 
                 final Label label = new Label(null);
@@ -240,7 +239,7 @@ public class EditGPXWaypoint extends AbstractStage {
                 label.setTooltip(tooltip);
 
                 final String iconBase64 = MarkerManager.getInstance().getIcon(marker.getIconName());
-                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
+                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), SYMBOL_SIZE, SYMBOL_SIZE, false, false);
                 label.setGraphic(new ImageView(image));
 
                 waypointSymTxt.add(label, gridColNum, gridRowNum, 1, 1);
@@ -253,6 +252,8 @@ public class EditGPXWaypoint extends AbstractStage {
                 
             }
         }
+        // make sure things are laid out properly
+        addColRowConstraints();
         // TFE, 20190721: filter while typing
         // TFE; 20200510: minor modification since we now show labels with images
         waypointSymTxt.getEditor().textProperty().addListener((ov, t, t1) -> {
@@ -511,6 +512,19 @@ public class EditGPXWaypoint extends AbstractStage {
         label.setDisable(true);
         label.getStyleClass().add("groupname-label");
         waypointSymTxt.add(label, 0, waypointSymTxt.getRowCount(), COLS_PER_ROW, 1);
+    }
+    private void addColRowConstraints() {
+        for (int i = 0; i < waypointSymTxt.getColumnCount(); i++) {
+            final ColumnConstraints column = new ColumnConstraints(SYMBOL_SIZE);
+            column.setFillWidth(true);
+            column.setHgrow(Priority.ALWAYS);
+            waypointSymTxt.getColumnConstraints().add(column);
+        }
+        for (int i = 0; i < waypointSymTxt.getRowCount(); i++) {
+            final RowConstraints row = new RowConstraints(SYMBOL_SIZE);
+            row.setFillHeight(true);
+            waypointSymTxt.getRowConstraints().add(row);
+        }
     }
 
     public void setCallback(final GPXEditor gpxEditor) {
