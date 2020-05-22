@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1145,7 +1146,18 @@ public class GPXEditor implements Initializable {
         TaskExecutor.executeTask(
             TaskExecutor.taskFromRunnableForLater(getScene(), () -> {
                 // TFE, 20200103: we don't show waypoints twice - so if a tracksegment and its track are selected only the track is relevant
-                final List<GPXMeasurable> uniqueItems = GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(lineItems);
+                List<GPXMeasurable> uniqueItems = GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(lineItems);
+                // TFE, 20200522: during deletion of tracks & segments it can happen that showGPXWaypoints is called from the listener
+                // for an "unconsistent" state: track & segements have been dettached from a gpxfile and we now want to show the track segements
+                // since the update to the list comes first for the removed track => we want to show "dangeling" items BUT we don't want to do that
+                uniqueItems = uniqueItems.stream().filter((GPXMeasurable t) -> {
+                        // you either are a gpxfile or you're attached to something at all
+                        if (t.isGPXFile() || t.getParent() != null) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }).collect(Collectors.toList());
 
                 // TFE, 20200103: check if new lineitem <> old one - otherwise do nothing
                 // TFE, 20200207: nope, don't do that! stops repaints in case of e.g. deletion of waypoints...
@@ -1348,6 +1360,10 @@ public class GPXEditor implements Initializable {
     }
 
     public Boolean closeFile(final GPXLineItem item) {
+        if (!item.isGPXFile()) {
+            return false;
+        }
+        
         if (item.hasUnsavedChanges()) {
             // gpxfile has changed - do want to save first?
             if (saveChangesDialog(item.getGPXFile())) {
