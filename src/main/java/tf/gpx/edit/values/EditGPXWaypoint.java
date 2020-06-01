@@ -186,6 +186,8 @@ public class EditGPXWaypoint extends AbstractStage {
         waypointSymTxt.setVisibleRowCount(8);
         waypointSymTxt.setHgap(0.0);
         waypointSymTxt.setVgap(0.0);
+        waypointSymTxt.setResizeContentColumn(false);
+        waypointSymTxt.setResizeContentRow(false);
         // handle non-string combobox content properly
         // https://stackoverflow.com/a/58286816
         waypointSymTxt.setGridConverter(new StringConverter<Label>() {
@@ -233,13 +235,15 @@ public class EditGPXWaypoint extends AbstractStage {
                 }
                 
                 final Label label = new Label(null);
+                label.getStyleClass().add("icon-label");
+                label.setGraphicTextGap(0.0);
 
                 final Tooltip tooltip = new Tooltip(marker.getMarkerName());
                 TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                 label.setTooltip(tooltip);
 
                 final String iconBase64 = MarkerManager.getInstance().getIcon(marker.getIconName());
-                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), SYMBOL_SIZE, SYMBOL_SIZE, false, false);
+                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), SYMBOL_SIZE, SYMBOL_SIZE, false, true);
                 label.setGraphic(new ImageView(image));
 
                 waypointSymTxt.add(label, gridColNum, gridRowNum, 1, 1);
@@ -274,7 +278,7 @@ public class EditGPXWaypoint extends AbstractStage {
                 if (waypointSymbolLabelForText(newValue).getGraphic() != null) {
                     // can't use graphics from newValue since it removes it from the combobox
                     final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
-                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
+                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, true);
                     symbolValue.setGraphic(new ImageView(image));
                 } else {
                     // poor mans disabled entry: reset to last value
@@ -510,7 +514,7 @@ public class EditGPXWaypoint extends AbstractStage {
         final Label label = new Label(name);
         label.setGraphic(null);
         label.setDisable(true);
-        label.getStyleClass().add("groupname-label");
+        label.getStyleClass().add("icon-groupname-label");
         waypointSymTxt.add(label, 0, waypointSymTxt.getRowCount(), COLS_PER_ROW, 1);
     }
     private void addColRowConstraints() {

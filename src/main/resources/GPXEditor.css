@@ -435,9 +435,16 @@
 
 /* TFE, 20200511: disabled items in waypoint icon combobox */
 .combo-box-popup .list-cell:disabled,
-.groupname-label {
+.icon-groupname-label {
     -fx-background-color: darkgrey;
     -fx-font-weight: bold;
     -fx-underline: true;
     -fx-opacity: 1.0;
+    -fx-padding: 0;
+    -fx-margin: 0;
+}
+.icon-label {
+    /* TODO: centering of graphics not yet working */
+    -fx-padding: 0 0 0 -16;
+    -fx-margin: 0;
 }
