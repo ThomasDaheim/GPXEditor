@@ -49,7 +49,6 @@ public class DeleteWaypointsAction extends InsertDeleteWaypointsAction {
     public DeleteWaypointsAction(final GPXEditor editor, final List<GPXWaypoint> waypoints) {
         super(LineItemAction.DELETE_WAYPOINTS, editor);
         
-        myEditor = editor;
         myWaypoints = new ArrayList<>(waypoints);
 
         initAction();

@@ -103,20 +103,6 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
 
     @Override
     public boolean doHook() {
-        return internalDo();
-    }
-
-    @Override
-    public boolean undoHook() {
-        // undo is more complex! if we convert a track than all tracksegements get combined into one route!
-        // TODO: we need to store before and after items! after image needs to be something like
-        // List<GPXMeasureable, GPXMeasureable>: for each converted item we store the input item
-        // on undo the converted items are deleted and replaced by the original items
-        // on each do this list needs to be created new, since converted items are created newly
-        return internalUndo();
-    }
-
-    private boolean internalDo() {
         boolean result = true;
 
         TaskExecutor.executeTask(
@@ -204,7 +190,13 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
         return result;
     }
 
-    private boolean internalUndo() {
+    @Override
+    public boolean undoHook() {
+        // undo is more complex! if we convert a track than all tracksegements get combined into one route!
+        // we need to store before and after items! after image needs to be something like
+        // List<GPXMeasureable, GPXMeasureable>: for each converted item we store the input item
+        // on undo the converted items are deleted and replaced by the original items
+        // on each do this list needs to be created new, since converted items are created newly
         boolean result = true;
 
         TaskExecutor.executeTask(
@@ -260,7 +252,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
 
         return result;
     }
-    
+
     private void restoreWaypointParent(final GPXLineItem item) {
         item.getGPXWaypoints().stream().forEach((t) -> {
             t.setParent(item);

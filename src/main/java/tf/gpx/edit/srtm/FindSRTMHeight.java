@@ -89,8 +89,8 @@ public class FindSRTMHeight extends AbstractStage {
                 GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
         
         // create new scene
-        getStage().setTitle("Assign SRTM height values");
-        getStage().initModality(Modality.WINDOW_MODAL);
+        setTitle("Assign SRTM height values");
+        initModality(Modality.WINDOW_MODAL);
        
         int rowNum = 0;
         // 10th row: latitude & longitude
@@ -222,6 +222,6 @@ public class FindSRTMHeight extends AbstractStage {
     public void findSRTMHeight(final HostServices hostServices) {
         myHostServices = hostServices;
 
-        getStage().showAndWait();
+        showAndWait();
     }
 }

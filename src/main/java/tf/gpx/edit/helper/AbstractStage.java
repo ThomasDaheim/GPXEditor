@@ -25,10 +25,10 @@
  */
 package tf.gpx.edit.helper;
 
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import tf.gpx.edit.main.GPXEditorManager;
@@ -38,8 +38,7 @@ import tf.helper.javafx.UsefulKeyCodes;
  *
  * @author thomas
  */
-public abstract class AbstractStage {
-    private final Stage myStage = new Stage();
+public abstract class AbstractStage extends Stage {
     private final GridPane myGridPane = new GridPane();
 
     public final static Insets INSET_NONE = new Insets(0, 0, 0, 0);
@@ -48,37 +47,64 @@ public abstract class AbstractStage {
     public final static Insets INSET_BOTTOM = new Insets(0, 8, 8, 8);
     public final static Insets INSET_TOP_BOTTOM = new Insets(8, 8, 8, 8);
     
-    public AbstractStage() {
-        initStage();
+    protected static enum ButtonPressed {
+        ACTION_BUTTON,
+        CANCEL_BUTTON;
     }
     
-    public Stage getStage() {
-        return myStage;
+    private ButtonPressed buttonPressed;
+    
+    public AbstractStage() {
+        initStage();
     }
     
     public GridPane getGridPane() {
         return myGridPane;
     }
     
-    private void initStage() {
-        myStage.setScene(new Scene(myGridPane));
-        myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-        myStage.setResizable(false);
+    public ButtonPressed getButtonPressed() {
+        return buttonPressed;
+    }
+    public boolean wasActionButtonPressed() {
+        return ButtonPressed.ACTION_BUTTON.equals(buttonPressed);
+    }
+    public boolean wasCancelButtonPressed() {
+        return ButtonPressed.CANCEL_BUTTON.equals(buttonPressed);
     }
     
-    public void setSaveAccelerator(final Button button) {
-        final Runnable saveRN = () -> button.fire(); 
+    private void initStage() {
+        setScene(new Scene(myGridPane));
+        getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
+        setResizable(false);
+    }
+    
+    public void setActionAccelerator(final Button button) {
+        button.setDefaultButton(true);
+        // more than one action handler - implementation has its own
+        // https://stackoverflow.com/a/29880122
+        button.addEventHandler(ActionEvent.ACTION, (t) -> {
+            buttonPressed = ButtonPressed.ACTION_BUTTON;
+        });
+        
+        final Runnable saveRN = () -> {
+            buttonPressed = ButtonPressed.ACTION_BUTTON;
+            button.fire();
+        };
 
-        myStage.getScene().getAccelerators().put(UsefulKeyCodes.CNTRL_S.getKeyCodeCombination(), saveRN);
+        getScene().getAccelerators().put(UsefulKeyCodes.CNTRL_S.getKeyCodeCombination(), saveRN);
     }
     
     public void setCancelAccelerator(final Button button) {
-        // can't be done via myStage.getScene().getAccelerators().put
-        // see https://stackoverflow.com/a/21670395
-        myStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, (KeyEvent evt) -> {
-            if (evt.getCode().equals(UsefulKeyCodes.ESCAPE.getKeyCodeCombination().getCode())) {
-                button.fire();
-            }
+        button.setCancelButton(true);
+        button.addEventHandler(ActionEvent.ACTION, (t) -> {
+            buttonPressed = ButtonPressed.CANCEL_BUTTON;
         });
+    }
+    
+    @Override
+    public void showAndWait() {
+        buttonPressed = null;
+        
+        super.showAndWait();
     }
 }

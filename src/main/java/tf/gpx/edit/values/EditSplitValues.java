@@ -71,8 +71,8 @@ public class EditSplitValues extends AbstractStage {
 
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Edit Split Values");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Edit Split Values");
+        initModality(Modality.APPLICATION_MODAL); 
         
         int rowNum = 0;
         // 1st row: split type
@@ -100,15 +100,25 @@ public class EditSplitValues extends AbstractStage {
         GridPane.setMargin(valueUnit, INSET_TOP);
         
         rowNum++;
-        // 3rd row: OK button
+        // 3rd row: Split button
         final Button splitButton = new Button("Split");
         splitButton.setOnAction((ActionEvent event) -> {
-            // done, lets get out of here...
-            getStage().close();
+            close();
         });
-        getGridPane().add(splitButton, 0, rowNum, 3, 1);
+        setActionAccelerator(splitButton);
+        getGridPane().add(splitButton, 0, rowNum, 1, 1);
         GridPane.setHalignment(splitButton, HPos.CENTER);
         GridPane.setMargin(splitButton, INSET_TOP_BOTTOM);
+
+        
+        final Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent event) -> {
+            close();
+        });
+        setCancelAccelerator(cancelBtn);
+        getGridPane().add(cancelBtn, 2, rowNum, 1, 1);
+        GridPane.setHalignment(cancelBtn, HPos.CENTER);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
 
         // update unit when type changes
         typeChoiceBox.getSelectionModel().selectedIndexProperty().addListener((ov, oldValue, newValue) -> {
@@ -117,15 +127,19 @@ public class EditSplitValues extends AbstractStage {
     }
     
     public SplitValue editSplitValues() {
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
-        getStage().showAndWait();
+        showAndWait();
         
-        final SplitType type = EnumHelper.getInstance().selectedEnumChoiceBox(SplitType.class, typeChoiceBox);
-        final double value = Math.max(Double.valueOf(valueText.getText().trim()), 1.0);
-        
-        return new SplitValue(type, value);
+        if (ButtonPressed.ACTION_BUTTON.equals(getButtonPressed())) {
+            final SplitType type = EnumHelper.getInstance().selectedEnumChoiceBox(SplitType.class, typeChoiceBox);
+            final double value = Math.max(Double.valueOf(valueText.getText().trim()), 1.0);
+
+            return new SplitValue(type, value);
+        } else {
+            return null;
+        }
     }
 }

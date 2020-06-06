@@ -96,8 +96,8 @@ public class AssignSRTMHeight extends AbstractStage  {
                 GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType();
         
         // create new scene
-        getStage().setTitle("Assign SRTM height values");
-        getStage().initModality(Modality.WINDOW_MODAL);
+        setTitle("Assign SRTM height values");
+        initModality(Modality.WINDOW_MODAL);
        
         int rowNum = 0;
         // 1st row: path to srtm files
@@ -224,7 +224,7 @@ public class AssignSRTMHeight extends AbstractStage  {
                 hasUpdated = true;
 
                 // done, lets getAsString out of here...
-                getStage().close();
+                close();
             }
         });
         getGridPane().add(assignButton, 0, rowNum, 1, 1);
@@ -232,8 +232,8 @@ public class AssignSRTMHeight extends AbstractStage  {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
-            getStage().setTitle("Cancel");
-            getStage().close();
+            setTitle("Cancel");
+            close();
         });
         getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
@@ -255,7 +255,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         // first check if all data files are available
         checkSRTMFiles();
         
-        getStage().showAndWait();
+        showAndWait();
         
         return hasUpdated;
     }

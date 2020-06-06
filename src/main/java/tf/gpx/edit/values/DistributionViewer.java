@@ -116,8 +116,8 @@ public class DistributionViewer extends AbstractStage {
     
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Distributions");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Distributions");
+        initModality(Modality.APPLICATION_MODAL); 
         
         //
         // left columns
@@ -304,7 +304,7 @@ public class DistributionViewer extends AbstractStage {
                 myGPXEditor.deleteWaypoints(wayPointList.getCheckModel().getCheckedItems());
                 
                 // done, lets get out of here...
-                getStage().close();
+                close();
                 
                 hasDeleted = true;
             }
@@ -322,8 +322,8 @@ public class DistributionViewer extends AbstractStage {
         assert myGPXEditor != null;
         assert gpxWayPoints != null;
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
         if (CollectionUtils.isEmpty(gpxWayPoints)) {
@@ -336,7 +336,7 @@ public class DistributionViewer extends AbstractStage {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
-        getStage().showAndWait();
+        showAndWait();
                 
         return hasDeleted;
     }

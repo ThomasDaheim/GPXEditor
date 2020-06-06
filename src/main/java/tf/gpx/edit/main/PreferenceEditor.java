@@ -140,8 +140,8 @@ public class PreferenceEditor extends AbstractStage {
     }
     
     private void initViewer() {
-        getStage().setTitle("Preferences");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Preferences");
+        initModality(Modality.APPLICATION_MODAL); 
         getGridPane().getChildren().clear();
 
         // create new scene with list of algos & parameter
@@ -619,17 +619,17 @@ public class PreferenceEditor extends AbstractStage {
         
         final Button saveBtn = new Button("Save");
         saveBtn.setOnAction((ActionEvent arg0) -> {
-            getStage().setTitle("Save");
-            getStage().close();
+            savePreferences();
+
+            close();
         });
-        setSaveAccelerator(saveBtn);
+        setActionAccelerator(saveBtn);
         buttonBox.getChildren().add(saveBtn);
         HBox.setMargin(saveBtn, INSET_SMALL);
         
         final Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
-            getStage().setTitle("Cancel");
-            getStage().close();
+            close();
         });
         getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         setCancelAccelerator(cancelBtn);
@@ -715,14 +715,12 @@ public class PreferenceEditor extends AbstractStage {
         HeatMapPane.getInstance().updateSettings();
     }
     
-    public void showPreferencesDialogue() {
+    public boolean editPreferences() {
         initPreferences();
 
-        getStage().showAndWait();
+        showAndWait();
         
-        if ("Save".equals(getStage().getTitle())) {
-            savePreferences();
-        }
+        return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
     private File getExportImportFileName(final ExportImport expImp) {

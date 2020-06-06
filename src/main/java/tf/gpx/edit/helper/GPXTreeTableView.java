@@ -304,7 +304,7 @@ public class GPXTreeTableView {
                                 if (!item.isGPXTrack()) {
                                     final MenuItem splitItems = new MenuItem("Split Items");
                                     splitItems.setOnAction((ActionEvent event) -> {
-                                         myEditor.splitItems(event);
+                                         myEditor.splitMeasurables(event);
                                     });
                                     splitItems.disableProperty().bind(
                                         Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));

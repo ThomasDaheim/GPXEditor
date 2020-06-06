@@ -45,7 +45,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         UPDATE_LINEITEM_INFORMATION,
         CONVERT_MEASURABLES,
         INVERT_SELECTED_WAYPOINTS,
-        INVERT_MEASURABLES;
+        INVERT_MEASURABLES,
+        SPLIT_MEASURABLES;
         
         @Override
         public String toString() {
@@ -60,6 +61,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                     return "Convert";
                 case INVERT_MEASURABLES:
                     return "Invert";
+                case SPLIT_MEASURABLES:
+                    return "Split";
                 case INVERT_SELECTED_WAYPOINTS:
                     return "Invert selection";
                 default:
@@ -70,17 +73,15 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         public String itemType() {
             switch (this) {
                 case INSERT_WAYPOINTS:
-                    return "waypoints";
                 case DELETE_WAYPOINTS:
+                case INVERT_SELECTED_WAYPOINTS:
                     return "waypoints";
                 case UPDATE_LINEITEM_INFORMATION:
                     return "items";
                 case CONVERT_MEASURABLES:
-                    return "measurables";
                 case INVERT_MEASURABLES:
+                case SPLIT_MEASURABLES:
                     return "measurables";
-                case INVERT_SELECTED_WAYPOINTS:
-                    return "waypoints";
                 default:
                     return "";
             }

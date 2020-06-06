@@ -132,8 +132,8 @@ public class EditGPXWaypoint extends AbstractStage {
 
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Edit Waypoint Properties");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Edit Waypoint Properties");
+        initModality(Modality.APPLICATION_MODAL); 
         
         // https://de.wikipedia.org/wiki/GPS_Exchange_Format
         // http://www.topografix.com/gpx/1/1/
@@ -490,23 +490,23 @@ public class EditGPXWaypoint extends AbstractStage {
             myGPXEditor.refresh();
 
             // done, lets get out of here...
-            getStage().close();
+            close();
         });
-        setSaveAccelerator(saveButton);
+        setActionAccelerator(saveButton);
         getGridPane().add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
         
         final Button cancelBtn = new Button("Cancel");
-        cancelBtn.setOnAction((ActionEvent arg0) -> {
-            getStage().close();
+        cancelBtn.setOnAction((ActionEvent event) -> {
+            close();
         });
         setCancelAccelerator(cancelBtn);
         getGridPane().add(cancelBtn, 2, rowNum, 2, 1);
         GridPane.setHalignment(cancelBtn, HPos.CENTER);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
         
-        getStage().addEventFilter(WindowEvent.WINDOW_HIDING, (t) -> {
+        addEventFilter(WindowEvent.WINDOW_HIDING, (t) -> {
             t.consume();
         });
     }
@@ -535,16 +535,16 @@ public class EditGPXWaypoint extends AbstractStage {
         myGPXEditor = gpxEditor;
     }
     
-    public void editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
+    public boolean editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert !CollectionUtils.isEmpty(gpxWaypoints);
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
         if (CollectionUtils.isEmpty(gpxWaypoints)) {
-            return;
+            return false;
         }
 
         myGPXWaypoints = gpxWaypoints;
@@ -552,13 +552,15 @@ public class EditGPXWaypoint extends AbstractStage {
         initProperties();
 
         try {
-            getStage().showAndWait();
+            showAndWait();
             // TFE; 20200510: ugly hack!
             // when hiding the stage an update event is fired when the symbol of the waypoint has been changed
             // ComboBox tries to set to the text, when instead it shows labels =>
             // Exception in thread "JavaFX Application Thread" java.lang.ClassCastException: class java.lang.String cannot be cast to class javafx.scene.control.Label (java.lang.String is in module java.base of loader 'bootstrap'; javafx.scene.control.Label is in module javafx.controls of loader 'app')
         } catch (ClassCastException ex) {
         }
+        
+        return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
     private void initProperties() {

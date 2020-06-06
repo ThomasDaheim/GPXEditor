@@ -107,6 +107,7 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
+import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -712,15 +713,25 @@ public class GPXEditor implements Initializable {
         });
     }
     public boolean undoAction() {
-        if (DoUndoManager.getInstance().canUndo(getCurrentGPXFileName())) {
-            return DoUndoManager.getInstance().singleUndo(getCurrentGPXFileName());
+        final String gpxFileName = getCurrentGPXFileName();
+        if (gpxFileName == null) {
+            return false;
+        }
+        
+        if (DoUndoManager.getInstance().canUndo(gpxFileName)) {
+            return DoUndoManager.getInstance().singleUndo(gpxFileName);
         } else {
             return false;
         }
     }
     public boolean redoAction() {
-        if (DoUndoManager.getInstance().canDo(getCurrentGPXFileName())) {
-            return DoUndoManager.getInstance().singleDo(getCurrentGPXFileName());
+        final String gpxFileName = getCurrentGPXFileName();
+        if (gpxFileName == null) {
+            return false;
+        }
+        
+        if (DoUndoManager.getInstance().canDo(gpxFileName)) {
+            return DoUndoManager.getInstance().singleDo(gpxFileName);
         } else {
             return false;
         }
@@ -959,7 +970,12 @@ public class GPXEditor implements Initializable {
         if (gpxFileList.getSelectionModel().getSelectedItem() != null) {
             return GPXFileHelper.getNameForGPXFile(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
         } else {
-            return null;
+            // nothing selected - use first file if any
+            if (!gpxFileList.getRoot().getChildren().isEmpty()) {
+                return GPXFileHelper.getNameForGPXFile(ObjectsHelper.uncheckedCast(gpxFileList.getRoot().getChildren().get(0).getValue()));
+            } else {
+                return null;
+            }
         }
     }
     
@@ -1719,66 +1735,77 @@ public class GPXEditor implements Initializable {
         refreshGPXFileList();
     }
     
-    public void splitItems(final Event event) {
+    public void splitMeasurables(final Event event) {
         // open dialog for split values
         final SplitValue splitValue = EditSplitValues.getInstance().editSplitValues();
+        
+        if (splitValue == null) {
+            // nothing to do
+            return;
+        }
        
         // iterate over selected items
         final List<GPXMeasurable> selectedItems = gpxFileList.getSelectedGPXMeasurables();
+        final String gpxFileName = getCurrentGPXFileName();
         // clear selection to avoid listener updates on adding potentially many new items...
         gpxFileList.getSelectionModel().clearSelection();
-        
-        for (GPXMeasurable item : selectedItems) {
-            if (item.isGPXTrackSegment()|| item.isGPXRoute()) {
-                // call worker to split item
-                List<GPXMeasurable> newItems = GPXStructureHelper.getInstance().splitGPXLineItem(item, splitValue);
 
-                // replace item by split result at the current position - need to work on concrete lists and not getChildren()
-                final GPXLineItem parent = item.getParent();
-                
-                int itemPos;
-                // insert below current item - need to work on concrete lists and not getChildren()
-                switch (item.getType()) {
-                    // TFE, 20200208: how should tracks be splitted???
-//                    case GPXTrack:
-//                        // tracks of gpxfile
-//                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
-//                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
+        final IDoUndoAction splitAction = new SplitMeasurablesAction(this, selectedItems, splitValue);
+        splitAction.doAction();
+        
+        addDoneAction(splitAction, gpxFileName);
+
+//        for (GPXMeasurable item : selectedItems) {
+//            if (item.isGPXTrackSegment()|| item.isGPXRoute()) {
+//                // call worker to split item
+//                List<GPXMeasurable> newItems = GPXStructureHelper.getInstance().splitGPXLineItem(item, splitValue);
+//
+//                // replace item by split result at the current position - need to work on concrete lists and not getChildren()
+//                final GPXLineItem parent = item.getParent();
+//                
+//                int itemPos;
+//                // insert below current item - need to work on concrete lists and not getChildren()
+//                switch (item.getType()) {
+//                    // TFE, 20200208: how should tracks be splitted???
+////                    case GPXTrack:
+////                        // tracks of gpxfile
+////                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
+////                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
+////                            // attach to new parent
+////                            t.setParent(parent);
+////                            return (GPXTrack) t;
+////                        }).collect(Collectors.toList()));
+////                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
+////                        break;
+//                    case GPXTrackSegment:
+//                        // segments of gpxtrack
+//                        itemPos = ((GPXTrack) parent).getGPXTrackSegments().indexOf(item);
+//                        ((GPXTrack) parent).getGPXTrackSegments().addAll(itemPos, newItems.stream().map((t) -> {
 //                            // attach to new parent
 //                            t.setParent(parent);
-//                            return (GPXTrack) t;
+//                            return (GPXTrackSegment) t;
 //                        }).collect(Collectors.toList()));
-//                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
+//                        ((GPXTrack) parent).getGPXTrackSegments().remove((GPXTrackSegment) item);
 //                        break;
-                    case GPXTrackSegment:
-                        // segments of gpxtrack
-                        itemPos = ((GPXTrack) parent).getGPXTrackSegments().indexOf(item);
-                        ((GPXTrack) parent).getGPXTrackSegments().addAll(itemPos, newItems.stream().map((t) -> {
-                            // attach to new parent
-                            t.setParent(parent);
-                            return (GPXTrackSegment) t;
-                        }).collect(Collectors.toList()));
-                        ((GPXTrack) parent).getGPXTrackSegments().remove((GPXTrackSegment) item);
-                        break;
-                    case GPXRoute:
-                        // routes of gpxfile
-                        itemPos = ((GPXFile) parent).getGPXRoutes().indexOf(item);
-                        ((GPXFile) parent).getGPXRoutes().addAll(itemPos, newItems.stream().map((t) -> {
-                            // attach to new parent
-                            t.setParent(parent);
-                            return (GPXRoute) t;
-                        }).collect(Collectors.toList()));
-                        ((GPXFile) parent).getGPXRoutes().remove((GPXRoute) item);
-                        break;
-                }
-            }
-        }
-        
-        refreshGPXFileList();
+//                    case GPXRoute:
+//                        // routes of gpxfile
+//                        itemPos = ((GPXFile) parent).getGPXRoutes().indexOf(item);
+//                        ((GPXFile) parent).getGPXRoutes().addAll(itemPos, newItems.stream().map((t) -> {
+//                            // attach to new parent
+//                            t.setParent(parent);
+//                            return (GPXRoute) t;
+//                        }).collect(Collectors.toList()));
+//                        ((GPXFile) parent).getGPXRoutes().remove((GPXRoute) item);
+//                        break;
+//                }
+//            }
+//        }
+//        
+//        refreshGPXFileList();
     }
 
     private void preferences(final Event event) {
-        PreferenceEditor.getInstance().showPreferencesDialogue();
+        PreferenceEditor.getInstance().editPreferences();
     }
 
     private void checkTrack(final Event event) {
@@ -1855,7 +1882,6 @@ public class GPXEditor implements Initializable {
                 
         removeGPXWaypointListListener();
 
-        // use set for faster processing
         final List<GPXWaypoint> affectedGPXWaypoints = new ArrayList<>();
         for (GPXWaypointNeighbours cluster : clusters) {
             final int index = cluster.getCenterIndex();
@@ -2111,13 +2137,14 @@ public class GPXEditor implements Initializable {
     public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         final List<GPXWaypoint> copiedWaypoints = new ArrayList<>(gpxWaypoints);
         
-        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
-        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
-        // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
-        showGPXWaypoints(getShownGPXMeasurables(), true, false);
-        
-        // TFE, 20191205: select waypoints again
-        selectGPXWaypoints(copiedWaypoints, false, false);
+        if (EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints)) {
+            GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
+            // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
+            showGPXWaypoints(getShownGPXMeasurables(), true, false);
+
+            // TFE, 20191205: select waypoints again
+            selectGPXWaypoints(copiedWaypoints, false, false);
+        }
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {

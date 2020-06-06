@@ -257,8 +257,8 @@ public class StatisticsViewer extends AbstractStage {
         }
 
         // create new scene
-        getStage().setTitle("Statistics");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Statistics");
+        initModality(Modality.APPLICATION_MODAL); 
 
         int rowNum = 0;
 
@@ -311,7 +311,7 @@ public class StatisticsViewer extends AbstractStage {
         final Button OKButton = new Button("OK");
         OKButton.setOnAction((ActionEvent event) -> {
             // done, lets getAsString out of here...
-            getStage().close();
+            close();
         });      
         getGridPane().add(OKButton, 0, rowNum, 1, 1);
         GridPane.setMargin(OKButton, INSET_BOTTOM);
@@ -346,15 +346,15 @@ public class StatisticsViewer extends AbstractStage {
     public boolean showStatistics(final GPXMeasurable gpxMeasurable) {
         assert gpxMeasurable != null && !gpxMeasurable.isGPXMetadata() && !gpxMeasurable.isGPXRoute();
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
         myGPXMeasurable = gpxMeasurable;
         // initialize the whole thing...
         initStatisticsViewer();
         
-        getStage().showAndWait();
+        showAndWait();
                 
         return true;
     }

@@ -269,6 +269,7 @@ public class EditGPXMetadata extends AbstractStage {
             
             myGPXEditor.refresh();
         });
+        setActionAccelerator(saveButton);
         editMetadataPane.add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
@@ -282,13 +283,15 @@ public class EditGPXMetadata extends AbstractStage {
         myGPXEditor = gpxEditor;
     }
     
-    public void editMetadata(final GPXFile gpxFile) {
+    public boolean editMetadata(final GPXFile gpxFile) {
         assert myGPXEditor != null;
         assert gpxFile != null;
         
         myGPXFile = gpxFile;
         
         initMetadata();
+        
+        return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
     private void initMetadata() {
