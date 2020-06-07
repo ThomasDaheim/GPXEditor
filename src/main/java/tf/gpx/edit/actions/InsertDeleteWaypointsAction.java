@@ -62,11 +62,11 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
                     final List<GPXWaypoint> parentWaypoints = new ArrayList<>(parent.getGPXWaypoints());
 
                     final List<Pair<Integer, GPXWaypoint>> parentPairs = lineItemCluster.get(parent);
+                    // performance: convert to hashset since its contains() is way faster
                     final LinkedHashSet<GPXWaypoint> waypointsToDelete = parentPairs.stream().map((t) -> {
                         return t.getRight();
                     }).collect(Collectors.toCollection(LinkedHashSet::new));
 
-                    // performance: convert to hashset since its contains() is way faster
                     parentWaypoints.removeAll(waypointsToDelete);
                     parent.setGPXWaypoints(parentWaypoints);
                 }

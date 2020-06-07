@@ -107,6 +107,7 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
+import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
@@ -1478,26 +1479,6 @@ public class GPXEditor implements Initializable {
         invertAction.doAction();
         
         addDoneAction(invertAction, getCurrentGPXFileName());
-
-
-//        TaskExecutor.executeTask(
-//            TaskExecutor.taskFromRunnableForLater(() -> {
-//                removeGPXWaypointListListener();
-//
-//                // invert items BUT beware what you have already inverted - otherwise you might to invert twice (file & track selected) and end up not inverting
-//                // so always invert the "highest" node in the hierarchy of selected items - with this you also invert everything below it
-//                for (GPXMeasurable invertItem : GPXStructureHelper.getInstance().uniqueHierarchyGPXMeasurables(gpxFileList.getSelectedGPXMeasurables())) {
-//                    invertItem.invert();
-//                }
-//
-//                gpxFileList.getSelectionModel().clearSelection();
-//                
-//                addGPXWaypointListListener();
-//                setStatusFromWaypoints();
-//
-//                refresh();
-//            }),
-//            StatusBar.getInstance());
     }
     
     public void convertItems(final Event event) {
@@ -1510,59 +1491,6 @@ public class GPXEditor implements Initializable {
         convertAction.doAction();
         
         addDoneAction(convertAction, getCurrentGPXFileName());
-
-//        TaskExecutor.executeTask(
-//            TaskExecutor.taskFromRunnableForLater(() -> {
-//                removeGPXWaypointListListener();
-//                
-//                for (GPXMeasurable item : gpxFileList.getSelectedGPXMeasurables()) {
-//                    if (item.isGPXRoute()) {
-//                        // new track & segment
-//                        final GPXTrack gpxTrack = new GPXTrack(item.getGPXFile());
-//                        final GPXTrackSegment gpxTrackSegment = new GPXTrackSegment(gpxTrack);
-//                        gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
-//
-//                        gpxTrack.setName(item.getName());
-//                        gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
-//
-//                        // move waypoints
-//                        gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
-//                        item.getGPXWaypoints().clear();
-//
-//                        // replace route with track
-//                        item.getGPXFile().getGPXTracks().add(gpxTrack);
-//                        item.getGPXFile().getGPXRoutes().remove((GPXRoute) item);
-//                    } else if (item.isGPXTrack() || item.isGPXTrackSegment()) {
-//                        // new route
-//                        final GPXRoute gpxRoute = new GPXRoute(item.getGPXFile());
-//
-//                        gpxRoute.setName(item.getName());
-//                        gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
-//
-//                        // move waypoints
-//                        if (item.isGPXTrack()) {
-//                            gpxRoute.getGPXWaypoints().addAll(item.getCombinedGPXWaypoints(null));
-//                        } else {
-//                            gpxRoute.getGPXWaypoints().addAll(item.getGPXWaypoints());
-//                        }
-//                        item.getGPXWaypoints().clear();
-//
-//                        // replace track with route
-//                        item.getGPXFile().getGPXRoutes().add(gpxRoute);
-//                        if (item.isGPXTrack()) {
-//                            item.getGPXFile().getGPXTracks().remove((GPXTrack) item);
-//                        } else {
-//                            item.getParent().getGPXTrackSegments().remove((GPXTrackSegment) item);
-//                        }
-//                    }
-//                }
-//
-//                addGPXWaypointListListener();
-//                setStatusFromWaypoints();
-//
-//                refresh();
-//            }),
-//            StatusBar.getInstance());
     }
     
     public void mergeFiles(final ActionEvent event) {
@@ -1643,7 +1571,10 @@ public class GPXEditor implements Initializable {
             }
         }
         
+        startAction();
+        
         for (GPXFile gpxFile : gpxFiles) {
+            final String currentGPXFileName = GPXFileHelper.getNameForGPXFile(gpxFile);
             // merge / delete track segments first
             // segments might be selected without their tracks
             List<GPXTrack> gpxTracks = GPXStructureHelper.getInstance().uniqueGPXTracksFromGPXTrackSegements(gpxFile, gpxFileList.getSelectionModel().getSelectedItems());
@@ -1657,14 +1588,19 @@ public class GPXEditor implements Initializable {
                         return (GPXTrackSegment) t;
                     }).collect(Collectors.toList());
 
-                if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
-                    if (gpxTrackSegments.size() > 1) {
-                        GPXStructureHelper.getInstance().mergeGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments);
-                    }
-                } else {
-                    // performance: convert to hashset since its contains() is way faster
-                    gpxTrack.getGPXTrackSegments().removeAll(new LinkedHashSet<>(gpxTrackSegments));
-                }
+                final IDoUndoAction action = new MergeDeleteTrackSegmentsAction(this, mergeOrDelete, gpxTrack, gpxTrackSegments);
+                action.doAction();
+
+                addDoneAction(action, currentGPXFileName);
+
+//                if (MergeDeleteItems.MERGE.equals(mergeOrDelete)) {
+//                    if (gpxTrackSegments.size() > 1) {
+//                        GPXStructureHelper.getInstance().mergeGPXTrackSegments(gpxTrack.getGPXTrackSegments(), gpxTrackSegments);
+//                    }
+//                } else {
+//                    // performance: convert to hashset since its contains() is way faster
+//                    gpxTrack.getGPXTrackSegments().removeAll(new LinkedHashSet<>(gpxTrackSegments));
+//                }
             }
 
             // we only merge tracks & routes from the same file but not across files
@@ -1728,6 +1664,8 @@ public class GPXEditor implements Initializable {
             forEach((t) -> {
                 closeFile(t);
             });
+        
+        endAction(true);
 
         // TFE, 20180811: unset selection in list
         gpxFileList.getSelectionModel().clearSelection();
@@ -1754,54 +1692,6 @@ public class GPXEditor implements Initializable {
         splitAction.doAction();
         
         addDoneAction(splitAction, gpxFileName);
-
-//        for (GPXMeasurable item : selectedItems) {
-//            if (item.isGPXTrackSegment()|| item.isGPXRoute()) {
-//                // call worker to split item
-//                List<GPXMeasurable> newItems = GPXStructureHelper.getInstance().splitGPXLineItem(item, splitValue);
-//
-//                // replace item by split result at the current position - need to work on concrete lists and not getChildren()
-//                final GPXLineItem parent = item.getParent();
-//                
-//                int itemPos;
-//                // insert below current item - need to work on concrete lists and not getChildren()
-//                switch (item.getType()) {
-//                    // TFE, 20200208: how should tracks be splitted???
-////                    case GPXTrack:
-////                        // tracks of gpxfile
-////                        itemPos = ((GPXFile) parent).getGPXTracks().indexOf(item);
-////                        ((GPXFile) parent).getGPXTracks().addAll(itemPos, newItems.stream().map((t) -> {
-////                            // attach to new parent
-////                            t.setParent(parent);
-////                            return (GPXTrack) t;
-////                        }).collect(Collectors.toList()));
-////                        ((GPXFile) parent).getGPXTracks().remove((GPXTrack) item);
-////                        break;
-//                    case GPXTrackSegment:
-//                        // segments of gpxtrack
-//                        itemPos = ((GPXTrack) parent).getGPXTrackSegments().indexOf(item);
-//                        ((GPXTrack) parent).getGPXTrackSegments().addAll(itemPos, newItems.stream().map((t) -> {
-//                            // attach to new parent
-//                            t.setParent(parent);
-//                            return (GPXTrackSegment) t;
-//                        }).collect(Collectors.toList()));
-//                        ((GPXTrack) parent).getGPXTrackSegments().remove((GPXTrackSegment) item);
-//                        break;
-//                    case GPXRoute:
-//                        // routes of gpxfile
-//                        itemPos = ((GPXFile) parent).getGPXRoutes().indexOf(item);
-//                        ((GPXFile) parent).getGPXRoutes().addAll(itemPos, newItems.stream().map((t) -> {
-//                            // attach to new parent
-//                            t.setParent(parent);
-//                            return (GPXRoute) t;
-//                        }).collect(Collectors.toList()));
-//                        ((GPXFile) parent).getGPXRoutes().remove((GPXRoute) item);
-//                        break;
-//                }
-//            }
-//        }
-//        
-//        refreshGPXFileList();
     }
 
     private void preferences(final Event event) {
@@ -2033,33 +1923,6 @@ public class GPXEditor implements Initializable {
         invertAction.doAction();
         
         addDoneAction(invertAction, getCurrentGPXFileName());
-
-//        TaskExecutor.executeTask(
-//            TaskExecutor.taskFromRunnableForLater(() -> {
-//                // disable listener for checked changes since it fires for each waypoint...
-//                removeGPXWaypointListListener();
-//
-//                // performance: convert to hashset since its contains() is way faster
-//                final Set<GPXWaypoint> selectedGPXWaypoints = gpxWaypoints.getSelectionModel().getSelectedItems().stream().collect(Collectors.toSet());
-//                gpxWaypoints.getSelectionModel().clearSelection();
-//
-//                int index = 0;
-//                final List<Integer> selectedList = new ArrayList<>();
-//                for (GPXWaypoint waypoint : gpxWaypoints.getItems()){
-//                    if (!selectedGPXWaypoints.contains(waypoint)) {
-//                        selectedList.add(index);
-//                    }
-//                    index++;
-//                }
-//                // fastest way to select a number of indices... but still slow for many
-//                gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
-//
-//                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
-//                
-//                addGPXWaypointListListener();
-//                setStatusFromWaypoints();
-//            }),
-//            StatusBar.getInstance());
     }
 
     private void fixGPXMeasurables(final Event event, final boolean fileLevel) {
@@ -2280,7 +2143,15 @@ public class GPXEditor implements Initializable {
 
         if (commit) {
             for (String fileName : myActionList.keySet()) {
-                DoUndoManager.getInstance().addDoneAction(myActionList.get(fileName), fileName);
+                final DoUndoActionList actionList = myActionList.get(fileName);
+                // keep track how often the individual actions have been done/undone
+                actionList.setDoneCountFromActions();
+                actionList.setUndoneCountFromActions();
+                
+                if (actionList.doneCount() > 0) {
+                    // only add to list if really executed at least once
+                    DoUndoManager.getInstance().addDoneAction(actionList, fileName);
+                }
             }
         }
         runningAction = false;

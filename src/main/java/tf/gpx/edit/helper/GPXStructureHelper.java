@@ -67,7 +67,6 @@ public class GPXStructureHelper {
     private static final String MERGED_FILE_NAME = "Merged.gpx";
     private static final String MERGED_ROUTE_NAME = "Merged Route";
     private static final String MERGED_TRACK_NAME = "Merged Track";
-    private static final String MERGED_TRACKSEGMENT_NAME = "Merged Segment";
     
     private GPXEditor myEditor;
     
@@ -145,19 +144,6 @@ public class GPXStructureHelper {
             mergedGPXWaypoints.addAll(gpxGPXRoute.getGPXWaypoints());
             
             gpxRoutes.remove(gpxGPXRoute);
-        }
-    }
-
-    public void mergeGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments, final List<GPXTrackSegment> gpxTrackSegmentsToMerge) {
-        // merge all selected waypoints into the first segment
-        final GPXTrackSegment mergedGPXTrackSegment = gpxTrackSegmentsToMerge.get(0);
-        mergedGPXTrackSegment.setName(MERGED_TRACKSEGMENT_NAME);
-
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXTrackSegment.getGPXWaypoints();
-        for (GPXTrackSegment gpxTrackSegment : gpxTrackSegmentsToMerge.subList(1, gpxTrackSegmentsToMerge.size())) {
-            mergedGPXWaypoints.addAll(gpxTrackSegment.getGPXWaypoints());
-            
-            gpxTrackSegments.remove(gpxTrackSegment);
         }
     }
     

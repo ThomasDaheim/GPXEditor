@@ -35,6 +35,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
@@ -42,6 +43,7 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.SplitValue.SplitType;
+import tf.helper.doundo.IDoUndoAction;
 
 /**
  *
@@ -118,10 +120,18 @@ public class TestSplitMerge extends GPXEditor {
         Assert.assertEquals(364, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         
-        GPXStructureHelper.getInstance().mergeGPXTrackSegments(gpxfile.getGPXTracks().get(0).getGPXTrackSegments(), gpxfile.getGPXTracks().get(0).getGPXTrackSegments());
+        final IDoUndoAction action = new MergeDeleteTrackSegmentsAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile.getGPXTracks().get(0), gpxfile.getGPXTracks().get(0).getGPXTrackSegments());
+        action.doAction();
 
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(364 + 758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
+
+        // TFE, 20200607: now we have undo as well!
+        action.undoAction();
+
+        Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assert.assertEquals(364, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
+        Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
     }
 
     @Test
@@ -198,10 +208,8 @@ public class TestSplitMerge extends GPXEditor {
         // only 36 new segments since "loss" of distance due to cutting into multiple items - no distance measured between end of on item and start of next
         Assert.assertEquals(36, result.size());
         
-        final List<GPXTrackSegment> merged = new ArrayList<>();
-        merged.add(new GPXTrackSegment(gpxfile.getGPXTracks().get(0)));
-        
-        GPXStructureHelper.getInstance().mergeGPXTrackSegments(merged, result);
+        final IDoUndoAction action = new MergeDeleteTrackSegmentsAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile.getGPXTracks().get(0), result);
+        action.doAction();
 
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());

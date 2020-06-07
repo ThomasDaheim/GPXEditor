@@ -46,7 +46,10 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         CONVERT_MEASURABLES,
         INVERT_SELECTED_WAYPOINTS,
         INVERT_MEASURABLES,
-        SPLIT_MEASURABLES;
+        SPLIT_MEASURABLES,
+        MERGE_DELETE_TRACKSEGMENTS,
+        MERGE_DELETE_TRACKS,
+        MERGE_DELETE_ROUTES;
         
         @Override
         public String toString() {
@@ -65,6 +68,10 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                     return "Split";
                 case INVERT_SELECTED_WAYPOINTS:
                     return "Invert selection";
+                case MERGE_DELETE_TRACKSEGMENTS:
+                case MERGE_DELETE_TRACKS:
+                case MERGE_DELETE_ROUTES:
+                    return "Merge or delete";
                 default:
                     return "";
             }
@@ -82,6 +89,12 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case INVERT_MEASURABLES:
                 case SPLIT_MEASURABLES:
                     return "measurables";
+                case MERGE_DELETE_TRACKSEGMENTS:
+                    return "track segments";
+                case MERGE_DELETE_TRACKS:
+                    return "tracks";
+                case MERGE_DELETE_ROUTES:
+                    return "routes";
                 default:
                     return "";
             }
