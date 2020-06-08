@@ -151,6 +151,14 @@ run {
 }
 
 test {
+    doFirst {
+        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
+        jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs = jvmArgs.plus('-Xss80M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
+        enableAssertions = true
+    }
+
     // https://stackoverflow.com/a/35467005
     testLogging.showStandardStreams true;   
 }

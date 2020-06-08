@@ -226,7 +226,11 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public String getName() {
-        return Objects.toString(myGPXTrack.getName(), "") + " - Segment " + getNumber();
+        if (myGPXTrack != null) {
+            return Objects.toString(myGPXTrack.getName(), "") + " - Segment " + getNumber();
+        } else {
+            return "Segment " + getNumber();
+        }
     }
 
     @Override

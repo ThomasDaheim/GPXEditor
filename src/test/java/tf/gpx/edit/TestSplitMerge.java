@@ -29,13 +29,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
+import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
@@ -122,7 +126,7 @@ public class TestSplitMerge extends GPXEditor {
         
         final IDoUndoAction action = new MergeDeleteTrackSegmentsAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile.getGPXTracks().get(0), gpxfile.getGPXTracks().get(0).getGPXTrackSegments());
         action.doAction();
-
+        
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(364 + 758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
 
@@ -142,10 +146,17 @@ public class TestSplitMerge extends GPXEditor {
         Assert.assertEquals(7, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
         Assert.assertEquals(7, gpxfile.getGPXRoutes().get(1).getGPXWaypoints().size());
         
-        GPXStructureHelper.getInstance().mergeGPXRoutes(gpxfile.getGPXRoutes(), gpxfile.getGPXRoutes());
+        final IDoUndoAction action = new MergeDeleteRoutesAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile, gpxfile.getGPXRoutes());
+        action.doAction();
 
         Assert.assertEquals(1, gpxfile.getGPXRoutes().size());
         Assert.assertEquals(14, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
+
+        // TFE, 20200608: now we have undo as well!
+        action.undoAction();
+
+        Assert.assertEquals(7, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
+        Assert.assertEquals(7, gpxfile.getGPXRoutes().get(1).getGPXWaypoints().size());
     }
 
     @Test
@@ -156,13 +167,20 @@ public class TestSplitMerge extends GPXEditor {
         Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(1, gpxfile.getGPXTracks().get(1).getGPXTrackSegments().size());
         
-        GPXStructureHelper.getInstance().mergeGPXTracks(gpxfile.getGPXTracks(), gpxfile.getGPXTracks());
+        final IDoUndoAction action = new MergeDeleteTracksAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile, gpxfile.getGPXTracks());
+        action.doAction();
 
         Assert.assertEquals(1, gpxfile.getGPXTracks().size());
         Assert.assertEquals(3, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         Assert.assertEquals(364, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
         Assert.assertEquals(758, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getGPXWaypoints().size());
         Assert.assertEquals(432, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(2).getGPXWaypoints().size());
+
+        // TFE, 20200608: now we have undo as well!
+        action.undoAction();
+
+        Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assert.assertEquals(1, gpxfile.getGPXTracks().get(1).getGPXTrackSegments().size());
     }
 
     @Test
@@ -232,7 +250,8 @@ public class TestSplitMerge extends GPXEditor {
         final List<GPXRoute> merged = new ArrayList<>();
         merged.add(new GPXRoute(gpxfile));
         
-        GPXStructureHelper.getInstance().mergeGPXRoutes(merged, result);
+        final IDoUndoAction action = new MergeDeleteRoutesAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxfile, result);
+        action.doAction();
 
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getLength(), result.get(0).getLength(), 0.1);
         Assert.assertEquals(gpxfile.getGPXRoutes().get(0).getCombinedGPXWaypoints(null).size(), result.get(0).getCombinedGPXWaypoints(null).size());

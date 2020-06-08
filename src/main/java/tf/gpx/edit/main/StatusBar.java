@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -59,7 +60,6 @@ import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.helper.doundo.DoUndoManager;
 import tf.helper.javafx.AppClipboard;
-import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  * StatusBar to show messages, ... at the bottom
@@ -92,16 +92,16 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     private static final String UNDO_TEXT = "UNDO";
     private static final DateTimeFormatter DATETIMEFORMATTER = DateTimeFormatter.ofPattern("EEE dd.MM.yyyy HH:mm");
     
-    private final Label myLabel = new Label();
-    private final ProgressBar myTaskProgress = new ProgressBar();
-    private final Label myDoUndoContentSeperator = new Label(SEPERATOR);
-    private final Button myUndoButton = new Button("");
-    private final Button myRedoButton = new Button("");
-    private final Label myCntrlPressed = new Label();
-    private final Label myCntrlPressedSeperator = new Label();
-    private final Label myClipboardContent = new Label();
-    private final Label myClipboardContentSeperator = new Label();
-    private final Label myClock = new Label();
+    private Label myLabel;
+    private ProgressBar myTaskProgress;
+    private Label myDoUndoContentSeperator;
+    private Button myUndoButton;
+    private Button myRedoButton;
+    private Label myCntrlPressed;
+    private Label myCntrlPressedSeperator;
+    private Label myClipboardContent;
+    private Label myClipboardContentSeperator;
+    private Label myClock;
     
     private final StringProperty myStatusText = new SimpleStringProperty();
     private final StringProperty myTaskText = new SimpleStringProperty();
@@ -110,7 +110,21 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         super();
         // Exists only to defeat instantiation.
 
-        initialize();
+        if (Platform.isFxApplicationThread()) {
+            myLabel = new Label();
+            myTaskProgress = new ProgressBar();
+            myDoUndoContentSeperator = new Label(SEPERATOR);
+            myUndoButton = new Button("");
+            myRedoButton = new Button("");
+            myCntrlPressed = new Label();
+            myCntrlPressedSeperator = new Label();
+            myClipboardContent = new Label();
+            myClipboardContentSeperator = new Label();
+            myClock = new Label();        
+
+            initialize();
+        }
+
     }
 
     public static StatusBar getInstance() {
@@ -185,6 +199,10 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     }
     
     public void setStatusText(final String text) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         myStatusText.setValue(text);
         if (myTaskText.getValue().isEmpty()) {
             myLabel.setText(text);
@@ -193,29 +211,53 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     
     // to be used as parameter for TaskExecutor.executeTask
     public void setTaskText(final String text) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         myTaskText.setValue(text);
         myLabel.setText(text);
     }
     
     public void clearTaskText() {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         setTaskText("");
         myLabel.setText(myStatusText.getValue());
     }
     
     public void setTaskProgress(final double value) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         myTaskProgress.setProgress(value);
     }
 
     // to be used as parameter for TaskExecutor.executeTask
     public void setTaskProgressFromNumber(final Number value) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         setTaskProgress(value.doubleValue());
     }
 
     public void clearTaskProgress() {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         myTaskProgress.setProgress(0.0);
     }
     
     public void setCntrlPressedProvider(final BooleanProperty cntrlPressed) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         cntrlPressed.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 if (newValue) {
@@ -257,6 +299,10 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     }
 
     public void setStatusFromWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         // set status text (count, dist, directDuration, ...) from waypoints
         switch (gpxWaypoints.size()) {
             case 0:
@@ -266,69 +312,60 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                 setStatusText(String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint)));
                 break;
             default:
-                // eat your own dog food :-)
-                TaskExecutor.executeTask(new Task<Void>() {
-                    @Override
-                    protected Void call() throws Exception {
-                        final int workLoad = gpxWaypoints.size();
+                final int workLoad = gpxWaypoints.size();
 
-                        updateMessage("Updating StatusBar");
-                        updateProgress(0, workLoad);
+                final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
+                final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
 
-                        final GPXWaypoint start = GPXLineItemHelper.earliestOrFirstGPXWaypoint(gpxWaypoints);
-                        final GPXWaypoint end = GPXLineItemHelper.latestOrLastGPXWaypoint(gpxWaypoints);
-
-                        // calculate direct & track distances
-                        double trackDistance = 0;
-                        long trackDurationValue = 0;
-                        int i = 0;
-                        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-                            if (i > 0) {
-                                // don't use for first - values are "to previous"
-                                trackDistance += gpxWaypoint.getDistance();
-                                trackDurationValue += gpxWaypoint.getCumulativeDuration();
-                            }
-
-                            i++;
-                            updateProgress(i, workLoad);
-                        }
-                        final String trackDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(trackDistance/1000d);
-                        String trackDuration;
-                        String trackSpeed;
-                        if (trackDurationValue > 0) {
-                            trackDuration = GPXLineItemHelper.formatDurationAsString(trackDurationValue);
-                            trackSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(trackDistance/trackDurationValue*1000d*3.6d);
-                        } else {
-                            trackDuration = GPXLineItem.NO_DATA;
-                            trackSpeed = GPXLineItem.NO_DATA;
-                        }
-
-                        final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
-                        final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
-                        String directSpeed;
-                        String directDuration;
-                        if (start.getDate() != null && end.getDate() != null) {
-                            final double durationValue = end.getDate().getTime() - start.getDate().getTime();
-                            directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
-                            directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
-                        } else {
-                            directDuration = GPXLineItem.NO_DATA;
-                            directSpeed = GPXLineItem.NO_DATA;
-                        }
-
-                        // label will be filled in getFinalizeTaskConsumer - so we can avoid "Platform.runlater" here
-                        myStatusText.setValue(String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed));
-
-                        updateProgress(workLoad, workLoad);
-
-                        return (Void) null;
+                // calculate direct & track distances
+                double trackDistance = 0;
+                long trackDurationValue = 0;
+                int i = 0;
+                for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+                    if (i > 0) {
+                        // don't use for first - values are "to previous"
+                        trackDistance += gpxWaypoint.getDistance();
+                        trackDurationValue += gpxWaypoint.getCumulativeDuration();
                     }
-                }, this);
+
+                    i++;
+                }
+                final String trackDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(trackDistance/1000d);
+                String trackDuration;
+                String trackSpeed;
+                if (trackDurationValue > 0) {
+                    trackDuration = GPXLineItemHelper.formatDurationAsString(trackDurationValue);
+                    trackSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(trackDistance/trackDurationValue*1000d*3.6d);
+                } else {
+                    trackDuration = GPXLineItem.NO_DATA;
+                    trackSpeed = GPXLineItem.NO_DATA;
+                }
+
+                final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
+                final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
+                String directSpeed;
+                String directDuration;
+                if (start.getDate() != null && end.getDate() != null) {
+                    final double durationValue = end.getDate().getTime() - start.getDate().getTime();
+                    directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
+                    directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
+                } else {
+                    directDuration = GPXLineItem.NO_DATA;
+                    directSpeed = GPXLineItem.NO_DATA;
+                }
+
+                // label will be filled in getFinalizeTaskConsumer - so we can avoid "Platform.runlater" here
+                myStatusText.setValue(String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed));
+
                 break;
         }
     }
     
     public void setStatusFromFile(final String file) {
+        if (!Platform.isFxApplicationThread()) {
+            return;
+        }
+        
         // This can happen! e.g. when deleting the selected line item...
         if (file != null) {
             // check canDo() / can Undo() for current gpxfile

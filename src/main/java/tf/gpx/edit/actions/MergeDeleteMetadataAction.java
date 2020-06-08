@@ -25,9 +25,9 @@
  */
 package tf.gpx.edit.actions;
 
-import java.util.List;
 import tf.gpx.edit.helper.TaskExecutor;
-import tf.gpx.edit.items.GPXMeasurable;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.StatusBar;
 
@@ -35,40 +35,46 @@ import tf.gpx.edit.main.StatusBar;
  *
  * @author thomas
  */
-public class InvertMeasurablesAction extends GPXLineItemAction<GPXMeasurable> {
-    private List<GPXMeasurable> myLineItems;
-    
-    private InvertMeasurablesAction() {
-        super(LineItemAction.INVERT_MEASURABLES, null);
+public class MergeDeleteMetadataAction extends GPXLineItemAction<GPXMetadata> {
+    private static enum DeleteCount {
+        ALL,
+        EXCEPT_FIRST;
     }
+    private static final String MERGED_TRACK_NAME = "Merged Track";
+
+    private final GPXEditor.MergeDeleteItems myMergeOrDelete;
+    private final GPXFile myFile;
+    private final GPXMetadata myMetadata;
     
-    public InvertMeasurablesAction(final GPXEditor editor, final List<GPXMeasurable> lineItems) {
-        super(LineItemAction.INVERT_MEASURABLES, editor);
+    public MergeDeleteMetadataAction(final GPXEditor editor, final GPXEditor.MergeDeleteItems mergeOrDelete, final GPXFile file) {
+        super(LineItemAction.MERGE_DELETE_TRACKS, editor);
         
-        myLineItems = lineItems;
+        myMergeOrDelete = mergeOrDelete;
+        myFile = file;
+        myMetadata = myFile.getGPXMetadata();
+
+        initAction();
     }
+
 
     @Override
     protected void initAction() {
+        // nothing to do for metadata
     }
-    
-    private boolean doInvertMeasurables() {
+
+    @Override
+    public boolean doHook() {
         boolean result = true;
-        
+
         TaskExecutor.executeTask(
             myEditor.getScene(), () -> {
-                myEditor.removeGPXWaypointListListener();
-
-                for (GPXMeasurable invertItem : myLineItems) {
-                    invertItem.invert();
+                if (GPXEditor.MergeDeleteItems.MERGE.equals(myMergeOrDelete)) {
+                    System.out.println("BUMMER! Called MERGE for metadata");
+                } else {
+                    myFile.setGPXMetadata(null);
                 }
 
-                myEditor.addGPXWaypointListListener();
-                myEditor.setStatusFromWaypoints();
-                
-                myEditor.refillGPXWaypointList(true);
-
-                myEditor.refresh();
+                myEditor.refreshGPXFileList();
             },
             StatusBar.getInstance());
 
@@ -76,12 +82,21 @@ public class InvertMeasurablesAction extends GPXLineItemAction<GPXMeasurable> {
     }
 
     @Override
-    public boolean doHook() {
-        return doInvertMeasurables();
-    }
-
-    @Override
     public boolean undoHook() {
-        return doInvertMeasurables();
+        boolean result = true;
+
+        TaskExecutor.executeTask(
+            myEditor.getScene(), () -> {
+                if (GPXEditor.MergeDeleteItems.MERGE.equals(myMergeOrDelete)) {
+                    System.out.println("BUMMER! Called MERGE for metadata");
+                } else {
+                    myFile.setGPXMetadata(myMetadata);
+                }
+
+                myEditor.refreshGPXFileList();
+            },
+            StatusBar.getInstance());
+
+        return result;
     }
 }

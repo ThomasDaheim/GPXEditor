@@ -70,61 +70,63 @@ public class TaskExecutor {
         }        
     }
     
-    public static <T> void executeTask(final Task<T> task, final ITaskExecutionConsumer consumer) {
-        // bind properties
-        final ChangeListener<String> messageListener = (ObservableValue<? extends String> ov, String oldValue, String newValue) -> {
-            consumer.getMessageConsumer().accept(newValue);
-        };
-        task.messageProperty().addListener(messageListener);
-        
-        final ChangeListener<Number> progressListener = (ObservableValue<? extends Number> ov, Number oldValue, Number newValue) -> {
-            consumer.getProgressConsumer().accept(newValue);
-        };
-        task.progressProperty().addListener(progressListener);
+    public static void executeTask(final Scene scene, final Runnable runnable, final ITaskExecutionConsumer consumer) {
+        if (Platform.isFxApplicationThread()) {
+            final Task<Void> task = taskFromRunnableForLater(scene, runnable);
+            
+            // bind properties
+            final ChangeListener<String> messageListener = (ObservableValue<? extends String> ov, String oldValue, String newValue) -> {
+                consumer.getMessageConsumer().accept(newValue);
+            };
+            task.messageProperty().addListener(messageListener);
 
-        // schedule task
-        consumer.getInitTaskConsumer().run();
-        Future<T> future = ObjectsHelper.uncheckedCast(executorService.submit(task));
+            final ChangeListener<Number> progressListener = (ObservableValue<? extends Number> ov, Number oldValue, Number newValue) -> {
+                consumer.getProgressConsumer().accept(newValue);
+            };
+            task.progressProperty().addListener(progressListener);
 
-        // wait for result
-        T result = null;
-        try {
-            result = future.get();
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(TaskExecutor.class.getName()).log(Level.SEVERE, null, ex);
-        }        
-        
-        // unbind properties
-        task.messageProperty().removeListener(messageListener);
-        task.progressProperty().removeListener(progressListener);
-        
-        // "return" result
-        consumer.getFinalizeTaskConsumer().accept(result);
+            scene.setCursor(Cursor.WAIT); //Change cursor to wait style
+            // schedule task
+            consumer.getInitTaskConsumer().run();
+            Future<Void> future = ObjectsHelper.uncheckedCast(executorService.submit(task));
+
+            // wait for result
+            Void result = null;
+            try {
+                result = future.get();
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(TaskExecutor.class.getName()).log(Level.SEVERE, null, ex);
+            }        
+            scene.setCursor(Cursor.DEFAULT);
+
+            // unbind properties
+            task.messageProperty().removeListener(messageListener);
+            task.progressProperty().removeListener(progressListener);
+
+            // "return" result
+            consumer.getFinalizeTaskConsumer().accept(result);
+        } else {
+            // not running online - no need to wait for anything
+            runnable.run();
+        }
     }
     
-    public static Task<Void> taskFromRunnable(final Runnable runnable) {
+    private static Task<Void> taskFromRunnableForLater(final Scene scene, final Runnable runnable) {
         return new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    runnable.run();
-
-                    return (Void) null;
-                }
-        };
-    }
-
-    public static Task<Void> taskFromRunnableForLater(final Scene scene, final Runnable runnable) {
-        return new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
+            @Override
+            protected Void call() throws Exception {
+                if (scene != null) {
                     Platform.runLater(() -> {
                         scene.setCursor(Cursor.WAIT); //Change cursor to wait style
                         runnable.run();
-                        scene.setCursor(Cursor.DEFAULT); //Change cursor to wait style
+                        scene.setCursor(Cursor.DEFAULT);
                     });
-
-                    return (Void) null;
+                } else {
+                    runnable.run();
                 }
+
+                return (Void) null;
+            }
         };
     }
 }

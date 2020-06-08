@@ -54,7 +54,7 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
         boolean result = true;
         
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
+            myEditor.getScene(), () -> {
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXLineItem parent : lineItemCluster.keySet()) {
@@ -78,7 +78,7 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
                 myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
                 // force repaint of gpxFileList to show unsaved items
                 myEditor.refreshGPXFileList();
-            }),
+            },
             StatusBar.getInstance());
 
         return result;
@@ -89,7 +89,7 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
         boolean result = true;
         
         TaskExecutor.executeTask(
-            TaskExecutor.taskFromRunnableForLater(myEditor.getScene(), () -> {
+            myEditor.getScene(), () -> {
                 myEditor.removeGPXWaypointListListener();
 
                 for (GPXLineItem parent : lineItemCluster.keySet()) {
@@ -108,7 +108,7 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
                 myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
                 // force repaint of gpxFileList to show unsaved items
                 myEditor.refreshGPXFileList();
-            }),
+            },
             StatusBar.getInstance());
 
         return result;

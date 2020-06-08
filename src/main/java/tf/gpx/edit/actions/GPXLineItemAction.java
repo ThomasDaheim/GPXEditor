@@ -49,7 +49,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         SPLIT_MEASURABLES,
         MERGE_DELETE_TRACKSEGMENTS,
         MERGE_DELETE_TRACKS,
-        MERGE_DELETE_ROUTES;
+        MERGE_DELETE_ROUTES,
+        MERGE_DELETE_METADATA;
         
         @Override
         public String toString() {
@@ -71,6 +72,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case MERGE_DELETE_TRACKSEGMENTS:
                 case MERGE_DELETE_TRACKS:
                 case MERGE_DELETE_ROUTES:
+                case MERGE_DELETE_METADATA:
                     return "Merge or delete";
                 default:
                     return "";
@@ -95,6 +97,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                     return "tracks";
                 case MERGE_DELETE_ROUTES:
                     return "routes";
+                case MERGE_DELETE_METADATA:
+                    return "meta data";
                 default:
                     return "";
             }

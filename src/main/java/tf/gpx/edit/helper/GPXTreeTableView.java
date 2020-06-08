@@ -80,6 +80,7 @@ import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXMetadata;
@@ -654,15 +655,16 @@ public class GPXTreeTableView {
                             super.updateItem(item, empty);
                             if (!empty && item != null) {
                                 setText(item);
-
+                                
                                 // TFE, 20191118: text color to color of lineitem
                                 // https://stackoverflow.com/a/33393401
                                 Color color = null;
                                 final GPXMeasurable lineItem = getTreeTableRow().getItem();
-                                if (lineItem != null) {
+                                // we need a lineitem that is not null, a file or has a parent
+                                if (lineItem != null && (GPXLineItemType.GPXFile.equals(lineItem.getType()) || (lineItem.getParent() != null))) {
                                     switch (lineItem.getType()) {
                                         case GPXTrack:
-                                        // tracksegments havee color from their tracks
+                                        // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
                                             color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());

@@ -35,10 +35,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
+import tf.helper.doundo.IDoUndoAction;
 
 /**
  *
@@ -108,7 +110,10 @@ public class GPXEditorBatch extends GPXEditor {
                 if(GPXEditorParameters.CmdOps.mergeTracks.toString().equals(arg) && myParameters.doMergeTracks()) {
                     System.out.println("Merging Tracks");
                     // here we merge all tracks, so both parameters are identical
-                    gpxFiles.forEach((GPXFile gpxFile) -> GPXStructureHelper.getInstance().mergeGPXTracks(gpxFile.getGPXTracks(), gpxFile.getGPXTracks()));
+                    gpxFiles.forEach((GPXFile gpxFile) -> {
+                            final IDoUndoAction action = new MergeDeleteTracksAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxFile, gpxFile.getGPXTracks());
+                            action.doAction();
+                        });
                 }
                 if(GPXEditorParameters.CmdOps.reduceTracks.toString().equals(arg) && myParameters.doReduceTracks()) {
                     System.out.println("Reducing Tracks in Files");

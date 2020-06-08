@@ -119,33 +119,6 @@ public class GPXStructureHelper {
         
         return mergedGPXFile;
     }
-
-    public void mergeGPXTracks(final List<GPXTrack> gpxTracks, final List<GPXTrack> gpxTracksToMerge) {
-        // merge all selected tracksegments into the first track
-        final GPXTrack mergedGPXTrack = gpxTracksToMerge.get(0);
-        mergedGPXTrack.setName(MERGED_TRACK_NAME);
-
-        final List<GPXTrackSegment> mergedGPXTrackegments = mergedGPXTrack.getGPXTrackSegments();
-        for (GPXTrack gpxTrack : gpxTracksToMerge.subList(1, gpxTracksToMerge.size())) {
-            // add track segments to new list
-            mergedGPXTrackegments.addAll(gpxTrack.getGPXTrackSegments());
-
-            gpxTracks.remove(gpxTrack);
-        }
-    }
-
-    public void mergeGPXRoutes(final List<GPXRoute> gpxRoutes, final List<GPXRoute> gpxRoutesToMerge) {
-        // merge all selected waypoints into the first route
-        final GPXRoute mergedGPXRoute = gpxRoutesToMerge.get(0);
-        mergedGPXRoute.setName(MERGED_ROUTE_NAME);
-
-        final List<GPXWaypoint> mergedGPXWaypoints = mergedGPXRoute.getGPXWaypoints();
-        for (GPXRoute gpxGPXRoute : gpxRoutesToMerge.subList(1, gpxRoutesToMerge.size())) {
-            mergedGPXWaypoints.addAll(gpxGPXRoute.getGPXWaypoints());
-            
-            gpxRoutes.remove(gpxGPXRoute);
-        }
-    }
     
     public <T extends GPXMeasurable> List<T> splitGPXLineItem(final T gpxLineItem, final SplitValue splitValue) {
         final List<T> result = new ArrayList<>();
