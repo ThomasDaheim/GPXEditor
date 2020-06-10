@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.main;
 
+import com.hs.gpxparser.modal.Metadata;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -112,6 +113,7 @@ import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
+import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -1054,6 +1056,17 @@ public class GPXEditor implements Initializable {
         }
     }
     
+    public void setWaypointInformation(final List<GPXWaypoint> waypoints, final GPXWaypoint waypoint) {
+        
+    }
+    
+    public void setMetadataInformation(final GPXFile file, final Metadata metadata) {
+        final IDoUndoAction updateAction = new UpdateMetadataAction(this, file, metadata);
+        updateAction.doAction();
+        
+        addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(file));
+    }
+    
     public void insertMeasureablesAtPosition(
             final GPXMeasurable target, 
             final List<GPXMeasurable> items, 
@@ -1908,7 +1921,6 @@ public class GPXEditor implements Initializable {
             getScene(), () -> {
 //                System.out.println("selectHighlightedWaypoints: " + Instant.now());
                 // disable listener for checked changes since it fires for each waypoint...
-                // TODO: use something fancy like LibFX ListenerHandle...
                 removeGPXWaypointListListener();
 
                 gpxWaypoints.getSelectionModel().clearSelection();
@@ -1980,14 +1992,6 @@ public class GPXEditor implements Initializable {
 
         refreshGPXFileList();
         refillGPXWaypointList(true);
-    }
-    
-    private void editMetadata(final Event event) {
-        // show metadata viewer
-        TrackMap.getInstance().setVisible(false);
-        EditGPXMetadata.getInstance().getPane().setVisible(true);
-
-        EditGPXMetadata.getInstance().editMetadata(gpxFileList.getSelectionModel().getSelectedItem().getValue().getGPXFile());
     }
     
     private void showDistributions(final Event event) {

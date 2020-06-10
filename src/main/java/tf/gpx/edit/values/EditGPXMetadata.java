@@ -265,9 +265,7 @@ public class EditGPXMetadata extends AbstractStage {
         // 16th row: store metadata values
         final Button saveButton = new Button("Save Metadata");
         saveButton.setOnAction((ActionEvent event) -> {
-            setMetadata();
-            
-            myGPXEditor.refresh();
+            myGPXEditor.setMetadataInformation(myGPXFile, getMetadata());
         });
         setActionAccelerator(saveButton);
         editMetadataPane.add(saveButton, 0, rowNum, 2, 1);
@@ -364,12 +362,8 @@ public class EditGPXMetadata extends AbstractStage {
         metaLinkTable.getItems().addAll(metadata.getLinks());
     }
     
-    private void setMetadata() {
-        // save previous values
-        Metadata metadata = myGPXFile.getGPX().getMetadata();
-        if (metadata == null) {
-            metadata = new Metadata();
-        }
+    private Metadata getMetadata() {
+        final Metadata metadata = new Metadata();
         
         metadata.setName(setEmptyToNull(metaNameTxt.getText()));
         metadata.setDesc(setEmptyToNull(metaDescTxt.getText()));
@@ -420,7 +414,7 @@ public class EditGPXMetadata extends AbstractStage {
         // set links from tableview
         metadata.setLinks(metaLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
         
-        myGPXFile.setGPXMetadata(new GPXMetadata(myGPXFile, metadata));
+        return metadata;
     }
     
     private String setEmptyToNull(final String test) {

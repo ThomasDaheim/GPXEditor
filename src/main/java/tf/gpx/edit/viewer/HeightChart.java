@@ -124,7 +124,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     private void installMousePointer() {
         // TFE, 20190712: install overall mouseText & mouseLine instead as node tooltips
-        // TODO: beautify code
         mouseText.getStyleClass().add("track-popup");
         mouseText.setVisible(false);
         mouseText.setMouseTransparent(true);
@@ -398,7 +397,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
         
         double distValue = 0.0;
-        // TODO: replace with iteration over lineItems
         
         for (GPXLineItem lineItem : myGPXLineItems) {
             for (GPXWaypoint gpxWaypoint: lineItem.getCombinedGPXWaypoints(null)) {

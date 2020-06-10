@@ -50,7 +50,9 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         MERGE_DELETE_TRACKSEGMENTS,
         MERGE_DELETE_TRACKS,
         MERGE_DELETE_ROUTES,
-        MERGE_DELETE_METADATA;
+        MERGE_DELETE_METADATA,
+        UPDATE_METADATA,
+        UPDATE_WAYPOINTS;
         
         @Override
         public String toString() {
@@ -60,6 +62,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case DELETE_WAYPOINTS:
                     return "Delete";
                 case UPDATE_LINEITEM_INFORMATION:
+                case UPDATE_METADATA:
+                case UPDATE_WAYPOINTS:
                     return "Update";
                 case CONVERT_MEASURABLES:
                     return "Convert";
@@ -84,6 +88,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case INSERT_WAYPOINTS:
                 case DELETE_WAYPOINTS:
                 case INVERT_SELECTED_WAYPOINTS:
+                case UPDATE_WAYPOINTS:
                     return "waypoints";
                 case UPDATE_LINEITEM_INFORMATION:
                     return "items";
@@ -98,6 +103,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case MERGE_DELETE_ROUTES:
                     return "routes";
                 case MERGE_DELETE_METADATA:
+                case UPDATE_METADATA:
                     return "meta data";
                 default:
                     return "";
