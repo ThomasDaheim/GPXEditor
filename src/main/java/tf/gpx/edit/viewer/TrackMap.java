@@ -428,11 +428,28 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
             // TFE, 20200313: support for heat map
             addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
-
+            
             // support to re-center
             addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
-            
+
+            // geolocation not working in webview
+//            // support for locate
+//            // url command in css not working
+//            // https://stackoverflow.com/a/50602814
+//            myWebView.getEngine().setUserStyleSheetLocation(
+//                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff2").toExternalForm()+"?v=4.7.0') format('woff2'), url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff").toExternalForm()+"?v=4.7.0') format('woff'), url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.ttf").toExternalForm()+"?v=4.7.0') format('truetype'), url('" + 
+//                    getClass().getResource("/font-awesome/fontawesome-webfont.svg").toExternalForm()+"?v=4.7.0#fontawesomeregular') format('svg');}");
+//            // https://github.com/domoritz/leaflet-locatecontrol
+//            addStyleFromPath("/font-awesome/font-awesome" + MIN_EXT + ".css");
+//            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
+//            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
             
             myMapPane = (Pane) getParent();
             
@@ -596,7 +613,7 @@ public class TrackMap extends LeafletMapView {
             final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
             addStyle(style);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

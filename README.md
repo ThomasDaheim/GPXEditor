@@ -349,6 +349,7 @@ Other things used internally:
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler

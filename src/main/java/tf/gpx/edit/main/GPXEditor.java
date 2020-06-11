@@ -1167,21 +1167,47 @@ public class GPXEditor implements Initializable {
     }
     public void parseAndAddFiles(final List<File> files) {
         if (!files.isEmpty()) {
+            final List<TreeItem<GPXMeasurable>> rootItems = gpxFileList.getRoot().getChildren();
+            
             for (File file : files) {
                 if (file.exists() && file.isFile()) {
-                    TaskExecutor.executeTask(
-                        getScene(), () -> {
-                            // TFE, 20191024 add warning for format issues
-                            GPXFileHelper.verifyXMLFile(file);
+                    boolean doOpen = true;
+                    
+                    // TFE, 20200611: don't open the same file twice - messes up do/undo manager
+                    for (TreeItem<GPXMeasurable> treeitem : rootItems) {
+                        if (treeitem.getValue().isGPXFile()) {
+                            final GPXFile gpxfile = ObjectsHelper.uncheckedCast(treeitem.getValue());
+                            if (file.getPath().equals(gpxfile.getPath() + gpxfile.getName())) {
+                                final ButtonType buttonOK = new ButtonType("OK", ButtonBar.ButtonData.RIGHT);
+                                Optional<ButtonType> doAction = 
+                                        ShowAlerts.getInstance().showAlert(
+                                                Alert.AlertType.WARNING,
+                                                "Warning",
+                                                "GPX file already opened, will be skipped",
+                                                file.getPath(),
+                                                buttonOK);
 
-                            gpxFileList.addGPXFile(new GPXFile(file));
+                                doOpen = false;
+                                break;
+                            }
+                        }
+                    }
 
-                            // store last filename
-                            GPXEditorPreferenceStore.getRecentFiles().addRecentFile(file.getAbsolutePath());
+                    if (doOpen) {
+                        TaskExecutor.executeTask(
+                            getScene(), () -> {
+                                // TFE, 20191024 add warning for format issues
+                                GPXFileHelper.verifyXMLFile(file);
 
-                            initRecentFilesMenu();
-                        },
-                        StatusBar.getInstance());
+                                gpxFileList.addGPXFile(new GPXFile(file));
+
+                                // store last filename
+                                GPXEditorPreferenceStore.getRecentFiles().addRecentFile(file.getAbsolutePath());
+
+                                initRecentFilesMenu();
+                            },
+                            StatusBar.getInstance());
+                    }
                 }
             }
         }

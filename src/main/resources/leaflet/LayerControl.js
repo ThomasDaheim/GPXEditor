@@ -36,7 +36,19 @@ function changeMapLayerUrl(layernum, url) {
 //    jscallback.log('tileLayer.url: ' + tileLayer._url);
 }
 
+/*******************************************************************************
+ * 
+ * Overlays to be used with the maps
+ * 
+ *******************************************************************************/
+
 // TFE, 20190814: add Hydda roads and labels and OpenMapSurfer contour lines to SATELLITE & MAPBOX layer where required
+var HikeBike_HillShading = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+	attribution: '&copy; OpenStreetMap'
+});
+HikeBike_HillShading.setZIndex(6);
+
 var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/asterc/webmercator/{z}/{x}/{y}.png', {
 	maxZoom: 18,
 	attribution: 'Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM'
@@ -49,50 +61,60 @@ var Hydda_RoadsAndLabels = L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/
 });
 Hydda_RoadsAndLabels.setZIndex(98);
     
-var HikeBike_HillShading = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: '&copy; OpenStreetMap'
-});
-HikeBike_HillShading.setZIndex(6);
-
 var OpenRailwayMap = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
 	maxZoom: 18,
 	attribution: 'Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenRailwayMap (CC-BY-SA)'
 });
 OpenRailwayMap.setZIndex(99);
 
-// TFE, 20200122: add some more base layers
-//        ,{ id:'OPENTOPOMAP', menu_order:2.20, menu_name:'OpenTopoMap', description:'OpenTopoMap.org', credit:'Map data from <a target="_blank" href="http://www.opentopomap.org/">OpenTopoMap.org</a>', error_message:'OpenTopoMap tiles unavailable', min_zoom:1, max_zoom:17, url:'https://opentopomap.org/{z}/{x}/{y}.png' }
-//        ,{ id:'DE_TOPPLUSOPEN', menu_order:32.4, menu_name:'de: TopPlusOpen topo', description:'German/European topo maps from BKG', credit:'Topo maps from <a target="_blank" href="http://www.geodatenzentrum.de/">BKG</a>', error_message:'TopPlusOpen tiles unavailable', min_zoom:6, max_zoom:18, country:'de', bounds:[4.22,46.32,16.87,55.77], url:'http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png' }
-//        ,{ id:'ES_IGN_TOPO', menu_order:32.81, menu_name:'es: Topo (IGN)', description:'Spanish topo maps from IGN.es', credit:'Topo maps from <a target="_blank" href="http://www.ign.es/">IGN.es</a>', error_message:'IGN.es topo tiles unavailable', min_zoom:6, max_zoom:17, country:'es', bounds:[-18.4,27.5,4.6,44.0], url:'http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}' }
-controlLayer.addBaseLayer(L.tileLayer('https://opentopomap.org/{z}/{x}/{y}.png', {
-	maxZoom: 17,
-	attribution: 'Map data: &copy; OpenTopoMap.org'
-}), "OpenTopoMap");
-controlLayer.addBaseLayer(L.tileLayer('http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png', {
+// TFE, 20200611: more overlays based on waymarkedtrails -  see https://github.com/Raruto/leaflet-trails for inspiration
+var HikingTrails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
 	maxZoom: 18,
-	attribution: 'Map data: &copy; geodatenzentrum.de'
-}), "DE: TopPlusOpen");
-controlLayer.addBaseLayer(L.tileLayer('http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}', {
-	maxZoom: 17,
-	attribution: 'Map data: &copy; IGN.es'
-}), "ES: Topo (IGN)");
+        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
+});
+HikingTrails.setZIndex(100);
+var CyclingTrails = L.tileLayer('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
+});
+CyclingTrails.setZIndex(101);
+var MTBTrails = L.tileLayer('https://tile.waymarkedtrails.org/mtb/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
+});
+MTBTrails.setZIndex(102);
+var SlopeTrails = L.tileLayer('https://tile.waymarkedtrails.org/slopes/{z}/{x}/{y}.png', {
+	maxZoom: 18,
+        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
+});
+SlopeTrails.setZIndex(103);
 
 // TFE, 20190831: add enums & arrays to store previously active overlays per base layer
 // https://stijndewitt.com/2014/01/26/enums-in-javascript/
 const overlaysList = {
     ITERATE_FIRST: 0,
-    CONTOUR_LINES: 0,
-    ROADS_AND_LABELS: 1,
-    HILL_SHADING: 2,
-    RAILWAY_LINES: 3,
-    ITERATE_LAST: 3,
     
+    CONTOUR_LINES: 0,
+    HILL_SHADING: 1,
+    HIKING_TRAILS: 2,
+    CYCLING_TRAILS: 3,
+    MTB_TRAILS: 4,
+    SLOPE_TRAILS: 5,
+    ROADS_AND_LABELS: 6,
+    RAILWAY_LINES: 7,
+    
+    ITERATE_LAST: 7,
+    
+    // TFE, 20200611: support to show / hide overlays
     properties: {
-        0: {name: 'Contour Lines', layer: OpenMapSurfer_ContourLines},
-        1: {name: 'Roads and Labels', layer: Hydda_RoadsAndLabels},
-        2: {name: 'Hill Shading', layer: HikeBike_HillShading},
-        3: {name: 'Railways', layer: OpenRailwayMap}
+        0: {name: 'Contour Lines', layer: OpenMapSurfer_ContourLines, visible: true},
+        1: {name: 'Hill Shading', layer: HikeBike_HillShading, visible: true},
+        2: {name: 'Hiking Trails', layer: HikingTrails, visible: true},
+        3: {name: 'Cycling Trails', layer: CyclingTrails, visible: true},
+        4: {name: 'MTB Trails', layer: MTBTrails, visible: true},
+        5: {name: 'Slopes', layer: SlopeTrails, visible: true},
+        6: {name: 'Roads and Labels', layer: Hydda_RoadsAndLabels, visible: true},
+        7: {name: 'Railways', layer: OpenRailwayMap, visible: true}
     }
 };
 
@@ -107,30 +129,129 @@ function getKnownOverlayNames() {
     return result;
 }
 
+/*******************************************************************************
+ * 
+ * Additional maps besides the ones available from leafletmap
+ * 
+ *******************************************************************************/
+
+// TFE, 20200611: add bing base layers, see view-source:https://www.sammyshp.de/fsmap/js/fsmap.js for inspiration
+/*
+ * TileLayer for Bing Maps.
+ */
+L.TileLayer.QuadKeyTileLayer = L.TileLayer.extend({
+    getTileUrl: function (tilePoint) {
+//        this._adjustTilePoint(tilePoint); <- no longer available in leaflet 1.0
+        return L.Util.template(this._url, {
+            s: this._getSubdomain(tilePoint),
+            q: this._quadKey(tilePoint.x, tilePoint.y, this._getZoomForUrl())
+        });
+    },
+    _quadKey: function (x, y, z) {
+        var quadKey = [];
+        for (var i = z; i > 0; i--) {
+            var digit = '0';
+            var mask = 1 << (i - 1);
+            if ((x & mask) != 0) {
+                digit++;
+            }
+            if ((y & mask) != 0) {
+                digit++;
+                digit++;
+            }
+            quadKey.push(digit);
+        }
+        return quadKey.join('');
+    }
+});
+
+controlLayer.addBaseLayer(new L.TileLayer.QuadKeyTileLayer(
+    'https://ecn.t{s}.tiles.virtualearth.net/tiles/r{q}?g=864&mkt=en-gb&lbl=l1&stl=h&shading=hill&n=z',
+    {
+        subdomains: "0123",
+        minZoom: 3,
+        maxZoom: 19,
+        attribution: "Bing - map data copyright Microsoft and its suppliers"
+    }
+), "Bing Maps");
+
+controlLayer.addBaseLayer(new L.TileLayer.QuadKeyTileLayer(
+    'https://ecn.t{s}.tiles.virtualearth.net/tiles/a{q}?g=737&n=z',
+    {
+        subdomains: "0123",
+        minZoom: 3,
+        maxZoom: 19,
+        attribution: "Bing - map data copyright Microsoft and its suppliers"
+    }
+), "Bing Aerial");
+
+// TFE, 20200122: add some more base layers
+//        ,{ id:'OPENTOPOMAP', menu_order:2.20, menu_name:'OpenTopoMap', description:'OpenTopoMap.org', credit:'Map data from <a target="_blank" href="http://www.opentopomap.org/">OpenTopoMap.org</a>', error_message:'OpenTopoMap tiles unavailable', min_zoom:1, max_zoom:17, url:'https://opentopomap.org/{z}/{x}/{y}.png' }
+//        ,{ id:'DE_TOPPLUSOPEN', menu_order:32.4, menu_name:'de: TopPlusOpen topo', description:'German/European topo maps from BKG', credit:'Topo maps from <a target="_blank" href="http://www.geodatenzentrum.de/">BKG</a>', error_message:'TopPlusOpen tiles unavailable', min_zoom:6, max_zoom:18, country:'de', bounds:[4.22,46.32,16.87,55.77], url:'http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png' }
+//        ,{ id:'ES_IGN_TOPO', menu_order:32.81, menu_name:'es: Topo (IGN)', description:'Spanish topo maps from IGN.es', credit:'Topo maps from <a target="_blank" href="http://www.ign.es/">IGN.es</a>', error_message:'IGN.es topo tiles unavailable', min_zoom:6, max_zoom:17, country:'es', bounds:[-18.4,27.5,4.6,44.0], url:'http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}' }
+controlLayer.addBaseLayer(L.tileLayer('https://opentopomap.org/{z}/{x}/{y}.png', {
+        maxNativeZoom: 17,
+        maxZoom: 18,
+	attribution: 'Map data: &copy; OpenTopoMap.org'
+}), "OpenTopoMap");
+controlLayer.addBaseLayer(L.tileLayer('http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png', {
+        maxNativeZoom: 18,
+	maxZoom: 18,
+	attribution: 'Map data: &copy; geodatenzentrum.de'
+}), "DE: TopPlusOpen");
+controlLayer.addBaseLayer(L.tileLayer('http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}', {
+        maxNativeZoom: 17,
+        maxZoom: 18,
+	attribution: 'Map data: &copy; IGN.es'
+}), "ES: Topo (IGN)");
+
 const baselayerList = {
     ITERATE_FIRST: 0,
+    
     OPENCYCLEMAP: 0,
     MAPBOX: 1,
     OPENSTREETMAP: 2,
     SATELLITEESRI: 3,
-    OPENTOPOMAP: 4,
-    DETOPPLUSOPEN: 5,
-    ESTOPOIGN: 6,
-    ITERATE_LAST: 6,
+    BING: 4,
+    BINGAERIAL: 5,
+    OPENTOPOMAP: 6,
+    DETOPPLUSOPEN: 7,
+    ESTOPOIGN: 8,
+    
+    ITERATE_LAST: 8,
     UNKNOWN: 99,
     
+    // TFE, 20200611: support to show / hide baselayers
     properties: {
-        0: {name: 'OpenCycleMap', overlays: [false, false, false, false]},
-        1: {name: 'MapBox', overlays: [false, false, false, false]},
-        2: {name: 'OpenStreetMap', overlays: [false, false, false, false]},
-        3: {name: 'Satellite Esri', overlays: [false, false, false, false]},
-        4: {name: 'OpenTopoMap', overlays: [false, false, false, false]},
-        5: {name: 'DE: TopPlusOpen', overlays: [false, false, false, false]},
-        6: {name: 'ES: Topo (IGN)', overlays: [false, false, false, false]},
-        99: {name: 'UNKNOWN', overlays: [false, false, false, false]}
+        0: {name: 'OpenCycleMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        1: {name: 'MapBox', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        2: {name: 'OpenStreetMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        3: {name: 'Satellite Esri', visible: false, overlays: [false, false, false, false, false, false, false, false]},
+        4: {name: 'Bing', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        5: {name: 'Bing Aerial', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        6: {name: 'OpenTopoMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        7: {name: 'DE: TopPlusOpen', visible: true, overlays: [false, false, false, false, false, false, false, false]},
+        8: {name: 'ES: Topo (IGN)', visible: false, overlays: [false, false, false, false, false, false, false, false]},
+        99: {name: 'UNKNOWN', visible: true, overlays: [false, false, false, false, false, false, false, false]}
     }
 };
 
+// add layer objects to list
+//jscallback.log('baselayer count: ' + controlLayer._layers.length);
+for (var i = 0; i < controlLayer._layers.length; i++) {
+    if (controlLayer._layers[i] && !controlLayer._layers[i].overlay) {
+//        jscallback.log('baselayer[' + i + "]: "+ controlLayer._layers[i].name);
+        for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+            if (controlLayer._layers[i].name == baselayerList.properties[i].name) {
+                baselayerList.properties[i].layer = controlLayer._layers[i].layer;
+            }
+        }
+    }
+}
+//for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+//    jscallback.log('baselayer[' + i + "]: "+ baselayerList.properties[i].name + ", " + baselayerList.properties[i].layer);
+//}
+                
 // MapBox needs contour lines
 baselayerList.properties[baselayerList.MAPBOX].overlays[overlaysList.CONTOUR_LINES] = true;
 // OpenStreetMap needs contour lines and hill shading
@@ -154,7 +275,10 @@ function getKnownBaselayerNames() {
 // get values to save preferences in TrackMap
 function getOverlayValues(baselayer) {
 //    jscallback.log('getOverlayValues: ' + baselayer);
-    var result = [false, false, false, false];
+    var result = [];
+    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
+        result.push(false);
+    }
 
     for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
         if (baselayer === baselayerList.properties[i].name) {
@@ -181,6 +305,26 @@ function setOverlayValues(baselayer, overlays) {
     }
 }
 
+// TFE, 20200611: support to show / hide baselayers
+//function showHideBaselayer(layer, isVisible) {
+//    var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
+//    if (isVisible) {
+//        layerControlElement.getElementsByTagName('input')[layer].style.visibility = 'visible';
+//    } else {
+//        layerControlElement.getElementsByTagName('input')[layer].style.visibility = 'hidden';
+//    }
+//    baselayerList.properties[layer].visible = isVisible;
+//}
+//for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
+////    jscallback.log('before showHideBaselayer: ' + i + ", " + baselayerList.properties[i].visible);
+//    showHideBaselayer(i, baselayerList.properties[i].visible);
+//}
+
+/*******************************************************************************
+ * 
+ * Functions for the dynamics when using maps
+ * 
+ *******************************************************************************/
 
 // initialize everything for base layer #0
 var currentBaselayer = 0;
@@ -221,7 +365,7 @@ function baselayerchange(e) {
             }
 
             // add if to be used
-            if (item) {
+            if (item && overlaysList.properties[index].visible) {
 //                jscallback.log('myMap.addLayer');
                 myMap.addLayer(overlaysList.properties[index].layer);
             }
@@ -229,7 +373,9 @@ function baselayerchange(e) {
 
         // update Layer control
         controlLayer.removeLayer(overlaysList.properties[index].layer);
-        controlLayer.addOverlay(overlaysList.properties[index].layer, overlaysList.properties[index].name);
+        if (overlaysList.properties[index].visible) {
+            controlLayer.addOverlay(overlaysList.properties[index].layer, overlaysList.properties[index].name);
+        }
     });
 
 //    jscallback.log('baseLayerChange: ' + e.name + ', ' + overlaysToUse + ', ' + currentOverlays);
