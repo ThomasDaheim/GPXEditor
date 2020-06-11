@@ -184,12 +184,19 @@ public class MarkerManager {
 //                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
 //                //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
 //            });
-            final List<File> iconFiles = new ArrayList<>(FileUtils.listFiles(myPath.toFile(), new String[] {ICON_EXT}, true));
+            // TFE, 20200611: Path.toFile() not working in jar file...
+            // https://stackoverflow.com/a/24006711
+//            final List<File> iconFiles = new ArrayList<>(FileUtils.listFiles(myPath.toFile(), new String[] {ICON_EXT}, true));
+            final List<Path> iconFiles = Files.walk(myPath)
+                    .filter((t) -> {
+                        return FilenameUtils.isExtension(t.toString(), ICON_EXT);
+                    })
+                    .collect(Collectors.toList());
             Collections.sort(iconFiles);
-            for (File iconFile : iconFiles) {
-                final String iconName = iconFile.getAbsolutePath();
+            for (Path iconFile : iconFiles) {
+                final String iconName = iconFile.toString();
                 final String baseName = FilenameUtils.getBaseName(iconName);
-                final String groupName = iconFile.toPath().getParent().getFileName().toString();
+                final String groupName = iconFile.getParent().getFileName().toString();
                 // add name without extension to list
                 iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, RESOURCE_PATH + "/" + groupName, jsCompatibleIconName(baseName)));
 //                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
