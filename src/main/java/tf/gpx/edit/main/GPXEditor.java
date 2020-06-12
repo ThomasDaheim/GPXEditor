@@ -114,6 +114,7 @@ import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
+import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
@@ -1056,8 +1057,16 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    public void setWaypointInformation(final List<GPXWaypoint> waypoints, final GPXWaypoint waypoint) {
+    public void setWaypointInformation(final List<GPXWaypoint> waypoints, final GPXWaypoint datapoint) {
+        if(waypoints.isEmpty()) {
+            // nothing to delete...
+            return;
+        }
+
+        final IDoUndoAction updateAction = new UpdateWaypointAction(this, waypoints, datapoint);
+        updateAction.doAction();
         
+        addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
     }
     
     public void setMetadataInformation(final GPXFile file, final Metadata metadata) {

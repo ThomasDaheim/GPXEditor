@@ -84,7 +84,7 @@ public class EditGPXWaypoint extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXWaypoint INSTANCE = new EditGPXWaypoint();
     
-    private final static String MULTIPLE_VALUES = "<Multiple>";
+    public final static String KEEP_MULTIPLE_VALUES = "<Keep multiple values>";
     private final static int SYMBOL_SIZE = 32;
     private final static int COLS_PER_ROW = 5;
 
@@ -485,9 +485,7 @@ public class EditGPXWaypoint extends AbstractStage {
         // 16th row: store properties
         final Button saveButton = new Button("Save Properties");
         saveButton.setOnAction((ActionEvent event) -> {
-            setProperties();
-            
-            myGPXEditor.refresh();
+            myGPXEditor.setWaypointInformation(myGPXWaypoints, getWaypointData());
 
             // done, lets get out of here...
             close();
@@ -656,13 +654,13 @@ public class EditGPXWaypoint extends AbstractStage {
     private void initMultipleProperties() {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
-        waypointNameTxt.setText(MULTIPLE_VALUES);
+        waypointNameTxt.setText(KEEP_MULTIPLE_VALUES);
         setWaypointSymTxt(waypoint.getSym());
-        waypointDescriptionTxt.setText(MULTIPLE_VALUES);
-        waypointCommentTxt.setText(MULTIPLE_VALUES);
-        waypointTimeTxt.setText(MULTIPLE_VALUES);
-        waypointSrcTxt.setText(MULTIPLE_VALUES);
-        waypointTypeTxt.setText(MULTIPLE_VALUES);
+        waypointDescriptionTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointCommentTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointTimeTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointSrcTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointTypeTxt.setText(KEEP_MULTIPLE_VALUES);
 
         waypointLinkTable.getItems().clear();
         if (waypoint.getLinks() != null) {
@@ -670,103 +668,50 @@ public class EditGPXWaypoint extends AbstractStage {
         }
         
         waypointLatitudeTxt.setDisable(true);
-        waypointLatitudeTxt.setText(MULTIPLE_VALUES);
+        waypointLatitudeTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointLongitudeTxt.setDisable(true);
-        waypointLongitudeTxt.setText(MULTIPLE_VALUES);
+        waypointLongitudeTxt.setText(KEEP_MULTIPLE_VALUES);
 
         waypointElevationTxt.setDisable(true);
-        waypointElevationTxt.setText(MULTIPLE_VALUES);
+        waypointElevationTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointGeoIdHeightTxt.setDisable(true);
-        waypointGeoIdHeightTxt.setText(MULTIPLE_VALUES);
+        waypointGeoIdHeightTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointHdopTxt.setDisable(true);
-        waypointHdopTxt.setText(MULTIPLE_VALUES);
+        waypointHdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointVdopTxt.setDisable(true);
-        waypointVdopTxt.setText(MULTIPLE_VALUES);
+        waypointVdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointPdopTxt.setDisable(true);
-        waypointPdopTxt.setText(MULTIPLE_VALUES);
+        waypointPdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointSatTxt.setDisable(true);
-        waypointSatTxt.setText(MULTIPLE_VALUES);
+        waypointSatTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointFixTxt.setDisable(true);
-        waypointFixTxt.setValue(MULTIPLE_VALUES);
+        waypointFixTxt.setValue(KEEP_MULTIPLE_VALUES);
         waypointMagneticVariationTxt.setDisable(true);
-        waypointMagneticVariationTxt.setText(MULTIPLE_VALUES);
+        waypointMagneticVariationTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointAgeOfGPSDataTxt.setDisable(true);
-        waypointAgeOfGPSDataTxt.setText(MULTIPLE_VALUES);
+        waypointAgeOfGPSDataTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointdGpsStationIdTxt.setDisable(true);
-        waypointdGpsStationIdTxt.setText(MULTIPLE_VALUES);
+        waypointdGpsStationIdTxt.setText(KEEP_MULTIPLE_VALUES);
     }
     
-    private void setProperties() {
-        if (myGPXWaypoints.size() == 1) {
-            setSingleProperties();
-        } else {
-            setMultipleProperties();
-        }
-    }
-    
-    private void setSingleProperties() {
-        final GPXWaypoint waypoint = myGPXWaypoints.get(0);
+    private GPXWaypoint getWaypointData() {
+        // set only if different from KEEP_MULTIPLE_VALUES or initial value
         
-        waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
-        waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
-        waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
-        waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
-        if (!waypointTimeTxt.getText().isEmpty()) {
-            try {
-                waypoint.setDate(GPXLineItem.DATE_FORMAT.parse(waypointTimeTxt.getText()));
-            } catch (ParseException ex) {
-                Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
-                waypoint.setDate(null);
-            }
-        } else {
-            waypoint.setDate(null);
-        }
-        waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
-        waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
-
-        if (!waypointLinkTable.getValidLinks().isEmpty()) {
-            waypoint.setLinks(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
-        } else {
-            waypoint.setLinks(null);
-        }
+        final GPXWaypoint waypoint = new GPXWaypoint(myGPXWaypoints.get(0).getGPXFile(), -1, -1);
         
-        waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
-        waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
-
-        waypoint.setElevation(setEmptyToZeroDouble(waypointElevationTxt.getText()));
-        waypoint.setGeoIdHeight(setEmptyToZeroDouble(waypointGeoIdHeightTxt.getText()));
-        waypoint.setHdop(setEmptyToZeroDouble(waypointHdopTxt.getText()));
-        waypoint.setVdop(setEmptyToZeroDouble(waypointVdopTxt.getText()));
-        waypoint.setPdop(setEmptyToZeroDouble(waypointPdopTxt.getText()));
-        waypoint.setSat(setEmptyToZeroInt(waypointSatTxt.getText()));
-        if (!waypointFixTxt.getValue().isEmpty()) {
-            waypoint.setFix(Fix.returnType(waypointFixTxt.getValue()));
-        } else {
-            waypoint.setFix(null);
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
+            waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
         }
-        waypoint.setMagneticVariation(setEmptyToZeroDouble(waypointMagneticVariationTxt.getText()));
-        waypoint.setAgeOfGPSData(setEmptyToZeroDouble(waypointAgeOfGPSDataTxt.getText()));
-        waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
-    }
-    
-    private void setMultipleProperties() {
-        // set only if different from MULTIPLE_VALUES or initial value
-        
-        final GPXWaypoint waypoint = myGPXWaypoints.get(0);
-        
-        if (!MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointNameTxt.getText()), GPXWaypoint::setName);
+        if ((myGPXWaypoints.get(0).getSym() != null) && !myGPXWaypoints.get(0).getSym().equals(waypointSymTxt.getValue())) {
+            waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
         }
-        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(waypointSymTxt.getValue())) {
-            setMultipleStringValues(setEmptyToNullString(waypointSymTxt.getValue()), GPXWaypoint::setSym);
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
+            waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
         }
-        if (!MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointDescriptionTxt.getText()), GPXWaypoint::setDescription);
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
+            waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
         }
-        if (!MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointCommentTxt.getText()), GPXWaypoint::setComment);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointTimeTxt.getText())) {
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointTimeTxt.getText())) {
             Date date = null;
             if (!waypointTimeTxt.getText().isEmpty()) {
                 try {
@@ -775,40 +720,45 @@ public class EditGPXWaypoint extends AbstractStage {
                     Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            setMultipleDateValues(date, GPXWaypoint::setDate);
+            waypoint.setDate(date);
+            
+            // ugly hack: set latitude to indicate that date has been set
+            waypoint.setLatitude(-Math.PI);
         }
-        if (!MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointSrcTxt.getText()), GPXWaypoint::setSrc);
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
+            waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
         }
-        if (!MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointTypeTxt.getText()), GPXWaypoint::setWaypointType);
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
+            waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
         }
         if (!waypointLinkTable.getValidLinks().isEmpty()) {
-            setMultipleLinkValues(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)), GPXWaypoint::setLinks);
+            waypoint.setLinks(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
         } else {
-            setMultipleLinkValues(null, GPXWaypoint::setLinks);
+            waypoint.setLinks(null);
         }
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleStringValues(final String newValue, final BiConsumer<GPXWaypoint, String> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleDateValues(final Date newValue, final BiConsumer<GPXWaypoint, Date> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleLinkValues(final HashSet<Link> newValue, final BiConsumer<GPXWaypoint, HashSet<Link>> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
+        
+        if (myGPXWaypoints.size() == 1) {
+            // more values can be changed for single waypoint
+            waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
+            waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
+
+            waypoint.setElevation(setEmptyToZeroDouble(waypointElevationTxt.getText()));
+            waypoint.setGeoIdHeight(setEmptyToZeroDouble(waypointGeoIdHeightTxt.getText()));
+            waypoint.setHdop(setEmptyToZeroDouble(waypointHdopTxt.getText()));
+            waypoint.setVdop(setEmptyToZeroDouble(waypointVdopTxt.getText()));
+            waypoint.setPdop(setEmptyToZeroDouble(waypointPdopTxt.getText()));
+            waypoint.setSat(setEmptyToZeroInt(waypointSatTxt.getText()));
+            if (!waypointFixTxt.getValue().isEmpty()) {
+                waypoint.setFix(Fix.returnType(waypointFixTxt.getValue()));
+            } else {
+                waypoint.setFix(null);
+            }
+            waypoint.setMagneticVariation(setEmptyToZeroDouble(waypointMagneticVariationTxt.getText()));
+            waypoint.setAgeOfGPSData(setEmptyToZeroDouble(waypointAgeOfGPSDataTxt.getText()));
+            waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
+        }
+        
+        return waypoint;
     }
     
     private String setZeroToEmpty(final int test) {
