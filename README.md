@@ -23,9 +23,15 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
-### Update v4.6
+### Update v5.0 - NoRestForTheWicked
 
 * preferences for heatmap
+* app clipboard to unify copy & paste and drag & drop
+* support for do/undo
+* performance improvements
+* icon groups as in Garmin BaseCamp
+* add. map layers and overlays
+* statusbar that shows info on selected waypoints, copy & paste, do & undo
 
 ### Update v4.6
 
