@@ -26,27 +26,34 @@
 package tf.gpx.edit.actions;
 
 import com.hs.gpxparser.modal.Link;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.values.EditGPXWaypoint;
 import static tf.gpx.edit.values.EditGPXWaypoint.KEEP_MULTIPLE_VALUES;
+import tf.gpx.edit.viewer.MarkerManager;
 
 /**
  *
  * @author thomas
  */
 public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
-    private final List<GPXWaypoint> myGPXWaypoints;
-    private List<GPXWaypoint> myStoreGPXWaypoints;
+    private final List<GPXWaypoint> myWaypoints;
+    private final List<GPXWaypoint> myStoreGPXWaypoints = new ArrayList<>();
     private final GPXWaypoint myDatapoint;
     
     public UpdateWaypointAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final GPXWaypoint datapoint) {
         super(LineItemAction.UPDATE_WAYPOINTS, editor);
         
-        myGPXWaypoints = waypoints;
+        myWaypoints = new ArrayList<>(waypoints);
         myDatapoint = datapoint;
         
         initAction();
@@ -55,8 +62,33 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
     @Override
     protected void initAction() {
         // simple store clone of waypoints to keep data - order etc isn't change by this
-        for (GPXWaypoint waypoint : myGPXWaypoints) {
+        for (GPXWaypoint waypoint : myWaypoints) {
             myStoreGPXWaypoints.add(waypoint.cloneMe(true));
+        }
+        
+        // need to set lineItemCluster ao that it can be counted in getDescription()
+        // performance: cluster waypoints by parents
+        for (GPXWaypoint waypoint : myWaypoints) {
+            final GPXLineItem parent = waypoint.getParent();
+            
+            if (!lineItemCluster.containsKey(parent)) {
+                final List<GPXWaypoint> parentWaypoints = myWaypoints.stream().filter((t) -> {
+                    return parent.equals(t.getParent());
+                }).collect(Collectors.toList());
+                
+                final List<Pair<Integer, GPXWaypoint>> parentPairs = new ArrayList<>();
+                for (GPXWaypoint pairWaypoint : parentWaypoints) {
+                    final int waypointIndex = parent.getGPXWaypoints().indexOf(pairWaypoint);
+
+                    // only delete if really present
+                    if (waypointIndex != -1) {
+                        // store each waypoint with its position in the list of parent's waypoints
+                        parentPairs.add(Pair.of(parent.getGPXWaypoints().indexOf(pairWaypoint), pairWaypoint));
+                    }
+                }
+                
+                lineItemCluster.put(parent, parentPairs);
+            }
         }
     }
 
@@ -65,6 +97,9 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         boolean result = true;
         
         setMultipleProperties();
+        
+        myEditor.refresh();
+        myEditor.refillGPXWaypointList(true);
         
         return result;
     }
@@ -75,23 +110,28 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         
         // iterate over waypoints and set from stored values
         int i = 0;
-        for (GPXWaypoint waypoint : myGPXWaypoints) {
+        for (GPXWaypoint waypoint : myWaypoints) {
             copyValues(myStoreGPXWaypoints.get(i), waypoint);
             i++;
         }
         
+        myEditor.refresh();
+        myEditor.refillGPXWaypointList(true);
+
         return result;
     }
 
     private void setMultipleProperties() {
         // set only if different from KEEP_MULTIPLE_VALUES or initial value
         
-        final GPXWaypoint waypoint = myGPXWaypoints.get(0);
+        final GPXWaypoint waypoint = myWaypoints.get(0);
         
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getName())) {
             setMultipleStringValues(myDatapoint.getName(), GPXWaypoint::setName);
         }
-        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(myDatapoint.getSym())) {
+        // value has changed: 1) was set and has changed OR 2) was null and has changed from default
+        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(myDatapoint.getSym()) ||
+            ((waypoint.getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(myDatapoint.getSym()))) {
             setMultipleStringValues(myDatapoint.getSym(), GPXWaypoint::setSym);
         }
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getDescription())) {
@@ -100,58 +140,54 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getComment())) {
             setMultipleStringValues(myDatapoint.getComment(), GPXWaypoint::setComment);
         }
-        // ugly hack: use latitude to indicate that date has been set
-        if (-Math.PI == waypoint.getLatitude()) {
-            setMultipleDateValues(myDatapoint.getDate(), GPXWaypoint::setDate);
-        }
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getSrc())) {
             setMultipleStringValues(myDatapoint.getSrc(), GPXWaypoint::setSrc);
         }
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getWaypointType())) {
             setMultipleStringValues(myDatapoint.getWaypointType(), GPXWaypoint::setWaypointType);
         }
-        if (!myDatapoint.getLinks().isEmpty()) {
+        if (myDatapoint.getLinks() != null && !myDatapoint.getLinks().isEmpty()) {
             setMultipleLinkValues(myDatapoint.getLinks(), GPXWaypoint::setLinks);
         } else {
             setMultipleLinkValues(null, GPXWaypoint::setLinks);
         }
         
         
-        if (myGPXWaypoints.size() == 1) {
-            final GPXWaypoint to = myGPXWaypoints.get(0);
+        if (myWaypoints.size() == 1) {
             // single update - allows more values
-            to.setLatitude(myDatapoint.getLatitude());
-            to.setLongitude(myDatapoint.getLongitude());
-            to.setElevation(myDatapoint.getElevation());
-            to.setGeoIdHeight(myDatapoint.getGeoIdHeight());
-            to.setHdop(myDatapoint.getHdop());
-            to.setVdop(myDatapoint.getVdop());
-            to.setPdop(myDatapoint.getPdop());
-            to.setSat(myDatapoint.getSat());
-            to.setFix(myDatapoint.getFix());
-            to.setMagneticVariation(myDatapoint.getMagneticVariation());
-            to.setAgeOfGPSData(myDatapoint.getAgeOfGPSData());
-            to.setdGpsStationId(myDatapoint.getdGpsStationId());
+            waypoint.setDate(myDatapoint.getDate());
+            waypoint.setLatitude(myDatapoint.getLatitude());
+            waypoint.setLongitude(myDatapoint.getLongitude());
+            waypoint.setElevation(myDatapoint.getElevation());
+            waypoint.setGeoIdHeight(myDatapoint.getGeoIdHeight());
+            waypoint.setHdop(myDatapoint.getHdop());
+            waypoint.setVdop(myDatapoint.getVdop());
+            waypoint.setPdop(myDatapoint.getPdop());
+            waypoint.setSat(myDatapoint.getSat());
+            waypoint.setFix(myDatapoint.getFix());
+            waypoint.setMagneticVariation(myDatapoint.getMagneticVariation());
+            waypoint.setAgeOfGPSData(myDatapoint.getAgeOfGPSData());
+            waypoint.setdGpsStationId(myDatapoint.getdGpsStationId());
         }
     }
     
     // don't call alle the different setters in individual streams
     private void setMultipleStringValues(final String newValue, final BiConsumer<GPXWaypoint, String> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
+        myWaypoints.stream().forEach((t) -> {
             setter.accept(t, newValue);
         });
     }
     
     // don't call alle the different setters in individual streams
     private void setMultipleDateValues(final Date newValue, final BiConsumer<GPXWaypoint, Date> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
+        myWaypoints.stream().forEach((t) -> {
             setter.accept(t, newValue);
         });
     }
     
     // don't call alle the different setters in individual streams
     private void setMultipleLinkValues(final HashSet<Link> newValue, final BiConsumer<GPXWaypoint, HashSet<Link>> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
+        myWaypoints.stream().forEach((t) -> {
             setter.accept(t, newValue);
         });
     }
@@ -166,7 +202,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         to.setWaypointType(from.getWaypointType());
         to.setLinks(from.getLinks());
         
-        if (myGPXWaypoints.size() == 1) {
+        if (myWaypoints.size() == 1) {
             // single update - allows more values
             to.setLatitude(from.getLatitude());
             to.setLongitude(from.getLongitude());

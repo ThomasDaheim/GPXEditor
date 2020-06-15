@@ -84,7 +84,6 @@ public class MarkerManager {
     private final static String LODGING_ICON = "Lodging";
     private final static String RESTAURANT_ICON = "Restaurant";
     private final static String WINERY_ICON = "Winery";
-    private final static String PIZZA_ICON = "Pizza";
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
     
@@ -101,19 +100,19 @@ public class MarkerManager {
     
     // definition of special markers
     public enum SpecialMarker {
-        TrackPointIcon("TrackPoint", TRACKPOINT_ICON, SMALL_ICON_SIZE),
-        TrackPointLineIcon("TrackPointLine", TRACKPOINTLINE_ICON, LONG_ICON_SIZE),
-        PlaceMarkIcon("Placemark", PLACEMARK_ICON, DEFAULT_ICON_SIZE),
-        LodgingIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
-        LodgingSearchIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
-        RestaurantIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
-        RestaurantSearchIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
-        WineryIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
-        WinerySearchIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
-        FastFoodIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
-        FastFoodSearchIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
-        BarIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
-        BarSearchIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
+        TrackPointIcon(TRACKPOINT_ICON, TRACKPOINT_ICON, SMALL_ICON_SIZE),
+        TrackPointLineIcon(TRACKPOINTLINE_ICON, TRACKPOINTLINE_ICON, LONG_ICON_SIZE),
+        PlaceMarkIcon(PLACEMARK_ICON, PLACEMARK_ICON, DEFAULT_ICON_SIZE),
+        LodgingIcon(LODGING_ICON, LODGING_ICON, DEFAULT_ICON_SIZE),
+        LodgingSearchIcon(LODGING_ICON, LODGING_ICON, DEFAULT_ICON_SIZE),
+        RestaurantIcon(RESTAURANT_ICON, RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        RestaurantSearchIcon(RESTAURANT_ICON, RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        WineryIcon(WINERY_ICON, WINERY_ICON, DEFAULT_ICON_SIZE),
+        WinerySearchIcon(WINERY_ICON, WINERY_ICON, DEFAULT_ICON_SIZE),
+        FastFoodIcon(FASTFOOD_ICON, FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        FastFoodSearchIcon(FASTFOOD_ICON, FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        BarIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
+        BarSearchIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
         SearchResultIcon("", SEARCHRESULT_ICON, DEFAULT_ICON_SIZE);
         
         private final String markerName;
@@ -148,6 +147,8 @@ public class MarkerManager {
             markerIcon = icon;
         }
     }
+    
+    public final static SpecialMarker DEFAULT_MARKER = SpecialMarker.PlaceMarkIcon;
     
     private final Map<SpecialMarker, MarkerIcon> specialMarkers  = new LinkedHashMap<>();
     
@@ -247,7 +248,7 @@ public class MarkerManager {
         result = specialMarkers.get(special);
         if (result == null) {
             // default is "Placemark"
-            result = specialMarkers.get(SpecialMarker.PlaceMarkIcon);
+            result = specialMarkers.get(DEFAULT_MARKER);
         }
         
         return result;
@@ -259,7 +260,7 @@ public class MarkerManager {
         result = iconMap.get(jsCompatibleIconName(symbol));
         if (result == null) {
             // default is "Placemark"
-            result = iconMap.get(jsCompatibleIconName(PLACEMARK_ICON));
+            result = iconMap.get(jsCompatibleIconName(DEFAULT_MARKER.getMarkerName()));
         }
         
         return result;

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.type.Fix;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
@@ -34,10 +33,10 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -572,7 +571,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private Label waypointSymbolLabelForText(final String labelText) {
         if (labelText == null) {
             // default label is a placemark
-            return waypointSymbolLabelForText("Placemark");
+            return waypointSymbolLabelForText(MarkerManager.DEFAULT_MARKER.getMarkerName());
         }
         
         final Optional<Label> label = waypointSymTxt.getGridItems().stream().filter((t) -> {
@@ -608,10 +607,21 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(setNullStringToEmpty(waypoint.getName()));
+        
+        // TFE, 20200615: symbols not shown for non-file waypoints
+        waypointSymTxt.setDisable(!waypoint.isGPXFileWaypoint());
         setWaypointSymTxt(waypoint.getSym());
+
         waypointDescriptionTxt.setText(setNullStringToEmpty(waypoint.getDescription()));
         waypointCommentTxt.setText(setNullStringToEmpty(waypoint.getComment()));
-        waypointTimeTxt.setText(setNullDateToEmpty(waypoint.getDate()));
+        waypointTimeTxt.setDisable(false);
+        if (waypoint.getDate() != null) {
+            final GregorianCalendar calendar = new GregorianCalendar();
+            calendar.setTime(waypoint.getDate());
+            waypointTimeTxt.setCalendar(calendar);
+        } else {
+            waypointTimeTxt.setText("");
+        }
         waypointSrcTxt.setText(setNullStringToEmpty(waypoint.getSrc()));
         waypointTypeTxt.setText(setNullStringToEmpty(waypoint.getWaypointType()));
 
@@ -655,10 +665,20 @@ public class EditGPXWaypoint extends AbstractStage {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(KEEP_MULTIPLE_VALUES);
+
+        // TFE, 20200615: symbols not shown for non-file waypoints
+        boolean hasFileWaypoint = false;
+        for (GPXWaypoint point : myGPXWaypoints) {
+            if (point.isGPXFileWaypoint()) {
+                hasFileWaypoint = true;
+                break;
+            }
+        }
+        waypointSymTxt.setDisable(!hasFileWaypoint);
         setWaypointSymTxt(waypoint.getSym());
+
         waypointDescriptionTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointCommentTxt.setText(KEEP_MULTIPLE_VALUES);
-        waypointTimeTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointSrcTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointTypeTxt.setText(KEEP_MULTIPLE_VALUES);
 
@@ -667,31 +687,25 @@ public class EditGPXWaypoint extends AbstractStage {
             waypointLinkTable.getItems().addAll(waypoint.getLinks());
         }
         
+        // all of those can't be edited in multiple mode - until I find a way to do it properly
+        waypointTimeTxt.setDisable(true);
+        waypointTimeTxt.setText("");
+
         waypointLatitudeTxt.setDisable(true);
-        waypointLatitudeTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointLatitudeTxt.setText("");
         waypointLongitudeTxt.setDisable(true);
-        waypointLongitudeTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointLongitudeTxt.setText("");
 
         waypointElevationTxt.setDisable(true);
-        waypointElevationTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointGeoIdHeightTxt.setDisable(true);
-        waypointGeoIdHeightTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointHdopTxt.setDisable(true);
-        waypointHdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointVdopTxt.setDisable(true);
-        waypointVdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointPdopTxt.setDisable(true);
-        waypointPdopTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointSatTxt.setDisable(true);
-        waypointSatTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointFixTxt.setDisable(true);
-        waypointFixTxt.setValue(KEEP_MULTIPLE_VALUES);
         waypointMagneticVariationTxt.setDisable(true);
-        waypointMagneticVariationTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointAgeOfGPSDataTxt.setDisable(true);
-        waypointAgeOfGPSDataTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointdGpsStationIdTxt.setDisable(true);
-        waypointdGpsStationIdTxt.setText(KEEP_MULTIPLE_VALUES);
     }
     
     private GPXWaypoint getWaypointData() {
@@ -699,46 +713,14 @@ public class EditGPXWaypoint extends AbstractStage {
         
         final GPXWaypoint waypoint = new GPXWaypoint(myGPXWaypoints.get(0).getGPXFile(), -1, -1);
         
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
-            waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
-        }
-        if ((myGPXWaypoints.get(0).getSym() != null) && !myGPXWaypoints.get(0).getSym().equals(waypointSymTxt.getValue())) {
-            waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
-        }
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
-            waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
-        }
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
-            waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
-        }
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointTimeTxt.getText())) {
-            Date date = null;
-            if (!waypointTimeTxt.getText().isEmpty()) {
-                try {
-                    date = GPXLineItem.DATE_FORMAT.parse(waypointTimeTxt.getText());
-                } catch (ParseException ex) {
-                    Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            waypoint.setDate(date);
-            
-            // ugly hack: set latitude to indicate that date has been set
-            waypoint.setLatitude(-Math.PI);
-        }
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
-            waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
-        }
-        if (!KEEP_MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
-            waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
-        }
-        if (!waypointLinkTable.getValidLinks().isEmpty()) {
-            waypoint.setLinks(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
-        } else {
-            waypoint.setLinks(null);
-        }
-        
         if (myGPXWaypoints.size() == 1) {
             // more values can be changed for single waypoint
+            Date date = null;
+            if (!waypointTimeTxt.getText().isEmpty()) {
+                date = waypointTimeTxt.getCalendar().getTime();
+            }
+            waypoint.setDate(date);
+
             waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
             waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
 
@@ -756,6 +738,32 @@ public class EditGPXWaypoint extends AbstractStage {
             waypoint.setMagneticVariation(setEmptyToZeroDouble(waypointMagneticVariationTxt.getText()));
             waypoint.setAgeOfGPSData(setEmptyToZeroDouble(waypointAgeOfGPSDataTxt.getText()));
             waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
+        }
+        
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
+            waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
+        }
+        // value has changed: 1) was set and has changed OR 2) was null and has changed from default
+        if ((myGPXWaypoints.get(0).getSym() != null) && !myGPXWaypoints.get(0).getSym().equals(waypointSymTxt.getValue()) ||
+            ((myGPXWaypoints.get(0).getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(waypointSymTxt.getValue()))) {
+            waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
+            waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
+            waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
+            waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
+            waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
+        }
+        if (!waypointLinkTable.getValidLinks().isEmpty()) {
+            waypoint.setLinks(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
+        } else {
+            waypoint.setLinks(null);
         }
         
         return waypoint;
@@ -782,16 +790,6 @@ public class EditGPXWaypoint extends AbstractStage {
         
         if (!StringUtils.isEmpty(test)) {
             result = test;
-        }
-
-        return result;
-    }
-    
-    private String setNullDateToEmpty(final Date test) {
-        String result = "";
-        
-        if (test != null) {
-            result = GPXLineItem.DATE_FORMAT.format(test);
         }
 
         return result;
