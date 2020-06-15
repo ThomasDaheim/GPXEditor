@@ -25,67 +25,99 @@
  */
 package tf.gpx.edit.helper;
 
+import eu.hansolo.fx.heatmap.ColorMapping;
+import eu.hansolo.fx.heatmap.OpacityDistribution;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.general.ObjectsHelper;
 
 public enum GPXEditorPreferences  {
-    RECENTWINDOWWIDTH("recentWindowWidth", Integer.toString(1200)),
-    RECENTWINDOWHEIGTH("recentWindowHeigth", Integer.toString(600)),
-    RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5)),
-    RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58)),
-    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name()),
-    DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name()),
-    REDUCE_EPSILON("epsilon", Integer.toString(50)),
-    FIX_EPSILON("fixDistance", Integer.toString(1000)),
-    SRTM_DATA_PATH("SRTMDataPath", ""),
-    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name()),
-    HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name()),
-    OPENCYCLEMAP_API_KEY("openCycleMapApiKey", ""),
-    ROUTING_API_KEY("routingApiKey", ""),
-    ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name()),
-    BREAK_DURATION("breakDuration", Long.toString(StatisticsViewer.BREAK_DURATION)),
-    SEARCH_RADIUS("searchRadius", Integer.toString(5000)),
-    ALWAYS_SHOW_FILE_WAYPOINTS("alwaysShowFileWaypoints", Boolean.toString(false)),
-    MAX_WAYPOINTS_TO_SHOW("maxWaypointsToShow", Integer.toString(GPXTrackviewer.MAX_WAYPOINTS)),
-    INITIAL_BASELAYER("initialBaselayer", Integer.toString(0)),
-    AUTO_ASSIGN_HEIGHT("autoAssignHeight", Boolean.toString(false)),
-    
+    RECENTWINDOWWIDTH("recentWindowWidth", Double.toString(1200), Double::valueOf),
+    RECENTWINDOWHEIGTH("recentWindowHeigth", Double.toString(600), Double::valueOf),
+    RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5), Double::valueOf),
+    RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58), Double::valueOf),
+    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name(), GPXAlgorithms.ReductionAlgorithm::valueOf),
+    DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name(), EarthGeometry.DistanceAlgorithm::valueOf),
+    REDUCE_EPSILON("epsilon", Double.toString(50), Double::valueOf),
+    FIX_EPSILON("fixDistance", Double.toString(1000), Double::valueOf),
+    // TFE, 20200508: empty string is not a good default...
+    SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String::valueOf),
+    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataStore.SRTMDataAverage::valueOf),
+    HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name(), GPXAssignSRTMHeightWorker.AssignMode::valueOf),
+    OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
+    ROUTING_API_KEY("routingApiKey", "", String::valueOf),
+    ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile::valueOf),
+    BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer::valueOf),
+    SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer::valueOf),
+    ALWAYS_SHOW_FILE_WAYPOINTS("alwaysShowFileWaypoints", Boolean.toString(false), Boolean::valueOf),
+    MAX_WAYPOINTS_TO_SHOW("maxWaypointsToShow", Integer.toString(GPXTrackviewer.MAX_WAYPOINTS), Integer::valueOf),
+    INITIAL_BASELAYER("initialBaselayer", Integer.toString(0), Integer::valueOf),
+    AUTO_ASSIGN_HEIGHT("autoAssignHeight", Boolean.toString(false), Boolean::valueOf),
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
-    CHARTSPANE_HEIGHT("chartsPaneHeight", Double.toString(0.25)),
-    WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18)),
-    WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10)),
-    WAYPOINT_LABEL_ANGLE("waypointLabelAngle", Integer.toString(90)),
-    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0)),
-    
+    CHARTSPANE_HEIGHT("chartsPaneHeight", Double.toString(0.25), Double::valueOf),
+    WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18), Integer::valueOf),
+    WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10), Integer::valueOf),
+    WAYPOINT_LABEL_ANGLE("waypointLabelAngle", Integer.toString(90), Integer::valueOf),
+    WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0), Integer::valueOf),
     // TFE, 20200324: options for algorithm to find "stops" in tracks with no movement
-    CLUSTER_RADIUS("clusterRadius", Double.toString(50.0)),
-    CLUSTER_COUNT("clusterCount", Integer.toString(30)),
-    CLUSTER_DURATION("clusterDuration", Integer.toString(15));
+    CLUSTER_RADIUS("clusterRadius", Double.toString(50.0), Double::valueOf),
+    CLUSTER_COUNT("clusterCount", Integer.toString(30), Integer::valueOf),
+    CLUSTER_DURATION("clusterDuration", Integer.toString(15), Integer::valueOf),
+    // TFE, 20200401: preferences for heatmap
+    HEATMAP_COLORMAPPING("heatMapColorMapping", ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED.name(), ColorMapping::valueOf),
+    HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
+    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf);
     
 
     private final String myPrefKey;
     private final String myDefaultValue;
+    private final Function<String, ?> myConverter;
     
-    private GPXEditorPreferences(final String key, final String defaultValue) {
+    private GPXEditorPreferences(final String key, final String defaultValue, final Function<String, ?> converter) {
         myPrefKey = key;
         myDefaultValue = defaultValue;
+        myConverter = converter;
     }
-    
+
     public String getAsString() {
         return GPXEditorPreferenceStore.getInstance().get(myPrefKey, myDefaultValue);
     }
     
-    public <T> T getAsType(final Function<String, T> converter) {
+    public <T> T getAsType() {
+        // TODO: check type against own class - needs add Class<?> variable...
+        
         // see https://ideone.com/WtNDN2 for the general idea
-        return converter.apply(getAsString());
+        return ObjectsHelper.uncheckedCast(myConverter.apply(getAsString()));
     }
     
     public <T> void put(final T value) {
         GPXEditorPreferenceStore.getInstance().put(myPrefKey, value.toString());
+    }
+    
+    public static Map<GPXEditorPreferences, String> getAsMap() {
+        final Map<GPXEditorPreferences, String> result = new HashMap<>();
+        
+        for (GPXEditorPreferences value : GPXEditorPreferences.values()) {
+            result.put(value, value.getAsString());
+        }
+        
+        return result;
+    }
+    
+    public static void setFromMap(final Map<GPXEditorPreferences, String> values) {
+        if (values == null) {
+            return;
+        }
+        
+        values.entrySet().forEach((value) -> {
+            GPXEditorPreferenceStore.getInstance().put(value.getKey().myPrefKey, value.getValue());
+        });
     }
 }

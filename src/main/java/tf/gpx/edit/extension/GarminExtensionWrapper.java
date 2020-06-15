@@ -132,12 +132,26 @@ public class GarminExtensionWrapper {
             return myJSColor;
         }
         
+        public static boolean isGarminDisplayColor(final String name) {
+            boolean result = false;
+            
+            for (GarminDisplayColor color : GarminDisplayColor.values()) {
+                if (color.name().equals(name)) {
+                    result = true;
+                    break;
+                }
+            }
+        
+            return result;
+        }
+        
         public static Color getJavaFXColorForName(final String name) {
             Color result = Color.BLACK;
             
             for (GarminDisplayColor color : GarminDisplayColor.values()) {
                 if (color.name().equals(name)) {
                     result = color.getJavaFXColor();
+                    break;
                 }
             }
         
@@ -150,6 +164,7 @@ public class GarminExtensionWrapper {
             for (GarminDisplayColor color : GarminDisplayColor.values()) {
                 if (color.getJavaFXColor().equals(col)) {
                     result = color.getJSColor();
+                    break;
                 }
             }
         
@@ -162,6 +177,7 @@ public class GarminExtensionWrapper {
             for (GarminDisplayColor color : GarminDisplayColor.values()) {
                 if (color.getJSColor().equals(name)) {
                     result = color;
+                    break;
                 }
             }
         

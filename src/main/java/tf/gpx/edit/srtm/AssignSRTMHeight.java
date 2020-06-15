@@ -45,10 +45,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.IGPXLineItemVisitor;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.EnumHelper;
+import tf.helper.javafx.EnumHelper;
 
 /**
  *
@@ -69,7 +69,7 @@ public class AssignSRTMHeight extends AbstractStage  {
     private VBox avgModeChoiceBox;
     private VBox asgnModeChoiceBox;
 
-    private List<GPXLineItem> myGPXLineItems;
+    private List<? extends GPXLineItem> myGPXLineItems;
     
     // host services from main application
     private HostServices myHostServices;
@@ -91,13 +91,13 @@ public class AssignSRTMHeight extends AbstractStage  {
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         myAverageMode = 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
         myAssignMode = 
-                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(GPXAssignSRTMHeightWorker.AssignMode::valueOf);
+                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType();
         
         // create new scene
-        getStage().setTitle("Assign SRTM height values");
-        getStage().initModality(Modality.WINDOW_MODAL);
+        setTitle("Assign SRTM height values");
+        initModality(Modality.WINDOW_MODAL);
        
         int rowNum = 0;
         // 1st row: path to srtm files
@@ -212,9 +212,9 @@ public class AssignSRTMHeight extends AbstractStage  {
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
 
-                final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+                final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, true);
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
-                runVisitor(myGPXLineItems, visitor);
+                GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
                 GPXEditorPreferences.SRTM_DATA_PATH.put(mySRTMDataPath);
@@ -224,7 +224,7 @@ public class AssignSRTMHeight extends AbstractStage  {
                 hasUpdated = true;
 
                 // done, lets getAsString out of here...
-                getStage().close();
+                close();
             }
         });
         getGridPane().add(assignButton, 0, rowNum, 1, 1);
@@ -232,8 +232,8 @@ public class AssignSRTMHeight extends AbstractStage  {
 
         Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
-            getStage().setTitle("Cancel");
-            getStage().close();
+            setTitle("Cancel");
+            close();
         });
         getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
@@ -241,7 +241,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         setCancelAccelerator(cancelBtn);
     }
     
-    public boolean assignSRTMHeight(final HostServices hostServices, final List<GPXLineItem> gpxLineItems) {
+    public boolean assignSRTMHeight(final HostServices hostServices, final List<? extends GPXLineItem> gpxLineItems) {
         if (CollectionUtils.isEmpty(gpxLineItems)) {
             // nothing to do
             return false;
@@ -255,12 +255,12 @@ public class AssignSRTMHeight extends AbstractStage  {
         // first check if all data files are available
         checkSRTMFiles();
         
-        getStage().showAndWait();
+        showAndWait();
         
         return hasUpdated;
     }
     
-    public boolean assignSRTMHeightNoUI(final List<GPXLineItem> gpxLineItems) {
+    public boolean assignSRTMHeightNoUI(final List<? extends GPXLineItem> gpxLineItems) {
         if (CollectionUtils.isEmpty(gpxLineItems)) {
             // nothing to do
             return false;
@@ -270,9 +270,9 @@ public class AssignSRTMHeight extends AbstractStage  {
         
         hasUpdated = false;
         if (checkSRTMFiles()) {
-            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
             visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
-            runVisitor(myGPXLineItems, visitor);
+            GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
 
             hasUpdated = true;
         }
@@ -281,10 +281,10 @@ public class AssignSRTMHeight extends AbstractStage  {
     }
 
     private boolean checkSRTMFiles() {
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode);
+        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
 
         visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
-        runVisitor(myGPXLineItems, visitor);
+        GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
         
         // sorted list of files and mark missing ones
         fileList.getItems().clear();
@@ -323,11 +323,5 @@ public class AssignSRTMHeight extends AbstractStage  {
 //        System.setErr(err);
 
         return missingDataFiles.isEmpty();
-    }
-
-    private void runVisitor(final List<GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
-        for (GPXLineItem gpxLineItem : gpxLineItems) {
-            gpxLineItem.acceptVisitor(visitor);
-        }
     }
 }

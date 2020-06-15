@@ -28,7 +28,6 @@ package tf.gpx.edit.values;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.value.ChangeListener;
@@ -57,9 +56,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
 import tf.gpx.edit.helper.AbstractStage;
-import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
-import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -85,7 +82,7 @@ public class DistributionViewer extends AbstractStage {
     private final RangeSlider minmaxSlider = new RangeSlider();
     private CategoryAxis xAxis = new CategoryAxis();
     private NumberAxis yAxis = new NumberAxis();
-    private BarChart barChart;
+    private BarChart<String, Number> barChart;
     private final Label countLbl = new Label("0 from 100 points selected");
     private final CheckListView<GPXWaypoint> wayPointList = new CheckListView<>();
     
@@ -119,8 +116,8 @@ public class DistributionViewer extends AbstractStage {
     
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Distributions");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Distributions");
+        initModality(Modality.APPLICATION_MODAL); 
         
         //
         // left columns
@@ -133,12 +130,14 @@ public class DistributionViewer extends AbstractStage {
         GridPane.setMargin(dataLbl, INSET_TOP_BOTTOM);
         
         // add all possible values from GPXLineItemData
+        // TFE, 20200407: not all - by now we have a few more values...
         for (GPXLineItemData value : GPXLineItemData.values()) {
-            if (value.hasDoubleValue()) {
+            if (value.showDistribution()) {
                 dataBox.getItems().add(value.getDescription());
             }
         }
-        dataBox.setValue(GPXLineItemData.CumulativeDuration.getDescription());
+        
+        dataBox.setValue(GPXLineItemData.Speed.getDescription());
         dataBox.setTooltip(new Tooltip("Data value to use."));
         dataBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -164,7 +163,7 @@ public class DistributionViewer extends AbstractStage {
         yAxis.setAutoRanging(false);
         yAxis.setOpacity(0);
 
-        barChart = new BarChart<String, Number>(xAxis, yAxis);
+        barChart = new BarChart<>(xAxis, yAxis);
         barChart.getStyleClass().add("unpad-chart");
         barChart.setLegendVisible(false);
         barChart.setAnimated(false);
@@ -235,7 +234,7 @@ public class DistributionViewer extends AbstractStage {
 
         rowNum++;
         // 5th row: select button
-        final Button selectButton = new Button("Select points in marked area");
+        final Button selectButton = new Button("Select points outside range");
         selectButton.setOnAction((ActionEvent event) -> {
             // disable listener for checked changes since it fires for each waypoint...
             // TODO: use something fancy like LibFX ListenerHandle...
@@ -300,16 +299,12 @@ public class DistributionViewer extends AbstractStage {
         final Button deleteButton = new Button("Delete selected points");
         deleteButton.setOnAction((ActionEvent event) -> {
             if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
-                final GPXTrackSegment gpxTrackSegment = myGPXWaypoints.get(0).getGPXTrackSegments().get(0);
-                final List<GPXWaypoint> newWaypoints = new ArrayList<>(gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-                final List<GPXWaypoint> oldWaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-
-                // performance: convert to hashset since its contains() is way faster
-                newWaypoints.removeAll(new LinkedHashSet<>(wayPointList.getCheckModel().getCheckedItems()));
-                gpxTrackSegment.setGPXWaypoints(newWaypoints);
+                // now more complex - can be waypoints of various track segements...
+                // luckily, we already have a method for that :-)
+                myGPXEditor.deleteWaypoints(wayPointList.getCheckModel().getCheckedItems());
                 
                 // done, lets get out of here...
-                getStage().close();
+                close();
                 
                 hasDeleted = true;
             }
@@ -327,8 +322,8 @@ public class DistributionViewer extends AbstractStage {
         assert myGPXEditor != null;
         assert gpxWayPoints != null;
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
         if (CollectionUtils.isEmpty(gpxWayPoints)) {
@@ -341,12 +336,11 @@ public class DistributionViewer extends AbstractStage {
         // initialize the whole thing...
         initDistributionViewer(GPXLineItemData.fromDescription(dataBox.getSelectionModel().getSelectedItem()));
 
-        getStage().showAndWait();
+        showAndWait();
                 
         return hasDeleted;
     }
     
-    @SuppressWarnings("unchecked")
     private void initDistributionViewer(final GPXLineItemData dataType) {
         // calculate distribution to have inputs for nodes
         GPXWaypointDistribution.getInstance().setValues(myGPXWaypoints);
@@ -368,12 +362,12 @@ public class DistributionViewer extends AbstractStage {
         
         barChart.setVisible(false);
         barChart.getData().clear();
-        final List<XYChart.Data<String, Double>> dataList = new ArrayList<>();
+        final List<XYChart.Data<String, Number>> dataList = new ArrayList<>();
         for (BinValue value : binValues) {
             dataList.add(new XYChart.Data<>(value.left.toString(), value.right));
         }
 
-        XYChart.Series<String, Double> series = new XYChart.Series<>();
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.getData().addAll(dataList);
         barChart.getData().add(series);
         barChart.lookupAll(".default-color0.chart-bar")
@@ -384,10 +378,10 @@ public class DistributionViewer extends AbstractStage {
         minmaxSlider.setBlockIncrement(binSize);
         minmaxSlider.setMinorTickCount(10);
         minmaxSlider.setMajorTickUnit(10.0 * binSize);
-        minmaxSlider.setMin(minXValue - binSize / 10.0);
-        minmaxSlider.setMax(maxXValue + binSize / 10.0);
-        minmaxSlider.setLowValue(minXValue - binSize / 10.0);
-        minmaxSlider.setHighValue(maxXValue + binSize / 10.0);
+        minmaxSlider.setMin(minXValue);
+        minmaxSlider.setMax(maxXValue);
+        minmaxSlider.setLowValue(minXValue);
+        minmaxSlider.setHighValue(maxXValue);
         
         // set labels
         minLbl.setText(formater.format(minXValue));

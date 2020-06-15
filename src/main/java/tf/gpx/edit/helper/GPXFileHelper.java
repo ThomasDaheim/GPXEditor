@@ -59,16 +59,20 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
-import tf.helper.ShowAlerts;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  *
  * @author Thomas
  */
 public class GPXFileHelper {
+    private final static GPXFileHelper INSTANCE = new GPXFileHelper();
+    
     public static final String GPX_EXT = "gpx";
     public static final String KML_EXT = "kml";
+    public static final String XML_EXT = "xml";
     public static final String CSV_EXT = "csv";
+    public static final String PNG_EXT = "png";
     public static final String BAK_EXT = ".bak";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
@@ -79,13 +83,15 @@ public class GPXFileHelper {
     
     private GPXEditor myEditor;
     
-    public GPXFileHelper() {
+    private GPXFileHelper() {
         super();
     }
-    
-    public GPXFileHelper(final GPXEditor editor) {
-        super();
-        
+
+    public static GPXFileHelper getInstance() {
+        return INSTANCE;
+    }
+
+    public void setCallback(final GPXEditor editor) {
         myEditor = editor;
     }
     
@@ -186,6 +192,9 @@ public class GPXFileHelper {
 //            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
 //            result = false;
 //        }
+
+        // store last filename - might have been renamed
+        GPXEditorPreferenceStore.getRecentFiles().addRecentFile(curFile.toFile().getAbsolutePath());
 
         // TFE, 20191024 add warning for format issues
         verifyXMLFile(curFile.toFile());
@@ -318,5 +327,9 @@ public class GPXFileHelper {
                             ex.getMessage(),
                             buttonOK);
         }
+    }
+    
+    public static String getNameForGPXFile(final GPXFile gpxfile) {
+        return gpxfile.getGPXFile().getPath() + gpxfile.getGPXFile().getName();
     }
 }

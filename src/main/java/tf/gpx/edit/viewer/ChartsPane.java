@@ -35,9 +35,10 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.DragResizer;
+import tf.helper.javafx.DragResizer;
 
 /**
  * Holder pane for various charts (height, speed, ...) to be placed on the map
@@ -52,11 +53,11 @@ public class ChartsPane extends StackPane {
     private final static double YAXIS_SEP = 20;
     
     // TFE, 20191119: hold a list of IChartBasics for height, speed, ...
-    private final List<IChartBasics> charts = new ArrayList<>();
+    private final List<IChartBasics<?>> charts = new ArrayList<>();
 
     // base is the one with yAxis to the right & mouse interaction
-    private final IChartBasics baseChart;
-    private final List<IChartBasics> additionalCharts = new ArrayList<>();
+    private final IChartBasics<?> baseChart;
+    private final List<IChartBasics<?>> additionalCharts = new ArrayList<>();
     private double totalYAxisWidth = YAXIS_WIDTH + YAXIS_SEP;
 
     private ChartsPane() {
@@ -164,8 +165,7 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    @SuppressWarnings("unchecked")
-    public void setGPXWaypoints(final List<GPXLineItem> lineItems, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert lineItems != null;
 
         final boolean isVisible = isVisible();
@@ -173,7 +173,7 @@ public class ChartsPane extends StackPane {
         // show all chart
         charts.stream().forEach((t) -> {
             t.setGPXWaypoints(lineItems, doFitBounds);
-            hasData.set(hasData.get() || t.hasData());
+            hasData.set(hasData.get() || t.hasNonZeroData());
         });
         setVisible(isVisible && hasData.get());
 
@@ -188,14 +188,12 @@ public class ChartsPane extends StackPane {
         });
     }
 
-    @SuppressWarnings("unchecked")
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         charts.stream().forEach((t) -> {
             t.updateGPXWaypoints(gpxWaypoints);
         });
     }
 
-    @SuppressWarnings("unchecked")
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         assert gpxWaypoints != null;
 

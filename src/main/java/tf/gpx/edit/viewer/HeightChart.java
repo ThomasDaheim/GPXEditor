@@ -52,6 +52,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -60,20 +61,20 @@ import tf.gpx.edit.main.GPXEditor;
  Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
-@SuppressWarnings("unchecked")
-public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
+public class HeightChart extends AreaChart<Number, Number> implements IChartBasics<AreaChart<Number, Number>> {
     private final static HeightChart INSTANCE = new HeightChart();
     
     private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
     private final static String DIST_LABEL = new String(Character.toChars(8658));
+    private final static String SPEED_LABEL = "";
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
 
-    private List<GPXLineItem> myGPXLineItems;
+    private List<GPXMeasurable> myGPXLineItems;
 
-    private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
-    private final ObservableList<Triple<GPXWaypoint, Double, Node>> selectedWaypoints;
+    private final List<Pair<GPXWaypoint, Number>> myPoints = new ArrayList<>();
+    private final ObservableList<Triple<GPXWaypoint, Number, Node>> selectedWaypoints;
     
     private boolean noLayout = false;
     
@@ -89,8 +90,15 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
+    
+    private boolean nonZeroData = false;
 
-    @SuppressWarnings("unchecked")
+    private final Region plotArea = (Region) lookup(".chart-plot-background");
+    private final Pane chartContent = (Pane) lookup(".chart-content");
+
+    private final Text mouseText = new Text("");
+    private final Line mouseLine = new Line();
+
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
@@ -108,32 +116,26 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         initialize();
         setCreateSymbols(false);
 
-        selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Double, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle())});
+        selectedWaypoints = FXCollections.observableArrayList((Triple<GPXWaypoint, Number, Node> data1) -> new Observable[]{new SimpleDoubleProperty(data1.getMiddle().doubleValue())});
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
         
         installMousePointer();
     }
     
     private void installMousePointer() {
-        // TFE, 20190712: install overall text & line instead as node tooltips
-        // TODO: beautify code
-        final Region plotArea = (Region) lookup(".chart-plot-background");
-        final Pane chartContent = (Pane) lookup(".chart-content");
+        // TFE, 20190712: install overall mouseText & mouseLine instead as node tooltips
+        mouseText.getStyleClass().add("track-popup");
+        mouseText.setVisible(false);
+        mouseText.setMouseTransparent(true);
 
-        final Text text = new Text("");
-        text.getStyleClass().add("track-popup");
-        text.setVisible(true);
-        text.setMouseTransparent(true);
+        mouseLine.setVisible(false);
+        mouseLine.setMouseTransparent(true);
 
-        final Line line = new Line();
-        line.setVisible(true);
-        line.setMouseTransparent(true);
-
-        chartContent.getChildren().addAll(line, text);
+        chartContent.getChildren().addAll(mouseLine, mouseText);
 
         setOnMouseMoved(e -> {
             // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
             Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
             double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
             double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
@@ -143,18 +145,22 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             // onyl show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
-                final Double distValue = data.XValueProperty().getValue();
-                final Double heightValue = data.YValueProperty().getValue();
+                XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
+                final Double distValue = data.XValueProperty().getValue().doubleValue();
+                final Double heightValue = data.YValueProperty().getValue().doubleValue();
 
-                text.setText(String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", x));
-                text.applyCss();
+                String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
+                if (SpeedChart.getInstance().hasNonZeroData()) {
+                    waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
+                }
+                mouseText.setText(waypointText);
+                mouseText.applyCss();
                 
-                // we want to show the text at the elevation
+                // we want to show the mouseText at the elevation
                 double yHeight = yAxis.getDisplayPosition(heightValue);
                 
-                // and we want to show lineStart line at this distance from top to bottom
-                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-line/40730299#40730299
+                // and we want to show lineStart mouseLine at this distance from top to bottom
+                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-mouseLine/40730299#40730299
                 Point2D lineStart = plotArea.localToScene(new Point2D(xPosInAxis, 0));
                 Point2D lineEnd = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
                 Point2D dataPoint = plotArea.localToScene(new Point2D(xPosInAxis, yHeight));
@@ -164,21 +170,20 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
                 Point2D cTrans = chartContent.sceneToLocal(dataPoint);
                 
                 // align center-center
-                text.setTranslateX(cTrans.getX() - text.getBoundsInLocal().getWidth() / 2.0);
-                text.setTranslateY(cTrans.getY() - text.getBoundsInLocal().getHeight() / 2.0);
-                text.setVisible(true);
+                mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
+                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 3.0);
+                mouseText.setVisible(true);
 
-                line.setStartX(aTrans.getX());
-                line.setStartY(aTrans.getY());
-                line.setEndX(bTrans.getX());
-                line.setEndY(bTrans.getY());
-                line.setVisible(true);
+                mouseLine.setStartX(aTrans.getX());
+                mouseLine.setStartY(aTrans.getY());
+                mouseLine.setEndX(bTrans.getX());
+                mouseLine.setEndY(bTrans.getY());
+                mouseLine.setVisible(true);
                 
                 // callback to highlight waypoint in TrackMap
                 myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true);
             } else {
-                line.setVisible(false);
-                text.setVisible(false);
+                hideMousePointer();
                 
                 // unset selected waypoint
                 myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
@@ -187,8 +192,8 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         
         setOnMouseExited(e -> {
             // TFE, 20191127 - don't reset everything
-//            line.setVisible(false);
-//            text.setVisible(false);
+//            mouseLine.setVisible(false);
+//            mouseText.setVisible(false);
 //                
 //            // unset selected waypoint
 //            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
@@ -206,7 +211,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             }
             
             // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-line/31382802#31382802
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
             Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
             double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
             double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
@@ -216,9 +221,9 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             // only show on top of chart area, not on axis
             if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
                 // we want to show the elevation at this distance
-                XYChart.Data<Double, Double> data = getNearestDataForXValue(x);
-                final Double distValue = data.XValueProperty().getValue();
-                final Double heightValue = data.YValueProperty().getValue();
+                XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
+                final Double distValue = data.XValueProperty().getValue().doubleValue();
+                final Double heightValue = data.YValueProperty().getValue().doubleValue();
                 
 //                System.out.println("setOnMouseDragged: " + " @ " + distValue);
 
@@ -269,28 +274,45 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         });
     }
     
+    private void hideMousePointer() {
+        mouseLine.setStartX(0.0);
+        mouseLine.setStartY(0.0);
+        mouseLine.setEndX(0.0);
+        mouseLine.setEndY(0.0);
+        mouseLine.setVisible(false);
+
+        mouseText.setTranslateX(0.0);
+        mouseText.setTranslateY(0.0);
+        mouseText.setVisible(false);
+    }
+    
     public static HeightChart getInstance() {
         return INSTANCE;
     }
 
     @Override
-    public AreaChart getChart() {
+    public AreaChart<Number, Number> getChart() {
         return this;
     }
     
     @Override
-    public Iterator<XYChart.Data<Double, Double>> getDataIterator(final XYChart.Series<Double, Double> series) {
+    public Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series) {
         return getDisplayedDataIterator(series);
     }
     
     @Override
-    public List<GPXLineItem> getGPXLineItems() {
+    public List<GPXMeasurable> getGPXMeasurables() {
         return myGPXLineItems;
     }
     
     @Override
-    public void setGPXLineItems(final List<GPXLineItem> lineItems) {
+    public void setGPXMeasurables(final List<GPXMeasurable> lineItems) {
         myGPXLineItems = lineItems;
+    }
+    
+    @Override
+    public void initForNewGPXWaypoints() {
+        hideMousePointer();
     }
     
     @Override
@@ -334,7 +356,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     }
 
     @Override
-    public List<Pair<GPXWaypoint, Double>> getPoints() {
+    public List<Pair<GPXWaypoint, Number>> getPoints() {
         return myPoints;
     }
     
@@ -372,17 +394,16 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
         // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
-        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType(Boolean::valueOf);
+        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
         
         double distValue = 0.0;
-        // TODO: replace with iteration over lineItems
         
         for (GPXLineItem lineItem : myGPXLineItems) {
             for (GPXWaypoint gpxWaypoint: lineItem.getCombinedGPXWaypoints(null)) {
                 distValue += gpxWaypoint.getDistance() / 1000.0;
 
-                if (!GPXLineItem.GPXLineItemType.GPXFile.equals(gpxWaypoint.getType()) ||
-                     GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType()) ||
+                if (!gpxWaypoint.isGPXFile() ||
+                     lineItem.isGPXFile() ||
                      alwayShowFileWaypoints) {
                     if (distValue >= dragStartDistance && distValue <= dragEndDistance) {
                         selectedWaypointsInRange.add(gpxWaypoint);
@@ -399,7 +420,6 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         if (isDisabled()) {
@@ -419,14 +439,14 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
         final Set<GPXWaypoint> waypointSet = new LinkedHashSet<>(gpxWaypoints);
         
         // figure out which ones to clear first -> in selectedWaypoints but not in gpxWaypoints
-        final Set<Triple<GPXWaypoint, Double, Node>> waypointsToUnselect = new LinkedHashSet<>();
-        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
+        final Set<Triple<GPXWaypoint, Number, Node>> waypointsToUnselect = new LinkedHashSet<>();
+        for (Triple<GPXWaypoint, Number, Node> waypoint : selectedWaypoints) {
             if (!waypointSet.contains(waypoint.getLeft())) {
                 waypointsToUnselect.add(waypoint);
             }
         }
 //        System.out.println("Cht Unselect: " + Instant.now() + " " + waypointsToUnselect.size() + " waypoints");
-        for (Triple<GPXWaypoint, Double, Node> waypoint : waypointsToUnselect) {
+        for (Triple<GPXWaypoint, Number, Node> waypoint : waypointsToUnselect) {
             selectedWaypoints.remove(waypoint);
             getPlotChildren().remove(waypoint.getRight());
         }
@@ -452,8 +472,8 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 //                .filter(x -> x.getLeft().equals(waypoint))
 //                .findFirst().orElse(null);
             // TFE, 20191124: speed things up a little...
-            Pair<GPXWaypoint, Double> point = null;
-            for (Pair<GPXWaypoint, Double> myPoint : myPoints) {
+            Pair<GPXWaypoint, Number> point = null;
+            for (Pair<GPXWaypoint, Number> myPoint : myPoints) {
                 if (myPoint.getLeft().equals(waypoint)) {
                     point = myPoint;
                     break;
@@ -492,7 +512,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 
         noLayout = true;
         
-        for (Triple<GPXWaypoint, Double, Node> waypoint : selectedWaypoints) {
+        for (Triple<GPXWaypoint, Number, Node> waypoint : selectedWaypoints) {
             getPlotChildren().remove(waypoint.getRight());
         }
         selectedWaypoints.clear();
@@ -502,7 +522,16 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    public boolean hasNonZeroData() {
+        return nonZeroData;
+    }
+
+    @Override
+    public void setNonZeroData(final boolean value) {
+        nonZeroData = value;
+    }
+
+    @Override
     protected void layoutPlotChildren() {
 //        System.out.println("layoutPlotChildren: " + noLayout);
 //        System.out.println("Printing stack trace:");
@@ -515,7 +544,7 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
 //        System.out.println("=====================");
         // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
         if (noLayout || !isVisible()) {
-//            System.out.println("HeighChart: sorry, no layout pass");
+//            System.out.println("HeighChart: sorry, no layout pass @" + Instant.now());
             return;
         }
 
@@ -529,17 +558,22 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             return t.getLeft();
         }).collect(Collectors.toList()));
         final List<GPXWaypoint> selectedWaypointsList = new ArrayList<>(selectedWaypointsSet);
+        
+        if (selectedWaypointsSet.isEmpty()) {
+            // nothing to do here
+            return;
+        }
 
-        Pair<GPXWaypoint, Double> prevPair = null;
+        Pair<GPXWaypoint, Number> prevPair = null;
         boolean prevSelected = false;
-        for (Pair<GPXWaypoint, Double> pair : myPoints) {
+        for (Pair<GPXWaypoint, Number> pair : myPoints) {
             final GPXWaypoint point = pair.getLeft();
             
             // find selected waypoint triple, if any (the fast way)
 //            Triple<GPXWaypoint, Double, Node> selectedPoint = selectedWaypoints.stream()
 //                    .filter(x -> x.getLeft().equals(point))
 //                    .findFirst().orElse(null);
-            Triple<GPXWaypoint, Double, Node> selectedPoint;
+            Triple<GPXWaypoint, Number, Node> selectedPoint;
             // now try using LinkedHashSet instead of stream - to improve performance
             if (selectedWaypointsSet.contains(point)) {
                 selectedPoint = selectedWaypoints.get(selectedWaypointsList.indexOf(point));
@@ -550,11 +584,11 @@ public class HeightChart extends AreaChart implements IChartBasics<AreaChart> {
             if (selectedPoint != null) {
                 Rectangle rect = (Rectangle) selectedPoint.getRight();
                 if (prevPair != null) {
-                    rect.setWidth(getXAxis().getDisplayPosition(selectedPoint.getMiddle() / 1000.0) - getXAxis().getDisplayPosition(prevPair.getRight() / 1000.0));
+                    rect.setWidth(getXAxis().getDisplayPosition(selectedPoint.getMiddle().doubleValue() / 1000.0) - getXAxis().getDisplayPosition(prevPair.getRight().doubleValue() / 1000.0));
                 } else {
                     rect.setWidth(1);
                 }
-                rect.setX(getXAxis().getDisplayPosition(selectedPoint.getMiddle() / 1000.0) - rect.getWidth());
+                rect.setX(getXAxis().getDisplayPosition(selectedPoint.getMiddle().doubleValue() / 1000.0) - rect.getWidth());
                 rect.setY(0d);
                 rect.setHeight(getBoundsInLocal().getHeight());
             }

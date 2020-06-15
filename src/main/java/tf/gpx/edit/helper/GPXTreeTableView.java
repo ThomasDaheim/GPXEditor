@@ -43,12 +43,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
-import javafx.css.PseudoClass;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.CacheHint;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -74,11 +74,15 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
+import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -87,48 +91,27 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
-import tf.helper.ColorConverter;
-import tf.helper.ColorSelectionMenu;
-import tf.helper.TableMenuUtils;
-import tf.helper.TooltipHelper;
-import tf.helper.UsefulKeyCodes;
+import tf.helper.javafx.AppClipboard;
+import tf.helper.javafx.ColorConverter;
+import tf.helper.javafx.ColorSelectionMenu;
+import tf.helper.general.ObjectsHelper;
+import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TooltipHelper;
+import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  *
  * @author Thomas
  */
 public class GPXTreeTableView {
-    private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+//    private static final DataFormat DRAG_AND_DROP = new DataFormat("application/x-java-serialized-object");
+    public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-treetableview-dnd");
+    public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-treetableview-cnp");
 
-    private TreeTableView<GPXLineItem> myTreeTableView;
+    private TreeTableView<GPXMeasurable> myTreeTableView;
     // need to store last non-empty row for drag & drop support
-    private TreeTableRow<GPXLineItem> lastRow;
+    private TreeTableRow<GPXMeasurable> lastRow;
     private GPXEditor myEditor;
-    
-    private final List<TreeItem<GPXLineItem>> clipboardLineItems = new ArrayList<>();
-
-    private static enum RelativePositionPseudoClass {
-        ABOVE(PseudoClass.getPseudoClass("drop-target-above")),
-        BELOW(PseudoClass.getPseudoClass("drop-target-below"));
-        
-        private final PseudoClass myPseudoClass;
-        
-        RelativePositionPseudoClass(final PseudoClass pseudoClass) {
-            myPseudoClass = pseudoClass;
-        }
-        
-        public PseudoClass getPseudoClass() {
-            return myPseudoClass;
-        }
-        
-        public static PseudoClass getPseudoClassForRelativePosition(final GPXEditor.RelativePosition relativePosition) {
-            if (GPXEditor.RelativePosition.ABOVE.equals(relativePosition)) {
-                return RelativePositionPseudoClass.ABOVE.getPseudoClass();
-            } else {
-                return RelativePositionPseudoClass.BELOW.getPseudoClass();
-            }
-        }
-    }
     
     // TFE: 20190822: we need to differentiate between dropping on me or my parent - required for decission of "above" is possible
     private static enum TargetForDragDrop {
@@ -141,7 +124,7 @@ public class GPXTreeTableView {
         super();
     }
     
-    public GPXTreeTableView(final TreeTableView<GPXLineItem> treeTableView, final GPXEditor editor) {
+    public GPXTreeTableView(final TreeTableView<GPXMeasurable> treeTableView, final GPXEditor editor) {
         super();
         
         myTreeTableView = treeTableView;
@@ -152,7 +135,7 @@ public class GPXTreeTableView {
     
     private void initTreeTableView() {
         // start with normal root since its only a holder for the gpx files
-        TreeItem<GPXLineItem> root = myTreeTableView.getRoot();
+        TreeItem<GPXMeasurable> root = myTreeTableView.getRoot();
         if (root == null) {
             myTreeTableView.setRoot(new TreeItem<>());
         }
@@ -162,18 +145,21 @@ public class GPXTreeTableView {
         myTreeTableView.getSortOrder().add(myTreeTableView.getColumns().get(0));
         myTreeTableView.setSortMode(TreeSortMode.ALL_DESCENDANTS);
         
+        myTreeTableView.setCache(true);
+        myTreeTableView.setCacheHint(CacheHint.SPEED);
+        
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTreeTableViewMenu(myTreeTableView);
         });
 
         // support drag & drop on GPXFile - level        
         // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html
-        myTreeTableView.setRowFactory((TreeTableView<GPXLineItem> tv) -> {
-            TreeTableRow<GPXLineItem> row = new TreeTableRow<GPXLineItem>(){
+        myTreeTableView.setRowFactory((TreeTableView<GPXMeasurable> tv) -> {
+            TreeTableRow<GPXMeasurable> row = new TreeTableRow<GPXMeasurable>(){
                 // show lines with GPXFile in bold
                 // http://stackoverflow.com/questions/20350099/programmatically-change-the-tableview-row-appearance
                 @Override
-                protected void updateItem(GPXLineItem item, boolean empty){
+                protected void updateItem(GPXMeasurable item, boolean empty){
                     super.updateItem(item, empty);
                     
                     if (empty) {
@@ -182,7 +168,7 @@ public class GPXTreeTableView {
                     } else {
                         final ContextMenu fileMenu = new ContextMenu();
                         
-                        // TFE, 20180525: support "New" based on current GPXLineItemType
+                        // TFE, 20180525: support "New" based on current GPXMeasurableType
                         switch (item.getType()) {
                             case GPXFile:
                                 final Menu newItem = new Menu("New...");
@@ -244,7 +230,7 @@ public class GPXTreeTableView {
                                 final MenuItem renameFile = new MenuItem("Rename");
                                 renameFile.setOnAction((ActionEvent event) -> {
                                     // start editing file name col cell
-                                    final TreeTableColumn<GPXLineItem, ?> nameGPXCol = myTreeTableView.getColumns().get(1);
+                                    final TreeTableColumn<GPXMeasurable, ?> nameGPXCol = myTreeTableView.getColumns().get(1);
                                     myTreeTableView.edit(getIndex(), nameGPXCol);
                                 });
                                 fileMenu.getItems().add(renameFile);
@@ -255,7 +241,7 @@ public class GPXTreeTableView {
                                         if (myEditor.saveFile(item)) {
                                             // reset hasSavedChanges for the whole GPXFile-Tree
                                             item.resetHasUnsavedChanges();
-                                            myTreeTableView.refresh();
+                                            myEditor.refreshGPXFileList();
                                         }
                                     });
                                     fileMenu.getItems().add(saveFile);
@@ -266,7 +252,7 @@ public class GPXTreeTableView {
                                     if (myEditor.saveFileAs(item)) {
                                         // reset hasSavedChanges for the whole GPXFile-Tree
                                         item.resetHasUnsavedChanges();
-                                        myTreeTableView.refresh();
+                                        myEditor.refreshGPXFileList();
                                     }
                                 });
                                 fileMenu.getItems().add(saveAsFile);
@@ -316,10 +302,10 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(deleteItems);
 
                                 // TODO: figure out how to split tracks
-                                if (!GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType())) {
+                                if (!item.isGPXTrack()) {
                                     final MenuItem splitItems = new MenuItem("Split Items");
                                     splitItems.setOnAction((ActionEvent event) -> {
-                                         myEditor.splitItems(event);
+                                         myEditor.splitMeasurables(event);
                                     });
                                     splitItems.disableProperty().bind(
                                         Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
@@ -329,7 +315,7 @@ public class GPXTreeTableView {
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
                                 deleteExtensions.setOnAction((ActionEvent event) -> {
-                                    deleteSelectedItemsInformation(GPXEditor.DeleteInformation.EXTENSION);
+                                    myEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
                                 });
                                 deleteAttr.getItems().add(deleteExtensions);
                                 fileMenu.getItems().add(deleteAttr);
@@ -352,7 +338,7 @@ public class GPXTreeTableView {
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(convertItem);
                                 
-                                if (!GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(item.getType())) {
+                                if (!item.isGPXTrackSegment()) {
                                     // select color for track or route
                                     fileMenu.getItems().add(new SeparatorMenuItem());
                                     
@@ -364,11 +350,19 @@ public class GPXTreeTableView {
                                                 
                                                 if (color.getUserData() != null && (color.getUserData() instanceof Color)) {
 //                                                    System.out.println(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
-                                                    item.setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
+                                                    for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                                        final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+                                                        
+                                                        if (selectedGPXItem.isGPXTrack() || 
+                                                                selectedGPXItem.isGPXRoute() || 
+                                                                selectedGPXItem.isGPXTrackSegment()) {
+                                                            selectedGPXItem.setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
+                                                            GPXTrackviewer.getInstance().updateLineColor(selectedGPXItem);
+                                                        }
+                                                    }
                                                     
                                                     // refresh TrackMap
                                                     myEditor.refreshGPXFileList();
-                                                    GPXTrackviewer.getInstance().updateLineColor(item);
                                                 }
                                             }
                                         }
@@ -387,6 +381,7 @@ public class GPXTreeTableView {
                                 final MenuItem deleteMetadata = new MenuItem("Delete");
                                 deleteMetadata.setOnAction((ActionEvent event) -> {
                                      item.getGPXFile().setGPXMetadata(null);
+                                     myEditor.refreshGPXFileList();
                                 });
                                 fileMenu.getItems().add(deleteMetadata);
                                 
@@ -413,18 +408,18 @@ public class GPXTreeTableView {
 
                         fileMenu.getItems().add(exportMenu);
                         
-                        if (!item.getType().equals(GPXLineItem.GPXLineItemType.GPXMetadata)) {
+                        if (!item.isGPXMetadata()) {
                             fileMenu.getItems().add(new SeparatorMenuItem());
                             // add context menu to expand/collapse all selected items
                             final MenuItem expandContextMenu = new MenuItem("Expand All");
                             expandContextMenu.setOnAction((ActionEvent event) -> {
-                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXMeasurable> t) -> {
                                  GPXTreeTableView.expandNodeAndChildren(t);});
                             });
                             fileMenu.getItems().add(expandContextMenu);
                             final MenuItem collapseContextMenu = new MenuItem("Collapse All");
                             collapseContextMenu.setOnAction((ActionEvent event) -> {
-                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXLineItem> t) -> {
+                                 myTreeTableView.getSelectionModel().getSelectedItems().stream().forEach((TreeItem<GPXMeasurable> t) -> {
                                  GPXTreeTableView.collapseNodeAndChildren(t);});
                             });
                             fileMenu.getItems().add(collapseContextMenu);
@@ -461,59 +456,60 @@ public class GPXTreeTableView {
             // drag is started inside the list
             // http://programmingtipsandtraps.blogspot.de/2015/10/drag-and-drop-in-treetableview-with.html
             row.setOnDragDetected(event -> {
-                if (!row.isEmpty() && !GPXLineItem.GPXLineItemType.GPXMetadata.equals(row.getItem().getType())) {
+                if (!row.isEmpty() && !row.getItem().isGPXMetadata()) {
                     // check if we're trying to drag a GPXFile item and not a track in it
                     final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
-                    final ClipboardContent cc = new ClipboardContent();
 
                     db.setDragView(row.snapshot(null, null));
-                    final ArrayList<Integer> selection = new ArrayList<>();
-                    selection.addAll(myTreeTableView.getSelectionModel().getSelectedIndices());
-                    cc.put(SERIALIZED_MIME_TYPE, selection);
+                    AppClipboard.getInstance().addContent(DRAG_AND_DROP, FXCollections.observableArrayList(myTreeTableView.getSelectionModel().getSelectedItems()));
+                    
+                    // dragboard needs dummy content...
+                    final ClipboardContent cc = new ClipboardContent();
+                    cc.put(DRAG_AND_DROP, "DRAG_AND_DROP");
                     db.setContent(cc);
+
                     event.consume();
                 }
             });
            
             // drag enters this row
             row.setOnDragEntered(event -> {
-                final Dragboard db = event.getDragboard();
-                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-                    final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+                if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP) || AppClipboard.getInstance().hasContent(GPXTableView.DRAG_AND_DROP)) {
+                    final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
 
                     GPXEditor.RelativePosition relativePosition;
                     // TODO: also check for types - on parent types its always below
-                    if (!GPXLineItem.GPXLineItemType.GPXFile.equals(checkRow.getItem().getType()) && row.equals(checkRow)) {
+                    if (!checkRow.getItem().isGPXFile() && row.equals(checkRow)) {
                         relativePosition = GPXEditor.RelativePosition.ABOVE;
                     } else {
                         relativePosition = GPXEditor.RelativePosition.BELOW;
                     }
-                    final TargetForDragDrop accetable = acceptableDragboard(db, checkRow, relativePosition);
+                    final TargetForDragDrop accetable = acceptableClipboardForTreeTableRow(DRAG_AND_DROP, checkRow, relativePosition);
                     if (!TargetForDragDrop.NONE.equals(accetable)) {
                         if (TargetForDragDrop.DROP_ON_ME.equals(accetable)) {
                             relativePosition = GPXEditor.RelativePosition.BELOW;
                         }
-                        checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.getPseudoClassForRelativePosition(relativePosition), true);
+                        checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.getPseudoClassForRelativePosition(relativePosition), true);
                     }
                 }
             });
 
             // drag exits this row
             row.setOnDragExited(event -> {
-                final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+                final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
 
                 if (checkRow != null) {
-                    checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.ABOVE.getPseudoClass(), false);
-                    checkRow.pseudoClassStateChanged(RelativePositionPseudoClass.BELOW.getPseudoClass(), false);
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass(), false);
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.BELOW.getPseudoClass(), false);
                 }
             });
    
             // and here is the drop
             row.setOnDragDropped(event -> {
-                TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
+                TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
 
                 if (checkRow != null) {
-                    if (checkRow.getPseudoClassStates().contains(RelativePositionPseudoClass.ABOVE.getPseudoClass())) {
+                    if (checkRow.getPseudoClassStates().contains(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass())) {
                         onDragDropped(event, row, GPXEditor.RelativePosition.ABOVE);
                     } else {
                         onDragDropped(event, row, GPXEditor.RelativePosition.BELOW);
@@ -524,7 +520,10 @@ public class GPXTreeTableView {
 
             // dragging something over the list
             row.setOnDragOver(event -> {
-                onDragOver(event);
+                if (event.getDragboard().hasContent(DataFormat.FILES)) {
+                    AppClipboard.getInstance().addContent(DataFormat.FILES, event.getDragboard().getContent(DataFormat.FILES));
+                }
+                onDragOver(event, row);
                 event.consume();
             });
             
@@ -541,82 +540,94 @@ public class GPXTreeTableView {
         // TFE, 20190902: still needed - in case of empty treetableview we don't have any rows!!!
         // allow file drag and drop to gpxFileList
         myTreeTableView.setOnDragOver((DragEvent event) -> {
-            onDragOver(event);
+            // copy dragboard files to internal clipboard
+            if (event.getDragboard().hasContent(DataFormat.FILES)) {
+                AppClipboard.getInstance().addContent(DataFormat.FILES, event.getDragboard().getContent(DataFormat.FILES));
+            }
+            
+            onDragOver(event, null);
         });
         
         // Dropping over surface
         myTreeTableView.setOnDragDropped((DragEvent event) -> {
-            onDragDropped(event);
+            // copy dragboard files to internal clipboard
+            if (event.getDragboard().hasContent(DataFormat.FILES)) {
+                AppClipboard.getInstance().addContent(DataFormat.FILES, event.getDragboard().getContent(DataFormat.FILES));
+            }
+            
+            onDragDropped(event, null, null);
         });
         
         // TFE, 20180812: support copy, paste, cut on lineitems - analogues to waypoints
         // can't use clipboard, since GPXWaypoints can't be serialized...
-        myTreeTableView.addEventHandler(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
-            // TODO: generalize and merge with similar code for gpxwaypointlist
-            // UNFORTUNATELY TreeTableView and TableView don't have any common ancesstors except Control...
-            
-            // any combination that removes entries
-            if (UsefulKeyCodes.CNTRL_C.match(event) ||
-                    UsefulKeyCodes.CNTRL_X.match(event) ||
-                    UsefulKeyCodes.SHIFT_DEL.match(event) ||
-                    UsefulKeyCodes.DEL.match(event)) {
-                //System.out.println("Control+C Control+V or pressed");
+        myTreeTableView.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                // TODO: generalize and merge with similar code for gpxwaypointlist
+                // UNFORTUNATELY TreeTableView and TableView don't have any common ancesstors except Control...
                 
-                if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
-                    if (UsefulKeyCodes.CNTRL_C.match(event) ||
-                            UsefulKeyCodes.CNTRL_X.match(event) ||
-                            UsefulKeyCodes.SHIFT_DEL.match(event)) {
-                        clipboardLineItems.clear();
-                        // filter out file & metadata - those can't be copy & paste - is done in insertItemAtLocation
-                        // no cloning done here since we store TreeItem<GPXLineItem> to have common code with drag & drop
-                        clipboardLineItems.addAll(new ArrayList<>(myTreeTableView.getSelectionModel().getSelectedItems()));
-                    }
+                // any combination that removes entries
+                if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                        UsefulKeyCodes.CNTRL_X.match(event) ||
+                        UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                        UsefulKeyCodes.DEL.match(event)) {
+                    //System.out.println("Control+C Control+V or pressed");
                     
-                    // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
-                    if (UsefulKeyCodes.CNTRL_X.match(event) ||
-                            UsefulKeyCodes.SHIFT_DEL.match(event) ||
-                            UsefulKeyCodes.DEL.match(event)) {
-                        myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
+                    if (!myTreeTableView.getSelectionModel().getSelectedItems().isEmpty()) {
+                        // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                        if (UsefulKeyCodes.CNTRL_C.match(event) ||
+                                UsefulKeyCodes.CNTRL_X.match(event) ||
+                                UsefulKeyCodes.SHIFT_DEL.match(event)) {
+                            // filter out file & metadata - those can't be copy & paste - is done in insertMeasureablesAtPosition
+                            // no cloning done here since we store TreeItem<GPXMeasurable> to be able to do "isParent" check on paste
+                            // TFE, 20200405: clever cloning :-)
+                            AppClipboard.getInstance().addContent(COPY_AND_PASTE, FXCollections.observableArrayList(myTreeTableView.getSelectionModel().getSelectedItems()));
+                        }
+                        
+                        // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
+                        if (UsefulKeyCodes.CNTRL_X.match(event) ||
+                                UsefulKeyCodes.SHIFT_DEL.match(event) ||
+                                UsefulKeyCodes.DEL.match(event)) {
+                            myEditor.mergeDeleteItems(event, GPXEditor.MergeDeleteItems.DELETE);
+                        }
                     }
-                }
-            // any combination that inserts entries
-            } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
-                    UsefulKeyCodes.INSERT.match(event) ||
-                    UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
-                    UsefulKeyCodes.SHIFT_INSERT.match(event)) {
-                //System.out.println("Control+V pressed");
-                
-                if(!clipboardLineItems.isEmpty()) {
+                    // any combination that inserts entries
+                } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
+                        UsefulKeyCodes.INSERT.match(event) ||
+                        UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                        UsefulKeyCodes.SHIFT_INSERT.match(event)) {
+                    //System.out.println("Control+V pressed");
                     GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
                     if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                             UsefulKeyCodes.SHIFT_INSERT.match(event)) {
                         position = GPXEditor.RelativePosition.BELOW;
                     }
                     
-                    // go through clipboardLineItems
-                    TreeItem<GPXLineItem> target = myTreeTableView.getSelectionModel().getSelectedItem();
-                    
-                    boolean canInsert = false;
-                    if (!TargetForDragDrop.NONE.equals(acceptableItems(clipboardLineItems, target, position))){
-                        canInsert = true;
-                    } else {
-                        // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
-                        if (!GPXLineItem.GPXLineItemType.GPXFile.equals(target.getValue().getType())) {
-                            target = target.getParent();
-                            canInsert = !TargetForDragDrop.NONE.equals(acceptableItems(clipboardLineItems, target, position));
+                    TreeItem<GPXMeasurable> target = myTreeTableView.getSelectionModel().getSelectedItem();
+                    TargetForDragDrop acceptable = acceptableClipboardForTreeItem(COPY_AND_PASTE, target, position);
+                    if (AppClipboard.getInstance().hasContent(COPY_AND_PASTE)) {
+                        boolean canInsert = false;
+                        if (!TargetForDragDrop.NONE.equals(acceptable)){
+                            canInsert = true;
+                        } else {
+                            // in order to support simple cntrl+c & cntrl+v to duplicate items we also check if parent can accept...
+                            if (!target.getValue().isGPXFile()) {
+                                target = target.getParent();
+                                canInsert = !TargetForDragDrop.NONE.equals(acceptableClipboardForTreeItem(COPY_AND_PASTE, target, position));
+                            }
+                        }
+                        
+                        if (canInsert) {
+                            onDroppedOrPasted(COPY_AND_PASTE, target, position);
+                        }
+                        
+                        // force repaint of gpxFileList to show unsaved items
+                        myEditor.refreshGPXFileList();
+                    } else if (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE)) {
+                        if (TargetForDragDrop.DROP_ON_ME.equals(acceptable)){
+                            onDroppedOrPasted(COPY_AND_PASTE, target, position);
                         }
                     }
-                    
-                    if (canInsert) {
-                        Collections.reverse(clipboardLineItems);
-                        for (TreeItem<GPXLineItem> draggedItem : clipboardLineItems) {
-                            insertItemAtLocation(draggedItem.getValue(), target.getValue(), position, false);
-                        }
-                    }
-                    
-                    // force repaint of gpxFileList to show unsaved items
-                    myEditor.refreshGPXFileList();
                 }
             }
         });
@@ -627,33 +638,33 @@ public class GPXTreeTableView {
         initColumns();
     }
     
-    @SuppressWarnings("unchecked")
     private void initColumns() {
         // iterate of columns and set accordingly
         // cast column to concrete version to be able to set comparator
-        for (TreeTableColumn<GPXLineItem, ?> column : myTreeTableView.getColumns()) {
+        for (TreeTableColumn<GPXMeasurable, ?> column : myTreeTableView.getColumns()) {
             switch (column.getId()) {
                 case "idGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> idGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> idGPXCol = ObjectsHelper.uncheckedCast(column);
                     idGPXCol.setCellValueFactory(
                             // getID not working for GPXFile - is always 0...
-            //                (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
-                    idGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
+            //                (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(Integer.toString(p.getValue().getParent().getChildren().indexOf(p.getValue())+1)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getCombinedID()));
+                    idGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXMeasurable, String>(new DefaultStringConverter()) {
                         @Override
                         public void updateItem(String item, boolean empty) {
                             super.updateItem(item, empty);
                             if (!empty && item != null) {
                                 setText(item);
-
+                                
                                 // TFE, 20191118: text color to color of lineitem
                                 // https://stackoverflow.com/a/33393401
                                 Color color = null;
-                                final GPXLineItem lineItem = getTreeTableRow().getItem();
-                                if (lineItem != null) {
+                                final GPXMeasurable lineItem = getTreeTableRow().getItem();
+                                // we need a lineitem that is not null, a file or has a parent
+                                if (lineItem != null && (GPXLineItemType.GPXFile.equals(lineItem.getType()) || (lineItem.getParent() != null))) {
                                     switch (lineItem.getType()) {
                                         case GPXTrack:
-                                        // tracksegments havee color from their tracks
+                                        // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
                                             color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
@@ -676,25 +687,25 @@ public class GPXTreeTableView {
                         }
                     });
                     idGPXCol.setEditable(false);
-                    idGPXCol.setComparator(GPXLineItem.getSingleIDComparator());
+                    idGPXCol.setComparator(GPXMeasurable.getSingleIDComparator());
                     idGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     idGPXCol.setUserData(TableMenuUtils.NO_HIDE_COLUMN);
                     break;
 
                 case "typeGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> typeGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> typeGPXCol = ObjectsHelper.uncheckedCast(column);
                     typeGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
                     typeGPXCol.setEditable(false);
                     typeGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
                     break;
 
                 case "nameGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> nameGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> nameGPXCol = ObjectsHelper.uncheckedCast(column);
                     nameGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Name)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Name)));
                     // TF, 20170626: track segments don't have a name attribute
-                    nameGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXLineItem, String>(new DefaultStringConverter()) {
+                    nameGPXCol.setCellFactory(col -> new TextFieldTreeTableCell<GPXMeasurable, String>(new DefaultStringConverter()) {
                         @Override
                         public void updateItem(String item, boolean empty) {
                             super.updateItem(item, empty);
@@ -702,15 +713,15 @@ public class GPXTreeTableView {
                                 setText(item);
 
                                 // name can't be edited for TrackSegments
-                                final GPXLineItem lineItem = getTreeTableRow().getItem();
-                                if (lineItem == null || GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(lineItem.getType())) {
+                                final GPXMeasurable lineItem = getTreeTableRow().getItem();
+                                if (lineItem == null || lineItem.isGPXTrackSegment()) {
                                     setEditable(false);
                                 } else {
                                     setEditable(true);
                                 }
 
                                 // TFE, 20190819: add full path name to name tooltip for gpx files
-                                if (lineItem != null && GPXLineItem.GPXLineItemType.GPXFile.equals(lineItem.getType())) {
+                                if (lineItem != null && lineItem.isGPXFile()) {
                                     final Tooltip t = new Tooltip();
                                     final StringBuilder tooltext = new StringBuilder();
                                     if (((GPXFile) lineItem).getPath() == null) {
@@ -727,9 +738,9 @@ public class GPXTreeTableView {
                             }
                         }
                     });
-                    nameGPXCol.setOnEditCommit((TreeTableColumn.CellEditEvent<GPXLineItem, String> t) -> {
+                    nameGPXCol.setOnEditCommit((TreeTableColumn.CellEditEvent<GPXMeasurable, String> t) -> {
                         if (!t.getNewValue().equals(t.getOldValue())) {
-                            final GPXLineItem item = t.getRowValue().getValue();
+                            final GPXMeasurable item = t.getRowValue().getValue();
                             item.setName(t.getNewValue());
                             // force refresh to show unsaved changes
                             myEditor.refreshGPXFileList();
@@ -740,10 +751,10 @@ public class GPXTreeTableView {
                     break;
 
                 case "startGPXCol":
-                    final TreeTableColumn<GPXLineItem, Date> startGPXCol = (TreeTableColumn<GPXLineItem, Date>) column;
+                    final TreeTableColumn<GPXMeasurable, Date> startGPXCol = ObjectsHelper.uncheckedCast(column);
                     startGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, Date> p) -> new SimpleObjectProperty<>(p.getValue().getValue().getDate()));
-                    startGPXCol.setCellFactory(col -> new TreeTableCell<GPXLineItem, Date>() {
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, Date> p) -> new SimpleObjectProperty<>(p.getValue().getValue().getDate()));
+                    startGPXCol.setCellFactory(col -> new TreeTableCell<GPXMeasurable, Date>() {
                         @Override
                         protected void updateItem(Date item, boolean empty) {
 
@@ -751,7 +762,7 @@ public class GPXTreeTableView {
                             if (empty || item == null)
                                 setText(null);
                             else
-                                setText(GPXLineItem.DATE_FORMAT.format(item));
+                                setText(GPXMeasurable.DATE_FORMAT.format(item));
                         }
                     });
                     startGPXCol.setEditable(false);
@@ -759,65 +770,65 @@ public class GPXTreeTableView {
                     break;
 
                 case "durationGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> durationGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> durationGPXCol = ObjectsHelper.uncheckedCast(column);
                     durationGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationGPXCol.setEditable(false);
                     durationGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     break;
 
                 case "lengthGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> lengthGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> lengthGPXCol = ObjectsHelper.uncheckedCast(column);
                     lengthGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Length)));
                     lengthGPXCol.setEditable(false);
                     lengthGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
-                    lengthGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    lengthGPXCol.setComparator(GPXMeasurable.getAsNumberComparator());
                     break;
 
                 case "speedGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> speedGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> speedGPXCol = ObjectsHelper.uncheckedCast(column);
                     speedGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
                     speedGPXCol.setEditable(false);
                     speedGPXCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
-                    speedGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    speedGPXCol.setComparator(GPXMeasurable.getAsNumberComparator());
                     break;
 
                 case "cumAccGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> cumAccGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> cumAccGPXCol = ObjectsHelper.uncheckedCast(column);
                     cumAccGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent)));
                     cumAccGPXCol.setEditable(false);
                     cumAccGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
-                    cumAccGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    cumAccGPXCol.setComparator(GPXMeasurable.getAsNumberComparator());
                     break;
 
                 case "cumDescGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> cumDescGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> cumDescGPXCol = ObjectsHelper.uncheckedCast(column);
                     cumDescGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent)));
                     cumDescGPXCol.setEditable(false);
                     cumDescGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
-                    cumDescGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    cumDescGPXCol.setComparator(GPXMeasurable.getAsNumberComparator());
                     break;
 
                 case "noItemsGPXCol":
-                    final TreeTableColumn<GPXLineItem, String> noItemsGPXCol = (TreeTableColumn<GPXLineItem, String>) column;
+                    final TreeTableColumn<GPXMeasurable, String> noItemsGPXCol = ObjectsHelper.uncheckedCast(column);
                     noItemsGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, String> p) -> new SimpleStringProperty(p.getValue().getValue().getDataAsString(GPXLineItem.GPXLineItemData.NoItems)));
                     noItemsGPXCol.setEditable(false);
                     noItemsGPXCol.setPrefWidth(GPXEditor.SMALL_WIDTH);
-                    noItemsGPXCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    noItemsGPXCol.setComparator(GPXMeasurable.getAsNumberComparator());
                     break;
 
                 case "extGPXCol":
-                    final TreeTableColumn<GPXLineItem, Boolean> extGPXCol = (TreeTableColumn<GPXLineItem, Boolean>) column;
+                    final TreeTableColumn<GPXMeasurable, Boolean> extGPXCol = ObjectsHelper.uncheckedCast(column);
                     extGPXCol.setCellValueFactory(
-                            (TreeTableColumn.CellDataFeatures<GPXLineItem, Boolean> p) -> new SimpleBooleanProperty(
+                            (TreeTableColumn.CellDataFeatures<GPXMeasurable, Boolean> p) -> new SimpleBooleanProperty(
                                             (p.getValue().getValue().getContent().getExtensionData() != null) &&
                                             !p.getValue().getValue().getContent().getExtensionData().isEmpty()));
-                    extGPXCol.setCellFactory(col -> new TreeTableCell<GPXLineItem, Boolean>() {
+                    extGPXCol.setCellFactory(col -> new TreeTableCell<GPXMeasurable, Boolean>() {
                         @Override
                         protected void updateItem(Boolean item, boolean empty) {
 
@@ -875,10 +886,10 @@ public class GPXTreeTableView {
         }
     }
     
-    private TreeTableRow<GPXLineItem> getRowToCheckForDragDrop(final TreeTableRow<GPXLineItem> row) {
-        TreeTableRow<GPXLineItem> result;
+    private TreeTableRow<GPXMeasurable> getRowToCheckForDragDrop(final TreeTableRow<GPXMeasurable> row) {
+        TreeTableRow<GPXMeasurable> result;
         
-        if (!row.isEmpty()) {
+        if (row != null && !row.isEmpty()) {
             result = row;
         } else {
             result = lastRow;
@@ -887,127 +898,180 @@ public class GPXTreeTableView {
         return result;
     }
     
-    private void onDragOver(final DragEvent event) {
-        Dragboard db = event.getDragboard();
-        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-            // TFE, 20190821: allow dragging after last row - means dropping at the end
+    private void onDragOver(final DragEvent event, final TreeTableRow<GPXMeasurable> row) {
+        final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
+
+        GPXEditor.RelativePosition relativePosition;
+        if (checkRow != null) {
+            // TODO: also check for types - on parent types its always below
+            if (!checkRow.getItem().isGPXFile() && checkRow.equals(row)) {
+                relativePosition = GPXEditor.RelativePosition.ABOVE;
+            } else {
+                relativePosition = GPXEditor.RelativePosition.BELOW;
+            }
+        } else {
+            // dragging onto an empty treetable
+            relativePosition = GPXEditor.RelativePosition.ABOVE;
+        }
+
+        final TargetForDragDrop accetable = acceptableClipboardForTreeTableRow(DRAG_AND_DROP, checkRow, relativePosition);
+        if (!TargetForDragDrop.NONE.equals(accetable)) {
             event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             event.consume();
-        } else {
-            if (db.hasFiles()) {
-                for (File file:db.getFiles()) {
-                    // accept only gpx files
-                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
-                        event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-                        break;
-                    }
-                }
-            } else {
-                event.consume();
-            }
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private void onDragDropped(final DragEvent event) {
-        onDragDropped(event, null, null);
+    private void onDragDropped(final DragEvent event, final TreeTableRow<GPXMeasurable> row, final GPXEditor.RelativePosition relativePosition) {
+        // TFE, 2020406: we allow drop only when its valid - so no need to check here all over again
+        final TreeTableRow<GPXMeasurable> checkRow = getRowToCheckForDragDrop(row);
+        if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
+            onDroppedOrPasted(DRAG_AND_DROP, checkRow.getTreeItem(), relativePosition);
+            
+            // DnD is done, throw away board
+            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
+        } else if (AppClipboard.getInstance().hasContent(GPXTableView.DRAG_AND_DROP)) {
+            onDroppedOrPasted(DRAG_AND_DROP, checkRow.getTreeItem(), relativePosition);
+            
+            // DnD is done, throw away board
+            AppClipboard.getInstance().clearContent(GPXTableView.DRAG_AND_DROP);
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            onDroppedOrPasted(DRAG_AND_DROP, null, relativePosition);
+        }
+
+        event.setDropCompleted(true);
+        event.consume();
     }
-    @SuppressWarnings("unchecked")
-    private void onDragDropped(final DragEvent event, final TreeTableRow<GPXLineItem> row, final GPXEditor.RelativePosition relativePosition) {
-        Dragboard db = event.getDragboard();
-        if (db.hasContent(SERIALIZED_MIME_TYPE)) {
-            final TreeTableRow<GPXLineItem> checkRow = getRowToCheckForDragDrop(row);
-            if (!TargetForDragDrop.NONE.equals(acceptableDragboard(db, checkRow, relativePosition))) {
-                // get dragged item and item drop on to
-                final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
+    
+    private void onDroppedOrPasted(final DataFormat dataFormat, final TreeItem<GPXMeasurable> item, final GPXEditor.RelativePosition relativePosition) {
+        DataFormat tableViewFormat = GPXTableView.DRAG_AND_DROP;
+        if (COPY_AND_PASTE.equals(dataFormat)) {
+            tableViewFormat = GPXTableView.COPY_AND_PASTE;
+        }
+
+        if (AppClipboard.getInstance().hasContent(dataFormat)) {
+            final GPXMeasurable target = item.getValue();
+
+            // get dragged item and item drop on to
+            final List<TreeItem<GPXMeasurable>> selection = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
+            if (!selection.isEmpty()) {
                 // work from bottom to top - otherwise delete will mess up things
                 Collections.reverse(selection);
 
-                final GPXLineItem target = checkRow.getTreeItem().getValue();
-
-                final List<GPXLineItem> items =
+                final List<GPXMeasurable> items =
                 selection.stream().map((t) -> {
-                        return myTreeTableView.getTreeItem(t).getValue();
+                        return t.getValue();
                     }).collect(Collectors.toList());
-                
-                for (GPXLineItem draggedItem : items) {
-                    insertItemAtLocation(draggedItem, target, relativePosition, true);
-                }
 
-                // clear drag&drop list since it might have been invalidated
-                clipboardLineItems.clear();
-                
-                event.setDropCompleted(true);
-                
-                myTreeTableView.getSelectionModel().clearSelection();
-                if (!selection.isEmpty()) {
-                    myTreeTableView.getSelectionModel().select(myTreeTableView.getTreeItem(selection.get(selection.size()-1)));
-                }
-                // TFE, 20190822: trigger re-sort manually
-                myTreeTableView.sort(); 
-                myTreeTableView.refresh(); 
-                
-                event.consume();
-            }           
-        } else {
-            boolean success = false;
-            if (db.hasFiles()) {
-                success = true;
-                final List<File> files = new ArrayList<>();
-                for (File file:db.getFiles()) {
-                    // accept only gpx files
-                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
-                        files.add(file);
-                    }
-                }
-                // read and add to list
-                myEditor.parseAndAddFiles(files);
+                // TFE, 2020402: support CNTRL + DRAG
+                myEditor.insertMeasureablesAtPosition(target, items, relativePosition, !myEditor.isCntrlPressed(), myTreeTableView.getRow(selection.get(selection.size()-1)));
             }
-            event.setDropCompleted(success);
-            event.consume();
+        } else if (AppClipboard.getInstance().hasContent(tableViewFormat)) {
+            final GPXMeasurable target = item.getValue();
+
+            final List<GPXWaypoint> waypoints = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(tableViewFormat));
+            myEditor.insertWaypointsAtPosition(
+                    target,
+                    waypoints, 
+                    // always insert @ start of waypoints
+                    GPXEditor.RelativePosition.ABOVE);
+
+            if (GPXTableView.DRAG_AND_DROP.equals(tableViewFormat) && !myEditor.isCntrlPressed()) {
+                myEditor.deleteSelectedWaypoints();
+            }
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            final List<File> files = new ArrayList<>();
+            for (File file: AppClipboard.getInstance().getFiles()) {
+                // accept only gpx files
+                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    files.add(file);
+                }
+            }
+            // read and add to list
+            myEditor.parseAndAddFiles(files);
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private TargetForDragDrop acceptableDragboard(final Dragboard db, final TreeTableRow<GPXLineItem> target, final GPXEditor.RelativePosition position) {
-        TargetForDragDrop result = TargetForDragDrop.DROP_ON_ME;
+    private TargetForDragDrop acceptableClipboardForTreeTableRow(final DataFormat dataFormat, final TreeTableRow<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.NONE;
         
-        if (db.hasContent(SERIALIZED_MIME_TYPE) && !target.isEmpty()) {
-            final ArrayList<Integer> selection = (ArrayList<Integer>) db.getContent(SERIALIZED_MIME_TYPE);
-            final List<TreeItem<GPXLineItem>> items =
-                selection.stream().map((t) -> {
-                        return myTreeTableView.getTreeItem(t);
-                    }).collect(Collectors.toList());
-            
-            result = acceptableItems(items, target.getTreeItem(), position);
+        DataFormat tableViewFormat = GPXTableView.DRAG_AND_DROP;
+        if (COPY_AND_PASTE.equals(dataFormat)) {
+            tableViewFormat = GPXTableView.COPY_AND_PASTE;
+        }
+        if (AppClipboard.getInstance().hasContent(dataFormat) && !target.isEmpty()) {
+            result = acceptableClipboardForTreeItem(dataFormat, target.getTreeItem(), position);
+            // TFE, 2020403: allow dragging of waypoints as well
+        } else if (AppClipboard.getInstance().hasContent(tableViewFormat) && !target.isEmpty()) {
+            // waypoints can be dropped on files, track segments & routes
+            result = acceptableClipboardForTreeItem(dataFormat, target.getTreeItem(), position);
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            result = acceptableClipboardForTreeItem(dataFormat, null, position);
         }
         
         return result;
     }
-    private TargetForDragDrop acceptableItems(final List<TreeItem<GPXLineItem>> selection, final TreeItem<GPXLineItem> target, final GPXEditor.RelativePosition position) {
-        TargetForDragDrop result = TargetForDragDrop.DROP_ON_ME;
+
+    private TargetForDragDrop acceptableClipboardForTreeItem(final DataFormat dataFormat, final TreeItem<GPXMeasurable> target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.NONE;
         
-        final GPXLineItem.GPXLineItemType targetType = target.getValue().getType();
+        DataFormat tableViewFormat = GPXTableView.DRAG_AND_DROP;
+        if (COPY_AND_PASTE.equals(dataFormat)) {
+            tableViewFormat = GPXTableView.COPY_AND_PASTE;
+        }
+        if (AppClipboard.getInstance().hasContent(dataFormat)) {
+            // get dragged item and item drop on to
+            final List<TreeItem<GPXMeasurable>> selection = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
+            // work from bottom to top - otherwise delete will mess up things
+            Collections.reverse(selection);
 
-        for (TreeItem<GPXLineItem> item : selection) {
-            //System.out.println("index: " + index + ", row index:" + row.getIndex());
+            final List<GPXMeasurable> items =
+            selection.stream().map((t) -> {
+                    return t.getValue();
+                }).collect(Collectors.toList());
+
+            result = acceptableItems(items, target.getValue(), position);
+            // TFE, 2020403: allow dragging of waypoints as well
+        } else if (AppClipboard.getInstance().hasContent(tableViewFormat)) {
+            // waypoints can be dropped on files, track segments & routes
+            final GPXMeasurable targeItem= target.getValue();
+            if (targeItem.isGPXFile() || targeItem.isGPXRoute() || targeItem.isGPXTrackSegment()) {
+                result = TargetForDragDrop.DROP_ON_ME;
+            }
+        } else if (AppClipboard.getInstance().hasFiles()) {
+            for (File file: AppClipboard.getInstance().getFiles()) {
+                // accept only gpx files
+                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                    result = TargetForDragDrop.DROP_ON_ME;
+                    break;
+                }
+            }
+        }
+        
+        return result;
+    }
+    private TargetForDragDrop acceptableItems(final List<GPXMeasurable> selection, final GPXMeasurable target, final GPXEditor.RelativePosition position) {
+        TargetForDragDrop result = TargetForDragDrop.DROP_ON_ME;
+
+        for (GPXMeasurable item : selection) {
+//            System.out.println("item: " + item.getValue().getCombinedID() + ", target:" + target.getValue().getCombinedID());
             if (!target.equals(item)) {
-                final GPXLineItem.GPXLineItemType itemType = item.getValue().getType();
-
                 // don't create loops and only insert on same level or drop on direct parent type
-                if (!isParent(item, target) && 
-                        (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType) || GPXLineItem.GPXLineItemType.isParentTypeOf(targetType, itemType))) {
+                if (!isParent(target, item) && 
+                        (GPXLineItemHelper.isSameTypeAs(target, item) || GPXLineItemHelper.isParentTypeOf(target, item))) {
                     // once anything is dropped on parent this is the highest to use as return value
-                    if (GPXLineItem.GPXLineItemType.isSameTypeAs(targetType, itemType)) {
+                    if (GPXLineItemHelper.isSameTypeAs(target, item)) {
+//                        System.out.println("item same type as target");
                         result = TargetForDragDrop.DROP_ON_PARENT;
                     }
                 } else {
+//                    System.out.println("item child of target or not correct type: " + isParent(item, target) + ", " + GPXLineItemHelper.isSameTypeAs(targetGPX, itemGPX) + ", " + GPXLineItemHelper.isParentTypeOf(targetGPX, itemGPX));
                     result = TargetForDragDrop.NONE;
                     // one not matching line is enough
                     break;
                 }
             } else {
-                result = TargetForDragDrop.NONE;
+//                System.out.println("item equals target");
+                result = TargetForDragDrop.DROP_ON_PARENT;
                 // one not matching line is enough
                 break;
             }
@@ -1017,79 +1081,26 @@ public class GPXTreeTableView {
     }
     
     // see https://github.com/ChrisLMerrill/FancyFxTree/blob/master/src/main/java/net/christophermerrill/FancyFxTree/FancyTreeView.java for the idea :-)
-    private static void expandNodeAndChildren(final TreeItem<GPXLineItem> node) {
+    private static void expandNodeAndChildren(final TreeItem<GPXMeasurable> node) {
         node.setExpanded(true);
         node.getChildren().forEach(GPXTreeTableView::expandNodeAndChildren);
     }
-    private static void collapseNodeAndChildren(final TreeItem<GPXLineItem> node) {
+    private static void collapseNodeAndChildren(final TreeItem<GPXMeasurable> node) {
         node.getChildren().forEach(GPXTreeTableView::collapseNodeAndChildren);
         node.setExpanded(false);
     }
-    
-    public void insertItemAtLocation(final GPXLineItem insert, final GPXLineItem location, final GPXEditor.RelativePosition position, final boolean doRemove) {
-        final GPXLineItem.GPXLineItemType insertType = insert.getType();
-        final GPXLineItem.GPXLineItemType locationType = location.getType();
-        
-        // TFE, 20190822: insert a clone since we might loose insert after we have removed it
-        final GPXLineItem insertReal = insert.cloneMe(true);
-        if (doRemove) {
-            // remove dragged item from treeitem and gpxlineitem
-            // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...
-            // so we need to get the concret list of children of type :-(
-            // same is true for target later one, so lets have a common method :-)
-            insert.getParent().getChildrenOfType(insertType).remove(insert);
-        }
-
-        GPXLineItem locationReal;
-        if (GPXLineItem.GPXLineItemType.isSameTypeAs(locationType, insertType)) {
-            locationReal = location.getParent();
-        } else {
-            locationReal = location;
-        }
-
-        final ObservableList childList = locationReal.getChildrenOfType(insertType);
-        // TFE, 20190822: extend for insert above & below
-        int insertIndex = childList.indexOf(location);
-        if (insertIndex > -1) {
-            if (GPXEditor.RelativePosition.BELOW.equals(position)) {
-                insertIndex++;
-            }
-        } else {
-            // location not found - insert upfront or at the end
-            if (GPXEditor.RelativePosition.ABOVE.equals(position)) {
-                insertIndex = 0;
-            } else {
-                insertIndex = childList.size();
-            }
-        }
-        switch (insertType) {
-            case GPXFile:
-                // can't drag files into files
-                break;
-            case GPXMetadata:
-                // can't drag metadata
-                break;
-            case GPXTrack:
-                locationReal.getGPXTracks().add(insertIndex, (GPXTrack) insertReal);
-                break;
-            case GPXTrackSegment:
-                locationReal.getGPXTrackSegments().add(insertIndex, (GPXTrackSegment) insertReal);
-                break;
-            case GPXWaypoint:
-                locationReal.getGPXWaypoints().add(insertIndex, (GPXWaypoint) insertReal);
-                break;
-            case GPXRoute:
-                locationReal.getGPXRoutes().add(insertIndex, (GPXRoute) insertReal);
-                break;
-            default:
-        }
-    }
 
     // prevent loops in the tree
-    public boolean isParent(final TreeItem<GPXLineItem> parent, TreeItem<GPXLineItem> child) {
+    // TFE, 20200407: change to testing GPXMeasurable instead of treeitem - allows to unify GPXTreeTableView handling with that for GPXTableView
+    public boolean isParent(final GPXMeasurable parent, GPXMeasurable child) {
         boolean result = false;
+        if (parent == null || child == null) {
+            return result;
+        }
+        
         while (!result && child != null) {
-            result = (child.getParent() == parent);
+            // not equals to handle case of 
+            result = parent.equals(child.getParent());
             child = child.getParent();
         }
         return result;
@@ -1126,9 +1137,9 @@ public class GPXTreeTableView {
     private int getIndexForGPXFile(final GPXFile gpxFile) {
         int result = -1;
         
-        final List<TreeItem<GPXLineItem>> gpxFileItems = myTreeTableView.getRoot().getChildren();
+        final List<TreeItem<GPXMeasurable>> gpxFileItems = myTreeTableView.getRoot().getChildren();
         int index = 0;
-        for (TreeItem<GPXLineItem> gpxFileItem : gpxFileItems) {
+        for (TreeItem<GPXMeasurable> gpxFileItem : gpxFileItems) {
             if (gpxFileItem.getValue().equals(gpxFile)) {
                 result = index;
                 break;
@@ -1139,50 +1150,34 @@ public class GPXTreeTableView {
         return result;
     }
     
-    private TreeItem<GPXLineItem> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXLineItem::getChildren, false, new Callback<GPXLineItem, Boolean>() {
+    private TreeItem<GPXMeasurable> createTreeItemForGPXFile(final GPXFile gpxFile) {
+        return new RecursiveTreeItem<GPXMeasurable>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
             @Override
-            public Boolean call(GPXLineItem item) {
-                return !GPXLineItem.GPXLineItemType.GPXWaypoint.equals(item.getType());
+            public Boolean call(GPXMeasurable item) {
+                return true;
             }
         });
     }
     
-    public List<GPXLineItem> getSelectedGPXLineItems() {
+    public List<GPXMeasurable> getSelectedGPXMeasurables() {
         return getSelectionModel().getSelectedItems().stream().
-                map((TreeItem<GPXLineItem> t) -> {
+                map((TreeItem<GPXMeasurable> t) -> {
                     return t.getValue();
                 }).collect(Collectors.toList());
-    }
-    
-    private void deleteSelectedItemsInformation(final GPXEditor.DeleteInformation info) {
-        // all waypoints to remove - as copy since otherwise observablelist get messed up by deletes
-        final List<GPXLineItem> selectedItems = getSelectedGPXLineItems();
-
-        for (GPXLineItem waypoint : selectedItems){
-            switch (info) {
-                case EXTENSION:
-                    if (waypoint.getContent().getExtensionData() != null) {
-                        waypoint.getContent().getExtensionData().clear();
-                        waypoint.setHasUnsavedChanges();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        myEditor.refresh();
     }
 
     /* Required getter and setter methods are forwarded to internal TreeTableView */
 
-    public TreeItem<GPXLineItem> getRoot() {
+    public TreeItem<GPXMeasurable> getRoot() {
         return myTreeTableView.getRoot();
     }
 
-    public  TreeTableView.TreeTableViewSelectionModel<GPXLineItem> getSelectionModel() {
+    public  TreeTableView.TreeTableViewSelectionModel<GPXMeasurable> getSelectionModel() {
         return myTreeTableView.getSelectionModel();
+    }
+    
+    public void sort() {
+        myTreeTableView.sort();
     }
 
     public void refresh() {
@@ -1193,7 +1188,7 @@ public class GPXTreeTableView {
         return myTreeTableView.getScene();
     }
     
-    public ObjectProperty<TreeItem<GPXLineItem>> rootProperty() {
+    public ObjectProperty<TreeItem<GPXMeasurable>> rootProperty() {
         return myTreeTableView.rootProperty();
     }
     

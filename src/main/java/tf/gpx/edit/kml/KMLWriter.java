@@ -48,7 +48,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.viewer.MarkerManager;
-import tf.helper.ColorConverter;
+import tf.helper.javafx.ColorConverter;
 
 /**
  * Writer for KML Files
@@ -303,13 +303,11 @@ public class KMLWriter {
      * @param pathName
      */
     private void addPath(final GPXLineItem item, final PathType type) {
-        final GPXLineItem.GPXLineItemType itemType = item.getType();
-        
-        if (!GPXLineItem.GPXLineItemType.GPXTrack.equals(itemType) && !GPXLineItem.GPXLineItemType.GPXRoute.equals(itemType)) {
+        if (!item.isGPXTrack() && !item.isGPXRoute()) {
             return;
         }
         
-        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(itemType);
+        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(item.getType());
         
         final Element placemark = doc.createElement("Placemark");
         if (PathType.Track.equals(type)) {

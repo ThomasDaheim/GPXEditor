@@ -59,12 +59,13 @@ import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.worker.GPXRenumberWorker;
+import tf.helper.general.AppInfo;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXFile extends GPXMeasurable {
     private String myGPXFilePath;
     private String myGPXFileName;
@@ -144,7 +145,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
@@ -177,7 +178,7 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     public boolean writeToFile(final File gpxFile) {
@@ -209,18 +210,34 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public final void setHeaderAndMeta() {
-        // TODO: use variables from JAR
-        myGPX.setCreator("GPXEditor - v4.5");
+        myGPX.setCreator(AppInfo.getInstance().getAppName() + " - " + AppInfo.getInstance().getAppVersion());
         myGPX.setVersion("1.1");
                 
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
+        // TFE, 20200405: url changed for extensions xsd... so sync with authentic garmin header
+//<gpx xmlns="http://www.topografix.com/GPX/1/1" 
+//xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" 
+//xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1" 
+//xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1" 
+//xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
+//xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+//xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd 
+//  http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd 
+//  http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd 
+//  http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd 
+//  http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">      
         myGPX.addXmlns("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
-        // others currently not used...
-//        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
-//        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
-//        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
-//        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
+        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
+        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        final String schemaLocation = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd" + " " +
+                "http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd";
+        myGPX.addXmlns("xsi:schemaLocation", schemaLocation);
         
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
@@ -271,26 +288,24 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public GPXLineItem getParent() {
+    public <T extends GPXLineItem> T getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    public GPXFile setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // GPXFiles don't have a parent.
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    // children of different typs! so we can only return list of GPXLineItem
-    public ObservableList<GPXLineItem> getChildren() {
-        // iterate over my segments
-        List<ObservableList<GPXLineItem>> children = new ArrayList<>();
-
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        final List<ObservableList<GPXLineItem>> children = new ArrayList<>();
+        
         // need to down-cast everything to GPXLineItem
-        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
         children.add(GPXListHelper.asGPXLineItemList(myGPXWaypoints));
+        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
         children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
         children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));
         
@@ -309,6 +324,18 @@ public class GPXFile extends GPXMeasurable {
         setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
         setGPXTracks(GPXLineItemHelper.castChildren(this, GPXTrack.class, children));
         setGPXRoutes(GPXLineItemHelper.castChildren(this, GPXRoute.class, children));
+    }
+
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        final List<ObservableList<GPXMeasurable>> children = new ArrayList<>();
+        
+        // need to down-cast everything to GPXMeasurable
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXMetadata));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXTracks));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXRoutes));
+        
+        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
     }
 
     @Override
@@ -377,7 +404,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>(myGPXTracks);
     }
 

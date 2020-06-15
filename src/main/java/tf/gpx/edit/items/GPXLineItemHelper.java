@@ -33,6 +33,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javafx.geometry.BoundingBox;
 import org.apache.commons.collections4.CollectionUtils;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
@@ -49,6 +54,125 @@ public class GPXLineItemHelper {
         return INSTANCE;
     }
     
+    public static boolean isParentTypeOf(final GPXLineItem parent, final GPXLineItem item) {
+        return isParentTypeOf(parent.getType(), item.getType());
+    }
+    public static boolean isParentTypeOf(final GPXLineItem.GPXLineItemType parent, final GPXLineItem.GPXLineItemType item) {
+        // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)
+        // metadata is parent of no one
+        // track is parent of segment
+        // segment is parent of waypoint
+        // route is parent of waypoint
+        // waypoint is parent of no one
+        switch (parent) {
+            case GPXFile:
+                return (!GPXFile.equals(item) && !GPXTrackSegment.equals(item));
+            case GPXWaypoint:
+                return false;
+            case GPXTrack:
+                return (GPXTrackSegment.equals(item));
+            case GPXTrackSegment:
+                return (GPXWaypoint.equals(item));
+            case GPXMetadata:
+                return false;
+            case GPXRoute:
+                return (GPXWaypoint.equals(item));
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isChildTypeOf(final GPXLineItem child, final GPXLineItem item) {
+        return isChildTypeOf(child.getType(), item.getType());
+    }
+    public static boolean isChildTypeOf(final GPXLineItem.GPXLineItemType child, final GPXLineItem.GPXLineItemType item) {
+        // file is child of no one
+        // metadata is child of file
+        // track is child of file
+        // segment is child of track
+        // route is child of file
+        // waypoint is child of segment and route and file BUT not track
+        switch (child) {
+            case GPXFile:
+                return false;
+            case GPXMetadata:
+                return (GPXFile.equals(item));
+            case GPXTrack:
+                return (GPXFile.equals(item));
+            case GPXTrackSegment:
+                return (GPXTrack.equals(item));
+            case GPXWaypoint:
+                return (!GPXTrack.equals(item) && !GPXWaypoint.equals(item));
+            case GPXRoute:
+                return (GPXFile.equals(item));
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isLowerTypeThan(final GPXLineItem lower, final GPXLineItem item) {
+        return isLowerTypeThan(lower.getType(), item.getType());
+    }
+    public static boolean isLowerTypeThan(final GPXLineItem.GPXLineItemType lower, final GPXLineItem.GPXLineItemType item) {
+        // file is lower nothing
+        // metadata is lower file
+        // track is lower file
+        // segment is lower file & track
+        // route is lower file
+        // waypoint is lower everything BUT not itself
+        switch (lower) {
+            case GPXFile:
+                return false;
+            case GPXMetadata:
+                return (GPXFile.equals(item));
+            case GPXTrack:
+                return (GPXFile.equals(item));
+            case GPXTrackSegment:
+                return (GPXFile.equals(item) || GPXTrack.equals(item));
+            case GPXWaypoint:
+                return (!GPXWaypoint.equals(item));
+            case GPXRoute:
+                return (GPXFile.equals(item));
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isUpperTypeThan(final GPXLineItem upper, final GPXLineItem item) {
+        return isUpperTypeThan(upper.getType(), item.getType());
+    }
+    public static boolean isUpperTypeThan(final GPXLineItem.GPXLineItemType upper, final GPXLineItem.GPXLineItemType item) {
+        // file is upper everything BUT not itself
+        // metadata is upper nothing
+        // track is upper segment & waypoint
+        // segment is upper waypoint
+        // route is upper waypoint
+        // waypoint is upper nothing
+        switch (upper) {
+            case GPXFile:
+                return (!GPXFile.equals(item));
+            case GPXMetadata:
+                return false;
+            case GPXTrack:
+                return (GPXTrackSegment.equals(item) || GPXWaypoint.equals(item));
+            case GPXTrackSegment:
+                return (GPXWaypoint.equals(item));
+            case GPXWaypoint:
+                return false;
+            case GPXRoute:
+                return (GPXWaypoint.equals(item));
+            default:
+                return false;
+        }
+    }
+
+    public static boolean isSameTypeAs(final GPXLineItem item1, final GPXLineItem item2) {
+        return isSameTypeAs(item1.getType(), item2.getType());
+    }
+    public static boolean isSameTypeAs(final GPXLineItem.GPXLineItemType item1, final GPXLineItem.GPXLineItemType item2) {
+        return item1.ordinal() == item2.ordinal();
+    }
+
     public static String getCumulativeDurationAsString(final GPXLineItem lineItem) {
         // http://stackoverflow.com/questions/17940200/how-to-find-the-duration-of-difference-between-two-dates-in-java
         return formatDurationAsString(lineItem.getCumulativeDuration());
@@ -60,7 +184,7 @@ public class GPXLineItemHelper {
     public static String formatDurationAsString(final long diff) {
         String result = GPXLineItem.NO_DATA;
         
-        if (diff > 0) {
+        if (diff != 0) {
             // TFE, 20170716: negative differences are only shown for hours
             final long diffSeconds = Math.abs(diff / 1000 % 60);
             final long diffMinutes = Math.abs(diff / (60 * 1000) % 60);
@@ -83,7 +207,6 @@ public class GPXLineItemHelper {
                     }).collect(Collectors.toList());
     }
  
-    @SuppressWarnings("unchecked")
     public static <T extends GPXLineItem> List<T> castChildren(final GPXLineItem lineItem, final Class<T> clazz, final List<? extends GPXLineItem> children) {
         // TFE, 20180215: don't assert that child.getClass().equals(clazz)
         // instead filter out such not matching children and return only matching class childs
@@ -91,7 +214,7 @@ public class GPXLineItemHelper {
                 map((GPXLineItem child) -> {
                     if (child.getClass().equals(clazz)) {
                         child.setParent(lineItem);
-                        return (T) child;
+                        return ObjectsHelper.<T>uncheckedCast(child);
                     } else {
                         return null;
                     }
@@ -110,8 +233,8 @@ public class GPXLineItemHelper {
         }
         
         // can't be child if same or upper type...
-        if (GPXLineItem.GPXLineItemType.isSameTypeAs(lineItem.getType(), potentialChild.getType()) || 
-                GPXLineItem.GPXLineItemType.isUpperTypeThan(lineItem.getType(), potentialChild.getType())) {
+        if (isSameTypeAs(lineItem.getType(), potentialChild.getType()) || 
+                isUpperTypeThan(lineItem.getType(), potentialChild.getType())) {
             return result;
         }
         
@@ -134,20 +257,19 @@ public class GPXLineItemHelper {
     public static boolean isDirectChildOf(final GPXLineItem lineItem, final GPXLineItem potentialChild) {
         boolean result = false;
         
-        if (GPXLineItem.GPXLineItemType.isChildTypeOf(lineItem.getType(), potentialChild.getType())) {
+        if (isChildTypeOf(lineItem.getType(), potentialChild.getType())) {
             result = potentialChild.getChildren().contains(lineItem);
         }
         
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public static <T extends Extension, U extends GPXLineItem> Set<T> numberExtensions(final List<U> children) {
         AtomicInteger counter = new AtomicInteger(1);
         return children.stream().
                 map((U child) -> {
                     child.setNumber(counter.getAndIncrement());
-                    return (T) child.getContent();
+                    return ObjectsHelper.<T>uncheckedCast(child.getContent());
                 // need to collect into a set that contains the order
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
     }

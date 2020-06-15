@@ -27,11 +27,15 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
@@ -45,6 +49,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.event.EventType;
+import javafx.scene.CacheHint;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
@@ -58,32 +63,47 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableView.ResizeFeatures;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.helper.TableMenuUtils;
-import tf.helper.TooltipHelper;
-import tf.helper.UsefulKeyCodes;
+import tf.gpx.edit.main.StatusBar;
+import tf.helper.javafx.AppClipboard;
+import tf.helper.general.ObjectsHelper;
+import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TooltipHelper;
+import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  *
  * @author thomas
  */
 public class GPXTableView {
+    public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-tableview-dnd");
+    public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-tableview-cnp");
+
     private TableView<GPXWaypoint> myTableView;
+    // need to store last non-empty row for drag & drop support
+    private TableRow<GPXWaypoint> lastRow;
     private GPXEditor myEditor;
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
-    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
+//    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
     private boolean onlyShiftPressed = false;
     
@@ -99,8 +119,11 @@ public class GPXTableView {
         
         initTableView();
     }
-
+    
     private void initTableView() {
+        myTableView.setCache(true);
+        myTableView.setCacheHint(CacheHint.SPEED);
+
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTableViewMenu(myTableView);
         });
@@ -132,75 +155,169 @@ public class GPXTableView {
 //                        }
                     } else {
                         getStyleClass().removeAll("highlightedRow", "firstRow");
-                        setTooltip(null);
+//                        setTooltip(null);
+                    }
+                }
+                
+                @Override
+                public void updateIndex(int i) {
+                    super.updateIndex(i);
+                    
+//                    System.out.println("updateIndex: " + i + ", " + this + ", " + this.getItem());
+                    if (!this.isEmpty() && ((lastRow == null) || i > lastRow.getIndex())) {
+                        lastRow = this;
+//                        System.out.println("lastRow: " + lastRow.getItem());
                     }
                 }
             };
             
             final ContextMenu waypointMenu = new ContextMenu();
-            final MenuItem selectWaypoints = new MenuItem("Select highlighted");
-            selectWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.selectHighlightedWaypoints();
-            });
-            waypointMenu.getItems().add(selectWaypoints);
+            
+            // sub menu for selected items
 
-            final MenuItem invertSelection = new MenuItem("Invert selection");
+            final Menu selected = new Menu("Selected");
+
+            final MenuItem invertSelection = new MenuItem("Invert");
             invertSelection.setOnAction((ActionEvent event) -> {
                 myEditor.invertSelectedWaypoints();
             });
-            waypointMenu.getItems().add(invertSelection);
+            selected.getItems().add(invertSelection);
             
-            final MenuItem deleteWaypoints = new MenuItem("Delete selected");
+            final MenuItem deleteWaypoints = new MenuItem("Delete");
             deleteWaypoints.setOnAction((ActionEvent event) -> {
                 myEditor.deleteSelectedWaypoints();
             });
-            waypointMenu.getItems().add(deleteWaypoints);
+            selected.getItems().add(deleteWaypoints);
             
-            final MenuItem replaceWaypoints = new MenuItem("Replace selected by Center");
+            final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
             replaceWaypoints.setOnAction((ActionEvent event) -> {
                 myEditor.replaceByCenter();
             });
             replaceWaypoints.disableProperty().bind(
                     Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
-            waypointMenu.getItems().add(replaceWaypoints);
+            selected.getItems().add(replaceWaypoints);
 
-            final Menu deleteAttr = new Menu("Delete attribute(s)");
+            final Menu deleteAttr = new Menu("Delete attributes");
             // TFE, 20190715: support for deletion of date & name...
-            final MenuItem deleteDates = new MenuItem("Date(s)");
+            final MenuItem deleteDates = new MenuItem("Date");
             deleteDates.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.DATE);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null, true);
             });
             deleteAttr.getItems().add(deleteDates);
             
-            final MenuItem deleteNames = new MenuItem("Name(s)");
+            final MenuItem deleteNames = new MenuItem("Name");
             deleteNames.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.NAME);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null, true);
             });
             deleteAttr.getItems().add(deleteNames);
+            
+            final MenuItem deleteHeights = new MenuItem("Height");
+            deleteHeights.setOnAction((ActionEvent event) -> {
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0), true);
+            });
+            deleteAttr.getItems().add(deleteHeights);
 
-            final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
+            final MenuItem deleteExtensions = new MenuItem("Extension");
             deleteExtensions.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypointsInformation(GPXEditor.DeleteInformation.EXTENSION);
+                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
             });
             deleteAttr.getItems().add(deleteExtensions);
             
-            waypointMenu.getItems().add(deleteAttr);
+            selected.getItems().add(deleteAttr);
             
-            waypointMenu.getItems().add(new SeparatorMenuItem());
+            waypointMenu.getItems().add(selected);
+            
+            // sub menu for highlighted items
+
+            final Menu highlighted = new Menu("Highlighted");
+
+            final MenuItem selectHighlighted = new MenuItem("Select");
+            selectHighlighted.setOnAction((ActionEvent event) -> {
+                myEditor.selectHighlightedWaypoints();
+            });
+            highlighted.getItems().add(selectHighlighted);
+
+            final MenuItem nextHighlighted = new MenuItem("Next");
+            nextHighlighted.setOnAction((ActionEvent event) -> {
+                List<GPXWaypoint> checkItems = new ArrayList<>(myTableView.getItems());
+                        
+                int skipRows = checkItems.indexOf(row.getItem());
+                // find next non-highlight
+                Optional<GPXWaypoint> nextNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+                if (nextNonHi.isPresent()) {
+                    skipRows = checkItems.indexOf(nextNonHi.get());
+                    
+                    // search for any highlight after that one
+                    Optional<GPXWaypoint> nextHi = checkItems.stream().skip(skipRows).filter(t -> t.isHighlight()).findFirst();
+                    if (nextHi.isPresent()) {
+                        scrollTo(nextHi.get());
+                    }
+                }
+            });
+            nextHighlighted.setAccelerator(UsefulKeyCodes.F3.getKeyCodeCombination());
+            highlighted.getItems().add(nextHighlighted);
+
+            final MenuItem prevHighlighted = new MenuItem("Prev");
+            prevHighlighted.setOnAction((ActionEvent event) -> {
+                List<GPXWaypoint> checkItems = new ArrayList<>(myTableView.getItems());
+                // do everything the other way around
+                Collections.reverse(checkItems);
+                        
+                int skipRows = checkItems.indexOf(row.getItem());
+                // find prev non-highlight
+                Optional<GPXWaypoint> nextNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+                if (nextNonHi.isPresent()) {
+                    skipRows = checkItems.indexOf(nextNonHi.get());
+                    
+                    // search for any highlight before that one
+                    Optional<GPXWaypoint> nextHi = checkItems.stream().skip(skipRows).filter(t -> t.isHighlight()).findFirst();
+                    if (nextHi.isPresent()) {
+                        skipRows = checkItems.indexOf(nextHi.get());
+
+                        // search for any non-highlight before that one <- we want to move to the beginning of the list of highlighted waypoints!
+                        Optional<GPXWaypoint> firstNonHi = checkItems.stream().skip(skipRows).filter(t -> !t.isHighlight()).findFirst();
+
+                        if (firstNonHi.isPresent()) {
+                            // its one after that we want to be...
+                            scrollTo(myTableView.getItems().indexOf(firstNonHi.get())+1);
+                        } else {
+                            // its the beginning we want to be
+                            scrollTo(0);
+                        }
+                    }
+                }
+            });
+            prevHighlighted.setAccelerator(UsefulKeyCodes.SHIFT_F3.getKeyCodeCombination());
+            highlighted.getItems().add(prevHighlighted);
+            
+//            highlighted.disableProperty().bind(GPXListHelper.none(myTableView.getItems(), (t) -> {
+//                return t.isHighlight();
+//            }));
+
+            waypointMenu.getItems().add(highlighted);
+
+            // sub menu for insert items & split
 
             final Menu insertItems = new Menu("Insert");
             final MenuItem insertAbove = new MenuItem("above");
             insertAbove.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
+                myEditor.insertWaypointsAtPosition(
+                        row.getItem(), 
+                        ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(COPY_AND_PASTE)), 
+                        GPXEditor.RelativePosition.ABOVE);
             });
             insertItems.getItems().add(insertAbove);
             
             final MenuItem insertBelow = new MenuItem("below");
             insertBelow.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+                myEditor.insertWaypointsAtPosition(
+                        row.getItem(), 
+                        ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(COPY_AND_PASTE)), 
+                        GPXEditor.RelativePosition.BELOW);
             });
             insertItems.getItems().add(insertBelow);
-            insertItems.disableProperty().bind(Bindings.isEmpty(clipboardWayPoints));
+            
+//            insertItems.disableProperty().bind(Bindings.isEmpty(bindingsHelper()));
             
             waypointMenu.getItems().add(insertItems);
             
@@ -244,7 +361,7 @@ public class GPXTableView {
                     }
                 }
                 
-                // TODO: refresh gpxFileList (length, ... per track)
+                myEditor.refresh();
             });
             splitWaypoints.disableProperty().bind(row.emptyProperty());
             waypointMenu.getItems().add(splitWaypoints);
@@ -259,6 +376,77 @@ public class GPXTableView {
             waypointMenu.getItems().add(editWaypoints);
 
             row.setContextMenu(waypointMenu);
+            
+            // TFE, 20200402: drag & drop for all!
+            // drag is started inside the list
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+
+                    // use info from statusbar
+//                    db.setDragView(row.snapshot(null, null));
+                    db.setDragView(StatusBar.getInstance().snapshot(null, null));
+                    final ObservableList<GPXWaypoint> items =
+                        myTableView.getSelectionModel().getSelectedItems().stream().map((t) -> {
+                                return t.<GPXWaypoint>cloneMe(true);
+                            }).collect(Collectors.toCollection(FXCollections::observableArrayList));
+                    AppClipboard.getInstance().addContent(DRAG_AND_DROP, items);
+                    
+                    // dragboard needs dummy content...
+                    final ClipboardContent cc = new ClipboardContent();
+                    cc.put(DRAG_AND_DROP, "DRAG_AND_DROP");
+                    db.setContent(cc);
+                    
+                    event.consume();
+                }
+            });
+           
+            // drag enters this row
+            row.setOnDragEntered(event -> {
+                if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
+                    final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                    GPXEditor.RelativePosition relativePosition;
+                    if (!row.isEmpty()) {
+                        relativePosition = GPXEditor.RelativePosition.ABOVE;
+                    } else {
+                        relativePosition = GPXEditor.RelativePosition.BELOW;
+                    }
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.getPseudoClassForRelativePosition(relativePosition), true);
+                }
+            });
+
+            // drag exits this row
+            row.setOnDragExited(event -> {
+                final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                if (checkRow != null) {
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass(), false);
+                    checkRow.pseudoClassStateChanged(GPXEditor.RelativePositionPseudoClass.BELOW.getPseudoClass(), false);
+                }
+            });
+   
+            // and here is the drop
+            row.setOnDragDropped(event -> {
+                final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+
+                if (checkRow != null) {
+                    if (checkRow.getPseudoClassStates().contains(GPXEditor.RelativePositionPseudoClass.ABOVE.getPseudoClass())) {
+                        onDragDropped(event, checkRow, GPXEditor.RelativePosition.ABOVE);
+                    } else {
+                        onDragDropped(event, checkRow, GPXEditor.RelativePosition.BELOW);
+                    }
+                    event.consume();
+                }
+            });
+
+            // dragging something over the list
+            row.setOnDragOver(event -> {
+                if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                    event.consume();
+                }
+            });
 
             return row;
         });
@@ -274,15 +462,17 @@ public class GPXTableView {
                 //System.out.println("Control+C Control+V or pressed");
                 
                 if (!myTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL entries keys, DEL doesn't
+                    // TFE, 2018061: CNTRL+C, CNTRL+X and SHFT+DEL copy entries, DEL doesn't
                     if (UsefulKeyCodes.CNTRL_C.match(event) ||
                             UsefulKeyCodes.CNTRL_X.match(event) ||
                             UsefulKeyCodes.SHIFT_DEL.match(event)) {
-                        clipboardWayPoints.clear();
                         // TFE, 20190812: add clone to clipboardWayPoints
-                        for (GPXWaypoint gpxWaypoint : myTableView.getSelectionModel().getSelectedItems()) {
-                            clipboardWayPoints.add(gpxWaypoint.cloneMe(true));
-                        }
+                        // TFE, 20200405: clever cloning :-)
+                        final ObservableList<GPXWaypoint> items =
+                            myTableView.getSelectionModel().getSelectedItems().stream().map((t) -> {
+                                    return t.<GPXWaypoint>cloneMe(true);
+                                }).collect(Collectors.toCollection(FXCollections::observableArrayList));
+                        AppClipboard.getInstance().addContent(COPY_AND_PASTE, items);
                     }
                     
                     // TFE, 2018061: CNTRL+X and SHFT+DEL, DEL delete entries, CNTRL+C doesn't
@@ -292,17 +482,30 @@ public class GPXTableView {
                         myEditor.deleteSelectedWaypoints();
                     }
                 }
-                // any combination that adds entries
+            // any combination that adds entries
             } else if (UsefulKeyCodes.CNTRL_V.match(event) ||
-                    UsefulKeyCodes.INSERT.match(event)) {
-                //System.out.println("Control+V pressed");
-                
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.ABOVE);
-            } else if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                    UsefulKeyCodes.INSERT.match(event) ||
+                    UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
                     UsefulKeyCodes.SHIFT_INSERT.match(event)) {
-                //System.out.println("Shift Control+V pressed");
+                //System.out.println("Control+V pressed");
+                GPXEditor.RelativePosition position = GPXEditor.RelativePosition.ABOVE;
+                if (UsefulKeyCodes.SHIFT_CNTRL_V.match(event) ||
+                        UsefulKeyCodes.SHIFT_INSERT.match(event)) {
+                    position = GPXEditor.RelativePosition.BELOW;
+                }
                 
-                myEditor.insertWaypointsAtPosition(clipboardWayPoints, GPXEditor.RelativePosition.BELOW);
+                // we might not have any waypoint at all here...
+                if (!myTableView.getItems().isEmpty()) {
+                    onDroppedOrPasted(COPY_AND_PASTE, myTableView.getItems().get(Math.max(0, myTableView.getSelectionModel().getSelectedIndex())), position);
+                } else {
+                    // use first target from getUserData - if any
+                    final List<GPXMeasurable> measurables = ObjectsHelper.uncheckedCast(myTableView.getUserData());
+                    if (measurables != null && !measurables.isEmpty()) {
+                        onDroppedOrPasted(COPY_AND_PASTE, measurables.get(0), position);
+                    } else {
+                        System.out.println("Paste of wapoints on empty list without parent item!");
+                    }
+                }
             }
             
             if (UsefulKeyCodes.CNTRL_A.match(event)) {
@@ -316,15 +519,22 @@ public class GPXTableView {
         
         initColumns();
     }
+    
+    private ObservableList<GPXWaypoint> bindingsHelper() {
+        if (AppClipboard.getInstance().hasContent(COPY_AND_PASTE)) {
+            return ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(COPY_AND_PASTE));
+        } else {
+            return FXCollections.emptyObservableList();
+        }
+    }
    
-    @SuppressWarnings("unchecked")
     private void initColumns() {
         // iterate of columns and set accordingly
         // cast column to concrete version to be able to set comparator
         for (TableColumn<GPXWaypoint, ?> column : myTableView.getColumns()) {
             switch (column.getId()) {
                 case "idTrackCol":
-                    final TableColumn<GPXWaypoint, String> idTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> idTrackCol = ObjectsHelper.uncheckedCast(column);
                     idTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.CombinedID)));
                     idTrackCol.setEditable(false);
@@ -335,7 +545,7 @@ public class GPXTableView {
                     break;
                     
                 case "typeTrackCol":
-                    final TableColumn<GPXWaypoint, String> typeTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> typeTrackCol = ObjectsHelper.uncheckedCast(column);
                     typeTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getParent().getDataAsString(GPXLineItem.GPXLineItemData.Type)));
                     typeTrackCol.setEditable(false);
@@ -343,7 +553,7 @@ public class GPXTableView {
                     break;
 
                 case "posTrackCol":
-                    final TableColumn<GPXWaypoint, String> posTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> posTrackCol = ObjectsHelper.uncheckedCast(column);
                     posTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Position)));
                     posTrackCol.setEditable(false);
@@ -351,7 +561,7 @@ public class GPXTableView {
                     break;
 
                 case "dateTrackCol":
-                    final TableColumn<GPXWaypoint, Date> dateTrackCol = (TableColumn<GPXWaypoint, Date>) column;
+                    final TableColumn<GPXWaypoint, Date> dateTrackCol = ObjectsHelper.uncheckedCast(column);
                     dateTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, Date> p) -> new SimpleObjectProperty<>(p.getValue().getDate()));
                     dateTrackCol.setCellFactory(col -> new TableCell<GPXWaypoint, Date>() {
@@ -370,7 +580,7 @@ public class GPXTableView {
                     break;
 
                 case "nameTrackCol":
-                    final TableColumn<GPXWaypoint, String> nameTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> nameTrackCol = ObjectsHelper.uncheckedCast(column);
                     nameTrackCol.setCellFactory(col -> new TextFieldTableCell<GPXWaypoint, String>(new DefaultStringConverter()) {
                         @Override
                         public void updateItem(String item, boolean empty) {
@@ -406,7 +616,7 @@ public class GPXTableView {
                     break;
 
                 case "durationTrackCol":
-                    final TableColumn<GPXWaypoint, String> durationTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> durationTrackCol = ObjectsHelper.uncheckedCast(column);
                     durationTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration)));
                     durationTrackCol.setEditable(false);
@@ -414,7 +624,7 @@ public class GPXTableView {
                     break;
 
                 case "lengthTrackCol":
-                    final TableColumn<GPXWaypoint, String> lengthTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> lengthTrackCol = ObjectsHelper.uncheckedCast(column);
                     lengthTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious)));
                     lengthTrackCol.setEditable(false);
@@ -423,7 +633,7 @@ public class GPXTableView {
                     break;
 
                 case "speedTrackCol":
-                    final TableColumn<GPXWaypoint, String> speedTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> speedTrackCol = ObjectsHelper.uncheckedCast(column);
                     speedTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Speed)));
                     speedTrackCol.setEditable(false);
@@ -432,7 +642,7 @@ public class GPXTableView {
                     break;
 
                 case "heightTrackCol":
-                    final TableColumn<GPXWaypoint, String> heightTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> heightTrackCol = ObjectsHelper.uncheckedCast(column);
                     heightTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Elevation)));
                     heightTrackCol.setEditable(false);
@@ -441,7 +651,7 @@ public class GPXTableView {
                     break;
 
                 case "heightDiffTrackCol":
-                    final TableColumn<GPXWaypoint, String> heightDiffTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> heightDiffTrackCol = ObjectsHelper.uncheckedCast(column);
                     heightDiffTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.ElevationDifferenceToPrevious)));
                     heightDiffTrackCol.setEditable(false);
@@ -450,7 +660,7 @@ public class GPXTableView {
                     break;
 
                 case "slopeTrackCol":
-                    final TableColumn<GPXWaypoint, String> slopeTrackCol = (TableColumn<GPXWaypoint, String>) column;
+                    final TableColumn<GPXWaypoint, String> slopeTrackCol = ObjectsHelper.uncheckedCast(column);
                     slopeTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.Slope)));
                     slopeTrackCol.setEditable(false);
@@ -459,7 +669,7 @@ public class GPXTableView {
                     break;
 
                 case "extTrackCol":
-                    final TableColumn<GPXWaypoint, Boolean> extTrackCol = (TableColumn<GPXWaypoint, Boolean>) column;
+                    final TableColumn<GPXWaypoint, Boolean> extTrackCol = ObjectsHelper.uncheckedCast(column);
                     extTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, Boolean> p) -> new SimpleBooleanProperty(
                                             (p.getValue().getContent().getExtensionData() != null) &&
@@ -517,6 +727,47 @@ public class GPXTableView {
                 default:
                     System.err.println("Unhandled ID in GPXTableView: " + column.getId());
                     break;
+            }
+        }
+    }
+    
+    private TableRow<GPXWaypoint> getRowToCheckForDragDrop(final TableRow<GPXWaypoint> row) {
+        TableRow<GPXWaypoint> result;
+        
+        if (row != null && !row.isEmpty()) {
+            result = row;
+        } else {
+            result = lastRow;
+        }
+        
+        return result;
+    }
+    
+    private void onDragDropped(final DragEvent event, final TableRow<GPXWaypoint> row, final GPXEditor.RelativePosition relativePosition) {
+        if (AppClipboard.getInstance().hasContent(DRAG_AND_DROP)) {
+            final TableRow<GPXWaypoint> checkRow = getRowToCheckForDragDrop(row);
+            
+            onDroppedOrPasted(DRAG_AND_DROP, checkRow.getItem(), relativePosition);
+            
+            // DnD is done, throw away board
+            AppClipboard.getInstance().clearContent(DRAG_AND_DROP);
+            
+            event.setDropCompleted(true);
+            event.consume();
+        }
+    }
+    
+    private void onDroppedOrPasted(final DataFormat dataFormat, final GPXLineItem target, final GPXEditor.RelativePosition relativePosition) {
+        if (AppClipboard.getInstance().hasContent(dataFormat)) {
+            final List<GPXWaypoint> waypoints = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
+
+            myEditor.insertWaypointsAtPosition(
+                    target,
+                    waypoints, 
+                    relativePosition);
+            
+            if (DRAG_AND_DROP.equals(dataFormat) && !myEditor.isCntrlPressed()) {
+                myEditor.deleteSelectedWaypoints();
             }
         }
     }

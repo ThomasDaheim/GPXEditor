@@ -33,7 +33,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -42,16 +42,15 @@ import tf.gpx.edit.main.GPXEditor;
  * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
-@SuppressWarnings("unchecked")
-public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
+public class SpeedChart extends LineChart<Number, Number> implements IChartBasics<LineChart<Number, Number>> {
     private final static SpeedChart INSTANCE = new SpeedChart();
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
 
-    private List<GPXLineItem> myGPXLineItems;
+    private List<GPXMeasurable> myGPXLineItems;
 
-    private final List<Pair<GPXWaypoint, Double>> myPoints = new ArrayList<>();
+    private final List<Pair<GPXWaypoint, Number>> myPoints = new ArrayList<>();
     
     private double minDistance;
     private double maxDistance;
@@ -60,8 +59,9 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
+    
+    private boolean nonZeroData = false;
 
-    @SuppressWarnings("unchecked")
     private SpeedChart() {
         super(new NumberAxis(), new NumberAxis());
         
@@ -85,22 +85,22 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     }
     
     @Override
-    public LineChart getChart() {
+    public LineChart<Number, Number> getChart() {
         return this;
     }
     
     @Override
-    public Iterator<XYChart.Data<Double, Double>> getDataIterator(final XYChart.Series<Double, Double> series) {
+    public Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series) {
         return getDisplayedDataIterator(series);
     }
     
     @Override
-    public List<GPXLineItem> getGPXLineItems() {
+    public List<GPXMeasurable> getGPXMeasurables() {
         return myGPXLineItems;
     }
     
     @Override
-    public void setGPXLineItems(final List<GPXLineItem> lineItems) {
+    public void setGPXMeasurables(final List<GPXMeasurable> lineItems) {
         myGPXLineItems = lineItems;
     }
     
@@ -145,7 +145,7 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     }
 
     @Override
-    public List<Pair<GPXWaypoint, Double>> getPoints() {
+    public List<Pair<GPXWaypoint, Number>> getPoints() {
         return myPoints;
     }
     
@@ -172,5 +172,15 @@ public class SpeedChart extends LineChart implements IChartBasics<LineChart> {
     @Override
     public void setChartsPane(final ChartsPane pane) {
         myChartsPane = pane;
+    }
+
+    @Override
+    public boolean hasNonZeroData() {
+        return nonZeroData;
+    }
+
+    @Override
+    public void setNonZeroData(final boolean value) {
+        nonZeroData = value;
     }
 }

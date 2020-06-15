@@ -56,8 +56,7 @@ public class BinValueDistribution {
         return INSTANCE;
     }
     
-    @SuppressWarnings("unchecked")
-    public void calculateBinValues(final ValueDistribution valueDistribution) {
+    public <T> void calculateBinValues(final ValueDistribution<T> valueDistribution) {
         assert valueDistribution != null && valueDistribution.getValues().size() > 0;
 
         // calc max & min values to determine bin size
@@ -73,7 +72,7 @@ public class BinValueDistribution {
         
         // count data into bins
         double checkValue;
-        for (Object value : valueDistribution.getValues()) {
+        for (T value : valueDistribution.getValues()) {
             checkValue = valueDistribution.getValueAsDouble(value);
             
             // set only if real value (<> Double.MIN_VALUE)
@@ -107,14 +106,13 @@ public class BinValueDistribution {
         }
     }
     
-    @SuppressWarnings("unchecked")
-    private void calculateMinMaxXValues(final ValueDistribution valueDistribution) {
+    private <T> void calculateMinMaxXValues(final ValueDistribution<T>  valueDistribution) {
         myMinXValue = Double.MAX_VALUE;
         myMaxXValue = 0.0;
         
         // iterate over gpxwaypoints and check against min & max
         double checkValue;
-        for (Object value : valueDistribution.getValues()) {
+        for (T value : valueDistribution.getValues()) {
             checkValue = valueDistribution.getValueAsDouble(value);
             // set only if real value (<> Double.MIN_VALUE)
             if (checkValue != Double.MIN_VALUE) {

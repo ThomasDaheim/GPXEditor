@@ -44,12 +44,12 @@ import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXWaypoint extends GPXLineItem {
     // TFE, 20180214: waypoints can be in segments, routes and files
     private GPXLineItem myGPXParent;
@@ -102,8 +102,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    @SuppressWarnings("unchecked")
-    public GPXWaypoint cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXWaypoint myClone = new GPXWaypoint();
         
         // parent needs to be set initially - list functions use this for checking
@@ -113,7 +112,7 @@ public class GPXWaypoint extends GPXLineItem {
         myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     public Waypoint getWaypoint() {
@@ -311,27 +310,30 @@ public class GPXWaypoint extends GPXLineItem {
     }
 
     @Override
-    public GPXLineItem getParent() {
-        return myGPXParent;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXParent);
     }
 
     @Override
-    public GPXWaypoint setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXParent != null && myGPXParent.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
-        assert GPXLineItem.GPXLineItemType.isParentTypeOf(parent.getType(), this.getType());
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItemHelper.isParentTypeOf(parent, this);
+        }
         
         myGPXParent = parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
+    public ObservableList<? extends GPXLineItem> getChildren() {
         return FXCollections.observableArrayList();
     }
     
@@ -387,7 +389,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_DATA;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() != 0.0) {
                     return gpxLineItemData.getFormat().format(getSpeed());
                 } else {
                     return NO_DATA;
@@ -545,7 +547,7 @@ public class GPXWaypoint extends GPXLineItem {
                     return NO_VALUE;
                 }
             case Speed:
-                if (myPrevGPXWaypoint != null && getCumulativeDuration() > 0.0) {
+                if (myPrevGPXWaypoint != null && getCumulativeDuration() != 0.0) {
                     return getSpeed();
                 } else {
                     return NO_VALUE;

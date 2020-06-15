@@ -35,25 +35,24 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
+import tf.helper.doundo.IDoUndoAction;
 
 /**
  *
  * @author Thomas
  */
-public class GPXEditorBatch {
+public class GPXEditorBatch extends GPXEditor {
     private final static GPXEditorBatch INSTANCE = new GPXEditorBatch();
     private final static GPXEditorParameters myParameters = GPXEditorParameters.getInstance();
 
-    private final GPXFileHelper myFileHelper = new GPXFileHelper();
-    private final GPXStructureHelper myStructureHelper = new GPXStructureHelper();
-    
     private GPXEditorBatch() {
         // Exists only to defeat instantiation.
+        super(false);
     }
 
     public static GPXEditorBatch getInstance() {
@@ -62,6 +61,9 @@ public class GPXEditorBatch {
     
     public boolean executeBatchProecssing() {
         boolean result = true;
+        
+        GPXFileHelper.getInstance().setCallback(this);
+        GPXStructureHelper.getInstance().setCallback(this);
         
         final List<File> gpxFileNames = new ArrayList<>();
         for (String gpxFile : myParameters.getGPXFiles()) {
@@ -99,7 +101,7 @@ public class GPXEditorBatch {
             for (String arg : myParameters.getArgsList()) {
                 if(GPXEditorParameters.CmdOps.mergeFiles.toString().equals(arg) && myParameters.doMergeFiles()) {
                     System.out.println("Merging Files");
-                    final GPXFile mergedGPXFile = myStructureHelper.mergeGPXFiles(gpxFiles);
+                    final GPXFile mergedGPXFile = GPXStructureHelper.getInstance().mergeGPXFiles(gpxFiles);
                     
                     // now replace previous file list with single new one
                     gpxFiles.clear();
@@ -108,25 +110,28 @@ public class GPXEditorBatch {
                 if(GPXEditorParameters.CmdOps.mergeTracks.toString().equals(arg) && myParameters.doMergeTracks()) {
                     System.out.println("Merging Tracks");
                     // here we merge all tracks, so both parameters are identical
-                    gpxFiles.forEach((GPXFile gpxFile) -> myStructureHelper.mergeGPXTracks(gpxFile.getGPXTracks(), gpxFile.getGPXTracks()));
+                    gpxFiles.forEach((GPXFile gpxFile) -> {
+                            final IDoUndoAction action = new MergeDeleteTracksAction(this, GPXEditor.MergeDeleteItems.MERGE, gpxFile, gpxFile.getGPXTracks());
+                            action.doAction();
+                        });
                 }
                 if(GPXEditorParameters.CmdOps.reduceTracks.toString().equals(arg) && myParameters.doReduceTracks()) {
                     System.out.println("Reducing Tracks in Files");
-                    myStructureHelper.reduceGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
+                    GPXStructureHelper.getInstance().reduceGPXMeasurables(gpxFiles, myParameters.getReduceAlgorithm(), myParameters.getReduceEpsilon());
                 }
                 if(GPXEditorParameters.CmdOps.fixTracks.toString().equals(arg) && myParameters.doFixTracks()) {
                     System.out.println("Fixing Tracks in Files");
-                    myStructureHelper.fixGPXLineItems(GPXLineItem.castToGPXLineItem(gpxFiles), myParameters.getFixDistance());
+                    GPXStructureHelper.getInstance().fixGPXMeasurables(gpxFiles, myParameters.getFixDistance());
                 }
                 if(GPXEditorParameters.CmdOps.deleteEmpty.toString().equals(arg) && myParameters.doDeleteEmpty()) {
                     System.out.println("Deleting empty line items in Files");
-                    myStructureHelper.deleteEmptyGPXTrackSegments(gpxFiles, myParameters.getDeleteCount());
+                    GPXStructureHelper.getInstance().deleteEmptyGPXTrackSegments(gpxFiles, myParameters.getDeleteCount());
                 }
             }
             
             // save updated files
             System.out.println("Saving " + gpxFileNames.size() + " files.");
-            gpxFiles.forEach((GPXFile gpxFile) -> myFileHelper.saveFile(gpxFile, false));
+            gpxFiles.forEach((GPXFile gpxFile) -> GPXFileHelper.getInstance().saveFile(gpxFile, false));
         }
         
         return true;

@@ -42,13 +42,12 @@ import tf.gpx.edit.extension.GarminExtensionWrapper;
 import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
@@ -119,6 +118,11 @@ public class GPXRoute extends GPXMeasurable {
     
     @Override
     public void setColor(final String col) {
+        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
+            setDefaultColor();
+            return;
+        }
+
         color = col;
         GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
                 this,
@@ -129,7 +133,22 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXRoute cloneMe(final boolean withChildren) {
+    public void setDefaultColor() {
+        color = GarminExtensionWrapper.GarminDisplayColor.Blue.name();
+        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
+            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
+                    this,
+                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
+                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        }
+
+        setHasUnsavedChanges();
+    }
+    
+    @Override
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
@@ -152,7 +171,7 @@ public class GPXRoute extends GPXMeasurable {
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected Route getRoute() {
@@ -160,33 +179,41 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXFile getParent() {
-        return myGPXFile;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
 
     @Override
-    public GPXRoute setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXFile != null && myGPXFile.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
+    }
+
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
     }
     
     @Override
@@ -253,7 +280,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
     

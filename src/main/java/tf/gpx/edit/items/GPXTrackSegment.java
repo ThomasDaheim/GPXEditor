@@ -38,13 +38,12 @@ import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-@SuppressWarnings("unchecked")
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
@@ -109,7 +108,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrackSegment cloneMe(final boolean withChildren) {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
         
         // parent needs to be set initially - list functions use this for checking
@@ -140,7 +139,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected TrackSegment getTrackSegment() {
@@ -148,33 +147,41 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public GPXTrack getParent() {
-        return myGPXTrack;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXTrack);
     }
 
     @Override
-    public GPXTrackSegment setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // performance: only do something in case of change
         if (myGPXTrack != null && myGPXTrack.equals(parent)) {
-            return this;
+            return ObjectsHelper.uncheckedCast(this);
         }
 
-        assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXTrack.equals(parent.getType());
+        }
         
         myGPXTrack = (GPXTrack) parent;
         setHasUnsavedChanges();
 
-        return this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
         setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
+    }
+
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
     }
     
     @Override
@@ -219,7 +226,11 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public String getName() {
-        return Objects.toString(myGPXTrack.getName(), "") + " - Segment " + getNumber();
+        if (myGPXTrack != null) {
+            return Objects.toString(myGPXTrack.getName(), "") + " - Segment " + getNumber();
+        } else {
+            return "Segment " + getNumber();
+        }
     }
 
     @Override
@@ -227,7 +238,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
     

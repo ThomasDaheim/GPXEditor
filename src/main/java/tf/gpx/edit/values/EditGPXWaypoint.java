@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.modal.Link;
 import com.hs.gpxparser.type.Fix;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
@@ -34,39 +33,46 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.RowConstraints;
 import javafx.stage.Modality;
+import javafx.stage.WindowEvent;
+import javafx.util.StringConverter;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.textfield.TextFields;
 import tf.gpx.edit.helper.AbstractStage;
+import static tf.gpx.edit.helper.AbstractStage.INSET_SMALL;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.MarkerIcon;
 import tf.gpx.edit.viewer.MarkerManager;
-import tf.helper.RestrictiveTextField;
-import tf.helper.TooltipHelper;
+import tf.helper.javafx.GridComboBox;
+import tf.helper.javafx.RestrictiveTextField;
+import tf.helper.javafx.TooltipHelper;
 
 /**
  *
@@ -77,7 +83,9 @@ public class EditGPXWaypoint extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXWaypoint INSTANCE = new EditGPXWaypoint();
     
-    private final static String MULTIPLE_VALUES = "<Multiple>";
+    public final static String KEEP_MULTIPLE_VALUES = "<Keep multiple values>";
+    private final static int SYMBOL_SIZE = 32;
+    private final static int COLS_PER_ROW = 5;
 
     private GPXEditor myGPXEditor;
     
@@ -86,7 +94,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private final TextField waypointDescriptionTxt = new TextField();
     private final TextField waypointCommentTxt = new TextField();
     private final TextField waypointSrcTxt = new TextField();
-    private final ComboBox<String> waypointSymTxt = new ComboBox<>();
+    private final GridComboBox<Label> waypointSymTxt = new GridComboBox<>();
     private final TextField waypointTypeTxt = new TextField();
     private final CalendarTextField waypointTimeTxt = new CalendarTextField();
     private LinkTable waypointLinkTable;
@@ -121,11 +129,10 @@ public class EditGPXWaypoint extends AbstractStage {
         return INSTANCE;
     }
 
-    @SuppressWarnings("unchecked")
     private void initViewer() {
         // create new scene
-        getStage().setTitle("Edit Waypoint Properties");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Edit Waypoint Properties");
+        initModality(Modality.APPLICATION_MODAL); 
         
         // https://de.wikipedia.org/wiki/GPS_Exchange_Format
         // http://www.topografix.com/gpx/1/1/
@@ -168,38 +175,132 @@ public class EditGPXWaypoint extends AbstractStage {
         getGridPane().add(symLbl, 0, rowNum);
         GridPane.setMargin(symLbl, INSET_TOP);
 
+        // set group labels disabled & show icons in multicolumn layout
+        // disable: https://stackoverflow.com/a/32373721 - BUT can still select with arrows
+        // multicolumn: https://stackoverflow.com/a/58286816 - BUT not for our case: mutliple items in one row
+        // https://stackoverflow.com/a/37190344 - seems to be the way to go have a gridpane as popup
+        // https://github.com/controlsfx/controlsfx/blob/master/controlsfx/src/main/java/org/controlsfx/control/GridView.java - might be useful here too - NON, no selection model
+        // FINALLY: build your own GridComboBox :-)
         waypointSymTxt.setEditable(true);
-        waypointSymTxt.setVisibleRowCount(10);
-        waypointSymTxt.getItems().addAll(MarkerManager.getInstance().getMarkerNames());
+        waypointSymTxt.setVisibleRowCount(8);
+        waypointSymTxt.setHgap(0.0);
+        waypointSymTxt.setVgap(0.0);
+        waypointSymTxt.setResizeContentColumn(false);
+        waypointSymTxt.setResizeContentRow(false);
+        // handle non-string combobox content properly
+        // https://stackoverflow.com/a/58286816
+        waypointSymTxt.setGridConverter(new StringConverter<Label>() {
+            @Override
+            public String toString(Label label) {
+                if (label == null) {
+                    return "";
+                } else if (label.getTooltip() == null) {
+                    // groupname
+                    return label.getText();
+                } else {
+                    // icon
+                    return label.getTooltip().getText();
+                }
+            }
+
+            @Override
+            public Label fromString(String string) {
+                 return waypointSymbolLabelForText(string);
+            }
+        });
+
+        // add icons and group labels
+        int gridRowNum = 0;
+        int gridColNum = 0;
+        addGroupLabel("Special");
+        String actGroupName = "Business";
+        gridRowNum++;
+        
+        for (MarkerIcon marker : MarkerManager.getInstance().getAllMarkers()) {
+            // hide specials - except for placemark
+            if (!MarkerManager.SPECIAL_GROUP.equals(marker.getGroupName()) || 
+                    MarkerManager.SpecialMarker.PlaceMarkIcon.getMarkerName().equals(marker.getMarkerName())) {
+                // check for change in group and add header if changed
+                if (!actGroupName.equals(marker.getGroupName()) && !MarkerManager.SpecialMarker.PlaceMarkIcon.getMarkerName().equals(marker.getMarkerName())) {
+                    addGroupLabel(marker.getGroupName());
+                    actGroupName = marker.getGroupName();
+                    
+                    gridRowNum++;
+                    // only add new line in case we didn't just finish one
+                    if (gridColNum != 0) {
+                        gridRowNum++;
+                        gridColNum = 0;
+                    }
+                }
+                
+                final Label label = new Label(null);
+                label.getStyleClass().add("icon-label");
+                label.setGraphicTextGap(0.0);
+
+                final Tooltip tooltip = new Tooltip(marker.getMarkerName());
+                TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                label.setTooltip(tooltip);
+
+                final String iconBase64 = MarkerManager.getInstance().getIcon(marker.getIconName());
+                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), SYMBOL_SIZE, SYMBOL_SIZE, false, true);
+                label.setGraphic(new ImageView(image));
+
+                waypointSymTxt.add(label, gridColNum, gridRowNum, 1, 1);
+                if (gridColNum + 1 < COLS_PER_ROW) {
+                    gridColNum++;
+                } else {
+                    gridRowNum++;
+                    gridColNum = 0;
+                }
+                
+            }
+        }
+        // make sure things are laid out properly
+        addColRowConstraints();
         // TFE, 20190721: filter while typing
-        TextFields.bindAutoCompletion(waypointSymTxt.getEditor(), waypointSymTxt.getItems());
+        // TFE; 20200510: minor modification since we now show labels with images
+        waypointSymTxt.getEditor().textProperty().addListener((ov, t, t1) -> {
+            if (t1 != null && !t1.equals(t)) {
+                setWaypointSymTxt(t1);
+            }
+        });
         getGridPane().add(waypointSymTxt, 1, rowNum);
         GridPane.setMargin(waypointSymTxt, INSET_TOP);
-        
+  
         final Label symbolValue = new Label("");
         getGridPane().add(symbolValue, 2, rowNum);
         GridPane.setMargin(symbolValue, INSET_TOP);
-        
+  
         // update label for any changes of combobox selection
         waypointSymTxt.valueProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
-            if (newValue != null && !newValue.equals(oldValue)) {
-                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
-                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, false);
-                symbolValue.setGraphic(new ImageView(image));
+            if (newValue != null && !newValue.equals(oldValue) && waypointSymbolLabelForText(newValue) != null) {
+                if (waypointSymbolLabelForText(newValue).getGraphic() != null) {
+                    // can't use graphics from newValue since it removes it from the combobox
+                    final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(newValue).getIconName());
+                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), 24, 24, false, true);
+                    symbolValue.setGraphic(new ImageView(image));
+                } else {
+                    // poor mans disabled entry: reset to last value
+                    Platform.runLater(() -> {
+                        waypointSymTxt.setValue(oldValue);
+                    });
+                }
             }
         });
+
         // focus dropdown on selected item - hacking needed
         waypointSymTxt.showingProperty().addListener((obs, wasShowing, isNowShowing) -> {
             if (isNowShowing) {
                 // set focus on selected item
                 if (waypointSymTxt.getSelectionModel().getSelectedIndex() > -1) {
+                    waypointSymTxt.scrollTo(waypointSymbolLabelForText(waypointSymTxt.getSelectionModel().getSelectedItem()));
                     // https://stackoverflow.com/a/36548310
                     // https://stackoverflow.com/a/47933342
-                    final ListView<String> lv = (ListView<String>) ((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent();
-                    lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
+//                    final ListView<Label> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
+//                    lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
                 }
             }
-        });        
+        });
 
         rowNum++;
         // 3rd row: desc
@@ -383,39 +484,80 @@ public class EditGPXWaypoint extends AbstractStage {
         // 16th row: store properties
         final Button saveButton = new Button("Save Properties");
         saveButton.setOnAction((ActionEvent event) -> {
-            setProperties();
-            
-            myGPXEditor.refresh();
+            myGPXEditor.setWaypointInformation(myGPXWaypoints, getWaypointData());
 
             // done, lets get out of here...
-            getStage().close();
+            close();
         });
-        getGridPane().add(saveButton, 0, rowNum, 4, 1);
+        setActionAccelerator(saveButton);
+        getGridPane().add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
         GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
+        
+        final Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent event) -> {
+            close();
+        });
+        setCancelAccelerator(cancelBtn);
+        getGridPane().add(cancelBtn, 2, rowNum, 2, 1);
+        GridPane.setHalignment(cancelBtn, HPos.CENTER);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
+        
+        addEventFilter(WindowEvent.WINDOW_HIDING, (t) -> {
+            t.consume();
+        });
+    }
+    private void addGroupLabel(final String name) {
+        final Label label = new Label(name);
+        label.setGraphic(null);
+        label.setDisable(true);
+        label.getStyleClass().add("icon-groupname-label");
+        waypointSymTxt.add(label, 0, waypointSymTxt.getRowCount(), COLS_PER_ROW, 1);
+    }
+    private void addColRowConstraints() {
+        for (int i = 0; i < waypointSymTxt.getColumnCount(); i++) {
+            final ColumnConstraints column = new ColumnConstraints(SYMBOL_SIZE);
+            column.setFillWidth(true);
+            column.setHgrow(Priority.ALWAYS);
+            waypointSymTxt.getColumnConstraints().add(column);
+        }
+        for (int i = 0; i < waypointSymTxt.getRowCount(); i++) {
+            final RowConstraints row = new RowConstraints(SYMBOL_SIZE);
+            row.setFillHeight(true);
+            waypointSymTxt.getRowConstraints().add(row);
+        }
     }
 
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
     
-    public void editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
+    public boolean editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert !CollectionUtils.isEmpty(gpxWaypoints);
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
         if (CollectionUtils.isEmpty(gpxWaypoints)) {
-            return;
+            return false;
         }
 
         myGPXWaypoints = gpxWaypoints;
         
         initProperties();
 
-        getStage().showAndWait();
+        try {
+            showAndWait();
+            // TFE; 20200510: ugly hack!
+            // when hiding the stage an update event is fired when the symbol of the waypoint has been changed
+            // ComboBox tries to set to the text, when instead it shows labels =>
+            // Exception in thread "JavaFX Application Thread" java.lang.ClassCastException: class java.lang.String cannot be cast to class javafx.scene.control.Label (java.lang.String is in module java.base of loader 'bootstrap'; javafx.scene.control.Label is in module javafx.controls of loader 'app')
+        } catch (ClassCastException ex) {
+        }
+        
+        return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
     private void initProperties() {
@@ -426,14 +568,60 @@ public class EditGPXWaypoint extends AbstractStage {
         }
     }
     
+    private Label waypointSymbolLabelForText(final String labelText) {
+        if (labelText == null) {
+            // default label is a placemark
+            return waypointSymbolLabelForText(MarkerManager.DEFAULT_MARKER.getMarkerName());
+        }
+        
+        final Optional<Label> label = waypointSymTxt.getGridItems().stream().filter((t) -> {
+            if (t.getTooltip() == null) {
+                return false;
+            } else {
+                return t.getTooltip().getText().equals(labelText);
+            }
+        }).findFirst();
+        
+        if (label.isPresent()) {
+            return label.get();
+        } else {
+            return null;
+        }
+    }
+    
+    private void setWaypointSymTxt(final String labelText) {
+        final Label label = waypointSymbolLabelForText(labelText);
+        
+        if (label != null) {
+            waypointSymTxt.getSelectionModel().select(label.getTooltip().getText());
+            waypointSymTxt.scrollTo(waypointSymbolLabelForText(waypointSymTxt.getSelectionModel().getSelectedItem()));
+
+//            if (waypointSymTxt.getSkin() != null) {
+//                final ListView<Label> lv = ObjectsHelper.uncheckedCast(((ComboBoxListViewSkin) waypointSymTxt.getSkin()).getPopupContent());
+//                lv.scrollTo(waypointSymTxt.getSelectionModel().getSelectedIndex());
+//            }
+        }
+    }
+    
     private void initSingleProperties() {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
         waypointNameTxt.setText(setNullStringToEmpty(waypoint.getName()));
-        waypointSymTxt.setValue(setNullStringToEmpty(waypoint.getSym()));
+        
+        // TFE, 20200615: symbols not shown for non-file waypoints
+        waypointSymTxt.setDisable(!waypoint.isGPXFileWaypoint());
+        setWaypointSymTxt(waypoint.getSym());
+
         waypointDescriptionTxt.setText(setNullStringToEmpty(waypoint.getDescription()));
         waypointCommentTxt.setText(setNullStringToEmpty(waypoint.getComment()));
-        waypointTimeTxt.setText(setNullDateToEmpty(waypoint.getDate()));
+        waypointTimeTxt.setDisable(false);
+        if (waypoint.getDate() != null) {
+            final GregorianCalendar calendar = new GregorianCalendar();
+            calendar.setTime(waypoint.getDate());
+            waypointTimeTxt.setCalendar(calendar);
+        } else {
+            waypointTimeTxt.setText("");
+        }
         waypointSrcTxt.setText(setNullStringToEmpty(waypoint.getSrc()));
         waypointTypeTxt.setText(setNullStringToEmpty(waypoint.getWaypointType()));
 
@@ -476,159 +664,109 @@ public class EditGPXWaypoint extends AbstractStage {
     private void initMultipleProperties() {
         final GPXWaypoint waypoint = myGPXWaypoints.get(0);
         
-        waypointNameTxt.setText(MULTIPLE_VALUES);
-        waypointSymTxt.setValue(setNullStringToEmpty(waypoint.getSym()));
-        waypointDescriptionTxt.setText(MULTIPLE_VALUES);
-        waypointCommentTxt.setText(MULTIPLE_VALUES);
-        waypointTimeTxt.setText(MULTIPLE_VALUES);
-        waypointSrcTxt.setText(MULTIPLE_VALUES);
-        waypointTypeTxt.setText(MULTIPLE_VALUES);
+        waypointNameTxt.setText(KEEP_MULTIPLE_VALUES);
+
+        // TFE, 20200615: symbols not shown for non-file waypoints
+        boolean hasFileWaypoint = false;
+        for (GPXWaypoint point : myGPXWaypoints) {
+            if (point.isGPXFileWaypoint()) {
+                hasFileWaypoint = true;
+                break;
+            }
+        }
+        waypointSymTxt.setDisable(!hasFileWaypoint);
+        setWaypointSymTxt(waypoint.getSym());
+
+        waypointDescriptionTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointCommentTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointSrcTxt.setText(KEEP_MULTIPLE_VALUES);
+        waypointTypeTxt.setText(KEEP_MULTIPLE_VALUES);
 
         waypointLinkTable.getItems().clear();
         if (waypoint.getLinks() != null) {
             waypointLinkTable.getItems().addAll(waypoint.getLinks());
         }
         
+        // all of those can't be edited in multiple mode - until I find a way to do it properly
+        waypointTimeTxt.setDisable(true);
+        waypointTimeTxt.setText("");
+
         waypointLatitudeTxt.setDisable(true);
-        waypointLatitudeTxt.setText(MULTIPLE_VALUES);
+        waypointLatitudeTxt.setText("");
         waypointLongitudeTxt.setDisable(true);
-        waypointLongitudeTxt.setText(MULTIPLE_VALUES);
+        waypointLongitudeTxt.setText("");
 
         waypointElevationTxt.setDisable(true);
-        waypointElevationTxt.setText(MULTIPLE_VALUES);
         waypointGeoIdHeightTxt.setDisable(true);
-        waypointGeoIdHeightTxt.setText(MULTIPLE_VALUES);
         waypointHdopTxt.setDisable(true);
-        waypointHdopTxt.setText(MULTIPLE_VALUES);
         waypointVdopTxt.setDisable(true);
-        waypointVdopTxt.setText(MULTIPLE_VALUES);
         waypointPdopTxt.setDisable(true);
-        waypointPdopTxt.setText(MULTIPLE_VALUES);
         waypointSatTxt.setDisable(true);
-        waypointSatTxt.setText(MULTIPLE_VALUES);
         waypointFixTxt.setDisable(true);
-        waypointFixTxt.setValue(MULTIPLE_VALUES);
         waypointMagneticVariationTxt.setDisable(true);
-        waypointMagneticVariationTxt.setText(MULTIPLE_VALUES);
         waypointAgeOfGPSDataTxt.setDisable(true);
-        waypointAgeOfGPSDataTxt.setText(MULTIPLE_VALUES);
         waypointdGpsStationIdTxt.setDisable(true);
-        waypointdGpsStationIdTxt.setText(MULTIPLE_VALUES);
     }
     
-    private void setProperties() {
-        if (myGPXWaypoints.size() == 1) {
-            setSingleProperties();
-        } else {
-            setMultipleProperties();
-        }
-    }
-    
-    private void setSingleProperties() {
-        final GPXWaypoint waypoint = myGPXWaypoints.get(0);
+    private GPXWaypoint getWaypointData() {
+        // set only if different from KEEP_MULTIPLE_VALUES or initial value
         
-        waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
-        waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
-        waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
-        waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
-        if (!waypointTimeTxt.getText().isEmpty()) {
-            try {
-                waypoint.setDate(GPXLineItem.DATE_FORMAT.parse(waypointTimeTxt.getText()));
-            } catch (ParseException ex) {
-                Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
-                waypoint.setDate(null);
+        final GPXWaypoint waypoint = new GPXWaypoint(myGPXWaypoints.get(0).getGPXFile(), -1, -1);
+        
+        if (myGPXWaypoints.size() == 1) {
+            // more values can be changed for single waypoint
+            Date date = null;
+            if (!waypointTimeTxt.getText().isEmpty()) {
+                date = waypointTimeTxt.getCalendar().getTime();
             }
-        } else {
-            waypoint.setDate(null);
-        }
-        waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
-        waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
+            waypoint.setDate(date);
 
+            waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
+            waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
+
+            waypoint.setElevation(setEmptyToZeroDouble(waypointElevationTxt.getText()));
+            waypoint.setGeoIdHeight(setEmptyToZeroDouble(waypointGeoIdHeightTxt.getText()));
+            waypoint.setHdop(setEmptyToZeroDouble(waypointHdopTxt.getText()));
+            waypoint.setVdop(setEmptyToZeroDouble(waypointVdopTxt.getText()));
+            waypoint.setPdop(setEmptyToZeroDouble(waypointPdopTxt.getText()));
+            waypoint.setSat(setEmptyToZeroInt(waypointSatTxt.getText()));
+            if (!waypointFixTxt.getValue().isEmpty()) {
+                waypoint.setFix(Fix.returnType(waypointFixTxt.getValue()));
+            } else {
+                waypoint.setFix(null);
+            }
+            waypoint.setMagneticVariation(setEmptyToZeroDouble(waypointMagneticVariationTxt.getText()));
+            waypoint.setAgeOfGPSData(setEmptyToZeroDouble(waypointAgeOfGPSDataTxt.getText()));
+            waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
+        }
+        
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
+            waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
+        }
+        // value has changed: 1) was set and has changed OR 2) was null and has changed from default
+        if ((myGPXWaypoints.get(0).getSym() != null) && !myGPXWaypoints.get(0).getSym().equals(waypointSymTxt.getValue()) ||
+            ((myGPXWaypoints.get(0).getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(waypointSymTxt.getValue()))) {
+            waypoint.setSym(setEmptyToNullString(waypointSymTxt.getValue()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
+            waypoint.setDescription(setEmptyToNullString(waypointDescriptionTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
+            waypoint.setComment(setEmptyToNullString(waypointCommentTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
+            waypoint.setSrc(setEmptyToNullString(waypointSrcTxt.getText()));
+        }
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
+            waypoint.setWaypointType(setEmptyToNullString(waypointTypeTxt.getText()));
+        }
         if (!waypointLinkTable.getValidLinks().isEmpty()) {
             waypoint.setLinks(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
         } else {
             waypoint.setLinks(null);
         }
         
-        waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
-        waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
-
-        waypoint.setElevation(setEmptyToZeroDouble(waypointElevationTxt.getText()));
-        waypoint.setGeoIdHeight(setEmptyToZeroDouble(waypointGeoIdHeightTxt.getText()));
-        waypoint.setHdop(setEmptyToZeroDouble(waypointHdopTxt.getText()));
-        waypoint.setVdop(setEmptyToZeroDouble(waypointVdopTxt.getText()));
-        waypoint.setPdop(setEmptyToZeroDouble(waypointPdopTxt.getText()));
-        waypoint.setSat(setEmptyToZeroInt(waypointSatTxt.getText()));
-        if (!waypointFixTxt.getValue().isEmpty()) {
-            waypoint.setFix(Fix.returnType(waypointFixTxt.getValue()));
-        } else {
-            waypoint.setFix(null);
-        }
-        waypoint.setMagneticVariation(setEmptyToZeroDouble(waypointMagneticVariationTxt.getText()));
-        waypoint.setAgeOfGPSData(setEmptyToZeroDouble(waypointAgeOfGPSDataTxt.getText()));
-        waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
-    }
-    
-    private void setMultipleProperties() {
-        // set only if different from MULTIPLE_VALUES or initial value
-        
-        final GPXWaypoint waypoint = myGPXWaypoints.get(0);
-        
-        if (!MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointNameTxt.getText()), GPXWaypoint::setName);
-        }
-        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(waypointSymTxt.getValue())) {
-            setMultipleStringValues(setEmptyToNullString(waypointSymTxt.getValue()), GPXWaypoint::setSym);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointDescriptionTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointDescriptionTxt.getText()), GPXWaypoint::setDescription);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointCommentTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointCommentTxt.getText()), GPXWaypoint::setComment);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointTimeTxt.getText())) {
-            Date date = null;
-            if (!waypointTimeTxt.getText().isEmpty()) {
-                try {
-                    date = GPXLineItem.DATE_FORMAT.parse(waypointTimeTxt.getText());
-                } catch (ParseException ex) {
-                    Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            setMultipleDateValues(date, GPXWaypoint::setDate);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointSrcTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointSrcTxt.getText()), GPXWaypoint::setSrc);
-        }
-        if (!MULTIPLE_VALUES.equals(waypointTypeTxt.getText())) {
-            setMultipleStringValues(setEmptyToNullString(waypointTypeTxt.getText()), GPXWaypoint::setWaypointType);
-        }
-        if (!waypointLinkTable.getValidLinks().isEmpty()) {
-            setMultipleLinkValues(waypointLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)), GPXWaypoint::setLinks);
-        } else {
-            setMultipleLinkValues(null, GPXWaypoint::setLinks);
-        }
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleStringValues(final String newValue, final BiConsumer<GPXWaypoint, String> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleDateValues(final Date newValue, final BiConsumer<GPXWaypoint, Date> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
-    }
-    
-    // don't call alle the different setters in individual streams
-    private void setMultipleLinkValues(final HashSet<Link> newValue, final BiConsumer<GPXWaypoint, HashSet<Link>> setter) {
-        myGPXWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
-        });
+        return waypoint;
     }
     
     private String setZeroToEmpty(final int test) {
@@ -652,16 +790,6 @@ public class EditGPXWaypoint extends AbstractStage {
         
         if (!StringUtils.isEmpty(test)) {
             result = test;
-        }
-
-        return result;
-    }
-    
-    private String setNullDateToEmpty(final Date test) {
-        String result = "";
-        
-        if (test != null) {
-            result = GPXLineItem.DATE_FORMAT.format(test);
         }
 
         return result;

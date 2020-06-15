@@ -26,10 +26,12 @@
 package tf.gpx.edit.worker;
 
 import de.saring.leafletmap.LatLong;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.srtm.SRTMDataStore;
 
@@ -64,6 +66,7 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
     
     private WorkMode myWorkMode = WorkMode.CHECK_DATA_FILES;
     private AssignMode myAssignMode = AssignMode.ALWAYS;
+    private boolean myDoUndo;
     private Set<String> requiredDataFiles = new LinkedHashSet<>();
     
     private int assignedHeightCount = 0;
@@ -74,12 +77,13 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
         super ();
     }
 
-    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final AssignMode assignMode) {
+    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final AssignMode assignMode, final boolean doUndo) {
         super ();
         
         SRTMDataStore.getInstance().setStorePath(path);
         SRTMDataStore.getInstance().setDataAverage(averageMode);
         myAssignMode = assignMode;
+        myDoUndo = doUndo;
     }
     
     public WorkMode getWorkMode() {
@@ -122,7 +126,8 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
                 final double elevation = SRTMDataStore.getInstance().getValueForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude());
 
                 if (elevation != SRTMDataStore.NODATA) {
-                    gpxWayPoint.setElevation(elevation);
+//                    gpxWayPoint.setElevation(elevation);
+                    myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
                     assignedHeightCount++;
                 } else {
                     noHeightCount++;

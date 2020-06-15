@@ -29,6 +29,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.Format;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,10 +52,11 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  *
@@ -64,11 +67,82 @@ public class StatisticsViewer extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatisticsViewer INSTANCE = new StatisticsViewer();
     
-    public final static long BREAK_DURATION = 3;
+    public final static int BREAK_DURATION = 3;
     
-    private long breakDuration = BREAK_DURATION;
+    private int breakDuration = BREAK_DURATION;
     
     private final ObservableList<StatisticValue> statisticsList = FXCollections.observableArrayList();
+    private final List<GPXWaypoint> extremePoints = new ArrayList<>();
+    
+    private GPXEditor myGPXEditor;
+    
+    private class StatisticValue {
+        private final StatisticData myData;
+        private Object myValue = null;
+        private GPXWaypoint myGPXWaypoint = null;
+        
+        StatisticValue (final StatisticData data) {
+            myData = data;
+        }
+        
+        private Object getValue() {
+            return myValue;
+        }
+        
+        private void setValue(final Object value) {
+            myValue = value;
+        }
+
+        /**
+         * @return the myGPXWaypoint
+         */
+        public GPXWaypoint getGPXWaypoint() {
+            return myGPXWaypoint;
+        }
+
+        /**
+         * @param myGPXWaypoint the myGPXWaypoint to set
+         */
+        public void setGPXWaypoint(final GPXWaypoint waypoint) {
+            myGPXWaypoint = waypoint;
+        }
+        
+        private String getDescription() {
+            return myData.getDescription();
+        }
+        
+        private String getUnit() {
+            return myData.getUnit();
+        }
+        
+        private String getLocation() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position);
+            }
+        }
+        
+        private String getTime() {
+            if (myGPXWaypoint == null) {
+                return "";
+            } else {
+                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Date);
+            }
+        }
+
+        private String getStringValue() {
+            if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
+                return GPXLineItem.NO_DATA;
+            } else {
+                if (myData.getFormat() != null) {
+                    return myData.getFormat().format(myValue);
+                } else {
+                    return myValue.toString();
+                }
+            }
+        }
+    }
 
     // for what do we calc statistics
     private static enum StatisticData {
@@ -159,7 +233,7 @@ public class StatisticsViewer extends AbstractStage {
     // UI elements used in various methods need to be class-wide
     final TableView<StatisticValue> table = new TableView<>();
     
-    private GPXFile myGPXFile;
+    private GPXMeasurable myGPXMeasurable;
 
     private StatisticsViewer() {
         super();
@@ -171,8 +245,11 @@ public class StatisticsViewer extends AbstractStage {
     public static StatisticsViewer getInstance() {
         return INSTANCE;
     }
+
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
     
-    @SuppressWarnings("unchecked")
     private void initViewer() {
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
@@ -180,8 +257,8 @@ public class StatisticsViewer extends AbstractStage {
         }
 
         // create new scene
-        getStage().setTitle("Statistics");
-        getStage().initModality(Modality.APPLICATION_MODAL); 
+        setTitle("Statistics");
+        initModality(Modality.APPLICATION_MODAL); 
 
         int rowNum = 0;
 
@@ -218,7 +295,7 @@ public class StatisticsViewer extends AbstractStage {
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getTime()));
         timeCol.setSortable(false);
         
-        table.getColumns().addAll(descCol, valueCol, unitCol, locCol, timeCol);
+        table.getColumns().addAll(Arrays.asList(descCol, valueCol, unitCol, locCol, timeCol));
         // automatically adjust width of columns depending on their content
         table.setColumnResizePolicy((param) -> true );
         
@@ -226,52 +303,62 @@ public class StatisticsViewer extends AbstractStage {
         table.setMinWidth(770);
         table.setMinHeight(750);
         
-        getGridPane().add(table, 0, rowNum, 2, 1);
+        getGridPane().add(table, 0, rowNum, 3, 1);
         GridPane.setMargin(table, INSET_TOP_BOTTOM);
         
         rowNum++;
-        // 2nd row: OK und Export buttons
+        // 2nd row: OK, highlight & Export buttons
         final Button OKButton = new Button("OK");
         OKButton.setOnAction((ActionEvent event) -> {
             // done, lets getAsString out of here...
-            getStage().close();
+            close();
         });      
         getGridPane().add(OKButton, 0, rowNum, 1, 1);
         GridPane.setMargin(OKButton, INSET_BOTTOM);
         GridPane.setHalignment(OKButton, HPos.CENTER);
 
+        // 2nd row: OK, highlight & Export buttons
+        final Button highlightButton = new Button("Select Wpts.");
+        highlightButton.setOnAction((ActionEvent event) -> {
+            myGPXEditor.selectGPXWaypoints(extremePoints, false, false);
+        });      
+        getGridPane().add(highlightButton, 1, rowNum, 1, 1);
+        GridPane.setMargin(highlightButton, INSET_BOTTOM);
+        GridPane.setHalignment(highlightButton, HPos.CENTER);
+
         final Button exportButton = new Button("Export CSV");
         exportButton.setOnAction((ActionEvent event) -> {
             exportCSV();
         });      
-        getGridPane().add(exportButton, 1, rowNum, 1, 1);
+        getGridPane().add(exportButton, 2, rowNum, 1, 1);
         GridPane.setMargin(exportButton, INSET_BOTTOM);
         GridPane.setHalignment(exportButton, HPos.CENTER);
         
         final ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
+        col1.setPercentWidth(33);
         final ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
-        getGridPane().getColumnConstraints().addAll(col1, col2);
+        col2.setPercentWidth(34);
+        final ColumnConstraints col3 = new ColumnConstraints();
+        col3.setPercentWidth(33);
+        getGridPane().getColumnConstraints().addAll(col1, col2, col3);
     }
     
-    public boolean showStatistics(final GPXFile gpxFile) {
-        assert gpxFile != null;
+    public boolean showStatistics(final GPXMeasurable gpxMeasurable) {
+        assert gpxMeasurable != null && !gpxMeasurable.isGPXMetadata() && !gpxMeasurable.isGPXRoute();
         
-        if (getStage().isShowing()) {
-            getStage().close();
+        if (isShowing()) {
+            close();
         }
         
-        myGPXFile = gpxFile;
+        myGPXMeasurable = gpxMeasurable;
         // initialize the whole thing...
         initStatisticsViewer();
         
-        getStage().showAndWait();
+        showAndWait();
                 
         return true;
     }
     
-    @SuppressWarnings("unchecked")
     private void initStatisticsViewer() {
         // reset all previous values
         for (StatisticValue value : statisticsList) {
@@ -284,30 +371,30 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.Break4.ordinal()).setValue("");
         
         // getAsString limits to identify a pause
-        breakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType(Integer::valueOf);
+        breakDuration = GPXEditorPreferences.BREAK_DURATION.getAsType();
         // minutes -> milliseconds
         breakDuration *= 60*1000;
         
-        final List<GPXWaypoint> gpxWaypoints = myGPXFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
+        final List<GPXWaypoint> gpxWaypoints = myGPXMeasurable.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
         
         // set values that don't need calculation
         statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
         
         // format duration as in getCumulativeDurationAsString
-        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXFile));
-        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXFile));
-        double totalLength = myGPXFile.getLength();
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXMeasurable));
+        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXMeasurable));
+        double totalLength = myGPXMeasurable.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
         statisticsList.get(StatisticData.StartHeight.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
         statisticsList.get(StatisticData.EndHeight.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
-        statisticsList.get(StatisticData.MinHeight.ordinal()).setValue(myGPXFile.getMinHeight());
-        statisticsList.get(StatisticData.MaxHeight.ordinal()).setValue(myGPXFile.getMaxHeight());
+        statisticsList.get(StatisticData.MinHeight.ordinal()).setValue(myGPXMeasurable.getMinHeight());
+        statisticsList.get(StatisticData.MaxHeight.ordinal()).setValue(myGPXMeasurable.getMaxHeight());
 
-        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXFile.getCumulativeAscent());
-        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXFile.getCumulativeDescent());
+        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXMeasurable.getCumulativeAscent());
+        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXMeasurable.getCumulativeDescent());
         
-        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXFile.getCumulativeDuration()*1000d*3.6d);
+        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXMeasurable.getCumulativeDuration()*1000d*3.6d);
 
         Date startDate = gpxWaypoints.get(0).getDate();
         Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();
@@ -436,18 +523,23 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.AvgHeight.ordinal()).setValue(avgHeight);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setValue(maxSlopeAsc);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setGPXWaypoint(maxSlopeAscGPXWaypoint);
+        extremePoints.add(maxSlopeAscGPXWaypoint);
         statisticsList.get(StatisticData.MaxSlopeDescent.ordinal()).setValue(maxSlopeDesc);
         statisticsList.get(StatisticData.MaxSlopeDescent.ordinal()).setGPXWaypoint(maxSlopeDescGPXWaypoint);
+        extremePoints.add(maxSlopeDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSlopeAscent.ordinal()).setValue(avgSlopeAsc);
         statisticsList.get(StatisticData.AvgSlopeDescent.ordinal()).setValue(avgSlopeDesc);
         
         statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
         statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
+        extremePoints.add(maxSpeedGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedNoPause.ordinal()).setValue(totalLength/(durationAscNoPause+durationDescNoPause)*1000d*3.6d);
         statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
         statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
+        extremePoints.add(maxSpeedAscGPXWaypoint);
         statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
         statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
+        extremePoints.add(maxSpeedDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedAscent.ordinal()).setValue(lengthAsc/durationAsc*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedAscentNoPause.ordinal()).setValue(lengthAsc/durationAscNoPause*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
@@ -484,74 +576,6 @@ public class StatisticsViewer extends AbstractStage {
                 });  
             } catch (IOException ex) {
                 Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    private class StatisticValue<T> {
-        private final StatisticData myData;
-        private T myValue = null;
-        private GPXWaypoint myGPXWaypoint = null;
-        
-        StatisticValue (final StatisticData data) {
-            myData = data;
-        }
-        
-        private T getValue() {
-            return myValue;
-        }
-        
-        private void setValue(final T value) {
-            myValue = value;
-        }
-
-        /**
-         * @return the myGPXWaypoint
-         */
-        public GPXWaypoint getGPXWaypoint() {
-            return myGPXWaypoint;
-        }
-
-        /**
-         * @param myGPXWaypoint the myGPXWaypoint to set
-         */
-        public void setGPXWaypoint(final GPXWaypoint waypoint) {
-            myGPXWaypoint = waypoint;
-        }
-        
-        private String getDescription() {
-            return myData.getDescription();
-        }
-        
-        private String getUnit() {
-            return myData.getUnit();
-        }
-        
-        private String getLocation() {
-            if (myGPXWaypoint == null) {
-                return "";
-            } else {
-                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Position);
-            }
-        }
-        
-        private String getTime() {
-            if (myGPXWaypoint == null) {
-                return "";
-            } else {
-                return myGPXWaypoint.getDataAsString(GPXLineItem.GPXLineItemData.Date);
-            }
-        }
-
-        private String getStringValue() {
-            if (myValue == null || (myValue instanceof Double && Double.isInfinite((Double) myValue))) {
-                return GPXLineItem.NO_DATA;
-            } else {
-                if (myData.getFormat() != null) {
-                    return myData.getFormat().format(myValue);
-                } else {
-                    return myValue.toString();
-                }
             }
         }
     }

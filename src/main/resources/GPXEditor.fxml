@@ -74,8 +74,6 @@
             <Menu mnemonicParsing="false" text="Values">
               <items>
                 <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
-                  <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="statisticsMenu" mnemonicParsing="false" text="Statistics" />
               </items>
             </Menu>
@@ -114,8 +112,8 @@
               <items>
                   <Menu fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height">
                     <items>
-                        <MenuItem fx:id="assignSRTMheightsFilesMenu" mnemonicParsing="false" text="Files of selected Items" />
-                      <MenuItem fx:id="assignSRTMheightsTracksMenu" mnemonicParsing="false" text="Selected Items" />
+                      <MenuItem fx:id="assignSRTMheightsTracksMenu" mnemonicParsing="false" text="Items" />
+                        <MenuItem fx:id="assignSRTMheightsFilesMenu" mnemonicParsing="false" text="Files of Items" />
                     </items>
                   </Menu>
                   <MenuItem fx:id="heightForCoordinateMenu" mnemonicParsing="false" text="Height for Coordinate" />

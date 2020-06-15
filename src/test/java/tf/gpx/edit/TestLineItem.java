@@ -34,7 +34,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
 import tf.gpx.edit.items.GPXLineItemHelper;
 
 /**
@@ -69,35 +68,35 @@ public class TestLineItem {
         // segment is parent of waypoint
         // route is parent of waypoint
         // waypoint is parent of no one
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isParentTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
 
         // isChildTypeOf
         // file is child of no one
@@ -105,35 +104,35 @@ public class TestLineItem {
         // segment is child of track
         // route is child of file
         // waypoint is child of segment and route and file BUT not track
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
         
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
         
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
         
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
         
-        Assert.assertTrue(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isChildTypeOf(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
 
         // isLowerTypeThan
         // file is lower nothing
@@ -141,35 +140,35 @@ public class TestLineItem {
         // segment is lower file & track
         // route is lower file
         // waypoint is lower everything BUT not itself
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertTrue(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isLowerTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
         
         // isUpperTypeThan
         // file is upper everything BUT not itself
@@ -177,66 +176,66 @@ public class TestLineItem {
         // segment is upper waypoint
         // route is upper waypoint
         // waypoint is upper nothing
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isUpperTypeThan(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
 
         // isSameTypeAs
-        Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertTrue(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXFile, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertTrue(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrack, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertTrue(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXTrackSegment, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertTrue(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXWaypoint, GPXLineItem.GPXLineItemType.GPXRoute));
 
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
-        Assert.assertFalse(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
-        Assert.assertTrue(GPXLineItemType.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXFile));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrack));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXTrackSegment));
+        Assert.assertFalse(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXWaypoint));
+        Assert.assertTrue(GPXLineItemHelper.isSameTypeAs(GPXLineItem.GPXLineItemType.GPXRoute, GPXLineItem.GPXLineItemType.GPXRoute));
     }
     
     @Test

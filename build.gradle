@@ -33,10 +33,17 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='4.6'
+version='5.0'
 
 repositories {
-    mavenLocal()
+    mavenLocal() {
+        // breaking change in gradle 6.*: doesn't find jar files automatically when no pom.xml is present...
+        // https://discuss.gradle.org/t/how-to-fetch-maven-artifact-without-pom-file-in-gradle-6-0/33836
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
     mavenCentral()
     jcenter()
     // You may define additional repositories, or even remove "mavenCentral()".
@@ -49,8 +56,8 @@ repositories {
 
 dependencies {
     // JavaFX11 explicit dependencies
-    def javafx_version='11.0.2'
-//    def javafx_version='14'
+//    def javafx_version='11.0.2'
+    def javafx_version='14'
     compile "org.openjfx:javafx-base:$javafx_version:$platform"
     compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
     compile "org.openjfx:javafx-controls:$javafx_version:$platform"
@@ -60,7 +67,7 @@ dependencies {
     compile "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.1'
+    compile 'tf.JavaHelper:JavaHelper:1.6'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
@@ -82,8 +89,18 @@ dependencies {
     compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '10.0-r1'
     compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
     compile 'uk.com.robust-it:cloning:1.9.12'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+    compile group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
     
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.1'
+}
+
+task unzip(type: Copy) {
+    def zipFile = file("${buildDir}/distributions/GPXEditor-${version}.zip")
+    def outputDir = file("dist")
+ 
+    from zipTree(zipFile)
+    into outputDir
 }
 
 compileJava {
@@ -117,6 +134,9 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--add-exports', 'javafx.controls/com.sun.javafx.scene.control.inputmap=ALL-UNNAMED',
                 '--add-exports', 'javafx.controls/com.sun.javafx.charts=ALL-UNNAMED',
                 '--add-exports', 'javafx.graphics/com.sun.javafx.scene.traversal=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.scene.input=ALL-UNNAMED',
+                '--add-opens', 'javafx.graphics/javafx.scene.layout=ALL-UNNAMED',
     ]
     
 // extend Netbeans Gradle "Run" task
@@ -126,10 +146,19 @@ run {
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
         jvmArgs = jvmArgs.plus('-Xmx4096M')
+        enableAssertions = true
     }
 }
 
 test {
+    doFirst {
+        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
+        jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs = jvmArgs.plus('-Xss80M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
+        enableAssertions = true
+    }
+
     // https://stackoverflow.com/a/35467005
     testLogging.showStandardStreams true;   
 }

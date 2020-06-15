@@ -23,6 +23,16 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.0 - NoRestForTheWicked
+
+* preferences for heatmap
+* app clipboard to unify copy & paste and drag & drop
+* support for do/undo
+* performance improvements
+* icon groups as in Garmin BaseCamp
+* add. map layers and overlays
+* statusbar that shows info on selected waypoints, copy & paste, do & undo
+
 ### Update v4.6
 
 Corona-Time...
@@ -336,6 +346,8 @@ Explicit dependencies:
 
 Other things used internally:
 
+* heatmap: https://github.com/HanSolo/FxHeatMap
+
 * leaflet: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
@@ -343,6 +355,7 @@ Other things used internally:
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
@@ -353,6 +366,7 @@ Other things used internally:
 * placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
 * route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 * heat map icon: https://icons8.com/icons/set/heat-map icon by Icons8
+* undo/redo icons: https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/undo-16.png, https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/redo-16.png by Ivan Boyko under https://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 
 ## Roadmap
 

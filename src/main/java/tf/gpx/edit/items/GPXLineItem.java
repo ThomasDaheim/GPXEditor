@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -65,110 +64,6 @@ public abstract class GPXLineItem {
         GPXRoute("Route"),
         GPXWaypoint("Waypt");
 
-        public static boolean isParentTypeOf(final GPXLineItemType parent, final GPXLineItemType item) {
-            // file is parent of track and route and waypoint... BUT Luckily only used in treetableview where there are no waypoints :-)
-            // metadata is parent of no one
-            // track is parent of segment
-            // segment is parent of waypoint
-            // route is parent of waypoint
-            // waypoint is parent of no one
-            switch (parent) {
-                case GPXFile:
-                    return (!GPXFile.equals(item) && !GPXTrackSegment.equals(item));
-                case GPXWaypoint:
-                    return false;
-                case GPXTrack:
-                    return (GPXTrackSegment.equals(item));
-                case GPXTrackSegment:
-                    return (GPXWaypoint.equals(item));
-                case GPXMetadata:
-                    return false;
-                case GPXRoute:
-                    return (GPXWaypoint.equals(item));
-                default:
-                    return false;
-            }
-        }
-        
-        public static boolean isChildTypeOf(final GPXLineItemType child, final GPXLineItemType item) {
-            // file is child of no one
-            // metadata is child of file
-            // track is child of file
-            // segment is child of track
-            // route is child of file
-            // waypoint is child of segment and route and file BUT not track
-            switch (child) {
-                case GPXFile:
-                    return false;
-                case GPXMetadata:
-                    return (GPXFile.equals(item));
-                case GPXTrack:
-                    return (GPXFile.equals(item));
-                case GPXTrackSegment:
-                    return (GPXTrack.equals(item));
-                case GPXWaypoint:
-                    return (!GPXTrack.equals(item) && !GPXWaypoint.equals(item));
-                case GPXRoute:
-                    return (GPXFile.equals(item));
-                default:
-                    return false;
-            }
-        }
-        
-        public static boolean isLowerTypeThan(final GPXLineItemType lower, final GPXLineItemType item) {
-            // file is lower nothing
-            // metadata is lower file
-            // track is lower file
-            // segment is lower file & track
-            // route is lower file
-            // waypoint is lower everything BUT not itself
-            switch (lower) {
-                case GPXFile:
-                    return false;
-                case GPXMetadata:
-                    return (GPXFile.equals(item));
-                case GPXTrack:
-                    return (GPXFile.equals(item));
-                case GPXTrackSegment:
-                    return (GPXFile.equals(item) || GPXTrack.equals(item));
-                case GPXWaypoint:
-                    return (!GPXWaypoint.equals(item));
-                case GPXRoute:
-                    return (GPXFile.equals(item));
-                default:
-                    return false;
-            }
-        }
-        
-        public static boolean isUpperTypeThan(final GPXLineItemType upper, final GPXLineItemType item) {
-            // file is upper everything BUT not itself
-            // metadata is upper nothing
-            // track is upper segment & waypoint
-            // segment is upper waypoint
-            // route is upper waypoint
-            // waypoint is upper nothing
-            switch (upper) {
-                case GPXFile:
-                    return (!GPXFile.equals(item));
-                case GPXMetadata:
-                    return false;
-                case GPXTrack:
-                    return (GPXTrackSegment.equals(item) || GPXWaypoint.equals(item));
-                case GPXTrackSegment:
-                    return (GPXWaypoint.equals(item));
-                case GPXWaypoint:
-                    return false;
-                case GPXRoute:
-                    return (GPXWaypoint.equals(item));
-                default:
-                    return false;
-            }
-        }
-        
-        public static boolean isSameTypeAs(final GPXLineItemType child, final GPXLineItemType item) {
-            return child.ordinal() == item.ordinal();
-        }
-
         private final String description;
         
         GPXLineItemType(final String desc) {
@@ -189,8 +84,8 @@ public abstract class GPXLineItem {
         Type(false, "Type", GPXLineItemDataType.Single, null),
         Name(false, "Name", GPXLineItemDataType.Single, null),
         Start(false, "Start", GPXLineItemDataType.Single, DATE_FORMAT),
-        CumulativeDuration(true, "Cumulative Duration", GPXLineItemDataType.Double, null),
-        OverallDuration(true, "Overall Duration", GPXLineItemDataType.Double, null),
+        CumulativeDuration(false, "Cumulative Duration", GPXLineItemDataType.Double, null),
+        OverallDuration(false, "Overall Duration", GPXLineItemDataType.Double, null),
         Length(false, "Length", GPXLineItemDataType.Double, DOUBLE_FORMAT_3),
         Speed(true, "Speed", GPXLineItemDataType.Double, DOUBLE_FORMAT_2),
         CumulativeAscent(false, "Cumulative Ascent", GPXLineItemDataType.Multiple, DOUBLE_FORMAT_2),
@@ -205,20 +100,20 @@ public abstract class GPXLineItem {
         ID(false, "ID", GPXLineItemDataType.Integer, null),
         CombinedID(false, "CombinedID", GPXLineItemDataType.Integer, null);
         
-        private final boolean hasDoubleValue;
+        private final boolean showDistribution;
         private final String description;
         private final GPXLineItemDataType dataType;
         private final Format format;
         
-        GPXLineItemData(final boolean doubleValue, final String desc, final GPXLineItemDataType type, final Format form) {
-            hasDoubleValue = doubleValue;
+        GPXLineItemData(final boolean showDist, final String desc, final GPXLineItemDataType type, final Format form) {
+            showDistribution = showDist;
             description = desc;
             dataType = type;
             format = form;
         }
         
-        public boolean hasDoubleValue() {
-            return hasDoubleValue;
+        public boolean showDistribution() {
+            return showDistribution;
         }
         
         public String getDescription() {
@@ -269,6 +164,30 @@ public abstract class GPXLineItem {
         myItemType = itemType;
         
         changeListener = getListChangeListener();
+    }
+    
+    public boolean isGPXFile() {
+        return GPXLineItemType.GPXFile.equals(myItemType);
+    }
+    
+    public boolean isGPXMetadata() {
+        return GPXLineItemType.GPXMetadata.equals(myItemType);
+    }
+    
+    public boolean isGPXTrack() {
+        return GPXLineItemType.GPXTrack.equals(myItemType);
+    }
+    
+    public boolean isGPXTrackSegment() {
+        return GPXLineItemType.GPXTrackSegment.equals(myItemType);
+    }
+    
+    public boolean isGPXRoute() {
+        return GPXLineItemType.GPXRoute.equals(myItemType);
+    }
+    
+    public boolean isGPXWaypoint() {
+        return GPXLineItemType.GPXWaypoint.equals(myItemType);
     }
     
     // cloning for extended class hierarchies
@@ -370,7 +289,7 @@ public abstract class GPXLineItem {
     public abstract <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent);
 
     // helper functions for child relations
-    public abstract ObservableList<GPXLineItem> getChildren();
+    public abstract ObservableList<? extends GPXLineItem> getChildren();
     public ObservableList<? extends GPXLineItem> getChildrenOfType(final GPXLineItem.GPXLineItemType itemType) {
         switch (itemType) {
             case GPXFile:
@@ -505,9 +424,6 @@ public abstract class GPXLineItem {
     }
     public void setColor(final String col) {
     }
-    
-    // TFE, 20190808: general list converter from anywhere to List<GPXLineItem>
-    public static List<GPXLineItem> castToGPXLineItem(final List<? extends GPXLineItem> gpxAnyList) {
-        return gpxAnyList.stream().collect(Collectors.toList());
+    public void setDefaultColor() {
     }
 }

@@ -28,13 +28,15 @@ package tf.gpx.edit.items;
 import com.hs.gpxparser.modal.Bounds;
 import java.util.Date;
 import java.util.List;
+import javafx.collections.ObservableList;
 
 /**
  *
  * @author Thomas
  */
 public abstract class GPXMeasurable extends GPXLineItem {
-    public abstract List<GPXMeasurable> getGPXMeasurables();
+    public abstract List<? extends GPXMeasurable> getGPXMeasurables();
+    public abstract ObservableList<? extends GPXMeasurable> getMeasurableChildren();
     
     private GPXMeasurable() {
         super(null);

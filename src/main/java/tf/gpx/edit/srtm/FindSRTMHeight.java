@@ -46,9 +46,9 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.EnumHelper;
-import tf.helper.RestrictiveTextField;
-import tf.helper.TooltipHelper;
+import tf.helper.javafx.EnumHelper;
+import tf.helper.javafx.RestrictiveTextField;
+import tf.helper.javafx.TooltipHelper;
 
 /**
  *
@@ -86,11 +86,11 @@ public class FindSRTMHeight extends AbstractStage {
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         myAverageMode = 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(SRTMDataStore.SRTMDataAverage::valueOf);
+                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
         
         // create new scene
-        getStage().setTitle("Assign SRTM height values");
-        getStage().initModality(Modality.WINDOW_MODAL);
+        setTitle("Assign SRTM height values");
+        initModality(Modality.WINDOW_MODAL);
        
         int rowNum = 0;
         // 10th row: latitude & longitude
@@ -204,7 +204,7 @@ public class FindSRTMHeight extends AbstractStage {
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 
-                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS);
+                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS, false);
                 final double elevation = worker.getElevation(latLong);
                 
                 if (elevation != SRTMDataStore.NODATA) {
@@ -222,6 +222,6 @@ public class FindSRTMHeight extends AbstractStage {
     public void findSRTMHeight(final HostServices hostServices) {
         myHostServices = hostServices;
 
-        getStage().showAndWait();
+        showAndWait();
     }
 }

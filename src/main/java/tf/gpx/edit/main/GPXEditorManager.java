@@ -25,18 +25,19 @@
  */
 package tf.gpx.edit.main;
 
+import com.sun.javafx.util.Logging;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.application.ConditionalFeature;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.TaskExecutor;
@@ -106,19 +107,25 @@ public class GPXEditorManager extends Application {
             }
 
             // TF, 20161103: store and read height, width of scene and divider positions of splitpane
-            Double recentWindowWidth = GPXEditorPreferences.RECENTWINDOWWIDTH.getAsType(Double::valueOf);
-            Double recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getAsType(Double::valueOf);
+            Double recentWindowWidth = GPXEditorPreferences.RECENTWINDOWWIDTH.getAsType();
+            Double recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getAsType();
 
             myStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
             myStage.setTitle("GPX Editor"); 
             myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
             myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
-            myStage.initStyle(StageStyle.UNIFIED);
+            if (Platform.isSupported(ConditionalFeature.UNIFIED_WINDOW)) {
+                // TFE, 20200508: not working in some environments!
+                // https://stackoverflow.com/a/58406995
+                // https://bugs.openjdk.java.net/browse/JDK-8154847
+//                myStage.initStyle(StageStyle.UNIFIED);
+            }
+            Logging.getCSSLogger().disableLogging();
             
-            controller.lateInitialize();
-
             myStage.show();
-        }
+
+            controller.lateInitialize();
+       }
     }
     
     @Override

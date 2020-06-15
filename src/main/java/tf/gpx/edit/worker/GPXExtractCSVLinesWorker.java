@@ -95,7 +95,7 @@ public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
         String length = "";
         String lengthUnit = "m";
         String height = "";
-        if (GPXLineItem.GPXLineItemType.GPXWaypoint.equals(gpxLineItem.getType())) {
+        if (gpxLineItem.isGPXWaypoint()) {
             length = gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious);
             height = gpxLineItem.getDataAsString(GPXLineItem.GPXLineItemData.Elevation);
         } else {

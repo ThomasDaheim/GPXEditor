@@ -14,6 +14,8 @@ import de.saring.leafletmap.Marker;
 public class MarkerIcon implements Marker {
     // name of the marker = name of the png file
     private final String markerName;
+    // fulll path to the png file
+    private final String markerPath;
     // js compatible name of the marker name
     private final String iconJSName;
     // lazy loading of actual base64 string upon access
@@ -25,16 +27,27 @@ public class MarkerIcon implements Marker {
         super();
         
         markerName = null;
+        markerPath = null;
         iconJSName = null;
     }
 
-    MarkerIcon(final String marker, final String icon) {
+    MarkerIcon(final String marker, final String path, final String icon) {
         markerName = marker;
+        markerPath = path;
         iconJSName = icon;
     }
 
     public String getMarkerName() {
         return markerName;
+    }   
+
+    public String getMarkerPath() {
+        return markerPath;
+    }   
+
+    public String getGroupName() {
+        // this assumes that all path names are of the form "XXX-GroupName"
+        return markerPath.split("-")[1];
     }   
 
     @Override

@@ -106,6 +106,16 @@
 .table-view .table-cell {
     -fx-padding: 0 5 0 5;
 }
+.table-row-cell:drop-target-above {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: black transparent transparent transparent;
+}
+.table-row-cell:drop-target-below {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: transparent transparent black transparent;
+}
 
 .hasUnsavedChanges {
     -fx-font-style: italic;
@@ -317,6 +327,7 @@
     -fx-font-weight: bold;
     -fx-text-alignment: center;
     -fx-text-origin: top;
+    -fx-line-spacing: -4;
 }
 
 * .item-id {
@@ -402,4 +413,38 @@
 
 .srtm-viewer-button {
     -fx-background-color: white
+}
+
+/*
+    undo/redo
+*/
+.redo-button {
+    -fx-padding: 0;
+    -fx-margin: 0;
+    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0px;
+}
+.undo-button {
+    -fx-padding: 0;
+    -fx-margin: 0;
+    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0px;
+}
+
+/* TFE, 20200511: disabled items in waypoint icon combobox */
+.combo-box-popup .list-cell:disabled,
+.icon-groupname-label {
+    -fx-background-color: darkgrey;
+    -fx-font-weight: bold;
+    -fx-underline: true;
+    -fx-opacity: 1.0;
+    -fx-padding: 0;
+    -fx-margin: 0;
+}
+.icon-label {
+    /* TODO: centering of graphics not yet working */
+    -fx-padding: 0 0 0 -16;
+    -fx-margin: 0;
 }

@@ -25,6 +25,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Dimension2D;
+import tf.helper.general.ObjectsHelper;
 
 
 /**
@@ -47,55 +48,46 @@ public class HeatMapBuilder<B extends HeatMapBuilder<B>> {
         return new HeatMapBuilder();
     }
 
-    @SuppressWarnings("unchecked")
     public final B prefSize(final Dimension2D PREF_SIZE) {
         properties.put("prefSize", new SimpleObjectProperty<>(PREF_SIZE));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B width(final double WIDTH) {
         properties.put("width", new SimpleDoubleProperty(WIDTH));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B height(final double HEIGHT) {
         properties.put("height", new SimpleDoubleProperty(HEIGHT));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B colorMapping(final ColorMapping COLOR_MAPPING) {
         properties.put("colorMapping", new SimpleObjectProperty<>(COLOR_MAPPING));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B eventRadius(final double EVENT_rADIUS) {
         properties.put("eventRadius", new SimpleDoubleProperty(EVENT_rADIUS));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B fadeColors(final boolean FADE_COLORS) {
         properties.put("fadeColors", new SimpleBooleanProperty(FADE_COLORS));
-        return (B)this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B heatMapOpacity(final double HEAT_MAP_OPACITY) {
         properties.put("heatMapOpacity", new SimpleDoubleProperty(HEAT_MAP_OPACITY));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final B opacityDistribution(final OpacityDistribution OPACITY_DISTRIBUTION) {
         properties.put("opacityDistribution", new SimpleObjectProperty<>(OPACITY_DISTRIBUTION));
-        return (B) this;
+        return ObjectsHelper.uncheckedCast(this);
     }
 
-    @SuppressWarnings("unchecked")
     public final HeatMap build() {
         double              width               = 400;
         double              height              = 400;
@@ -107,7 +99,7 @@ public class HeatMapBuilder<B extends HeatMapBuilder<B>> {
 
         for (String key : properties.keySet()) {
             if ("prefSize".equals(key)) {
-                Dimension2D dim = ((ObjectProperty<Dimension2D>) properties.get(key)).get();
+                Dimension2D dim = ObjectsHelper.<ObjectProperty<Dimension2D>>uncheckedCast(properties.get(key)).get();
                 width  = dim.getWidth();
                 height = dim.getHeight();
             } else if ("width".equals(key)) {
@@ -115,7 +107,7 @@ public class HeatMapBuilder<B extends HeatMapBuilder<B>> {
             } else if ("height".equals(key)) {
                 height = ((DoubleProperty) properties.get(key)).get();
             } else if ("colorMapping".equals(key)) {
-                colorMapping = ((ObjectProperty<ColorMapping>) properties.get(key)).get();
+                colorMapping = ObjectsHelper.<ObjectProperty<ColorMapping>>uncheckedCast(properties.get(key)).get();
             } else if ("eventRadius".equals(key)) {
                 eventRadius = ((DoubleProperty) properties.get(key)).get();
             } else if ("fadeColors".equals(key)) {
@@ -123,7 +115,7 @@ public class HeatMapBuilder<B extends HeatMapBuilder<B>> {
             } else if ("heatMapOpacity".equals(key)) {
                 heatMapOpacity = ((DoubleProperty) properties.get(key)).get();
             } else if ("opacityDistribution".equals(key)) {
-                opacityDistribution = ((ObjectProperty<OpacityDistribution>) properties.get(key)).get();
+                opacityDistribution = ObjectsHelper.<ObjectProperty<OpacityDistribution>>uncheckedCast(properties.get(key)).get();
             }
         }
 

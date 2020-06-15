@@ -26,6 +26,7 @@
 package tf.gpx.edit.viewer;
 
 import de.saring.leafletmap.Marker;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -35,16 +36,20 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -79,13 +84,14 @@ public class MarkerManager {
     private final static String LODGING_ICON = "Lodging";
     private final static String RESTAURANT_ICON = "Restaurant";
     private final static String WINERY_ICON = "Winery";
-    private final static String PIZZA_ICON = "Pizza";
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
     
     public final static String LONG_ICON_SIZE = "Long";
     public final static String DEFAULT_ICON_SIZE = "24";
     private final static String SMALL_ICON_SIZE = "8";
+    
+    public final static String SPECIAL_GROUP = "Special";
     
     // keys are jsNames
     // pair keys are icon names as in garmin
@@ -94,19 +100,19 @@ public class MarkerManager {
     
     // definition of special markers
     public enum SpecialMarker {
-        TrackPointIcon("TrackPoint", TRACKPOINT_ICON, SMALL_ICON_SIZE),
-        TrackPointLineIcon("TrackPointLine", TRACKPOINTLINE_ICON, LONG_ICON_SIZE),
-        PlaceMarkIcon("Placemark", PLACEMARK_ICON, DEFAULT_ICON_SIZE),
-        LodgingIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
-        LodgingSearchIcon("Lodging", LODGING_ICON, DEFAULT_ICON_SIZE),
-        RestaurantIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
-        RestaurantSearchIcon("Restaurant", RESTAURANT_ICON, DEFAULT_ICON_SIZE),
-        WineryIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
-        WinerySearchIcon("Winery", WINERY_ICON, DEFAULT_ICON_SIZE),
-        FastFoodIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
-        FastFoodSearchIcon("Fast Food", FASTFOOD_ICON, DEFAULT_ICON_SIZE),
-        BarIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
-        BarSearchIcon("Bar", BAR_ICON, DEFAULT_ICON_SIZE),
+        TrackPointIcon(TRACKPOINT_ICON, TRACKPOINT_ICON, SMALL_ICON_SIZE),
+        TrackPointLineIcon(TRACKPOINTLINE_ICON, TRACKPOINTLINE_ICON, LONG_ICON_SIZE),
+        PlaceMarkIcon(PLACEMARK_ICON, PLACEMARK_ICON, DEFAULT_ICON_SIZE),
+        LodgingIcon(LODGING_ICON, LODGING_ICON, DEFAULT_ICON_SIZE),
+        LodgingSearchIcon(LODGING_ICON, LODGING_ICON, DEFAULT_ICON_SIZE),
+        RestaurantIcon(RESTAURANT_ICON, RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        RestaurantSearchIcon(RESTAURANT_ICON, RESTAURANT_ICON, DEFAULT_ICON_SIZE),
+        WineryIcon(WINERY_ICON, WINERY_ICON, DEFAULT_ICON_SIZE),
+        WinerySearchIcon(WINERY_ICON, WINERY_ICON, DEFAULT_ICON_SIZE),
+        FastFoodIcon(FASTFOOD_ICON, FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        FastFoodSearchIcon(FASTFOOD_ICON, FASTFOOD_ICON, DEFAULT_ICON_SIZE),
+        BarIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
+        BarSearchIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
         SearchResultIcon("", SEARCHRESULT_ICON, DEFAULT_ICON_SIZE);
         
         private final String markerName;
@@ -142,6 +148,8 @@ public class MarkerManager {
         }
     }
     
+    public final static SpecialMarker DEFAULT_MARKER = SpecialMarker.PlaceMarkIcon;
+    
     private final Map<SpecialMarker, MarkerIcon> specialMarkers  = new LinkedHashMap<>();
     
     private MarkerManager() {
@@ -168,13 +176,32 @@ public class MarkerManager {
             
             // use sorting since order is different in UI or JAR...
             // https://stackoverflow.com/a/7199929
-            Files.list(myPath).filter(t -> FilenameUtils.isExtension(t.toString(), ICON_EXT)).sorted().forEach((t) -> {
-                final String iconName = t.toString();
+            // TFE, 20200510: icons are now in sub-folders to have same clustering as in garmin mapsource, basecamp
+            // https://stackoverflow.com/a/14676430
+//            Files.list(myPath).filter(t -> FilenameUtils.isExtension(t.toString(), ICON_EXT)).sorted().forEach((t) -> {
+//                final String iconName = t.toString();
+//                final String baseName = FilenameUtils.getBaseName(iconName);
+//                // add name without extension to list
+//                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
+//                //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
+//            });
+            // TFE, 20200611: Path.toFile() not working in jar file...
+            // https://stackoverflow.com/a/24006711
+//            final List<File> iconFiles = new ArrayList<>(FileUtils.listFiles(myPath.toFile(), new String[] {ICON_EXT}, true));
+            final List<Path> iconFiles = Files.walk(myPath)
+                    .filter((t) -> {
+                        return FilenameUtils.isExtension(t.toString(), ICON_EXT);
+                    })
+                    .collect(Collectors.toList());
+            Collections.sort(iconFiles);
+            for (Path iconFile : iconFiles) {
+                final String iconName = iconFile.toString();
                 final String baseName = FilenameUtils.getBaseName(iconName);
+                final String groupName = iconFile.getParent().getFileName().toString();
                 // add name without extension to list
-                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, jsCompatibleIconName(baseName)));
-                //System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
-            });
+                iconMap.put(jsCompatibleIconName(baseName), new MarkerIcon(baseName, RESOURCE_PATH + "/" + groupName, jsCompatibleIconName(baseName)));
+//                System.out.println(baseName + ", " + jsCompatibleIconName(baseName));
+            }
         } catch (URISyntaxException | IOException ex) {
             Logger.getLogger(MarkerManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -221,7 +248,7 @@ public class MarkerManager {
         result = specialMarkers.get(special);
         if (result == null) {
             // default is "Placemark"
-            result = specialMarkers.get(SpecialMarker.PlaceMarkIcon);
+            result = specialMarkers.get(DEFAULT_MARKER);
         }
         
         return result;
@@ -233,7 +260,7 @@ public class MarkerManager {
         result = iconMap.get(jsCompatibleIconName(symbol));
         if (result == null) {
             // default is "Placemark"
-            result = iconMap.get(jsCompatibleIconName(PLACEMARK_ICON));
+            result = iconMap.get(jsCompatibleIconName(DEFAULT_MARKER.getMarkerName()));
         }
         
         return result;
@@ -244,20 +271,22 @@ public class MarkerManager {
         return getMarkerForSymbol(gpxWaypoint.getSym());
     }
     
-    public Set<String> getMarkerNames() {
-        final LinkedHashSet<String> result = new LinkedHashSet<>();
+    // all markers that we know
+    public Set<MarkerIcon> getAllMarkers() {
+        final LinkedHashSet<MarkerIcon> result = new LinkedHashSet<>();
         
         // add our special values upfront...
-        result.add(SpecialMarker.PlaceMarkIcon.getMarkerName());
-        result.add(SpecialMarker.LodgingIcon.getMarkerName());
-        result.add(SpecialMarker.RestaurantIcon.getMarkerName());
-        result.add(SpecialMarker.WineryIcon.getMarkerName());
-        result.add(SpecialMarker.FastFoodIcon.getMarkerName());
-        result.add(SpecialMarker.BarIcon.getMarkerName());
+        // can't use .getMarkerIcon() here since loadSpecialIcons() hasn't run yet...
+        result.add(getMarkerForSymbol(SpecialMarker.PlaceMarkIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.LodgingIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.RestaurantIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.WineryIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.FastFoodIcon.getIconName()));
+        result.add(getMarkerForSymbol(SpecialMarker.BarIcon.getIconName()));
         
         // garmin names are the marker names
         result.addAll(iconMap.entrySet().stream().map((t) -> {
-                            return t.getValue().getMarkerName();
+                            return t.getValue();
                         }).collect(Collectors.toCollection(LinkedHashSet::new)));
         
         return result;
@@ -273,7 +302,7 @@ public class MarkerManager {
             
             if (result.isBlank()) {
                 try {
-                    final InputStream iconStream = MarkerManager.class.getResourceAsStream(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT);
+                    final InputStream iconStream = MarkerManager.class.getResourceAsStream(markerIcon.getMarkerPath()+ "/" + markerIcon.getMarkerName()+ "." + ICON_EXT);
                     final byte[] data = IOUtils.toByteArray(iconStream); //FileUtils.readFileToByteArray(new File(RESOURCE_PATH + "/" + markerIcon.getMarkerName()+ "." + ICON_EXT));
                     result = Base64.getEncoder().encodeToString(data);
                     
