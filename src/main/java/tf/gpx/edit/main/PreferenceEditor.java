@@ -46,6 +46,7 @@ import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -53,8 +54,10 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
@@ -143,6 +146,7 @@ public class PreferenceEditor extends AbstractStage {
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
         getGridPane().getChildren().clear();
+        setHeight(600.0);
 
         // create new scene with list of algos & parameter
         int rowNum = 0;
@@ -410,7 +414,13 @@ public class PreferenceEditor extends AbstractStage {
         searchText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         searchText.setTooltip(t);
         getGridPane().add(searchText, 1, rowNum, 1, 1);
-        GridPane.setMargin(searchText, INSET_TOP);        
+        GridPane.setMargin(searchText, INSET_TOP);
+        
+        // TODO: add table to enable / disable baselayers and overlays
+        // TrackMap.getInstance.getKnownBaselayerNames() and TrackMap.getInstance.getKnownBaselayerNames();
+        // getPreference per layer (JSON!)
+        // create Layer object (enabled, type, name, url, apikey, attribution, minzoom, maxzoom, order)
+        // populate Layer tabke
 
         rowNum++;
         // 4th row: open cycle map api key
@@ -653,9 +663,13 @@ public class PreferenceEditor extends AbstractStage {
         });
         buttonBox.getChildren().add(importBtn);
         HBox.setMargin(importBtn, INSET_SMALL);
-
-        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
-        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
+        
+        // TFE, 20200619: not part of grid but separately below - to have scrolling with fixed buttons
+        getRootPane().getChildren().add(buttonBox);
+        VBox.setMargin(buttonBox, INSET_TOP_BOTTOM);
+        
+//        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
+//        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
     }
     
     private void initPreferences() {

@@ -1620,15 +1620,13 @@ public class TrackMap extends LeafletMapView {
     
     // TFE, 20190901: support to store & load overlay settings per baselayer
     public void loadPreferences() {
-        // neeed to make sure our intrenal setup has been completed...
+        // neeed to make sure our internal setup has been completed...
         if (isInitialized) {
             // overlays per baselayer first
-            // first need to getAsString the know names from js...
-            final List<String> baselayerNames = new ArrayList<>();
-            transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
+            // first need to getAsString the known names from js...
+            final List<String> baselayerNames = getKnownBaselayerNames();
 
-            final List<String> overlayNames = new ArrayList<>();
-            transformToJavaList("getKnownOverlayNames();", overlayNames, false);
+            final List<String> overlayNames = getKnownOverlayNames();
 
             // know read the combinations of baselayer and overlay names from the preferences
             final List<String> preferenceValues = new ArrayList<>();
@@ -1735,7 +1733,19 @@ public class TrackMap extends LeafletMapView {
         }
         sb.append("]");
         return sb.toString();
-    }    
+    }   
+    
+    public List<String> getKnownOverlayNames() {
+        final List<String> result = new ArrayList<>();
+        transformToJavaList("getKnownOverlayNames();", result, false);
+        return result;
+    }
+    
+    public List<String> getKnownBaselayerNames() {
+        final List<String> result = new ArrayList<>();
+        transformToJavaList("getKnownBaselayerNames();", result, false);
+        return result;
+    }
 
     public class JSCallback {
         // call back for jscallback :-)
