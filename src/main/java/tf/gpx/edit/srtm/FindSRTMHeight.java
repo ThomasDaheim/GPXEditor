@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.srtm;
 
-import de.saring.leafletmap.LatLong;
 import java.io.File;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
@@ -45,6 +44,7 @@ import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
+import tf.gpx.edit.leafletmap.LatLong;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.javafx.EnumHelper;
 import tf.helper.javafx.RestrictiveTextField;

@@ -24,70 +24,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// TFE, 20190720: add api keys later on - rewrite url with api key...
-function changeMapLayerUrl(layernum, url) {
-//    jscallback.log('initApiKey: ' + layernum + ", " + url);
-    
-    // get layer for tileset
-    var tileLayer = window["layer" + layernum];
-//    jscallback.log('tileLayer.url: ' + tileLayer._url);
-    
-    tileLayer.setUrl(url);
-//    jscallback.log('tileLayer.url: ' + tileLayer._url);
-}
-
 /*******************************************************************************
  * 
  * Overlays to be used with the maps
  * 
  *******************************************************************************/
-
-// TFE, 20190814: add Hydda roads and labels and OpenMapSurfer contour lines to SATELLITE & MAPBOX layer where required
-var HikeBike_HillShading = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: '&copy; OpenStreetMap'
-});
-HikeBike_HillShading.setZIndex(6);
-
-var OpenMapSurfer_ContourLines = L.tileLayer('https://maps.heigit.org/openmapsurfer/tiles/asterc/webmercator/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: 'Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM'
-});
-OpenMapSurfer_ContourLines.setZIndex(97);
-
-var Hydda_RoadsAndLabels = L.tileLayer('https://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: 'Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors'
-});
-Hydda_RoadsAndLabels.setZIndex(98);
-    
-var OpenRailwayMap = L.tileLayer('https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-	attribution: 'Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenRailwayMap (CC-BY-SA)'
-});
-OpenRailwayMap.setZIndex(99);
-
-// TFE, 20200611: more overlays based on waymarkedtrails -  see https://github.com/Raruto/leaflet-trails for inspiration
-var HikingTrails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
-});
-HikingTrails.setZIndex(100);
-var CyclingTrails = L.tileLayer('https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
-});
-CyclingTrails.setZIndex(101);
-var MTBTrails = L.tileLayer('https://tile.waymarkedtrails.org/mtb/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
-});
-MTBTrails.setZIndex(102);
-var SlopeTrails = L.tileLayer('https://tile.waymarkedtrails.org/slopes/{z}/{x}/{y}.png', {
-	maxZoom: 18,
-        attribution: '&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)',
-});
-SlopeTrails.setZIndex(103);
 
 // TFE, 20190831: add enums & arrays to store previously active overlays per base layer
 // https://stijndewitt.com/2014/01/26/enums-in-javascript/
@@ -107,14 +48,14 @@ const overlaysList = {
     
     // TFE, 20200611: support to show / hide overlays
     properties: {
-        0: {name: 'Contour Lines', layer: OpenMapSurfer_ContourLines, visible: true},
-        1: {name: 'Hill Shading', layer: HikeBike_HillShading, visible: true},
-        2: {name: 'Hiking Trails', layer: HikingTrails, visible: true},
-        3: {name: 'Cycling Trails', layer: CyclingTrails, visible: true},
-        4: {name: 'MTB Trails', layer: MTBTrails, visible: true},
-        5: {name: 'Slopes', layer: SlopeTrails, visible: true},
-        6: {name: 'Roads and Labels', layer: Hydda_RoadsAndLabels, visible: true},
-        7: {name: 'Railways', layer: OpenRailwayMap, visible: true}
+        0: {name: 'Contour Lines', layer: overlay1, visible: true},
+        1: {name: 'Hill Shading', layer: overlay2, visible: true},
+        2: {name: 'Hiking Trails', layer: overlay3, visible: true},
+        3: {name: 'Cycling Trails', layer: overlay4, visible: true},
+        4: {name: 'MTB Trails', layer: overlay5, visible: true},
+        5: {name: 'Slopes', layer: overlay6, visible: true},
+        6: {name: 'Roads and Labels', layer: overlay7, visible: true},
+        7: {name: 'Railways', layer: overlay8, visible: true}
     }
 };
 
@@ -131,79 +72,9 @@ function getKnownOverlayNames() {
 
 /*******************************************************************************
  * 
- * Additional maps besides the ones available from leafletmap
+ * Maps to be used with leaflet
  * 
  *******************************************************************************/
-
-// TFE, 20200611: add bing base layers, see view-source:https://www.sammyshp.de/fsmap/js/fsmap.js for inspiration
-/*
- * TileLayer for Bing Maps.
- */
-L.TileLayer.QuadKeyTileLayer = L.TileLayer.extend({
-    getTileUrl: function (tilePoint) {
-//        this._adjustTilePoint(tilePoint); <- no longer available in leaflet 1.0
-        return L.Util.template(this._url, {
-            s: this._getSubdomain(tilePoint),
-            q: this._quadKey(tilePoint.x, tilePoint.y, this._getZoomForUrl())
-        });
-    },
-    _quadKey: function (x, y, z) {
-        var quadKey = [];
-        for (var i = z; i > 0; i--) {
-            var digit = '0';
-            var mask = 1 << (i - 1);
-            if ((x & mask) != 0) {
-                digit++;
-            }
-            if ((y & mask) != 0) {
-                digit++;
-                digit++;
-            }
-            quadKey.push(digit);
-        }
-        return quadKey.join('');
-    }
-});
-
-controlLayer.addBaseLayer(new L.TileLayer.QuadKeyTileLayer(
-    'https://ecn.t{s}.tiles.virtualearth.net/tiles/r{q}?g=864&mkt=en-gb&lbl=l1&stl=h&shading=hill&n=z',
-    {
-        subdomains: "0123",
-        minZoom: 3,
-        maxZoom: 19,
-        attribution: "Bing - map data copyright Microsoft and its suppliers"
-    }
-), "Bing Maps");
-
-controlLayer.addBaseLayer(new L.TileLayer.QuadKeyTileLayer(
-    'https://ecn.t{s}.tiles.virtualearth.net/tiles/a{q}?g=737&n=z',
-    {
-        subdomains: "0123",
-        minZoom: 3,
-        maxZoom: 19,
-        attribution: "Bing - map data copyright Microsoft and its suppliers"
-    }
-), "Bing Aerial");
-
-// TFE, 20200122: add some more base layers
-//        ,{ id:'OPENTOPOMAP', menu_order:2.20, menu_name:'OpenTopoMap', description:'OpenTopoMap.org', credit:'Map data from <a target="_blank" href="http://www.opentopomap.org/">OpenTopoMap.org</a>', error_message:'OpenTopoMap tiles unavailable', min_zoom:1, max_zoom:17, url:'https://opentopomap.org/{z}/{x}/{y}.png' }
-//        ,{ id:'DE_TOPPLUSOPEN', menu_order:32.4, menu_name:'de: TopPlusOpen topo', description:'German/European topo maps from BKG', credit:'Topo maps from <a target="_blank" href="http://www.geodatenzentrum.de/">BKG</a>', error_message:'TopPlusOpen tiles unavailable', min_zoom:6, max_zoom:18, country:'de', bounds:[4.22,46.32,16.87,55.77], url:'http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png' }
-//        ,{ id:'ES_IGN_TOPO', menu_order:32.81, menu_name:'es: Topo (IGN)', description:'Spanish topo maps from IGN.es', credit:'Topo maps from <a target="_blank" href="http://www.ign.es/">IGN.es</a>', error_message:'IGN.es topo tiles unavailable', min_zoom:6, max_zoom:17, country:'es', bounds:[-18.4,27.5,4.6,44.0], url:'http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}' }
-controlLayer.addBaseLayer(L.tileLayer('https://opentopomap.org/{z}/{x}/{y}.png', {
-        maxNativeZoom: 17,
-        maxZoom: 18,
-	attribution: 'Map data: &copy; OpenTopoMap.org'
-}), "OpenTopoMap");
-controlLayer.addBaseLayer(L.tileLayer('http://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web/default/WEBMERCATOR/{z}/{y}/{x}.png', {
-        maxNativeZoom: 18,
-	maxZoom: 18,
-	attribution: 'Map data: &copy; geodatenzentrum.de'
-}), "DE: TopPlusOpen");
-controlLayer.addBaseLayer(L.tileLayer('http://www.ign.es/wmts/mapa-raster?service=WMTS&request=GetTile&version=1.0.0&format=image/jpeg&layer=MTN&tilematrixset=GoogleMapsCompatible&style=default&tilematrix={z}&tilerow={y}&tilecol={x}', {
-        maxNativeZoom: 17,
-        maxZoom: 18,
-	attribution: 'Map data: &copy; IGN.es'
-}), "ES: Topo (IGN)");
 
 const baselayerList = {
     ITERATE_FIRST: 0,

@@ -23,30 +23,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.leafletmap;
 
-/**
- * Enumeration for all marker colors of the leaflet-color-markers JavaScript library.
- * @author thomas
+/*
+ * TileLayer for Bing Maps.
  */
-public enum ColorMarker implements IMarker {
-    BLUE_MARKER("blueIcon"),
-    RED_MARKER("redIcon"),
-    GREEN_MARKER("greenIcon"),
-    ORANGE_MARKER("orangeIcon"),
-    YELLOW_MARKER("yellowIcon"),
-    VIOLET_MARKER("violetIcon"),
-    GREY_MARKER("greyIcon"),
-    BLACK_MARKER("blackIcon");
-    
-    private final String myIconName;
-    
-    private ColorMarker(final String iconName) {
-        myIconName = iconName;
+L.TileLayer.QuadKeyTileLayer = L.TileLayer.extend({
+    getTileUrl: function (tilePoint) {
+//        this._adjustTilePoint(tilePoint); <- no longer available in leaflet 1.0
+        return L.Util.template(this._url, {
+            s: this._getSubdomain(tilePoint),
+            q: this._quadKey(tilePoint.x, tilePoint.y, this._getZoomForUrl())
+        });
+    },
+    _quadKey: function (x, y, z) {
+        var quadKey = [];
+        for (var i = z; i > 0; i--) {
+            var digit = '0';
+            var mask = 1 << (i - 1);
+            if ((x & mask) != 0) {
+                digit++;
+            }
+            if ((y & mask) != 0) {
+                digit++;
+                digit++;
+            }
+            quadKey.push(digit);
+        }
+        return quadKey.join('');
     }
-    
-    @Override
-    public String getIconName() {
-        return myIconName;
-    }
-}
+});

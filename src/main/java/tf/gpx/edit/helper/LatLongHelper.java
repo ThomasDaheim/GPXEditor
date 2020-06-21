@@ -25,10 +25,10 @@
  */
 package tf.gpx.edit.helper;
 
-import de.saring.leafletmap.LatLong;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.LatLong;
 
 /**
  *

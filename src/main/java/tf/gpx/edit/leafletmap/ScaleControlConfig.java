@@ -31,31 +31,31 @@ package tf.gpx.edit.leafletmap;
  * @author thomas
  */
 public class ScaleControlConfig {
-    private Boolean isVisible = false;
-    private ControlPosition position = ControlPosition.BOTTOM_LEFT;
-    private Boolean metric = true;
+    private final Boolean isVisible;
+    private final ControlPosition myPosition;
+    private final Boolean isMetric;
+
+    public ScaleControlConfig() {
+        isVisible = false;
+        myPosition = ControlPosition.BOTTOM_LEFT;
+        isMetric = true;
+    }
+
+    public ScaleControlConfig(final boolean visible, final ControlPosition position, final boolean metric) {
+        isVisible = visible;
+        myPosition = position;
+        isMetric = metric;
+    }
 
     public Boolean isVisible() {
         return isVisible;
     }
 
-    public void setVisible(final Boolean show) {
-        isVisible = show;
-    }
-
     public ControlPosition getPosition() {
-        return position;
-    }
-
-    public void setPosition(final ControlPosition position) {
-        this.position = position;
+        return myPosition;
     }
 
     public Boolean getMetric() {
-        return metric;
-    }
-
-    public void setMetric(final Boolean metric) {
-        this.metric = metric;
+        return isMetric;
     }
 }

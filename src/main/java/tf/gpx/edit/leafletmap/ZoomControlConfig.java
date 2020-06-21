@@ -31,22 +31,24 @@ package tf.gpx.edit.leafletmap;
  * @author thomas
  */
 public class ZoomControlConfig {
-    private Boolean isVisible = false;
-    private ControlPosition position = ControlPosition.TOP_LEFT;
+    private final Boolean isVisible;
+    private final ControlPosition myPosition;
+    
+    public ZoomControlConfig() {
+        isVisible = false;
+        myPosition = ControlPosition.TOP_LEFT;
+    }
+
+    public ZoomControlConfig(final boolean visible, final ControlPosition position) {
+        isVisible = visible;
+        myPosition = position;
+    }
 
     public Boolean isVisible() {
         return isVisible;
     }
 
-    public void setVisible(final Boolean show) {
-        isVisible = show;
-    }
-
     public ControlPosition getPosition() {
-        return position;
-    }
-
-    public void setPosition(final ControlPosition position) {
-        this.position = position;
+        return myPosition;
     }
 }

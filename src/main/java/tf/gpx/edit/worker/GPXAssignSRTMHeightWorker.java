@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.worker;
 
-import de.saring.leafletmap.LatLong;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.LatLong;
 import tf.gpx.edit.srtm.SRTMDataStore;
 
 /**

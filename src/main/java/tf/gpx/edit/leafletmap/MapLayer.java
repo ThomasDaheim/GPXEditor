@@ -25,6 +25,10 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Class for any valid map layers (baselayer and overlay) for leaflet maps.
  * Also contains instances of known baselayers and overlays.
@@ -32,6 +36,8 @@ package tf.gpx.edit.leafletmap;
  * @author thomas
  */
 public class MapLayer {
+    private final static int MAX_ZOOM = 18;
+    
     public enum LayerType {
         BASELAYER("Baselayer"),
         OVERLAY("Overlay");
@@ -57,17 +63,32 @@ public class MapLayer {
     }
     
     public enum TileLayerClass {
-        STANDARD("L.tileLayer"),
-        QUADKEY("L.TileLayer.QuadKeyTileLayer");
+        STANDARD("L.TileLayer", "", ""),
+        QUADKEY("L.TileLayer.QuadKeyTileLayer", "subdomains: '0123'", "QuadKeyTileLayer");
         
+        // leaflet class to be used for this layer
         private final String myClass;
+        // add. option that might be required
+        private final String myOption;
+        // add. js that might to be loaded upfront
+        private final String myJSResource;
         
-        private TileLayerClass(final String layerclass) {
+        private TileLayerClass(final String layerclass, final String option, final String jsResource) {
             myClass = layerclass;
+            myOption = option;
+            myJSResource = jsResource;
         }
         
         public String getTileLayerClass() {
             return myClass;
+        }
+        
+        public String getOption() {
+            return myOption;
+        }
+        
+        public String getJSResource() {
+            return myJSResource;
         }
         
         public String getName() {
@@ -92,7 +113,7 @@ public class MapLayer {
     
     // properties of the layer on the leaflet map - might be in a separate class
     private int myIndex;
-    private boolean isVisible;
+    private boolean isEnabled;
     
     public MapLayer(
             final LayerType layertype,
@@ -119,7 +140,7 @@ public class MapLayer {
         myTileLayerClass = layerclass;
         
         myIndex = index;
-        isVisible = visible;
+        isEnabled = visible;
     }
     
     public LayerType getLayerType() {
@@ -202,14 +223,51 @@ public class MapLayer {
         myIndex = index;
     }
     
-    public boolean isVisible() {
-        return isVisible;
+    public boolean isEnabled() {
+        return isEnabled;
     }
     
-    public void setVisible(final boolean visible) {
-        isVisible = visible;
+    public void setEnabled(final boolean visible) {
+        isEnabled = visible;
     }
     
+    public String getJSCode() {
+        final StringBuilder result = new StringBuilder();
+
+        result.append("new ");
+        result.append(myTileLayerClass.getTileLayerClass());
+        result.append("('");
+        result.append(myURL);
+        result.append(myAPIKey);
+        result.append("', {\n");
+        
+        if (!myTileLayerClass.getOption().isEmpty()) {
+            result.append("    " + myTileLayerClass.getOption());
+            result.append(",\n");
+        }
+
+        result.append("    maxZoom: ");
+        result.append(MAX_ZOOM);
+        result.append(",\n");
+
+        result.append("    maxNativeZoom: ");
+        result.append(myMaxZoom);
+        result.append(",\n");
+
+        result.append("    minZoom: ");
+        result.append(myMinZoom);
+        result.append(",\n");
+
+        result.append("    attribution: '");
+        result.append(myAttribution);
+        result.append("',\n");
+
+        // no ";" - might be used in some complex js statement
+        result.append("})");
+        
+        return result.toString();
+    }
+
     // and here are all our know layers...
     
     // baselayers
@@ -235,7 +293,7 @@ public class MapLayer {
                     "pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw", 
                     0, 
                     18, 
-                    "Map data &copy; OpenStreetMap contributors, Imagery &copy; Mapbox'", 
+                    "Map data &copy; OpenStreetMap contributors, Imagery &copy; Mapbox", 
                     0,
                     TileLayerClass.STANDARD,
                     1, 
@@ -351,6 +409,7 @@ public class MapLayer {
                     0,
                     TileLayerClass.STANDARD,
                     9, 
+                    // default: not enabled
                     false);
     
     public static MapLayer MTB_MAP = 
@@ -365,7 +424,26 @@ public class MapLayer {
                     0,
                     TileLayerClass.STANDARD,
                     10, 
+                    // default: not enabled
                     false);
+    
+    private static final List<MapLayer> knownBaselayers = new ArrayList<>(
+            Arrays.asList(
+                    MapLayer.OPENCYCLEMAP, 
+                    MapLayer.MAPBOX, 
+                    MapLayer.OPENSTREETMAP, 
+                    MapLayer.SATELITTE, 
+                    MapLayer.BING, 
+                    MapLayer.BING_AERIAL, 
+                    MapLayer.OPENTOPOMAP, 
+                    MapLayer.DE_TOPOPLUSOPEN, 
+                    MapLayer.ES_TOPOIGN, 
+                    MapLayer.HIKE_BIKE_MAP, 
+                    MapLayer.MTB_MAP));
+    
+    public static List<MapLayer> getKnownBaselayer() {
+        return knownBaselayers;
+    }
     
     // overlays
 
@@ -409,7 +487,7 @@ public class MapLayer {
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     100,
                     TileLayerClass.STANDARD,
-                    1, 
+                    2, 
                     true);
     public static MapLayer CYCLING_TRAILS = 
             new MapLayer(
@@ -422,7 +500,7 @@ public class MapLayer {
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     101,
                     TileLayerClass.STANDARD,
-                    1, 
+                    3, 
                     true);
     public static MapLayer MTB_TRAILS = 
             new MapLayer(
@@ -435,7 +513,7 @@ public class MapLayer {
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     102,
                     TileLayerClass.STANDARD,
-                    1, 
+                    4, 
                     true);
     public static MapLayer SLOPE_TRAILS = 
             new MapLayer(
@@ -448,7 +526,7 @@ public class MapLayer {
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     103,
                     TileLayerClass.STANDARD,
-                    1, 
+                    5, 
                     true);
     public static MapLayer ROADS_AND_LABELS = 
             new MapLayer(
@@ -461,7 +539,7 @@ public class MapLayer {
                     "Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors", 
                     98,
                     TileLayerClass.STANDARD,
-                    1, 
+                    6, 
                     true);
     public static MapLayer RAILWAY_LINES = 
             new MapLayer(
@@ -474,6 +552,21 @@ public class MapLayer {
                     "Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenRailwayMap (CC-BY-SA)", 
                     99,
                     TileLayerClass.STANDARD,
-                    1, 
+                    7, 
                     true);
+
+    private static final List<MapLayer> knownOverlays = new ArrayList<>(
+            Arrays.asList(
+                    MapLayer.CONTOUR_LINES, 
+                    MapLayer.HILL_SHADING, 
+                    MapLayer.HIKING_TRAILS, 
+                    MapLayer.CYCLING_TRAILS, 
+                    MapLayer.MTB_TRAILS, 
+                    MapLayer.SLOPE_TRAILS, 
+                    MapLayer.ROADS_AND_LABELS, 
+                    MapLayer.RAILWAY_LINES));
+    
+    public static List<MapLayer> getKnownOverlays () {
+        return knownOverlays;
+    }
 }

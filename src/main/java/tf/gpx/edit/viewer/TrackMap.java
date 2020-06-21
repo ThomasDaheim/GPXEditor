@@ -27,26 +27,14 @@ package tf.gpx.edit.viewer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.saring.leafletmap.ColorMarker;
-import de.saring.leafletmap.ControlPosition;
-import de.saring.leafletmap.LatLong;
-import de.saring.leafletmap.LeafletMapView;
-import de.saring.leafletmap.MapConfig;
-import de.saring.leafletmap.MapLayer;
-import de.saring.leafletmap.Marker;
-import de.saring.leafletmap.ScaleControlConfig;
-import de.saring.leafletmap.ZoomControlConfig;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,7 +52,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -75,12 +62,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebEvent;
-import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -93,6 +78,15 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.ColorMarker;
+import tf.gpx.edit.leafletmap.ControlPosition;
+import tf.gpx.edit.leafletmap.IMarker;
+import tf.gpx.edit.leafletmap.LatLong;
+import tf.gpx.edit.leafletmap.LeafletMapView;
+import tf.gpx.edit.leafletmap.MapConfig;
+import tf.gpx.edit.leafletmap.MapLayer;
+import tf.gpx.edit.leafletmap.ScaleControlConfig;
+import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
@@ -232,11 +226,6 @@ public class TrackMap extends LeafletMapView {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
-    private final static String LEAFLET_PATH = "/leaflet";
-    private final static String MIN_EXT = ".min";
-    
-    // webview holds the leaflet map
-    private WebView myWebView = null;
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
     // rectangle to select fileWaypointsCount
@@ -264,7 +253,6 @@ public class TrackMap extends LeafletMapView {
     // https://stackoverflow.com/a/41908133
     private JSCallback jscallback;
     
-    final List<MapLayer> mapLayers;
     private final CompletableFuture<Worker.State> cfMapLoadState;
 //    private int originalMapLayers = 0;
     private boolean isLoaded = false;
@@ -285,11 +273,21 @@ public class TrackMap extends LeafletMapView {
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS,
                 false);
         
+        
+        // set api key before display map
+        MapLayer.OPENCYCLEMAP.setAPIKey(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString());
+        
         setVisible(false);
-        mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
-        final MapConfig myMapConfig = new MapConfig(mapLayers, 
-                        new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
+        final MapConfig myMapConfig = new MapConfig(
+                MapLayer.getKnownBaselayer().stream().filter((t) -> {
+                    return t.isEnabled();
+                }).collect(Collectors.toList()), 
+                MapLayer.getKnownOverlays().stream().filter((t) -> {
+                    return t.isEnabled();
+                }).collect(Collectors.toList()), 
+                new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
+                new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
+                new LatLong(51.505, -0.09));
 
         cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
@@ -303,21 +301,21 @@ public class TrackMap extends LeafletMapView {
         return INSTANCE;
     }
     
-    // TFE, can't overwrite addTrack from kotlin LeafletMapView...
-    private String myAddTrack(final List<LatLong> positions, final String color) {
-        final String varName = "track" + varNameSuffix++;
-
-        execScript("var " + varName + " = L.polyline(" + transformToJavascriptArray(positions) + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
-
-        return varName;
-    }
+//    // TFE, can't overwrite addTrack from kotlin LeafletMapView...
+//    private String myAddTrack(final List<LatLong> positions, final String color) {
+//        final String varName = "track" + varNameSuffix++;
+//
+//        execScript("var " + varName + " = L.polyline(" + transformToJavascriptArray(positions) + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
+//
+//        return varName;
+//    }
     
     public void setEnable(final boolean enabled) {
         setDisable(!enabled);
         setVisible(enabled);
         
-        myWebView.setDisable(!enabled);
-        myWebView.setVisible(enabled);
+        getWebView().setDisable(!enabled);
+        getWebView().setVisible(enabled);
     }
     
     /**
@@ -329,22 +327,13 @@ public class TrackMap extends LeafletMapView {
 
     private void initialize() {
         if (!isInitialized) {
-            for (Node node : getChildren()) {
-                // getAsString webview from my children
-                if (node instanceof WebView) {
-                    myWebView = (WebView) node;
-                    break;
-                }
-            }
-            assert myWebView != null;
-
 //            enableFirebug();
             
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
 //                (myWebView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
 //            );
             // show "alert" Javascript messages in stdout (useful to debug)	            
-            myWebView.getEngine().setOnAlert((WebEvent<String> arg0) -> {
+            getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
                 System.err.println("TrackMap: " + arg0.getData());
             });
         
@@ -371,7 +360,7 @@ public class TrackMap extends LeafletMapView {
             // map helper functions for manipulating layer control entries
             addScriptFromPath(LEAFLET_PATH + "/LayerControl" + MIN_EXT + ".js");
             // set api key for open cycle map
-            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
+//            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -510,19 +499,19 @@ public class TrackMap extends LeafletMapView {
 
             // support drawing rectangle with mouse + cntrl
             // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
-            myWebView.setOnMousePressed((MouseEvent event) -> {
+            getWebView().setOnMousePressed((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlPressed(event);
                     event.consume();
                 }
             });
-            myWebView.setOnMouseDragged((MouseEvent event) -> {
+            getWebView().setOnMouseDragged((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlDragged(event);
                     event.consume();
                 }
             });
-            myWebView.setOnMouseReleased((MouseEvent event) -> {
+            getWebView().setOnMouseReleased((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlReleased(event);
                     event.consume();
@@ -532,7 +521,7 @@ public class TrackMap extends LeafletMapView {
 //            // TODO: disable heatmap while dragging
             
             // we want our own context menu!
-            myWebView.setContextMenuEnabled(false);
+            getWebView().setContextMenuEnabled(false);
             createContextMenu();
 
             isInitialized = true;
@@ -545,76 +534,6 @@ public class TrackMap extends LeafletMapView {
             
             // TFE, 20190901: load preferences - now things are up & running
             loadPreferences();
-        }
-    }
-    
-    public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
-//        System.out.println("Adding icon " + iconName + ", " + base64data);
-        
-        final String scriptCmd = 
-            "var url = \"data:image/png;base64," + base64data + "\";" + 
-            "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
-
-//        System.out.println(scriptCmd);
-        execScript(scriptCmd);
-//        System.out.println(iconName + " created");
-    }
-    
-    /**
-     * Create and add a javascript tag containing the passed javascript code.
-     *
-     * @param script javascript code to add to leafletmap.html
-     */
-    private void addScript(final String script) {
-        final String scriptCmd = 
-          "var script = document.createElement('script');" +
-          "script.type = 'text/javascript';" +
-          "script.text = \"" + script + "\";" +
-          "document.getElementsByTagName('head')[0].appendChild(script);";
-
-        execScript(scriptCmd);
-    }
-    
-    /**
-     * Create and add a style tag containing the passed style
-     *
-     * @param style style to add to leafletmap.html
-     */
-    private void addStyle(final String style) {
-        final String scriptCmd = 
-          "var style = document.createElement('style');" +
-          "style.type = 'text/css';" +
-          "style.appendChild(document.createTextNode(\"" + style + "\"));" +
-          "document.getElementsByTagName('head')[0].appendChild(style);";
-
-        execScript(scriptCmd);
-    }
-    
-    private void addScriptFromPath(final String scriptpath) {
-        try { 
-            final InputStream js = TrackMap.class.getResourceAsStream(scriptpath);
-            final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
-
-            addScript(script);
-        } catch (Exception ex) {
-            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    private void addStyleFromPath(final String stylepath) {
-        try { 
-            final InputStream css = TrackMap.class.getResourceAsStream(stylepath);
-            final String style = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(css, Charset.defaultCharset()));
-            
-            // since the html page we use is in another package all path values used in url('') statements in css point to wrong locations
-            // this needs to be fixed manually since javafx doesn't resolve it properly
-            // SOLUTION: use https://websemantics.uk/tools/image-to-data-uri-converter/ to convert images and
-            // replace url(IMAGE.TYPE) with url(data:image/TYPE;base64,...) in css
-            final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
-
-            addStyle(style);
-        } catch (Exception ex) {
-            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -870,9 +789,9 @@ public class TrackMap extends LeafletMapView {
             updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
         });
 
-        myWebView.setOnMousePressed(e -> {
+        getWebView().setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
-                contextMenu.show(myWebView, e.getScreenX(), e.getScreenY());
+                contextMenu.show(getWebView(), e.getScreenX(), e.getScreenY());
             } else {
                 contextMenu.hide();
             }
@@ -1499,7 +1418,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWaypointList(false);
     }
     
-    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final Marker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
+    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final IMarker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
         final LatLong point = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
         
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
@@ -1538,7 +1457,7 @@ public class TrackMap extends LeafletMapView {
         return layer;
     }
     
-    private String addCircleMarker(final LatLong position, final String title, final Marker marker, final int zIndexOffset) {
+    private String addCircleMarker(final LatLong position, final String title, final IMarker marker, final int zIndexOffset) {
         final String varName = "circleMarker" + varNameSuffix++;
 
 //        execScript("var " + varName + " = L.marker([" + position.getLatitude() + ", " + position.getLongitude() + "], "
@@ -1551,7 +1470,7 @@ public class TrackMap extends LeafletMapView {
     }
 
     private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
-        final String layer = myAddTrack(waypoints, color);
+        final String layer = addTrack(waypoints, color, false);
         // reduce number of calls to execScript()
         execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);" + "\n" + "addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;

@@ -83,7 +83,7 @@ dependencies {
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
     compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
     compile 'de.jensd:fontawesomefx:8.9'
-    compile 'de.saring:leafletmap:1.0.5-SNAPSHOT'
+//    compile 'de.saring:leafletmap:1.0.5-SNAPSHOT'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.9'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
     compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '10.0-r1'

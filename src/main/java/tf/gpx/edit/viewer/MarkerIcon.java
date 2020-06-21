@@ -5,13 +5,13 @@
  */
 package tf.gpx.edit.viewer;
 
-import de.saring.leafletmap.Marker;
+import tf.gpx.edit.leafletmap.IMarker;
 
 /**
  *
  * @author Unterwegs
  */
-public class MarkerIcon implements Marker {
+public class MarkerIcon implements IMarker {
     // name of the marker = name of the png file
     private final String markerName;
     // fulll path to the png file
