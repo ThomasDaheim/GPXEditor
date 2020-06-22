@@ -110,11 +110,6 @@ public class MapLayer {
     private int myZIndex;
     private TileLayerClass myTileLayerClass;
     
-    
-    // properties of the layer on the leaflet map - might be in a separate class
-    private int myIndex;
-    private boolean isEnabled;
-    
     public MapLayer(
             final LayerType layertype,
             final String name, 
@@ -124,9 +119,7 @@ public class MapLayer {
             final int maxzoom, 
             final String attribution, 
             final int zIndex,
-            final TileLayerClass layerclass,
-            final int index,
-            final boolean visible) {
+            final TileLayerClass layerclass) {
         super();
 
         myName = name;
@@ -138,9 +131,6 @@ public class MapLayer {
         myLayerType = layertype;
         myZIndex = zIndex;
         myTileLayerClass = layerclass;
-        
-        myIndex = index;
-        isEnabled = visible;
     }
     
     public LayerType getLayerType() {
@@ -215,20 +205,21 @@ public class MapLayer {
         myTileLayerClass = tileLayerClass;
     }
 
+    // conviniance methods to get add. configuration info on this layer
     public int getIndex() {
-        return myIndex;
+        return MapLayerUsage.getInstance().getLayerIndex(this);
     }
 
     public void setIndex(final int index) {
-        myIndex = index;
+        MapLayerUsage.getInstance().setLayerIndex(this, index);
     }
     
     public boolean isEnabled() {
-        return isEnabled;
+        return MapLayerUsage.getInstance().isLayerEnabled(this);
     }
     
-    public void setEnabled(final boolean visible) {
-        isEnabled = visible;
+    public void setEnabled(final boolean enabled) {
+        MapLayerUsage.getInstance().setLayerEnabled(this, enabled);
     }
     
     public String getJSCode() {
@@ -281,9 +272,7 @@ public class MapLayer {
                     18, 
                     "&copy; OpenCycleMap, Map data &copy; OpenStreetMap contributors", 
                     0,
-                    TileLayerClass.STANDARD,
-                    0, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer MAPBOX = 
             new MapLayer(
@@ -295,9 +284,7 @@ public class MapLayer {
                     18, 
                     "Map data &copy; OpenStreetMap contributors, Imagery &copy; Mapbox", 
                     0,
-                    TileLayerClass.STANDARD,
-                    1, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer OPENSTREETMAP = 
             new MapLayer(
@@ -309,9 +296,7 @@ public class MapLayer {
                     18, 
                     "Map data &copy; OpenStreetMap and contributors", 
                     0,
-                    TileLayerClass.STANDARD,
-                    2, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer SATELITTE = 
             new MapLayer(
@@ -323,9 +308,7 @@ public class MapLayer {
                     18, 
                     "&copy; Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo and the GIS User Community", 
                     0,
-                    TileLayerClass.STANDARD,
-                    3, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer BING = 
             new MapLayer(
@@ -337,9 +320,7 @@ public class MapLayer {
                     19, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
-                    TileLayerClass.QUADKEY,
-                    4, 
-                    true);
+                    TileLayerClass.QUADKEY);
     
     public static MapLayer BING_AERIAL = 
             new MapLayer(
@@ -351,9 +332,7 @@ public class MapLayer {
                     19, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
-                    TileLayerClass.QUADKEY,
-                    5, 
-                    true);
+                    TileLayerClass.QUADKEY);
     
     public static MapLayer OPENTOPOMAP = 
             new MapLayer(
@@ -365,9 +344,7 @@ public class MapLayer {
                     17, 
                     "Map data: &copy; OpenTopoMap.org", 
                     0,
-                    TileLayerClass.STANDARD,
-                    6, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer DE_TOPOPLUSOPEN = 
             new MapLayer(
@@ -379,9 +356,7 @@ public class MapLayer {
                     18, 
                     "Map data: &copy; geodatenzentrum.de", 
                     0,
-                    TileLayerClass.STANDARD,
-                    7, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer ES_TOPOIGN = 
             new MapLayer(
@@ -393,9 +368,7 @@ public class MapLayer {
                     18, 
                     "Map data: &copy; IGN.es", 
                     0,
-                    TileLayerClass.STANDARD,
-                    8, 
-                    true);
+                    TileLayerClass.STANDARD);
 
     public static MapLayer HIKE_BIKE_MAP = 
             new MapLayer(
@@ -407,10 +380,7 @@ public class MapLayer {
                     18, 
                     "&copy; HikeBikeMap.org, Map data &copy; OpenStreetMap and contributors", 
                     0,
-                    TileLayerClass.STANDARD,
-                    9, 
-                    // default: not enabled
-                    false);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer MTB_MAP = 
             new MapLayer(
@@ -422,10 +392,7 @@ public class MapLayer {
                     18, 
                     "&copy; OpenStreetMap and USGS", 
                     0,
-                    TileLayerClass.STANDARD,
-                    10, 
-                    // default: not enabled
-                    false);
+                    TileLayerClass.STANDARD);
     
     private static final List<MapLayer> knownBaselayers = new ArrayList<>(
             Arrays.asList(
@@ -457,9 +424,7 @@ public class MapLayer {
                     18, 
                     "Imagery from GIScience Research Group @ University of Heidelberg | Map data ASTER GDEM", 
                     90,
-                    TileLayerClass.STANDARD,
-                    0, 
-                    true);
+                    TileLayerClass.STANDARD);
     
     public static MapLayer HILL_SHADING = 
             new MapLayer(
@@ -471,10 +436,7 @@ public class MapLayer {
                     18, 
                     "&copy; OpenStreetMap", 
                     6,
-                    TileLayerClass.STANDARD,
-                    1, 
-                    true);
-    
+                    TileLayerClass.STANDARD);
     
     public static MapLayer HIKING_TRAILS = 
             new MapLayer(
@@ -486,9 +448,8 @@ public class MapLayer {
                     18, 
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     100,
-                    TileLayerClass.STANDARD,
-                    2, 
-                    true);
+                    TileLayerClass.STANDARD);
+
     public static MapLayer CYCLING_TRAILS = 
             new MapLayer(
                     LayerType.OVERLAY, 
@@ -499,9 +460,8 @@ public class MapLayer {
                     18, 
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     101,
-                    TileLayerClass.STANDARD,
-                    3, 
-                    true);
+                    TileLayerClass.STANDARD);
+
     public static MapLayer MTB_TRAILS = 
             new MapLayer(
                     LayerType.OVERLAY, 
@@ -512,9 +472,8 @@ public class MapLayer {
                     18, 
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     102,
-                    TileLayerClass.STANDARD,
-                    4, 
-                    true);
+                    TileLayerClass.STANDARD);
+
     public static MapLayer SLOPE_TRAILS = 
             new MapLayer(
                     LayerType.OVERLAY, 
@@ -525,9 +484,8 @@ public class MapLayer {
                     18, 
                     "&copy; http://waymarkedtrails.org, Sarah Hoffmann (CC-BY-SA)", 
                     103,
-                    TileLayerClass.STANDARD,
-                    5, 
-                    true);
+                    TileLayerClass.STANDARD);
+
     public static MapLayer ROADS_AND_LABELS = 
             new MapLayer(
                     LayerType.OVERLAY, 
@@ -538,9 +496,8 @@ public class MapLayer {
                     18, 
                     "Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors", 
                     98,
-                    TileLayerClass.STANDARD,
-                    6, 
-                    true);
+                    TileLayerClass.STANDARD);
+
     public static MapLayer RAILWAY_LINES = 
             new MapLayer(
                     LayerType.OVERLAY, 
@@ -551,9 +508,7 @@ public class MapLayer {
                     18, 
                     "Map data: &copy; OpenStreetMap contributors | Map style: &copy; OpenRailwayMap (CC-BY-SA)", 
                     99,
-                    TileLayerClass.STANDARD,
-                    7, 
-                    true);
+                    TileLayerClass.STANDARD);
 
     private static final List<MapLayer> knownOverlays = new ArrayList<>(
             Arrays.asList(

@@ -136,6 +136,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.FindSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
@@ -446,9 +447,6 @@ public class GPXEditor implements Initializable {
     public void lateInitialize() {
         AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.0", "https://github.com/ThomasDaheim/GPXEditor");
         
-        // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences();
-        
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
             if (KeyCode.CONTROL.equals(event.getCode())) {
@@ -462,6 +460,14 @@ public class GPXEditor implements Initializable {
         });
         
     }
+    
+    public void initializeAfterMapLoaded() {
+        // TFE, 20200622: now also track map has completed loading...
+
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences();
+        MapLayerUsage.getInstance().loadPreferences();
+    }
 
     public void stop() {
         // TF, 20170720: store and read divider positions of panes
@@ -474,6 +480,7 @@ public class GPXEditor implements Initializable {
 
         // TFE, 20180901: store values for track & height map
         GPXTrackviewer.getInstance().savePreferences();
+        MapLayerUsage.getInstance().savePreferences();
     }
     
     public Window getWindow() {

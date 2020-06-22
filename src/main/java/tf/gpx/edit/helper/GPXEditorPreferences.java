@@ -75,6 +75,9 @@ public enum GPXEditorPreferences  {
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
     HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf);
     
+    // additional preferences not handled here as enums
+    // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
+    // map layer settings: Index, Enabled, EnabledOverlays - see tf.gpx.edit.leafletmap.MapLayerUsage
 
     private final String myPrefKey;
     private final String myDefaultValue;

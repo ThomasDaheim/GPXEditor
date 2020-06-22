@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -533,7 +534,7 @@ public class TrackMap extends LeafletMapView {
             execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
             
             // TFE, 20190901: load preferences - now things are up & running
-            loadPreferences();
+            myGPXEditor.initializeAfterMapLoaded();
         }
     }
     
@@ -1536,7 +1537,50 @@ public class TrackMap extends LeafletMapView {
         HeatMapPane.getInstance().clearHeatMap();
         HeatMapPane.getInstance().addEvents(point2Ds);
     }
-    
+
+    // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
+    // we only have the methods to access the leafletview
+    public int getCurrentBaselayer() {
+        return (Integer) execScript("getCurrentBaselayer();");
+    }
+    public void setCurrentBaselayer(final int layer) {
+        if (isInitialized) {
+            execScript("setCurrentBaselayer(\"" + layer + "\");");
+        }
+    }
+    public Map<String, Boolean> getOverlaysForBaselayer(final MapLayer base) {
+        // TODO: get rid of to improve performance once we can strip LayerControl.js down
+        final List<String> overlayNames = new ArrayList<>();
+        transformToJavaList("getKnownOverlayNames();", overlayNames, false);
+        
+        final List<String> overlayValues = new ArrayList<>();
+        // getAsString current values as default - bootstrap for no preferences set...
+        transformToJavaList("getOverlayValues(\"" + base.getName() + "\");", overlayValues, false);
+        
+        final Map<String, Boolean> result = new HashMap<>();
+        for (int i = 0; i < overlayNames.size(); i++) {
+            result.put(overlayNames.get(i), Boolean.valueOf(overlayValues.get(i)));
+        }
+        return result;
+    }
+    public void setOverlaysForBaselayer(final MapLayer base, final Map<String, Boolean> overlays) {
+        // TODO: get rid of to improve performance once we can strip LayerControl.js down
+        final List<String> overlayNames = new ArrayList<>();
+        transformToJavaList("getKnownOverlayNames();", overlayNames, false);
+
+        // TODO: get rid of this conversion 
+        final List<String> preferenceValues = new ArrayList<>();
+        for (String overlay : overlayNames) {
+            if (overlays.containsKey(overlay)) {
+                preferenceValues.add(overlays.get(overlay).toString());
+            } else {
+                preferenceValues.add(Boolean.FALSE.toString());
+            }
+        }
+        
+        execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
+    }
+
     // TFE, 20190901: support to store & load overlay settings per baselayer
     public void loadPreferences() {
         // neeed to make sure our internal setup has been completed...
@@ -1565,15 +1609,9 @@ public class TrackMap extends LeafletMapView {
                 
                 execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
             }
-
-            // and now switch the baselayer
-            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.INITIAL_BASELAYER.getAsString() + "\");");
         }
     }
     public void savePreferences() {
-        Integer outVal = (Integer) execScript("getCurrentBaselayer();");
-        GPXEditorPreferences.INITIAL_BASELAYER.put(outVal);
-
         // overlays per baselayer
         // first need to getAsString the know names from js...
         final List<String> baselayerNames = new ArrayList<>();
