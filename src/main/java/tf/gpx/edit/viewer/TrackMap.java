@@ -1582,66 +1582,10 @@ public class TrackMap extends LeafletMapView {
     }
 
     // TFE, 20190901: support to store & load overlay settings per baselayer
+    // TFE, 20200623: now done in MapLayerUsage
     public void loadPreferences() {
-        // neeed to make sure our internal setup has been completed...
-        if (isInitialized) {
-            // overlays per baselayer first
-            // first need to getAsString the known names from js...
-            final List<String> baselayerNames = getKnownBaselayerNames();
-
-            final List<String> overlayNames = getKnownOverlayNames();
-
-            // know read the combinations of baselayer and overlay names from the preferences
-            final List<String> preferenceValues = new ArrayList<>();
-            final List<String> defaultValues = new ArrayList<>();
-            for (String baselayer : baselayerNames) {
-                preferenceValues.clear();
-                defaultValues.clear();
-                
-                // getAsString current values as default - bootstrap for no preferences set...
-                transformToJavaList("getOverlayValues(\"" + baselayer + "\");", defaultValues, false);
-
-                for (int i = 0; i < overlayNames.size(); i++) {
-                    final String overlay = overlayNames.get(i);
-                    final String defaultVal = defaultValues.get(i);
-                    preferenceValues.add(GPXEditorPreferenceStore.getInstance().get(preferenceString(baselayer, overlay), defaultVal));
-                }
-                
-                execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
-            }
-        }
     }
     public void savePreferences() {
-        // overlays per baselayer
-        // first need to getAsString the know names from js...
-        final List<String> baselayerNames = new ArrayList<>();
-        transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
-
-        final List<String> overlayNames = new ArrayList<>();
-        transformToJavaList("getKnownOverlayNames();", overlayNames, false);
-
-        // know read the combinations of baselayer and overlay names from the preferences
-        final List<String> overlayValues = new ArrayList<>();
-        for (String baselayer : baselayerNames) {
-            overlayValues.clear();
-
-            // getAsString current values as default - bootstrap for no preferences set...
-            transformToJavaList("getOverlayValues(\"" + baselayer + "\");", overlayValues, false);
-
-            for (int i = 0; i < overlayNames.size(); i++) {
-                final String overlay = overlayNames.get(i);
-                final String overlayVal = overlayValues.get(i);
-                
-//                System.out.println("GPXEditorPreferenceStore.getInstance().put: " + preferenceString(baselayer, overlay) + " to " + overlayVal);
-                GPXEditorPreferenceStore.getInstance().put(preferenceString(baselayer, overlay), overlayVal);
-            }
-        }
-    }
-    private static String preferenceString(final String baselayer, final String overlay) {
-        // no spaces in preference names, please
-        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
-                GPXEditorPreferenceStore.SEPARATOR + 
-                GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.replaceAll("\\s+", "");
     }
     private void transformToJavaList(final String jsScript, final List<String> result, final boolean appendTo) {
         if (!appendTo) {

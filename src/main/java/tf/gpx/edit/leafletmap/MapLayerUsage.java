@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import org.eclipse.persistence.internal.jaxb.many.MapEntry;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.TrackMap;
@@ -53,12 +52,44 @@ public class MapLayerUsage {
     
     // struct to hold the info per layer (both baselayer and overlays)
     private class LayerConfig {
+        private static final String PREF_STRING_PREFIX = "[ ";
+        private static final String PREF_STRING_SUFFIX = " ]";
+        private static final String PREF_STRING_SEP = ", ";
+        private static final String REFERENCE_PREF_STRING = PREF_STRING_PREFIX + "0" + PREF_STRING_SEP + "true" + PREF_STRING_SUFFIX;
+        public static final String DEFAULT_PREF_STRING = PREF_STRING_PREFIX + PREF_STRING_SEP + PREF_STRING_SUFFIX;
+        
         public int index;
         public boolean isEnabled;
         
         public LayerConfig(final int idx, final boolean enabled) {
             index = idx;
             isEnabled = enabled;
+        }
+        
+        public String toPreferenceString() {
+            return PREF_STRING_PREFIX + index + PREF_STRING_SEP + isEnabled + PREF_STRING_SUFFIX;
+        }
+        
+        public void fromPreferenceString(final String prefString) {
+            // nothing to do for default string - defaults are already set in init()
+            if (DEFAULT_PREF_STRING.equals(prefString)) {
+                return;
+            }
+            
+            String temp = prefString;
+            // not long enough to be a valid preference string
+            if (temp.length() < REFERENCE_PREF_STRING.length()) {
+                temp = REFERENCE_PREF_STRING;
+            }
+            // no two elements in preference string
+            if (temp.split(PREF_STRING_SEP).length < 2) {
+                temp = REFERENCE_PREF_STRING;
+            }
+            
+            String [] prefs = prefString.substring(PREF_STRING_PREFIX.length(), temp.length()-PREF_STRING_SUFFIX.length()).strip().split(PREF_STRING_SEP);
+            
+            index = Integer.valueOf(prefs[0]);
+            isEnabled = Boolean.valueOf(prefs[1]);
         }
     }
     
@@ -198,13 +229,17 @@ public class MapLayerUsage {
     
     public void loadPreferences() {
         // active overlays for base layers - was previously in TrackMap
-//        for (MapLayer base : MapLayer.getKnownBaselayer()) {
-//            final Map<String, Boolean> overlays = new HashMap<>();
-//            for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).activeOverlays.entrySet()) {
-//                overlays.put(entry.getKey().getName(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
-//            }
-//            TrackMap.getInstance().setOverlaysForBaselayer(base, overlays);
-//        }
+        for (MapLayer base : MapLayer.getKnownBaselayer()) {
+            // properties per base layer
+             myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base.getName()), LayerConfig.DEFAULT_PREF_STRING));
+
+            // active overlays for base layers - was previously in TrackMap
+            final Map<String, Boolean> overlays = new HashMap<>();
+            for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).activeOverlays.entrySet()) {
+                overlays.put(entry.getKey().getName(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
+            }
+            TrackMap.getInstance().setOverlaysForBaselayer(base, overlays);
+        }
         
         // set current layer
         TrackMap.getInstance().setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
@@ -214,26 +249,34 @@ public class MapLayerUsage {
         // store current baselayer
         GPXEditorPreferences.INITIAL_BASELAYER.put(TrackMap.getInstance().getCurrentBaselayer());
         
-        // active overlays for base layers - was previously in TrackMap
-//        final List<String> overlayNames = MapLayer.getKnownOverlays().stream().map((t) -> {
-//            return t.getName();
-//        }).collect(Collectors.toList());
-//        for (MapLayer base : MapLayer.getKnownBaselayer()) {
-//            final Map<String, Boolean> overlays = TrackMap.getInstance().getOverlaysForBaselayer(base);
-//            
-//            for (Entry<String, Boolean> entry : overlays.entrySet()) {
-//                // TODO: remove security check once we can strip LayerControl.js down?
-//                if (overlayNames.contains(entry.getKey())) {
-//                    GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayerOverlay(base.getName(), entry.getKey()), entry.getValue().toString());
-//                }
-//            }
-//        }
+        final List<String> overlayNames = MapLayer.getKnownOverlays().stream().map((t) -> {
+            return t.getName();
+        }).collect(Collectors.toList());
+        for (MapLayer base : MapLayer.getKnownBaselayer()) {
+            // properties per base layer
+            GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayer(base.getName()), myLayerConfig.get(base).toPreferenceString());
+
+            // active overlays for base layers - was previously in TrackMap
+            final Map<String, Boolean> overlays = TrackMap.getInstance().getOverlaysForBaselayer(base);
+            
+            for (Entry<String, Boolean> entry : overlays.entrySet()) {
+                // TODO: remove security check once we can strip LayerControl.js down?
+                if (overlayNames.contains(entry.getKey())) {
+                    GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayerOverlay(base.getName(), entry.getKey()), entry.getValue().toString());
+                }
+            }
+        }
     }
     
     // helper to create key for pref store
+    private static String prefKeyBaselayer(final String baselayer) {
+        // no spaces in preference names, please
+        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "");
+    }
+    // helper to create key for pref store
     private static String prefKeyBaselayerOverlay(final String baselayer, final String overlay) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
+        return prefKeyBaselayer(baselayer) + 
                 GPXEditorPreferenceStore.SEPARATOR + 
                 GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.replaceAll("\\s+", "");
     }
