@@ -60,6 +60,16 @@ public class MapLayer {
         public String getShortName() {
             return toString().substring(0, 0);
         }
+        
+        public static LayerType fromShortName(final String name) {
+            for (LayerType type : values()) {
+                if (type.getShortName().equals(name)) {
+                    return type;
+                }
+            }
+            
+            return null;
+        }
     }
     
     public enum TileLayerClass {
@@ -97,6 +107,16 @@ public class MapLayer {
         
         public String getShortName() {
             return toString().substring(0, 0);
+        }
+        
+        public static TileLayerClass fromShortName(final String name) {
+            for (TileLayerClass type : values()) {
+                if (type.getShortName().equals(name)) {
+                    return type;
+                }
+            }
+            
+            return null;
         }
     }
     
