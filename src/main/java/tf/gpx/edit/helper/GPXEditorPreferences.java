@@ -103,24 +103,4 @@ public enum GPXEditorPreferences  {
     public <T> void put(final T value) {
         GPXEditorPreferenceStore.getInstance().put(myPrefKey, value.toString());
     }
-    
-    public static Map<GPXEditorPreferences, String> getAsMap() {
-        final Map<GPXEditorPreferences, String> result = new HashMap<>();
-        
-        for (GPXEditorPreferences value : GPXEditorPreferences.values()) {
-            result.put(value, value.getAsString());
-        }
-        
-        return result;
-    }
-    
-    public static void setFromMap(final Map<GPXEditorPreferences, String> values) {
-        if (values == null) {
-            return;
-        }
-        
-        values.entrySet().forEach((value) -> {
-            GPXEditorPreferenceStore.getInstance().put(value.getKey().myPrefKey, value.getValue());
-        });
-    }
 }

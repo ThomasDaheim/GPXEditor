@@ -29,20 +29,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ChoiceBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.Callback;
 import javafx.util.converter.IntegerStringConverter;
 
 /**
@@ -57,12 +64,12 @@ public class MapLayerTable extends TableView<MapLayer> {
     }
     
     private void initTableView() {
-        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         setEditable(true);
 
         // make room for 4 columns
 //        final double tableHeight = result.getFixedCellSize() * 4.01;
-        final double tableHeight = 120.0;
+        final double tableHeight = 240.0;
         setPrefHeight(tableHeight);
         setMinHeight(tableHeight);
         setMaxHeight(tableHeight);
@@ -71,16 +78,22 @@ public class MapLayerTable extends TableView<MapLayer> {
         // index is done via order of the table - BUT BEWARE! first sort by layertype and then by index...
         
         // enabled: checkboxtablecell
+        // https://o7planning.org/de/11079/anleitung-javafx-tableview
         final TableColumn<MapLayer, Boolean> enabledCol = new TableColumn<>();
         enabledCol.setText("Enabled");
-        enabledCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<MapLayer, Boolean> p) -> new SimpleObjectProperty<>(p.getValue().isEnabled()));
-        enabledCol.setCellFactory(CheckBoxTableCell.forTableColumn(enabledCol));
-        enabledCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, Boolean> t) -> {
-            if (!t.getNewValue().equals(t.getOldValue())) {
-                final MapLayer layer = t.getRowValue();
-                layer.setEnabled(t.getNewValue());
-            }
+        enabledCol.setCellValueFactory((TableColumn.CellDataFeatures<MapLayer, Boolean> p) -> {
+            final MapLayer layer = p.getValue();
+            final SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(layer.isEnabled());
+
+            booleanProp.addListener((ObservableValue<? extends Boolean> ov, Boolean oldValue, Boolean newValue) -> {
+                layer.setEnabled(newValue);
+            });
+            return booleanProp;
+        });
+        enabledCol.setCellFactory((TableColumn<MapLayer, Boolean> p) -> {
+            CheckBoxTableCell<MapLayer, Boolean> cell = new CheckBoxTableCell<>();
+            cell.setAlignment(Pos.CENTER);
+            return cell;
         });
         enabledCol.setEditable(true);
 
@@ -110,7 +123,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         nameCol.setText("Name");
         nameCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, String> p) -> new SimpleStringProperty(p.getValue().getName()));
-        nameCol.setCellFactory(TextFieldTableCell.<MapLayer>forTableColumn());
+        nameCol.setCellFactory(TextFieldTableCell.forTableColumn());
         nameCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, String> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -124,7 +137,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         urlCol.setText("URL");
         urlCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, String> p) -> new SimpleStringProperty(p.getValue().getURL()));
-        urlCol.setCellFactory(TextFieldTableCell.<MapLayer>forTableColumn());
+        urlCol.setCellFactory(TextFieldTableCell.forTableColumn());
         urlCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, String> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -138,7 +151,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         apiKeyCol.setText("API key");
         apiKeyCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, String> p) -> new SimpleStringProperty(p.getValue().getAPIKey()));
-        apiKeyCol.setCellFactory(TextFieldTableCell.<MapLayer>forTableColumn());
+        apiKeyCol.setCellFactory(TextFieldTableCell.forTableColumn());
         apiKeyCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, String> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -152,7 +165,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         minZoomCol.setText("Min. Zoom");
         minZoomCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, Integer> p) -> new SimpleObjectProperty<>(p.getValue().getMinZoom()));
-        minZoomCol.setCellFactory(TextFieldTableCell.<MapLayer, Integer>forTableColumn(new IntegerStringConverter()));
+        minZoomCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         minZoomCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, Integer> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -165,8 +178,8 @@ public class MapLayerTable extends TableView<MapLayer> {
         final TableColumn<MapLayer, Integer> maxZoomCol = new TableColumn<>();
         maxZoomCol.setText("Max. Zoom");
         maxZoomCol.setCellValueFactory(
-                (TableColumn.CellDataFeatures<MapLayer, Integer> p) -> new SimpleObjectProperty<>(p.getValue().getMinZoom()));
-        maxZoomCol.setCellFactory(TextFieldTableCell.<MapLayer, Integer>forTableColumn(new IntegerStringConverter()));
+                (TableColumn.CellDataFeatures<MapLayer, Integer> p) -> new SimpleObjectProperty<>(p.getValue().getMaxZoom()));
+        maxZoomCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         maxZoomCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, Integer> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -180,7 +193,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         attributionCol.setText("Attribution");
         attributionCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, String> p) -> new SimpleStringProperty(p.getValue().getAttribution()));
-        attributionCol.setCellFactory(TextFieldTableCell.<MapLayer>forTableColumn());
+        attributionCol.setCellFactory(TextFieldTableCell.forTableColumn());
         attributionCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, String> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -194,7 +207,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         zIndexCol.setText("zIndex");
         zIndexCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<MapLayer, Integer> p) -> new SimpleObjectProperty<>(p.getValue().getZIndex()));
-        zIndexCol.setCellFactory(TextFieldTableCell.<MapLayer, Integer>forTableColumn(new IntegerStringConverter()));
+        zIndexCol.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         zIndexCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, Integer> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
@@ -224,7 +237,6 @@ public class MapLayerTable extends TableView<MapLayer> {
         // addAll() leads to unchecked cast - and we don't want that
         getColumns().add(enabledCol);
         getColumns().add(layerTypeCol);
-        getColumns().add(nameCol);
         getColumns().add(nameCol);
         getColumns().add(urlCol);
         getColumns().add(apiKeyCol);
@@ -275,11 +287,23 @@ public class MapLayerTable extends TableView<MapLayer> {
         }
     }
     
-    public void setItemsSorted(final List<MapLayer> items) {
+    public void setMapLayers(final List<MapLayer> items) {
         final List<MapLayer> sortedItems = new ArrayList<>(items);
         // sort by type and then by index
         Collections.sort(sortedItems, Comparator.comparing(MapLayer::getLayerType)
                     .thenComparing(MapLayer::getIndex));
         getItems().setAll(sortedItems);
+    }
+    
+    public List<MapLayer> getBaselayer() {
+        return getItems().stream().filter((t) -> {
+            return MapLayer.LayerType.BASELAYER.equals(t.getLayerType());
+        }).collect(Collectors.toList());
+    }
+    
+    public List<MapLayer> getOverlays() {
+        return getItems().stream().filter((t) -> {
+            return MapLayer.LayerType.OVERLAY.equals(t.getLayerType());
+        }).collect(Collectors.toList());
     }
 }

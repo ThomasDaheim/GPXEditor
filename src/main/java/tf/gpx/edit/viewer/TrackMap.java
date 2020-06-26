@@ -86,6 +86,7 @@ import tf.gpx.edit.leafletmap.LatLong;
 import tf.gpx.edit.leafletmap.LeafletMapView;
 import tf.gpx.edit.leafletmap.MapConfig;
 import tf.gpx.edit.leafletmap.MapLayer;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.leafletmap.ScaleControlConfig;
 import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
@@ -274,16 +275,15 @@ public class TrackMap extends LeafletMapView {
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS,
                 false);
         
-        
         // set api key before display map
         MapLayer.OPENCYCLEMAP.setAPIKey(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString());
         
         setVisible(false);
         final MapConfig myMapConfig = new MapConfig(
-                MapLayer.getKnownBaselayer().stream().filter((t) -> {
+                MapLayerUsage.getInstance().getBaselayer().stream().filter((t) -> {
                     return t.isEnabled();
                 }).collect(Collectors.toList()), 
-                MapLayer.getKnownOverlays().stream().filter((t) -> {
+                MapLayerUsage.getInstance().getOverlays().stream().filter((t) -> {
                     return t.isEnabled();
                 }).collect(Collectors.toList()), 
                 new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 

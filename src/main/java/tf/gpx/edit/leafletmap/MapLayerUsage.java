@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -105,15 +106,16 @@ public class MapLayerUsage {
     }
     
     // config per layer
-    private Map<MapLayer, LayerConfig> myLayerConfig = new HashMap<>();
+    private final Map<MapLayer, LayerConfig> myLayerConfig = new HashMap<>();
     
     private MapLayerUsage() {
         init();
     }
     
     private void init() {
-        //iterate all baselayers and init config per layer
-        final List<MapLayer> overlays = MapLayer.getKnownOverlays();
+        //iterate all default baselayers and init config per layer
+        // new layers will be added by load preferences
+        final List<MapLayer> overlays = MapLayer.getDefaultOverlays();
         
         final Map<MapLayer, Boolean> allActiveOverlays = new HashMap<>();
         
@@ -126,7 +128,7 @@ public class MapLayerUsage {
             allActiveOverlays.put(layer, false);
         }
 
-        final List<MapLayer> baselayer = MapLayer.getKnownBaselayer();
+        final List<MapLayer> baselayer = MapLayer.getDefaultBaselayer();
         i = 0;
         for (MapLayer layer : baselayer) {
             myLayerConfig.put(layer, new BaselayerConfig(i, true, allActiveOverlays));
@@ -182,6 +184,22 @@ public class MapLayerUsage {
         return INSTANCE;
     }
     
+    public List<MapLayer> getMapLayers() {
+        return new ArrayList<>(myLayerConfig.keySet());
+    }
+    
+    public List<MapLayer> getBaselayer() {
+        return myLayerConfig.keySet().stream().filter((t) -> {
+            return MapLayer.LayerType.BASELAYER.equals(t.getLayerType());
+        }).collect(Collectors.toList());
+    }
+    
+    public List<MapLayer> getOverlays() {
+        return myLayerConfig.keySet().stream().filter((t) -> {
+            return MapLayer.LayerType.OVERLAY.equals(t.getLayerType());
+        }).collect(Collectors.toList());
+    }
+    
     public boolean isLayerEnabled(final MapLayer layer) {
         if (myLayerConfig.containsKey(layer)) {
             return myLayerConfig.get(layer).isEnabled;
@@ -229,7 +247,7 @@ public class MapLayerUsage {
     
     public void loadPreferences() {
         // active overlays for base layers - was previously in TrackMap
-        for (MapLayer base : MapLayer.getKnownBaselayer()) {
+        for (MapLayer base : getBaselayer()) {
             // properties per base layer
              myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base.getName()), LayerConfig.DEFAULT_PREF_STRING));
 
@@ -249,10 +267,10 @@ public class MapLayerUsage {
         // store current baselayer
         GPXEditorPreferences.INITIAL_BASELAYER.put(TrackMap.getInstance().getCurrentBaselayer());
         
-        final List<String> overlayNames = MapLayer.getKnownOverlays().stream().map((t) -> {
+        final List<String> overlayNames = getOverlays().stream().map((t) -> {
             return t.getName();
         }).collect(Collectors.toList());
-        for (MapLayer base : MapLayer.getKnownBaselayer()) {
+        for (MapLayer base : getBaselayer()) {
             // properties per base layer
             GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayer(base.getName()), myLayerConfig.get(base).toPreferenceString());
 

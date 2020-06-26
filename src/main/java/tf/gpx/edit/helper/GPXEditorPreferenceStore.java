@@ -25,8 +25,13 @@
  */
 package tf.gpx.edit.helper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.general.IPreferencesStore;
@@ -77,5 +82,32 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
     @Override
     public void put(final String key, final String value) {
         MYPREFERENCES.put(key, value);
+    }
+
+    @Override
+    public void clear() {
+        try {
+            MYPREFERENCES.clear();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void exportSubtree(final OutputStream os) {
+        try {
+            MYPREFERENCES.exportSubtree(os);
+        } catch (BackingStoreException | IOException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void importPreferences(final InputStream is) {
+        try {
+            MYPREFERENCES.importPreferences(is);
+        } catch (InvalidPreferencesFormatException | IOException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

@@ -28,6 +28,8 @@ package tf.gpx.edit.leafletmap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Class for any valid map layers (baselayer and overlay) for leaflet maps.
@@ -58,7 +60,7 @@ public class MapLayer {
         }
         
         public String getShortName() {
-            return toString().substring(0, 0);
+            return toString().substring(0, 1);
         }
         
         public static LayerType fromShortName(final String name) {
@@ -106,7 +108,7 @@ public class MapLayer {
         }
         
         public String getShortName() {
-            return toString().substring(0, 0);
+            return toString().substring(0, 1);
         }
         
         public static TileLayerClass fromShortName(final String name) {
@@ -405,7 +407,7 @@ public class MapLayer {
     public static MapLayer MTB_MAP = 
             new MapLayer(
                     LayerType.BASELAYER, 
-                    "OpenStreetMap", 
+                    "MTB Map", 
                     "http://tile.mtbmap.cz/mtbmap_tiles/{z}/{x}/{y}.png", 
                     "", 
                     0, 
@@ -414,7 +416,8 @@ public class MapLayer {
                     0,
                     TileLayerClass.STANDARD);
     
-    private static final List<MapLayer> knownBaselayers = new ArrayList<>(
+    // TODO: make observable list
+    private static final List<MapLayer> myBaselayer = new ArrayList<>(
             Arrays.asList(
                     MapLayer.OPENCYCLEMAP, 
                     MapLayer.MAPBOX, 
@@ -428,8 +431,8 @@ public class MapLayer {
                     MapLayer.HIKE_BIKE_MAP, 
                     MapLayer.MTB_MAP));
     
-    public static List<MapLayer> getKnownBaselayer() {
-        return knownBaselayers;
+    public static List<MapLayer> getDefaultBaselayer() {
+        return myBaselayer;
     }
     
     // overlays
@@ -530,7 +533,8 @@ public class MapLayer {
                     99,
                     TileLayerClass.STANDARD);
 
-    private static final List<MapLayer> knownOverlays = new ArrayList<>(
+    // TODO: make observable list
+    private static final List<MapLayer> myOverlays = new ArrayList<>(
             Arrays.asList(
                     MapLayer.CONTOUR_LINES, 
                     MapLayer.HILL_SHADING, 
@@ -541,7 +545,7 @@ public class MapLayer {
                     MapLayer.ROADS_AND_LABELS, 
                     MapLayer.RAILWAY_LINES));
     
-    public static List<MapLayer> getKnownOverlays () {
-        return knownOverlays;
+    public static List<MapLayer> getDefaultOverlays () {
+        return myOverlays;
     }
 }
