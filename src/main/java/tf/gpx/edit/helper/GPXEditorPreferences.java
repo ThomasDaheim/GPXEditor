@@ -27,8 +27,6 @@ package tf.gpx.edit.helper;
 
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;

@@ -41,14 +41,14 @@ import java.util.List;
  * @author thomas
  */
 public class MapConfig {
-    private final List<MapLayer> myBaseLayers;
+    private final List<MapLayer> myBaselayer;
     private final List<MapLayer> myOverlays;
     private final ZoomControlConfig myZoomControlConfig;
     private final ScaleControlConfig myScaleControlConfig;
     private final LatLong myInitialCenter;
 
     public MapConfig() {
-        myBaseLayers = new ArrayList<>(Arrays.asList(MapLayer.OPENSTREETMAP));
+        myBaselayer = new ArrayList<>(Arrays.asList(MapLayer.OPENSTREETMAP));
         myOverlays = new ArrayList<>();
         myZoomControlConfig = new ZoomControlConfig();
         myScaleControlConfig = new ScaleControlConfig();
@@ -56,15 +56,15 @@ public class MapConfig {
     }
     
     public MapConfig(final List<MapLayer> baselayers, final List<MapLayer> overlays, final ZoomControlConfig zoomControlConfig, final ScaleControlConfig scaleControlConfig, final LatLong latLong) {
-        myBaseLayers = new ArrayList<>(baselayers);
+        myBaselayer = new ArrayList<>(baselayers);
         myOverlays = new ArrayList<>(overlays);
         myZoomControlConfig = zoomControlConfig;
         myScaleControlConfig = scaleControlConfig;
         myInitialCenter = latLong;
     }
 
-    public List<MapLayer> getBaseLayers() {
-        return myBaseLayers;
+    public List<MapLayer> getBaselayer() {
+        return myBaselayer;
     }
 
     public List<MapLayer> getOverlays() {

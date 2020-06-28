@@ -26,7 +26,7 @@
 package tf.gpx.edit.leafletmap;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -101,12 +101,12 @@ public class MapLayerUsage {
         public BaselayerConfig(final int idx, final boolean enabled, final Map<MapLayer, Boolean> active) {
             super(idx, enabled);
 
-            activeOverlays = new HashMap<>(active);
+            activeOverlays = new LinkedHashMap<>(active);
         }
     }
     
     // config per layer
-    private final Map<MapLayer, LayerConfig> myLayerConfig = new HashMap<>();
+    private final Map<MapLayer, LayerConfig> myLayerConfig = new LinkedHashMap<>();
     
     private MapLayerUsage() {
         init();
@@ -117,7 +117,7 @@ public class MapLayerUsage {
         // new layers will be added by load preferences
         final List<MapLayer> overlays = MapLayer.getDefaultOverlays();
         
-        final Map<MapLayer, Boolean> allActiveOverlays = new HashMap<>();
+        final Map<MapLayer, Boolean> allActiveOverlays = new LinkedHashMap<>();
         
         int i = 0;
         for (MapLayer layer : overlays) {
@@ -252,7 +252,7 @@ public class MapLayerUsage {
              myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base.getName()), LayerConfig.DEFAULT_PREF_STRING));
 
             // active overlays for base layers - was previously in TrackMap
-            final Map<String, Boolean> overlays = new HashMap<>();
+            final Map<String, Boolean> overlays = new LinkedHashMap<>();
             for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).activeOverlays.entrySet()) {
                 overlays.put(entry.getKey().getName(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
             }

@@ -484,8 +484,13 @@ public class GPXEditor implements Initializable {
     }
     
     public Window getWindow() {
-        // see https://stackoverflow.com/a/26061123
-        return gpxFileListXML.getScene().getWindow();
+        // TFE: 20200628: if we have a cmd line parameter the UI might not yet fully initialized
+        if (gpxFileListXML.getScene() != null) {
+            // see https://stackoverflow.com/a/26061123
+            return gpxFileListXML.getScene().getWindow();
+        } else {
+            return null;
+        }
     }
     
     public boolean isCntrlPressed() {
@@ -1213,7 +1218,7 @@ public class GPXEditor implements Initializable {
                         TaskExecutor.executeTask(
                             getScene(), () -> {
                                 // TFE, 20191024 add warning for format issues
-                                GPXFileHelper.verifyXMLFile(file);
+                                GPXFileHelper.getInstance().verifyXMLFile(file);
 
                                 gpxFileList.addGPXFile(new GPXFile(file));
 
@@ -2246,7 +2251,8 @@ public class GPXEditor implements Initializable {
     }
     
     public Scene getScene() {
-        if (Platform.isFxApplicationThread()) {
+        // TFE: 20200628: if we have a cmd line parameter the UI might not yet fully initialized
+        if (Platform.isFxApplicationThread() && getWindow() != null) {
             return getWindow().getScene();
         } else {
             return null;

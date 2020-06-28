@@ -304,7 +304,7 @@ public class GPXFileHelper {
         return result;
     }
 
-    public static void verifyXMLFile(final File gpxFile) {
+    public void verifyXMLFile(final File gpxFile) {
         try {
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -316,16 +316,19 @@ public class GPXFileHelper {
             parser.parse(gpxFile, handler);
             
         } catch(IOException | ParserConfigurationException | SAXException ex) {
-//            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
+            // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
+            if (myEditor.getScene() != null) {
+//                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             
-            final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
-            Optional<ButtonType> doAction = 
-                    ShowAlerts.getInstance().showAlert(
-                            Alert.AlertType.WARNING,
-                            "Warning",
-                            "Invalid file: " + gpxFile.getName(),
-                            ex.getMessage(),
-                            buttonOK);
+                final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
+                Optional<ButtonType> doAction = 
+                        ShowAlerts.getInstance().showAlert(
+                                Alert.AlertType.WARNING,
+                                "Warning",
+                                "Invalid file: " + gpxFile.getName(),
+                                ex.getMessage(),
+                                buttonOK);
+            }
         }
     }
     

@@ -60,6 +60,8 @@ public class LeafletMapView extends StackPane {
     
     private Integer varNameSuffix = 1;
     
+    private MapConfig myMapConfig;
+    
     public LeafletMapView() {
         init();
     }
@@ -85,12 +87,15 @@ public class LeafletMapView extends StackPane {
      */
     public CompletableFuture<Worker.State> displayMap(final MapConfig mapConfig) {
         final CompletableFuture<Worker.State> result = new CompletableFuture<>();
+        
+        // store for later us, e.g. return baselayer and overlays
+        myMapConfig = mapConfig;
 
         myWebEngine.setJavaScriptEnabled(true);
 
         myWebEngine.getLoadWorker().stateProperty().addListener((ov, t, newValue) -> {
             if (newValue == Worker.State.SUCCEEDED) {
-                executeMapSetupScripts(mapConfig);
+                executeMapSetupScripts();
             }
 
             if (newValue == Worker.State.SUCCEEDED || newValue == Worker.State.FAILED) {
@@ -104,15 +109,15 @@ public class LeafletMapView extends StackPane {
         return result;
     }
     
-    private void executeMapSetupScripts(final MapConfig mapConfig) {
+    private void executeMapSetupScripts() {
         // collect all required resources for the layers
         final Set<String> jsResources = new HashSet<>();
         
         // add all resources before doing anything
-        for (MapLayer layer : mapConfig.getBaseLayers()) {
+        for (MapLayer layer : myMapConfig.getBaselayer()) {
             jsResources.add(layer.getTileLayerClass().getJSResource());
         }
-        for (MapLayer layer : mapConfig.getOverlays()) {
+        for (MapLayer layer : myMapConfig.getOverlays()) {
             jsResources.add(layer.getTileLayerClass().getJSResource());
         }
         for (String jsResource : jsResources) {
@@ -125,7 +130,7 @@ public class LeafletMapView extends StackPane {
         int i = 1;
         String cmdString;
         final StringBuilder baselayer = new StringBuilder();
-        for (MapLayer layer : mapConfig.getBaseLayers()) {
+        for (MapLayer layer : myMapConfig.getBaselayer()) {
             cmdString = String.format(Locale.US, "var baselayer%d = %s;", i, layer.getJSCode());
 //            System.out.println(layer.getName() + ": " + cmdString);
             execScript(cmdString);
@@ -141,7 +146,7 @@ public class LeafletMapView extends StackPane {
         // create vars for all overlays & array of all
         i = 1;
         final StringBuilder overlays = new StringBuilder();
-        for (MapLayer layer : mapConfig.getOverlays()) {
+        for (MapLayer layer : myMapConfig.getOverlays()) {
             cmdString = String.format(Locale.US, "var overlay%d = %s;", i, layer.getJSCode());
 //            System.out.println(layer.getName() + ": " + cmdString);
             execScript(cmdString);
@@ -157,7 +162,7 @@ public class LeafletMapView extends StackPane {
         // execute script for map view creation (Leaflet attribution must not be a clickable link)
         final StringBuilder mapCmd = new StringBuilder();
         mapCmd.append("var myMap = L.map('map', {\n");
-        mapCmd.append(String.format(Locale.US, "   center: new L.LatLng(%f, %f),\n", mapConfig.getInitialCenter().getLatitude(), mapConfig.getInitialCenter().getLongitude()));
+        mapCmd.append(String.format(Locale.US, "   center: new L.LatLng(%f, %f),\n", myMapConfig.getInitialCenter().getLatitude(), myMapConfig.getInitialCenter().getLongitude()));
         mapCmd.append("    zoom: 8,\n");
         mapCmd.append("    zoomControl: false,\n");
         mapCmd.append("    layers: [baselayer1],\n");
@@ -168,25 +173,25 @@ public class LeafletMapView extends StackPane {
         execScript(mapCmd.toString());
 
         // execute script for layer control definition if there are multiple layers
-        if (mapConfig.getBaseLayers().size() + mapConfig.getOverlays().size() > 1) {
+        if (myMapConfig.getBaselayer().size() + myMapConfig.getOverlays().size() > 1) {
             execScript("var controlLayer = L.control.layers(baseMaps, overlayMaps).addTo(myMap);");
         }
 
         // execute script for scale control definition
-        if (mapConfig.getScaleControlConfig().isVisible()) {
+        if (myMapConfig.getScaleControlConfig().isVisible()) {
             final StringBuilder scaleCmd = new StringBuilder();
-            scaleCmd.append(String.format(Locale.US, "L.control.scale({position: '%s', ", mapConfig.getScaleControlConfig().getPosition().getPosition()));
-            scaleCmd.append(String.format(Locale.US, "metric: %s, ", mapConfig.getScaleControlConfig().getMetric().toString()));
-            scaleCmd.append(String.format(Locale.US, "imperial: %s})", Boolean.valueOf(!mapConfig.getScaleControlConfig().getMetric()).toString()));
+            scaleCmd.append(String.format(Locale.US, "L.control.scale({position: '%s', ", myMapConfig.getScaleControlConfig().getPosition().getPosition()));
+            scaleCmd.append(String.format(Locale.US, "metric: %s, ", myMapConfig.getScaleControlConfig().getMetric().toString()));
+            scaleCmd.append(String.format(Locale.US, "imperial: %s})", Boolean.valueOf(!myMapConfig.getScaleControlConfig().getMetric()).toString()));
             scaleCmd.append(".addTo(myMap);");
 //            System.out.println("scaleCmd: " + scaleCmd.toString());
             execScript(scaleCmd.toString());
         }
 
         // execute script for zoom control definition
-        if (mapConfig.getZoomControlConfig().isVisible()) {
+        if (myMapConfig.getZoomControlConfig().isVisible()) {
             final StringBuilder zoomCmd = new StringBuilder();
-            zoomCmd.append(String.format(Locale.US, "L.control.zoom({position: '%s'})", mapConfig.getZoomControlConfig().getPosition().getPosition()));
+            zoomCmd.append(String.format(Locale.US, "L.control.zoom({position: '%s'})", myMapConfig.getZoomControlConfig().getPosition().getPosition()));
             zoomCmd.append(".addTo(myMap);");
 //            System.out.println("zoomCmd: " + zoomCmd.toString());
             execScript(zoomCmd.toString());
@@ -378,5 +383,13 @@ public class LeafletMapView extends StackPane {
      */
     protected Object execScript(final String script) {
         return myWebEngine.executeScript(script);
+    }
+    
+    protected List<MapLayer> getBaselayer() {
+        return myMapConfig.getBaselayer();
+    }
+    
+    protected List<MapLayer> getOverlays() {
+        return myMapConfig.getOverlays();
     }
 }
