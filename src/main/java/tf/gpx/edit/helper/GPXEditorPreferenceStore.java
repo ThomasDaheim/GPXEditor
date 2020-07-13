@@ -105,7 +105,7 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
     @Override
     public void importPreferences(final InputStream is) {
         try {
-            MYPREFERENCES.importPreferences(is);
+            Preferences.importPreferences(is);
         } catch (InvalidPreferencesFormatException | IOException ex) {
             Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
         }

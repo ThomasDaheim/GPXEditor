@@ -39,13 +39,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -104,7 +102,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
-import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
@@ -113,6 +110,7 @@ import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -152,11 +150,11 @@ import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.doundo.DoUndoActionList;
 import tf.helper.doundo.DoUndoManager;
 import tf.helper.doundo.IDoUndoAction;
-import tf.helper.javafx.AboutMenu;
 import tf.helper.general.ObjectsHelper;
-import tf.helper.javafx.UsefulKeyCodes;
+import tf.helper.javafx.AboutMenu;
 import tf.helper.javafx.ShowAlerts;
 import tf.helper.javafx.TableViewPreferences;
+import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  *
@@ -442,6 +440,10 @@ public class GPXEditor implements Initializable {
         
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
+
+        // TFE, 20200713: needs to happen before map gets loaded
+        MapLayerUsage.getInstance().loadPreferences();
+        TrackMap.getInstance().initMap();
     }
     
     public void lateInitialize() {
@@ -458,7 +460,6 @@ public class GPXEditor implements Initializable {
                 cntrlPressedProperty.setValue(Boolean.FALSE);
             }
         });
-        
     }
     
     public void initializeAfterMapLoaded() {
@@ -466,7 +467,6 @@ public class GPXEditor implements Initializable {
 
         // TFE, 20180901: load stored values for track & height map
         GPXTrackviewer.getInstance().loadPreferences();
-        MapLayerUsage.getInstance().loadPreferences();
     }
 
     public void stop() {

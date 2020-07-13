@@ -27,7 +27,6 @@ package tf.gpx.edit.actions;
 
 import com.hs.gpxparser.modal.Link;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.values.EditGPXWaypoint;
 import static tf.gpx.edit.values.EditGPXWaypoint.KEEP_MULTIPLE_VALUES;
 import tf.gpx.edit.viewer.MarkerManager;
 

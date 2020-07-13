@@ -32,40 +32,26 @@
 
 // TFE, 20190831: add enums & arrays to store previously active overlays per base layer
 // https://stijndewitt.com/2014/01/26/enums-in-javascript/
-const overlaysList = {
-    ITERATE_FIRST: 0,
-    
-    CONTOUR_LINES: 0,
-    HILL_SHADING: 1,
-    HIKING_TRAILS: 2,
-    CYCLING_TRAILS: 3,
-    MTB_TRAILS: 4,
-    SLOPE_TRAILS: 5,
-    ROADS_AND_LABELS: 6,
-    RAILWAY_LINES: 7,
-    
-    ITERATE_LAST: 7,
-    
-    // TFE, 20200611: support to show / hide overlays
-    properties: {
-        0: {name: 'Contour Lines', layer: overlay1, visible: true},
-        1: {name: 'Hill Shading', layer: overlay2, visible: true},
-        2: {name: 'Hiking Trails', layer: overlay3, visible: true},
-        3: {name: 'Cycling Trails', layer: overlay4, visible: true},
-        4: {name: 'MTB Trails', layer: overlay5, visible: true},
-        5: {name: 'Slopes', layer: overlay6, visible: true},
-        6: {name: 'Roads and Labels', layer: overlay7, visible: true},
-        7: {name: 'Railways', layer: overlay8, visible: true}
-    }
-};
+// TFE, 20200713: change to arrays to support preferences
+var overlaysList = [];
+var overlayTest = Object.getOwnPropertyNames(overlayMaps);
+for (var i = 0; i < overlayTest.length; i++) {
+//    jscallback.log('overlayTest[i]: ' + overlayTest[i]);
+//    jscallback.log('overlayMaps[i]: ' + overlayMaps[overlayTest[i]]);
+
+    var properties = { name: overlayTest[i], layer: overlayMaps[overlayTest[i]], visible: true };
+    overlaysList.push(properties);
+}
+//for (var i = 0; i < overlaysList.length; i++) {
+//    jscallback.log('overlaysList[i].name: ' + overlaysList[i].name);
+//}
 
 // support function for load/save preferences in TrackMap
 function getKnownOverlayNames() {
     var result = [];
-    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
-        result.push(overlaysList.properties[i].name);
+    for (var i = 0; i < overlaysList.length; i++) {
+        result.push(overlaysList[i].name);
     }
-    
 //    jscallback.log('getKnownOverlayNames: ' + result);
     return result;
 }
@@ -76,69 +62,32 @@ function getKnownOverlayNames() {
  * 
  *******************************************************************************/
 
-const baselayerList = {
-    ITERATE_FIRST: 0,
-    
-    OPENCYCLEMAP: 0,
-    MAPBOX: 1,
-    OPENSTREETMAP: 2,
-    SATELLITEESRI: 3,
-    BING: 4,
-    BINGAERIAL: 5,
-    OPENTOPOMAP: 6,
-    DETOPPLUSOPEN: 7,
-    ESTOPOIGN: 8,
-    
-    ITERATE_LAST: 8,
-    UNKNOWN: 99,
-    
-    // TFE, 20200611: support to show / hide baselayers
-    properties: {
-        0: {name: 'OpenCycleMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        1: {name: 'MapBox', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        2: {name: 'OpenStreetMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        3: {name: 'Satellite Esri', visible: false, overlays: [false, false, false, false, false, false, false, false]},
-        4: {name: 'Bing', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        5: {name: 'Bing Aerial', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        6: {name: 'OpenTopoMap', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        7: {name: 'DE: TopPlusOpen', visible: true, overlays: [false, false, false, false, false, false, false, false]},
-        8: {name: 'ES: Topo (IGN)', visible: false, overlays: [false, false, false, false, false, false, false, false]},
-        99: {name: 'UNKNOWN', visible: true, overlays: [false, false, false, false, false, false, false, false]}
-    }
-};
-
-// add layer objects to list
-//jscallback.log('baselayer count: ' + controlLayer._layers.length);
-for (var i = 0; i < controlLayer._layers.length; i++) {
-    if (controlLayer._layers[i] && !controlLayer._layers[i].overlay) {
-//        jscallback.log('baselayer[' + i + "]: "+ controlLayer._layers[i].name);
-        for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-            if (controlLayer._layers[i].name == baselayerList.properties[i].name) {
-                baselayerList.properties[i].layer = controlLayer._layers[i].layer;
-            }
-        }
-    }
+// intially, set all overlays to true
+var data = [];
+for(var i = 0; i < overlaysList.length; i++) {
+    data.push(false);
 }
-//for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-//    jscallback.log('baselayer[' + i + "]: "+ baselayerList.properties[i].name + ", " + baselayerList.properties[i].layer);
+
+var baselayerList = [];
+var baselayerTest = Object.getOwnPropertyNames(baseMaps);
+
+for (var i = 0; i < baselayerTest.length; i++) {
+//    jscallback.log('baselayerTest[i]: ' + baselayerTest[i]);
+//    jscallback.log('baselayerTest[i]: ' + baseMaps[baselayerTest[i]]);
+
+    var properties = { name: baselayerTest[i], layer: baseMaps[baselayerTest[i]], visible: true, overlays: data.slice(0) };
+    baselayerList.push(properties);
+}
+//for (var i = 0; i < baselayerList.length; i++) {
+//    jscallback.log('baselayerList[i].name: ' + baselayerList[i].name);
 //}
                 
-// MapBox needs contour lines
-baselayerList.properties[baselayerList.MAPBOX].overlays[overlaysList.CONTOUR_LINES] = true;
-// OpenStreetMap needs contour lines and hill shading
-baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.CONTOUR_LINES] = true;
-baselayerList.properties[baselayerList.OPENSTREETMAP].overlays[overlaysList.HILL_SHADING] = true;
-// Satellite Esri needs roads/labels and contour lines
-baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.CONTOUR_LINES] = true;
-baselayerList.properties[baselayerList.SATELLITEESRI].overlays[overlaysList.ROADS_AND_LABELS] = true;
-
 // support function for load/save preferences in TrackMap
 function getKnownBaselayerNames() {
     var result = [];
-    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-        result.push(baselayerList.properties[i].name);
+    for (var i = 0; i < baselayerList.length; i++) {
+        result.push(baselayerList[i].name);
     }
-    
 //    jscallback.log('getKnownBaselayerNames: ' + result);
     return result;
 }
@@ -147,15 +96,15 @@ function getKnownBaselayerNames() {
 function getOverlayValues(baselayer) {
 //    jscallback.log('getOverlayValues: ' + baselayer);
     var result = [];
-    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
+    for (let i = 0; i < overlaysList.length; i++) {
         result.push(false);
     }
 
-    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-        if (baselayer === baselayerList.properties[i].name) {
-//            jscallback.log('getOverlayValues: ' + baselayerList.properties[i].overlays);
+    for (var i = 0; i < baselayerList.length; i++) {
+        if (baselayer === baselayerList[i].name) {
+//            jscallback.log('getOverlayValues: ' + baselayerList[i].overlays);
 
-            result = baselayerList.properties[i].overlays.slice(0);
+            result = baselayerList[i].overlays.slice(0);
             break;
         }
     }
@@ -167,29 +116,14 @@ function getOverlayValues(baselayer) {
 function setOverlayValues(baselayer, overlays) {
 //    jscallback.log('setOverlayValues: ' + baselayer + " to " + overlays);
     
-    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-        if (baselayer === baselayerList.properties[i].name) {
-//            jscallback.log('setOverlayValues: ' + baselayerList.properties[i].overlays);
+    for (var i = 0; i < baselayerList.length; i++) {
+        if (baselayer === baselayerList[i].name) {
+//            jscallback.log('setOverlayValues: ' + baselayerList[i].overlays);
             
-            baselayerList.properties[i].overlays = overlays.slice(0);
+            baselayerList[i].overlays = overlays.slice(0);
         }
     }
 }
-
-// TFE, 20200611: support to show / hide baselayers
-//function showHideBaselayer(layer, isVisible) {
-//    var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
-//    if (isVisible) {
-//        layerControlElement.getElementsByTagName('input')[layer].style.visibility = 'visible';
-//    } else {
-//        layerControlElement.getElementsByTagName('input')[layer].style.visibility = 'hidden';
-//    }
-//    baselayerList.properties[layer].visible = isVisible;
-//}
-//for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-////    jscallback.log('before showHideBaselayer: ' + i + ", " + baselayerList.properties[i].visible);
-//    showHideBaselayer(i, baselayerList.properties[i].visible);
-//}
 
 /*******************************************************************************
  * 
@@ -199,10 +133,11 @@ function setOverlayValues(baselayer, overlays) {
 
 // initialize everything for base layer #0
 var currentBaselayer = 0;
-var currentOverlays = baselayerList.properties[0].overlays.slice(0);
-baselayerchange({name: baselayerList.properties[0].name});
+var currentOverlays = baselayerList[0].overlays.slice(0);
+baselayerchange({name: baselayerList[0].name});
 
 function setCurrentBaselayer(layer) {
+//    jscallback.log('setCurrentBaselayer to: ' + layer);
     var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
     layerControlElement.getElementsByTagName('input')[layer].click();
 }
@@ -212,9 +147,9 @@ function getCurrentBaselayer() {
 
 // add automatically for maps that need the additional info
 function baselayerchange(e) {
-    currentBaselayer = baselayerList.UNKNOWN;
-    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-        if (e.name === baselayerList.properties[i].name) {
+    currentBaselayer = -1;
+    for (var i = 0; i < baselayerList.length; i++) {
+        if (e.name === baselayerList[i].name) {
 //            jscallback.log('baselayerchange to: ' + i + ' from ' + currentBaselayer);
 
             currentBaselayer = i;
@@ -222,35 +157,38 @@ function baselayerchange(e) {
         }
     }
     
-    logOverlays();
+//    logOverlays();
     
     // go through all 
-    baselayerList.properties[currentBaselayer].overlays.forEach(function (item, index) {
-//        jscallback.log('working on: ' + currentOverlays[index] + ', ' + item + ', ' + overlaysList.properties[index].name);
+    baselayerList[currentBaselayer].overlays.forEach(function (item, index) {
+//        jscallback.log('working on: ' + item + ', ' + index);
+//        jscallback.log('working on: ' + currentOverlays[index] + ', ' + item + ', ' + overlaysList[index].name);
         
         if (currentOverlays[index] !== item) {
             // remove if previously present
             if (currentOverlays[index]) {
 //                jscallback.log('myMap.removeLayer');
-                myMap.removeLayer(overlaysList.properties[index].layer);
+                myMap.removeLayer(overlaysList[index].layer);
             }
 
             // add if to be used
-            if (item && overlaysList.properties[index].visible) {
+            if (item && overlaysList[index].visible) {
 //                jscallback.log('myMap.addLayer');
-                myMap.addLayer(overlaysList.properties[index].layer);
+                myMap.addLayer(overlaysList[index].layer);
             }
         }
 
         // update Layer control
-        controlLayer.removeLayer(overlaysList.properties[index].layer);
-        if (overlaysList.properties[index].visible) {
-            controlLayer.addOverlay(overlaysList.properties[index].layer, overlaysList.properties[index].name);
+        controlLayer.removeLayer(overlaysList[index].layer);
+        if (overlaysList[index].visible) {
+            controlLayer.addOverlay(overlaysList[index].layer, overlaysList[index].name);
         }
     });
 
-//    jscallback.log('baseLayerChange: ' + e.name + ', ' + overlaysToUse + ', ' + currentOverlays);
+//    jscallback.log('baseLayerChange done: ' + e.name + ', ' + currentOverlays);
 } 
+myMap.on('baselayerchange', baselayerchange);
+
 function overlayadd(e) {
 //    jscallback.log('overlayadd: ' + e.name + ' for baselayer: ' + currentBaselayer);
     overlayChanged(e, true);
@@ -260,28 +198,27 @@ function overlayremove(e) {
     overlayChanged(e, false);
 }
 function overlayChanged(e, value) {
-    for (let i = overlaysList.ITERATE_FIRST; i <= overlaysList.ITERATE_LAST; i++) {
-        if (e.name === overlaysList.properties[i].name) {
+    for (var i = 0; i < overlaysList.length; i++) {
+        if (e.name === overlaysList[i].name) {
 //            jscallback.log('overlayChanged to ' + value + ' for baselayer: ' + currentBaselayer + ' and overlay: ' + i);
             
             currentOverlays[i] = value;
     
             // update value for baselayer as well to store for next usage
-            baselayerList.properties[currentBaselayer].overlays[i] = value;
+            baselayerList[currentBaselayer].overlays[i] = value;
             break;
         }
     }
 
     logOverlays();
 }
-myMap.on('baselayerchange', baselayerchange);
 myMap.on('overlayadd', overlayadd);
 myMap.on('overlayremove', overlayremove);
 
 function logOverlays() {
 //    jscallback.log('------------------------------------------------------------------------------------------');
-//    for (let i = baselayerList.ITERATE_FIRST; i <= baselayerList.ITERATE_LAST; i++) {
-//        jscallback.log('baselayer: ' + baselayerList.properties[i].name + ', overlays: ' + baselayerList.properties[i].overlays);
+//    for (var i = 0; i < baselayerList.length; i++) {
+//        jscallback.log('baselayer: ' + baselayerList[i].name + ', overlays: ' + baselayerList[i].overlays);
 //    }
 //    jscallback.log('------------------------------------------------------------------------------------------');
 }

@@ -34,7 +34,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,14 +41,12 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ChoiceBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.util.Callback;
 import javafx.util.converter.IntegerStringConverter;
 
 /**
@@ -116,7 +113,8 @@ public class MapLayerTable extends TableView<MapLayer> {
                 updatedItemIndices();
             }
         });
-        layerTypeCol.setEditable(true);
+        // initially, lets not change type - messes up a lot of things in the back
+        layerTypeCol.setEditable(false);
         
         // name: string
         final TableColumn<MapLayer, String> nameCol = new TableColumn<>();
@@ -130,7 +128,8 @@ public class MapLayerTable extends TableView<MapLayer> {
                 layer.setName(t.getNewValue());
             }
         });
-        nameCol.setEditable(true);
+        // initially, lets not change name - messes up a lot of things in the back
+        nameCol.setEditable(false);
         
         // url: string
         final TableColumn<MapLayer, String> urlCol = new TableColumn<>();

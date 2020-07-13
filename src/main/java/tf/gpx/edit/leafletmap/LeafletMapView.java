@@ -1,28 +1,4 @@
-/*
- * Copyright (c) 2014ff Thomas Feuster
- * All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+
 package tf.gpx.edit.leafletmap;
 
 import java.io.InputStream;
@@ -102,6 +78,33 @@ public class LeafletMapView extends StackPane {
                 result.complete(newValue);
             }
         });
+        
+        // TODO: load file somehow as https - otherwise navigator.geolocation isn't working
+        // https://stackoverflow.com/a/23782959
+        // setup SSL cehck to accept everything
+//        final TrustManager[] trustAllCerts = new TrustManager[] {  
+//            new X509TrustManager() {  
+//              @Override
+//              public java.security.cert.X509Certificate[] getAcceptedIssuers() {  
+//                return null;  
+//              }  
+//              @Override
+//              public void checkClientTrusted(  
+//                  java.security.cert.X509Certificate[] certs, String authType) {  
+//              }  
+//              @Override
+//              public void checkServerTrusted(  
+//                  java.security.cert.X509Certificate[] certs, String authType) {  
+//              }  
+//            }  
+//        };  
+//        // Install the all-trusting trust manager  
+//        try {  
+//            final SSLContext sc = SSLContext.getInstance("SSL");  
+//            sc.init(null, trustAllCerts, new java.security.SecureRandom());  
+//            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());  
+//        } catch (GeneralSecurityException e) {  
+//        }  
 
         final String editor_script = LeafletMapView.class.getResource(LEAFLET_PATH + "/leafletmap" + MIN_EXT + ".html").toExternalForm();
         myWebView.getEngine().load(editor_script);
@@ -129,35 +132,44 @@ public class LeafletMapView extends StackPane {
         // create vars for all baselayers & array of all
         int i = 1;
         String cmdString;
-        final StringBuilder baselayer = new StringBuilder();
-        for (MapLayer layer : myMapConfig.getBaselayer()) {
-            cmdString = String.format(Locale.US, "var baselayer%d = %s;", i, layer.getJSCode());
-//            System.out.println(layer.getName() + ": " + cmdString);
+        if (!myMapConfig.getBaselayer().isEmpty()) {
+            final StringBuilder baselayer = new StringBuilder();
+            for (MapLayer layer : myMapConfig.getBaselayer()) {
+                cmdString = String.format(Locale.US, "var baselayer%d = %s;", i, layer.getJSCode());
+    //            System.out.println(layer.getName() + ": " + cmdString);
+                execScript(cmdString);
+
+                baselayer.append(String.format(Locale.US, "'%s': baselayer%d, ", layer.getName(), i));
+
+                i++;
+            }
+
+            cmdString = String.format(Locale.US, "var baseMaps = { %s };", baselayer.toString());
             execScript(cmdString);
-            
-            baselayer.append(String.format(Locale.US, "'%s': baselayer%d, ", layer.getName(), i));
-            
-            i++;
+        } else {
+            execScript("var baseMaps = { };");
+            System.out.println("LeafletMapView: No basemaps defined in MapConfig.");
         }
 
-        cmdString = String.format(Locale.US, "var baseMaps = { %s };", baselayer.toString());
-        execScript(cmdString);
+        // create vars for all overlays & array of all - if any
+        if (!myMapConfig.getOverlays().isEmpty()) {
+            i = 1;
+            final StringBuilder overlays = new StringBuilder();
+            for (MapLayer layer : myMapConfig.getOverlays()) {
+                cmdString = String.format(Locale.US, "var overlay%d = %s;", i, layer.getJSCode());
+    //            System.out.println(layer.getName() + ": " + cmdString);
+                execScript(cmdString);
 
-        // create vars for all overlays & array of all
-        i = 1;
-        final StringBuilder overlays = new StringBuilder();
-        for (MapLayer layer : myMapConfig.getOverlays()) {
-            cmdString = String.format(Locale.US, "var overlay%d = %s;", i, layer.getJSCode());
-//            System.out.println(layer.getName() + ": " + cmdString);
+                overlays.append(String.format(Locale.US, "'%s': overlay%d, ", layer.getName(), i));
+
+                i++;
+            }
+
+            cmdString = String.format(Locale.US, "var overlayMaps = { %s };", overlays.toString());
             execScript(cmdString);
-            
-            overlays.append(String.format(Locale.US, "'%s': overlay%d, ", layer.getName(), i));
-            
-            i++;
+        } else {
+            execScript("var overlayMaps = { };");
         }
-
-        cmdString = String.format(Locale.US, "var overlayMaps = { %s };", overlays.toString());
-        execScript(cmdString);
         
         // execute script for map view creation (Leaflet attribution must not be a clickable link)
         final StringBuilder mapCmd = new StringBuilder();
@@ -165,7 +177,9 @@ public class LeafletMapView extends StackPane {
         mapCmd.append(String.format(Locale.US, "   center: new L.LatLng(%f, %f),\n", myMapConfig.getInitialCenter().getLatitude(), myMapConfig.getInitialCenter().getLongitude()));
         mapCmd.append("    zoom: 8,\n");
         mapCmd.append("    zoomControl: false,\n");
-        mapCmd.append("    layers: [baselayer1],\n");
+        if (!myMapConfig.getBaselayer().isEmpty()) {
+            mapCmd.append("    layers: [baselayer1],\n");
+        }
         mapCmd.append("});\n\n");
         mapCmd.append("var attribution = myMap.attributionControl;\n");
         mapCmd.append("attribution.setPrefix('Leaflet');");
@@ -182,7 +196,7 @@ public class LeafletMapView extends StackPane {
             final StringBuilder scaleCmd = new StringBuilder();
             scaleCmd.append(String.format(Locale.US, "L.control.scale({position: '%s', ", myMapConfig.getScaleControlConfig().getPosition().getPosition()));
             scaleCmd.append(String.format(Locale.US, "metric: %s, ", myMapConfig.getScaleControlConfig().getMetric().toString()));
-            scaleCmd.append(String.format(Locale.US, "imperial: %s})", Boolean.valueOf(!myMapConfig.getScaleControlConfig().getMetric()).toString()));
+            scaleCmd.append(String.format(Locale.US, "imperial: %s})", Boolean.toString(!myMapConfig.getScaleControlConfig().getMetric())));
             scaleCmd.append(".addTo(myMap);");
 //            System.out.println("scaleCmd: " + scaleCmd.toString());
             execScript(scaleCmd.toString());

@@ -32,16 +32,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -64,15 +59,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
@@ -430,7 +416,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(searchText, INSET_TOP);
         
         rowNum++;
-        final Label mapLayerLbl = new Label("Map Layer settings:");
+        final Label mapLayerLbl = new Label("Map Layer settings (only changed after restart):");
         getGridPane().add(mapLayerLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(mapLayerLbl, VPos.TOP);
         GridPane.setMargin(mapLayerLbl, INSET_TOP);
@@ -718,7 +704,7 @@ public class PreferenceEditor extends AbstractStage {
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
         numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
-        mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getMapLayers());
+        mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         openCycleMapApiKeyText.setText(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsType());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
@@ -742,6 +728,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
+        MapLayerUsage.getInstance().savePreferences();
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
         GPXEditorPreferences.OPENCYCLEMAP_API_KEY.put(openCycleMapApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());

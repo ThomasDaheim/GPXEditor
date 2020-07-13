@@ -68,7 +68,6 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -255,8 +254,6 @@ public class TrackMap extends LeafletMapView {
     // https://stackoverflow.com/a/41908133
     private JSCallback jscallback;
     
-    private final CompletableFuture<Worker.State> cfMapLoadState;
-//    private int originalMapLayers = 0;
     private boolean isLoaded = false;
     private boolean isInitialized = false;
     
@@ -279,37 +276,27 @@ public class TrackMap extends LeafletMapView {
         MapLayer.OPENCYCLEMAP.setAPIKey(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString());
         
         setVisible(false);
-        final MapConfig myMapConfig = new MapConfig(
-                MapLayerUsage.getInstance().getBaselayer().stream().filter((t) -> {
-                    return t.isEnabled();
-                }).collect(Collectors.toList()), 
-                MapLayerUsage.getInstance().getOverlays().stream().filter((t) -> {
-                    return t.isEnabled();
-                }).collect(Collectors.toList()), 
-                new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
-                new LatLong(51.505, -0.09));
-
-        cfMapLoadState = displayMap(myMapConfig);
-        cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
-            isLoaded = true;
-
-            initialize();
-        });
     }
     
     public static TrackMap getInstance() {
         return INSTANCE;
     }
     
-//    // TFE, can't overwrite addTrack from kotlin LeafletMapView...
-//    private String myAddTrack(final List<LatLong> positions, final String color) {
-//        final String varName = "track" + varNameSuffix++;
-//
-//        execScript("var " + varName + " = L.polyline(" + transformToJavascriptArray(positions) + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
-//
-//        return varName;
-//    }
+    public void initMap() {
+        final MapConfig myMapConfig = new MapConfig(
+                MapLayerUsage.getInstance().getEnabledSortedBaselayer(), 
+                MapLayerUsage.getInstance().getEnabledSortedOverlays(), 
+                new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
+                new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
+                new LatLong(48.137154, 11.576124));
+
+        final CompletableFuture<Worker.State> cfMapLoadState = displayMap(myMapConfig);
+        cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
+            isLoaded = true;
+
+            initialize();
+        });
+    }
     
     public void setEnable(final boolean enabled) {
         setDisable(!enabled);
@@ -533,8 +520,18 @@ public class TrackMap extends LeafletMapView {
             // now we can set the search icon to use
             execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
             
+            // TFE, 20200713: now we can enable the overlays per baselayer
+            setOverlaysForBaselayer();
+            // set current layer
+            setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+                    
             // TFE, 20190901: load preferences - now things are up & running
             myGPXEditor.initializeAfterMapLoaded();
+            
+            // TFE, 20200713: show empty map in any case - no need to have a gpx loaded
+            // center to current location - NOT WORKING, see LeafletMapView
+//            execScript("centerToLocation();");
+            setVisible(true);
         }
     }
     
@@ -1543,12 +1540,17 @@ public class TrackMap extends LeafletMapView {
     public int getCurrentBaselayer() {
         return (Integer) execScript("getCurrentBaselayer();");
     }
-    public void setCurrentBaselayer(final int layer) {
+    private void setCurrentBaselayer(final int layer) {
         if (isInitialized) {
             execScript("setCurrentBaselayer(\"" + layer + "\");");
         }
     }
     public Map<String, Boolean> getOverlaysForBaselayer(final MapLayer base) {
+        if (!getBaselayer().contains(base)) {
+            // base layer not enabled - doesn't have overlay configuration
+            return new HashMap<>();
+        }
+        
         // TODO: get rid of to improve performance once we can strip LayerControl.js down
         final List<String> overlayNames = new ArrayList<>();
         transformToJavaList("getKnownOverlayNames();", overlayNames, false);
@@ -1563,22 +1565,17 @@ public class TrackMap extends LeafletMapView {
         }
         return result;
     }
-    public void setOverlaysForBaselayer(final MapLayer base, final Map<String, Boolean> overlays) {
-        // TODO: get rid of to improve performance once we can strip LayerControl.js down
-        final List<String> overlayNames = new ArrayList<>();
-        transformToJavaList("getKnownOverlayNames();", overlayNames, false);
-
-        // TODO: get rid of this conversion 
-        final List<String> preferenceValues = new ArrayList<>();
-        for (String overlay : overlayNames) {
-            if (overlays.containsKey(overlay)) {
-                preferenceValues.add(overlays.get(overlay).toString());
-            } else {
-                preferenceValues.add(Boolean.FALSE.toString());
+    private void setOverlaysForBaselayer() {
+        for (MapLayer base : getBaselayer()) {
+            final Map<MapLayer, Boolean> enabledOverlays = MapLayerUsage.getInstance().getOverlayConfiguration(base);
+            
+            final List<String> preferenceValues = new ArrayList<>();
+            for (Entry<MapLayer, Boolean> overlayEntry : enabledOverlays.entrySet()) {
+                preferenceValues.add(overlayEntry.getValue().toString());
             }
+            
+            execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
         }
-        
-        execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
     }
 
     // TFE, 20190901: support to store & load overlay settings per baselayer
@@ -1636,18 +1633,6 @@ public class TrackMap extends LeafletMapView {
         return sb.toString();
     }   
     
-    public List<String> getKnownOverlayNames() {
-        final List<String> result = new ArrayList<>();
-        transformToJavaList("getKnownOverlayNames();", result, false);
-        return result;
-    }
-    
-    public List<String> getKnownBaselayerNames() {
-        final List<String> result = new ArrayList<>();
-        transformToJavaList("getKnownBaselayerNames();", result, false);
-        return result;
-    }
-
     public class JSCallback {
         // call back for jscallback :-)
         private final TrackMap myTrackMap;
