@@ -243,7 +243,7 @@ public class MapLayerUsage {
     }
     
     public boolean isOverlayEnabled(final MapLayer base, final MapLayer ovrly) {
-        if (!MapLayer.LayerType.BASELAYER.equals(base)) {
+        if (!MapLayer.LayerType.BASELAYER.equals(base.getLayerType())) {
             throw new IllegalArgumentException(String.format(Locale.US, "Not a base layer: %s", base.getName()));
         }
         
@@ -260,7 +260,7 @@ public class MapLayerUsage {
     }
     
     public void setOverlayEnabled(final MapLayer base, final MapLayer ovrly, final boolean enabled) {
-        if (!MapLayer.LayerType.BASELAYER.equals(base)) {
+        if (!MapLayer.LayerType.BASELAYER.equals(base.getLayerType())) {
             throw new IllegalArgumentException(String.format(Locale.US, "Not a base layer: %s", base.getName()));
         }
         
@@ -271,7 +271,7 @@ public class MapLayerUsage {
     }
     
     public Map<MapLayer, Boolean> getOverlayConfiguration(final MapLayer base) {
-        if (!MapLayer.LayerType.BASELAYER.equals(base)) {
+        if (!MapLayer.LayerType.BASELAYER.equals(base.getLayerType())) {
             throw new IllegalArgumentException(String.format(Locale.US, "Not a base layer: %s", base.getName()));
         }
         
@@ -282,6 +282,18 @@ public class MapLayerUsage {
         }
     }
     
+    public void setOverlayConfiguration(final MapLayer base, Map<MapLayer, Boolean> config) {
+        if (!MapLayer.LayerType.BASELAYER.equals(base.getLayerType())) {
+            throw new IllegalArgumentException(String.format(Locale.US, "Not a base layer: %s", base.getName()));
+        }
+        
+        if (myLayerConfig.containsKey(base)) {
+            final Map<MapLayer, Boolean> overlayConfiguration = ((BaselayerConfig) myLayerConfig.get(base)).overlayConfiguration;
+            overlayConfiguration.clear();
+            overlayConfiguration.putAll(new LinkedHashMap<>(config));
+        }
+    }
+    
     public void loadPreferences() {
         // active overlays for base layers - was previously in TrackMap
         for (MapLayer base : getKnownBaselayer()) {
@@ -289,10 +301,12 @@ public class MapLayerUsage {
              myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base.getName()), LayerConfig.DEFAULT_PREF_STRING));
 
             // active overlays for base layers - was previously in TrackMap
-            final Map<String, Boolean> overlays = new LinkedHashMap<>();
+            final Map<MapLayer, Boolean> overlays = new LinkedHashMap<>();
             for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).overlayConfiguration.entrySet()) {
-                overlays.put(entry.getKey().getName(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
+                overlays.put(entry.getKey(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
             }
+            setOverlayConfiguration(base, overlays);
+            
             // TFE, 20200713: can't be done here since map can only be loaded after we know, which layers are enabled
             //TrackMap.getInstance().setOverlaysForBaselayer(base, overlays);
         }

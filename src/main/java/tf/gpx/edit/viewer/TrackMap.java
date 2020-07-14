@@ -1558,6 +1558,7 @@ public class TrackMap extends LeafletMapView {
         final List<String> overlayValues = new ArrayList<>();
         // getAsString current values as default - bootstrap for no preferences set...
         transformToJavaList("getOverlayValues(\"" + base.getName() + "\");", overlayValues, false);
+//        System.out.println("getOverlayValues " + base.getName() + " gives " + overlayValues.toString());
         
         final Map<String, Boolean> result = new HashMap<>();
         for (int i = 0; i < overlayNames.size(); i++) {
@@ -1574,6 +1575,7 @@ public class TrackMap extends LeafletMapView {
                 preferenceValues.add(overlayEntry.getValue().toString());
             }
             
+//            System.out.println("setOverlaysForBaselayer " + base.getName() + " to " + transformToJavascriptArray(preferenceValues, false));
             execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
         }
     }
