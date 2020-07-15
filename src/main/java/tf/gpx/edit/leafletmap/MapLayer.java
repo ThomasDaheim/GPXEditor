@@ -98,6 +98,7 @@ public class MapLayer {
     
     private LayerType myLayerType;
     private String myName;
+    private final String myKey;
     private String myURL;
     private String myAPIKey;
     private int myMinZoom;
@@ -119,6 +120,7 @@ public class MapLayer {
         super();
 
         myName = name;
+        myKey = name;
         myURL = url;
         myAPIKey = apikey;
         myMinZoom = minzoom;
@@ -129,6 +131,10 @@ public class MapLayer {
         myTileLayerClass = layerclass;
     }
     
+    public String getKey() {
+        return myKey;
+    }
+
     public LayerType getLayerType() {
         return myLayerType;
     }

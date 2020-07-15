@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -61,10 +62,12 @@ public class MapLayerUsage {
         private static final String REFERENCE_PREF_STRING = PREF_STRING_PREFIX + "0" + PREF_STRING_SEP + "true" + PREF_STRING_SUFFIX;
         public static final String DEFAULT_PREF_STRING = PREF_STRING_PREFIX + PREF_STRING_SEP + PREF_STRING_SUFFIX;
         
+        private final MapLayer myLayer;
         public int index;
         public boolean isEnabled;
         
-        public LayerConfig(final int idx, final boolean enabled) {
+        public LayerConfig(final MapLayer layer, final int idx, final boolean enabled) {
+            myLayer = layer;
             index = idx;
             isEnabled = enabled;
         }
@@ -100,8 +103,8 @@ public class MapLayerUsage {
         // indicate per overlay if active for this baselayer
         public final Map<MapLayer, Boolean> overlayConfiguration;
         
-        public BaselayerConfig(final int idx, final boolean enabled, final Map<MapLayer, Boolean> active) {
-            super(idx, enabled);
+        public BaselayerConfig(final MapLayer layer, final int idx, final boolean enabled, final Map<MapLayer, Boolean> active) {
+            super(layer, idx, enabled);
 
             overlayConfiguration = new LinkedHashMap<>(active);
         }
@@ -123,7 +126,7 @@ public class MapLayerUsage {
         
         int i = 0;
         for (MapLayer layer : overlays) {
-            myLayerConfig.put(layer, new LayerConfig(i, true));
+            myLayerConfig.put(layer, new LayerConfig(layer, i, true));
             i++;
             
             // set all overlays to disabled intially
@@ -133,7 +136,7 @@ public class MapLayerUsage {
         final List<MapLayer> baselayer = MapLayer.getDefaultBaselayer();
         i = 0;
         for (MapLayer layer : baselayer) {
-            myLayerConfig.put(layer, new BaselayerConfig(i, true, allActiveOverlays));
+            myLayerConfig.put(layer, new BaselayerConfig(layer, i, true, allActiveOverlays));
             i++;
         }
         
@@ -298,12 +301,12 @@ public class MapLayerUsage {
         // active overlays for base layers - was previously in TrackMap
         for (MapLayer base : getKnownBaselayer()) {
             // properties per base layer
-             myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base.getName()), LayerConfig.DEFAULT_PREF_STRING));
+             myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base), LayerConfig.DEFAULT_PREF_STRING));
 
             // active overlays for base layers - was previously in TrackMap
             final Map<MapLayer, Boolean> overlays = new LinkedHashMap<>();
             for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).overlayConfiguration.entrySet()) {
-                overlays.put(entry.getKey(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base.getName(), entry.getKey().getName()), entry.getValue().toString())));
+                overlays.put(entry.getKey(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base, entry.getKey()), entry.getValue().toString())));
             }
             setOverlayConfiguration(base, overlays);
             
@@ -313,7 +316,7 @@ public class MapLayerUsage {
         
         for (MapLayer overlay : getKnownOverlays()) {
             // properties per overlay
-             myLayerConfig.get(overlay).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyOverlay(overlay.getName()), LayerConfig.DEFAULT_PREF_STRING));
+             myLayerConfig.get(overlay).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyOverlay(overlay), LayerConfig.DEFAULT_PREF_STRING));
         }
     }
     
@@ -321,36 +324,45 @@ public class MapLayerUsage {
         // store current baselayer
         GPXEditorPreferences.INITIAL_BASELAYER.put(TrackMap.getInstance().getCurrentBaselayer());
         
+        final List<MapLayer> overlayList = getKnownOverlays();
         for (MapLayer base : getKnownBaselayer()) {
             // properties per base layer
-            GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayer(base.getName()), myLayerConfig.get(base).toPreferenceString());
+            GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayer(base), myLayerConfig.get(base).toPreferenceString());
 
             // active overlays for enabled base layers - was previously in TrackMap
             final Map<String, Boolean> overlays = TrackMap.getInstance().getOverlaysForBaselayer(base);
             
             // changes can have only happened for base layer & overlays that are enabled - all others weren't shown in the map
             for (Entry<String, Boolean> entry : overlays.entrySet()) {
-                GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayerOverlay(base.getName(), entry.getKey()), entry.getValue().toString());
+                final String overlayName = entry.getKey();
+                final Optional<MapLayer> overlay = overlayList.stream().filter((t) -> {
+                    return t.getName().equals(overlayName);
+                }).findFirst();
+                if (overlay.isPresent()) {
+                    GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayerOverlay(base, overlay.get()), entry.getValue().toString());
+                } else {
+                    System.out.println("Something is wrong! No overlay found for name " + overlayName);
+                }
             }
         }
-        for (MapLayer overlay : getKnownOverlays()) {
+        for (MapLayer overlay : overlayList) {
             // properties per overlay
-            GPXEditorPreferenceStore.getInstance().put(prefKeyOverlay(overlay.getName()), myLayerConfig.get(overlay).toPreferenceString());
+            GPXEditorPreferenceStore.getInstance().put(prefKeyOverlay(overlay), myLayerConfig.get(overlay).toPreferenceString());
         }
     }
     
     // helper to create key for pref store
-    private static String prefKeyBaselayer(final String baselayer) {
+    private static String prefKeyBaselayer(final MapLayer baselayer) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "");
+        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.getKey().replaceAll("\\s+", "");
     }
     // helper to create key for pref store
-    private static String prefKeyOverlay(final String overlay) {
+    private static String prefKeyOverlay(final MapLayer overlay) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.replaceAll("\\s+", "");
+        return GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.getKey().replaceAll("\\s+", "");
     }
     // helper to create key for pref store
-    private static String prefKeyBaselayerOverlay(final String baselayer, final String overlay) {
+    private static String prefKeyBaselayerOverlay(final MapLayer baselayer, final MapLayer overlay) {
         // no spaces in preference names, please
         return prefKeyBaselayer(baselayer) + GPXEditorPreferenceStore.SEPARATOR + prefKeyOverlay(overlay);
     }

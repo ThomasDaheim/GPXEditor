@@ -128,8 +128,8 @@ public class MapLayerTable extends TableView<MapLayer> {
                 layer.setName(t.getNewValue());
             }
         });
-        // initially, lets not change name - messes up a lot of things in the back
-        nameCol.setEditable(false);
+        // we can even change the name - since we use a key for the preference store
+        nameCol.setEditable(true);
         
         // url: string
         final TableColumn<MapLayer, String> urlCol = new TableColumn<>();
