@@ -56,11 +56,10 @@ public class MapLayerUsage {
     
     // struct to hold the info per layer (both baselayer and overlays)
     private class LayerConfig {
-        private static final String PREF_STRING_PREFIX = "[ ";
-        private static final String PREF_STRING_SUFFIX = " ]";
-        private static final String PREF_STRING_SEP = ", ";
-        private static final String REFERENCE_PREF_STRING = PREF_STRING_PREFIX + "0" + PREF_STRING_SEP + "true" + PREF_STRING_SUFFIX;
-        public static final String DEFAULT_PREF_STRING = PREF_STRING_PREFIX + PREF_STRING_SEP + PREF_STRING_SUFFIX;
+        private static final String REFERENCE_PREF_STRING = 
+                GPXEditorPreferenceStore.PREF_STRING_PREFIX + "0" + GPXEditorPreferenceStore.PREF_STRING_SEP + "true" + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+        public static final String DEFAULT_PREF_STRING = 
+                GPXEditorPreferenceStore.PREF_STRING_PREFIX + GPXEditorPreferenceStore.PREF_STRING_SEP + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
         
         private final MapLayer myLayer;
         public int index;
@@ -73,7 +72,7 @@ public class MapLayerUsage {
         }
         
         public String toPreferenceString() {
-            return PREF_STRING_PREFIX + index + PREF_STRING_SEP + isEnabled + PREF_STRING_SUFFIX;
+            return GPXEditorPreferenceStore.PREF_STRING_PREFIX + index + GPXEditorPreferenceStore.PREF_STRING_SEP + isEnabled + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
         }
         
         public void fromPreferenceString(final String prefString) {
@@ -87,12 +86,19 @@ public class MapLayerUsage {
             if (temp.length() < REFERENCE_PREF_STRING.length()) {
                 temp = REFERENCE_PREF_STRING;
             }
+            if (!temp.startsWith(GPXEditorPreferenceStore.PREF_STRING_PREFIX)) {
+                temp = REFERENCE_PREF_STRING;
+            }
+            if (!temp.endsWith(GPXEditorPreferenceStore.PREF_STRING_SUFFIX)) {
+                temp = REFERENCE_PREF_STRING;
+            }
             // no two elements in preference string
-            if (temp.split(PREF_STRING_SEP).length < 2) {
+            if (temp.split(GPXEditorPreferenceStore.PREF_STRING_SEP).length < 2) {
                 temp = REFERENCE_PREF_STRING;
             }
             
-            String [] prefs = prefString.substring(PREF_STRING_PREFIX.length(), temp.length()-PREF_STRING_SUFFIX.length()).strip().split(PREF_STRING_SEP);
+            String [] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
+                    strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
             
             index = Integer.valueOf(prefs[0]);
             isEnabled = Boolean.valueOf(prefs[1]);
@@ -301,12 +307,14 @@ public class MapLayerUsage {
         // active overlays for base layers - was previously in TrackMap
         for (MapLayer base : getKnownBaselayer()) {
             // properties per base layer
+             base.fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyMaplayer(base), ""));
              myLayerConfig.get(base).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayer(base), LayerConfig.DEFAULT_PREF_STRING));
 
             // active overlays for base layers - was previously in TrackMap
             final Map<MapLayer, Boolean> overlays = new LinkedHashMap<>();
             for (Entry<MapLayer, Boolean> entry : ((BaselayerConfig) myLayerConfig.get(base)).overlayConfiguration.entrySet()) {
-                overlays.put(entry.getKey(), Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base, entry.getKey()), entry.getValue().toString())));
+                overlays.put(entry.getKey(), 
+                        Boolean.valueOf(GPXEditorPreferenceStore.getInstance().get(prefKeyBaselayerOverlay(base, entry.getKey()), entry.getValue().toString())));
             }
             setOverlayConfiguration(base, overlays);
             
@@ -316,6 +324,7 @@ public class MapLayerUsage {
         
         for (MapLayer overlay : getKnownOverlays()) {
             // properties per overlay
+             overlay.fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyMaplayer(overlay), ""));
              myLayerConfig.get(overlay).fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyOverlay(overlay), LayerConfig.DEFAULT_PREF_STRING));
         }
     }
@@ -327,6 +336,7 @@ public class MapLayerUsage {
         final List<MapLayer> overlayList = getKnownOverlays();
         for (MapLayer base : getKnownBaselayer()) {
             // properties per base layer
+            GPXEditorPreferenceStore.getInstance().put(prefKeyMaplayer(base), base.toPreferenceString());
             GPXEditorPreferenceStore.getInstance().put(prefKeyBaselayer(base), myLayerConfig.get(base).toPreferenceString());
 
             // active overlays for enabled base layers - was previously in TrackMap
@@ -347,21 +357,24 @@ public class MapLayerUsage {
         }
         for (MapLayer overlay : overlayList) {
             // properties per overlay
+            GPXEditorPreferenceStore.getInstance().put(prefKeyMaplayer(overlay), overlay.toPreferenceString());
             GPXEditorPreferenceStore.getInstance().put(prefKeyOverlay(overlay), myLayerConfig.get(overlay).toPreferenceString());
         }
     }
     
     // helper to create key for pref store
+    private static String prefKeyMaplayer(final MapLayer layer) {
+        // no spaces in preference names, please
+        return GPXEditorPreferenceStore.MAPLAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + layer.getKey().replaceAll("\\s+", "");
+    }
     private static String prefKeyBaselayer(final MapLayer baselayer) {
         // no spaces in preference names, please
         return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.getKey().replaceAll("\\s+", "");
     }
-    // helper to create key for pref store
     private static String prefKeyOverlay(final MapLayer overlay) {
         // no spaces in preference names, please
         return GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.getKey().replaceAll("\\s+", "");
     }
-    // helper to create key for pref store
     private static String prefKeyBaselayerOverlay(final MapLayer baselayer, final MapLayer overlay) {
         // no spaces in preference names, please
         return prefKeyBaselayer(baselayer) + GPXEditorPreferenceStore.SEPARATOR + prefKeyOverlay(overlay);

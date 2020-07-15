@@ -50,9 +50,14 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 10);
 
+    public final static String MAPLAYER_PREFIX = "maplayer";
     public final static String BASELAYER_PREFIX = "baselayer";
     public final static String OVERLAY_PREFIX = "overlay";
     public final static String SEPARATOR = "-";
+
+    public static final String PREF_STRING_PREFIX = "[ ";
+    public static final String PREF_STRING_SUFFIX = " ]";
+    public static final String PREF_STRING_SEP = " ::: ";
 
     private GPXEditorPreferenceStore() {
         // Exists only to defeat instantiation.

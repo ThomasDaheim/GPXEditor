@@ -1,9 +1,34 @@
-
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package tf.gpx.edit.leafletmap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 
 /**
  * Class for any valid map layers (baselayer and overlay) for leaflet maps.
@@ -130,6 +155,49 @@ public class MapLayer {
         myZIndex = zIndex;
         myTileLayerClass = layerclass;
     }
+
+    protected String toPreferenceString() {
+        return GPXEditorPreferenceStore.PREF_STRING_PREFIX + 
+                myName + GPXEditorPreferenceStore.PREF_STRING_SEP + 
+                myURL + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myAPIKey + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myMinZoom + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myMaxZoom + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myAttribution + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myLayerType.name() + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myZIndex + GPXEditorPreferenceStore.PREF_STRING_SEP +
+                myTileLayerClass.name() + 
+                GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+    }
+
+    protected void fromPreferenceString(final String prefString) {
+        String temp = prefString;
+        if (!temp.startsWith(GPXEditorPreferenceStore.PREF_STRING_PREFIX)) {
+            return;
+        }
+        if (!temp.endsWith(GPXEditorPreferenceStore.PREF_STRING_SUFFIX)) {
+            return;
+        }
+        // no two elements in preference string
+        if (temp.split(GPXEditorPreferenceStore.PREF_STRING_SEP).length != 9) {
+            return;
+        }
+
+        String [] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
+                strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
+
+        // set attributes from strings
+        myName = prefs[0]; 
+        myURL = prefs[1];
+        myAPIKey = prefs[2];
+        myMinZoom = Integer.valueOf(prefs[3]);
+        myMaxZoom = Integer.valueOf(prefs[4]);
+        myAttribution = prefs[5];
+        myLayerType = LayerType.valueOf(prefs[6]);
+        myZIndex = Integer.valueOf(prefs[7]);
+        myTileLayerClass = TileLayerClass.valueOf(prefs[8]);
+    }
+
     
     public String getKey() {
         return myKey;
