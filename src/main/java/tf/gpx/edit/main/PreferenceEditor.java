@@ -55,6 +55,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
@@ -106,7 +108,6 @@ public class PreferenceEditor extends AbstractStage {
     private final CheckBox waypointChkBox = new CheckBox();
     private final TextField numShowText = new TextField();
     private final TextField searchText = new TextField();
-    private final TextField openCycleMapApiKeyText = new TextField();
     private final TextField routingApiKeyText = new TextField();
     private final ChoiceBox<TrackMap.RoutingProfile> profileChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
@@ -416,7 +417,15 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(searchText, INSET_TOP);
         
         rowNum++;
-        final Label mapLayerLbl = new Label("Map Layer settings (only changed after restart):");
+        // https://stackoverflow.com/a/22838050
+        final TextFlow mapLayerLbl = new TextFlow();
+        final Text text1 = new Text("Map Layer settings (");
+        text1.setStyle("-fx-font-weight: regular");
+        final Text text2 = new Text("only applied after restart");
+        text2.setStyle("-fx-font-weight: bold");
+        final Text text3 = new Text("):");
+        text3.setStyle("-fx-font-weight: regular");
+        mapLayerLbl.getChildren().addAll(text1, text2, text3);
         getGridPane().add(mapLayerLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(mapLayerLbl, VPos.TOP);
         GridPane.setMargin(mapLayerLbl, INSET_TOP);
@@ -429,21 +438,6 @@ public class PreferenceEditor extends AbstractStage {
         getGridPane().add(mapLayerTable, 0, rowNum, 2, 1);
         GridPane.setMargin(mapLayerTable, INSET_TOP);
         GridPane.setVgrow(mapLayerTable, Priority.ALWAYS);
-
-        rowNum++;
-        // 4th row: open cycle map api key
-        t = new Tooltip("API key for OpenCycleMap");
-        final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
-        openCycleMapApiKeyLbl.setTooltip(t);
-        getGridPane().add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
-        GridPane.setMargin(openCycleMapApiKeyLbl, INSET_TOP);
-        
-        openCycleMapApiKeyText.setPrefWidth(400);
-        openCycleMapApiKeyText.setMaxWidth(400);
-        openCycleMapApiKeyText.setTooltip(t);
-        getGridPane().add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
-        GridPane.setMargin(openCycleMapApiKeyText, INSET_TOP);
 
         rowNum++;
         // 4th row: routing api key
@@ -705,7 +699,6 @@ public class PreferenceEditor extends AbstractStage {
         numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
-        openCycleMapApiKeyText.setText(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsType());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         wayLblAngleText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
@@ -730,7 +723,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences();
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
-        GPXEditorPreferences.OPENCYCLEMAP_API_KEY.put(openCycleMapApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
         GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf(wayIcnSizeText.getText().trim()), 0));

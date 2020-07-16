@@ -48,7 +48,8 @@ public enum GPXEditorPreferences  {
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String::valueOf),
     SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataStore.SRTMDataAverage::valueOf),
     HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name(), GPXAssignSRTMHeightWorker.AssignMode::valueOf),
-    OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
+    // TFE, 20200716: API keys are now stored as part of map layer information
+    // OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
     ROUTING_API_KEY("routingApiKey", "", String::valueOf),
     ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile::valueOf),
     BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer::valueOf),

@@ -47,6 +47,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ChoiceBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.util.converter.IntegerStringConverter;
 
 /**
@@ -55,6 +59,7 @@ import javafx.util.converter.IntegerStringConverter;
  * @author thomas
  */
 public class MapLayerTable extends TableView<MapLayer> {
+    private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
     
     public MapLayerTable() {
         initTableView();
@@ -66,7 +71,7 @@ public class MapLayerTable extends TableView<MapLayer> {
 
         // make room for 4 columns
 //        final double tableHeight = result.getFixedCellSize() * 4.01;
-        final double tableHeight = 240.0;
+        final double tableHeight = 300.0;
         setPrefHeight(tableHeight);
         setMinHeight(tableHeight);
         setMaxHeight(tableHeight);
@@ -252,14 +257,50 @@ public class MapLayerTable extends TableView<MapLayer> {
 
             final MenuItem upMenuItem = new MenuItem("Up");
             upMenuItem.setOnAction((ActionEvent event) -> {
-                // TODO: insert above
-                updatedItemIndices();
+                final int curRow = row.getIndex();
+                final MapLayer curLayer = row.getItem();
+                final List<MapLayer> mapLayers = row.getTableView().getItems();
+                
+//                System.out.println("curRow: " + curRow);
+                if (curRow > 0) {
+                    // who is above me?
+                    final MapLayer neighbourLayer = mapLayers.get(curRow-1);
+                    
+                    // only move up in same sort of layers
+                    if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
+//                        System.out.println("Rows have same type! " + curLayer.getLayerType());
+                        
+                        // swap current and upper
+                        mapLayers.remove(neighbourLayer);
+                        mapLayers.add(curRow, neighbourLayer);
+                        
+                        updatedItemIndices();
+                    }
+                }
             });
             
             final MenuItem downMenuItem = new MenuItem("Down");
             downMenuItem.setOnAction((ActionEvent event) -> {
-                // TODO: insert below
-                updatedItemIndices();
+                final int curRow = row.getIndex();
+                final MapLayer curLayer = row.getItem();
+                final List<MapLayer> mapLayers = row.getTableView().getItems();
+                
+//                System.out.println("curRow: " + curRow);
+                if (curRow < mapLayers.size()-1) {
+                    // who is below me?
+                    final MapLayer neighbourLayer = mapLayers.get(curRow+1);
+                    
+                    // only move up in same sort of layers
+                    if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
+//                        System.out.println("Rows have same type! " + curLayer.getLayerType());
+                        
+                        // swap current and upper
+                        mapLayers.remove(neighbourLayer);
+                        mapLayers.add(curRow, neighbourLayer);
+                        
+                        updatedItemIndices();
+                    }
+                }
             });
             
             contextMenu.getItems().addAll(upMenuItem, downMenuItem);
@@ -267,9 +308,63 @@ public class MapLayerTable extends TableView<MapLayer> {
             // Set context menu on row, but use a binding to make it only show for non-empty rows:
             row.contextMenuProperty().bind(Bindings.when(row.emptyProperty())
                 .then((ContextMenu)null).otherwise(contextMenu));
+            
+            // allow reordering via drag & drop
+            // https://stackoverflow.com/questions/28603224/sort-tableview-with-drag-and-drop-rows
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    Integer index = row.getIndex();
+                    final Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+                    db.setDragView(row.snapshot(null, null));
+                    final ClipboardContent cc = new ClipboardContent();
+                    cc.put(SERIALIZED_MIME_TYPE, index);
+                    db.setContent(cc);
+                    event.consume();
+                }
+            });
+            
+            row.setOnDragOver(event -> {
+                Dragboard db = event.getDragboard();
+                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                    // shouldn't be same row & needs to be of same type
+                    final int draggedIndex = ((Integer) db.getContent(SERIALIZED_MIME_TYPE));
+                    final List<MapLayer> mapLayers = row.getTableView().getItems();
+                    // needs to be a filled row, not equal to initial row, of the same type so we can drop
+                    if ((row.getIndex() < mapLayers.size()) &&
+                            (row.getIndex() != draggedIndex) &&
+                            (mapLayers.get(row.getIndex()).getLayerType().equals(mapLayers.get(draggedIndex).getLayerType()))) {
+                        event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                        event.consume();
+                    }
+                }
+            });
+
+            row.setOnDragDropped(event -> {
+                Dragboard db = event.getDragboard();
+                if (db.hasContent(SERIALIZED_MIME_TYPE)) {
+                    int draggedIndex = (Integer) db.getContent(SERIALIZED_MIME_TYPE);
+                    MapLayer draggedLayer = tableView.getItems().remove(draggedIndex);
+
+                    int dropIndex ; 
+
+                    if (row.isEmpty()) {
+                        dropIndex = tableView.getItems().size() ;
+                    } else {
+                        dropIndex = row.getIndex();
+                    }
+
+                    tableView.getItems().add(dropIndex, draggedLayer);
+                        
+                    updatedItemIndices();
+
+                    event.setDropCompleted(true);
+                    tableView.getSelectionModel().select(dropIndex);
+                    event.consume();
+                }
+            });
+            
             return row ;  
         });  
-        // TODO: allow reordering via drag & drop
     }
     
     private void updatedItemIndices() {

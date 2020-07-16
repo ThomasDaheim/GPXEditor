@@ -272,9 +272,6 @@ public class TrackMap extends LeafletMapView {
                 GPXAssignSRTMHeightWorker.AssignMode.ALWAYS,
                 false);
         
-        // set api key before display map
-        MapLayer.OPENCYCLEMAP.setAPIKey(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString());
-        
         setVisible(false);
     }
     
