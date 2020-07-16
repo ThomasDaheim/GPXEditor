@@ -68,6 +68,30 @@ public class GPXEditorManager extends Application {
         launch(GPXEditorManager.class, args);
     }
     
+    private Stage getSplashStage() {
+        // TFE, 20200715: show a splash screen while we're setting up shop
+        final int splashSize = 260;
+        final Image image = new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png"), splashSize, splashSize, true, true);
+        final ImageView splashImage = new ImageView(image);
+        final Scene splashScene = new Scene(new Group(splashImage), splashSize, splashSize);
+        
+        final Stage splashStage = new Stage(StageStyle.UNDECORATED);
+        splashStage.setScene(splashScene);
+        splashStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
+        splashStage.initModality(Modality.APPLICATION_MODAL);
+        splashStage.setHeight(splashSize);
+        splashStage.setWidth(splashSize);
+        splashStage.setAlwaysOnTop(true);
+        splashStage.setAlwaysOnTop(false);
+        // center splash on screen
+        // http://www.java2s.com/Code/Java/JavaFX/Setstagexandyaccordingtoscreensize.htm
+        final Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
+        splashStage.setX((primScreenBounds.getWidth() - splashSize) / 2.0); 
+        splashStage.setY((primScreenBounds.getHeight() - splashSize) / 2.0);  
+        
+        return splashStage;
+    }
+    
     /**
      * 
      * @param primaryStage 
@@ -99,24 +123,9 @@ public class GPXEditorManager extends Application {
         } else {
 //            System.out.println("Start of loading: " + Instant.now());
             // TFE, 20200715: show a splash screen while we're setting up shop
-            final int splashSize = 260;
-            final Image image = new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png"), splashSize, splashSize, true, true);
-            final ImageView splashImage = new ImageView(image);
-            final Scene splashScene = new Scene(new Group(splashImage), splashSize, splashSize);
-            final Stage splashStage = new Stage(StageStyle.UNDECORATED);
-            splashStage.setScene(splashScene);
-            splashStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-            splashStage.initModality(Modality.APPLICATION_MODAL);
-            splashStage.setHeight(splashSize);
-            splashStage.setWidth(splashSize);
-            splashStage.setAlwaysOnTop(true);
-            splashStage.setAlwaysOnTop(false);
-            // center splash on screen
-            // http://www.java2s.com/Code/Java/JavaFX/Setstagexandyaccordingtoscreensize.htm
-            final Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
-            splashStage.setX((primScreenBounds.getWidth() - splashSize) / 2.0); 
-            splashStage.setY((primScreenBounds.getHeight() - splashSize) / 2.0);  
+            final Stage splashStage = getSplashStage();
             splashStage.show();
+            // hack to make sure we're in front of other windows
             splashStage.setAlwaysOnTop(true);
             splashStage.setAlwaysOnTop(false);
 //            System.out.println("After showing splashStage: " + Instant.now());
@@ -156,8 +165,8 @@ public class GPXEditorManager extends Application {
                 }
                 Logging.getCSSLogger().disableLogging();
 
-                splashStage.hide();
                 myStage.show();
+                splashStage.hide();
 
                 controller.lateInitialize();
 //                System.out.println("End of start: " + Instant.now());
