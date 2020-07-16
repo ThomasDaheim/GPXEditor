@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -1534,12 +1535,24 @@ public class TrackMap extends LeafletMapView {
 
     // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
     // we only have the methods to access the leafletview
-    public int getCurrentBaselayer() {
-        return (Integer) execScript("getCurrentBaselayer();");
+    public String getCurrentBaselayer() {
+        final int layerIndex = (Integer) execScript("getCurrentBaselayer();");
+        
+        return getBaselayer().get(layerIndex).getKey();
     }
-    private void setCurrentBaselayer(final int layer) {
+    private void setCurrentBaselayer(final String layerKey) {
         if (isInitialized) {
-            execScript("setCurrentBaselayer(\"" + layer + "\");");
+            // get index from layer key
+            final Optional<MapLayer> mapLayer = getBaselayer().stream().filter((t) -> {
+                return t.getKey().equals(layerKey);
+            }).findFirst();
+            
+            int layerIndex = 0;
+            if (mapLayer.isPresent()) {
+                layerIndex = getBaselayer().indexOf(mapLayer.get());
+            }
+            
+            execScript("setCurrentBaselayer(\"" + layerIndex + "\");");
         }
     }
     public Map<String, Boolean> getOverlaysForBaselayer(final MapLayer base) {

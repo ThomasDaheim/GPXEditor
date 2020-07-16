@@ -56,7 +56,7 @@ public enum GPXEditorPreferences  {
     SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer::valueOf),
     ALWAYS_SHOW_FILE_WAYPOINTS("alwaysShowFileWaypoints", Boolean.toString(false), Boolean::valueOf),
     MAX_WAYPOINTS_TO_SHOW("maxWaypointsToShow", Integer.toString(GPXTrackviewer.MAX_WAYPOINTS), Integer::valueOf),
-    INITIAL_BASELAYER("initialBaselayer", Integer.toString(0), Integer::valueOf),
+    INITIAL_BASELAYER("initialBaselayer", "", String::valueOf),
     AUTO_ASSIGN_HEIGHT("autoAssignHeight", Boolean.toString(false), Boolean::valueOf),
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
