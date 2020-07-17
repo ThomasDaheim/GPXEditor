@@ -1536,8 +1536,12 @@ public class TrackMap extends LeafletMapView {
     // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
     // we only have the methods to access the leafletview
     public String getCurrentBaselayer() {
-        final int layerIndex = (Integer) execScript("getCurrentBaselayer();");
-        
+        int layerIndex = 0;
+        try {
+            layerIndex = (Integer) execScript("getCurrentBaselayer();");
+        } catch (Exception ex) {
+            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return getBaselayer().get(layerIndex).getKey();
     }
     private void setCurrentBaselayer(final String layerKey) {
