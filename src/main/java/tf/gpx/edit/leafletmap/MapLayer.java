@@ -28,6 +28,7 @@ package tf.gpx.edit.leafletmap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.RandomStringUtils;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 
 /**
@@ -133,7 +134,9 @@ public class MapLayer {
     private int myZIndex;
     private TileLayerClass myTileLayerClass;
     
-    public MapLayer(
+    private boolean deletable;
+    
+    private MapLayer(
             final LayerType layertype,
             final String name, 
             final String url, 
@@ -155,6 +158,32 @@ public class MapLayer {
         myLayerType = layertype;
         myZIndex = zIndex;
         myTileLayerClass = layerclass;
+        
+        deletable = false;
+    }
+
+    public MapLayer (final LayerType layertype) {
+        super();
+
+        if (layertype == null) {
+            throw new IllegalArgumentException("LayerType can't be null");
+        }
+
+        myKey = randomKey();
+
+        myLayerType = layertype;
+        if (LayerType.BASELAYER.equals(myLayerType)) {
+            myName = "New baselayer";
+        } else {
+            myName = "New overlay";
+        }
+        myTileLayerClass = TileLayerClass.STANDARD;
+        
+        deletable = true;
+    }
+    
+    private String randomKey() {
+        return RandomStringUtils.random(10, true, true);
     }
 
     protected String toPreferenceString() {
@@ -202,6 +231,10 @@ public class MapLayer {
     
     public String getKey() {
         return myKey;
+    }
+    
+    public boolean isDeletable() {
+        return deletable;
     }
 
     public LayerType getLayerType() {

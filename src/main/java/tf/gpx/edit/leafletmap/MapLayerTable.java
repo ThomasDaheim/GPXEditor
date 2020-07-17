@@ -252,63 +252,82 @@ public class MapLayerTable extends TableView<MapLayer> {
         
         // add, remove via context menu
         setRowFactory((TableView<MapLayer> tableView) -> {
-            final TableRow<MapLayer> row = new TableRow<>();
-            final ContextMenu contextMenu = new ContextMenu();
+            final TableRow<MapLayer> row = new TableRow<>(){
+                @Override
+                protected void updateItem(MapLayer item, boolean empty){
+                    super.updateItem(item, empty);
+                    
+                    if (!empty) {
+                        final ContextMenu contextMenu = new ContextMenu();
 
-            final MenuItem upMenuItem = new MenuItem("Up");
-            upMenuItem.setOnAction((ActionEvent event) -> {
-                final int curRow = row.getIndex();
-                final MapLayer curLayer = row.getItem();
-                final List<MapLayer> mapLayers = row.getTableView().getItems();
-                
-//                System.out.println("curRow: " + curRow);
-                if (curRow > 0) {
-                    // who is above me?
-                    final MapLayer neighbourLayer = mapLayers.get(curRow-1);
-                    
-                    // only move up in same sort of layers
-                    if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
-//                        System.out.println("Rows have same type! " + curLayer.getLayerType());
-                        
-                        // swap current and upper
-                        mapLayers.remove(neighbourLayer);
-                        mapLayers.add(curRow, neighbourLayer);
-                        
-                        updatedItemIndices();
+                        final MenuItem upMenuItem = new MenuItem("Up");
+                        upMenuItem.setOnAction((ActionEvent event) -> {
+                            final int curRow = getIndex();
+                            final MapLayer curLayer = getItem();
+                            final List<MapLayer> mapLayers = getTableView().getItems();
+
+            //                System.out.println("curRow: " + curRow);
+                            if (curRow > 0) {
+                                // who is above me?
+                                final MapLayer neighbourLayer = mapLayers.get(curRow-1);
+
+                                // only move up in same sort of layers
+                                if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
+            //                        System.out.println("Rows have same type! " + curLayer.getLayerType());
+
+                                    // swap current and upper
+                                    mapLayers.remove(neighbourLayer);
+                                    mapLayers.add(curRow, neighbourLayer);
+
+                                    updatedItemIndices();
+                                }
+                            }
+                        });
+
+                        final MenuItem downMenuItem = new MenuItem("Down");
+                        downMenuItem.setOnAction((ActionEvent event) -> {
+                            final int curRow = getIndex();
+                            final MapLayer curLayer = getItem();
+                            final List<MapLayer> mapLayers = getTableView().getItems();
+
+            //                System.out.println("curRow: " + curRow);
+                            if (curRow < mapLayers.size()-1) {
+                                // who is below me?
+                                final MapLayer neighbourLayer = mapLayers.get(curRow+1);
+
+                                // only move up in same sort of layers
+                                if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
+            //                        System.out.println("Rows have same type! " + curLayer.getLayerType());
+
+                                    // swap current and upper
+                                    mapLayers.remove(neighbourLayer);
+                                    mapLayers.add(curRow, neighbourLayer);
+
+                                    updatedItemIndices();
+                                }
+                            }
+                        });
+
+                        // new: creates of same type & inserts
+                        final MenuItem newMenuItem = new MenuItem("New");
+                        newMenuItem.setOnAction((ActionEvent event) -> {
+                        });
+
+                        // delete: only if deletable
+                        final MenuItem deleteMenuItem = new MenuItem("Delete");
+                        deleteMenuItem.setOnAction((ActionEvent event) -> {
+                        });
+                        deleteMenuItem.visibleProperty().bind(new SimpleBooleanProperty(item.isDeletable()));
+
+                        contextMenu.getItems().addAll(upMenuItem, downMenuItem, newMenuItem, deleteMenuItem);
+
+                        setContextMenu(contextMenu);
+                    } else {
+                        setContextMenu((ContextMenu)null);
                     }
                 }
-            });
-            
-            final MenuItem downMenuItem = new MenuItem("Down");
-            downMenuItem.setOnAction((ActionEvent event) -> {
-                final int curRow = row.getIndex();
-                final MapLayer curLayer = row.getItem();
-                final List<MapLayer> mapLayers = row.getTableView().getItems();
-                
-//                System.out.println("curRow: " + curRow);
-                if (curRow < mapLayers.size()-1) {
-                    // who is below me?
-                    final MapLayer neighbourLayer = mapLayers.get(curRow+1);
-                    
-                    // only move up in same sort of layers
-                    if (curLayer.getLayerType().equals(neighbourLayer.getLayerType())) {
-//                        System.out.println("Rows have same type! " + curLayer.getLayerType());
-                        
-                        // swap current and upper
-                        mapLayers.remove(neighbourLayer);
-                        mapLayers.add(curRow, neighbourLayer);
-                        
-                        updatedItemIndices();
-                    }
-                }
-            });
-            
-            contextMenu.getItems().addAll(upMenuItem, downMenuItem);
-            
-            // Set context menu on row, but use a binding to make it only show for non-empty rows:
-            row.contextMenuProperty().bind(Bindings.when(row.emptyProperty())
-                .then((ContextMenu)null).otherwise(contextMenu));
-            
+            };
+
             // allow reordering via drag & drop
             // https://stackoverflow.com/questions/28603224/sort-tableview-with-drag-and-drop-rows
             row.setOnDragDetected(event -> {
