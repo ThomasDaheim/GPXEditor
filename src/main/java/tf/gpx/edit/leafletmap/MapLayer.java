@@ -74,19 +74,20 @@ public class MapLayer {
     }
     
     public enum TileLayerClass {
-        STANDARD("L.TileLayer", "", ""),
-        QUADKEY("L.TileLayer.QuadKeyTileLayer", "subdomains: '0123'", "QuadKeyTileLayer");
+        STANDARD("L.TileLayer", new String[]{""}, ""),
+        MAPBOX("L.TileLayer", new String[]{"tileSize: 512", "zoomOffset: -1"}, ""),
+        QUADKEY("L.TileLayer.QuadKeyTileLayer", new String[]{"subdomains: '0123'"}, "QuadKeyTileLayer");
         
         // leaflet class to be used for this layer
         private final String myClass;
         // add. option that might be required
-        private final String myOption;
+        private final String[] myOptions;
         // add. js that might to be loaded upfront
         private final String myJSResource;
         
-        private TileLayerClass(final String layerclass, final String option, final String jsResource) {
+        private TileLayerClass(final String layerclass, final String[] options, final String jsResource) {
             myClass = layerclass;
-            myOption = option;
+            myOptions = options;
             myJSResource = jsResource;
         }
         
@@ -94,8 +95,8 @@ public class MapLayer {
             return myClass;
         }
         
-        public String getOption() {
-            return myOption;
+        public String[] getOptions() {
+            return myOptions;
         }
         
         public String getJSResource() {
@@ -302,9 +303,11 @@ public class MapLayer {
         result.append(myAPIKey);
         result.append("', {\n");
         
-        if (!myTileLayerClass.getOption().isEmpty()) {
-            result.append("    ").append(myTileLayerClass.getOption());
-            result.append(",\n");
+        for (String opt : myTileLayerClass.getOptions()) {
+            if (!opt.isEmpty()) {
+                result.append("    ").append(opt);
+                result.append(",\n");
+            }
         }
 
         result.append("    maxZoom: ");
@@ -348,13 +351,27 @@ public class MapLayer {
             new MapLayer(
                     LayerType.BASELAYER, 
                     "MapBox", 
-                    "https://api.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=", 
+//                    "https://api.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=",
+                    "https://api.mapbox.com/styles/v1/mapbox/outdoors-v11/tiles/{z}/{x}/{y}?access_token=", 
                     "", 
                     0, 
                     18, 
                     "Map data &copy; OpenStreetMap contributors, Imagery &copy; Mapbox", 
                     0,
-                    TileLayerClass.STANDARD);
+                    TileLayerClass.MAPBOX);
+    
+    public static MapLayer MAPBOX_SATELLITE = 
+            new MapLayer(
+                    LayerType.BASELAYER, 
+                    "MapBox Satellite", 
+//                    "https://api.tiles.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=",
+                    "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=", 
+                    "", 
+                    0, 
+                    18, 
+                    "Map data &copy; OpenStreetMap contributors, Imagery &copy; Mapbox", 
+                    0,
+                    TileLayerClass.MAPBOX);
     
     public static MapLayer OPENSTREETMAP = 
             new MapLayer(
@@ -469,6 +486,7 @@ public class MapLayer {
             Arrays.asList(
                     MapLayer.OPENCYCLEMAP, 
                     MapLayer.MAPBOX, 
+                    MapLayer.MAPBOX_SATELLITE, 
                     MapLayer.OPENSTREETMAP, 
                     MapLayer.SATELITTE, 
                     MapLayer.BING, 

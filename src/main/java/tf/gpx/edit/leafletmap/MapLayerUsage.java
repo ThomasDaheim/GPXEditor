@@ -149,46 +149,21 @@ public class MapLayerUsage {
         // and known program defaults
     
         // base layer
-        setLayerIndex(MapLayer.OPENCYCLEMAP, 0);
-        setLayerEnabled(MapLayer.OPENCYCLEMAP, true);
-        setLayerIndex(MapLayer.MAPBOX, 1);
-        setLayerEnabled(MapLayer.MAPBOX, true);
-        setLayerIndex(MapLayer.OPENSTREETMAP, 2);
-        setLayerEnabled(MapLayer.OPENSTREETMAP, true);
-        setLayerIndex(MapLayer.SATELITTE, 3);
-        setLayerEnabled(MapLayer.SATELITTE, true);
-        setLayerIndex(MapLayer.BING, 4);
-        setLayerEnabled(MapLayer.BING, true);
-        setLayerIndex(MapLayer.BING_AERIAL, 5);
-        setLayerEnabled(MapLayer.BING_AERIAL, true);
-        setLayerIndex(MapLayer.OPENTOPOMAP, 6);
-        setLayerEnabled(MapLayer.OPENTOPOMAP, true);
-        setLayerIndex(MapLayer.DE_TOPOPLUSOPEN, 7);
-        setLayerEnabled(MapLayer.DE_TOPOPLUSOPEN, true);
-        setLayerIndex(MapLayer.ES_TOPOIGN, 8);
-        setLayerEnabled(MapLayer.ES_TOPOIGN, true);
-        setLayerIndex(MapLayer.HIKE_BIKE_MAP, 9);
+        int layerIndex = -1;
+        for (MapLayer layer : baselayer) {
+            setLayerIndex(layer, layerIndex++);
+            setLayerEnabled(layer, true);
+        }
+        // I don't like those too much...
         setLayerEnabled(MapLayer.HIKE_BIKE_MAP, false);
-        setLayerIndex(MapLayer.MTB_MAP, 10);
         setLayerEnabled(MapLayer.MTB_MAP, false);
         
         // overlays
-        setLayerIndex(MapLayer.CONTOUR_LINES, 0);
-        setLayerEnabled(MapLayer.CONTOUR_LINES, true);
-        setLayerIndex(MapLayer.HILL_SHADING, 1);
-        setLayerEnabled(MapLayer.HILL_SHADING, true);
-        setLayerIndex(MapLayer.HIKING_TRAILS, 2);
-        setLayerEnabled(MapLayer.HIKING_TRAILS, true);
-        setLayerIndex(MapLayer.CYCLING_TRAILS, 3);
-        setLayerEnabled(MapLayer.CYCLING_TRAILS, true);
-        setLayerIndex(MapLayer.MTB_TRAILS, 4);
-        setLayerEnabled(MapLayer.MTB_TRAILS, true);
-        setLayerIndex(MapLayer.SLOPE_TRAILS, 5);
-        setLayerEnabled(MapLayer.SLOPE_TRAILS, true);
-        setLayerIndex(MapLayer.ROADS_AND_LABELS, 6);
-        setLayerEnabled(MapLayer.ROADS_AND_LABELS, true);
-        setLayerIndex(MapLayer.RAILWAY_LINES, 7);
-        setLayerEnabled(MapLayer.RAILWAY_LINES, true);
+        layerIndex = -1;
+        for (MapLayer layer : overlays) {
+            setLayerIndex(layer, layerIndex++);
+            setLayerEnabled(layer, true);
+        }
     }
     
     public static MapLayerUsage getInstance() {

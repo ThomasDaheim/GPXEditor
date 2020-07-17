@@ -139,7 +139,12 @@ baselayerchange({name: baselayerList[0].name});
 function setCurrentBaselayer(layer) {
 //    jscallback.log('setCurrentBaselayer to: ' + layer);
     var layerControlElement = document.getElementsByClassName('leaflet-control-layers')[0];
-    layerControlElement.getElementsByTagName('input')[layer].click();
+    // we might only have one layer... than we have no layer control
+    if (layerControlElement) {
+        layerControlElement.getElementsByTagName('input')[layer].click();
+    } else {
+        currentBaselayer = 0;
+    }
 }
 function getCurrentBaselayer() {
     return currentBaselayer;

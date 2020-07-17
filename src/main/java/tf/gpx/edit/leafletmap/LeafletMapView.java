@@ -136,7 +136,7 @@ public class LeafletMapView extends StackPane {
             final StringBuilder baselayer = new StringBuilder();
             for (MapLayer layer : myMapConfig.getBaselayer()) {
                 cmdString = String.format(Locale.US, "var baselayer%d = %s;", i, layer.getJSCode());
-    //            System.out.println(layer.getName() + ": " + cmdString);
+//                System.out.println(layer.getName() + ": " + cmdString);
                 execScript(cmdString);
 
                 baselayer.append(String.format(Locale.US, "'%s': baselayer%d, ", layer.getName(), i));
