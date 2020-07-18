@@ -53,6 +53,7 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
     public final static String MAPLAYER_PREFIX = "maplayer";
     public final static String BASELAYER_PREFIX = "baselayer";
     public final static String OVERLAY_PREFIX = "overlay";
+    public final static String ADDITIONAL_MAPLAY_PREFIX = "additional";
     public final static String SEPARATOR = "-";
 
     public static final String PREF_STRING_PREFIX = "[ ";

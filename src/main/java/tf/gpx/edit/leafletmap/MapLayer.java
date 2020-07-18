@@ -125,7 +125,7 @@ public class MapLayer {
     
     private LayerType myLayerType;
     private String myName;
-    private final String myKey;
+    private String myKey;
     private String myURL;
     private String myAPIKey;
     private int myMinZoom;
@@ -134,7 +134,7 @@ public class MapLayer {
     private int myZIndex;
     private TileLayerClass myTileLayerClass;
     
-    private boolean deletable;
+    private boolean additional;
     
     private MapLayer(
             final LayerType layertype,
@@ -159,10 +159,10 @@ public class MapLayer {
         myZIndex = zIndex;
         myTileLayerClass = layerclass;
         
-        deletable = false;
+        additional = false;
     }
 
-    public MapLayer (final LayerType layertype) {
+    public MapLayer(final LayerType layertype) {
         super();
 
         if (layertype == null) {
@@ -177,9 +177,13 @@ public class MapLayer {
         } else {
             myName = "New overlay";
         }
+        myURL = "";
+        myAPIKey = "";
+        myMaxZoom = MAX_ZOOM;
+        myAttribution = "";
         myTileLayerClass = TileLayerClass.STANDARD;
         
-        deletable = true;
+        additional = true;
     }
     
     private String randomKey() {
@@ -213,7 +217,7 @@ public class MapLayer {
             return;
         }
 
-        String [] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
+        String[] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
                 strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
 
         // set attributes from strings
@@ -228,13 +232,16 @@ public class MapLayer {
         myTileLayerClass = TileLayerClass.valueOf(prefs[8]);
     }
 
-    
     public String getKey() {
         return myKey;
     }
     
+    protected void setKey(final String key) {
+        myKey = key;
+    }
+    
     public boolean isDeletable() {
-        return deletable;
+        return additional;
     }
 
     public LayerType getLayerType() {

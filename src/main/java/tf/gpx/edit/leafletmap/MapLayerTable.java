@@ -311,11 +311,22 @@ public class MapLayerTable extends TableView<MapLayer> {
                         // new: creates of same type & inserts
                         final MenuItem newMenuItem = new MenuItem("New");
                         newMenuItem.setOnAction((ActionEvent event) -> {
+                            final MapLayer newLayer = new MapLayer(item.getLayerType());
+                            getTableView().getItems().add(getIndex(), newLayer);
+                            
+                            MapLayerUsage.getInstance().addMapLayer(newLayer);
+
+                            updatedItemIndices();
                         });
 
                         // delete: only if deletable
                         final MenuItem deleteMenuItem = new MenuItem("Delete");
                         deleteMenuItem.setOnAction((ActionEvent event) -> {
+                            getTableView().getItems().remove(item);
+
+                            MapLayerUsage.getInstance().removeMapLayer(item);
+
+                            updatedItemIndices();
                         });
                         deleteMenuItem.visibleProperty().bind(new SimpleBooleanProperty(item.isDeletable()));
 
