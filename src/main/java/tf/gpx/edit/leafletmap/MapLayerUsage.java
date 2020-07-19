@@ -246,6 +246,9 @@ public class MapLayerUsage {
                 ((BaselayerConfig) myLayerConfig.get(layer)).overlayConfig.remove(mapLayer);
             }
         }
+        
+        // and finally: clean up registry items
+        deletePreferences(mapLayer);
     }
     
     public void removeAllMapLayer(final List<MapLayer> mapLayer) {
@@ -429,6 +432,29 @@ public class MapLayerUsage {
             // properties per overlay
             GPXEditorPreferenceStore.getInstance().put(prefKeyMaplayer(overlay), overlay.toPreferenceString());
             GPXEditorPreferenceStore.getInstance().put(prefKeyOverlay(overlay), myLayerConfig.get(overlay).toPreferenceString());
+        }
+    }
+    
+    private void deletePreferences(final MapLayer layer) {
+        // necessary cleanups in the registry
+        
+        // 1. data of the layer itself
+        // 2a. if baselayer: enabled/disabled overlays
+        // 2b. if overlay: enabled/disabled for each baselayer
+        if (MapLayer.LayerType.BASELAYER.equals(layer.getLayerType())) {
+            GPXEditorPreferenceStore.getInstance().remove(prefKeyMaplayer(layer));
+            GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayer(layer));
+            
+            for (MapLayer overlay : getKnownOverlays()) {
+                GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayerOverlay(layer, overlay));
+            }
+        } else {
+            GPXEditorPreferenceStore.getInstance().remove(prefKeyMaplayer(layer));
+            GPXEditorPreferenceStore.getInstance().remove(prefKeyOverlay(layer));
+            
+            for (MapLayer base : getKnownBaselayer()) {
+                GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayerOverlay(base, layer));
+            }
         }
     }
     

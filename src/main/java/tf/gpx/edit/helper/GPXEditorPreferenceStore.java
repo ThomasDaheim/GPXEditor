@@ -98,6 +98,11 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
             Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    @Override
+    public void remove(String key) {
+        MYPREFERENCES.remove(key);
+    }
 
     @Override
     public void exportSubtree(final OutputStream os) {

@@ -27,7 +27,6 @@ package tf.gpx.edit.main;
 
 import com.sun.javafx.util.Logging;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;

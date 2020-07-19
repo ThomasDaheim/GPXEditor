@@ -72,7 +72,6 @@ import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
-import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
@@ -876,7 +875,7 @@ public class TrackMap extends LeafletMapView {
             // TFE, 20200121: show height with coordinate in context menu
             final double elevation = heightWorker.getElevation(latLong);
             if (elevation != SRTMDataStore.NODATA) {
-                showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + DOUBLE_FORMAT_2.format(elevation) + " m");
+                showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + GPXLineItem.DOUBLE_FORMAT_2.format(elevation) + " m");
             } else {
                 showCord.setText(LatLongHelper.LatLongToString(latLong));
             }
