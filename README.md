@@ -17,14 +17,19 @@ Note on Java 11: There is a version of controlsfx for Java9 and later. Together 
 
 Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 
+Note on running GPXEditor: Analogous to the --add-modules and --add-exports in build.gradle you also need the same set of commands when trying to run GPXEditor. To show how this should look like please see GPXEditor.bat.
+
 Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
 
 Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
 
+### Update v5.2
+
 ### Update v5.1
 
+* added GPXEditor.bat to show usage of --add-modules and --add-exports
 * switch from de.saring:leafletmap to java implementation (based on kotlin code from de.saring)
 * preferences for basemaps and overlays: name, url, sort order, enabled/disable
 * add /delete new layers
