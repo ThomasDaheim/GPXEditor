@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.viewer;
 
-import de.saring.leafletmap.Marker;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -36,9 +34,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -49,10 +45,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.IMarker;
 import static tf.gpx.edit.viewer.MarkerManager.SpecialMarker.SearchResultIcon;
 
 /**
@@ -242,8 +238,8 @@ public class MarkerManager {
         }        
     }
     
-    public Marker getSpecialMarker(final SpecialMarker special) {
-        Marker result;
+    public IMarker getSpecialMarker(final SpecialMarker special) {
+        MarkerIcon result;
         
         result = specialMarkers.get(special);
         if (result == null) {

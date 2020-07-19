@@ -97,7 +97,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private final GridComboBox<Label> waypointSymTxt = new GridComboBox<>();
     private final TextField waypointTypeTxt = new TextField();
     private final CalendarTextField waypointTimeTxt = new CalendarTextField();
-    private LinkTable waypointLinkTable;
+    private final LinkTable waypointLinkTable = new LinkTable();
     private final RestrictiveTextField waypointLatitudeTxt = new RestrictiveTextField();
     private final RestrictiveTextField waypointLongitudeTxt = new RestrictiveTextField();
     private final BigDecimalField waypointElevationTxt = new BigDecimalField();
@@ -355,7 +355,6 @@ public class EditGPXWaypoint extends AbstractStage {
         GridPane.setMargin(linksLbl, INSET_TOP);
 
         rowNum++;
-        waypointLinkTable = new LinkTable();
         getGridPane().add(waypointLinkTable, 0, rowNum, 4, 1);
         GridPane.setMargin(waypointLinkTable, INSET_SMALL);
         

@@ -23,6 +23,13 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.1
+
+* switch from de.saring:leafletmap to java implementation (based on kotlin code from de.saring)
+* preferences for basemaps and overlays: name, url, sort order, enabled/disable
+* add /delete new layers
+* added splashscreen to make long startup bearable :-)
+
 ### Update v5.0 - NoRestForTheWicked
 
 * preferences for heatmap
@@ -335,26 +342,29 @@ Explicit dependencies:
 * 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
 * 'org.jzy3d:jzy3d-api:1.0.2'
 * 'org.jzy3d:jzy3d-javafx:1.0.2'
-* 'org.controlsfx:controlsfx:11.0.0'
+* 'org.controlsfx:controlsfx:11.0.1'
 * 'de.jensd:fontawesomefx:8.9'
-* 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
+* NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 * 'com.fasterxml.jackson.core:jackson-core:2.9.9'
 * 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
 * 'org.jfxtras:jfxtras-controls:10.0-r1'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
 * 'uk.com.robust-it:cloning:1.9.12'
+* 'javax.xml.bind:jaxb-api:2.3.1'
+* 'org.eclipse.persistence:eclipselink:2.7.4'
 
 Other things used internally:
 
 * heatmap: https://github.com/HanSolo/FxHeatMap
 
-* leaflet: https://leafletjs.com/
+* leaflet 1.6: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.color-markers: https://github.com/pointhi/leaflet-color-markers
 * leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)

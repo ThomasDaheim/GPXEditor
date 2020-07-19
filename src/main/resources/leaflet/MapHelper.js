@@ -437,3 +437,45 @@ function addMouseOverToLayer(layer) {
         jscallback.deregisterWaypoint(layer, markerPos.lat, markerPos.lng);
     });
 }
+
+// TFE, 20200713: add support to center map to user location - NOT WORKING, see LeafletMapView.java
+//function locationFound(e) {
+//    jscallback.log("location found");
+//    jscallback.log(e.latlng.lat + ", " + e.latlng.lng);
+//} 
+//function locationError(e) {
+//    jscallback.log("location error");
+//    jscallback.log(e.message);
+//} 
+//myMap.on('locationfound', locationFound);
+//myMap.on('locationerror', locationError);
+
+// should work in newer webview
+//var options = {
+//  enableHighAccuracy: false,
+//  timeout: 1000,
+//  maximumAge: 0
+//};
+//
+//function success(pos) {
+//  var crd = pos.coords;
+//
+//  jscallback.log('Your current position is:');
+//  jscallback.log(`Latitude : ${crd.latitude}`);
+//  jscallback.log(`Longitude: ${crd.longitude}`);
+//  jscallback.log(`More or less ${crd.accuracy} meters.`);
+//}
+//
+//function error(err) {
+//  jscallback.warn(`ERROR(${err.code}): ${err.message}`);
+//}
+//
+//function centerToLocation() {
+//    navigator.geolocation.getCurrentPosition(success, error, options);
+////    myMap.locate({
+////        setView: true,
+////        timeout: 1000
+////    });
+//}
+
+

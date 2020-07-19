@@ -85,7 +85,10 @@ public class TaskExecutor {
             };
             task.progressProperty().addListener(progressListener);
 
-            scene.setCursor(Cursor.WAIT); //Change cursor to wait style
+            // Even on an FXThread we might not allways have a scene! E.g. during XML loading
+            if (scene != null) {
+                scene.setCursor(Cursor.WAIT); //Change cursor to wait style
+            }
             // schedule task
             consumer.getInitTaskConsumer().run();
             Future<Void> future = ObjectsHelper.uncheckedCast(executorService.submit(task));
@@ -97,7 +100,10 @@ public class TaskExecutor {
             } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(TaskExecutor.class.getName()).log(Level.SEVERE, null, ex);
             }        
-            scene.setCursor(Cursor.DEFAULT);
+            // Even on an FXThread we might not allways have a scene! E.g. during XML loading
+            if (scene != null) {
+                scene.setCursor(Cursor.DEFAULT);
+            }
 
             // unbind properties
             task.messageProperty().removeListener(messageListener);

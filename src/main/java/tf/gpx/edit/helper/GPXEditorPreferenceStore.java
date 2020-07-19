@@ -25,8 +25,13 @@
  */
 package tf.gpx.edit.helper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.general.IPreferencesStore;
@@ -45,9 +50,15 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
 
     private final static RecentFiles MYRECENTFILES = new RecentFiles(INSTANCE, 10);
 
+    public final static String MAPLAYER_PREFIX = "maplayer";
     public final static String BASELAYER_PREFIX = "baselayer";
     public final static String OVERLAY_PREFIX = "overlay";
+    public final static String ADDITIONAL_MAPLAY_PREFIX = "additional";
     public final static String SEPARATOR = "-";
+
+    public static final String PREF_STRING_PREFIX = "[ ";
+    public static final String PREF_STRING_SUFFIX = " ]";
+    public static final String PREF_STRING_SEP = " ::: ";
 
     private GPXEditorPreferenceStore() {
         // Exists only to defeat instantiation.
@@ -77,5 +88,37 @@ public class GPXEditorPreferenceStore implements IPreferencesStore {
     @Override
     public void put(final String key, final String value) {
         MYPREFERENCES.put(key, value);
+    }
+
+    @Override
+    public void clear() {
+        try {
+            MYPREFERENCES.clear();
+        } catch (BackingStoreException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    @Override
+    public void remove(String key) {
+        MYPREFERENCES.remove(key);
+    }
+
+    @Override
+    public void exportSubtree(final OutputStream os) {
+        try {
+            MYPREFERENCES.exportSubtree(os);
+        } catch (BackingStoreException | IOException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Override
+    public void importPreferences(final InputStream is) {
+        try {
+            Preferences.importPreferences(is);
+        } catch (InvalidPreferencesFormatException | IOException ex) {
+            Logger.getLogger(GPXEditorPreferenceStore.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

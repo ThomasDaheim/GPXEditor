@@ -25,9 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
-import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.HeatMap;
-import eu.hansolo.fx.heatmap.OpacityDistribution;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**

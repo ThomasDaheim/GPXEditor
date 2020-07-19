@@ -39,13 +39,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -104,7 +102,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
-import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
@@ -113,6 +110,7 @@ import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -136,6 +134,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.FindSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
@@ -151,11 +150,11 @@ import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.doundo.DoUndoActionList;
 import tf.helper.doundo.DoUndoManager;
 import tf.helper.doundo.IDoUndoAction;
-import tf.helper.javafx.AboutMenu;
 import tf.helper.general.ObjectsHelper;
-import tf.helper.javafx.UsefulKeyCodes;
+import tf.helper.javafx.AboutMenu;
 import tf.helper.javafx.ShowAlerts;
 import tf.helper.javafx.TableViewPreferences;
+import tf.helper.javafx.UsefulKeyCodes;
 
 /**
  *
@@ -441,13 +440,14 @@ public class GPXEditor implements Initializable {
         
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
+
+        // TFE, 20200713: needs to happen before map gets loaded
+        MapLayerUsage.getInstance().loadPreferences();
+        TrackMap.getInstance().initMap();
     }
     
     public void lateInitialize() {
         AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.0", "https://github.com/ThomasDaheim/GPXEditor");
-        
-        // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences();
         
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
@@ -460,7 +460,13 @@ public class GPXEditor implements Initializable {
                 cntrlPressedProperty.setValue(Boolean.FALSE);
             }
         });
-        
+    }
+    
+    public void initializeAfterMapLoaded() {
+        // TFE, 20200622: now also track map has completed loading...
+
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences();
     }
 
     public void stop() {
@@ -474,11 +480,17 @@ public class GPXEditor implements Initializable {
 
         // TFE, 20180901: store values for track & height map
         GPXTrackviewer.getInstance().savePreferences();
+        MapLayerUsage.getInstance().savePreferences();
     }
     
     public Window getWindow() {
-        // see https://stackoverflow.com/a/26061123
-        return gpxFileListXML.getScene().getWindow();
+        // TFE: 20200628: if we have a cmd line parameter the UI might not yet fully initialized
+        if (gpxFileListXML.getScene() != null) {
+            // see https://stackoverflow.com/a/26061123
+            return gpxFileListXML.getScene().getWindow();
+        } else {
+            return null;
+        }
     }
     
     public boolean isCntrlPressed() {
@@ -1206,7 +1218,7 @@ public class GPXEditor implements Initializable {
                         TaskExecutor.executeTask(
                             getScene(), () -> {
                                 // TFE, 20191024 add warning for format issues
-                                GPXFileHelper.verifyXMLFile(file);
+                                GPXFileHelper.getInstance().verifyXMLFile(file);
 
                                 gpxFileList.addGPXFile(new GPXFile(file));
 
@@ -2239,7 +2251,8 @@ public class GPXEditor implements Initializable {
     }
     
     public Scene getScene() {
-        if (Platform.isFxApplicationThread()) {
+        // TFE: 20200628: if we have a cmd line parameter the UI might not yet fully initialized
+        if (Platform.isFxApplicationThread() && getWindow() != null) {
             return getWindow().getScene();
         } else {
             return null;

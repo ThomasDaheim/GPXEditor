@@ -27,8 +27,6 @@ package tf.gpx.edit.helper;
 
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;
@@ -50,14 +48,15 @@ public enum GPXEditorPreferences  {
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String::valueOf),
     SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataStore.SRTMDataAverage::valueOf),
     HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name(), GPXAssignSRTMHeightWorker.AssignMode::valueOf),
-    OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
+    // TFE, 20200716: API keys are now stored as part of map layer information
+    // OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
     ROUTING_API_KEY("routingApiKey", "", String::valueOf),
     ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile::valueOf),
     BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer::valueOf),
     SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer::valueOf),
     ALWAYS_SHOW_FILE_WAYPOINTS("alwaysShowFileWaypoints", Boolean.toString(false), Boolean::valueOf),
     MAX_WAYPOINTS_TO_SHOW("maxWaypointsToShow", Integer.toString(GPXTrackviewer.MAX_WAYPOINTS), Integer::valueOf),
-    INITIAL_BASELAYER("initialBaselayer", Integer.toString(0), Integer::valueOf),
+    INITIAL_BASELAYER("initialBaselayer", "", String::valueOf),
     AUTO_ASSIGN_HEIGHT("autoAssignHeight", Boolean.toString(false), Boolean::valueOf),
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
@@ -75,6 +74,9 @@ public enum GPXEditorPreferences  {
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
     HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf);
     
+    // additional preferences not handled here as enums
+    // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
+    // map layer settings: Index, Enabled, EnabledOverlays - see tf.gpx.edit.leafletmap.MapLayerUsage
 
     private final String myPrefKey;
     private final String myDefaultValue;
@@ -99,25 +101,5 @@ public enum GPXEditorPreferences  {
     
     public <T> void put(final T value) {
         GPXEditorPreferenceStore.getInstance().put(myPrefKey, value.toString());
-    }
-    
-    public static Map<GPXEditorPreferences, String> getAsMap() {
-        final Map<GPXEditorPreferences, String> result = new HashMap<>();
-        
-        for (GPXEditorPreferences value : GPXEditorPreferences.values()) {
-            result.put(value, value.getAsString());
-        }
-        
-        return result;
-    }
-    
-    public static void setFromMap(final Map<GPXEditorPreferences, String> values) {
-        if (values == null) {
-            return;
-        }
-        
-        values.entrySet().forEach((value) -> {
-            GPXEditorPreferenceStore.getInstance().put(value.getKey().myPrefKey, value.getValue());
-        });
     }
 }

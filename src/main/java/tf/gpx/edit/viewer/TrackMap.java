@@ -27,32 +27,22 @@ package tf.gpx.edit.viewer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.saring.leafletmap.ColorMarker;
-import de.saring.leafletmap.ControlPosition;
-import de.saring.leafletmap.LatLong;
-import de.saring.leafletmap.LeafletMapView;
-import de.saring.leafletmap.MapConfig;
-import de.saring.leafletmap.MapLayer;
-import de.saring.leafletmap.Marker;
-import de.saring.leafletmap.ScaleControlConfig;
-import de.saring.leafletmap.ZoomControlConfig;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
@@ -64,7 +54,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -75,24 +64,30 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebEvent;
-import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
-import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.ColorMarker;
+import tf.gpx.edit.leafletmap.ControlPosition;
+import tf.gpx.edit.leafletmap.IMarker;
+import tf.gpx.edit.leafletmap.LatLong;
+import tf.gpx.edit.leafletmap.LeafletMapView;
+import tf.gpx.edit.leafletmap.MapConfig;
+import tf.gpx.edit.leafletmap.MapLayer;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
+import tf.gpx.edit.leafletmap.ScaleControlConfig;
+import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
@@ -232,11 +227,6 @@ public class TrackMap extends LeafletMapView {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
-    private final static String LEAFLET_PATH = "/leaflet";
-    private final static String MIN_EXT = ".min";
-    
-    // webview holds the leaflet map
-    private WebView myWebView = null;
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
     // rectangle to select fileWaypointsCount
@@ -264,9 +254,6 @@ public class TrackMap extends LeafletMapView {
     // https://stackoverflow.com/a/41908133
     private JSCallback jscallback;
     
-    final List<MapLayer> mapLayers;
-    private final CompletableFuture<Worker.State> cfMapLoadState;
-//    private int originalMapLayers = 0;
     private boolean isLoaded = false;
     private boolean isInitialized = false;
     
@@ -286,12 +273,21 @@ public class TrackMap extends LeafletMapView {
                 false);
         
         setVisible(false);
-        mapLayers = Arrays.asList(MapLayer.OPENCYCLEMAP, MapLayer.MAPBOX, MapLayer.OPENSTREETMAP, MapLayer.SATELITTE);
-        final MapConfig myMapConfig = new MapConfig(mapLayers, 
-                        new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
-                        new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true));
+    }
+    
+    public static TrackMap getInstance() {
+        return INSTANCE;
+    }
+    
+    public void initMap() {
+        final MapConfig myMapConfig = new MapConfig(
+                MapLayerUsage.getInstance().getEnabledSortedBaselayer(), 
+                MapLayerUsage.getInstance().getEnabledSortedOverlays(), 
+                new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
+                new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
+                new LatLong(48.137154, 11.576124));
 
-        cfMapLoadState = displayMap(myMapConfig);
+        final CompletableFuture<Worker.State> cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
             isLoaded = true;
 
@@ -299,25 +295,12 @@ public class TrackMap extends LeafletMapView {
         });
     }
     
-    public static TrackMap getInstance() {
-        return INSTANCE;
-    }
-    
-    // TFE, can't overwrite addTrack from kotlin LeafletMapView...
-    private String myAddTrack(final List<LatLong> positions, final String color) {
-        final String varName = "track" + varNameSuffix++;
-
-        execScript("var " + varName + " = L.polyline(" + transformToJavascriptArray(positions) + ", {color: '" + color + "', weight: 2}).addTo(myMap);");
-
-        return varName;
-    }
-    
     public void setEnable(final boolean enabled) {
         setDisable(!enabled);
         setVisible(enabled);
         
-        myWebView.setDisable(!enabled);
-        myWebView.setVisible(enabled);
+        getWebView().setDisable(!enabled);
+        getWebView().setVisible(enabled);
     }
     
     /**
@@ -329,22 +312,13 @@ public class TrackMap extends LeafletMapView {
 
     private void initialize() {
         if (!isInitialized) {
-            for (Node node : getChildren()) {
-                // getAsString webview from my children
-                if (node instanceof WebView) {
-                    myWebView = (WebView) node;
-                    break;
-                }
-            }
-            assert myWebView != null;
-
 //            enableFirebug();
             
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
 //                (myWebView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
 //            );
             // show "alert" Javascript messages in stdout (useful to debug)	            
-            myWebView.getEngine().setOnAlert((WebEvent<String> arg0) -> {
+            getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
                 System.err.println("TrackMap: " + arg0.getData());
             });
         
@@ -371,7 +345,7 @@ public class TrackMap extends LeafletMapView {
             // map helper functions for manipulating layer control entries
             addScriptFromPath(LEAFLET_PATH + "/LayerControl" + MIN_EXT + ".js");
             // set api key for open cycle map
-            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
+//            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
 
             // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
             // https://github.com/hiasinho/Leaflet.vector-markers
@@ -510,19 +484,19 @@ public class TrackMap extends LeafletMapView {
 
             // support drawing rectangle with mouse + cntrl
             // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
-            myWebView.setOnMousePressed((MouseEvent event) -> {
+            getWebView().setOnMousePressed((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlPressed(event);
                     event.consume();
                 }
             });
-            myWebView.setOnMouseDragged((MouseEvent event) -> {
+            getWebView().setOnMouseDragged((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlDragged(event);
                     event.consume();
                 }
             });
-            myWebView.setOnMouseReleased((MouseEvent event) -> {
+            getWebView().setOnMouseReleased((MouseEvent event) -> {
                 if(event.isControlDown()) {
                     handleMouseCntrlReleased(event);
                     event.consume();
@@ -532,7 +506,7 @@ public class TrackMap extends LeafletMapView {
 //            // TODO: disable heatmap while dragging
             
             // we want our own context menu!
-            myWebView.setContextMenuEnabled(false);
+            getWebView().setContextMenuEnabled(false);
             createContextMenu();
 
             isInitialized = true;
@@ -543,78 +517,18 @@ public class TrackMap extends LeafletMapView {
             // now we can set the search icon to use
             execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
             
+            // TFE, 20200713: now we can enable the overlays per baselayer
+            setOverlaysForBaselayer();
+            // set current layer
+            setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+                    
             // TFE, 20190901: load preferences - now things are up & running
-            loadPreferences();
-        }
-    }
-    
-    public void addPNGIcon(final String iconName, final String iconSize, final String base64data) {
-//        System.out.println("Adding icon " + iconName + ", " + base64data);
-        
-        final String scriptCmd = 
-            "var url = \"data:image/png;base64," + base64data + "\";" + 
-            "var " + iconName + "= new CustomIcon" + iconSize + "({iconUrl: url});";
-
-//        System.out.println(scriptCmd);
-        execScript(scriptCmd);
-//        System.out.println(iconName + " created");
-    }
-    
-    /**
-     * Create and add a javascript tag containing the passed javascript code.
-     *
-     * @param script javascript code to add to leafletmap.html
-     */
-    private void addScript(final String script) {
-        final String scriptCmd = 
-          "var script = document.createElement('script');" +
-          "script.type = 'text/javascript';" +
-          "script.text = \"" + script + "\";" +
-          "document.getElementsByTagName('head')[0].appendChild(script);";
-
-        execScript(scriptCmd);
-    }
-    
-    /**
-     * Create and add a style tag containing the passed style
-     *
-     * @param style style to add to leafletmap.html
-     */
-    private void addStyle(final String style) {
-        final String scriptCmd = 
-          "var style = document.createElement('style');" +
-          "style.type = 'text/css';" +
-          "style.appendChild(document.createTextNode(\"" + style + "\"));" +
-          "document.getElementsByTagName('head')[0].appendChild(style);";
-
-        execScript(scriptCmd);
-    }
-    
-    private void addScriptFromPath(final String scriptpath) {
-        try { 
-            final InputStream js = TrackMap.class.getResourceAsStream(scriptpath);
-            final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
-
-            addScript(script);
-        } catch (Exception ex) {
-            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    private void addStyleFromPath(final String stylepath) {
-        try { 
-            final InputStream css = TrackMap.class.getResourceAsStream(stylepath);
-            final String style = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(css, Charset.defaultCharset()));
+            myGPXEditor.initializeAfterMapLoaded();
             
-            // since the html page we use is in another package all path values used in url('') statements in css point to wrong locations
-            // this needs to be fixed manually since javafx doesn't resolve it properly
-            // SOLUTION: use https://websemantics.uk/tools/image-to-data-uri-converter/ to convert images and
-            // replace url(IMAGE.TYPE) with url(data:image/TYPE;base64,...) in css
-            final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
-
-            addStyle(style);
-        } catch (Exception ex) {
-            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+            // TFE, 20200713: show empty map in any case - no need to have a gpx loaded
+            // center to current location - NOT WORKING, see LeafletMapView
+//            execScript("centerToLocation();");
+            setVisible(true);
         }
     }
     
@@ -870,9 +784,9 @@ public class TrackMap extends LeafletMapView {
             updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
         });
 
-        myWebView.setOnMousePressed(e -> {
+        getWebView().setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
-                contextMenu.show(myWebView, e.getScreenX(), e.getScreenY());
+                contextMenu.show(getWebView(), e.getScreenX(), e.getScreenY());
             } else {
                 contextMenu.hide();
             }
@@ -961,7 +875,7 @@ public class TrackMap extends LeafletMapView {
             // TFE, 20200121: show height with coordinate in context menu
             final double elevation = heightWorker.getElevation(latLong);
             if (elevation != SRTMDataStore.NODATA) {
-                showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + DOUBLE_FORMAT_2.format(elevation) + " m");
+                showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + GPXLineItem.DOUBLE_FORMAT_2.format(elevation) + " m");
             } else {
                 showCord.setText(LatLongHelper.LatLongToString(latLong));
             }
@@ -1499,7 +1413,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWaypointList(false);
     }
     
-    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final Marker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
+    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final IMarker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
         final LatLong point = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
         
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
@@ -1538,7 +1452,7 @@ public class TrackMap extends LeafletMapView {
         return layer;
     }
     
-    private String addCircleMarker(final LatLong position, final String title, final Marker marker, final int zIndexOffset) {
+    private String addCircleMarker(final LatLong position, final String title, final IMarker marker, final int zIndexOffset) {
         final String varName = "circleMarker" + varNameSuffix++;
 
 //        execScript("var " + varName + " = L.marker([" + position.getLatitude() + ", " + position.getLongitude() + "], "
@@ -1551,7 +1465,7 @@ public class TrackMap extends LeafletMapView {
     }
 
     private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
-        final String layer = myAddTrack(waypoints, color);
+        final String layer = addTrack(waypoints, color, false);
         // reduce number of calls to execScript()
         execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);" + "\n" + "addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;
@@ -1617,76 +1531,73 @@ public class TrackMap extends LeafletMapView {
         HeatMapPane.getInstance().clearHeatMap();
         HeatMapPane.getInstance().addEvents(point2Ds);
     }
-    
-    // TFE, 20190901: support to store & load overlay settings per baselayer
-    public void loadPreferences() {
-        // neeed to make sure our intrenal setup has been completed...
+
+    // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
+    // we only have the methods to access the leafletview
+    public String getCurrentBaselayer() {
+        int layerIndex = 0;
+        try {
+            layerIndex = (Integer) execScript("getCurrentBaselayer();");
+        } catch (Exception ex) {
+            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return getBaselayer().get(layerIndex).getKey();
+    }
+    private void setCurrentBaselayer(final String layerKey) {
         if (isInitialized) {
-            // overlays per baselayer first
-            // first need to getAsString the know names from js...
-            final List<String> baselayerNames = new ArrayList<>();
-            transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
-
-            final List<String> overlayNames = new ArrayList<>();
-            transformToJavaList("getKnownOverlayNames();", overlayNames, false);
-
-            // know read the combinations of baselayer and overlay names from the preferences
-            final List<String> preferenceValues = new ArrayList<>();
-            final List<String> defaultValues = new ArrayList<>();
-            for (String baselayer : baselayerNames) {
-                preferenceValues.clear();
-                defaultValues.clear();
-                
-                // getAsString current values as default - bootstrap for no preferences set...
-                transformToJavaList("getOverlayValues(\"" + baselayer + "\");", defaultValues, false);
-
-                for (int i = 0; i < overlayNames.size(); i++) {
-                    final String overlay = overlayNames.get(i);
-                    final String defaultVal = defaultValues.get(i);
-                    preferenceValues.add(GPXEditorPreferenceStore.getInstance().get(preferenceString(baselayer, overlay), defaultVal));
-                }
-                
-                execScript("setOverlayValues(\"" + baselayer + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
+            // get index from layer key
+            final Optional<MapLayer> mapLayer = getBaselayer().stream().filter((t) -> {
+                return t.getKey().equals(layerKey);
+            }).findFirst();
+            
+            int layerIndex = 0;
+            if (mapLayer.isPresent()) {
+                layerIndex = getBaselayer().indexOf(mapLayer.get());
             }
-
-            // and now switch the baselayer
-            execScript("setCurrentBaselayer(\"" + GPXEditorPreferences.INITIAL_BASELAYER.getAsString() + "\");");
+            
+            execScript("setCurrentBaselayer(\"" + layerIndex + "\");");
         }
     }
-    public void savePreferences() {
-        Integer outVal = (Integer) execScript("getCurrentBaselayer();");
-        GPXEditorPreferences.INITIAL_BASELAYER.put(outVal);
-
-        // overlays per baselayer
-        // first need to getAsString the know names from js...
-        final List<String> baselayerNames = new ArrayList<>();
-        transformToJavaList("getKnownBaselayerNames();", baselayerNames, false);
-
+    public Map<String, Boolean> getOverlaysForBaselayer(final MapLayer base) {
+        if (!getBaselayer().contains(base)) {
+            // base layer not enabled - doesn't have overlay configuration
+            return new HashMap<>();
+        }
+        
+        // TODO: get rid of to improve performance once we can strip LayerControl.js down
         final List<String> overlayNames = new ArrayList<>();
         transformToJavaList("getKnownOverlayNames();", overlayNames, false);
-
-        // know read the combinations of baselayer and overlay names from the preferences
+        
         final List<String> overlayValues = new ArrayList<>();
-        for (String baselayer : baselayerNames) {
-            overlayValues.clear();
-
-            // getAsString current values as default - bootstrap for no preferences set...
-            transformToJavaList("getOverlayValues(\"" + baselayer + "\");", overlayValues, false);
-
-            for (int i = 0; i < overlayNames.size(); i++) {
-                final String overlay = overlayNames.get(i);
-                final String overlayVal = overlayValues.get(i);
-                
-//                System.out.println("GPXEditorPreferenceStore.getInstance().put: " + preferenceString(baselayer, overlay) + " to " + overlayVal);
-                GPXEditorPreferenceStore.getInstance().put(preferenceString(baselayer, overlay), overlayVal);
+        // getAsString current values as default - bootstrap for no preferences set...
+        transformToJavaList("getOverlayValues(\"" + base.getName() + "\");", overlayValues, false);
+//        System.out.println("getOverlayValues " + base.getName() + " gives " + overlayValues.toString());
+        
+        final Map<String, Boolean> result = new HashMap<>();
+        for (int i = 0; i < overlayNames.size(); i++) {
+            result.put(overlayNames.get(i), Boolean.valueOf(overlayValues.get(i)));
+        }
+        return result;
+    }
+    private void setOverlaysForBaselayer() {
+        for (MapLayer base : getBaselayer()) {
+            final Map<MapLayer, Boolean> enabledOverlays = MapLayerUsage.getInstance().getOverlayConfiguration(base);
+            
+            final List<String> preferenceValues = new ArrayList<>();
+            for (Entry<MapLayer, Boolean> overlayEntry : enabledOverlays.entrySet()) {
+                preferenceValues.add(overlayEntry.getValue().toString());
             }
+            
+//            System.out.println("setOverlaysForBaselayer " + base.getName() + " to " + transformToJavascriptArray(preferenceValues, false));
+            execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
         }
     }
-    private static String preferenceString(final String baselayer, final String overlay) {
-        // no spaces in preference names, please
-        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.replaceAll("\\s+", "") + 
-                GPXEditorPreferenceStore.SEPARATOR + 
-                GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.replaceAll("\\s+", "");
+
+    // TFE, 20190901: support to store & load overlay settings per baselayer
+    // TFE, 20200623: now done in MapLayerUsage
+    public void loadPreferences() {
+    }
+    public void savePreferences() {
     }
     private void transformToJavaList(final String jsScript, final List<String> result, final boolean appendTo) {
         if (!appendTo) {
@@ -1735,8 +1646,8 @@ public class TrackMap extends LeafletMapView {
         }
         sb.append("]");
         return sb.toString();
-    }    
-
+    }   
+    
     public class JSCallback {
         // call back for jscallback :-)
         private final TrackMap myTrackMap;

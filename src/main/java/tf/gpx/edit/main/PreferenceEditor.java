@@ -28,17 +28,15 @@ package tf.gpx.edit.main;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.HeatMap;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.Reader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -51,28 +49,26 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
+import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
+import tf.gpx.edit.leafletmap.MapLayerTable;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
@@ -112,7 +108,6 @@ public class PreferenceEditor extends AbstractStage {
     private final CheckBox waypointChkBox = new CheckBox();
     private final TextField numShowText = new TextField();
     private final TextField searchText = new TextField();
-    private final TextField openCycleMapApiKeyText = new TextField();
     private final TextField routingApiKeyText = new TextField();
     private final ChoiceBox<TrackMap.RoutingProfile> profileChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
@@ -125,6 +120,7 @@ public class PreferenceEditor extends AbstractStage {
     private final ChoiceBox<OpacityDistribution> opacDistChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(OpacityDistribution.class, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
     private final TextField eventText = new TextField();
+    private MapLayerTable mapLayerTable = new MapLayerTable();
 
     private PreferenceEditor() {
         super();
@@ -143,6 +139,14 @@ public class PreferenceEditor extends AbstractStage {
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
         getGridPane().getChildren().clear();
+        setHeight(800.0);
+        setWidth(1000.0);
+        getGridPane().setPrefWidth(1000);
+        
+        final ColumnConstraints col1 = new ColumnConstraints();
+        final ColumnConstraints col2 = new ColumnConstraints();
+        col2.setHgrow(Priority.ALWAYS);
+        getGridPane().getColumnConstraints().addAll(col1,col2);
 
         // create new scene with list of algos & parameter
         int rowNum = 0;
@@ -410,22 +414,30 @@ public class PreferenceEditor extends AbstractStage {
         searchText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         searchText.setTooltip(t);
         getGridPane().add(searchText, 1, rowNum, 1, 1);
-        GridPane.setMargin(searchText, INSET_TOP);        
+        GridPane.setMargin(searchText, INSET_TOP);
+        
+        rowNum++;
+        // https://stackoverflow.com/a/22838050
+        final TextFlow mapLayerLbl = new TextFlow();
+        final Text text1 = new Text("Map Layer settings (");
+        text1.setStyle("-fx-font-weight: regular");
+        final Text text2 = new Text("only applied after restart");
+        text2.setStyle("-fx-font-weight: bold");
+        final Text text3 = new Text("):");
+        text3.setStyle("-fx-font-weight: regular");
+        mapLayerLbl.getChildren().addAll(text1, text2, text3);
+        getGridPane().add(mapLayerLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(mapLayerLbl, VPos.TOP);
+        GridPane.setMargin(mapLayerLbl, INSET_TOP);
 
         rowNum++;
-        // 4th row: open cycle map api key
-        t = new Tooltip("API key for OpenCycleMap");
-        final Label openCycleMapApiKeyLbl = new Label("OpenCycleMap API key:");
-        openCycleMapApiKeyLbl.setTooltip(t);
-        getGridPane().add(openCycleMapApiKeyLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(openCycleMapApiKeyLbl, VPos.TOP);
-        GridPane.setMargin(openCycleMapApiKeyLbl, INSET_TOP);
-        
-        openCycleMapApiKeyText.setPrefWidth(400);
-        openCycleMapApiKeyText.setMaxWidth(400);
-        openCycleMapApiKeyText.setTooltip(t);
-        getGridPane().add(openCycleMapApiKeyText, 1, rowNum, 1, 1);
-        GridPane.setMargin(openCycleMapApiKeyText, INSET_TOP);
+        // TrackMap.getInstance.getKnownBaselayerNames() and TrackMap.getInstance.getKnownBaselayerNames();
+        // getPreference per layer (JSON!)
+        // create Layer object (enabled, type, name, url, apikey, attribution, minzoom, maxzoom, order)
+        // populate Layer tabke
+        getGridPane().add(mapLayerTable, 0, rowNum, 2, 1);
+        GridPane.setMargin(mapLayerTable, INSET_TOP);
+        GridPane.setVgrow(mapLayerTable, Priority.ALWAYS);
 
         rowNum++;
         // 4th row: routing api key
@@ -614,7 +626,7 @@ public class PreferenceEditor extends AbstractStage {
         });
         
         rowNum++;
-        // last row: save / cancel / export / import buttons
+        // last row: save / cancel / export / import / clear buttons
         final HBox buttonBox = new HBox();
         
         final Button saveBtn = new Button("Save");
@@ -653,9 +665,20 @@ public class PreferenceEditor extends AbstractStage {
         });
         buttonBox.getChildren().add(importBtn);
         HBox.setMargin(importBtn, INSET_SMALL);
-
-        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
-        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
+        
+        final Button clearBtn = new Button("Clear");
+        clearBtn.setOnAction((ActionEvent arg0) -> {
+            GPXEditorPreferenceStore.getInstance().clear();
+        });
+        buttonBox.getChildren().add(clearBtn);
+        HBox.setMargin(clearBtn, INSET_SMALL);
+        
+        // TFE, 20200619: not part of grid but separately below - to have scrolling with fixed buttons
+        getRootPane().getChildren().add(buttonBox);
+        VBox.setMargin(buttonBox, INSET_TOP_BOTTOM);
+        
+//        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
+//        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
     }
     
     private void initPreferences() {
@@ -675,7 +698,7 @@ public class PreferenceEditor extends AbstractStage {
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
         numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
-        openCycleMapApiKeyText.setText(GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsType());
+        mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         wayLblAngleText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
@@ -697,8 +720,9 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
         GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
+        // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
+        MapLayerUsage.getInstance().savePreferences();
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
-        GPXEditorPreferences.OPENCYCLEMAP_API_KEY.put(openCycleMapApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
         GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf(wayIcnSizeText.getText().trim()), 0));
@@ -751,29 +775,6 @@ public class PreferenceEditor extends AbstractStage {
         }
     }
     
-    // helper class for serialization / deserialization
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.NONE)
-    private static class PreferenceHolder {
-        @XmlElement
-        private Map<GPXEditorPreferences, String> myPreferences = null;
-        
-        public PreferenceHolder() {
-        }
-
-        public PreferenceHolder(final Map<GPXEditorPreferences, String> preferences) {
-            myPreferences = preferences;
-        }
-
-        public Map<GPXEditorPreferences, String> getPreferences() {
-            return myPreferences;
-        }
-
-        public void setMyPreferences(final Map<GPXEditorPreferences, String> preferences) {
-            myPreferences = preferences;
-        }
-    }
-    
     private boolean exportPreferences(final File fileName) {
         if (fileName == null) {
             return false;
@@ -782,23 +783,13 @@ public class PreferenceEditor extends AbstractStage {
             return false;
         }
         
-        final PreferenceHolder preferences = new PreferenceHolder(GPXEditorPreferences.getAsMap());
-        
-        // serialize
-        // http://blog.bdoughan.com/2010/10/how-does-jaxb-compare-to-xstream.html
-        try {
-            final BufferedOutputStream stdout = new BufferedOutputStream(new FileOutputStream(fileName));
-            
-            final Map<String, Object> properties = new HashMap<>();
-            final JAXBContext jaxbContext = JAXBContextFactory.createContext(new Class[]{PreferenceHolder.class}, properties);
-            
-            final Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            marshaller.marshal(preferences, stdout);            
-        } catch (JAXBException | FileNotFoundException ex) {
+        // TFE, 20200626: use methods from PreferenceStore
+        try (final BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(fileName))) {
+            GPXEditorPreferenceStore.getInstance().exportSubtree(os);
+        } catch (IOException ex) {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return true;
     }
     
@@ -810,24 +801,13 @@ public class PreferenceEditor extends AbstractStage {
             return false;
         }
 
-        PreferenceHolder preferences = new PreferenceHolder();
-        
-        // deserialize
-        try {
-            final Reader fileReader = new FileReader(fileName);
-            
-            final Map<String, Object> properties = new HashMap<>();
-            final JAXBContext jaxbContext = JAXBContextFactory.createContext(new Class[]{PreferenceHolder.class}, properties);
-
-            final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-            
-            preferences = (PreferenceHolder) unmarshaller.unmarshal(fileReader);
-        } catch (FileNotFoundException | JAXBException ex) {
+        // TFE, 20200626: use methods from PreferenceStore
+        try (final BufferedInputStream is = new BufferedInputStream(new FileInputStream(fileName))) {
+            GPXEditorPreferenceStore.getInstance().importPreferences(is);
+        } catch (IOException ex) {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        GPXEditorPreferences.setFromMap(preferences.getPreferences());
-        
+
         initPreferences();
 
         return true;

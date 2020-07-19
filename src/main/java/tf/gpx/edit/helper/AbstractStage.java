@@ -29,7 +29,9 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.javafx.UsefulKeyCodes;
@@ -40,6 +42,7 @@ import tf.helper.javafx.UsefulKeyCodes;
  */
 public abstract class AbstractStage extends Stage {
     private final GridPane myGridPane = new GridPane();
+    private final VBox myRootPane = new VBox();
 
     public final static Insets INSET_NONE = new Insets(0, 0, 0, 0);
     public final static Insets INSET_SMALL = new Insets(0, 8, 0, 8);
@@ -62,6 +65,10 @@ public abstract class AbstractStage extends Stage {
         return myGridPane;
     }
     
+    public VBox getRootPane() {
+        return myRootPane;
+    }
+    
     public ButtonPressed getButtonPressed() {
         return buttonPressed;
     }
@@ -73,7 +80,17 @@ public abstract class AbstractStage extends Stage {
     }
     
     private void initStage() {
-        setScene(new Scene(myGridPane));
+        final ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(myGridPane);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPadding(INSET_NONE);
+        
+        myRootPane.getChildren().add(scrollPane);
+        myRootPane.setPadding(INSET_NONE);
+        
+        setScene(new Scene(myRootPane));
         getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
         setResizable(false);
     }
