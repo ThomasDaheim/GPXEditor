@@ -25,8 +25,6 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
-### Update v5.2
-
 ### Update v5.1
 
 * added GPXEditor.bat to show usage of --add-modules and --add-exports
