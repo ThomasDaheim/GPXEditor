@@ -1580,6 +1580,24 @@ public class GPXEditor implements Initializable {
         addDoneAction(convertAction, getCurrentGPXFileName());
     }
     
+    public void playbackItem(final Event event) {
+        if (gpxFileList.getSelectedGPXMeasurables().isEmpty()) {
+            // nothing to do...
+            return;
+        }
+        
+        // use first track / tracksegment of the selection
+        Optional<GPXMeasurable> firstTrack = gpxFileList.getSelectedGPXMeasurables().stream().filter((t) -> {
+            return t.isGPXTrack() || t.isGPXTrackSegment();
+        }).findFirst();
+        if (firstTrack.isEmpty()) {
+            // nothing to do...
+            return;
+        }
+        
+        TrackMap.getInstance().playBackItem(firstTrack.get());
+    }
+    
     public void mergeFiles(final ActionEvent event) {
         final List<GPXFile> gpxFiles = GPXStructureHelper.getInstance().uniqueGPXFilesFromGPXMeasurables(gpxFileList.getSelectionModel().getSelectedItems());
         

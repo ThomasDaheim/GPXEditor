@@ -301,8 +301,8 @@ public class LeafletMapView extends StackPane {
         }).collect( Collectors.joining( ", \n" ) );
 
         String cmdString = 
-                String.format(Locale.US, "var latLngs = [%s];\nvar %s = L.polyline(latLngs, {color: '%s', weight: 2}).addTo(myMap);", 
-                        jsPositions, varName, color, varName);
+                String.format(Locale.US, "var %s = L.polyline([%s], {color: '%s', weight: 2}).addTo(myMap);", 
+                        varName, jsPositions, color);
 //        System.out.println("addTrack: " + cmdString);
         execScript(cmdString);
         
@@ -363,7 +363,7 @@ public class LeafletMapView extends StackPane {
     
     protected void addScriptFromPath(final String scriptpath) {
         try { 
-            final InputStream js = TrackMap.class.getResourceAsStream(scriptpath);
+            final InputStream js = LeafletMapView.class.getResourceAsStream(scriptpath);
             final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
 
             addScript(script);

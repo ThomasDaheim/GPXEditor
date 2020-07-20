@@ -376,6 +376,19 @@ public class GPXTreeTableView {
                                     fileMenu.getItems().add(colorMenu);
                                 }
                                 
+                                // TFE, 20200720: play tracks with timestamps
+                                if (!item.isGPXRoute() && item.getCumulativeDuration() > 0) {
+                                    fileMenu.getItems().add(new SeparatorMenuItem());
+
+                                    final MenuItem playbackItem = new MenuItem("Playback");
+                                    playbackItem.setOnAction((ActionEvent event) -> {
+                                        myEditor.playbackItem(event);
+                                    });
+                                    playbackItem.disableProperty().bind(
+                                        Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                    fileMenu.getItems().add(playbackItem);
+                                }
+                                
                                 break;
                             case GPXMetadata:
                                 final MenuItem deleteMetadata = new MenuItem("Delete");
