@@ -76,12 +76,11 @@ public class GPXEditorManager extends Application {
         
         final Stage splashStage = new Stage(StageStyle.UNDECORATED);
         splashStage.setScene(splashScene);
+        splashStage.setTitle("GPX Editor");
         splashStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         splashStage.initModality(Modality.APPLICATION_MODAL);
         splashStage.setHeight(splashSize);
         splashStage.setWidth(splashSize);
-        splashStage.setAlwaysOnTop(true);
-        splashStage.setAlwaysOnTop(false);
         // center splash on screen
         // http://www.java2s.com/Code/Java/JavaFX/Setstagexandyaccordingtoscreensize.htm
         final Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
@@ -153,7 +152,7 @@ public class GPXEditorManager extends Application {
                 Double recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getAsType();
 
                 myStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
-                myStage.setTitle("GPX Editor"); 
+                myStage.setTitle("GPX Editor");
                 myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
                 myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
                 if (Platform.isSupported(ConditionalFeature.UNIFIED_WINDOW)) {

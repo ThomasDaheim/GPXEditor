@@ -412,6 +412,8 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/hallahan/LeafletPlayback
             addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Playback" + ".js");
 
             // geolocation not working in webview
 //            // support for locate
@@ -1441,29 +1443,11 @@ public class TrackMap extends LeafletMapView {
 //        System.out.println("geojson: " + geojson);
         
         // call LeafletPlayback
-//        var playbackOptions = {
-//            playControl: true,
-//            dateControl: true,
-//            sliderControl: true     
-//        };
-        // TODO: add below to init-js and call only playback#clearData() + playback#setData(geoJSON) + playback.start() here
         // TODO: how to clear once done?
         // TODO: icons not shown - file missing?
         // play control next to date control, please
-        final StringBuilder cmdString = new StringBuilder();
-        cmdString.append(geojson);
-        cmdString.append("var playbackOptions = {\n");
-        cmdString.append("    playControl: true,\n");
-        cmdString.append("    dateControl: true,\n");
-        cmdString.append("    tracksLayer: false,\n");
-        cmdString.append("    speed: 10\n");
-        cmdString.append("};\n");
-        cmdString.append("var playback = new L.Playback(myMap, geojson, null, playbackOptions);\n");
-        cmdString.append("playback.start();\n");
-        String playback = cmdString.toString();
-//        System.out.println("playback: " + playback);
 
-        execScript(playback);
+        execScript("playbackGeoJSON(" + geojson + ");\n");
     }
     
     private String playbackJS(final List<GPXWaypoint> waypoints) {
@@ -1485,7 +1469,7 @@ public class TrackMap extends LeafletMapView {
 
         // create variable frame
         final StringBuilder cmdString = new StringBuilder();
-        cmdString.append("var geojson = {\n");
+        cmdString.append("{\n");
         cmdString.append("    type: 'Feature',\n");
         cmdString.append("    geometry: {\n");
         cmdString.append("        type: 'MultiPoint',\n");
@@ -1498,7 +1482,7 @@ public class TrackMap extends LeafletMapView {
         cmdString.append("        altitude: %s,\n");
         cmdString.append("        bbox: []\n");
         cmdString.append("    }\n");
-        cmdString.append("};\n");
+        cmdString.append("}\n");
         
         String geojson = cmdString.toString();
         

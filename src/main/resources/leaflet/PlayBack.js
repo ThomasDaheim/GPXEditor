@@ -24,9 +24,26 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-L.control.mousePosition({
-    position: 'topleft',
-    prefix: 'Mouse:',
-    separator: ' | '
-}).addTo(myMap);
+var playbackOptions = {
+    playControl: true,
+    dateControl: true,
+    tracksLayer: false,
+    sliderControl: true,
+    speed: 10
+};
 
+function playbackGeoJSON(geojson) {
+    jscallback.log('playbackGeoJSON: ' + geojson);
+
+    var playback = new L.Playback(myMap, null, null, playbackOptions);
+    playback.clearData();
+    playback.setData(geojson);
+    playback.start();
+}
+
+function endPlayback() {
+    if (playback) {
+        playback.destroy();
+        playback = null;
+    }
+}
