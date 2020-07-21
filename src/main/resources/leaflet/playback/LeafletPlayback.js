@@ -202,7 +202,6 @@ L.Playback = L.Playback || {};
 
         
 L.Playback.Track = L.Class.extend({
-
         initialize : function (geoJSON, options) {
             options = options || {};
             var tickLen = options.tickLen || 250;
@@ -625,6 +624,8 @@ L.Playback.Clock = L.Class.extend({
   _tick: function (self) {
     if (self._cursor > self._trackController.getEndTime()) {
       clearInterval(self._intervalID);
+      // done with playback - lets send an event to the world BUT HOW???
+      // this._map.fire('playback:done');
       return;
     }
     self._trackController.tock(self._cursor, self._transitionTime);
@@ -788,7 +789,7 @@ L.Playback.DateControl = L.Control.extend({
     
 L.Playback.PlayControl = L.Control.extend({
     options : {
-        position : 'bottomright'
+        position : 'bottomleft'
     },
 
     initialize : function (playback) {

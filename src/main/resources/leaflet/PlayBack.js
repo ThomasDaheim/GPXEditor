@@ -28,22 +28,26 @@ var playbackOptions = {
     playControl: true,
     dateControl: true,
     tracksLayer: false,
-    sliderControl: true,
+//    sliderControl: true,
     speed: 10
 };
+var playback = null;
 
 function playbackGeoJSON(geojson) {
-    jscallback.log('playbackGeoJSON: ' + geojson);
+//    jscallback.log('playbackGeoJSON: ' + geojson);
 
-    var playback = new L.Playback(myMap, null, null, playbackOptions);
+    playback = new L.Playback(myMap, null, null, playbackOptions);
     playback.clearData();
     playback.setData(geojson);
     playback.start();
 }
 
 function endPlayback() {
-    if (playback) {
-        playback.destroy();
-        playback = null;
+    if (typeof playback === 'undefined' || playback === null) {
+        return;
     }
+
+    jscallback.log('endPlayback');
+    playback.destroy();
+    playback = null;
 }

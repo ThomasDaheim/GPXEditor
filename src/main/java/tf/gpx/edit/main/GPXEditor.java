@@ -1595,7 +1595,7 @@ public class GPXEditor implements Initializable {
             return;
         }
         
-        TrackMap.getInstance().playBackItem(firstTrack.get());
+        TrackMap.getInstance().playbackItem(firstTrack.get());
     }
     
     public void mergeFiles(final ActionEvent event) {

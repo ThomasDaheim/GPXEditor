@@ -412,8 +412,7 @@ public class TrackMap extends LeafletMapView {
             // https://github.com/hallahan/LeafletPlayback
             addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Playback" + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
 
             // geolocation not working in webview
 //            // support for locate
@@ -965,6 +964,7 @@ public class TrackMap extends LeafletMapView {
         execScript("clearSearchResults();");
         execScript("stopRouting(false);");
         execScript("clearEditable();");
+        execScript("endPlayback();");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(myGPXLineItems) || myGPXLineItems.get(0).isGPXMetadata()) {
@@ -1421,7 +1421,7 @@ public class TrackMap extends LeafletMapView {
         myGPXEditor.refillGPXWaypointList(false);
     }
     
-    public void playBackItem(final GPXMeasurable item) {
+    public void playbackItem(final GPXMeasurable item) {
         if (!item.isGPXTrack() && !item.isGPXTrackSegment()) {
             // nothing to do...
             return;
@@ -1435,7 +1435,7 @@ public class TrackMap extends LeafletMapView {
                 } else {
                     return item.equals(t.getGPXTrackSegments().get(0));
                 }
-            }).collect(Collectors.toList()));
+            }).sorted((o1, o2)->o1.getDate().compareTo(o2.getDate())).collect(Collectors.toList()));
 //        System.out.println("Waypoints for playback: " + shownWaypoints.size());
         
         // create cmdString input for LeafletPlayback
@@ -1445,7 +1445,6 @@ public class TrackMap extends LeafletMapView {
         // call LeafletPlayback
         // TODO: how to clear once done?
         // TODO: icons not shown - file missing?
-        // play control next to date control, please
 
         execScript("playbackGeoJSON(" + geojson + ");\n");
     }
@@ -1495,6 +1494,7 @@ public class TrackMap extends LeafletMapView {
             time.add(String.valueOf(waypoint.getDate().toInstant().toEpochMilli()));
             altitude.add(String.valueOf(waypoint.getElevation()));
         }
+//        System.out.println("geojson with starttime = " + time.get(0) + ", endtime = " + time.get(time.size()-1));
         geojson = String.format(Locale.US, geojson, 
                 transformToJavascriptArray(coordinates), 
                 transformToJavascriptArray(time, false), 
