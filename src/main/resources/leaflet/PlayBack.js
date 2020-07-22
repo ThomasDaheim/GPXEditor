@@ -24,30 +24,52 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+var markerOptions = {
+    // options for marker since default icon can't be read from js in jar...
+    icon: blueIcon,
+    zIndexOffset: 3000
+}
 var playbackOptions = {
     playControl: true,
     dateControl: true,
     tracksLayer: false,
 //    sliderControl: true,
-    speed: 10
+    speed: 10,
+    orientIcons: false,
+    marker: markerOptions,
 };
 var playback = null;
 
 function playbackGeoJSON(geojson) {
 //    jscallback.log('playbackGeoJSON: ' + geojson);
 
+    // only one playback at a time, please
+    destroyPlayback();
     playback = new L.Playback(myMap, null, null, playbackOptions);
+        
     playback.clearData();
     playback.setData(geojson);
-    playback.start();
+    // click the button if available - otherwise it will still be showing "Play"
+    if (playbackOptions.playControl) {
+        playback.playControl._button.click();
+    } else {
+        playback.start();
+    }
 }
 
-function endPlayback() {
+function destroyPlayback() {
     if (typeof playback === 'undefined' || playback === null) {
         return;
     }
 
-    jscallback.log('endPlayback');
+//    jscallback.log('destroyPlayback');
     playback.destroy();
     playback = null;
 }
+
+// TODO: not yet working
+//function endPlayback(e) {
+//    // switch playback.playControl._button back to "Play" - should be done in LeafletPlayback.js!
+//    playback.playControl._button.innerHTML = 'Play';
+//}
+//myMap.on('playback:end:playback', endPlayback);

@@ -93,8 +93,9 @@ L.Playback.MoveableMarker = L.Marker.extend({
             marker_options = marker_options(feature);
         }
         
-        L.Marker.prototype.initialize.call(this, startLatLng, marker_options);
-        
+//        L.Marker.prototype.initialize.call(this, startLatLng, marker_options);
+        L.Marker.prototype.initialize.call(this, startLatLng, { icon: greenIcon, zIndexOffset: 3000 });
+
         this.popupContent = '';
         this.feature = feature;
 		
@@ -146,7 +147,7 @@ L.Playback.MoveableMarker = L.Marker.extend({
         }    
     },
     
-    // modify leaflet markers to add our roration code
+    // modify leaflet markers to add our rotation code
     /*
      * Based on comments by @runanet and @coomsie 
      * https://github.com/CloudMade/Leaflet/issues/386
@@ -199,8 +200,6 @@ L.Playback.MoveableMarker = L.Marker.extend({
 
 L.Playback = L.Playback || {};
 
-
-        
 L.Playback.Track = L.Class.extend({
         initialize : function (geoJSON, options) {
             options = options || {};
@@ -451,6 +450,7 @@ L.Playback.Track = L.Class.extend({
         
             if (lngLat) {
                 var latLng = new L.LatLng(lngLat[1], lngLat[0]);
+
                 this._marker = new L.Playback.MoveableMarker(latLng, options, this._geoJSON);     
 				if(options.mouseOverCallback) {
                     this._marker.on('mouseover',options.mouseOverCallback);
@@ -609,43 +609,62 @@ L.Playback.TrackController = L.Class.extend({
 L.Playback = L.Playback || {};
 
 L.Playback.Clock = L.Class.extend({
-
-  initialize: function (trackController, callback, options) {
+  initialize: function (trackController, callbackTimeChange, callbackEndPlayback, options) {
     this._trackController = trackController;
-    this._callbacksArry = [];
-    if (callback) this.addCallback(callback);
+    this._callbacksTimeChangeArray = [];
+    if (callbackTimeChange) this.addCallbackTimeChange(callbackTimeChange);
+    this._callbacksEndPlaybackArray = [];
+    if (callbackEndPlayback) this.addCallbackEndPlayback(callbackEndPlayback);
     L.setOptions(this, options);
     this._speed = this.options.speed;
     this._tickLen = this.options.tickLen;
-    this._cursor = trackController.getStartTime();
+    this._cursor = this._trackController.getStartTime();
     this._transitionTime = this._tickLen / this._speed;
   },
 
   _tick: function (self) {
     if (self._cursor > self._trackController.getEndTime()) {
-      clearInterval(self._intervalID);
+      window.clearInterval(self._intervalID);
+      self._intervalID = null;
       // done with playback - lets send an event to the world BUT HOW???
-      // this._map.fire('playback:done');
+      // this._map.fire('playback:done'); isn't available here
+      self._callbacksEndPlayback(self._cursor);
       return;
     }
     self._trackController.tock(self._cursor, self._transitionTime);
-    self._callbacks(self._cursor);
+    self._callbacksTimeChange(self._cursor);
     self._cursor += self._tickLen;
   },
 
-  _callbacks: function(cursor) {
-    var arry = this._callbacksArry;
-    for (var i=0, len=arry.length; i<len; i++) {
-      arry[i](cursor);
+  _callbacksTimeChange: function(cursor) {
+    var array = this._callbacksTimeChangeArray;
+    for (var i=0, len=array.length; i<len; i++) {
+      array[i](cursor);
     }
   },
 
-  addCallback: function(fn) {
-    this._callbacksArry.push(fn);
+  addCallbackTimeChange: function(fn) {
+    this._callbacksTimeChangeArray.push(fn);
+  },
+
+  // TFE, 20200722: add support for callbacks on end of playback reached
+  _callbacksEndPlayback: function(cursor) {
+    var array = this._callbacksEndPlaybackArray;
+    for (var i=0, len=array.length; i<len; i++) {
+      array[i](cursor);
+    }
+  },
+
+  addCallbackEndPlayback: function(fn) {
+    this._callbacksEndPlaybackArray.push(fn);
   },
 
   start: function () {
     if (this._intervalID) return;
+    // TFE, 20200722: enabled re-start after complete playback
+    if (this._cursor > this._trackController.getEndTime()) {
+        this._cursor = this._trackController.getStartTime();
+    }
     this._intervalID = window.setInterval(
       this._tick, 
       this._transitionTime, 
@@ -684,7 +703,7 @@ L.Playback.Clock = L.Class.extend({
     }
     this._cursor = time;
     this._trackController.tock(this._cursor, 0);
-    this._callbacks(this._cursor);
+    this._callbacksTimeChange(this._cursor);
   },
 
   getTime: function() {
@@ -778,7 +797,7 @@ L.Playback.DateControl = L.Control.extend({
         this._time.innerHTML = this.options.timeFormatFn(time);
 
         // setup callback
-        playback.addCallback(function (ms) {
+        playback.addCallbackTimeChange(function (ms) {
             self._date.innerHTML = self.options.dateFormatFn(ms);
             self._time.innerHTML = self.options.timeFormatFn(ms);
         });
@@ -873,7 +892,7 @@ L.Playback.SliderControl = L.Control.extend({
             playback.setCursor(val);
         }
 
-        playback.addCallback(function (ms) {
+        playback.addCallbackTimeChange(function (ms) {
             self._slider.value = ms;
         });
         
@@ -923,19 +942,33 @@ L.Playback = L.Playback.Clock.extend({
             }
         },
 
-        initialize : function (map, geoJSON, callback, options) {
+        initialize : function (map, geoJSON, callbackTimeChange, options) {
             L.setOptions(this, options);
             
             this._map = map;
             this._trackController = new L.Playback.TrackController(map, null, this.options);
-            L.Playback.Clock.prototype.initialize.call(this, this._trackController, callback, this.options);
+
+            // TFE, 20200722: add support for callbacks on end of playback reached
+            var self = this;
+            L.Playback.Clock.prototype.initialize.call(
+                    this, 
+                    this._trackController, 
+                    callbackTimeChange, 
+                    function (endTimestamp) {
+                        if (self.options.playControl) {
+                            // HACK: switch playback.playControl._button back to "Play"
+                            self.playControl._button.innerHTML = 'Play';
+                        }
+                        // whoever might be interested to know...
+                        self._map.fire('playback:end:playback');
+                    }, 
+                    this.options);
             
             if (this.options.tracksLayer) {
                 this._tracksLayer = new L.Playback.TracksLayer(map, options);
             }
 
-            this.setData(geoJSON);            
-            
+            this.setData(geoJSON);
 
             if (this.options.playControl) {
                 this.playControl = new L.Playback.PlayControl(this);
