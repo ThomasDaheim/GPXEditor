@@ -19,68 +19,67 @@
 L.Playback = L.Playback || {};
 
 L.Playback.Util = L.Class.extend({
-  statics: {
-
-    DateStr: function(time) {
-      return new Date(time).toDateString();
-    },
-
-    TimeStr: function(time) {
-      var d = new Date(time);
-      var h = d.getHours();
-      var m = d.getMinutes();
-      var s = d.getSeconds();
-      var tms = time / 1000;
-      var dec = (tms - Math.floor(tms)).toFixed(2).slice(1);
-      var mer = 'AM';
-      if (h > 11) {
-        h %= 12;
-        mer = 'PM';
-      } 
-      if (h === 0) h = 12;
-      if (m < 10) m = '0' + m;
-      if (s < 10) s = '0' + s;
-      return h + ':' + m + ':' + s + dec + ' ' + mer;
-    },
-
-    ParseGPX: function(gpx) {
-      var geojson = {
-        type: 'Feature',
-        geometry: {
-          type: 'MultiPoint',
-          coordinates: []
+    statics: {
+        DateStr: function(time) {
+            return new Date(time).toDateString();
         },
-        properties: {
-          time: [],
-          speed: [],
-          altitude: []
+
+        TimeStr: function(time) {
+            var d = new Date(time);
+            var h = d.getHours();
+            var m = d.getMinutes();
+            var s = d.getSeconds();
+            var tms = time / 1000;
+            var dec = (tms - Math.floor(tms)).toFixed(2).slice(1);
+            var mer = 'AM';
+            if (h > 11) {
+                h %= 12;
+                mer = 'PM';
+            } 
+            if (h === 0) h = 12;
+            if (m < 10) m = '0' + m;
+            if (s < 10) s = '0' + s;
+            return h + ':' + m + ':' + s + dec + ' ' + mer;
         },
-        bbox: []
-      };
-      var xml = $.parseXML(gpx);
-      var pts = $(xml).find('trkpt');
-      for (var i=0, len=pts.length; i<len; i++) {
-        var p = pts[i];
-        var lat = parseFloat(p.getAttribute('lat'));
-        var lng = parseFloat(p.getAttribute('lon'));
-        var timeStr = $(p).find('time').text();
-        var eleStr = $(p).find('ele').text();
-        var t = new Date(timeStr).getTime();
-        var ele = parseFloat(eleStr);
 
-        var coords = geojson.geometry.coordinates;
-        var props = geojson.properties;
-        var time = props.time;
-        var altitude = geojson.properties.altitude;
+        ParseGPX: function(gpx) {
+            var geojson = {
+              type: 'Feature',
+              geometry: {
+                    type: 'MultiPoint',
+                    coordinates: []
+              },
+              properties: {
+                    time: [],
+                    speed: [],
+                    altitude: []
+              },
+              bbox: []
+            };
+            var xml = $.parseXML(gpx);
+            var pts = $(xml).find('trkpt');
+            for (var i=0, len=pts.length; i<len; i++) {
+                var p = pts[i];
+                var lat = parseFloat(p.getAttribute('lat'));
+                var lng = parseFloat(p.getAttribute('lon'));
+                var timeStr = $(p).find('time').text();
+                var eleStr = $(p).find('ele').text();
+                var t = new Date(timeStr).getTime();
+                var ele = parseFloat(eleStr);
 
-        coords.push([lng,lat]);
-        time.push(t);
-        altitude.push(ele);
-      }
-      return geojson;
+                var coords = geojson.geometry.coordinates;
+                var props = geojson.properties;
+                var time = props.time;
+                var altitude = geojson.properties.altitude;
+
+                // TFE, 20200723: what the FUCK? [lng,lat] when every one else in the whole (leaflet) world uses lat,lang???
+                coords.push([lat,lng]);
+                time.push(t);
+                altitude.push(ele);
+            }
+            return geojson;
+        }
     }
-  }
-
 });
 
 L.Playback = L.Playback || {};
@@ -93,8 +92,7 @@ L.Playback.MoveableMarker = L.Marker.extend({
             marker_options = marker_options(feature);
         }
         
-//        L.Marker.prototype.initialize.call(this, startLatLng, marker_options);
-        L.Marker.prototype.initialize.call(this, startLatLng, { icon: greenIcon, zIndexOffset: 3000 });
+        L.Marker.prototype.initialize.call(this, startLatLng, marker_options);
 
         this.popupContent = '';
         this.feature = feature;
@@ -246,11 +244,11 @@ L.Playback.Track = L.Class.extend({
                 ratio = rem / (nextSampleTime - currSampleTime);
                 t += rem;
                 this._ticks[t] = this._interpolatePoint(currSample, nextSample, ratio);
-				this._orientations[t] = this._directionOfPoint(currSample,nextSample);
+                this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                 previousOrientation = this._orientations[t];
             } else {
                 this._ticks[t] = currSample;
-				this._orientations[t] = this._directionOfPoint(currSample,nextSample);
+                this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                 previousOrientation = this._orientations[t];
             }
 
@@ -259,7 +257,7 @@ L.Playback.Track = L.Class.extend({
             while (t < nextSampleTime) {
                 ratio = (t - currSampleTime) / (nextSampleTime - currSampleTime);
                 this._ticks[t] = this._interpolatePoint(currSample, nextSample, ratio);
-				this._orientations[t] = this._directionOfPoint(currSample,nextSample);
+                this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                 previousOrientation = this._orientations[t];
                 t += tickLen;
             }
@@ -277,7 +275,7 @@ L.Playback.Track = L.Class.extend({
                     ratio = rem / (nextSampleTime - currSampleTime);
                     t += rem;
                     this._ticks[t] = this._interpolatePoint(currSample, nextSample, ratio);
-					if(nextSample){
+                    if(nextSample){
                         this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                         previousOrientation = this._orientations[t];
                     } else {
@@ -300,7 +298,7 @@ L.Playback.Track = L.Class.extend({
                     if (nextSampleTime - currSampleTime > options.maxInterpolationTime){
                         this._ticks[t] = currSample;
                         
-						if(nextSample){
+                        if(nextSample){
                             this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                             previousOrientation = this._orientations[t];
                         } else {
@@ -309,7 +307,8 @@ L.Playback.Track = L.Class.extend({
                     }
                     else {
                         this._ticks[t] = this._interpolatePoint(currSample, nextSample, ratio);
-						if(nextSample) {
+
+                        if(nextSample) {
                             this._orientations[t] = this._directionOfPoint(currSample,nextSample);
                             previousOrientation = this._orientations[t];
                         } else {
@@ -341,7 +340,12 @@ L.Playback.Track = L.Class.extend({
         },
         
         _directionOfPoint:function(start,end){
-            return this._getBearing(start[1],start[0],end[1],end[0]);
+            // TFE, 20200723: only do the complex calc if we need it...
+            if (this._orientIcon) {
+                return this._getBearing(start[1],start[0],end[1],end[0]);
+            } else {
+                return 0.0;
+            }
         },
         
         _getBearing:function(startLat,startLong,endLat,endLong){
@@ -449,21 +453,22 @@ L.Playback.Track = L.Class.extend({
             }        
         
             if (lngLat) {
-                var latLng = new L.LatLng(lngLat[1], lngLat[0]);
+                // TFE, 20200723: lnglat??? my coordinates have lattitude first...
+                var latLng = new L.LatLng(lngLat[0], lngLat[1]);
 
-                this._marker = new L.Playback.MoveableMarker(latLng, options, this._geoJSON);     
-				if(options.mouseOverCallback) {
+                this._marker = new L.Playback.MoveableMarker(latLng, options, this._geoJSON);
+                if(options.mouseOverCallback) {
                     this._marker.on('mouseover',options.mouseOverCallback);
                 }
-				if(options.clickCallback) {
+                if(options.clickCallback) {
                     this._marker.on('click',options.clickCallback);
                 }
 				
-				//hide the marker if its not present yet and fadeMarkersWhenStale is true
-				if(this._fadeMarkersWhenStale && !this.trackPresentAtTick(timestamp))
-				{
-					this._marker.setOpacity(0);
-				}
+                //hide the marker if its not present yet and fadeMarkersWhenStale is true
+                if(this._fadeMarkersWhenStale && !this.trackPresentAtTick(timestamp))
+                {
+                    this._marker.setOpacity(0);
+                }
             }
             
             return this._marker;
@@ -565,7 +570,8 @@ L.Playback.TrackController = L.Class.extend({
     tock : function (timestamp, transitionTime) {
         for (var i = 0, len = this._tracks.length; i < len; i++) {
             var lngLat = this._tracks[i].tick(timestamp);
-            var latLng = new L.LatLng(lngLat[1], lngLat[0]);
+            // TFE, 20200723: lnglat??? my coordinates have lattitude first...
+            var latLng = new L.LatLng(lngLat[0], lngLat[1]);
             this._tracks[i].moveMarker(latLng, transitionTime,timestamp);
         }
     },
@@ -609,118 +615,118 @@ L.Playback.TrackController = L.Class.extend({
 L.Playback = L.Playback || {};
 
 L.Playback.Clock = L.Class.extend({
-  initialize: function (trackController, callbackTimeChange, callbackEndPlayback, options) {
-    this._trackController = trackController;
-    this._callbacksTimeChangeArray = [];
-    if (callbackTimeChange) this.addCallbackTimeChange(callbackTimeChange);
-    this._callbacksEndPlaybackArray = [];
-    if (callbackEndPlayback) this.addCallbackEndPlayback(callbackEndPlayback);
-    L.setOptions(this, options);
-    this._speed = this.options.speed;
-    this._tickLen = this.options.tickLen;
-    this._cursor = this._trackController.getStartTime();
-    this._transitionTime = this._tickLen / this._speed;
-  },
-
-  _tick: function (self) {
-    if (self._cursor > self._trackController.getEndTime()) {
-      window.clearInterval(self._intervalID);
-      self._intervalID = null;
-      // done with playback - lets send an event to the world BUT HOW???
-      // this._map.fire('playback:done'); isn't available here
-      self._callbacksEndPlayback(self._cursor);
-      return;
-    }
-    self._trackController.tock(self._cursor, self._transitionTime);
-    self._callbacksTimeChange(self._cursor);
-    self._cursor += self._tickLen;
-  },
-
-  _callbacksTimeChange: function(cursor) {
-    var array = this._callbacksTimeChangeArray;
-    for (var i=0, len=array.length; i<len; i++) {
-      array[i](cursor);
-    }
-  },
-
-  addCallbackTimeChange: function(fn) {
-    this._callbacksTimeChangeArray.push(fn);
-  },
-
-  // TFE, 20200722: add support for callbacks on end of playback reached
-  _callbacksEndPlayback: function(cursor) {
-    var array = this._callbacksEndPlaybackArray;
-    for (var i=0, len=array.length; i<len; i++) {
-      array[i](cursor);
-    }
-  },
-
-  addCallbackEndPlayback: function(fn) {
-    this._callbacksEndPlaybackArray.push(fn);
-  },
-
-  start: function () {
-    if (this._intervalID) return;
-    // TFE, 20200722: enabled re-start after complete playback
-    if (this._cursor > this._trackController.getEndTime()) {
+    initialize: function (trackController, callbackTimeChange, callbackEndPlayback, options) {
+        this._trackController = trackController;
+        this._callbacksTimeChangeArray = [];
+        if (callbackTimeChange) this.addCallbackTimeChange(callbackTimeChange);
+        this._callbacksEndPlaybackArray = [];
+        if (callbackEndPlayback) this.addCallbackEndPlayback(callbackEndPlayback);
+        L.setOptions(this, options);
+        this._speed = this.options.speed;
+        this._tickLen = this.options.tickLen;
         this._cursor = this._trackController.getStartTime();
+        this._transitionTime = this._tickLen / this._speed;
+    },
+
+    _tick: function (self) {
+        if (self._cursor > self._trackController.getEndTime()) {
+            window.clearInterval(self._intervalID);
+            self._intervalID = null;
+            // done with playback - lets send an event to the world BUT HOW???
+            // this._map.fire('playback:done'); isn't available here
+            self._callbacksEndPlayback(self._cursor);
+            return;
+        }
+        self._trackController.tock(self._cursor, self._transitionTime);
+        self._callbacksTimeChange(self._cursor);
+        self._cursor += self._tickLen;
+    },
+
+    _callbacksTimeChange: function(cursor) {
+        var array = this._callbacksTimeChangeArray;
+        for (var i=0, len=array.length; i<len; i++) {
+            array[i](cursor);
+        }
+    },
+
+    addCallbackTimeChange: function(fn) {
+        this._callbacksTimeChangeArray.push(fn);
+    },
+
+    // TFE, 20200722: add support for callbacks on end of playback reached
+    _callbacksEndPlayback: function(cursor) {
+        var array = this._callbacksEndPlaybackArray;
+        for (var i=0, len=array.length; i<len; i++) {
+            array[i](cursor);
+        }
+    },
+
+    addCallbackEndPlayback: function(fn) {
+        this._callbacksEndPlaybackArray.push(fn);
+    },
+
+    start: function () {
+        if (this._intervalID) return;
+        // TFE, 20200722: enabled re-start after complete playback
+        if (this._cursor > this._trackController.getEndTime()) {
+            this._cursor = this._trackController.getStartTime();
+        }
+        this._intervalID = window.setInterval(
+            this._tick, 
+            this._transitionTime, 
+            this);
+    },
+
+    stop: function () {
+        if (!this._intervalID) return;
+        window.clearInterval(this._intervalID);
+        this._intervalID = null;
+    },
+
+    getSpeed: function() {
+        return this._speed;
+    },
+
+    isPlaying: function() {
+      return this._intervalID ? true : false;
+    },
+
+    setSpeed: function (speed) {
+        this._speed = speed;
+        this._transitionTime = this._tickLen / speed;
+        if (this._intervalID) {
+            this.stop();
+            this.start();
+        }
+    },
+
+    setCursor: function (ms) {
+        var time = parseInt(ms);
+        if (!time) return;
+        var mod = time % this._tickLen;
+        if (mod !== 0) {
+            time += this._tickLen - mod;
+        }
+        this._cursor = time;
+        this._trackController.tock(this._cursor, 0);
+        this._callbacksTimeChange(this._cursor);
+    },
+
+    getTime: function() {
+        return this._cursor;
+    },
+
+    getStartTime: function() {
+        return this._trackController.getStartTime();
+    },
+
+    getEndTime: function() {
+        return this._trackController.getEndTime();
+    },
+
+    getTickLen: function() {
+        return this._tickLen;
     }
-    this._intervalID = window.setInterval(
-      this._tick, 
-      this._transitionTime, 
-      this);
-  },
-
-  stop: function () {
-    if (!this._intervalID) return;
-    window.clearInterval(this._intervalID);
-    this._intervalID = null;
-  },
-
-  getSpeed: function() {
-    return this._speed;
-  },
-
-  isPlaying: function() {
-    return this._intervalID ? true : false;
-  },
-
-  setSpeed: function (speed) {
-    this._speed = speed;
-    this._transitionTime = this._tickLen / speed;
-    if (this._intervalID) {
-      this.stop();
-      this.start();
-    }
-  },
-
-  setCursor: function (ms) {
-    var time = parseInt(ms);
-    if (!time) return;
-    var mod = time % this._tickLen;
-    if (mod !== 0) {
-      time += this._tickLen - mod;
-    }
-    this._cursor = time;
-    this._trackController.tock(this._cursor, 0);
-    this._callbacksTimeChange(this._cursor);
-  },
-
-  getTime: function() {
-    return this._cursor;
-  },
-
-  getStartTime: function() {
-    return this._trackController.getStartTime();
-  },
-
-  getEndTime: function() {
-    return this._trackController.getEndTime();
-  },
-
-  getTickLen: function() {
-    return this._tickLen;
-  }
 
 });
 
@@ -908,136 +914,136 @@ L.Playback.SliderControl = L.Control.extend({
 });      
 
 L.Playback = L.Playback.Clock.extend({
-        statics : {
-            MoveableMarker : L.Playback.MoveableMarker,
-            Track : L.Playback.Track,
-            TrackController : L.Playback.TrackController,
-            Clock : L.Playback.Clock,
-            Util : L.Playback.Util,
-            
-            TracksLayer : L.Playback.TracksLayer,
-            PlayControl : L.Playback.PlayControl,
-            DateControl : L.Playback.DateControl,
-            SliderControl : L.Playback.SliderControl
+    statics : {
+        MoveableMarker : L.Playback.MoveableMarker,
+        Track : L.Playback.Track,
+        TrackController : L.Playback.TrackController,
+        Clock : L.Playback.Clock,
+        Util : L.Playback.Util,
+
+        TracksLayer : L.Playback.TracksLayer,
+        PlayControl : L.Playback.PlayControl,
+        DateControl : L.Playback.DateControl,
+        SliderControl : L.Playback.SliderControl
+    },
+
+    options : {
+        tickLen: 250,
+        speed: 1,
+        maxInterpolationTime: 5*60*1000, // 5 minutes
+
+        tracksLayer : true,
+
+        playControl: false,
+        dateControl: false,
+        sliderControl: false,
+
+        // options
+        layer: {
+            // pointToLayer(featureData, latlng)
         },
 
-        options : {
-            tickLen: 250,
-            speed: 1,
-            maxInterpolationTime: 5*60*1000, // 5 minutes
-
-            tracksLayer : true,
-            
-            playControl: false,
-            dateControl: false,
-            sliderControl: false,
-            
-            // options
-            layer: {
-                // pointToLayer(featureData, latlng)
-            },
-            
-            marker : {
-                // getPopup(feature)
-            }
-        },
-
-        initialize : function (map, geoJSON, callbackTimeChange, options) {
-            L.setOptions(this, options);
-            
-            this._map = map;
-            this._trackController = new L.Playback.TrackController(map, null, this.options);
-
-            // TFE, 20200722: add support for callbacks on end of playback reached
-            var self = this;
-            L.Playback.Clock.prototype.initialize.call(
-                    this, 
-                    this._trackController, 
-                    callbackTimeChange, 
-                    function (endTimestamp) {
-                        if (self.options.playControl) {
-                            // HACK: switch playback.playControl._button back to "Play"
-                            self.playControl._button.innerHTML = 'Play';
-                        }
-                        // whoever might be interested to know...
-                        self._map.fire('playback:end:playback');
-                    }, 
-                    this.options);
-            
-            if (this.options.tracksLayer) {
-                this._tracksLayer = new L.Playback.TracksLayer(map, options);
-            }
-
-            this.setData(geoJSON);
-
-            if (this.options.playControl) {
-                this.playControl = new L.Playback.PlayControl(this);
-                this.playControl.addTo(map);
-            }
-
-            if (this.options.sliderControl) {
-                this.sliderControl = new L.Playback.SliderControl(this);
-                this.sliderControl.addTo(map);
-            }
-
-            if (this.options.dateControl) {
-                this.dateControl = new L.Playback.DateControl(this, options);
-                this.dateControl.addTo(map);
-            }
-
-        },
-        
-        clearData : function(){
-            this._trackController.clearTracks();
-            
-            if (this._tracksLayer) {
-                this._tracksLayer.clearLayer();
-            }
-        },
-        
-        setData : function (geoJSON) {
-            this.clearData();
-        
-            this.addData(geoJSON, this.getTime());
-            
-            this.setCursor(this.getStartTime());
-        },
-
-        // bad implementation
-        addData : function (geoJSON, ms) {
-            // return if data not set
-            if (!geoJSON) {
-                return;
-            }
-        
-            if (geoJSON instanceof Array) {
-                for (var i = 0, len = geoJSON.length; i < len; i++) {
-                    this._trackController.addTrack(new L.Playback.Track(geoJSON[i], this.options), ms);
-                }
-            } else {
-                this._trackController.addTrack(new L.Playback.Track(geoJSON, this.options), ms);
-            }
-
-            this._map.fire('playback:set:data');
-            
-            if (this.options.tracksLayer) {
-                this._tracksLayer.addLayer(geoJSON);
-            }                  
-        },
-
-        destroy: function() {
-            this.clearData();
-            if (this.playControl) {
-                this._map.removeControl(this.playControl);
-            }
-            if (this.sliderControl) {
-                this._map.removeControl(this.sliderControl);
-            }
-            if (this.dateControl) {
-                this._map.removeControl(this.dateControl);
-            }
+        marker : {
+            // getPopup(feature)
         }
-    });
+    },
+
+    initialize : function (map, geoJSON, callbackTimeChange, options) {
+        L.setOptions(this, options);
+
+        this._map = map;
+        this._trackController = new L.Playback.TrackController(map, null, this.options);
+
+        // TFE, 20200722: add support for callbacks on end of playback reached
+        var self = this;
+        L.Playback.Clock.prototype.initialize.call(
+                this, 
+                this._trackController, 
+                callbackTimeChange, 
+                function (endTimestamp) {
+                    if (self.options.playControl) {
+                        // HACK: switch playback.playControl._button back to "Play"
+                        self.playControl._button.innerHTML = 'Play';
+                    }
+                    // whoever might be interested to know...
+                    self._map.fire('playback:end:playback');
+                }, 
+                this.options);
+
+        if (this.options.tracksLayer) {
+            this._tracksLayer = new L.Playback.TracksLayer(map, options);
+        }
+
+        this.setData(geoJSON);
+
+        if (this.options.playControl) {
+            this.playControl = new L.Playback.PlayControl(this);
+            this.playControl.addTo(map);
+        }
+
+        if (this.options.sliderControl) {
+            this.sliderControl = new L.Playback.SliderControl(this);
+            this.sliderControl.addTo(map);
+        }
+
+        if (this.options.dateControl) {
+            this.dateControl = new L.Playback.DateControl(this, options);
+            this.dateControl.addTo(map);
+        }
+
+    },
+
+    clearData : function(){
+        this._trackController.clearTracks();
+
+        if (this._tracksLayer) {
+            this._tracksLayer.clearLayer();
+        }
+    },
+
+    setData : function (geoJSON) {
+        this.clearData();
+
+        this.addData(geoJSON, this.getTime());
+
+        this.setCursor(this.getStartTime());
+    },
+
+    // bad implementation
+    addData : function (geoJSON, ms) {
+        // return if data not set
+        if (!geoJSON) {
+            return;
+        }
+
+        if (geoJSON instanceof Array) {
+            for (var i = 0, len = geoJSON.length; i < len; i++) {
+                this._trackController.addTrack(new L.Playback.Track(geoJSON[i], this.options), ms);
+            }
+        } else {
+            this._trackController.addTrack(new L.Playback.Track(geoJSON, this.options), ms);
+        }
+
+        this._map.fire('playback:set:data');
+
+        if (this.options.tracksLayer) {
+            this._tracksLayer.addLayer(geoJSON);
+        }                  
+    },
+
+    destroy: function() {
+        this.clearData();
+        if (this.playControl) {
+            this._map.removeControl(this.playControl);
+        }
+        if (this.sliderControl) {
+            this._map.removeControl(this.sliderControl);
+        }
+        if (this.dateControl) {
+            this._map.removeControl(this.dateControl);
+        }
+    }
+});
 
 L.Map.addInitHook(function () {
     if (this.options.playback) {

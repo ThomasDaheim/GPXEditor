@@ -33,7 +33,7 @@ var playbackOptions = {
     playControl: true,
     dateControl: true,
     tracksLayer: false,
-//    sliderControl: true,
+    sliderControl: true,
     speed: 10,
     orientIcons: false,
     marker: markerOptions,
@@ -66,10 +66,3 @@ function destroyPlayback() {
     playback.destroy();
     playback = null;
 }
-
-// TODO: not yet working
-//function endPlayback(e) {
-//    // switch playback.playControl._button back to "Play" - should be done in LeafletPlayback.js!
-//    playback.playControl._button.innerHTML = 'Play';
-//}
-//myMap.on('playback:end:playback', endPlayback);
