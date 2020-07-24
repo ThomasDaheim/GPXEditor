@@ -31,15 +31,17 @@ L.Playback.Util = L.Class.extend({
             var s = d.getSeconds();
             var tms = time / 1000;
             var dec = (tms - Math.floor(tms)).toFixed(2).slice(1);
-            var mer = 'AM';
-            if (h > 11) {
-                h %= 12;
-                mer = 'PM';
-            } 
-            if (h === 0) h = 12;
+            // european time format, please
+//            var mer = 'AM';
+//            if (h > 11) {
+//                h %= 12;
+//                mer = 'PM';
+//            } 
+//            if (h === 0) h = 12;
             if (m < 10) m = '0' + m;
             if (s < 10) s = '0' + s;
-            return h + ':' + m + ':' + s + dec + ' ' + mer;
+//            return h + ':' + m + ':' + s + dec + ' ' + mer;
+            return h + ':' + m + ':' + s + dec;
         },
 
         ParseGPX: function(gpx) {
@@ -902,8 +904,10 @@ L.Playback.SliderControl = L.Control.extend({
             self._slider.value = ms;
         });
         
-        
-        map.on('playback:add_tracks', function() {
+
+        // TFE, 20200724: there is no playback:add_tracks event
+//        map.on('playback:add_tracks', function() {
+        map.on('playback:set:data', function() {
             self._slider.min = playback.getStartTime();
             self._slider.max = playback.getEndTime();
             self._slider.value = playback.getTime();

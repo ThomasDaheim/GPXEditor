@@ -23,47 +23,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+/* 
+    Created on : 24.07.2020, 18:07:13
+    Author     : thomas
+*/
 
-var markerOptions = {
-    // options for marker since default icon can't be read from js in jar...
-    icon: blueIcon,
-    zIndexOffset: 3000
-}
-var playbackOptions = {
-    playControl: true,
-    dateControl: true,
-    tracksLayer: false,
-    sliderControl: true,
-    speed: 10,
-    orientIcons: false,
-    marker: markerOptions,
-};
-var playback = null;
-
-function playbackGeoJSON(geojson) {
-//    jscallback.log('playbackGeoJSON: ' + geojson);
-
-    // only one playback at a time, please
-    destroyPlayback();
-    playback = new L.Playback(myMap, null, null, playbackOptions);
-        
-    playback.clearData();
-    playback.setData(geojson);
-    // TFE, 20200724: don't play automatically
-    // click the button if available - otherwise it will still be showing "Play"
-//    if (playbackOptions.playControl) {
-//        playback.playControl._button.click();
-//    } else {
-//        playback.start();
-//    }
+/* borrowed from https://www.w3schools.com/howto/howto_js_rangeslider.asp */
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;  
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
 }
 
-function destroyPlayback() {
-    if (typeof playback === 'undefined' || playback === null) {
-        return;
-    }
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%; 
+  background: #2A81CB;
+  cursor: pointer;
+}
 
-//    jscallback.log('destroyPlayback');
-    playback.destroy();
-    playback = null;
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2A81CB;
+  cursor: pointer;
 }

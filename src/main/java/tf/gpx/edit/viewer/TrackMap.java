@@ -412,6 +412,7 @@ public class TrackMap extends LeafletMapView {
             addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
+            addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
 
             // geolocation not working in webview
 //            // support for locate
