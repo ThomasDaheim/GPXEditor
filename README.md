@@ -27,6 +27,8 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ### Update v5.2
 
+* added option to playback tracks / segments with date values
+
 ### Update v5.1
 
 * added GPXEditor.bat to show usage of --add-modules and --add-exports
@@ -372,6 +374,7 @@ Other things used internally:
 * leaflet.color-markers: https://github.com/pointhi/leaflet-color-markers
 * leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet.leafletplayback: https://github.com/hallahan/LeafletPlayback + some own fixes & improvements
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
 * leaflet.search: https://github.com/stefanocudini/leaflet-search
