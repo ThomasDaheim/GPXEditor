@@ -116,7 +116,7 @@ public class GPXFile extends GPXMeasurable {
         } catch (Exception ex) {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         if (myGPX.getMetadata() != null) {
             myGPXMetadata.add(new GPXMetadata(this, myGPX.getMetadata()));
         }
