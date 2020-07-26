@@ -350,11 +350,11 @@ public class GPXAlgorithms {
     /**
      * Find points where "nothing happened":
      * When e.g.sitting down for a while and keeping the GPS on you will get a cluster of nearby points.Including those points in calculation of e.g. distances leads to wrong values since they oscilate around
- (approx. 30m x 30m for Garmin indoors) instead of being in the same spot.
- 
- IDEA:
-   1) go over each point and find all repv + next points within a given bounding box
-   2) if this count is > limit than add to list of locations where "nothing happened"
+     * (approx. 30m x 30m for Garmin indoors) instead of being in the same spot.
+     *
+     * IDEA:
+     *   1) go over each point and find all prev + next points within a given bounding box
+     *   2) if this count is > limit than add to list of locations where "nothing happened"
      *   3) Optional: use this list to replace all prev + next point locations by the center
      * 
      * There might be other approaches to do this but this is the simple one I came up with :-)

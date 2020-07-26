@@ -27,11 +27,11 @@ package tf.gpx.edit.values;
  */
 
 
-import com.hs.gpxparser.modal.Copyright;
-import com.hs.gpxparser.modal.Email;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Metadata;
-import com.hs.gpxparser.modal.Person;
+import me.himanshusoni.gpxparser.modal.Copyright;
+import me.himanshusoni.gpxparser.modal.Email;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Person;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;

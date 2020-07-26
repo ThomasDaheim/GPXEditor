@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
-import com.hs.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
@@ -196,7 +196,6 @@ public class GPXTreeTableView {
                                         final GPXMetadata newStuff = new GPXMetadata((GPXFile) item, new Metadata());
                                         newStuff.setName("New Metadata");
                                         ((GPXFile) item).setGPXMetadata(newStuff);
-                                        ((GPXFile) item).setHeaderAndMeta();
                                     });
                                     newItem.getItems().add(newMetadata);
                                 }

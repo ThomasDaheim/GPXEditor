@@ -26,9 +26,13 @@
 package tf.gpx.edit.actions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -41,6 +45,10 @@ public class InsertWaypointsAction extends InsertDeleteWaypointsAction {
     private GPXLineItem myTarget = null;
     private List<GPXWaypoint> myWaypoints = null;
     private GPXEditor.RelativePosition myPosition = null;
+    
+    // TFE, 20200726: need to extend xmnls list in gpxfile in case of copy between different files
+    private boolean copyXmnls;
+    private HashMap<String, String> myXmnls = null;
     
     private InsertWaypointsAction() {
         super(LineItemAction.INSERT_WAYPOINTS, null);
@@ -98,5 +106,41 @@ public class InsertWaypointsAction extends InsertDeleteWaypointsAction {
         }
         
         lineItemCluster.put(realTarget, pairs);
+        
+        // check if we have extensions in waypoints from other gpxfiles and therefore might need to copy xmnls
+        copyXmnls = myWaypoints.stream().filter((t) -> {
+            return !myTarget.getGPXFile().equals(t.getGPXFile()) && (t.getWaypoint().getExtensionsParsed() > 0);
+        }).findFirst().isPresent();
+        myXmnls = myTarget.getGPXFile().getGPX().getXmlns();
+    }
+    
+    @Override
+    protected boolean doDelete() {
+        boolean result = super.doDelete();
+
+        // restore original xmnls set
+        if (copyXmnls) {
+            myTarget.getGPXFile().getGPX().setXmlns(myXmnls);
+        }
+        
+        return result;
+    }
+    
+    @Override
+    protected boolean doInsert() {
+        boolean result = super.doInsert();
+        
+        // add xmnls from all other gpxfiles
+        if (copyXmnls) {
+            Set<GPXFile> gpxFiles = myWaypoints.stream().map((t) -> {
+                return t.getGPXFile();
+            }).collect(Collectors.toSet());
+
+            gpxFiles.stream().forEach((t) -> {
+                myTarget.getGPXFile().extendHeader(t);
+            });
+        }
+        
+        return result;
     }
 }

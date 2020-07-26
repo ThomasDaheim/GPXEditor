@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.actions;
 
-import com.hs.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Link;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;

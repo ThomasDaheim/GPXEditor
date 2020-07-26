@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.extension;
 
-import com.hs.gpxparser.extension.DummyExtensionHolder;
+import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,7 @@ import org.w3c.dom.NodeList;
  * http://gpsbabel.2324879.n4.nabble.com/PATCH-Humminbird-extensions-in-gpx-files-td7330.html - <h:*>
  * https://help.routeyou.com/en/topic/view/262/gpxm-file - <gpxmedia>
  * 
- * pix and more google earth extensions extensions are part of metadata and look like this:
+ * pix and more google earth extensions are part of metadata and look like this:
  * 
 <pmx:GoogleEarth>
     <pmx:LastOutput>C:\WUTemp\Test.kml</pmx:LastOutput>
@@ -82,30 +82,43 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
     private final static String LINE_SEP_QUOTE = LINE_SEP.replace("\\", "\\\\");
     
     public enum ExtensionType {
-        GarminGPX("gpxx:", "GarminGPX"),
-        GarminTrkpt("gpxtpx:", "GarminTrackPoint"),
-        GarminTrksts("gpxtrkx:", "GarminTrackStats"),
-        GarminWpt("wptx1:", "GarminWaypoint"),
-        GarminAccl("gpxacc:", "GarminAccl"),
-        PixAndMore("pmx:GoogleEarth", "PixAndMore"),
-        Humminbird("h:", "Humminbird"),
-        GPXM("gpxmedia", "GPXM"),
-        ClueTrust("gpxdata:", "ClueTrust");
+        GarminGPX("gpxx", "GarminGPX", "http://www.garmin.com/xmlschemas/GpxExtensions/v3", "http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd"),
+        GarminTrkpt("gpxtpx", "GarminTrackPoint", "http://www.garmin.com/xmlschemas/TrackPointExtension/v2", "http://www.garmin.com/xmlschemas/TrackPointExtensionv2.xsd"),
+        GarminTrksts("gpxtrkx", "GarminTrackStats", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1", "http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd"),
+        GarminWpt("wptx1", "GarminWaypoint", "http://www.garmin.com/xmlschemas/WaypointExtension/v1", "http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd"),
+        GarminAccl("gpxacc", "GarminAccl", "http://www.garmin.com/xmlschemas/AccelerationExtension/v1", "http://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd"),
+        Locus("locus", "LocusMap", "http://www.locusmap.eu", "");
+//        PixAndMore("pmx:GoogleEarth:", "PixAndMore", "", ""),
+//        Humminbird("h:", "Humminbird", "", ""),
+//        GPXM("gpxmedia:", "GPXM", "", ""),
+//        ClueTrust("gpxdata:", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "");
         
-        private String myStartsWith;
-        private String myName;
+        private final String myNamespace;
+        private final String myName;
+        private final String mySchemaDefinition;
+        private final String mySchemaLocation;
         
-        ExtensionType(final String startsWith, final String name) {
-            myStartsWith = startsWith;
+        private ExtensionType(final String namespace, final String name, final String schemaDefinition, final String schemaLocation) {
+            myNamespace = namespace;
             myName = name;
+            mySchemaDefinition = schemaDefinition;
+            mySchemaLocation = schemaLocation;
         }
         
-        public String getStartsWith() {
-            return myStartsWith;
+        public String getNamespace() {
+            return myNamespace;
         }
         
         public String getName() {
             return myName;
+        }
+        
+        public String getSchemaDefinition() {
+            return mySchemaDefinition;
+        }
+        
+        public String getSchemaLocation() {
+            return mySchemaLocation;
         }
     }
     
@@ -203,7 +216,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             for (int i = 0; i < myNodeList.getLength(); i++) {
                 final Node myNode = myNodeList.item(i);
                 
-                if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getStartsWith())) {
+                if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getNamespace())) {
                     extensionNodes.put(type, myNode);
                     
                     result = true;

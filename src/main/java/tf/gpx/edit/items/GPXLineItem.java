@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Bounds;
-import com.hs.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Bounds;
+import me.himanshusoni.gpxparser.modal.Extension;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -277,7 +277,7 @@ public abstract class GPXLineItem {
     public abstract ObservableList<GPXRoute> getGPXRoutes();
     public abstract void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints);
     public abstract ObservableList<GPXWaypoint> getGPXWaypoints();
-    // get the actual content of com.hs.gpxparser.* type
+    // get the actual content of me.himanshusoni.gpxparser.* type
     public abstract Extension getContent();
     // TFE, 20180214: wayopints can be below tracksegments, routes and file
     // therefore we need a new parameter to indicate what sort of waypoints we want

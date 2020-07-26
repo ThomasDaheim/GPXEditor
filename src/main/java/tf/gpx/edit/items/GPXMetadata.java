@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

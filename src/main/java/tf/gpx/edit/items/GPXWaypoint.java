@@ -25,14 +25,14 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Bounds;
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.TrackSegment;
-import com.hs.gpxparser.modal.Waypoint;
-import com.hs.gpxparser.type.Fix;
+import me.himanshusoni.gpxparser.modal.Bounds;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import me.himanshusoni.gpxparser.type.Fix;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;

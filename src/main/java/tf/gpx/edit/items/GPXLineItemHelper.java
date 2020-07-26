@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Extension;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;

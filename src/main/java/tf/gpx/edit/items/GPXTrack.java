@@ -25,10 +25,10 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;

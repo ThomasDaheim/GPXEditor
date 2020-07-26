@@ -78,7 +78,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.7'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
-    compile 'gpx-parser:gpx-parser:1.2'
+    compile 'me.himanshusoni.gpxparser:gpx-parser:1.12'
     compile 'org.jzy3d:jzy3d-api:1.0.2'
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
     compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'

@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit;
 
-import com.hs.gpxparser.modal.Waypoint;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 
 /**
  *

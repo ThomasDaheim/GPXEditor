@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.extension;
 
-import com.hs.gpxparser.GPXConstants;
+import me.himanshusoni.gpxparser.GPXConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,18 +50,24 @@ public class GarminExtensionWrapper {
     private final static GarminExtensionWrapper INSTANCE = new GarminExtensionWrapper();
     
     // we can only handle GarminGPX at the moment
-    private static final String GARMIN_PREFIX = ExtensionType.GarminGPX.getStartsWith();
+    private static final String GARMIN_PREFIX = ExtensionType.GarminGPX.getNamespace();
 
     public enum GarminExtension {
-        WaypointExtension,
-        RouteExtension,
-        RoutePointExtension,
-        TrackExtension,
-        TrackPointExtension;
+        WaypointExtension(ExtensionType.GarminWpt),
+        RouteExtension(ExtensionType.GarminWpt),
+        RoutePointExtension(ExtensionType.GarminTrkpt),
+        TrackExtension(ExtensionType.GarminWpt),
+        TrackPointExtension(ExtensionType.GarminTrkpt);
+        
+        private final ExtensionType myExtType;
+        
+        private GarminExtension(final ExtensionType extType) {
+            myExtType = extType;
+        }
         
         @Override
         public String toString() {
-            return GARMIN_PREFIX + name();
+            return myExtType.getNamespace() + ":" + name();
         }
     }
     

@@ -25,15 +25,15 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.GPXParser;
-import com.hs.gpxparser.GPXWriter;
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Metadata;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.Waypoint;
+import me.himanshusoni.gpxparser.GPXParser;
+import me.himanshusoni.gpxparser.GPXWriter;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,18 +42,23 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
@@ -67,6 +72,12 @@ import tf.helper.general.ObjectsHelper;
  * @author Thomas
  */
 public class GPXFile extends GPXMeasurable {
+    protected static final String SCHEMALOCATION = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
+            DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaLocation();
+
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
@@ -83,6 +94,9 @@ public class GPXFile extends GPXMeasurable {
         // create empty gpx
         myGPX = new GPX();
         
+        // TFE, 20200726: initialize header data & meta data
+        setHeader();
+
         myGPXTracks.addListener(changeListener);
         myGPXRoutes.addListener(changeListener);
         myGPXWaypoints.addListener(changeListener);
@@ -137,7 +151,7 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // TFE, 20180201: update header data & meta data
-        setHeaderAndMeta();
+        setHeader();
         
         myGPXTracks.addListener(changeListener);
         myGPXRoutes.addListener(changeListener);
@@ -188,7 +202,7 @@ public class GPXFile extends GPXMeasurable {
         acceptVisitor(new GPXRenumberWorker());
         
         // update bounds
-        setHeaderAndMeta();
+        updateMetadata();
         
         final GPXWriter writer = new GPXWriter();
         writer.addExtensionParser(DefaultExtensionParser.getInstance());
@@ -209,36 +223,88 @@ public class GPXFile extends GPXMeasurable {
         return result;
     }
     
-    public final void setHeaderAndMeta() {
+    public final void setHeader() {
         myGPX.setCreator(AppInfo.getInstance().getAppName() + " - " + AppInfo.getInstance().getAppVersion());
         myGPX.setVersion("1.1");
                 
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
         // TFE, 20200405: url changed for extensions xsd... so sync with authentic garmin header
-//<gpx xmlns="http://www.topografix.com/GPX/1/1" 
-//xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" 
-//xmlns:gpxtrkx="http://www.garmin.com/xmlschemas/TrackStatsExtension/v1" 
-//xmlns:wptx1="http://www.garmin.com/xmlschemas/WaypointExtension/v1" 
-//xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
-//xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-//xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd 
-//  http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd 
-//  http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd 
-//  http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd 
-//  http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">      
-        myGPX.addXmlns("xmlns:gpxx", "http://www.garmin.com/xmlschemas/GpxExtensions/v3");
-        myGPX.addXmlns("xmlns:gpxtrkx", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1");
-        myGPX.addXmlns("xmlns:wptx1", "http://www.garmin.com/xmlschemas/WaypointExtension/v1");
-        myGPX.addXmlns("xmlns:gpxtpx", "http://www.garmin.com/xmlschemas/TrackPointExtension/v1");
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition());
         myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        final String schemaLocation = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
-                "http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd" + " " +
-                "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd" + " " +
-                "http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd" + " " +
-                "http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd";
-        myGPX.addXmlns("xsi:schemaLocation", schemaLocation);
         
+        // extend existing xsi:schemaLocation, if any
+        myGPX.addXmlns("xsi:schemaLocation", extendSchemaLocation(SCHEMALOCATION));
+    }
+    
+    public void extendHeader(final GPXFile otherFile) {
+        if (this.equals(otherFile)) {
+            // nothing to do
+            return;
+        }
+        
+        // TFE, 20200726: bug found in copy & paste
+        // if you copy items with extensions across files you might also want to copy the necessary Xmlns required for it
+        // and be sure to handle all the NULLs we can have
+        final HashMap<String, String> myXmlns = new HashMap<>();
+        if (myGPX.getXmlns() != null) {
+            myXmlns.putAll(myGPX.getXmlns());
+        }
+        String mySchemaLocation = "";
+        if (myXmlns.containsKey("xsi:schemaLocation")) {
+            mySchemaLocation = myXmlns.remove("xsi:schemaLocation");
+        }
+        
+        final HashMap<String, String> otherXmlns = new HashMap<>();
+        if (otherFile.myGPX.getXmlns() != null) {
+            otherXmlns.putAll(otherFile.myGPX.getXmlns());
+        }
+        String otherSchemaLocation = "";
+        if (otherXmlns.containsKey("xsi:schemaLocation")) {
+            otherSchemaLocation = otherXmlns.remove("xsi:schemaLocation");
+        }
+        
+        // add all other Xmlns to ours - xsi:schemaLocation will be treated in a separate step
+        for (Entry<String, String> otherEntry: otherXmlns.entrySet()) {
+            // check if we have the same entry but with a different value AND SCREAM FOR HELP
+            if (myXmlns.containsKey(otherEntry.getKey())) {
+                if (!myXmlns.get(otherEntry.getKey()).equals(otherXmlns.get(otherEntry.getKey()))) {
+                    System.out.println("Houston, we have a problem with " + otherEntry.getKey() + " xmlns entries.");
+                }
+            } else {
+                // we found a new one
+                myXmlns.put(otherEntry.getKey(), otherEntry.getValue());
+            }
+        }
+        
+        // and now for xsi:schemaLocation
+        myXmlns.put("xsi:schemaLocation", extendSchemaLocation(otherSchemaLocation));
+        
+        myGPX.setXmlns(myXmlns);
+    }
+    
+    private String extendSchemaLocation(final String otherSchemaLocation) {
+        final HashMap<String, String> myXmlns = new HashMap<>();
+        if (myGPX.getXmlns() != null) {
+            myXmlns.putAll(myGPX.getXmlns());
+        }
+        String mySchemaLocation = "";
+        if (myXmlns.containsKey("xsi:schemaLocation")) {
+            mySchemaLocation = myXmlns.remove("xsi:schemaLocation");
+        }
+
+        // xsi:schemaLocation is a list of strings separated by SPACE that we need to compare
+        final Set<String> mySchemaLocations = new HashSet<>(Arrays.asList(mySchemaLocation.split(" ")));
+        final Set<String> otherSchemaLocations = new HashSet<>(Arrays.asList(otherSchemaLocation.split(" ")));
+        mySchemaLocations.addAll(otherSchemaLocations);
+
+        return mySchemaLocations.stream().collect(Collectors.joining(" ")).strip();
+    }
+    
+    private void updateMetadata() {
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
 
@@ -249,17 +315,14 @@ public class GPXFile extends GPXMeasurable {
 
             // add link to me if not already present
             HashSet<Link> links = metadata.getLinks();
-            if (links == null) {
-                links = new HashSet<>();
+            if (links != null) {
+                if (!links.stream().anyMatch(link -> (link != null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
+                    links.add(new Link(GPXMetadata.HOME_LINK));
+                }
+                metadata.setLinks(links);
             }
-            if (!links.stream().anyMatch(link -> (link!=null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
-                links.add(new Link(GPXMetadata.HOME_LINK));
-            }
-            metadata.setLinks(links);
 
             setGPXMetadata(new GPXMetadata(this, metadata));
-            
-            resetHasUnsavedChanges();
         }
     }
     
@@ -374,6 +437,8 @@ public class GPXFile extends GPXMeasurable {
         if (gpxMetadata != null) {
             myGPXMetadata.add(gpxMetadata);
             myGPX.setMetadata(gpxMetadata.getMetadata());
+            
+            updateMetadata();
         } else {
             myGPX.setMetadata(null);
         }

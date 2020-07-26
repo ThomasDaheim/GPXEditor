@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.main;
 
-import com.hs.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -1099,9 +1099,10 @@ public class GPXEditor implements Initializable {
             return;
         }
 
+        // TODO: convert into acction
+        boolean insertDone = false;
         for (GPXMeasurable item : items) {
             final GPXLineItem.GPXLineItemType insertType = item.getType();
-            final GPXLineItem.GPXLineItemType locationType = target.getType();
 
             // TFE, 20190822: items a clone since we might loose items after we have removed it
             final GPXMeasurable insertReal = item.cloneMe(true);
@@ -1144,16 +1145,38 @@ public class GPXEditor implements Initializable {
                     break;
                 case GPXTrack:
                     locationReal.getGPXTracks().add(insertIndex, (GPXTrack) insertReal);
+                    insertDone = true;
                     break;
                 case GPXTrackSegment:
                     locationReal.getGPXTrackSegments().add(insertIndex, (GPXTrackSegment) insertReal);
+                    insertDone = true;
                     break;
                 case GPXRoute:
                     locationReal.getGPXRoutes().add(insertIndex, (GPXRoute) insertReal);
+                    insertDone = true;
                     break;
                 default:
             }
         }
+        
+        // TFE, 20200726: need to extend xmnls list in gpxfile in case of copy between different files
+        if (insertDone) {
+            // check if we have extensions in measurables from other gpxfiles and therefore might need to copy xmnls
+            final boolean copyXmnls = items.stream().filter((t) -> {
+                return !target.getGPXFile().equals(t.getGPXFile()) && (t.getContent().getExtensionsParsed() > 0);
+            }).findFirst().isPresent();
+            
+            if (copyXmnls) {
+                Set<GPXFile> gpxFiles = items.stream().map((t) -> {
+                    return t.getGPXFile();
+                }).collect(Collectors.toSet());
+
+                gpxFiles.stream().forEach((t) -> {
+                    target.getGPXFile().extendHeader(t);
+                });
+            }
+        }
+
 
         gpxFileList.getSelectionModel().clearSelection();
         gpxFileList.getSelectionModel().select(selectPosition);

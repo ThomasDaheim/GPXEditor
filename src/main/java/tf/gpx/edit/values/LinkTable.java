@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Link;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;

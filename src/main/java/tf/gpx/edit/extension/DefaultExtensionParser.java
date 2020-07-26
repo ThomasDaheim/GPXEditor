@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.extension;
 
-import com.hs.gpxparser.GPXConstants;
-import com.hs.gpxparser.extension.DummyExtensionParser;
+import me.himanshusoni.gpxparser.GPXConstants;
+import me.himanshusoni.gpxparser.extension.DummyExtensionParser;
 import org.w3c.dom.Node;
 
 /**

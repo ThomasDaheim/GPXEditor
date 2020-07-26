@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.type.Fix;
+import me.himanshusoni.gpxparser.type.Fix;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

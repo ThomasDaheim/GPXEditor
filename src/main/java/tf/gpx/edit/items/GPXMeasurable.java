@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Bounds;
+import me.himanshusoni.gpxparser.modal.Bounds;
 import java.util.Date;
 import java.util.List;
 import javafx.collections.ObservableList;
