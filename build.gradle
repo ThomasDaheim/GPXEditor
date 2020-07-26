@@ -11,10 +11,17 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
 apply plugin: 'idea'
-idea.module.downloadJavadoc = true
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
@@ -194,3 +201,5 @@ jar {
         )
     }
 }
+
+build.finalizedBy(install)

@@ -297,8 +297,9 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // xsi:schemaLocation is a list of strings separated by SPACE that we need to compare
-        final Set<String> mySchemaLocations = new HashSet<>(Arrays.asList(mySchemaLocation.split(" ")));
-        final Set<String> otherSchemaLocations = new HashSet<>(Arrays.asList(otherSchemaLocation.split(" ")));
+        // use LinkedHashSet to keep same order of entries
+        final Set<String> mySchemaLocations = new LinkedHashSet<>(Arrays.asList(mySchemaLocation.split(" ")));
+        final Set<String> otherSchemaLocations = new LinkedHashSet<>(Arrays.asList(otherSchemaLocation.split(" ")));
         mySchemaLocations.addAll(otherSchemaLocations);
 
         return mySchemaLocations.stream().collect(Collectors.joining(" ")).strip();
