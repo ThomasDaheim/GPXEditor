@@ -73,10 +73,9 @@ import tf.helper.general.ObjectsHelper;
  */
 public class GPXFile extends GPXMeasurable {
     protected static final String SCHEMALOCATION = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
-            DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaLocation() + " " +
-            DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaLocation() + " " +
-            DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaLocation() + " " +
-            DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaLocation();
+            DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaLocation();
 
     private String myGPXFilePath;
     private String myGPXFileName;
@@ -230,10 +229,10 @@ public class GPXFile extends GPXMeasurable {
         // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
         // TFE, 20200405: url changed for extensions xsd... so sync with authentic garmin header
-        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition());
-        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition());
-        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition());
-        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace(), DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition());
+        // TODO: add only those that are actually present in the gpx file...
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition());
         myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         
         // extend existing xsi:schemaLocation, if any
@@ -323,7 +322,8 @@ public class GPXFile extends GPXMeasurable {
                 metadata.setLinks(links);
             }
 
-            setGPXMetadata(new GPXMetadata(this, metadata));
+            myGPXMetadata.setAll(new GPXMetadata(this, metadata));
+            myGPX.setMetadata(metadata);
         }
     }
     
@@ -436,11 +436,12 @@ public class GPXFile extends GPXMeasurable {
         
         // TFE, 20191230: need a way to delete metadata as well...
         if (gpxMetadata != null) {
-            myGPXMetadata.add(gpxMetadata);
+            myGPXMetadata.setAll(gpxMetadata);
             myGPX.setMetadata(gpxMetadata.getMetadata());
             
             updateMetadata();
         } else {
+            myGPXMetadata.clear();
             myGPX.setMetadata(null);
         }
 

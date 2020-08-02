@@ -81,34 +81,41 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
     private final static String LINE_SEP = System.lineSeparator();
     private final static String LINE_SEP_QUOTE = LINE_SEP.replace("\\", "\\\\");
     
-    public enum ExtensionType {
-        GarminGPX("gpxx", "GarminGPX", "http://www.garmin.com/xmlschemas/GpxExtensions/v3", "http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd"),
-        GarminTrkpt("gpxtpx", "GarminTrackPoint", "http://www.garmin.com/xmlschemas/TrackPointExtension/v2", "http://www.garmin.com/xmlschemas/TrackPointExtensionv2.xsd"),
-        GarminTrksts("gpxtrkx", "GarminTrackStats", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1", "http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd"),
-        GarminWpt("wptx1", "GarminWaypoint", "http://www.garmin.com/xmlschemas/WaypointExtension/v1", "http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd"),
-        GarminAccl("gpxacc", "GarminAccl", "http://www.garmin.com/xmlschemas/AccelerationExtension/v1", "http://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd"),
-        Locus("locus", "LocusMap", "http://www.locusmap.eu", "");
-//        PixAndMore("pmx:GoogleEarth:", "PixAndMore", "", ""),
-//        Humminbird("h:", "Humminbird", "", ""),
-//        GPXM("gpxmedia:", "GPXM", "", ""),
-//        ClueTrust("gpxdata:", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "");
+    public enum ExtensionClass implements IGPXExtension {
+        GarminGPX("gpxx", "GarminGPX", "http://www.garmin.com/xmlschemas/GpxExtensions/v3", "https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd"),
+        GarminTrkpt("gpxtpx", "GarminTrackPoint", "http://www.garmin.com/xmlschemas/TrackPointExtension/v2", "https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd"),
+        GarminTrksts("gpxtrkx", "GarminTrackStats", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1", "https://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd"),
+        GarminAccl("gpxacc", "GarminAccl", "http://www.garmin.com/xmlschemas/AccelerationExtension/v1", "https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd"),
+        Locus("locus", "LocusMap", "http://www.locusmap.eu", ""),
+        // TFE, 20200802: gpx_style is tricky... no clear usage to be found here
+        // 1) as namespace like <gpx_style:line> (https://forum.locusmap.eu/index.php?topic=6749.0)
+        // 2) directly without xml namespace like <line xmlns="http://www.topografix.com/GPX/gpx_style/0/2"> (https://www.gpsvisualizer.com/examples/barrett_spur.gpx.txt)
+        // we try to handle both here
+        GPXStyle("gpx_style", "GPXStyle", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd"),
+        Line("", "line", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd");
+//        PixAndMore("pmx:GoogleEarth", "PixAndMore", "", ""),
+//        Humminbird("h", "Humminbird", "", ""),
+//        GPXM("gpxmedia", "GPXM", "", ""),
+//        ClueTrust("gpxdata", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "");
         
         private final String myNamespace;
         private final String myName;
         private final String mySchemaDefinition;
         private final String mySchemaLocation;
         
-        private ExtensionType(final String namespace, final String name, final String schemaDefinition, final String schemaLocation) {
+        private ExtensionClass(final String namespace, final String name, final String schemaDefinition, final String schemaLocation) {
             myNamespace = namespace;
             myName = name;
             mySchemaDefinition = schemaDefinition;
             mySchemaLocation = schemaLocation;
         }
         
+        @Override
         public String getNamespace() {
             return myNamespace;
         }
         
+        @Override
         public String getName() {
             return myName;
         }
@@ -123,7 +130,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
     }
     
     // "cache" for known extensions: once holdsExtensionType is called the result is stored to speed up further lookups
-    private Map<ExtensionType, Node> extensionNodes = new HashMap<>();
+    private Map<IGPXExtension, Node> extensionNodes = new HashMap<>();
 
     public DefaultExtensionHolder() {
         super();
@@ -131,6 +138,14 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
 
     public DefaultExtensionHolder(final NodeList childNodes) {
         super(childNodes);
+    }
+    
+    public static String nameWithNamespace(final IGPXExtension ext, final String name) {
+        if (!ext.getNamespace().isEmpty()) {
+            return ext.getNamespace() + ":" + name;
+        } else {
+            return name;
+        }
     }
     
     // https://stackoverflow.com/questions/4412848/xml-node-to-string-in-java
@@ -187,18 +202,18 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         return result;
     }
     
-    public Node getExtensionForType(final ExtensionType type) {
+    public Node getExtensionForClass(final IGPXExtension type) {
         Node result = null;
         
-        // make ssure "cache" gets filled
-        if (holdsExtensionType(type)) {
+        // make sure "cache" gets filled
+        if (holdsExtensionClass(type)) {
             result = extensionNodes.get(type);
         }
         
         return result;
     }
     
-    public boolean holdsExtensionType(final ExtensionType type) {
+    private boolean holdsExtensionClass(final IGPXExtension type) {
         boolean result = false;
         
         if (extensionNodes.containsKey(type)) {
@@ -212,11 +227,19 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         // check all nodes in list for startswith
         final NodeList myNodeList = getNodeList();
         if (myNodeList != null) {
+            // TFE, 20200802: we can have extensions without a namespace :-(
+            String compareName;
+            if (!type.getNamespace().isEmpty()) {
+                compareName = type.getNamespace() + ":";
+            } else {
+                compareName = type.getName();
+            }
+            
             // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
             for (int i = 0; i < myNodeList.getLength(); i++) {
                 final Node myNode = myNodeList.item(i);
                 
-                if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(type.getNamespace())) {
+                if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(compareName)) {
                     extensionNodes.put(type, myNode);
                     
                     result = true;

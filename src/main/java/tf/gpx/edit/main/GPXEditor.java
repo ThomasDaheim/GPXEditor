@@ -903,35 +903,6 @@ public class GPXEditor implements Initializable {
             StatusBar.getInstance().setStatusFromFile(getCurrentGPXFileName());
         };
         gpxFileList.getSelectionModel().getSelectedItems().addListener(gpxFileListSelectionListener);
-        
-//        // selection change listener to populate the track table
-//        gpxFileListSelectedItemListener = (ObservableValue<? extends TreeItem<GPXLineItem>> observable, TreeItem<GPXLineItem> oldSelection, TreeItem<GPXLineItem> newSelection) -> {
-//            if (oldSelection != null) {
-//                if (newSelection != null || !oldSelection.equals(newSelection)) {
-//                    // reset any highlights from checking
-//                    final List<GPXWaypoint> waypoints = oldSelection.getValue().getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-//                    for (GPXWaypoint waypoint : waypoints) {
-//                        waypoint.setHighlight(false);
-//                    }
-//                }
-//            }
-//            if (newSelection != null) {
-//                showGPXWaypoints(newSelection.getValue(), true, true);
-//                
-//                if (GPXLineItem.GPXLineItemType.GPXTrackSegment.equals(newSelection.getValue().getType())) {
-//                    distributionsMenu.setDisable(false);
-//                    specialValuesMenu.setDisable(false);
-//                } else {
-//                    distributionsMenu.setDisable(true);
-//                    specialValuesMenu.setDisable(true);
-//                }
-//            } else {
-//                showGPXWaypoints(null, true, true);
-//                distributionsMenu.setDisable(true);
-//                specialValuesMenu.setDisable(true);
-//            }
-//        };
-//        gpxFileList.getSelectionModel().selectedItemProperty().addListener(gpxFileListSelectedItemListener);
     }
     public void removeGPXFileListListener() {
         if (!Platform.isFxApplicationThread()) {
@@ -1011,8 +982,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void deleteSelectedWaypoints() {
-        // all waypoints to remove - as copy since otherwise observablelist getAsString messed up by deletes
-        deleteWaypoints(new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems()));
+        deleteWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems());
     }
     
     public void deleteWaypoints(final List<GPXWaypoint> wayPoints) {
@@ -1040,7 +1010,6 @@ public class GPXEditor implements Initializable {
     }
     
     public void updateSelectedWaypointsInformation(final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue, final boolean doUndo) {
-        // all waypoints to remove - as copy since otherwise observablelist getAsString messed up by deletes
         final List<GPXLineItem> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         if(selectedWaypoints.isEmpty()) {
@@ -1330,81 +1299,7 @@ public class GPXEditor implements Initializable {
     }
 
     public void refillGPXWaypointList(final boolean updateViewer) {
-        // TFE, 20200103: not sure hwat below code does other than a simple???
-        // first it finds the matching gpxfile and then file/track/route that equals the lineitem and shows it
-        // so always the lineitem is shown again?!?
         showGPXWaypoints(getShownGPXMeasurables(), updateViewer, updateViewer);
-        
-//        final GPXLineItem lineItem = getShownGPXMeasurables().getAsString(0);
-//        if (lineItem != null) {
-//            // find the lineItem in the gpxFileList 
-//            
-//            // 1) find gpxFile
-//            final GPXFile gpxFile = lineItem.getGPXFile();
-//            final List<GPXFile> gpxFiles = 
-//                gpxFileList.getRoot().getChildren().stream().
-//                    filter((TreeItem<GPXLineItem> t) -> {
-//                        // so we need to search for all tracks from selection for each file
-//                        if (GPXLineItem.GPXLineItemType.GPXFile.equals(t.getValue().getType()) && gpxFile.equals(t.getValue().getGPXFile())) {
-//                            return true;
-//                        } else {
-//                            return false;
-//                        }
-//                    }).
-//                    map((TreeItem<GPXLineItem> t) -> {
-//                        return (GPXFile) t.getValue();
-//                    }).collect(Collectors.toList());
-//            
-//            if (gpxFiles.size() == 1) {
-//                GPXLineItem showItem = null;
-//                switch (lineItem.getType()) {
-//                    case GPXFile:
-//                        // 2) if currently a file is shown, show it again
-//                        showItem = gpxFiles.getAsString(0);
-//                        break;
-//                    case GPXTrack:
-//                        // else, find and show track or route
-//                        final List<GPXTrack> gpxTracks =
-//                                gpxFiles.getAsString(0).getGPXTracks().stream().
-//                                        filter((GPXTrack t) -> {
-//                                            // so we need to search for all tracks from selection for each file
-//                                            if (lineItem.equals(t)) {
-//                                                return true;
-//                                            } else {
-//                                                return false;
-//                                            }
-//                                        }).
-//                                        collect(Collectors.toList());
-//                        if (gpxTracks.size() == 1) {
-//                            showItem = gpxTracks.getAsString(0);
-//                        }
-//                        break;
-//                    case GPXRoute:
-//                        // else, find and show track or route
-//                        final List<GPXRoute> gpxGPXRoutes =
-//                                gpxFiles.getAsString(0).getGPXRoutes().stream().
-//                                        filter((GPXRoute t) -> {
-//                                            // so we need to search for all tracks from selection for each file
-//                                            if (lineItem.equals(t)) {
-//                                                return true;
-//                                            } else {
-//                                                return false;
-//                                            }
-//                                        }).
-//                                        collect(Collectors.toList());
-//                        if (gpxGPXRoutes.size() == 1) {
-//                            showItem = gpxGPXRoutes.getAsString(0);
-//                        }
-//                        break;
-//                    default:
-//                        // nothing found!!! probably somthing wrong... so better clear list
-//                        break;
-//                }
-//                showGPXWaypoints(Arrays.asList(showItem), updateViewer, updateViewer);
-//                
-//                System.out.println("refillGPXWaypointList: " + lineItem.equals(showItem));
-//            }
-//        }
     }
 
     private void saveAllFilesAction(final ActionEvent event) {
@@ -1463,7 +1358,7 @@ public class GPXEditor implements Initializable {
             for (TreeItem<GPXMeasurable> treeitem : gpxFiles) {
                 assert treeitem.getValue().isGPXFile();
 
-                result = closeFile(treeitem.getValue().getGPXFile());
+                result = result && closeFile(treeitem.getValue().getGPXFile());
             }
         }
         

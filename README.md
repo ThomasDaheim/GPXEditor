@@ -28,6 +28,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.2
 
 * added option to playback tracks / segments with date values
+* fixes around gpx xmnls headers
 
 ### Update v5.1
 
@@ -346,7 +347,7 @@ Explicit dependencies:
 * 'org.apache.commons:commons-text:1.7'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
-* 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
+* 'me.himanshusoni.gpxparser:gpx-parser:1.12'
 * 'org.jzy3d:jzy3d-api:1.0.2'
 * 'org.jzy3d:jzy3d-javafx:1.0.2'
 * 'org.controlsfx:controlsfx:11.0.1'

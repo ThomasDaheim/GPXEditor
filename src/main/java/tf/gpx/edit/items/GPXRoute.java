@@ -38,8 +38,8 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
@@ -91,9 +91,8 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
-                        GarminExtensionWrapper.GarminExtension.RouteExtension, 
-                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
+        final String nodeColor = KnownExtensionAttributes.getValueForAttribute(this.getContent(), 
+                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
         if (nodeColor != null && !nodeColor.isBlank()) {
             color = nodeColor;
         }
@@ -118,30 +117,25 @@ public class GPXRoute extends GPXMeasurable {
     
     @Override
     public void setColor(final String col) {
-        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
+        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
             setDefaultColor();
             return;
         }
 
         color = col;
-        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                this,
-                GarminExtensionWrapper.GarminExtension.RouteExtension, 
-                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
+        KnownExtensionAttributes.setValueForAttribute(this.getContent(),
+                KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, col);
 
         setHasUnsavedChanges();
     }
     
     @Override
     public void setDefaultColor() {
-        color = GarminExtensionWrapper.GarminDisplayColor.Blue.name();
-        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
-            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                    this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        color = GarminDisplayColor.Blue.name();
+        if (KnownExtensionAttributes.getValueForAttribute(this.getContent(),
+                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route) != null) {
+            KnownExtensionAttributes.setValueForAttribute(this.getContent(),
+                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, color);
         }
 
         setHasUnsavedChanges();

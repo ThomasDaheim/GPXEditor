@@ -38,7 +38,7 @@ import tf.gpx.edit.items.GPXFile;
  *
  * @author thomas
  */
-public class TestGPXHeader extends GPXFile {
+public class TestGPXExtensions extends GPXFile {
     @Before
     public void setUp() {
     }
@@ -61,17 +61,14 @@ public class TestGPXHeader extends GPXFile {
         Assert.assertNotNull(xmnls.get("xmlns:xsi"));
         Assert.assertEquals("http://www.w3.org/2001/XMLSchema-instance", xmnls.get("xmlns:xsi"));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace()));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace()));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace()));
-        
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace()));
 
         Assert.assertNotNull(xmnls.get("xsi:schemaLocation"));
         Assert.assertEquals(xmnls.get("xsi:schemaLocation"), SCHEMALOCATION);
@@ -94,21 +91,18 @@ public class TestGPXHeader extends GPXFile {
         Assert.assertNotNull(xmnls.get("xmlns:xsi"));
         Assert.assertEquals("http://www.w3.org/2001/XMLSchema-instance", xmnls.get("xmlns:xsi"));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminGPX.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminGPX.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace()));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminWpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminWpt.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace()));
         
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminTrkpt.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrkpt.getNamespace()));
-        
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.GarminTrksts.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.GarminTrksts.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace()));
 
         // here comes the merged stuff
-        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.Locus.getNamespace()));
-        Assert.assertEquals(DefaultExtensionHolder.ExtensionType.Locus.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionType.Locus.getNamespace()));
+        Assert.assertNotNull(xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.Locus.getNamespace()));
+        Assert.assertEquals(DefaultExtensionHolder.ExtensionClass.Locus.getSchemaDefinition(), xmnls.get("xmlns:" + DefaultExtensionHolder.ExtensionClass.Locus.getNamespace()));
         
         final String schemaLocation = xmnls.get("xsi:schemaLocation");
         Assert.assertNotNull(schemaLocation);

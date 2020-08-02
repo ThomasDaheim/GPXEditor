@@ -419,6 +419,7 @@ public abstract class GPXLineItem {
     }
     
     // TFE, 20190723: some color, please
+    // TODO: move to separate interface for LineStyle with default implementation
     public String getColor() {
         return "Black";
     }

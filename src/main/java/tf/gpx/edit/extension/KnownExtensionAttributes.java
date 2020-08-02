@@ -34,190 +34,164 @@ import javafx.scene.paint.Color;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import me.himanshusoni.gpxparser.modal.Extension;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import tf.gpx.edit.extension.DefaultExtensionHolder.ExtensionType;
-import tf.gpx.edit.items.GPXLineItem;
 
 /**
- * Wrapper for reading writing Garmin extension attributes.
+ * Wrapper for reading writing extension attributes.
  * Not planned (yet) as a fully fledged editor as in e.g. BaseCamp...
  * 
  * @author thomas
  */
-public class GarminExtensionWrapper {
-    private final static GarminExtensionWrapper INSTANCE = new GarminExtensionWrapper();
-    
-    // we can only handle GarminGPX at the moment
-    private static final String GARMIN_PREFIX = ExtensionType.GarminGPX.getNamespace();
+public class KnownExtensionAttributes {
+    private final static KnownExtensionAttributes INSTANCE = new KnownExtensionAttributes();
 
-    public enum GarminExtension {
-        WaypointExtension(ExtensionType.GarminWpt),
-        RouteExtension(ExtensionType.GarminWpt),
-        RoutePointExtension(ExtensionType.GarminTrkpt),
-        TrackExtension(ExtensionType.GarminWpt),
-        TrackPointExtension(ExtensionType.GarminTrkpt);
+    // TFE, 20200802: at some time in the future this will be real classes with a real xml parser...
+    public enum KnownExtension implements IGPXExtension {
+        WaypointExtension("WaypointExtension", DefaultExtensionHolder.ExtensionClass.GarminGPX),
+        RouteExtension("RouteExtension", DefaultExtensionHolder.ExtensionClass.GarminGPX),
+        TrackExtension("TrackExtension", DefaultExtensionHolder.ExtensionClass.GarminGPX),
         
-        private final ExtensionType myExtType;
+        TrackPointExtension("TrackPointExtension", DefaultExtensionHolder.ExtensionClass.GarminTrkpt),
+
+        TrackStatsExtension("TrackStatsExtension", DefaultExtensionHolder.ExtensionClass.GarminTrksts),
         
-        private GarminExtension(final ExtensionType extType) {
-            myExtType = extType;
+        Line("line", DefaultExtensionHolder.ExtensionClass.Line);
+        
+        private final String myName;
+        private final IGPXExtension myExtensionParent;
+        
+        private KnownExtension(final String name, final IGPXExtension extParent) {
+            myName = name;
+            myExtensionParent = extParent;
+        }
+        
+        @Override
+        public String getNamespace() {
+            return myExtensionParent.getNamespace();
+        }
+        
+        @Override
+        public String getName() {
+            return myName;
         }
         
         @Override
         public String toString() {
-            return myExtType.getNamespace() + ":" + name();
+            return DefaultExtensionHolder.nameWithNamespace(myExtensionParent, myName);
         }
     }
     
-    public enum GarminAttibute {
-        // Waypoint (partially covers Trackpoints) attributes
-        Proximity,
-        Temperature,
-        Depth,
-        DisplayMode,
-        Categories,
-        Address,
-        PhoneNumber,
-        Extensions,
+    public enum KnownAttribute {
+        //
+        // attributes from GpxExtensionsv3.xsd
+        //
         
-        // Address attributes
-        StreetAddress,
-        City,
-        State,
-        Country,
-        PostalCode,
+        // Waypoint attributes
+        Proximity("Proximity", KnownExtension.WaypointExtension),
+        Temperature("Temperature", KnownExtension.WaypointExtension),
+        Depth("Depth", KnownExtension.WaypointExtension),
+        DisplayMode("DisplayMode", KnownExtension.WaypointExtension),
+        Categories("Categories", KnownExtension.WaypointExtension),
+        Address("Address", KnownExtension.WaypointExtension),
+        PhoneNumber("PhoneNumber", KnownExtension.WaypointExtension),
+        
+//        // Address attributes
+//        StreetAddress(DefaultExtensionHolder.ExtensionClass.GarminGPX),
+//        City(DefaultExtensionHolder.ExtensionClass.GarminGPX),
+//        State(DefaultExtensionHolder.ExtensionClass.GarminGPX),
+//        Country(DefaultExtensionHolder.ExtensionClass.GarminGPX),
+//        PostalCode(DefaultExtensionHolder.ExtensionClass.GarminGPX),
         
         // Route & Track attributes
-        IsAutoNamed,
-        DisplayColor,
+        IsAutoNamed("IsAutoNamed", KnownExtension.RouteExtension),
+        DisplayColor_Track("DisplayColor", KnownExtension.TrackExtension),
+        DisplayColor_Route("DisplayColor", KnownExtension.RouteExtension),
         
-        // Trackpoints v2 attributes
-        speed;
-
+        //
+        // attributes from TrackPointExtensionv2.xsd
+        //
+        
+        atemp("atemp", KnownExtension.TrackPointExtension),
+        wtemp("wtemp", KnownExtension.TrackPointExtension),
+        depth("depth", KnownExtension.TrackPointExtension),
+        hr("hr", KnownExtension.TrackPointExtension),
+        cad("cad", KnownExtension.TrackPointExtension),
+        speed("speed", KnownExtension.TrackPointExtension),
+        course("course", KnownExtension.TrackPointExtension),
+        bearing("bearing", KnownExtension.TrackPointExtension),
+        
+        //
+        // attributes from TrackStatsExtension.xsd
+        //
+        
+        Distance("Distance", KnownExtension.TrackStatsExtension),
+        TimerTime("TimerTime", KnownExtension.TrackStatsExtension),
+        TotalElapsedTime("TotalElapsedTime", KnownExtension.TrackStatsExtension),
+        MovingTime("MovingTime", KnownExtension.TrackStatsExtension),
+        StoppedTime("StoppedTime", KnownExtension.TrackStatsExtension),
+        MovingSpeed("MovingSpeed", KnownExtension.TrackStatsExtension),
+        MaxSpeed("MaxSpeed", KnownExtension.TrackStatsExtension),
+        MaxElevation("MaxElevation", KnownExtension.TrackStatsExtension),
+        MinElevation("MinElevation", KnownExtension.TrackStatsExtension),
+        Ascent("Ascent", KnownExtension.TrackStatsExtension),
+        Descent("Descent", KnownExtension.TrackStatsExtension),
+        AvgAscentRate("AvgAscentRate", KnownExtension.TrackStatsExtension),
+        MaxAscentRate("MaxAscentRate", KnownExtension.TrackStatsExtension),
+        AvgDescentRate("AvgDescentRate", KnownExtension.TrackStatsExtension),
+        MaxDescentRate("MaxDescentRate", KnownExtension.TrackStatsExtension),
+        Calories("Calories", KnownExtension.TrackStatsExtension),
+        AvgHeartRate("AvgHeartRate", KnownExtension.TrackStatsExtension),
+        AvgCadence("AvgCadence", KnownExtension.TrackStatsExtension),
+        
+        //
+        // attributes from gpx_style.xsd
+        //
+        
+        color("color", KnownExtension.Line),
+        opacity("opacity", KnownExtension.Line),
+        width("width", KnownExtension.Line),
+        pattern("pattern", KnownExtension.Line),
+        linecap("linecap", KnownExtension.Line),
+        dasharray("dasharray", KnownExtension.Line),
+        extensions("extensions", KnownExtension.Line);
+        
+        private final String myName;
+        private final KnownExtension myExtension;
+        
+        private KnownAttribute(final String name, final KnownExtension ext) {
+            myName = name;
+            myExtension = ext;
+        }
+        
+        public KnownExtension getExtension() {
+            return myExtension;
+        }
+        
         @Override
         public String toString() {
-            return GARMIN_PREFIX + name();
-        }
-    }
-
-    // mapping to leaflet-conform colors might be required...
-    public enum GarminDisplayColor {
-        Black(Color.BLACK, "Black"),
-        DarkRed(Color.DARKRED, "DarkRed"),
-        DarkGreen(Color.DARKGREEN, "DarkGreen"),
-        DarkYellow(Color.GOLDENROD, "GoldenRod"),
-        DarkBlue(Color.DARKBLUE, "DarkBlue"),
-        DarkMagenta(Color.DARKMAGENTA, "DarkMagenta"),
-        DarkCyan(Color.DARKCYAN, "DarkCyan"),
-        LightGray(Color.LIGHTGRAY, "LightGray"),
-        DarkGray(Color.DARKGRAY, "DarkGray"),
-        Red(Color.RED, "Red"),
-        Green(Color.GREEN, "Green"),
-        Yellow(Color.YELLOW, "Yellow"),
-        Blue(Color.BLUE, "Blue"),
-        Magenta(Color.MAGENTA, "Magenta"),
-        Cyan(Color.CYAN, "Cyan"),
-        White(Color.WHITE, "White"),
-        Transparent(Color.SILVER, "Transparent");
-        
-        private final Color myJavaFXColor;
-        private final String myJSColor;
-        
-        private GarminDisplayColor(final Color javaFXcolor, final String jsColor) {
-            myJavaFXColor = javaFXcolor;
-            myJSColor = jsColor;
-        }
-        
-        public Color getJavaFXColor() {
-            return myJavaFXColor;
-        }
-        
-        public String getJSColor() {
-            return myJSColor;
-        }
-        
-        public static boolean isGarminDisplayColor(final String name) {
-            boolean result = false;
-            
-            for (GarminDisplayColor color : GarminDisplayColor.values()) {
-                if (color.name().equals(name)) {
-                    result = true;
-                    break;
-                }
-            }
-        
-            return result;
-        }
-        
-        public static Color getJavaFXColorForName(final String name) {
-            Color result = Color.BLACK;
-            
-            for (GarminDisplayColor color : GarminDisplayColor.values()) {
-                if (color.name().equals(name)) {
-                    result = color.getJavaFXColor();
-                    break;
-                }
-            }
-        
-            return result;
-        }
-        
-        public static String getJSColorForJavaFXColor(final Color col) {
-            String result = "Black";
-            
-            for (GarminDisplayColor color : GarminDisplayColor.values()) {
-                if (color.getJavaFXColor().equals(col)) {
-                    result = color.getJSColor();
-                    break;
-                }
-            }
-        
-            return result;
-        }
-        
-        public static GarminDisplayColor getGarminDisplayColorForJSName(final String name) {
-            GarminDisplayColor result = GarminDisplayColor.Black;
-            
-            for (GarminDisplayColor color : GarminDisplayColor.values()) {
-                if (color.getJSColor().equals(name)) {
-                    result = color;
-                    break;
-                }
-            }
-        
-            return result;
+            return DefaultExtensionHolder.nameWithNamespace(myExtension, myName);
         }
     }
     
-    private GarminExtensionWrapper() {
+    private KnownExtensionAttributes() {
     }
 
-    public static GarminExtensionWrapper getInstance() {
+    public static KnownExtensionAttributes getInstance() {
         return INSTANCE;
     }
     
-    public static boolean hasGarminExtension(final GPXLineItem lineitem) {
-        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
-        
-        if (extensionHolder == null) {
-            return false;
-        } else {
-            // just a wrapper to have all relevant methods in this class
-            return extensionHolder.holdsExtensionType(ExtensionType.GarminGPX);
-        }
-    }
-    
-    public static String getTextForGarminExtensionAndAttribute(final GPXLineItem lineitem, final GarminExtension ext, final GarminAttibute attr) {
+    public static String getValueForAttribute(final Extension extension, final KnownAttribute attr) {
         String result = null;
         
-        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
         if (extensionHolder == null) {
             return result;
         }
         
-        final Node extNode = extensionHolder.getExtensionForType(ExtensionType.GarminGPX);
+        final Node extNode = extensionHolder.getExtensionForClass(attr.getExtension());
         
         if (extNode == null) {
             return result;
@@ -226,7 +200,7 @@ public class GarminExtensionWrapper {
         // 1) find extension node
         NodeList nodeList = null;
         // check node itself
-        if (extNode.getNodeName() != null && extNode.getNodeName().equals(ext.toString())) {
+        if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
             nodeList = extNode.getChildNodes();
         } else {
             NodeList childNodes = extNode.getChildNodes();
@@ -235,7 +209,7 @@ public class GarminExtensionWrapper {
             for (int i = 0; i < childNodes.getLength(); i++) {
                 final Node myNode = childNodes.item(i);
                 
-                if (myNode.getNodeName() != null && myNode.getNodeName().equals(ext.toString())) {
+                if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
                     nodeList = myNode.getChildNodes();
                     break;
                 }
@@ -258,8 +232,8 @@ public class GarminExtensionWrapper {
         return result;
     }
     
-    public static void setTextForGarminExtensionAndAttribute(final GPXLineItem lineitem, final GarminExtension ext, final GarminAttibute attr, final String text) {
-        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) lineitem.getContent().getExtensionData(DefaultExtensionParser.getInstance().getId());
+    public static void setValueForAttribute(final Extension extension, final KnownAttribute attr, final String text) {
+        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
 
         try {
             Document doc;
@@ -275,19 +249,19 @@ public class GarminExtensionWrapper {
             Node extNode = null;
 
             if (extensionHolder != null) {
-                extNode = extensionHolder.getExtensionForType(ExtensionType.GarminGPX);
+                extNode = extensionHolder.getExtensionForClass(attr.getExtension());
             }
 
             final boolean hasGarminGPX = (extNode != null);
             if (extNode == null) {
                 // create new node for GarminGPX;
-                extNode = doc.createElement(ext.toString());
+                extNode = doc.createElement(attr.getExtension().toString());
             }
 
             // 1) find extension node OR create
             NodeList nodeList = null;
             // check node itself
-            if (extNode.getNodeName() != null && extNode.getNodeName().equals(ext.toString())) {
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
                 nodeList = extNode.getChildNodes();
             } else {
                 NodeList childNodes = extNode.getChildNodes();
@@ -296,7 +270,7 @@ public class GarminExtensionWrapper {
                 for (int i = 0; i < childNodes.getLength(); i++) {
                     final Node myNode = childNodes.item(i);
 
-                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(ext.toString())) {
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
                         nodeList = myNode.getChildNodes();
                         break;
                     }
@@ -357,22 +331,12 @@ public class GarminExtensionWrapper {
                     extensionHolder.setNodeList(dummy.getChildNodes());
                 } else {
                     // we have a brand new extension
-                    lineitem.getContent().addExtensionData(DefaultExtensionParser.getInstance().getId(), new DefaultExtensionHolder(dummy.getChildNodes()));
+                    extension.addExtensionData(DefaultExtensionParser.getInstance().getId(), new DefaultExtensionHolder(dummy.getChildNodes()));
                 }
             }
         } catch (ParserConfigurationException ex) {
-            Logger.getLogger(GarminExtensionWrapper.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(KnownExtensionAttributes.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-    }
-    
-    public static List<Color> getGarminColorsAsJavaFXColors() {
-        List<Color> result = new ArrayList<>();
-        
-        for (GarminDisplayColor color : GarminDisplayColor.values()) {
-            result.add(color.getJavaFXColor());
-        }
-        
-        return result;
     }
 }

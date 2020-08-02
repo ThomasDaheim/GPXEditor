@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
@@ -50,7 +51,7 @@ public class GPXTrack extends GPXMeasurable {
     private Track myTrack;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
 
-    private String color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
+    private String color = GarminDisplayColor.Red.name();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
@@ -82,9 +83,8 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
-                        GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
+        final String nodeColor = KnownExtensionAttributes.getValueForAttribute(this.getContent(), 
+                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
         if (nodeColor != null && !nodeColor.isBlank()) {
             color = nodeColor;
         }
@@ -107,30 +107,25 @@ public class GPXTrack extends GPXMeasurable {
     
     @Override
     public void setColor(final String col) {
-        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
+        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
             setDefaultColor();
             return;
         }
 
         color = col;
-        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                this,
-                GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        KnownExtensionAttributes.setValueForAttribute(this.getContent(),
+                KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, color);
 
         setHasUnsavedChanges();
     }
     
     @Override
     public void setDefaultColor() {
-        color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
-        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
-            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                    this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
+        color = GarminDisplayColor.Red.name();
+        if (KnownExtensionAttributes.getValueForAttribute(this.getContent(),
+                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Track) != null) {
+            KnownExtensionAttributes.setValueForAttribute(this.getContent(),
+                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, color);
         }
 
         setHasUnsavedChanges();

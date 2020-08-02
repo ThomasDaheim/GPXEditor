@@ -76,8 +76,8 @@ import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
@@ -367,8 +367,7 @@ public class GPXTreeTableView {
                                         }
                                     };
 
-                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(
-                                            GarminExtensionWrapper.getGarminColorsAsJavaFXColors(), colorHandler);
+                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(GarminDisplayColor.getGarminColorsAsJavaFXColors(), colorHandler);
                                     colorMenu.setOnShowing((t) -> {
                                         ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForName(item.getColor()));
                                     });
@@ -679,7 +678,7 @@ public class GPXTreeTableView {
                                         // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
-                                            color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
+                                            color = GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
                                             break;
                                         default:
                                             break;
