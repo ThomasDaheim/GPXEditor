@@ -40,6 +40,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import tf.gpx.edit.extension.GarminDisplayColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
@@ -53,8 +54,6 @@ public class GPXRoute extends GPXMeasurable {
     private Route myRoute;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
 
-    private String color = GarminDisplayColor.Blue.name();
-    
     private Double myLength = null;
     private Double myCumulativeAscent = null;
     private Double myCumulativeDescent = null;
@@ -75,10 +74,12 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = new Route();
         
         // if possible add route to parent class
-        Extension content = gpxFile.getContent();
+        Extension content = gpxFile.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addRoute(myRoute);
         }
+
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminDisplayColor.Blue.name());
         
         myGPXWaypoints.addListener(changeListener);
     }
@@ -91,11 +92,7 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        final String nodeColor = KnownExtensionAttributes.getValueForAttribute(this.getContent(), 
-                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
-        if (nodeColor != null && !nodeColor.isBlank()) {
-            color = nodeColor;
-        }
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminDisplayColor.Blue.name());
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
@@ -110,36 +107,29 @@ public class GPXRoute extends GPXMeasurable {
         myGPXWaypoints.addListener(changeListener);
     }
     
-    @Override
-    public String getColor() {
-        return color;
-    }
-    
-    @Override
-    public void setColor(final String col) {
-        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
-            setDefaultColor();
-            return;
-        }
-
-        color = col;
-        KnownExtensionAttributes.setValueForAttribute(this.getContent(),
-                KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, col);
-
-        setHasUnsavedChanges();
-    }
-    
-    @Override
-    public void setDefaultColor() {
-        color = GarminDisplayColor.Blue.name();
-        if (KnownExtensionAttributes.getValueForAttribute(this.getContent(),
-                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route) != null) {
-            KnownExtensionAttributes.setValueForAttribute(this.getContent(),
-                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, color);
-        }
-
-        setHasUnsavedChanges();
-    }
+//    public void setColor(final String col) {
+//        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
+//            setDefaultColor();
+//            return;
+//        }
+//
+//        color = col;
+//        KnownExtensionAttributes.setValueForAttribute(this.getExtension(),
+//                KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, col);
+//
+//        setHasUnsavedChanges();
+//    }
+//    
+//    public void setDefaultColor() {
+//        color = GarminDisplayColor.Blue.name();
+//        if (KnownExtensionAttributes.getValueForAttribute(this.getExtension(),
+//                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route) != null) {
+//            KnownExtensionAttributes.setValueForAttribute(this.getExtension(),
+//                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, color);
+//        }
+//
+//        setHasUnsavedChanges();
+//    }
     
     @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
@@ -313,7 +303,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myRoute;
     }
 

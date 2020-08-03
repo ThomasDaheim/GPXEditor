@@ -66,7 +66,7 @@ public enum GarminDisplayColor {
         return result;
     }
 
-    public static Color getJavaFXColorForName(final String name) {
+    public static Color getJavaFXColorForJSColor(final String name) {
         Color result = Color.BLACK;
 
         for (GarminDisplayColor color : GarminDisplayColor.values()) {
@@ -92,7 +92,7 @@ public enum GarminDisplayColor {
         return result;
     }
 
-    public static GarminDisplayColor getGarminDisplayColorForJSName(final String name) {
+    public static GarminDisplayColor getGarminDisplayColorForJSColor(final String name) {
         GarminDisplayColor result = GarminDisplayColor.Black;
 
         for (GarminDisplayColor color : GarminDisplayColor.values()) {
@@ -105,8 +105,56 @@ public enum GarminDisplayColor {
         return result;
     }
     
-    // TODO: get closest GarminDisplayColor for hex string
+    // get closest GarminDisplayColor for hex string
     // see https://stackoverflow.com/a/20670056 on how to do it
+    public static GarminDisplayColor getGarminDisplayColorForHexColor(final String color) {
+        String inColor = color;
+        if (inColor == null) {
+            throw new IllegalArgumentException("Argument is null");
+        }
+        if (inColor.startsWith("#")) {
+            inColor = inColor.substring(1);
+        }
+        if (inColor.length() < 6) {
+            throw new IllegalArgumentException("Argument is to short: " + inColor);
+        }
+        
+        int hexColor = Integer.decode("#" + inColor);
+        double r = ((hexColor & 0xFF0000) >> 16) / 255.0;
+        double g = ((hexColor & 0xFF00) >> 8) / 255.0;
+        double b = (hexColor & 0xFF) / 255.0;
+
+        return getGarminDisplayColorForRGB(r, g, b);
+    }
+    
+    private static GarminDisplayColor getGarminDisplayColorForRGB(final double r, final double g, final double b) {
+        GarminDisplayColor closestMatch = GarminDisplayColor.Black;
+        double minMSE = Double.MAX_VALUE;
+        double mse;
+
+//        System.out.println("Searching for: " + r + ", " + g + ", " + b);
+        for (GarminDisplayColor color : GarminDisplayColor.values()) {
+            mse = computeMSE(color, r, g, b);
+            if (mse < minMSE) {
+                minMSE = mse;
+                closestMatch = color;
+                
+//                System.out.println("Closest found: " + closestMatch.getJavaFXColor().getRed() + ", " + closestMatch.getJavaFXColor().getGreen()+ ", " + closestMatch.getJavaFXColor().getBlue()+ " - " + closestMatch);
+                // shortcut - it doesn't get better than this
+                if (minMSE < 0.0001) {
+                    break;
+                }
+            }
+        }
+        
+        return closestMatch;
+    }
+    
+    private static double computeMSE(final GarminDisplayColor color, final double r, final double g, final double b) {
+        return ((color.getJavaFXColor().getRed()-r)*(color.getJavaFXColor().getRed()-r) + 
+               (color.getJavaFXColor().getGreen()-g)*(color.getJavaFXColor().getGreen()-g) + 
+               (color.getJavaFXColor().getBlue()-b)*(color.getJavaFXColor().getBlue()-b)) / 3.0;
+    }
     
     public static List<Color> getGarminColorsAsJavaFXColors() {
         List<Color> result = new ArrayList<>();

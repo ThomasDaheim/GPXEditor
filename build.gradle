@@ -143,6 +143,9 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
                 '--add-exports', 'javafx.graphics/com.sun.javafx.scene.input=ALL-UNNAMED',
                 '--add-opens', 'javafx.graphics/javafx.scene.layout=ALL-UNNAMED',
+                // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
+                // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
+                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
     ]
     
 // extend Netbeans Gradle "Run" task

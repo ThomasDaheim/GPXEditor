@@ -269,7 +269,7 @@ public class GPXLineItemHelper {
         return children.stream().
                 map((U child) -> {
                     child.setNumber(counter.getAndIncrement());
-                    return ObjectsHelper.<T>uncheckedCast(child.getContent());
+                    return ObjectsHelper.<T>uncheckedCast(child.getExtension());
                 // need to collect into a set that contains the order
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
     }

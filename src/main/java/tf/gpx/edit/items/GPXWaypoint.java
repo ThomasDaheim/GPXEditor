@@ -77,7 +77,7 @@ public class GPXWaypoint extends GPXLineItem {
         myWaypoint = new Waypoint(lat, lon);
         
         // if possible add waypoint to parent class
-        Extension content = gpxParent.getContent();
+        Extension content = gpxParent.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addWaypoint(myWaypoint);
         }
@@ -624,7 +624,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myWaypoint;
     }
 

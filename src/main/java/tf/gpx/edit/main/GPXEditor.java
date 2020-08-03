@@ -1132,7 +1132,7 @@ public class GPXEditor implements Initializable {
         if (insertDone) {
             // check if we have extensions in measurables from other gpxfiles and therefore might need to copy xmnls
             final boolean copyXmnls = items.stream().filter((t) -> {
-                return !target.getGPXFile().equals(t.getGPXFile()) && (t.getContent().getExtensionsParsed() > 0);
+                return !target.getGPXFile().equals(t.getGPXFile()) && (t.getExtension().getExtensionsParsed() > 0);
             }).findFirst().isPresent();
             
             if (copyXmnls) {

@@ -387,7 +387,7 @@ public class SRTMDataViewer {
                 final LineStrip fline = new LineStrip(line.interpolate(points, 1));
     
                 // Color is not the same as Color...
-                final javafx.scene.paint.Color javaFXColor = GarminDisplayColor.getJavaFXColorForName(gpxTrack.getColor());
+                final javafx.scene.paint.Color javaFXColor = GarminDisplayColor.getJavaFXColorForJSColor(gpxTrack.getLineStyle().getColor());
                 final org.jzy3d.colors.Color jzy3dColor = new Color(
                         (float) javaFXColor.getRed(), 
                         (float) javaFXColor.getGreen(), 

@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.items;
 
+import tf.gpx.edit.extension.IStylableItem;
 import me.himanshusoni.gpxparser.modal.Bounds;
-import me.himanshusoni.gpxparser.modal.Extension;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -38,12 +38,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.math.NumberUtils;
+import tf.gpx.edit.extension.LineStyle;
 
 /**
  *
  * @author Thomas
  */
-public abstract class GPXLineItem {
+public abstract class GPXLineItem implements IStylableItem {
     // output format for data
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss z"); 
     public static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss"); 
@@ -227,6 +228,7 @@ public abstract class GPXLineItem {
         
         return false;
     }
+    @Override
     public void setHasUnsavedChanges() {
         this.hasUnsavedChanges = true;
     }
@@ -277,8 +279,6 @@ public abstract class GPXLineItem {
     public abstract ObservableList<GPXRoute> getGPXRoutes();
     public abstract void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints);
     public abstract ObservableList<GPXWaypoint> getGPXWaypoints();
-    // get the actual content of me.himanshusoni.gpxparser.* type
-    public abstract Extension getContent();
     // TFE, 20180214: wayopints can be below tracksegments, routes and file
     // therefore we need a new parameter to indicate what sort of waypoints we want
     // either for a specific itemtype or for all (itemType = null)
@@ -419,12 +419,10 @@ public abstract class GPXLineItem {
     }
     
     // TFE, 20190723: some color, please
-    // TODO: move to separate interface for LineStyle with default implementation
-    public String getColor() {
-        return "Black";
-    }
-    public void setColor(final String col) {
-    }
-    public void setDefaultColor() {
+    protected LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
+    
+    @Override
+    public LineStyle getLineStyle() {
+        return myLineStyle;
     }
 }

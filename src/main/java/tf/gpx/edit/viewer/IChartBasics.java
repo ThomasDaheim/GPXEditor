@@ -516,7 +516,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         if (lineItem.isGPXTrackSegment()) {
             seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
         }
-        series.setName(seriesID + DATA_SEP + lineItem.getColor());
+        series.setName(seriesID + DATA_SEP + lineItem.getLineStyle().getColor());
     }
     private static String getSeriesID(final XYChart.Series<Number, Number> series) {
         return series.getName().split(DATA_SEP)[0];

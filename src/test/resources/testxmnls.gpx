@@ -16,11 +16,11 @@
 	</link>
 	<extensions>
 		<line xmlns="http://www.topografix.com/GPX/gpx_style/0/2">
-			<color>0000FF</color>
+			<color>483D8B</color>
 			<opacity>0.59</opacity>
 			<width>6.0</width>
 			<extensions>
-				<locus:lsColorBase>#960000FF</locus:lsColorBase>
+				<locus:lsColorBase>#96483D8B</locus:lsColorBase>
 				<locus:lsWidth>6.0</locus:lsWidth>
 				<locus:lsUnits>PIXELS</locus:lsUnits>
 			</extensions>
@@ -30,6 +30,10 @@
 <trkpt lat="48.0421450" lon="11.5231510">
 	<ele>634.95</ele>
 	<time>2020-06-28T11:47:35.487Z</time>
+</trkpt>
+<trkpt lat="48.0431550" lon="11.5331610">
+	<ele>634.95</ele>
+	<time>2020-06-28T11:57:36.487Z</time>
 </trkpt>
 </trkseg>
 </trk>

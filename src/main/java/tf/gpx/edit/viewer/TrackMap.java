@@ -1145,11 +1145,11 @@ public class TrackMap extends LeafletMapView {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
-                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getColor());
+                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getLineStyle().getColor());
                 trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
-                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getColor());
+                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getLineStyle().getColor());
                 execScript("makeEditable(\"" + route + "\");");
                 routes.put(route, gpxRoute);
             }
@@ -1266,14 +1266,14 @@ public class TrackMap extends LeafletMapView {
                     layer = trackSegments.getKey(segment);
 
                     if (layer != null) {
-                        execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                        execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getLineStyle().getColor() + "\");");
                     }
                 }
             } else {
                 layer = routes.getKey((GPXRoute) lineItem);
 
                 if (layer != null) {
-                    execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getColor() + "\");");
+                    execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getLineStyle().getColor() + "\");");
                 }
             }
         }

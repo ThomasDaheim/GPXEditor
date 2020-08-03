@@ -355,7 +355,7 @@ public class GPXTreeTableView {
                                                         if (selectedGPXItem.isGPXTrack() || 
                                                                 selectedGPXItem.isGPXRoute() || 
                                                                 selectedGPXItem.isGPXTrackSegment()) {
-                                                            selectedGPXItem.setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
+                                                            selectedGPXItem.getLineStyle().setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
                                                             GPXTrackviewer.getInstance().updateLineColor(selectedGPXItem);
                                                         }
                                                     }
@@ -369,7 +369,7 @@ public class GPXTreeTableView {
 
                                     final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(GarminDisplayColor.getGarminColorsAsJavaFXColors(), colorHandler);
                                     colorMenu.setOnShowing((t) -> {
-                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForName(item.getColor()));
+                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForJSColor(item.getLineStyle().getColor()));
                                     });
                                     fileMenu.getItems().add(colorMenu);
                                 }
@@ -678,7 +678,7 @@ public class GPXTreeTableView {
                                         // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
-                                            color = GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
+                                            color = GarminDisplayColor.getJavaFXColorForJSColor(lineItem.getLineStyle().getColor());
                                             break;
                                         default:
                                             break;
@@ -837,8 +837,8 @@ public class GPXTreeTableView {
                     final TreeTableColumn<GPXMeasurable, Boolean> extGPXCol = ObjectsHelper.uncheckedCast(column);
                     extGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, Boolean> p) -> new SimpleBooleanProperty(
-                                            (p.getValue().getValue().getContent().getExtensionData() != null) &&
-                                            !p.getValue().getValue().getContent().getExtensionData().isEmpty()));
+                                            (p.getValue().getValue().getExtension().getExtensionData() != null) &&
+                                            !p.getValue().getValue().getExtension().getExtensionData().isEmpty()));
                     extGPXCol.setCellFactory(col -> new TreeTableCell<GPXMeasurable, Boolean>() {
                         @Override
                         protected void updateItem(Boolean item, boolean empty) {
@@ -856,11 +856,11 @@ public class GPXTreeTableView {
                                     final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
 
                                     if (getTreeTableRow().getItem() != null &&
-                                        getTreeTableRow().getItem().getContent() != null &&
-                                        getTreeTableRow().getItem().getContent().getExtensionData() != null) {
+                                        getTreeTableRow().getItem().getExtension() != null &&
+                                        getTreeTableRow().getItem().getExtension().getExtensionData() != null) {
                                         // add the tooltext that contains the extension data we have parsed
                                         final StringBuilder tooltext = new StringBuilder();
-                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getContent().getExtensionData();
+                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getExtension().getExtensionData();
                                         for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
                                             if (entry.getValue() instanceof DefaultExtensionHolder) {
                                                 if (tooltext.length() > 0) {

@@ -150,7 +150,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myMetadata;
     }
 

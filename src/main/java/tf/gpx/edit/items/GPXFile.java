@@ -536,7 +536,7 @@ public class GPXFile extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myGPX;
     }
     

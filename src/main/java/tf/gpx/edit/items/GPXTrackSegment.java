@@ -71,7 +71,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myTrackSegment = new TrackSegment();
         
         // if possible add waypoint to parent class
-        Extension content = gpxTrack.getContent();
+        Extension content = gpxTrack.getExtension();
         if (content instanceof Track) {
             ((Track) content).addTrackSegment(myTrackSegment);
         }
@@ -101,12 +101,6 @@ public class GPXTrackSegment extends GPXMeasurable {
         myGPXWaypoints.addListener(changeListener);
     }
 
-    @Override
-    public String getColor() {
-        // tracksegments have the color of their tracks
-        return getParent().getColor();
-    }
-    
     @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
@@ -278,7 +272,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myTrackSegment;
     }
 

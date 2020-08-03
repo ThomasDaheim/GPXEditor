@@ -167,21 +167,17 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         String prevColor;
                         String newColor;
                         if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
-                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
-                                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
-                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
-                                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
+                            prevColor = lineItem.getLineStyle().getColor();
+                            lineItem.getExtension().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
+                            newColor = lineItem.getLineStyle().getColor();
                         } else {
-                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
-                                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
-                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
-                                        KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
+                            prevColor = lineItem.getLineStyle().getColor();
+                            lineItem.getExtension().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
+                            newColor = lineItem.getLineStyle().getColor();
                         }
 
-                        lineItem.getContent().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
-
                         if ((prevColor != null && !prevColor.equals(newColor)) || newColor != null) {
-                            lineItem.setColor(newColor);
+                            lineItem.getLineStyle().setColor(newColor);
                         } else {
                             lineItem.setHasUnsavedChanges();                            
                         }
@@ -236,21 +232,21 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         String prevColor;
                         String newColor;
                         if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
-                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
+                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
-                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
+                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
                         } else {
-                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
+                            prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
-                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getContent(),
+                            newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
                         }
 
-                        lineItem.getContent().setExtensionData(copyLineItem.getContent().getExtensionData());
+                        lineItem.getExtension().setExtensionData(copyLineItem.getExtension().getExtensionData());
 
                         if ((prevColor != null && !prevColor.equals(newColor)) || newColor != null) {
-                            lineItem.setColor(newColor);
+                            lineItem.getLineStyle().setColor(newColor);
                         } else {
                             lineItem.setHasUnsavedChanges();                            
                         }

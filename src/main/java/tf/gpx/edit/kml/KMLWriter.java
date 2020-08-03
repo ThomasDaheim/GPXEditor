@@ -344,7 +344,7 @@ public class KMLWriter {
         style.appendChild(lineStyle);
 
         final Element color = doc.createElement("color");
-        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(GarminDisplayColor.getJavaFXColorForName(item.getColor()))));
+        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(GarminDisplayColor.getJavaFXColorForJSColor(item.getLineStyle().getColor()))));
         lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement("LineString");
