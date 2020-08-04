@@ -76,7 +76,7 @@ import javafx.util.converter.DefaultStringConverter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -348,14 +348,14 @@ public class GPXTreeTableView {
                                                 final MenuItem color = (MenuItem) t.getSource();
                                                 
                                                 if (color.getUserData() != null && (color.getUserData() instanceof Color)) {
-//                                                    System.out.println(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
+//                                                    System.out.println(GarminColor.getNameForJavaFXColor((Color) color.getUserData()));
                                                     for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
                                                         final GPXMeasurable selectedGPXItem = selectedItem.getValue();
                                                         
                                                         if (selectedGPXItem.isGPXTrack() || 
                                                                 selectedGPXItem.isGPXRoute() || 
                                                                 selectedGPXItem.isGPXTrackSegment()) {
-                                                            selectedGPXItem.getLineStyle().setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
+                                                            selectedGPXItem.getLineStyle().setColor(GarminColor.getGarminColorForJavaFXColor((Color) color.getUserData()));
                                                             GPXTrackviewer.getInstance().updateLineColor(selectedGPXItem);
                                                         }
                                                     }
@@ -367,9 +367,9 @@ public class GPXTreeTableView {
                                         }
                                     };
 
-                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(GarminDisplayColor.getGarminColorsAsJavaFXColors(), colorHandler);
+                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(GarminColor.getGarminColorsAsJavaFXColors(), colorHandler);
                                     colorMenu.setOnShowing((t) -> {
-                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForJSColor(item.getLineStyle().getColor()));
+                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, item.getLineStyle().getColor().getJavaFXColor());
                                     });
                                     fileMenu.getItems().add(colorMenu);
                                 }
@@ -678,7 +678,7 @@ public class GPXTreeTableView {
                                         // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
-                                            color = GarminDisplayColor.getJavaFXColorForJSColor(lineItem.getLineStyle().getColor());
+                                            color = lineItem.getLineStyle().getColor().getJavaFXColor();
                                             break;
                                         default:
                                             break;

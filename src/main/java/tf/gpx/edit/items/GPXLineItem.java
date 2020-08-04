@@ -228,7 +228,6 @@ public abstract class GPXLineItem implements IStylableItem {
         
         return false;
     }
-    @Override
     public void setHasUnsavedChanges() {
         this.hasUnsavedChanges = true;
     }
@@ -424,5 +423,10 @@ public abstract class GPXLineItem implements IStylableItem {
     @Override
     public LineStyle getLineStyle() {
         return myLineStyle;
+    }
+    
+    @Override
+    public void lineStyleHasChanged() {
+        setHasUnsavedChanges();
     }
 }

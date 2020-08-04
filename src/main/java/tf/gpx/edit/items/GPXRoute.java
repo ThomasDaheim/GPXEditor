@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -79,7 +79,7 @@ public class GPXRoute extends GPXMeasurable {
             ((GPX) content).addRoute(myRoute);
         }
 
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminDisplayColor.Blue.name());
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
         myGPXWaypoints.addListener(changeListener);
     }
@@ -92,7 +92,7 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminDisplayColor.Blue.name());
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
@@ -108,7 +108,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
 //    public void setColor(final String col) {
-//        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
+//        if (col == null || !GarminColor.isGarminDisplayColor(col)) {
 //            setDefaultColor();
 //            return;
 //        }
@@ -121,7 +121,7 @@ public class GPXRoute extends GPXMeasurable {
 //    }
 //    
 //    public void setDefaultColor() {
-//        color = GarminDisplayColor.Blue.name();
+//        color = GarminColor.Blue.name();
 //        if (KnownExtensionAttributes.getValueForAttribute(this.getExtension(),
 //                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Route) != null) {
 //            KnownExtensionAttributes.setValueForAttribute(this.getExtension(),

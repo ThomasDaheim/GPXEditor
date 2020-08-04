@@ -221,9 +221,6 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             return (extensionNodes.get(type) != null);
         }
         
-        // first time for everything...
-        extensionNodes.put(type, null);
-        
         // check all nodes in list for startswith
         final NodeList myNodeList = getNodeList();
         if (myNodeList != null) {

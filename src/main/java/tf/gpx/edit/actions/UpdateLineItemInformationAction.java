@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -164,8 +165,8 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         break;
                     case EXTENSION:
                         // special case: we might have changed the color of track or route...
-                        String prevColor;
-                        String newColor;
+                        GarminColor prevColor;
+                        GarminColor newColor;
                         if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
                             prevColor = lineItem.getLineStyle().getColor();
                             lineItem.getExtension().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
@@ -234,19 +235,19 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType())) {
                             prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
+                            lineItem.getExtension().setExtensionData(copyLineItem.getExtension().getExtensionData());
                             newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
                         } else {
                             prevColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
+                            lineItem.getExtension().setExtensionData(copyLineItem.getExtension().getExtensionData());
                             newColor = KnownExtensionAttributes.getValueForAttribute(lineItem.getExtension(),
                                         KnownExtensionAttributes.KnownAttribute.DisplayColor_Route);
                         }
 
-                        lineItem.getExtension().setExtensionData(copyLineItem.getExtension().getExtensionData());
-
                         if ((prevColor != null && !prevColor.equals(newColor)) || newColor != null) {
-                            lineItem.getLineStyle().setColor(newColor);
+                            lineItem.getLineStyle().setColor(GarminColor.valueOf(newColor));
                         } else {
                             lineItem.setHasUnsavedChanges();                            
                         }

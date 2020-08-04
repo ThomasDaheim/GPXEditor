@@ -78,7 +78,7 @@ import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
-import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -387,7 +387,7 @@ public class SRTMDataViewer {
                 final LineStrip fline = new LineStrip(line.interpolate(points, 1));
     
                 // Color is not the same as Color...
-                final javafx.scene.paint.Color javaFXColor = GarminDisplayColor.getJavaFXColorForJSColor(gpxTrack.getLineStyle().getColor());
+                final javafx.scene.paint.Color javaFXColor = gpxTrack.getLineStyle().getColor().getJavaFXColor();
                 final org.jzy3d.colors.Color jzy3dColor = new Color(
                         (float) javaFXColor.getRed(), 
                         (float) javaFXColor.getGreen(), 

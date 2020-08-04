@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXCloner;
@@ -71,7 +71,7 @@ public class GPXTrack extends GPXMeasurable {
             ((GPX) content).addTrack(myTrack);
         }
         
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminDisplayColor.Red.name());
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
 
         myGPXTrackSegments.addListener(changeListener);
     }
@@ -84,7 +84,7 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminDisplayColor.Red.name());
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
         
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
@@ -98,7 +98,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
 //    public void setColor(final String col) {
-//        if (col == null || !GarminDisplayColor.isGarminDisplayColor(col)) {
+//        if (col == null || !GarminColor.isGarminDisplayColor(col)) {
 //            setDefaultColor();
 //            return;
 //        }
@@ -111,7 +111,7 @@ public class GPXTrack extends GPXMeasurable {
 //    }
 //    
 //    public void setDefaultColor() {
-//        color = GarminDisplayColor.Red.name();
+//        color = GarminColor.Red.name();
 //        if (KnownExtensionAttributes.getValueForAttribute(this.getExtension(),
 //                    KnownExtensionAttributes.KnownAttribute.DisplayColor_Track) != null) {
 //            KnownExtensionAttributes.setValueForAttribute(this.getExtension(),

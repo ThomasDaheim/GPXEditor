@@ -42,7 +42,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import tf.gpx.edit.extension.GarminDisplayColor;
+import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -344,7 +344,7 @@ public class KMLWriter {
         style.appendChild(lineStyle);
 
         final Element color = doc.createElement("color");
-        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(GarminDisplayColor.getJavaFXColorForJSColor(item.getLineStyle().getColor()))));
+        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(item.getLineStyle().getColor().getJavaFXColor())));
         lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement("LineString");

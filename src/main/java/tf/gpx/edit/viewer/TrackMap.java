@@ -70,6 +70,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -94,6 +95,7 @@ import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.javafx.UnitConverter;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -1145,11 +1147,11 @@ public class TrackMap extends LeafletMapView {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
-                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getLineStyle().getColor());
+                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getLineStyle());
                 trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
-                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getLineStyle().getColor());
+                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getLineStyle());
                 execScript("makeEditable(\"" + route + "\");");
                 routes.put(route, gpxRoute);
             }
@@ -1556,8 +1558,15 @@ public class TrackMap extends LeafletMapView {
         return varName;
     }
 
-    private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final String color) {
-        final String layer = addTrack(waypoints, color, false);
+    private String addTrackAndCallback(final List<LatLong> waypoints, final String trackName, final LineStyle linestyle) {
+        final String layer = addTrack(
+                waypoints, 
+                linestyle.getColor().getJSColor(), 
+                String.valueOf(UnitConverter.getInstance().millimeterToPixel(linestyle.getWidth())), 
+                linestyle.getOpacity().toString(), 
+                linestyle.getLinecap().toString(), 
+                false);
+        
         // reduce number of calls to execScript()
         execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);" + "\n" + "addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;

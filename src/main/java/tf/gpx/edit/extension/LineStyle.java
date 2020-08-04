@@ -9,16 +9,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import me.himanshusoni.gpxparser.modal.Extension;
+import tf.helper.javafx.UnitConverter;
 
 /**
  * Holder class for line style attributes from gpx_style:line or gpxx:TrackExtension / gpxx:RouteExtension.
+ * Attention: Colors are handled as GarminColor - so appropriate conversion is done where required
  * 
  * @author thomas
  */
 public class LineStyle {
-    public static final String DEFAULT_COLOR = GarminDisplayColor.Black.name();
+    public static final GarminColor DEFAULT_COLOR = GarminColor.DarkGray;
     public static final Double DEFAULT_OPACITY = 1.0;
-    public static final Double DEFAULT_WIDTH = 3.0;
+    // width in gpx_style is in millimeters BUT leaflet calculates in pixel...
+    // default in leaflet is 2 PIXEL
+    public static final Double DEFAULT_WIDTH = UnitConverter.getInstance().pixelToMillimeter(2.0);
     public static final String DEFAULT_PATTERN = "";
     public static final Linecap DEFAULT_CAP = Linecap.ROUND;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
@@ -56,15 +60,15 @@ public class LineStyle {
     
     // support lazy loading by using Optional<>: if null, value hasn't been looked up in extension
     // we map hexColors to garmin colors - to be compatible with garmin software
-    private Optional<String> myColor;
-    private String myDefaultColor = DEFAULT_COLOR;
+    private Optional<GarminColor> myColor;
+    private GarminColor myDefaultColor = DEFAULT_COLOR;
     private Optional<Double> myOpacity;
     private Optional<Double> myWidth;
     private Optional<String> myPattern;
     private Optional<Linecap> myLinecap;
     private Optional<List<Dash>> myDashes = Optional.of(new ArrayList<>());
     
-    public LineStyle(final IStylableItem item, final KnownExtensionAttributes.KnownAttribute colorAttribute, final String defaultCol) {
+    public LineStyle(final IStylableItem item, final KnownExtensionAttributes.KnownAttribute colorAttribute, final GarminColor defaultCol) {
         myItem = item;
         myExtension = item.getExtension();
         myColorAttribute = colorAttribute;
@@ -72,7 +76,7 @@ public class LineStyle {
         myDefaultColor = defaultCol;
     }
     
-    private LineStyle(final String color, final Double opacity, final Double width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
+    private LineStyle(final GarminColor color, final Double opacity, final Double width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
         myItem = null;
         myExtension = null;
         myColorAttribute = null;
@@ -89,7 +93,7 @@ public class LineStyle {
     public static final LineStyle DEFAULT_LINESTYLE = new LineStyle(DEFAULT_COLOR, DEFAULT_OPACITY, DEFAULT_WIDTH, DEFAULT_PATTERN, DEFAULT_CAP, DEFAULT_DASHES);
     
     // intelligent getters: support lazy loading and get value from KnownAttribute from extension
-    public String getColor() {
+    public GarminColor getColor() {
         if (myColor == null) {
             // try provided attribute first
             // BUT this is a Garmin color name
@@ -102,18 +106,18 @@ public class LineStyle {
                 
                 // worst case: use default
                 if (nodeValue == null || nodeValue.isBlank()) {
-                    nodeValue = myDefaultColor;
+                    nodeValue = myDefaultColor.name();
                 } else {
                     // match to nearest garmin color - this is our basis
-                    nodeValue = GarminDisplayColor.getGarminDisplayColorForHexColor(nodeValue).getJSColor();
+                    nodeValue = GarminColor.getGarminColorForHexColor(nodeValue).name();
                     
                     // store as germin extension as well - convert anything back to garmin since it can't read other color values
                     KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, nodeValue);
-                    myItem.setHasUnsavedChanges();
+                    myItem.lineStyleHasChanged();
                 }
             }
 
-            myColor = Optional.of(nodeValue);
+            myColor = Optional.of(GarminColor.valueOf(nodeValue));
         }
         return myColor.get();
     }
@@ -179,21 +183,36 @@ public class LineStyle {
         return myDashes.get();
     }
     
-    public void setColor(final String color) {
+    public void setColor(final GarminColor color) {
+        GarminColor inColor = color;
+        if (inColor == null) {
+            throw new IllegalArgumentException("Argument is null");
+        }
+
+        // set both our variable and the gpx extension
+        myColor = Optional.of(inColor);
+        
+        if (myItem != null) {
+            KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, inColor.name());
+            myItem.lineStyleHasChanged();
+        }
+    }
+    
+    public void setColorFromHexColor(final String color) {
         String inColor = color;
         if (inColor == null) {
             throw new IllegalArgumentException("Argument is null");
         }
 
         // match to nearest garmin color - this is our basis
-        inColor = GarminDisplayColor.getGarminDisplayColorForHexColor(inColor).getJSColor();
+        inColor = GarminColor.getGarminColorForHexColor(inColor).name();
 
         // set both our variable and the gpx extension
-        myColor = Optional.of(inColor);
+        myColor = Optional.of(GarminColor.valueOf(inColor));
         
         if (myItem != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, inColor);
-            myItem.setHasUnsavedChanges();
+            myItem.lineStyleHasChanged();
         }
     }
 }

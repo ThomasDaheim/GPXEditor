@@ -29,6 +29,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 * added option to playback tracks / segments with date values
 * fixes around gpx xmnls headers
+* support for "line" extension for tracks & routes (read & use color / width / opacity / linecap attributes)
 
 ### Update v5.1
 

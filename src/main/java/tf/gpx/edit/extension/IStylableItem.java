@@ -19,5 +19,5 @@ public interface IStylableItem {
     public abstract Extension getExtension();
     
     // callback for changes to LineStyle
-    public abstract void setHasUnsavedChanges();
+    public abstract void lineStyleHasChanged();
 }
