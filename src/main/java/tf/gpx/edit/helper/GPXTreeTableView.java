@@ -54,7 +54,10 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Slider;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeSortMode;
@@ -78,6 +81,7 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
@@ -338,8 +342,10 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(convertItem);
                                 
                                 if (!item.isGPXTrackSegment()) {
-                                    // select color for track or route
+                                    // select color, width, opacity, cap for track or route
                                     fileMenu.getItems().add(new SeparatorMenuItem());
+                                    
+                                    final Menu lineStyle = new Menu("Line style...");
                                     
                                     final EventHandler<ActionEvent> colorHandler = new EventHandler<ActionEvent>() {
                                         @Override
@@ -353,10 +359,9 @@ public class GPXTreeTableView {
                                                         final GPXMeasurable selectedGPXItem = selectedItem.getValue();
                                                         
                                                         if (selectedGPXItem.isGPXTrack() || 
-                                                                selectedGPXItem.isGPXRoute() || 
-                                                                selectedGPXItem.isGPXTrackSegment()) {
+                                                                selectedGPXItem.isGPXRoute()) {
                                                             selectedGPXItem.getLineStyle().setColor(GarminColor.getGarminColorForJavaFXColor((Color) color.getUserData()));
-                                                            GPXTrackviewer.getInstance().updateLineColor(selectedGPXItem);
+                                                            GPXTrackviewer.getInstance().updateLineStyle(selectedGPXItem);
                                                         }
                                                     }
                                                     
@@ -371,7 +376,115 @@ public class GPXTreeTableView {
                                     colorMenu.setOnShowing((t) -> {
                                         ColorSelectionMenu.getInstance().selectColor(colorMenu, item.getLineStyle().getColor().getJavaFXColor());
                                     });
-                                    fileMenu.getItems().add(colorMenu);
+
+                                    // line width
+                                    final Slider widthSlider = new Slider(0, 10, 0);
+                                    widthSlider.setShowTickLabels(true);
+                                    widthSlider.setShowTickMarks(true);
+                                    widthSlider.setMajorTickUnit(2);
+                                    widthSlider.setMinorTickCount(20);
+                                    widthSlider.setBlockIncrement(1);
+                                    widthSlider.setSnapToTicks(true);
+                                    
+                                    final Menu widthMenu = new Menu("Width");
+                                    final MenuItem widthItem = new MenuItem();
+                                    widthItem.setGraphic(widthSlider);
+                                    widthMenu.getItems().add(widthItem);
+                                        
+                                    widthMenu.setOnShowing((t) -> {
+                                        // we get shown - set slider value to first selected
+                                        for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+                                            if (selectedGPXItem.isGPXTrack() || 
+                                                    selectedGPXItem.isGPXRoute()) {
+                                                widthSlider.setValue(selectedGPXItem.getLineStyle().getWidth());
+
+                                                break;
+                                            }
+                                        }
+                                    });
+                                        
+                                    widthMenu.setOnHiding((t) -> {
+                                        // update linestyles and map
+                                        final double newWidth = widthSlider.getValue();
+
+                                        for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+                                            if (selectedGPXItem.isGPXTrack() || 
+                                                    selectedGPXItem.isGPXRoute()) {
+                                                selectedGPXItem.getLineStyle().setWidth(newWidth);
+                                                GPXTrackviewer.getInstance().updateLineStyle(selectedGPXItem);
+                                            }
+                                        }
+                                                    
+                                        // refresh TrackMap
+                                        myEditor.refreshGPXFileList();
+                                    });
+                                    
+                                    // line opacity
+                                    final Slider opacitySlider = new Slider(0, 1, 0);
+                                    opacitySlider.setShowTickLabels(true);
+                                    opacitySlider.setShowTickMarks(true);
+                                    opacitySlider.setMajorTickUnit(0.1);
+                                    opacitySlider.setMinorTickCount(10);
+                                    opacitySlider.setBlockIncrement(0.05);
+                                    opacitySlider.setSnapToTicks(true);
+                                    
+                                    final Menu opacityMenu = new Menu("Opacity");
+                                    final MenuItem opacityItem = new MenuItem();
+                                    opacityItem.setGraphic(opacitySlider);
+                                    opacityMenu.getItems().add(opacityItem);
+                                        
+                                    opacityMenu.setOnShowing((t) -> {
+                                        // we get shown - set slider value to first selected
+                                        for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+                                            if (selectedGPXItem.isGPXTrack() || 
+                                                    selectedGPXItem.isGPXRoute()) {
+                                                opacitySlider.setValue(selectedGPXItem.getLineStyle().getOpacity());
+
+                                                break;
+                                            }
+                                        }
+                                    });
+                                        
+                                    opacityMenu.setOnHiding((t) -> {
+                                        // update linestyles and map
+                                        final double newOpacity = opacitySlider.getValue();
+
+                                        for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+                                            if (selectedGPXItem.isGPXTrack() || 
+                                                    selectedGPXItem.isGPXRoute()) {
+                                                selectedGPXItem.getLineStyle().setOpacity(newOpacity);
+                                                GPXTrackviewer.getInstance().updateLineStyle(selectedGPXItem);
+                                            }
+                                        }
+                                                    
+                                        // refresh TrackMap
+                                        myEditor.refreshGPXFileList();
+                                    });
+                                    
+                                    // line cap
+                                    final Menu linecapMenu = new Menu("Cap");
+
+                                    final ToggleGroup capGroup = new ToggleGroup();
+                                    // create menuitem for each color and set event handler
+                                    for (LineStyle.Linecap cap : LineStyle.Linecap.values()) {
+                                        final RadioMenuItem capMenuItem = new RadioMenuItem(cap.name());
+                                        capMenuItem.setSelected(false);
+                                        capMenuItem.setToggleGroup(capGroup);
+
+                                        linecapMenu.getItems().add(capMenuItem);
+                                    }
+                                    
+                                    lineStyle.getItems().addAll(colorMenu, widthMenu, opacityMenu, linecapMenu);
+                                    
+                                    fileMenu.getItems().add(lineStyle);
                                 }
                                 
                                 // TFE, 20200720: play tracks with timestamps

@@ -638,7 +638,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         }
     }
     
-    default void updateLineColor(final GPXLineItem lineItem) {
+    default public void updateLineStyle(final GPXLineItem lineItem) {
         // nothing todo
     }
 

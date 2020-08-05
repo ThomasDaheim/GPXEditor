@@ -210,9 +210,9 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
+    public void updateLineStyle(final GPXLineItem lineItem) {
         charts.stream().forEach((t) -> {
-            t.updateLineColor(lineItem);
+            t.updateLineStyle(lineItem);
         });
     }
     

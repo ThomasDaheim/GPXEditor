@@ -1258,7 +1258,7 @@ public class TrackMap extends LeafletMapView {
 //        System.out.println("Map End:      " + Instant.now() + ", " + notShownCount + " not shown");
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
+    public void updateLineStyle(final GPXLineItem lineItem) {
         if ((lineItem instanceof GPXTrack) || (lineItem instanceof GPXRoute)) {
             String layer = null;
             

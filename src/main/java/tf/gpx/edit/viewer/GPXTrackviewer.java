@@ -101,10 +101,10 @@ public class GPXTrackviewer {
         });
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
-        TrackMap.getInstance().updateLineColor(lineItem);
+    public void updateLineStyle(final GPXLineItem lineItem) {
+        TrackMap.getInstance().updateLineStyle(lineItem);
 
-        ChartsPane.getInstance().updateLineColor(lineItem);
+        ChartsPane.getInstance().updateLineStyle(lineItem);
     }
     
     public void loadPreferences() {

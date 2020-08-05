@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import me.himanshusoni.gpxparser.modal.Extension;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.util.Precision;
 import tf.helper.javafx.UnitConverter;
 
 /**
@@ -24,17 +26,21 @@ public class LineStyle {
     // default in leaflet is 2 PIXEL
     public static final Double DEFAULT_WIDTH = UnitConverter.getInstance().pixelToMillimeter(2.0);
     public static final String DEFAULT_PATTERN = "";
-    public static final Linecap DEFAULT_CAP = Linecap.ROUND;
+    public static final Linecap DEFAULT_CAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
     
     public static enum Linecap {
-        BUTT,
-        ROUND,
-        SQUARE;
+        Round,
+        Butt,
+        Square;
         
         @Override
         public String toString() {
             return name().toLowerCase();
+        }
+        
+        public static Linecap fromString(final String input) {
+            return Linecap.valueOf(StringUtils.capitalize(input));
         }
     }
     
@@ -133,7 +139,7 @@ public class LineStyle {
 
             myOpacity = Optional.of(Double.valueOf(nodeValue));
         }
-        return myOpacity.get();
+        return Precision.round(myOpacity.get(), 2);
     }
 
     public Double getWidth() {
@@ -147,7 +153,7 @@ public class LineStyle {
 
             myWidth = Optional.of(Double.valueOf(nodeValue));
         }
-        return myWidth.get();
+        return Precision.round(myWidth.get(), 1);
     }
 
     public String getPattern() {
@@ -173,7 +179,7 @@ public class LineStyle {
                 nodeValue = DEFAULT_CAP.name();
             }
 
-            myLinecap = Optional.of(Linecap.valueOf(nodeValue.toUpperCase()));
+            myLinecap = Optional.of(Linecap.fromString(nodeValue));
         }
         return myLinecap.get();
     }
@@ -212,6 +218,36 @@ public class LineStyle {
         
         if (myItem != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, inColor);
+            myItem.lineStyleHasChanged();
+        }
+    }
+    
+    public void setWidth(final double width) {
+        // set both our variable and the gpx extension
+        myWidth = Optional.of(Precision.round(width, 1));
+        
+        if (myItem != null) {
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
+            myItem.lineStyleHasChanged();
+        }
+    }
+    
+    public void setOpacity(final double opacity) {
+        // set both our variable and the gpx extension
+        myOpacity = Optional.of(Precision.round(opacity, 2));
+        
+        if (myItem != null) {
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.opacity, Double.toString(myOpacity.get()));
+            myItem.lineStyleHasChanged();
+        }
+    }
+    
+    public void setLinecap(final Linecap linecap) {
+        // set both our variable and the gpx extension
+        myLinecap = Optional.of(linecap);
+        
+        if (myItem != null) {
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.linecap, linecap.toString());
             myItem.lineStyleHasChanged();
         }
     }
