@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.extension;
 
-import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +34,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
@@ -120,10 +120,12 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             return myName;
         }
         
+        @Override
         public String getSchemaDefinition() {
             return mySchemaDefinition;
         }
         
+        @Override
         public String getSchemaLocation() {
             return mySchemaLocation;
         }

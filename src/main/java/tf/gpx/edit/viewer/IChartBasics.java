@@ -355,7 +355,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
                 if (!firstWaypoint.isGPXFile()) {
                     // and now color the series nodes according to lineitem color
                     // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
+                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
                     reducedSeries.getNode().pseudoClassStateChanged(color, true);
                     Set<Node> nodes = getChart().lookupAll(".series" + j);
                     for (Node n : nodes) {
@@ -516,7 +516,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         if (lineItem.isGPXTrackSegment()) {
             seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
         }
-        series.setName(seriesID + DATA_SEP + lineItem.getLineStyle().getColor());
+        series.setName(seriesID + DATA_SEP + lineItem.getLineStyle().getColor().getJSColor());
     }
     private static String getSeriesID(final XYChart.Series<Number, Number> series) {
         return series.getName().split(DATA_SEP)[0];

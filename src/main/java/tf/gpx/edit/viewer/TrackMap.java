@@ -70,7 +70,6 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
-import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -80,6 +79,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.leafletmap.ColorMarker;
 import tf.gpx.edit.leafletmap.ControlPosition;
 import tf.gpx.edit.leafletmap.IMarker;
@@ -95,7 +95,6 @@ import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
-import tf.helper.javafx.UnitConverter;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -1262,20 +1261,30 @@ public class TrackMap extends LeafletMapView {
         if ((lineItem instanceof GPXTrack) || (lineItem instanceof GPXRoute)) {
             String layer = null;
             
+            final LineStyle linestyle = lineItem.getLineStyle();
+            
             if (lineItem instanceof GPXTrack) {
                 // update for each segment
                 for (GPXTrackSegment segment : ((GPXTrack) lineItem).getGPXTrackSegments()) {
                     layer = trackSegments.getKey(segment);
 
                     if (layer != null) {
-                        execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getLineStyle().getColor() + "\");");
+                        execScript("updateMarkerStyle(\"" + layer + "\", \"" + 
+                                linestyle.getColor().getJSColor() + "\", \"" + 
+                                String.valueOf(linestyle.getWidth()) + "\", \"" + 
+                                linestyle.getOpacity().toString() + "\", \"" + 
+                                linestyle.getLinecap().toString() + "\");");
                     }
                 }
             } else {
                 layer = routes.getKey((GPXRoute) lineItem);
 
                 if (layer != null) {
-                    execScript("updateMarkerColor(\"" + layer + "\", \"" + lineItem.getLineStyle().getColor() + "\");");
+                    execScript("updateMarkerStyle(\"" + layer + "\", \"" + 
+                            linestyle.getColor().getJSColor() + "\", \"" + 
+                            String.valueOf(linestyle.getWidth()) + "\", \"" + 
+                            linestyle.getOpacity().toString() + "\", \"" + 
+                            linestyle.getLinecap().toString() + "\");");
                 }
             }
         }
@@ -1562,7 +1571,7 @@ public class TrackMap extends LeafletMapView {
         final String layer = addTrack(
                 waypoints, 
                 linestyle.getColor().getJSColor(), 
-                String.valueOf(UnitConverter.getInstance().millimeterToPixel(linestyle.getWidth())), 
+                String.valueOf(linestyle.getWidth()), 
                 linestyle.getOpacity().toString(), 
                 linestyle.getLinecap().toString(), 
                 false);

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tf.gpx.edit.extension;
+package tf.gpx.edit.items;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,8 @@ import java.util.Optional;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.helper.javafx.UnitConverter;
 
 /**
@@ -24,7 +26,8 @@ public class LineStyle {
     public static final Double DEFAULT_OPACITY = 1.0;
     // width in gpx_style is in millimeters BUT leaflet calculates in pixel...
     // default in leaflet is 2 PIXEL
-    public static final Double DEFAULT_WIDTH = UnitConverter.getInstance().pixelToMillimeter(2.0);
+    // we work in pixel
+    public static final Integer DEFAULT_WIDTH = 2;
     public static final String DEFAULT_PATTERN = "";
     public static final Linecap DEFAULT_CAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
@@ -69,7 +72,7 @@ public class LineStyle {
     private Optional<GarminColor> myColor;
     private GarminColor myDefaultColor = DEFAULT_COLOR;
     private Optional<Double> myOpacity;
-    private Optional<Double> myWidth;
+    private Optional<Integer> myWidth;
     private Optional<String> myPattern;
     private Optional<Linecap> myLinecap;
     private Optional<List<Dash>> myDashes = Optional.of(new ArrayList<>());
@@ -82,7 +85,7 @@ public class LineStyle {
         myDefaultColor = defaultCol;
     }
     
-    private LineStyle(final GarminColor color, final Double opacity, final Double width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
+    private LineStyle(final GarminColor color, final Double opacity, final Integer width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
         myItem = null;
         myExtension = null;
         myColorAttribute = null;
@@ -95,8 +98,30 @@ public class LineStyle {
         // TODO: get more fancy to support arrays and stuff...
         myDashes = Optional.of(dashes);
     }
+    
+    public LineStyle(final LineStyle lineStyle) {
+        myItem = lineStyle.getItem();
+        myExtension = myItem.getExtension();
+        myColorAttribute = lineStyle.getColorAttribute();
+        
+        myColor = Optional.of(lineStyle.getColor());
+        myOpacity = Optional.of(lineStyle.getOpacity());
+        myWidth = Optional.of(lineStyle.getWidth());
+        myPattern = Optional.of(lineStyle.getPattern());
+        myLinecap = Optional.of(lineStyle.getLinecap());
+        // TODO: get more fancy to support arrays and stuff...
+        myDashes = Optional.of(lineStyle.getDashes());
+    }
 
     public static final LineStyle DEFAULT_LINESTYLE = new LineStyle(DEFAULT_COLOR, DEFAULT_OPACITY, DEFAULT_WIDTH, DEFAULT_PATTERN, DEFAULT_CAP, DEFAULT_DASHES);
+    
+    private IStylableItem getItem() {
+        return myItem;
+    }
+    
+    private KnownExtensionAttributes.KnownAttribute getColorAttribute() {
+        return myColorAttribute;
+    }
     
     // intelligent getters: support lazy loading and get value from KnownAttribute from extension
     public GarminColor getColor() {
@@ -142,18 +167,20 @@ public class LineStyle {
         return Precision.round(myOpacity.get(), 2);
     }
 
-    public Double getWidth() {
+    public Integer getWidth() {
         if (myWidth == null) {
             String nodeValue = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width);
 
             // worst case: use default
             if (nodeValue == null || nodeValue.isBlank()) {
-                nodeValue = DEFAULT_WIDTH.toString();
+                myWidth = Optional.of(DEFAULT_WIDTH);
+            } else {
+                // we work in pixel, gpx_style in millimeter
+                myWidth = Optional.of((int) Math.round(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue))));
             }
 
-            myWidth = Optional.of(Double.valueOf(nodeValue));
         }
-        return Precision.round(myWidth.get(), 1);
+        return myWidth.get();
     }
 
     public String getPattern() {
@@ -222,12 +249,19 @@ public class LineStyle {
         }
     }
     
-    public void setWidth(final double width) {
+    public void setWidth(final Integer width) {
         // set both our variable and the gpx extension
-        myWidth = Optional.of(Precision.round(width, 1));
+        myWidth = Optional.of(width);
         
         if (myItem != null) {
-            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
+            // we work in pixel, gpx_style in millimeter
+            KnownExtensionAttributes.setValueForAttribute(
+                    myExtension, 
+                    KnownExtensionAttributes.KnownAttribute.width, 
+                    Double.toString(
+                            Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
+                            )
+                    );
             myItem.lineStyleHasChanged();
         }
     }

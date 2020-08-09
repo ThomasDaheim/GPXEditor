@@ -25,9 +25,9 @@
  */
 package tf.gpx.edit.actions;
 
-import me.himanshusoni.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.List;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;

@@ -27,11 +27,6 @@ package tf.gpx.edit.values;
  */
 
 
-import me.himanshusoni.gpxparser.modal.Copyright;
-import me.himanshusoni.gpxparser.modal.Email;
-import me.himanshusoni.gpxparser.modal.Link;
-import me.himanshusoni.gpxparser.modal.Metadata;
-import me.himanshusoni.gpxparser.modal.Person;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -46,6 +41,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import me.himanshusoni.gpxparser.modal.Copyright;
+import me.himanshusoni.gpxparser.modal.Email;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Person;
 import tf.gpx.edit.helper.AbstractStage;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;

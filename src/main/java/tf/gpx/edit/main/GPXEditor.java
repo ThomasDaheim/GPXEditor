@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.main;
 
-import me.himanshusoni.gpxparser.modal.Metadata;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
@@ -97,6 +96,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javax.imageio.ImageIO;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -134,6 +134,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.FindSRTMHeight;
@@ -142,6 +143,7 @@ import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditGPXWaypoint;
+import tf.gpx.edit.values.EditLineStyle;
 import tf.gpx.edit.values.EditSplitValues;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.StatisticsViewer;
@@ -407,6 +409,7 @@ public class GPXEditor implements Initializable {
         DistributionViewer.getInstance().setCallback(this);
         EditGPXMetadata.getInstance().setCallback(this);
         EditGPXWaypoint.getInstance().setCallback(this);
+        EditLineStyle.getInstance().setCallback(this);
         StatisticsViewer.getInstance().setCallback(this);
         StatusBar.getInstance().setCallback(this);
 
@@ -1055,6 +1058,26 @@ public class GPXEditor implements Initializable {
         updateAction.doAction();
         
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(file));
+    }
+
+    public void updateLineStyle(final LineStyle lineStyle) {
+        // update linestyles and map
+        for (TreeItem<GPXMeasurable> selectedItem : gpxFileList.getSelectionModel().getSelectedItems()) {
+            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+            if (selectedGPXItem.isGPXTrack() || 
+                    selectedGPXItem.isGPXRoute()) {
+                selectedGPXItem.getLineStyle().setColor(lineStyle.getColor());
+                selectedGPXItem.getLineStyle().setWidth(lineStyle.getWidth());
+                selectedGPXItem.getLineStyle().setOpacity(lineStyle.getOpacity());
+                selectedGPXItem.getLineStyle().setLinecap(lineStyle.getLinecap());
+
+                GPXTrackviewer.getInstance().updateLineStyle(selectedGPXItem);
+            }
+        }
+
+        // refresh TrackMap
+        refreshGPXFileList();
     }
     
     public void insertMeasureablesAtPosition(

@@ -25,15 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import me.himanshusoni.gpxparser.GPXParser;
-import me.himanshusoni.gpxparser.GPXWriter;
-import me.himanshusoni.gpxparser.modal.Extension;
-import me.himanshusoni.gpxparser.modal.GPX;
-import me.himanshusoni.gpxparser.modal.Link;
-import me.himanshusoni.gpxparser.modal.Metadata;
-import me.himanshusoni.gpxparser.modal.Route;
-import me.himanshusoni.gpxparser.modal.Track;
-import me.himanshusoni.gpxparser.modal.Waypoint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -58,6 +49,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import me.himanshusoni.gpxparser.GPXParser;
+import me.himanshusoni.gpxparser.GPXWriter;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;

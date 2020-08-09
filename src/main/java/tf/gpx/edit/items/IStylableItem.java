@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tf.gpx.edit.extension;
+package tf.gpx.edit.items;
 
 import me.himanshusoni.gpxparser.modal.Extension;
 

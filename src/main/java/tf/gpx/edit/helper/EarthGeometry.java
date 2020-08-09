@@ -1,8 +1,8 @@
 package tf.gpx.edit.helper;
 
-import me.himanshusoni.gpxparser.modal.Waypoint;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
 

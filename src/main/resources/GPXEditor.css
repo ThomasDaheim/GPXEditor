@@ -448,3 +448,8 @@
     -fx-padding: 0 0 0 -16;
     -fx-margin: 0;
 }
+
+/* TFE, 20200807: slider tick labels */
+.slider .axis {
+    -fx-tick-label-fill: -fx-text-inner-color;
+}

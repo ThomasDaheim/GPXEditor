@@ -25,6 +25,12 @@
  */
 package tf.gpx.edit.items;
 
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
@@ -33,12 +39,6 @@ import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import me.himanshusoni.gpxparser.type.Fix;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;

@@ -113,11 +113,17 @@ function getMapBounds() {
 function updateMarkerIcon(layer, icon) {
     window[layer].setIcon(window[icon]);
 }
-function updateMarkerColor(layer, color) {
+function updateMarkerStyle(layer, color, weight, opacity, linecap) {
     window[layer].setStyle({
         color: color,
-        weight: 2
+        weight: weight,
+        opacity: opacity,
+        lineCap: linecap
     });
+
+    // TODO: repaint doesn't get trigerred!!!
+    window[layer].remove(myMap);
+    window[layer].addTo(myMap);
 }
 function highlightMarker(layer) {
     window[layer].valueOf()._icon.style.backgroundColor = 'red';

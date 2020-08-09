@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import tf.gpx.edit.extension.IStylableItem;
-import me.himanshusoni.gpxparser.modal.Bounds;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -37,8 +35,8 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.lang3.math.NumberUtils;
-import tf.gpx.edit.extension.LineStyle;
 
 /**
  *
@@ -418,11 +416,9 @@ public abstract class GPXLineItem implements IStylableItem {
     }
     
     // TFE, 20190723: some color, please
-    protected LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
-    
     @Override
     public LineStyle getLineStyle() {
-        return myLineStyle;
+        return LineStyle.DEFAULT_LINESTYLE;
     }
     
     @Override

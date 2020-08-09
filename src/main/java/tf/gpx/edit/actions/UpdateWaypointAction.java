@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.actions;
 
-import me.himanshusoni.gpxparser.modal.Link;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import me.himanshusoni.gpxparser.modal.Link;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;

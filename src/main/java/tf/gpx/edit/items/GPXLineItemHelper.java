@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.items;
 
-import me.himanshusoni.gpxparser.modal.Extension;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javafx.geometry.BoundingBox;
+import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.collections4.CollectionUtils;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;

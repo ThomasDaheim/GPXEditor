@@ -13,9 +13,9 @@ import org.junit.Before;
 import org.junit.Test;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
-import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.LineStyle;
 
 /**
  *

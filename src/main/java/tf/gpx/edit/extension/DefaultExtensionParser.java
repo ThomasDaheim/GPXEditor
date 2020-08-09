@@ -55,7 +55,7 @@ public class DefaultExtensionParser extends DummyExtensionParser {
 
     @Override
     public Object parseExtensions(Node node) {
-        // store all nodes under extension in DummyExtensionHolder - if any
+        // store all nodes under extension in DefaultExtensionHolder - if any
         if (GPXConstants.NODE_EXTENSIONS.equals(node.getNodeName()) && (node.getChildNodes().getLength() > 0)) {
             return new DefaultExtensionHolder(node.getChildNodes());
         } else {

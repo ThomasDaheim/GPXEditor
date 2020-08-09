@@ -25,14 +25,15 @@
  */
 package tf.gpx.edit.extension;
 
-import me.himanshusoni.gpxparser.GPXConstants;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import me.himanshusoni.gpxparser.GPXConstants;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -73,6 +74,16 @@ public class KnownExtensionAttributes {
         @Override
         public String getName() {
             return myName;
+        }
+        
+        @Override
+        public String getSchemaDefinition() {
+            return myExtensionParent.getSchemaDefinition();
+        }
+        
+        @Override
+        public String getSchemaLocation() {
+            return myExtensionParent.getSchemaLocation();
         }
         
         @Override
@@ -253,6 +264,14 @@ public class KnownExtensionAttributes {
             if (extNode == null) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(attr.getExtension().toString());
+                
+                // set xmnls as attribute in case namespace of the extension is empty, e.g.
+                // <line xmlns="http://www.topografix.com/GPX/gpx_style/0/2">#
+                // instead of
+                // <gpx_style:line>
+                if (attr.getExtension().getNamespace().isEmpty()) {
+                    ((Element) extNode).setAttribute("xmlns", attr.getExtension().getSchemaDefinition());
+                }
             }
 
             // 1) find extension node OR create

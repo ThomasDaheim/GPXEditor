@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import me.himanshusoni.gpxparser.type.Fix;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -60,6 +59,7 @@ import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
+import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.AbstractStage;
