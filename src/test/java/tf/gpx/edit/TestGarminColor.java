@@ -58,18 +58,31 @@ public class TestGarminColor {
     }
     
     @Test
-    public void getGarminDisplayColorForHexColor_Exceptions() {
+    public void getGarminDisplayColorForHexColor_Exceptions1() {
         exceptionRule.expect(IllegalArgumentException.class);
         
         exceptionRule.expectMessage("Argument is null");
         GarminColor.getGarminColorForHexColor(null);
-
+    }
+    
+    @Test
+    public void getGarminDisplayColorForHexColor_Exceptions2() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        
         exceptionRule.expectMessage("Argument is to short: ");
         GarminColor.getGarminColorForHexColor("12345");
-
+    }
+    
+    @Test
+    public void getGarminDisplayColorForHexColor_Exceptions3() {
+        exceptionRule.expect(IllegalArgumentException.class);
+        
         exceptionRule.expectMessage("Argument is to short: ");
         GarminColor.getGarminColorForHexColor("#12345");
-
+    }
+    
+    @Test
+    public void getGarminDisplayColorForHexColor_Exceptions4() {
         exceptionRule.expect(NumberFormatException.class);
         GarminColor.getGarminColorForHexColor("#-+[]()");
     }
