@@ -155,7 +155,6 @@ import tf.helper.doundo.IDoUndoAction;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AboutMenu;
 import tf.helper.javafx.ShowAlerts;
-import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.UsefulKeyCodes;
 
 /**
@@ -399,8 +398,8 @@ public class GPXEditor implements Initializable {
         initDoUndo();
         
         // load stored values for tableviews
-        TableViewPreferences.loadTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferenceStore.getInstance());
-        TableViewPreferences.loadTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferenceStore.getInstance());
+        gpxFileList.loadPreferences(GPXEditorPreferenceStore.getInstance());
+        gpxWaypoints.loadPreferences(GPXEditorPreferenceStore.getInstance());
         
         // they all need to be able to do something in the editor
         GPXFileHelper.getInstance().setCallback(this);
@@ -445,7 +444,7 @@ public class GPXEditor implements Initializable {
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
 
         // TFE, 20200713: needs to happen before map gets loaded
-        MapLayerUsage.getInstance().loadPreferences();
+        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
         TrackMap.getInstance().initMap();
     }
     
@@ -469,7 +468,7 @@ public class GPXEditor implements Initializable {
         // TFE, 20200622: now also track map has completed loading...
 
         // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences();
+        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
     }
 
     public void stop() {
@@ -478,12 +477,12 @@ public class GPXEditor implements Initializable {
         GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.put(splitPane.getDividerPositions()[0]);
         
         // store values for tableviews
-        TableViewPreferences.saveTreeTableViewPreferences(gpxFileListXML, "gpxFileListXML", GPXEditorPreferenceStore.getInstance());
-        TableViewPreferences.saveTableViewPreferences(gpxWaypointsXML, "gpxTrackXML", GPXEditorPreferenceStore.getInstance());
+        gpxFileList.savePreferences(GPXEditorPreferenceStore.getInstance());
+        gpxWaypoints.savePreferences(GPXEditorPreferenceStore.getInstance());
 
         // TFE, 20180901: store values for track & height map
-        GPXTrackviewer.getInstance().savePreferences();
-        MapLayerUsage.getInstance().savePreferences();
+        GPXTrackviewer.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
+        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
     }
     
     public Window getWindow() {

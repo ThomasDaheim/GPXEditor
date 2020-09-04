@@ -58,6 +58,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -65,7 +66,7 @@ import tf.helper.general.ObjectsHelper;
  * @author thomas
  * @param <T>
  */
-public interface IChartBasics<T extends XYChart<Number, Number>> {
+public interface IChartBasics<T extends XYChart<Number, Number>> extends IPreferencesHolder {
     static String DATA_SEP = "-";
     static String SHIFT_LABEL = "ShiftNode";
     static String SHIFT_TEXT = "ShiftText";
@@ -639,14 +640,6 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
     }
     
     default public void updateLineStyle(final GPXLineItem lineItem) {
-        // nothing todo
-    }
-
-    default void loadPreferences() {
-        // nothing todo
-    }
-    
-    default void savePreferences() {
         // nothing todo
     }
 }

@@ -83,9 +83,12 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.StatusBar;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AppClipboard;
 import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.TooltipHelper;
 import tf.helper.javafx.UsefulKeyCodes;
 
@@ -93,7 +96,7 @@ import tf.helper.javafx.UsefulKeyCodes;
  *
  * @author thomas
  */
-public class GPXTableView {
+public class GPXTableView implements IPreferencesHolder {
     public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-tableview-dnd");
     public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-tableview-cnp");
 
@@ -774,6 +777,16 @@ public class GPXTableView {
     
     public boolean onlyShiftPressed() {
         return onlyShiftPressed;
+    }
+    
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
+        TableViewPreferences.loadTableViewPreferences(myTableView, "gpxTrackXML", store);        
+    }
+    
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
+        TableViewPreferences.saveTableViewPreferences(myTableView, "gpxTrackXML", store);        
     }
     
     /* Required getter and setter methods are forwarded to internal TreeTableView */

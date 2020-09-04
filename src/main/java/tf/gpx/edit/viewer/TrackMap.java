@@ -95,12 +95,13 @@ import tf.gpx.edit.srtm.AssignSRTMHeight;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.general.IPreferencesHolder;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
  * @author thomas
  */
-public class TrackMap extends LeafletMapView {
+public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static TrackMap INSTANCE = new TrackMap();
 
     public enum RoutingProfile {
@@ -1705,10 +1706,7 @@ public class TrackMap extends LeafletMapView {
 
     // TFE, 20190901: support to store & load overlay settings per baselayer
     // TFE, 20200623: now done in MapLayerUsage
-    public void loadPreferences() {
-    }
-    public void savePreferences() {
-    }
+
     private void transformToJavaList(final String jsScript, final List<String> result, final boolean appendTo) {
         if (!appendTo) {
             result.clear();

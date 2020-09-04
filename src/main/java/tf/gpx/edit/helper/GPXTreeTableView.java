@@ -90,10 +90,13 @@ import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.EditLineStyle;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AppClipboard;
 import tf.helper.javafx.ColorConverter;
 import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.TooltipHelper;
 import tf.helper.javafx.UsefulKeyCodes;
 
@@ -101,7 +104,7 @@ import tf.helper.javafx.UsefulKeyCodes;
  *
  * @author Thomas
  */
-public class GPXTreeTableView {
+public class GPXTreeTableView implements IPreferencesHolder {
 //    private static final DataFormat DRAG_AND_DROP = new DataFormat("application/x-java-serialized-object");
     public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-treetableview-dnd");
     public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-treetableview-cnp");
@@ -1087,6 +1090,16 @@ public class GPXTreeTableView {
     private static void collapseNodeAndChildren(final TreeItem<GPXMeasurable> node) {
         node.getChildren().forEach(GPXTreeTableView::collapseNodeAndChildren);
         node.setExpanded(false);
+    }
+    
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
+        TableViewPreferences.loadTreeTableViewPreferences(myTreeTableView, "gpxFileListXML", store);        
+    }
+    
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
+        TableViewPreferences.saveTreeTableViewPreferences(myTreeTableView, "gpxFileListXML", store);        
     }
 
     // prevent loops in the tree
