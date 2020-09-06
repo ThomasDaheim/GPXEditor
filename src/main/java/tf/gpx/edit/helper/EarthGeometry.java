@@ -262,7 +262,7 @@ public class EarthGeometry {
         final double distAB = EarthGeometry.distanceWaypoints(a, b);
         final double distPA = EarthGeometry.distanceWaypoints(p, a);
         final double distPB = EarthGeometry.distanceWaypoints(p, b);
-        if ((distAB == 0) || (distPA == 0) || (distPB == 0)) return 0;
+        if ((distAB == 0.0) || (distPA == 0.0) || (distPB == 0.0)) return 0.0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;
 
@@ -310,7 +310,7 @@ public class EarthGeometry {
         final double distAB = EarthGeometry.distanceWaypoints(a, b);
         final double distAC = EarthGeometry.distanceWaypoints(a, c);
         final double distBC = EarthGeometry.distanceWaypoints(b, c);
-        if ((distAB == 0) || (distAC == 0) || (distBC == 0)) return 0;
+        if ((distAB == 0.0) || (distAC == 0.0) || (distBC == 0.0)) return 0.0;
 
         final double s = (distAB + distAC + distBC) / 2.0;
         

@@ -322,18 +322,26 @@ public class GPXAlgorithms {
         final List<GPXWaypoint> list = new ArrayList<>(track);
     	int index=0;
     	while( index < list.size()-3 ){
-            // System.out.println("index: " + index);
-            int firstOut= index+2;
-            // System.out.println("firstOut: " + firstOut);
-            // go forward til outside tolerance area
-            while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircleGPXWaypoints(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
-                // System.out.println("firstOut: " + firstOut);
-                firstOut++;
-            }
-            // remove all inside tolerance
-            for (int i=index+1; i<firstOut-1; i++){
-                // System.out.println("i: " + i);
-                list.remove(index+1);
+//            System.out.println("index: " + index);
+            // TFE, 20200906: special case alert! distance between index, index+1, index+2 can be 0!
+            // in this case distanceToGreatCircleGPXWaypoints will always return 0 an all points of the track will be removed
+            if (EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+1)) > 0.0 &&
+                    EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+2)) > 0.0 &&
+                    EarthGeometry.distanceGPXWaypoints(list.get(index+1), list.get(index+2)) > 0.0) {
+                int firstOut= index+2;
+//                System.out.println("firstOut: " + firstOut);
+                // go forward til outside tolerance area
+                while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircleGPXWaypoints(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
+//                    System.out.println("firstOut: " + firstOut);
+                    firstOut++;
+                }
+                // remove all inside tolerance
+                for (int i=index+1; i<firstOut-1; i++){
+//                    System.out.println("i: " + i);
+                    list.remove(index+1);
+                }
+            } else {
+                System.out.println("Zero distance points detected at: " + index + ", skipping");
             }
             index++;
     	}
