@@ -1074,7 +1074,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                             MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 
                             MarkerType.MARKER,
                             0, 
-                            false);
+                            true);
                     fileWaypoints.put(waypoint, gpxWaypoint);
                     
                     bounds[4] = 1d;
@@ -1517,7 +1517,13 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         return geojson;
     }
     
-    private String addMarkerAndCallback(final GPXWaypoint gpxWaypoint, final String pointTitle, final IMarker marker, final MarkerType markerType, final int zIndex, final boolean interactive) {
+    private String addMarkerAndCallback(
+            final GPXWaypoint gpxWaypoint, 
+            final String pointTitle, 
+            final IMarker marker, 
+            final MarkerType markerType, 
+            final int zIndex, 
+            final boolean interactive) {
         final LatLong point = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
         
         // TFE, 20180513: if waypoint has a name, add it to the pop-up
@@ -1549,6 +1555,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 final GPXLineItem parent = gpxWaypoint.getParent();
                 if (parent.isGPXTrackSegment()) {
                     execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
+                } else {
+                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"\");");
                 }
             }
         }
