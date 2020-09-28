@@ -287,9 +287,10 @@ public class GPXLineItemHelper {
         
         GPXWaypoint result = null;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            if (result != null && result.getDate() != null && gpxWaypoint.getDate() != null && result.getDate().after(gpxWaypoint.getDate())) {
+            // TFE, 20200926: selectionmodel selecteditems can contain a NULL entry... don't ask!
+            if (result != null && result.getDate() != null && gpxWaypoint != null && gpxWaypoint.getDate() != null && result.getDate().after(gpxWaypoint.getDate())) {
                 result = gpxWaypoint;
-            } else if (result == null && gpxWaypoint.getDate() != null) {
+            } else if (result == null && gpxWaypoint != null && gpxWaypoint.getDate() != null) {
                 result = gpxWaypoint;
             }
         }
@@ -306,9 +307,10 @@ public class GPXLineItemHelper {
         
         GPXWaypoint result = null;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            if (result != null && result.getDate() != null && gpxWaypoint.getDate() != null && result.getDate().before(gpxWaypoint.getDate())) {
+            // TFE, 20200926: selectionmodel selecteditems can contain a NULL entry... don't ask!
+            if (result != null && result.getDate() != null && gpxWaypoint != null && gpxWaypoint.getDate() != null && result.getDate().before(gpxWaypoint.getDate())) {
                 result = gpxWaypoint;
-            } else if (result == null && gpxWaypoint.getDate() != null) {
+            } else if (result == null && gpxWaypoint != null && gpxWaypoint.getDate() != null) {
                 result = gpxWaypoint;
             }
         }

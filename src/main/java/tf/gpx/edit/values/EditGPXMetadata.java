@@ -359,7 +359,9 @@ public class EditGPXMetadata extends AbstractStage {
         metaBoundsLbl.setText(bounds);
         
         metaLinkTable.getItems().clear();
-        metaLinkTable.getItems().addAll(metadata.getLinks());
+        if (metadata.getLinks() != null) {
+            metaLinkTable.getItems().addAll(metadata.getLinks());
+        }
     }
     
     private Metadata getMetadata() {
