@@ -153,6 +153,10 @@ public class LineStyle {
         return myColor.get();
     }
     
+    public GarminColor getDefaultColor() {
+        return myDefaultColor;
+    }
+    
     public Double getOpacity() {
         if (myOpacity == null) {
             String nodeValue = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.opacity);
@@ -165,6 +169,10 @@ public class LineStyle {
             myOpacity = Optional.of(Double.valueOf(nodeValue));
         }
         return Precision.round(myOpacity.get(), 2);
+    }
+    
+    public Double getDefaultOpacity() {
+        return DEFAULT_OPACITY;
     }
 
     public Integer getWidth() {
@@ -182,6 +190,10 @@ public class LineStyle {
         }
         return myWidth.get();
     }
+    
+    public Integer getDefaultWidth() {
+        return DEFAULT_WIDTH;
+    }
 
     public String getPattern() {
         if (myPattern == null) {
@@ -196,6 +208,10 @@ public class LineStyle {
         }
         return myPattern.get();
     }
+    
+    public String getDefaultPattern() {
+        return DEFAULT_PATTERN;
+    }
 
     public Linecap getLinecap() {
         if (myLinecap == null) {
@@ -209,6 +225,10 @@ public class LineStyle {
             myLinecap = Optional.of(Linecap.fromString(nodeValue));
         }
         return myLinecap.get();
+    }
+    
+    public Linecap getDefaultLinecap() {
+        return DEFAULT_CAP;
     }
 
     public List<Dash> getDashes() {
@@ -284,5 +304,13 @@ public class LineStyle {
             KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.linecap, linecap.toString());
             myItem.lineStyleHasChanged();
         }
+    }
+    
+    // clear cache, e.g. in case extensions have changed
+    public void reset() {
+        myColor = null;
+        myOpacity = null;
+        myWidth = null;
+        myLinecap = null;
     }
 }
