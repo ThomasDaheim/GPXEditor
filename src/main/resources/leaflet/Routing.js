@@ -92,8 +92,10 @@ function startRouting(layer, routingprofile) {
             foundRoute = routes[0];
         }).addTo(myMap);
                     
-//        curRoute.disableEdit();
-        curRoute.editing.disable();
+        // for use with Leaflet.Editable
+        curRoute.disableEdit();
+        // for use with Leaflet.Draw
+//        curRoute.editing.disable();
         myMap.removeLayer(curRoute);
     }
 }
@@ -128,8 +130,10 @@ function stopRouting(updateRoute) {
 
             // show route as editable
             myMap.addLayer(curRoute);
-//            curRoute.enableEdit();
-            curRoute.editing.disable();
+            // for use with Leaflet.Editable
+            curRoute.enableEdit();
+            // for use with Leaflet.Draw
+//            curRoute.editing.disable();
         
             // done here, lets clean up
             routingControl = undefined;

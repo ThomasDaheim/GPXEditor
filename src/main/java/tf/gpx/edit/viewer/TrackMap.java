@@ -354,14 +354,15 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
 
 //            // https://github.com/Leaflet/Leaflet.Editable
-//            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
             // TFE, 20200510: draw instead of editable
+            // TFE, 20201025: rolled back since "New Route" not working properly
             // since we have an optimization for many waypointsToShow here...
-            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
             // add support for lat / lon lines
@@ -966,6 +967,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         clearMarkersAndTracks();
         execScript("clearSearchResults();");
         execScript("stopRouting(false);");
+        // for use with Leaflet.Draw
 //        execScript("clearEditable();");
         execScript("destroyPlayback();");
 
