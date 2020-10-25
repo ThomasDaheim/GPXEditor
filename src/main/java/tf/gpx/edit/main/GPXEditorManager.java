@@ -150,12 +150,28 @@ public class GPXEditorManager extends Application {
                 // TF, 20161103: store and read height, width of scene and divider positions of splitpane
                 Double recentWindowWidth = GPXEditorPreferences.RECENTWINDOWWIDTH.getAsType();
                 Double recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getAsType();
+                // TFE, 20201020: store left & top as well
+                final Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
+                Double recentWindowLeft = GPXEditorPreferences.RECENTWINDOWLEFT.getAsType();
+                if (recentWindowLeft < 0.0) {
+                    recentWindowLeft = (primScreenBounds.getWidth() - recentWindowWidth) / 2.0;
+                }
+                Double recentWindowTop = GPXEditorPreferences.RECENTWINDOWTOP.getAsType();
+                if (recentWindowTop < 0.0) {
+                    recentWindowTop = (primScreenBounds.getHeight() - recentWindowHeigth) / 2.0;
+                }
                 // TFE, 20201011: check that not larger than current screen - might happen with multiple monitors
-                final Rectangle2D screenRect = Screen.getPrimary().getVisualBounds();
-                recentWindowWidth = Math.min(recentWindowWidth, screenRect.getWidth());
-                recentWindowHeigth = Math.min(recentWindowHeigth, screenRect.getHeight());
+                if (Screen.getScreensForRectangle(recentWindowLeft, recentWindowTop, recentWindowWidth, recentWindowHeigth).isEmpty()) {
+                    recentWindowWidth = GPXEditorPreferences.RECENTWINDOWWIDTH.getDefaultAsType();
+                    recentWindowHeigth = GPXEditorPreferences.RECENTWINDOWHEIGTH.getDefaultAsType();
+                    recentWindowLeft = (primScreenBounds.getWidth() - recentWindowWidth) / 2.0;
+                    recentWindowTop = (primScreenBounds.getHeight() - recentWindowHeigth) / 2.0;
+                }
 
                 myStage.setScene(new Scene(pane, recentWindowWidth, recentWindowHeigth));
+                myStage.setX(recentWindowLeft);
+                myStage.setY(recentWindowTop);
+                
                 myStage.setTitle("GPX Editor");
                 myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
                 myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
@@ -179,9 +195,11 @@ public class GPXEditorManager extends Application {
     @Override
     public void stop() {
         // TF, 20161103: store and read height, width of scene and divider positions of splitpane
-        if (myStage != null) {
+        if (myStage != null && !myStage.isMaximized() && !myStage.isIconified()) {
             GPXEditorPreferences.RECENTWINDOWWIDTH.put(myStage.getScene().getWidth());
             GPXEditorPreferences.RECENTWINDOWHEIGTH.put(myStage.getScene().getHeight());
+            GPXEditorPreferences.RECENTWINDOWLEFT.put(myStage.getX());
+            GPXEditorPreferences.RECENTWINDOWTOP.put(myStage.getY());
         }
         
         if (controller != null) {

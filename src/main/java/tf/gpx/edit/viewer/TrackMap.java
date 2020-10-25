@@ -354,15 +354,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
 
 //            // https://github.com/Leaflet/Leaflet.Editable
-//            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
             // TFE, 20200510: draw instead of editable
             // since we have an optimization for many waypointsToShow here...
-            // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
+//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
             // add support for lat / lon lines
@@ -748,7 +747,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
 
                 execScript("var " + routeName + " = myMap.editTools.startPolyline();");
-                execScript("updateMarkerColor(\"" + routeName + "\", \"blue\");");
+//                execScript("updateMarkerColor(\"" + routeName + "\", \"blue\");");
                 execScript("makeEditable(\"" + routeName + "\");");
 
                 routes.put(routeName, gpxRoute);
@@ -967,7 +966,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         clearMarkersAndTracks();
         execScript("clearSearchResults();");
         execScript("stopRouting(false);");
-        execScript("clearEditable();");
+//        execScript("clearEditable();");
         execScript("destroyPlayback();");
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
@@ -1147,11 +1146,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track
                 final GPXTrackSegment gpxTrackSegment = (GPXTrackSegment) gpxpoint.getParent();
-                final String track = addTrackAndCallback(waypoints, gpxpoint.getParent().getParent().getName(), gpxTrackSegment.getParent().getLineStyle());
+                final String track = addTrackAndCallback(waypoints, gpxTrackSegment.getParent().getName(), gpxTrackSegment.getParent().getLineStyle());
                 trackSegments.put(track, gpxTrackSegment);
             } else if (gpxpoint.isGPXRouteWaypoint()) {
                 final GPXRoute gpxRoute = (GPXRoute) gpxpoint.getParent();
-                final String route = addTrackAndCallback(waypoints, gpxpoint.getParent().getName(), gpxRoute.getLineStyle());
+                final String route = addTrackAndCallback(waypoints, gpxRoute.getName(), gpxRoute.getLineStyle());
                 execScript("makeEditable(\"" + route + "\");");
                 routes.put(route, gpxRoute);
             }
@@ -1829,12 +1828,12 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         public void registerRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.setCurrentGPXRoute(route, lat, lon);
-            //System.out.println("Route registered: " + gpxRoute + ", " + lat + ", " + lon);
+//            System.out.println("Route registered: " + route + ", " + lat + ", " + lon);
         }
 
         public void deregisterRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.removeCurrentGPXRoute();
-            //System.out.println("Route deregistered: " + gpxRoute + ", " + lat + ", " + lon);
+//            System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
         }
 
         public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
