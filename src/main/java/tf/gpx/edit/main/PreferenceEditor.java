@@ -705,7 +705,7 @@ public class PreferenceEditor extends AbstractStage {
         wayIcnSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         wayThshldText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         eventText.setText(decimalFormat.format(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
-        breakText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
+        breakText.setText(decimalFormat.format(GPXEditorPreferences.BREAK_DURATION.getAsType()));
     }
     
     private void savePreferences() {
