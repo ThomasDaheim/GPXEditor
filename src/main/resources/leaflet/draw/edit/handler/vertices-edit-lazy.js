@@ -161,10 +161,23 @@ L.Edit.PolyVerticesEdit.include({
             .on('touchend', this._fireEdit, this)
             .on('MSPointerMove', this._onTouchMove, this)
             .on('MSPointerUp', this._fireEdit, this);
+    
+        // forward mouseover / mouseout to poly
+        marker
+            .on('mouseover', this._onMouseover, this)
+            .on('mouseout', this._onMouseout, this);
 
         this._markerGroup.addLayer(marker);
 
         return marker;
+    },
+    
+    _onMouseover: function(e) {
+        this._poly.fire('mouseover');
+    },
+
+    _onMouseout: function(e) {
+        this._poly.fire('mouseout');
     },
 
     _onMarkerDragStart: function () {
@@ -197,6 +210,11 @@ L.Edit.PolyVerticesEdit.include({
             .off('click', this._onMarkerClick, this)
             .off('MSPointerMove', this._onTouchMove, this)
             .off('MSPointerUp', this._fireEdit, this);
+
+        // forward mouseover / mouseout to poly
+        marker
+            .off('mouseover', this._onMouseover, this)
+            .off('mouseout', this._onMouseout, this);
     },
 
     _fireEdit: function () {

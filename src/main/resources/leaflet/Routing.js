@@ -92,7 +92,8 @@ function startRouting(layer, routingprofile) {
             foundRoute = routes[0];
         }).addTo(myMap);
                     
-        curRoute.disableEdit();
+//        curRoute.disableEdit();
+        curRoute.editing.disable();
         myMap.removeLayer(curRoute);
     }
 }
@@ -127,7 +128,8 @@ function stopRouting(updateRoute) {
 
             // show route as editable
             myMap.addLayer(curRoute);
-            curRoute.enableEdit();
+//            curRoute.enableEdit();
+            curRoute.editing.disable();
         
             // done here, lets clean up
             routingControl = undefined;

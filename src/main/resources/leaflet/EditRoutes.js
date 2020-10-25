@@ -28,47 +28,32 @@
  * Enable editing on marker and add callbacks for editing ends
  */
 
-//// store pairs layer / polyline for each editable polyline
-//// need for revers-lookup of the layer for callback to java
-//var editLayerPoly = [];
-//
-//myMap.on(L.Draw.Event.EDITVERTEX, function(e) {
-//    var polyline = e.poly;
-//    var coords = polyline.getLatLngs();
-//    
-////    jscallback.log("e: " + e);
-////    jscallback.log("e.poly: " + e.poly);
-////    jscallback.log("coords: " + coords);
-//
-//    var layer;
-//    for(let i = 0; i < editLayerPoly.length; i++) {
-//        if (editLayerPoly[i][0] === polyline) {
-//            layer = editLayerPoly[i][1];
-//        }
-//    }
-////    jscallback.log("layer: " + layer);
-//
-//    if (layer !== undefined) {
-//        jscallback.updateRoute(L.Draw.Event.EDITVERTEX, layer, coordsToString(coords));
-//    } else {
-//        jscallback.log("e.poly: " + e.poly + " has no attached layer!");
-//    }
-//});
-//
-//function makeEditable(layer) {
-//    var polyline = window[layer];
-//    polyline.editing.enable();
-//
-//    editLayerPoly.push([polyline, layer]);
-//}
-//
-//// reset array of stored layer / polyline pairs
-//function clearEditable() {
-//    editLayerPoly = [];
-//}
+// store pairs layer / polyline for each editable polyline
+// need for revers-lookup of the layer for callback to java
+var editLayerPoly = [];
 
-// add editable as option to the map
-myMap.editTools = new L.Editable(myMap, {editable: true});
+myMap.on(L.Draw.Event.EDITVERTEX, function(e) {
+    var polyline = e.poly;
+    var coords = polyline.getLatLngs();
+    
+//    jscallback.log("e: " + e);
+//    jscallback.log("e.poly: " + e.poly);
+//    jscallback.log("coords: " + coords);
+
+    var layer;
+    for(let i = 0; i < editLayerPoly.length; i++) {
+        if (editLayerPoly[i][0] === polyline) {
+            layer = editLayerPoly[i][1];
+        }
+    }
+//    jscallback.log("layer: " + layer);
+
+    if (layer !== undefined) {
+        jscallback.updateRoute(L.Draw.Event.EDITVERTEX, layer, coordsToString(coords));
+    } else {
+        jscallback.log("e.poly: " + e.poly + " has no attached layer!");
+    }
+});
 
 // show tootltip when drawing a new route
 // http://leaflet.github.io/Leaflet.Editable/example/tooltip-when-drawing.html
@@ -100,55 +85,17 @@ function updateTooltip (e) {
     tooltip.innerHTML = 'Click on last point to finish the route.';
   }
 }
-myMap.on('editable:drawing:start', addTooltip);
-myMap.on('editable:drawing:end', removeTooltip);
-myMap.on('editable:drawing:click', updateTooltip);
+myMap.on(L.Draw.Event.DRAWSTART, addTooltip);
+myMap.on(L.Draw.Event.DRAWSTOP, removeTooltip);
+myMap.on(L.Draw.Event.DRAWVERTEX, updateTooltip);
 
-/*
- * JSON.stringify doesn't work on LatLngs...
- */
-function coordsToString(coords) {
-    var coordsString = "";
-    
-    var arrayLength = coords.length;
-    for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
-        
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
-        
-        if (i < arrayLength-1) {
-            coordsString = coordsString + " - "
-        }
-    }
-    return coordsString;
-}
-
-/*
- * Enable editing on marker and add callbacks for editing ends
- */
 function makeEditable(layer) {
     var polyline = window[layer];
-    polyline.enableEdit();
-    
-    polyline.on('editable:drawing:end', function(e) {
-        var coords = polyline.getLatLngs();
-        jscallback.updateRoute("editable:drawing:end", layer, coordsToString(coords));
-    });
-    polyline.on('editable:vertex:dragend', function(e) {
-        var coords = polyline.getLatLngs();
-        jscallback.updateRoute("editable:vertex:dragend", layer, coordsToString(coords));
-    });
-    polyline.on('editable:vertex:deleted', function(e) {
-        polyline.closeTooltip();
-        var coords = polyline.getLatLngs();
-        jscallback.updateRoute("editable:vertex:deleted", layer, coordsToString(coords));
-    });
-    polyline.on('editable:vertex:new', function(e) {
-        var coords = polyline.getLatLngs();
-        jscallback.updateRoute("editable:vertex:new", layer, coordsToString(coords));
-    });
+    polyline.editing.enable();
 
-    polyline.on('editable:vertex:mouseover', function(e) {
+    editLayerPoly.push([polyline, layer]);
+    
+    polyline.on('mouseover', function(e) {
         var latlng = e.latlng;
         jscallback.registerRoute(layer, latlng.lat, latlng.lng);
 
@@ -156,7 +103,7 @@ function makeEditable(layer) {
         polyline.openTooltip(latlng);
     });
 
-    polyline.on('editable:vertex:mouseout', function(e) {
+    polyline.on('mouseout', function(e) {
         var latlng = e.latlng;
         jscallback.deregisterRoute(layer, latlng.lat, latlng.lng);
 
@@ -164,3 +111,106 @@ function makeEditable(layer) {
         polyline.closeTooltip();
     });
 }
+
+// reset array of stored layer / polyline pairs
+function clearEditable() {
+    editLayerPoly = [];
+}
+
+//// add editable as option to the map
+//myMap.editTools = new L.Editable(myMap, {editable: true});
+//
+//// show tootltip when drawing a new route
+//// http://leaflet.github.io/Leaflet.Editable/example/tooltip-when-drawing.html
+//var tooltip = document.createElement('div');
+//tooltip.style.cssText = 'display: none; position: absolute; background: #666; color: white; padding: 10px; border: 1px dashed #999; font-family: sans-serif; font-size: 12px; height: 20px; line-height: 20px; z-index: 1000;';
+//document.body.appendChild(tooltip);
+//function addTooltip (e) {
+//  L.DomEvent.on(document, 'mousemove', moveTooltip);
+//  tooltip.innerHTML = 'Click on the map to start a new route.';
+//  tooltip.style.display = 'block';
+//}
+//
+//function removeTooltip (e) {
+//  tooltip.innerHTML = '';
+//  tooltip.style.display = 'none';
+//  L.DomEvent.off(document, 'mousemove', moveTooltip);
+//}
+//
+//function moveTooltip (e) {
+//  tooltip.style.left = e.clientX + 20 + 'px';
+//  tooltip.style.top = e.clientY - 10 + 'px';
+//}
+//
+//function updateTooltip (e) {
+//  if (e.layer.editor._drawnLatLngs.length < e.layer.editor.MIN_VERTEX) {
+//    tooltip.innerHTML = 'Click on the map to continue the route.';
+//  }
+//  else {
+//    tooltip.innerHTML = 'Click on last point to finish the route.';
+//  }
+//}
+//myMap.on('editable:drawing:start', addTooltip);
+//myMap.on('editable:drawing:end', removeTooltip);
+//myMap.on('editable:drawing:click', updateTooltip);
+//
+///*
+// * JSON.stringify doesn't work on LatLngs...
+// */
+//function coordsToString(coords) {
+//    var coordsString = "";
+//    
+//    var arrayLength = coords.length;
+//    for (var i = 0; i < arrayLength; i++) {
+//        var latlan = coords[i];
+//        
+//        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+//        
+//        if (i < arrayLength-1) {
+//            coordsString = coordsString + " - "
+//        }
+//    }
+//    return coordsString;
+//}
+//
+///*
+// * Enable editing on marker and add callbacks for editing ends
+// */
+//function makeEditable(layer) {
+//    var polyline = window[layer];
+//    polyline.enableEdit();
+//    
+//    polyline.on('editable:drawing:end', function(e) {
+//        var coords = polyline.getLatLngs();
+//        jscallback.updateRoute("editable:drawing:end", layer, coordsToString(coords));
+//    });
+//    polyline.on('editable:vertex:dragend', function(e) {
+//        var coords = polyline.getLatLngs();
+//        jscallback.updateRoute("editable:vertex:dragend", layer, coordsToString(coords));
+//    });
+//    polyline.on('editable:vertex:deleted', function(e) {
+//        polyline.closeTooltip();
+//        var coords = polyline.getLatLngs();
+//        jscallback.updateRoute("editable:vertex:deleted", layer, coordsToString(coords));
+//    });
+//    polyline.on('editable:vertex:new', function(e) {
+//        var coords = polyline.getLatLngs();
+//        jscallback.updateRoute("editable:vertex:new", layer, coordsToString(coords));
+//    });
+//
+//    polyline.on('editable:vertex:mouseover', function(e) {
+//        var latlng = e.latlng;
+//        jscallback.registerRoute(layer, latlng.lat, latlng.lng);
+//
+//        // TFE, 20181009: show tooltip on vertex since mouseover on polyline isn't working
+//        polyline.openTooltip(latlng);
+//    });
+//
+//    polyline.on('editable:vertex:mouseout', function(e) {
+//        var latlng = e.latlng;
+//        jscallback.deregisterRoute(layer, latlng.lat, latlng.lng);
+//
+//        // TFE, 20181009: hide tooltip on vertex since mouseout on polyline isn't working
+//        polyline.closeTooltip();
+//    });
+//}
