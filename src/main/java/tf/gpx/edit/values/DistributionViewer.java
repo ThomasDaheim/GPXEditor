@@ -55,7 +55,7 @@ import javafx.stage.Modality;
 import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
-import tf.gpx.edit.helper.AbstractStage;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;

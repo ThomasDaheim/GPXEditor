@@ -61,7 +61,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import tf.gpx.edit.helper.AbstractStage;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -615,7 +615,7 @@ public class PreferenceEditor extends AbstractStage {
             heatMap.setOpacityDistribution(OpacityDistribution.valueOf(opacDistChoiceBox.getSelectionModel().getSelectedItem().toString()));
             heatMap.updateMonochromeMap(heatMap.getOpacityDistribution());
         });
-        eventText.textProperty().addListener((ov, newValue, oldValue) -> {
+        eventText.textProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 heatMap.setEventRadius(Math.max(Double.valueOf(eventText.getText().trim()), 0));
                 heatMap.clearHeatMap();
