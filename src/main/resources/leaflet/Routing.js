@@ -64,7 +64,7 @@ function startRouting(layer, routingprofile) {
             autoRoute: true,
             showAlternatives: false,
             // https://openrouteservice.org/plans/
-            router: new L.Routing.openrouteservice(
+            router: new L.Routing.openrouteserviceV2(
                 apikey,
                 {
                     profile: routingprofile

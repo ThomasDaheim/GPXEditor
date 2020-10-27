@@ -381,10 +381,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // https://github.com/perliedman/leaflet-routing-machine
             addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/lodash.min.js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/corslite" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/polyline" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteService" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/ors-js-client" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteServiceV2" + MIN_EXT + ".js");
             addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");

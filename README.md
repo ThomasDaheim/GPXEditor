@@ -28,8 +28,11 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.2
 
 * added option to playback tracks / segments with date values
-* fixes around gpx xmnls headers
+* some more functions that can be undone
+* fixes around gpx xmnls headers and others
 * support for "line" extension for tracks & routes (read & use color / width / opacity / linecap attributes)
+* linestyle editor for all attributes (except linecap for now)
+* support for openroutingservice V2
 
 ### Update v5.1
 
@@ -339,7 +342,7 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'tf.JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.8': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
 * 'commons-cli:commons-cli:1.4'
 * 'commons-io:commons-io:2.6'
@@ -361,6 +364,7 @@ Explicit dependencies:
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'javax.xml.bind:jaxb-api:2.3.1'
 * 'org.eclipse.persistence:eclipselink:2.7.4'
+* 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 
 Other things used internally:
 
