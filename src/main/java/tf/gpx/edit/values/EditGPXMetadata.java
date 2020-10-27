@@ -27,11 +27,6 @@ package tf.gpx.edit.values;
  */
 
 
-import com.hs.gpxparser.modal.Copyright;
-import com.hs.gpxparser.modal.Email;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Metadata;
-import com.hs.gpxparser.modal.Person;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -46,7 +41,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import tf.gpx.edit.helper.AbstractStage;
+import me.himanshusoni.gpxparser.modal.Copyright;
+import me.himanshusoni.gpxparser.modal.Email;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Person;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
@@ -359,7 +359,9 @@ public class EditGPXMetadata extends AbstractStage {
         metaBoundsLbl.setText(bounds);
         
         metaLinkTable.getItems().clear();
-        metaLinkTable.getItems().addAll(metadata.getLinks());
+        if (metadata.getLinks() != null) {
+            metaLinkTable.getItems().addAll(metadata.getLinks());
+        }
     }
     
     private Metadata getMetadata() {

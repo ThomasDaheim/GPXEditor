@@ -25,10 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -36,7 +32,12 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
@@ -48,9 +49,8 @@ import tf.helper.general.ObjectsHelper;
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
+    private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
-
-    private String color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
     
     private GPXTrack() {
         super(GPXLineItemType.GPXTrack);
@@ -66,10 +66,12 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = new Track();
         
         // if possible add track to parent class
-        Extension content = gpxFile.getContent();
+        Extension content = gpxFile.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addTrack(myTrack);
         }
+        
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
 
         myGPXTrackSegments.addListener(changeListener);
     }
@@ -82,12 +84,7 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
-                        GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
-        if (nodeColor != null && !nodeColor.isBlank()) {
-            color = nodeColor;
-        }
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
         
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
@@ -101,47 +98,13 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public String getColor() {
-        return color;
-    }
-    
-    @Override
-    public void setColor(final String col) {
-        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
-            setDefaultColor();
-            return;
-        }
-
-        color = col;
-        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                this,
-                GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
-
-        setHasUnsavedChanges();
-    }
-    
-    @Override
-    public void setDefaultColor() {
-        color = GarminExtensionWrapper.GarminDisplayColor.Red.name();
-        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
-            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                    this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
-        }
-
-        setHasUnsavedChanges();
-    }
-    
-    @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrack myClone = new GPXTrack();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+        
+        myClone.myLineStyle = myLineStyle;
         
         // set route via cloner
         myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
@@ -160,6 +123,11 @@ public class GPXTrack extends GPXMeasurable {
 
     protected Track getTrack() {
         return myTrack;
+    }
+    
+    @Override
+    public LineStyle getLineStyle() {
+        return myLineStyle;
     }
     
     @Override
@@ -282,7 +250,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myTrack;
     }
 

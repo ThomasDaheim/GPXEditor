@@ -31,6 +31,8 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 
 
 /**
@@ -38,7 +40,7 @@ import tf.gpx.edit.main.GPXEditor;
  * 
  * @author Thomas
  */
-public class GPXTrackviewer {
+public class GPXTrackviewer implements IPreferencesHolder {
     // don't show more than this number of points
     public final static int MAX_WAYPOINTS = 1000;
     
@@ -101,21 +103,23 @@ public class GPXTrackviewer {
         });
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
-        TrackMap.getInstance().updateLineColor(lineItem);
+    public void updateLineStyle(final GPXLineItem lineItem) {
+        TrackMap.getInstance().updateLineStyle(lineItem);
 
-        ChartsPane.getInstance().updateLineColor(lineItem);
+        ChartsPane.getInstance().updateLineStyle(lineItem);
     }
     
-    public void loadPreferences() {
-        TrackMap.getInstance().loadPreferences();
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
+        TrackMap.getInstance().loadPreferences(store);
 
-        ChartsPane.getInstance().loadPreferences();
+        ChartsPane.getInstance().loadPreferences(store);
     }
     
-    public void savePreferences() {
-        TrackMap.getInstance().savePreferences();
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
+        TrackMap.getInstance().savePreferences(store);
 
-        ChartsPane.getInstance().savePreferences();
+        ChartsPane.getInstance().savePreferences(store);
     }
 }

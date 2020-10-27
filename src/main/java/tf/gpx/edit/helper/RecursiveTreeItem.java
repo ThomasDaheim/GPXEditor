@@ -56,7 +56,7 @@ public class RecursiveTreeItem<T> extends TreeItem<T> {
     }
 
     public RecursiveTreeItem(final T value, Callback<T, Node> graphicsFactory, Callback<T, ObservableList<? extends T>> childrenFactory, boolean expandItem){
-        this(value, (item) -> null, childrenFactory, expandItem, (item) -> true);
+        this(value, graphicsFactory, childrenFactory, expandItem, (item) -> true);
     }
 
     public RecursiveTreeItem(

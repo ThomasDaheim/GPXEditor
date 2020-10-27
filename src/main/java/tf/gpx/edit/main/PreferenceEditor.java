@@ -61,7 +61,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import tf.gpx.edit.helper.AbstractStage;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -615,7 +615,7 @@ public class PreferenceEditor extends AbstractStage {
             heatMap.setOpacityDistribution(OpacityDistribution.valueOf(opacDistChoiceBox.getSelectionModel().getSelectedItem().toString()));
             heatMap.updateMonochromeMap(heatMap.getOpacityDistribution());
         });
-        eventText.textProperty().addListener((ov, newValue, oldValue) -> {
+        eventText.textProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 heatMap.setEventRadius(Math.max(Double.valueOf(eventText.getText().trim()), 0));
                 heatMap.clearHeatMap();
@@ -705,7 +705,7 @@ public class PreferenceEditor extends AbstractStage {
         wayIcnSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         wayThshldText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
         eventText.setText(decimalFormat.format(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
-        breakText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
+        breakText.setText(decimalFormat.format(GPXEditorPreferences.BREAK_DURATION.getAsType()));
     }
     
     private void savePreferences() {
@@ -721,7 +721,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
-        MapLayerUsage.getInstance().savePreferences();
+        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());

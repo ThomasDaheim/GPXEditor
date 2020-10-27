@@ -38,6 +38,8 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 import tf.helper.javafx.DragResizer;
 
 /**
@@ -45,7 +47,7 @@ import tf.helper.javafx.DragResizer;
  * See https://gist.github.com/MaciejDobrowolski/9c99af00668986a0a303 for the idea
  * @author thomas
  */
-public class ChartsPane extends StackPane {
+public class ChartsPane extends StackPane implements IPreferencesHolder {
     private final static ChartsPane INSTANCE = new ChartsPane();
 
     // reserved pace per yAxis on the right side
@@ -210,21 +212,23 @@ public class ChartsPane extends StackPane {
         });
     }
     
-    public void updateLineColor(final GPXLineItem lineItem) {
+    public void updateLineStyle(final GPXLineItem lineItem) {
         charts.stream().forEach((t) -> {
-            t.updateLineColor(lineItem);
+            t.updateLineStyle(lineItem);
         });
     }
     
-    public void loadPreferences() {
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
         charts.stream().forEach((t) -> {
-            t.loadPreferences();
+            t.loadPreferences(store);
         });
     }
     
-    public void savePreferences() {
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
         charts.stream().forEach((t) -> {
-            t.savePreferences();
+            t.savePreferences(store);
         });
     }
     

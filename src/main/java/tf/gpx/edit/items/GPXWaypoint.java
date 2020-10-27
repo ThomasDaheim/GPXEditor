@@ -25,20 +25,20 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Bounds;
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.TrackSegment;
-import com.hs.gpxparser.modal.Waypoint;
-import com.hs.gpxparser.type.Fix;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import me.himanshusoni.gpxparser.modal.Bounds;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.helper.EarthGeometry;
@@ -77,7 +77,7 @@ public class GPXWaypoint extends GPXLineItem {
         myWaypoint = new Waypoint(lat, lon);
         
         // if possible add waypoint to parent class
-        Extension content = gpxParent.getContent();
+        Extension content = gpxParent.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addWaypoint(myWaypoint);
         }
@@ -624,7 +624,7 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myWaypoint;
     }
 

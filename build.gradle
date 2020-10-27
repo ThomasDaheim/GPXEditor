@@ -11,10 +11,17 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
 apply plugin: 'idea'
-idea.module.downloadJavadoc = true
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
@@ -33,7 +40,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.1'
+version='5.2'
 
 repositories {
     mavenLocal() {
@@ -67,7 +74,7 @@ dependencies {
     compile "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.7'
+    compile 'tf.JavaHelper:JavaHelper:1.8'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
@@ -78,12 +85,11 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.7'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
-    compile 'gpx-parser:gpx-parser:1.2'
+    compile 'me.himanshusoni.gpxparser:gpx-parser:1.12'
     compile 'org.jzy3d:jzy3d-api:1.0.2'
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
     compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
     compile 'de.jensd:fontawesomefx:8.9'
-//    compile 'de.saring:leafletmap:1.0.5-SNAPSHOT'
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.9'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
     compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '10.0-r1'
@@ -92,7 +98,7 @@ dependencies {
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
     compile group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
     
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.1'
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
 }
 
 task unzip(type: Copy) {
@@ -137,6 +143,9 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
                 '--add-exports', 'javafx.graphics/com.sun.javafx.scene.input=ALL-UNNAMED',
                 '--add-opens', 'javafx.graphics/javafx.scene.layout=ALL-UNNAMED',
+                // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
+                // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
+                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
     ]
     
 // extend Netbeans Gradle "Run" task
@@ -146,6 +155,8 @@ run {
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
         jvmArgs = jvmArgs.plus('-Xmx4096M')
+        // profiler not working with netbeans...
+//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
         enableAssertions = true
     }
 //    args = ["P:\\Pictures\\Raw\\GPX\\Georgenstein_20200628.gpx"]
@@ -194,3 +205,5 @@ jar {
         )
     }
 }
+
+build.finalizedBy(install)

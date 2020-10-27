@@ -320,7 +320,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                 long trackDurationValue = 0;
                 int i = 0;
                 for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-                    if (i > 0) {
+                    if (i > 0 && gpxWaypoint != null) {
                         // don't use for first - values are "to previous"
                         trackDistance += gpxWaypoint.getDistance();
                         trackDurationValue += gpxWaypoint.getCumulativeDuration();
@@ -339,17 +339,24 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                     trackSpeed = GPXLineItem.NO_DATA;
                 }
 
-                final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
-                final String directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
                 String directSpeed;
                 String directDuration;
-                if (start.getDate() != null && end.getDate() != null) {
-                    final double durationValue = end.getDate().getTime() - start.getDate().getTime();
-                    directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
-                    directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
+                String directDist;
+                if (start != null && end != null) {
+                    final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
+                    directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
+                    if (start.getDate() != null && end.getDate() != null) {
+                        final double durationValue = end.getDate().getTime() - start.getDate().getTime();
+                        directSpeed = GPXLineItem.GPXLineItemData.Speed.getFormat().format(directDistance/durationValue*1000d*3.6d);
+                        directDuration = GPXLineItemHelper.formatDurationAsString(end.getDate().getTime() - start.getDate().getTime());
+                    } else {
+                        directDuration = GPXLineItem.NO_DATA;
+                        directSpeed = GPXLineItem.NO_DATA;
+                    }
                 } else {
                     directDuration = GPXLineItem.NO_DATA;
                     directSpeed = GPXLineItem.NO_DATA;
+                    directDist = GPXLineItem.NO_DATA;
                 }
 
                 // label will be filled in getFinalizeTaskConsumer - so we can avoid "Platform.runlater" here

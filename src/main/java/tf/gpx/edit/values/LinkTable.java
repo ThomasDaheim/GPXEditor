@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.modal.Link;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
@@ -37,6 +36,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
+import me.himanshusoni.gpxparser.modal.Link;
 
 /**
  *

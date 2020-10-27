@@ -25,11 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.TrackSegment;
-import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,8 +33,13 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
@@ -51,10 +51,9 @@ import tf.helper.general.ObjectsHelper;
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
+    private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
 
-    private String color = GarminDisplayColor.Blue.name();
-    
     private Double myLength = null;
     private Double myCumulativeAscent = null;
     private Double myCumulativeDescent = null;
@@ -75,10 +74,12 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = new Route();
         
         // if possible add route to parent class
-        Extension content = gpxFile.getContent();
+        Extension content = gpxFile.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addRoute(myRoute);
         }
+
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
         myGPXWaypoints.addListener(changeListener);
     }
@@ -91,12 +92,7 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        final String nodeColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this, 
-                        GarminExtensionWrapper.GarminExtension.RouteExtension, 
-                        GarminExtensionWrapper.GarminAttibute.DisplayColor);
-        if (nodeColor != null && !nodeColor.isBlank()) {
-            color = nodeColor;
-        }
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
@@ -112,47 +108,13 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public String getColor() {
-        return color;
-    }
-    
-    @Override
-    public void setColor(final String col) {
-        if (col == null || !GarminExtensionWrapper.GarminDisplayColor.isGarminDisplayColor(col)) {
-            setDefaultColor();
-            return;
-        }
-
-        color = col;
-        GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                this,
-                GarminExtensionWrapper.GarminExtension.RouteExtension, 
-                GarminExtensionWrapper.GarminAttibute.DisplayColor, col);
-
-        setHasUnsavedChanges();
-    }
-    
-    @Override
-    public void setDefaultColor() {
-        color = GarminExtensionWrapper.GarminDisplayColor.Blue.name();
-        if (GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor) != null) {
-            GarminExtensionWrapper.setTextForGarminExtensionAndAttribute(
-                    this,
-                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                    GarminExtensionWrapper.GarminAttibute.DisplayColor, color);
-        }
-
-        setHasUnsavedChanges();
-    }
-    
-    @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+
+        myClone.myLineStyle = myLineStyle;
         
         // set route via cloner
         myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
@@ -176,6 +138,11 @@ public class GPXRoute extends GPXMeasurable {
 
     protected Route getRoute() {
         return myRoute;
+    }
+    
+    @Override
+    public LineStyle getLineStyle() {
+        return myLineStyle;
     }
     
     @Override
@@ -319,7 +286,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myRoute;
     }
 

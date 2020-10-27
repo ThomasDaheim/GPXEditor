@@ -43,7 +43,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
-import tf.gpx.edit.helper.AbstractStage;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXLineItem;

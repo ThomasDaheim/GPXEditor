@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.type.Fix;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -60,10 +59,11 @@ import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
+import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import tf.gpx.edit.helper.AbstractStage;
-import static tf.gpx.edit.helper.AbstractStage.INSET_SMALL;
+import tf.helper.javafx.AbstractStage;
+import static tf.helper.javafx.AbstractStage.INSET_SMALL;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -96,6 +96,7 @@ public class EditGPXWaypoint extends AbstractStage {
     private final TextField waypointSrcTxt = new TextField();
     private final GridComboBox<Label> waypointSymTxt = new GridComboBox<>();
     private final TextField waypointTypeTxt = new TextField();
+    private final Label waypointTimeLbl = new Label("Date:");
     private final CalendarTextField waypointTimeTxt = new CalendarTextField();
     private final LinkTable waypointLinkTable = new LinkTable();
     private final RestrictiveTextField waypointLatitudeTxt = new RestrictiveTextField();
@@ -322,9 +323,8 @@ public class EditGPXWaypoint extends AbstractStage {
         
         rowNum++;
         // 5th row: time
-        final Label timeLbl = new Label("Time:");
-        getGridPane().add(timeLbl, 0, rowNum);
-        GridPane.setMargin(timeLbl, INSET_TOP);
+        getGridPane().add(waypointTimeLbl, 0, rowNum);
+        GridPane.setMargin(waypointTimeLbl, INSET_TOP);
 
         waypointTimeTxt.setAllowNull(Boolean.TRUE);
         waypointTimeTxt.setShowTime(Boolean.TRUE);
@@ -613,6 +613,8 @@ public class EditGPXWaypoint extends AbstractStage {
 
         waypointDescriptionTxt.setText(setNullStringToEmpty(waypoint.getDescription()));
         waypointCommentTxt.setText(setNullStringToEmpty(waypoint.getComment()));
+        
+        waypointTimeLbl.setText("Date:");
         waypointTimeTxt.setDisable(false);
         if (waypoint.getDate() != null) {
             final GregorianCalendar calendar = new GregorianCalendar();
@@ -686,10 +688,18 @@ public class EditGPXWaypoint extends AbstractStage {
             waypointLinkTable.getItems().addAll(waypoint.getLinks());
         }
         
-        // all of those can't be edited in multiple mode - until I find a way to do it properly
-        waypointTimeTxt.setDisable(true);
-        waypointTimeTxt.setText("");
+        // TFE, 20200925: edit time of first waypoint and set all others accordingly...
+        waypointTimeLbl.setText("Start Date:");
+        waypointTimeTxt.setDisable(false);
+        if (waypoint.getDate() != null) {
+            final GregorianCalendar calendar = new GregorianCalendar();
+            calendar.setTime(waypoint.getDate());
+            waypointTimeTxt.setCalendar(calendar);
+        } else {
+            waypointTimeTxt.setText("");
+        }
 
+        // all of those can't be edited in multiple mode - until I find a way to do it properly
         waypointLatitudeTxt.setDisable(true);
         waypointLatitudeTxt.setText("");
         waypointLongitudeTxt.setDisable(true);
@@ -714,12 +724,6 @@ public class EditGPXWaypoint extends AbstractStage {
         
         if (myGPXWaypoints.size() == 1) {
             // more values can be changed for single waypoint
-            Date date = null;
-            if (!waypointTimeTxt.getText().isEmpty()) {
-                date = waypointTimeTxt.getCalendar().getTime();
-            }
-            waypoint.setDate(date);
-
             waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
             waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
 
@@ -739,6 +743,14 @@ public class EditGPXWaypoint extends AbstractStage {
             waypoint.setdGpsStationId(setEmptyToZeroInt(waypointdGpsStationIdTxt.getText()));
         }
         
+        if (!KEEP_MULTIPLE_VALUES.equals(waypointTimeTxt.getText()) && !waypointTimeTxt.getText().isEmpty()) {
+            Date date = null;
+            if (!waypointTimeTxt.getText().isEmpty()) {
+                date = waypointTimeTxt.getCalendar().getTime();
+            }
+            waypoint.setDate(date);
+        }
+
         if (!KEEP_MULTIPLE_VALUES.equals(waypointNameTxt.getText())) {
             waypoint.setName(setEmptyToNullString(waypointNameTxt.getText()));
         }

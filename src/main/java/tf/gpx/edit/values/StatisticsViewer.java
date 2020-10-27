@@ -50,7 +50,7 @@ import javafx.stage.Modality;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.helper.AbstractStage;
+import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
@@ -442,10 +442,11 @@ public class StatisticsViewer extends AbstractStage {
                 endDate = waypointDate;
             }
             
+            final double duration = waypoint.getCumulativeDuration();
             // do we have a break?
             boolean isBreak = false;
             if (prevGPXWaypoint != null && !waypoint.getGPXTrackSegments().get(0).equals(prevGPXWaypoint.getGPXTrackSegments().get(0)) ||
-                    (waypoint.getCumulativeDuration() > breakDuration)) {
+                    (duration > breakDuration)) {
                 isBreak = true;
 //                System.out.println("prevGPXWaypoint: " + prevGPXWaypoint);
 //                System.out.println("waypoint: " + waypoint);
@@ -468,9 +469,9 @@ public class StatisticsViewer extends AbstractStage {
             
             if (heightDiff > 0.0) {
                 lengthAsc += waypoint.getDistance();
-                durationAsc += waypoint.getCumulativeDuration();
+                durationAsc += duration;
                 if (!isBreak) {
-                    durationAscNoPause += waypoint.getCumulativeDuration();
+                    durationAscNoPause += duration;
                 }
                 if (slope > maxSlopeAsc) {
                     maxSlopeAsc = slope;
@@ -483,9 +484,9 @@ public class StatisticsViewer extends AbstractStage {
                 }
             } else {
                 lengthDesc += waypoint.getDistance();
-                durationDesc += waypoint.getCumulativeDuration();
+                durationDesc += duration;
                 if (!isBreak) {
-                    durationDescNoPause += waypoint.getCumulativeDuration();
+                    durationDescNoPause += duration;
                 }
                 if (slope < maxSlopeDesc) {
                     maxSlopeDesc = slope;

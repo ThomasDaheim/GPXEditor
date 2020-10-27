@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javafx.geometry.BoundingBox;
+import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.collections4.CollectionUtils;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
@@ -269,7 +269,7 @@ public class GPXLineItemHelper {
         return children.stream().
                 map((U child) -> {
                     child.setNumber(counter.getAndIncrement());
-                    return ObjectsHelper.<T>uncheckedCast(child.getContent());
+                    return ObjectsHelper.<T>uncheckedCast(child.getExtension());
                 // need to collect into a set that contains the order
                 }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
@@ -287,9 +287,10 @@ public class GPXLineItemHelper {
         
         GPXWaypoint result = null;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            if (result != null && result.getDate() != null && gpxWaypoint.getDate() != null && result.getDate().after(gpxWaypoint.getDate())) {
+            // TFE, 20200926: selectionmodel selecteditems can contain a NULL entry... don't ask!
+            if (result != null && result.getDate() != null && gpxWaypoint != null && gpxWaypoint.getDate() != null && result.getDate().after(gpxWaypoint.getDate())) {
                 result = gpxWaypoint;
-            } else if (result == null && gpxWaypoint.getDate() != null) {
+            } else if (result == null && gpxWaypoint != null && gpxWaypoint.getDate() != null) {
                 result = gpxWaypoint;
             }
         }
@@ -306,9 +307,10 @@ public class GPXLineItemHelper {
         
         GPXWaypoint result = null;
         for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
-            if (result != null && result.getDate() != null && gpxWaypoint.getDate() != null && result.getDate().before(gpxWaypoint.getDate())) {
+            // TFE, 20200926: selectionmodel selecteditems can contain a NULL entry... don't ask!
+            if (result != null && result.getDate() != null && gpxWaypoint != null && gpxWaypoint.getDate() != null && result.getDate().before(gpxWaypoint.getDate())) {
                 result = gpxWaypoint;
-            } else if (result == null && gpxWaypoint.getDate() != null) {
+            } else if (result == null && gpxWaypoint != null && gpxWaypoint.getDate() != null) {
                 result = gpxWaypoint;
             }
         }

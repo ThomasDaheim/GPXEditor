@@ -38,6 +38,8 @@ import tf.helper.general.ObjectsHelper;
 public enum GPXEditorPreferences  {
     RECENTWINDOWWIDTH("recentWindowWidth", Double.toString(1200), Double::valueOf),
     RECENTWINDOWHEIGTH("recentWindowHeigth", Double.toString(600), Double::valueOf),
+    RECENTWINDOWLEFT("recentWindowLeft", Double.toString(-1), Double::valueOf),
+    RECENTWINDOWTOP("recentWindowTop", Double.toString(-1), Double::valueOf),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5), Double::valueOf),
     RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58), Double::valueOf),
     REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name(), GPXAlgorithms.ReductionAlgorithm::valueOf),
@@ -101,5 +103,12 @@ public enum GPXEditorPreferences  {
     
     public <T> void put(final T value) {
         GPXEditorPreferenceStore.getInstance().put(myPrefKey, value.toString());
+    }
+    
+    public <T> T getDefaultAsType() {
+        // TODO: check type against own class - needs add Class<?> variable...
+        
+        // see https://ideone.com/WtNDN2 for the general idea
+        return ObjectsHelper.uncheckedCast(myConverter.apply(myDefaultValue));
     }
 }

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.helper;
 
-import com.hs.gpxparser.modal.Metadata;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
@@ -73,11 +72,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
-import tf.gpx.edit.extension.GarminExtensionWrapper.GarminDisplayColor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
@@ -88,14 +86,17 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.srtm.SRTMDataViewer;
-import tf.gpx.edit.viewer.GPXTrackviewer;
+import tf.gpx.edit.values.EditLineStyle;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AppClipboard;
 import tf.helper.javafx.ColorConverter;
-import tf.helper.javafx.ColorSelectionMenu;
 import tf.helper.javafx.TableMenuUtils;
+import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.TooltipHelper;
 import tf.helper.javafx.UsefulKeyCodes;
 
@@ -103,7 +104,7 @@ import tf.helper.javafx.UsefulKeyCodes;
  *
  * @author Thomas
  */
-public class GPXTreeTableView {
+public class GPXTreeTableView implements IPreferencesHolder {
 //    private static final DataFormat DRAG_AND_DROP = new DataFormat("application/x-java-serialized-object");
     public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-treetableview-dnd");
     public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-treetableview-cnp");
@@ -196,7 +197,6 @@ public class GPXTreeTableView {
                                         final GPXMetadata newStuff = new GPXMetadata((GPXFile) item, new Metadata());
                                         newStuff.setName("New Metadata");
                                         ((GPXFile) item).setGPXMetadata(newStuff);
-                                        ((GPXFile) item).setHeaderAndMeta();
                                     });
                                     newItem.getItems().add(newMetadata);
                                 }
@@ -339,41 +339,43 @@ public class GPXTreeTableView {
                                 fileMenu.getItems().add(convertItem);
                                 
                                 if (!item.isGPXTrackSegment()) {
-                                    // select color for track or route
+                                    // select color, width, opacity, cap for track or route
                                     fileMenu.getItems().add(new SeparatorMenuItem());
                                     
-                                    final EventHandler<ActionEvent> colorHandler = new EventHandler<ActionEvent>() {
-                                        @Override
-                                        public void handle(ActionEvent t) {
-                                            if ((t.getSource() != null) && (t.getSource() instanceof MenuItem)) {
-                                                final MenuItem color = (MenuItem) t.getSource();
-                                                
-                                                if (color.getUserData() != null && (color.getUserData() instanceof Color)) {
-//                                                    System.out.println(GarminDisplayColor.getNameForJavaFXColor((Color) color.getUserData()));
-                                                    for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
-                                                        final GPXMeasurable selectedGPXItem = selectedItem.getValue();
-                                                        
-                                                        if (selectedGPXItem.isGPXTrack() || 
-                                                                selectedGPXItem.isGPXRoute() || 
-                                                                selectedGPXItem.isGPXTrackSegment()) {
-                                                            selectedGPXItem.setColor(GarminDisplayColor.getJSColorForJavaFXColor((Color) color.getUserData()));
-                                                            GPXTrackviewer.getInstance().updateLineColor(selectedGPXItem);
-                                                        }
-                                                    }
-                                                    
-                                                    // refresh TrackMap
-                                                    myEditor.refreshGPXFileList();
-                                                }
+                                    final MenuItem lineStyle = new MenuItem("Line style...");
+                                    lineStyle.setOnAction((ActionEvent event) -> {
+                                        LineStyle style = null;
+                                        for (TreeItem<GPXMeasurable> selectedItem : myTreeTableView.getSelectionModel().getSelectedItems()) {
+                                            final GPXMeasurable selectedGPXItem = selectedItem.getValue();
+
+                                            if (selectedGPXItem.isGPXTrack() || 
+                                                    selectedGPXItem.isGPXRoute()) {
+                                                style = selectedGPXItem.getLineStyle();
+
+                                                break;
                                             }
                                         }
-                                    };
-
-                                    final Menu colorMenu = ColorSelectionMenu.getInstance().createColorSelectionMenu(
-                                            GarminExtensionWrapper.getGarminColorsAsJavaFXColors(), colorHandler);
-                                    colorMenu.setOnShowing((t) -> {
-                                        ColorSelectionMenu.getInstance().selectColor(colorMenu, GarminDisplayColor.getJavaFXColorForName(item.getColor()));
+                                        
+                                        if (lineStyle != null) {
+                                            // in case of changes the callback goes to GPXEditor...
+                                            EditLineStyle.getInstance().editLineStyle(style);
+                                        }
                                     });
-                                    fileMenu.getItems().add(colorMenu);
+
+                                    fileMenu.getItems().add(lineStyle);
+                                }
+                                
+                                // TFE, 20200720: play tracks with timestamps
+                                if (!item.isGPXRoute() && item.getCumulativeDuration() > 0) {
+                                    fileMenu.getItems().add(new SeparatorMenuItem());
+
+                                    final MenuItem playbackItem = new MenuItem("Playback");
+                                    playbackItem.setOnAction((ActionEvent event) -> {
+                                        myEditor.playbackItem(event);
+                                    });
+                                    playbackItem.disableProperty().bind(
+                                        Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
+                                    fileMenu.getItems().add(playbackItem);
                                 }
                                 
                                 break;
@@ -667,7 +669,7 @@ public class GPXTreeTableView {
                                         // tracksegments have color from their tracks
                                         case GPXTrackSegment:
                                         case GPXRoute:
-                                            color = GarminExtensionWrapper.GarminDisplayColor.getJavaFXColorForName(lineItem.getColor());
+                                            color = lineItem.getLineStyle().getColor().getJavaFXColor();
                                             break;
                                         default:
                                             break;
@@ -826,8 +828,8 @@ public class GPXTreeTableView {
                     final TreeTableColumn<GPXMeasurable, Boolean> extGPXCol = ObjectsHelper.uncheckedCast(column);
                     extGPXCol.setCellValueFactory(
                             (TreeTableColumn.CellDataFeatures<GPXMeasurable, Boolean> p) -> new SimpleBooleanProperty(
-                                            (p.getValue().getValue().getContent().getExtensionData() != null) &&
-                                            !p.getValue().getValue().getContent().getExtensionData().isEmpty()));
+                                            (p.getValue().getValue().getExtension().getExtensionData() != null) &&
+                                            !p.getValue().getValue().getExtension().getExtensionData().isEmpty()));
                     extGPXCol.setCellFactory(col -> new TreeTableCell<GPXMeasurable, Boolean>() {
                         @Override
                         protected void updateItem(Boolean item, boolean empty) {
@@ -845,11 +847,11 @@ public class GPXTreeTableView {
                                     final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
 
                                     if (getTreeTableRow().getItem() != null &&
-                                        getTreeTableRow().getItem().getContent() != null &&
-                                        getTreeTableRow().getItem().getContent().getExtensionData() != null) {
+                                        getTreeTableRow().getItem().getExtension() != null &&
+                                        getTreeTableRow().getItem().getExtension().getExtensionData() != null) {
                                         // add the tooltext that contains the extension data we have parsed
                                         final StringBuilder tooltext = new StringBuilder();
-                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getContent().getExtensionData();
+                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getExtension().getExtensionData();
                                         for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
                                             if (entry.getValue() instanceof DefaultExtensionHolder) {
                                                 if (tooltext.length() > 0) {
@@ -1088,6 +1090,16 @@ public class GPXTreeTableView {
     private static void collapseNodeAndChildren(final TreeItem<GPXMeasurable> node) {
         node.getChildren().forEach(GPXTreeTableView::collapseNodeAndChildren);
         node.setExpanded(false);
+    }
+    
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
+        TableViewPreferences.loadTreeTableViewPreferences(myTreeTableView, "gpxFileListXML", store);        
+    }
+    
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
+        TableViewPreferences.saveTreeTableViewPreferences(myTreeTableView, "gpxFileListXML", store);        
     }
 
     // prevent loops in the tree

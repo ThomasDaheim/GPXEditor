@@ -58,6 +58,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -65,7 +66,7 @@ import tf.helper.general.ObjectsHelper;
  * @author thomas
  * @param <T>
  */
-public interface IChartBasics<T extends XYChart<Number, Number>> {
+public interface IChartBasics<T extends XYChart<Number, Number>> extends IPreferencesHolder {
     static String DATA_SEP = "-";
     static String SHIFT_LABEL = "ShiftNode";
     static String SHIFT_TEXT = "ShiftText";
@@ -355,7 +356,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
                 if (!firstWaypoint.isGPXFile()) {
                     // and now color the series nodes according to lineitem color
                     // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = IChartBasics.ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
+                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
                     reducedSeries.getNode().pseudoClassStateChanged(color, true);
                     Set<Node> nodes = getChart().lookupAll(".series" + j);
                     for (Node n : nodes) {
@@ -516,7 +517,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         if (lineItem.isGPXTrackSegment()) {
             seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
         }
-        series.setName(seriesID + DATA_SEP + lineItem.getColor());
+        series.setName(seriesID + DATA_SEP + lineItem.getLineStyle().getColor().getJSColor());
     }
     private static String getSeriesID(final XYChart.Series<Number, Number> series) {
         return series.getName().split(DATA_SEP)[0];
@@ -638,15 +639,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> {
         }
     }
     
-    default void updateLineColor(final GPXLineItem lineItem) {
-        // nothing todo
-    }
-
-    default void loadPreferences() {
-        // nothing todo
-    }
-    
-    default void savePreferences() {
+    default public void updateLineStyle(final GPXLineItem lineItem) {
         // nothing todo
     }
 }

@@ -33,7 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.extension.GarminExtensionWrapper;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -146,6 +147,7 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
             myEditor.removeGPXWaypointListListener();
         }
         
+        boolean repaintMap = false;
         for (GPXLineItem parent : lineItemCluster.keySet()) {
             final List<GPXLineItem> parentLineItems = new ArrayList<>(parent.getChildren());
 
@@ -163,19 +165,13 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         lineItem.setName(ObjectsHelper.uncheckedCast(myValue));
                         break;
                     case EXTENSION:
-                        // special case: we might have changed the color of track or route...
-                        final String prevColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(lineItem,
-                                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                                    GarminExtensionWrapper.GarminAttibute.DisplayColor);
-                        lineItem.getContent().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
-                        final String newColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(lineItem,
-                                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                                    GarminExtensionWrapper.GarminAttibute.DisplayColor);
+                        lineItem.getExtension().setExtensionData(ObjectsHelper.uncheckedCast(myValue));
+                        lineItem.setHasUnsavedChanges();                            
 
-                        if ((prevColor != null && !prevColor.equals(newColor)) || newColor != null) {
-                            lineItem.setColor(newColor);
-                        } else {
-                            lineItem.setHasUnsavedChanges();                            
+                        // special case: we might have changed the color of track or route...
+                        if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType()) || GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType()) ) {
+                            lineItem.getLineStyle().reset();
+                            repaintMap = true;
                         }
                         break;
                     case HEIGHT:
@@ -194,6 +190,11 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
         }
         
         myEditor.refresh();
+
+        // TFE, 20201012: delete extensions can change linestyle...
+        if (repaintMap) {
+            myEditor.refillGPXWaypointList(true);
+        }
         
         return result;
     }
@@ -206,6 +207,7 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
             myEditor.removeGPXWaypointListListener();
         }
         
+        boolean repaintMap = false;
         for (GPXLineItem parent : lineItemCluster.keySet()) {
             final List<GPXLineItem> parentLineItems = new ArrayList<>(parent.getChildren());
 
@@ -224,19 +226,13 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
                         lineItem.setName(copyLineItem.getName());
                         break;
                     case EXTENSION:
-                        // special case: we might have changed the color of track or route...
-                        final String prevColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(lineItem,
-                                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                                    GarminExtensionWrapper.GarminAttibute.DisplayColor);
-                        lineItem.getContent().setExtensionData(copyLineItem.getContent().getExtensionData());
-                        final String newColor = GarminExtensionWrapper.getTextForGarminExtensionAndAttribute(lineItem,
-                                    GarminExtensionWrapper.GarminExtension.TrackExtension, 
-                                    GarminExtensionWrapper.GarminAttibute.DisplayColor);
+                        lineItem.getExtension().setExtensionData(copyLineItem.getExtension().getExtensionData());
+                        lineItem.setHasUnsavedChanges();                            
 
-                        if ((prevColor != null && !prevColor.equals(newColor)) || newColor != null) {
-                            lineItem.setColor(newColor);
-                        } else {
-                            lineItem.setHasUnsavedChanges();                            
+                        // special case: we might have changed the color of track or route...
+                        if (GPXLineItem.GPXLineItemType.GPXTrack.equals(lineItem.getType()) || GPXLineItem.GPXLineItemType.GPXRoute.equals(lineItem.getType()) ) {
+                            lineItem.getLineStyle().reset();
+                            repaintMap = true;
                         }
                         break;
                     case HEIGHT:
@@ -256,6 +252,11 @@ public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineIt
         }
         
         myEditor.refresh();
+        
+        // TFE, 20201012: delete extensions can change linestyle...
+        if (repaintMap) {
+            myEditor.refillGPXWaypointList(true);
+        }
 
         return result;
     }

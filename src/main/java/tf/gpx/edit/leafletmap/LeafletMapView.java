@@ -31,6 +31,10 @@ public class LeafletMapView extends StackPane {
     protected final static String LEAFLET_PATH = "/leaflet";
     protected final static String MIN_EXT = ".min";
     
+    private final static String DEFAULT_TRACK_WEIGHT = "2";
+    private final static String DEFAULT_TRACK_OPACITY = "1.0";
+    private final static String DEFAULT_TRACK_LINECAP = "round";
+    
     private final WebView myWebView = new WebView();
     private final WebEngine myWebEngine = myWebView.getEngine();
     
@@ -291,9 +295,20 @@ public class LeafletMapView extends StackPane {
      * Draws a track path along the specified positions in the color red and zooms the map to fit the track perfectly.
      *
      * @param positions list of track positions
+     * @param color color of track
+     * @param weight weight of track
+     * @param opacity opacity of track
+     * @param linecap linecap to be used for track
+     * @param fitBounds should map.fitBounds be called after adding track
      * @return variable name of the created track
      */
-    public String addTrack(final List<LatLong> positions, final String color, final boolean fitBounds) {
+    public String addTrack(
+            final List<LatLong> positions, 
+            final String color, 
+            final String weight, 
+            final String opacity, 
+            final String linecap, 
+            final boolean fitBounds) {
         final String varName = String.format(Locale.US, "track%d", varNameSuffix++);
         
         final String jsPositions = positions.stream().map((t) -> {
@@ -301,8 +316,8 @@ public class LeafletMapView extends StackPane {
         }).collect( Collectors.joining( ", \n" ) );
 
         String cmdString = 
-                String.format(Locale.US, "var latLngs = [%s];\nvar %s = L.polyline(latLngs, {color: '%s', weight: 2}).addTo(myMap);", 
-                        jsPositions, varName, color, varName);
+                String.format(Locale.US, "var %s = L.polyline([%s], {color: '%s', weight: %s, opacity: %s, lineCap: '%s'}).addTo(myMap);", 
+                        varName, jsPositions, color, weight, opacity, linecap);
 //        System.out.println("addTrack: " + cmdString);
         execScript(cmdString);
         
@@ -313,6 +328,10 @@ public class LeafletMapView extends StackPane {
         }
 
         return varName;
+    }
+    // convenience method using defaults for weight, ...
+    public String addTrack(final List<LatLong> positions, final String color, final boolean fitBounds) {
+        return addTrack(positions, color, DEFAULT_TRACK_WEIGHT, DEFAULT_TRACK_OPACITY, DEFAULT_TRACK_LINECAP, fitBounds);
     }
 
     /**
@@ -363,7 +382,7 @@ public class LeafletMapView extends StackPane {
     
     protected void addScriptFromPath(final String scriptpath) {
         try { 
-            final InputStream js = TrackMap.class.getResourceAsStream(scriptpath);
+            final InputStream js = LeafletMapView.class.getResourceAsStream(scriptpath);
             final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
 
             addScript(script);

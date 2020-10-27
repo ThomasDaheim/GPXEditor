@@ -597,4 +597,10 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
             prevPair = pair;
         }
     }
+    
+    
+    @Override
+    public void updateLineStyle(final GPXLineItem lineItem) {
+        // TODO: trigger redraw with new color
+    }
 }

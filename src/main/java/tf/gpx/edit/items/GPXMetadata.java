@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import tf.gpx.edit.helper.GPXCloner;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.CumulativeDescent;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.OverallDuration;
@@ -150,7 +150,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myMetadata;
     }
 

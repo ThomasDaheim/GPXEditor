@@ -64,7 +64,7 @@ function startRouting(layer, routingprofile) {
             autoRoute: true,
             showAlternatives: false,
             // https://openrouteservice.org/plans/
-            router: new L.Routing.openrouteservice(
+            router: new L.Routing.openrouteserviceV2(
                 apikey,
                 {
                     profile: routingprofile
@@ -92,7 +92,10 @@ function startRouting(layer, routingprofile) {
             foundRoute = routes[0];
         }).addTo(myMap);
                     
+        // for use with Leaflet.Editable
         curRoute.disableEdit();
+        // for use with Leaflet.Draw
+//        curRoute.editing.disable();
         myMap.removeLayer(curRoute);
     }
 }
@@ -127,7 +130,10 @@ function stopRouting(updateRoute) {
 
             // show route as editable
             myMap.addLayer(curRoute);
+            // for use with Leaflet.Editable
             curRoute.enableEdit();
+            // for use with Leaflet.Draw
+//            curRoute.editing.disable();
         
             // done here, lets clean up
             routingControl = undefined;

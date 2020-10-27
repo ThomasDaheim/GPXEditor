@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.actions;
 
-import com.hs.gpxparser.modal.Link;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import me.himanshusoni.gpxparser.modal.Link;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -130,7 +130,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         // value has changed: 1) was set and has changed OR 2) was null and has changed from default
         if ((waypoint.getSym() != null) && !waypoint.getSym().equals(myDatapoint.getSym()) ||
             ((waypoint.getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(myDatapoint.getSym()))) {
-            setMultipleStringValues(myDatapoint.getSym(), GPXWaypoint::setSym);
+            setMultipleSymbols(myDatapoint.getSym());
         }
         if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getDescription())) {
             setMultipleStringValues(myDatapoint.getDescription(), GPXWaypoint::setDescription);
@@ -150,10 +150,13 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
             setMultipleLinkValues(null, GPXWaypoint::setLinks);
         }
         
+        // TFE, 20200925: set date as well - if different from date of first waypoint
+        if ((waypoint.getDate() != null ) && !waypoint.getDate().equals(myDatapoint.getDate())) {
+            setMultipleDateValues(myDatapoint.getDate());
+        }
         
         if (myWaypoints.size() == 1) {
             // single update - allows more values
-            waypoint.setDate(myDatapoint.getDate());
             waypoint.setLatitude(myDatapoint.getLatitude());
             waypoint.setLongitude(myDatapoint.getLongitude());
             waypoint.setElevation(myDatapoint.getElevation());
@@ -176,14 +179,26 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         });
     }
     
-    // don't call alle the different setters in individual streams
-    private void setMultipleDateValues(final Date newValue, final BiConsumer<GPXWaypoint, Date> setter) {
+    private void setMultipleSymbols(final String symbol) {
         myWaypoints.stream().forEach((t) -> {
-            setter.accept(t, newValue);
+            if (t.isGPXFileWaypoint()) {
+                // only file waypoints can have symbols
+                t.setSym(symbol);
+            }
         });
     }
     
-    // don't call alle the different setters in individual streams
+    private void setMultipleDateValues(final Date startDate) {
+        final long diffInMillies = Math.abs(startDate.getTime() - myWaypoints.get(0).getDate().getTime());
+        
+        // set date accordingly
+        myWaypoints.stream().forEach((t) -> {
+            if (t.getDate() != null) {
+                t.getDate().setTime(t.getDate().getTime() + diffInMillies);
+            }
+        });
+    }
+    
     private void setMultipleLinkValues(final HashSet<Link> newValue, final BiConsumer<GPXWaypoint, HashSet<Link>> setter) {
         myWaypoints.stream().forEach((t) -> {
             setter.accept(t, newValue);

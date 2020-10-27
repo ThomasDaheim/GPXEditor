@@ -25,10 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.TrackSegment;
-import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -37,6 +33,10 @@ import java.util.Objects;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
 
@@ -71,7 +71,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myTrackSegment = new TrackSegment();
         
         // if possible add waypoint to parent class
-        Extension content = gpxTrack.getContent();
+        Extension content = gpxTrack.getExtension();
         if (content instanceof Track) {
             ((Track) content).addTrackSegment(myTrackSegment);
         }
@@ -85,7 +85,8 @@ public class GPXTrackSegment extends GPXMeasurable {
             final int number) {
         super(GPXLineItemType.GPXTrackSegment);
         
-        myGPXTrack = gpxTrack;
+        myGPXTrack = gpxTrack;        
+
         myTrackSegment = trackSegment;
         setNumber(number);
         
@@ -102,18 +103,12 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public String getColor() {
-        // tracksegments have the color of their tracks
-        return getParent().getColor();
-    }
-    
-    @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrackSegment myClone = new GPXTrackSegment();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXTrack = myGPXTrack;
-        
+
         // set tracksegment via cloner
         myClone.myTrackSegment = GPXCloner.getInstance().deepClone(myTrackSegment);
         
@@ -144,6 +139,11 @@ public class GPXTrackSegment extends GPXMeasurable {
 
     protected TrackSegment getTrackSegment() {
         return myTrackSegment;
+    }
+    
+    @Override
+    public LineStyle getLineStyle() {
+        return myGPXTrack.getLineStyle();
     }
     
     @Override
@@ -278,7 +278,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myTrackSegment;
     }
 

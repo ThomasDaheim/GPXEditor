@@ -131,7 +131,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                                 gpxTrack.getGPXTrackSegments().add(gpxTrackSegment);
 
                                 gpxTrack.setName(item.getName());
-                                gpxTrack.getContent().setExtensionData(item.getContent().getExtensionData());
+                                gpxTrack.getExtension().setExtensionData(item.getExtension().getExtensionData());
 
                                 // move waypoints
                                 gpxTrackSegment.getGPXWaypoints().addAll(item.getGPXWaypoints());
@@ -153,7 +153,7 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                                 gpxRoute = new GPXRoute(item.getGPXFile());
 
                                 gpxRoute.setName(item.getName());
-                                gpxRoute.getContent().setExtensionData(item.getContent().getExtensionData());
+                                gpxRoute.getExtension().setExtensionData(item.getExtension().getExtensionData());
 
                                 // move waypoints
                                 if (item.isGPXTrack()) {

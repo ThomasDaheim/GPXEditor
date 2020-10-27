@@ -25,6 +25,15 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.2
+
+* added option to playback tracks / segments with date values
+* some more functions that can be undone
+* fixes around gpx xmnls headers and others
+* support for "line" extension for tracks & routes (read & use color / width / opacity / linecap attributes)
+* linestyle editor for all attributes (except linecap for now)
+* support for openroutingservice V2
+
 ### Update v5.1
 
 * added GPXEditor.bat to show usage of --add-modules and --add-exports
@@ -333,7 +342,7 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'tf.JavaHelper:JavaHelper:1.0': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.8': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
 * 'commons-cli:commons-cli:1.4'
 * 'commons-io:commons-io:2.6'
@@ -342,7 +351,7 @@ Explicit dependencies:
 * 'org.apache.commons:commons-text:1.7'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
-* 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
+* 'me.himanshusoni.gpxparser:gpx-parser:1.12'
 * 'org.jzy3d:jzy3d-api:1.0.2'
 * 'org.jzy3d:jzy3d-javafx:1.0.2'
 * 'org.controlsfx:controlsfx:11.0.1'
@@ -355,6 +364,7 @@ Explicit dependencies:
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'javax.xml.bind:jaxb-api:2.3.1'
 * 'org.eclipse.persistence:eclipselink:2.7.4'
+* 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 
 Other things used internally:
 
@@ -370,6 +380,7 @@ Other things used internally:
 * leaflet.color-markers: https://github.com/pointhi/leaflet-color-markers
 * leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet.leafletplayback: https://github.com/hallahan/LeafletPlayback + some own fixes & improvements
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
 * leaflet.search: https://github.com/stefanocudini/leaflet-search
