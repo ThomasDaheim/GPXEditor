@@ -59,6 +59,8 @@ import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import jfxtras.labs.scene.control.BigDecimalField;
 import jfxtras.scene.control.CalendarTextField;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -131,6 +133,9 @@ public class EditGPXWaypoint extends AbstractStage {
     }
 
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(EditGPXWaypoint.class.getResource("/GPXEditor.css").toExternalForm());
+
         // create new scene
         setTitle("Edit Waypoint Properties");
         initModality(Modality.APPLICATION_MODAL); 

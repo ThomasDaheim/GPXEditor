@@ -47,6 +47,8 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
@@ -251,6 +253,9 @@ public class StatisticsViewer extends AbstractStage {
     }
     
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor.css").toExternalForm());
+
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
             statisticsList.add(new StatisticValue(data));

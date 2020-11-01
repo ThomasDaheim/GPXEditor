@@ -40,7 +40,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.2'
+version='5.3'
 
 repositories {
     mavenLocal() {
@@ -64,7 +64,8 @@ repositories {
 dependencies {
     // JavaFX11 explicit dependencies
 //    def javafx_version='11.0.2'
-    def javafx_version='14'
+//    def javafx_version='14'
+    def javafx_version='15.0.1'
     compile "org.openjfx:javafx-base:$javafx_version:$platform"
     compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
     compile "org.openjfx:javafx-controls:$javafx_version:$platform"
@@ -97,6 +98,7 @@ dependencies {
     compile 'uk.com.robust-it:cloning:1.9.12'
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
     compile group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
+    compile group: 'org.jfxtras', name: 'jmetro', version: '11.6.12'
     
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
 }
@@ -159,7 +161,7 @@ run {
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
         enableAssertions = true
     }
-//    args = ["P:\\Pictures\\Raw\\GPX\\Georgenstein_20200628.gpx"]
+//    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
 }
 
 test {

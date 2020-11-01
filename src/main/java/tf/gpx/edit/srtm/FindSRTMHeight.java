@@ -40,6 +40,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -83,6 +85,9 @@ public class FindSRTMHeight extends AbstractStage {
     }
 
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(FindSRTMHeight.class.getResource("/GPXEditor.css").toExternalForm());
+
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         myAverageMode = 

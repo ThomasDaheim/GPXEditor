@@ -61,6 +61,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
@@ -136,6 +138,9 @@ public class PreferenceEditor extends AbstractStage {
     }
     
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.css").toExternalForm());
+
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
         getGridPane().getChildren().clear();

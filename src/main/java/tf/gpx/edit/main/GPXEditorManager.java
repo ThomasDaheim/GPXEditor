@@ -44,6 +44,8 @@ import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.TaskExecutor;
@@ -174,6 +176,7 @@ public class GPXEditorManager extends Application {
                 
                 myStage.setTitle("GPX Editor");
                 myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
+                (new JMetro(Style.LIGHT)).setScene(myStage.getScene());
                 myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
                 if (Platform.isSupported(ConditionalFeature.UNIFIED_WINDOW)) {
                     // TFE, 20200508: not working in some environments!

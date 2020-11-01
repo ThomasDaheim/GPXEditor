@@ -21,10 +21,10 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.stage.Modality;
 import javafx.stage.WindowEvent;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.extension.GarminColor;
 import tf.helper.javafx.AbstractStage;
-import static tf.helper.javafx.AbstractStage.INSET_TOP;
-import static tf.helper.javafx.AbstractStage.INSET_TOP_BOTTOM;
 import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
 import tf.helper.javafx.ColorSelection;
@@ -63,6 +63,9 @@ public class EditLineStyle extends AbstractStage {
     }
 
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(EditLineStyle.class.getResource("/GPXEditor.css").toExternalForm());
+
         // create new scene
         setTitle("Edit LineStyle Properties");
         initModality(Modality.APPLICATION_MODAL); 

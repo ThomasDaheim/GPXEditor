@@ -516,8 +516,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             getWebView().setContextMenuEnabled(false);
             createContextMenu();
 
-            isInitialized = true;
-            
             // now we have loaded TrackMarker.js...
             MarkerManager.getInstance().loadSpecialIcons();
 
@@ -529,6 +527,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // set current layer
             setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
                     
+            isInitialized = true;
+            
             // TFE, 20190901: load preferences - now things are up & running
             myGPXEditor.initializeAfterMapLoaded();
             
@@ -1828,12 +1828,12 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         public void registerRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.setCurrentGPXRoute(route, lat, lon);
-            System.out.println("Route registered: " + route + ", " + lat + ", " + lon);
+//            System.out.println("Route registered: " + route + ", " + lat + ", " + lon);
         }
 
         public void deregisterRoute(final String route, final Double lat, final Double lon) {
             myTrackMap.removeCurrentGPXRoute();
-            System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
+//            System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
         }
 
         public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {

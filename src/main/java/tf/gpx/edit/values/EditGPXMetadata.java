@@ -41,6 +41,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import me.himanshusoni.gpxparser.modal.Copyright;
 import me.himanshusoni.gpxparser.modal.Email;
 import me.himanshusoni.gpxparser.modal.Link;
@@ -94,6 +96,9 @@ public class EditGPXMetadata extends AbstractStage {
     }
 
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(EditGPXMetadata.class.getResource("/GPXEditor.css").toExternalForm());
+
         //<metadata>
         //  <name>GPS Receiver track log</name>
         //  <desc>Tallinn (car)</desc>

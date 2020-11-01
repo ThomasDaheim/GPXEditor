@@ -52,6 +52,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.stage.Modality;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
 import org.controlsfx.control.RangeSlider;
@@ -115,6 +117,9 @@ public class DistributionViewer extends AbstractStage {
     }
     
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(DistributionViewer.class.getResource("/GPXEditor.css").toExternalForm());
+
         // create new scene
         setTitle("Distributions");
         initModality(Modality.APPLICATION_MODAL); 
