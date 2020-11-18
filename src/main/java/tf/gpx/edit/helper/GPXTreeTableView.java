@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.helper.javafx.RecursiveTreeItem;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
@@ -1163,7 +1164,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
     }
     
     private TreeItem<GPXMeasurable> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        return new RecursiveTreeItem<GPXMeasurable>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
+        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
             @Override
             public Boolean call(GPXMeasurable item) {
                 return true;
