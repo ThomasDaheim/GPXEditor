@@ -52,13 +52,13 @@ import jfxtras.styles.jmetro.Style;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
-import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.javafx.AbstractStage;
 
 /**
  *

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.helper.javafx.RecursiveTreeItem;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.File;
@@ -96,6 +95,7 @@ import tf.helper.general.IPreferencesStore;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AppClipboard;
 import tf.helper.javafx.ColorConverter;
+import tf.helper.javafx.RecursiveTreeItem;
 import tf.helper.javafx.TableMenuUtils;
 import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.TooltipHelper;

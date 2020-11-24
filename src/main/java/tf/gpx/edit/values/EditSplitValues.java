@@ -38,8 +38,8 @@ import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.values.SplitValue.SplitType;
+import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 
 /**

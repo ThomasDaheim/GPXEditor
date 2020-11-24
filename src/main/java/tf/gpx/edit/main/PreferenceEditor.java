@@ -63,7 +63,6 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -74,6 +73,7 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
+import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 
 /**

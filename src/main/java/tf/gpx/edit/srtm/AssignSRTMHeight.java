@@ -45,11 +45,11 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.collections4.CollectionUtils;
 import org.controlsfx.control.CheckListView;
-import tf.helper.javafx.AbstractStage;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 
 /**

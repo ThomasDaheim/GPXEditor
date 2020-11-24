@@ -33,8 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.extension.GarminColor;
-import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
