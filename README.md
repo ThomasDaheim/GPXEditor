@@ -26,6 +26,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.3
 
 * show gpx file if passed as parameter
+* Switch to JMetro theme
 
 ### Update v5.2
 
@@ -344,13 +345,13 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'tf.JavaHelper:JavaHelper:1.8': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.9': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
 * 'commons-cli:commons-cli:1.4'
 * 'commons-io:commons-io:2.6'
 * 'org.apache.commons:commons-lang3:3.9'
 * 'org.apache.commons:commons-collections4:4.4'
-* 'org.apache.commons:commons-text:1.7'
+* 'org.apache.commons:commons-text:1.8'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
 * 'me.himanshusoni.gpxparser:gpx-parser:1.12'
@@ -366,6 +367,7 @@ Explicit dependencies:
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'javax.xml.bind:jaxb-api:2.3.1'
 * 'org.eclipse.persistence:eclipselink:2.7.4'
+* 'org.jfxtras:jmetro:11.6.14'
 * 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 
 Other things used internally:
@@ -375,6 +377,7 @@ Other things used internally:
 * leaflet 1.6: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
+* leaflet.draw: https://github.com/Leaflet/Leaflet.draw
 * leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
 * leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
 * leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
