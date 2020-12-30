@@ -61,7 +61,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import tf.helper.javafx.AbstractStage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -72,6 +73,7 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
+import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 
 /**
@@ -136,6 +138,9 @@ public class PreferenceEditor extends AbstractStage {
     }
     
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.css").toExternalForm());
+
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
         getGridPane().getChildren().clear();

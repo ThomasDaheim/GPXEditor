@@ -95,6 +95,7 @@ import tf.helper.general.IPreferencesStore;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AppClipboard;
 import tf.helper.javafx.ColorConverter;
+import tf.helper.javafx.RecursiveTreeItem;
 import tf.helper.javafx.TableMenuUtils;
 import tf.helper.javafx.TableViewPreferences;
 import tf.helper.javafx.TooltipHelper;
@@ -1163,7 +1164,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
     }
     
     private TreeItem<GPXMeasurable> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        return new RecursiveTreeItem<GPXMeasurable>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
+        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
             @Override
             public Boolean call(GPXMeasurable item) {
                 return true;

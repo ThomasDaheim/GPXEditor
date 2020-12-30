@@ -412,6 +412,36 @@ public class GPXEditor implements Initializable {
         StatisticsViewer.getInstance().setCallback(this);
         StatusBar.getInstance().setCallback(this);
 
+        // set algorithm for distance calculation
+        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
+
+        // TFE, 20200713: needs to happen before map gets loaded
+        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
+        TrackMap.getInstance().initMap();
+    }
+    
+    public void lateInitialize() {
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.3", "https://github.com/ThomasDaheim/GPXEditor");
+        
+        // check for control key to distinguish between move & copy when dragging
+        getWindow().getScene().setOnKeyPressed(event -> {
+            if (KeyCode.CONTROL.equals(event.getCode())) {
+                cntrlPressedProperty.setValue(Boolean.TRUE);
+            }
+        });
+        getWindow().getScene().setOnKeyReleased(event -> {
+            if (KeyCode.CONTROL.equals(event.getCode())) {
+                cntrlPressedProperty.setValue(Boolean.FALSE);
+            }
+        });
+    }
+    
+    public void initializeAfterMapLoaded() {
+        // TFE, 20200622: now also track map has completed loading...
+
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
+
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
         for (String gpxFile : GPXEditorParameters.getInstance().getGPXFiles()) {
@@ -439,36 +469,11 @@ public class GPXEditor implements Initializable {
         }
         // System.out.println("Processing " + gpxFileNames.size() + " files.");
         parseAndAddFiles(gpxFileNames);
-        
-        // set algorithm for distance calculation
-        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
 
-        // TFE, 20200713: needs to happen before map gets loaded
-        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
-        TrackMap.getInstance().initMap();
-    }
-    
-    public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.2", "https://github.com/ThomasDaheim/GPXEditor");
-        
-        // check for control key to distinguish between move & copy when dragging
-        getWindow().getScene().setOnKeyPressed(event -> {
-            if (KeyCode.CONTROL.equals(event.getCode())) {
-                cntrlPressedProperty.setValue(Boolean.TRUE);
-            }
+        // TFE, 20201030: select first item if passed as arg
+        Platform.runLater(() -> {
+            gpxFileList.getSelectionModel().select(0);
         });
-        getWindow().getScene().setOnKeyReleased(event -> {
-            if (KeyCode.CONTROL.equals(event.getCode())) {
-                cntrlPressedProperty.setValue(Boolean.FALSE);
-            }
-        });
-    }
-    
-    public void initializeAfterMapLoaded() {
-        // TFE, 20200622: now also track map has completed loading...
-
-        // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
     }
 
     public void stop() {
