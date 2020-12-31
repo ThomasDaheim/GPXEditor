@@ -74,7 +74,9 @@ public enum GPXEditorPreferences  {
     // TFE, 20200401: preferences for heatmap
     HEATMAP_COLORMAPPING("heatMapColorMapping", ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED.name(), ColorMapping::valueOf),
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
-    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf);
+    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf),
+    // TFE, 20201231: show/hide the star/end track symbols
+    SHOW_TRACK_SYMBOLS("showTrackSymbols", Boolean.toString(true), Boolean::valueOf);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

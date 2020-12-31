@@ -1131,17 +1131,20 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     }
     private void showWaypointsOnMap(final List<LatLong> waypoints, final List<GPXWaypoint> gpxWaypoints) {
         if (!waypoints.isEmpty()) {
-            
-            // show start & end markers
+
             LatLong point = waypoints.get(0);
             GPXWaypoint gpxpoint = gpxWaypoints.get(0);
-            String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, MarkerType.MARKER, 1000, false);
-            markers.put(marker, gpxpoint);
             
-            point = waypoints.get(waypoints.size()-1);
-            gpxpoint = gpxWaypoints.get(gpxWaypoints.size()-1);
-            marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, MarkerType.MARKER, 2000, false);
-            markers.put(marker, gpxpoint);
+            if (GPXEditorPreferences.SHOW_TRACK_SYMBOLS.getAsType()) {
+                // show start & end markers
+                String marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.GREEN_MARKER, MarkerType.MARKER, 1000, false);
+                markers.put(marker, gpxpoint);
+
+                point = waypoints.get(waypoints.size()-1);
+                gpxpoint = gpxWaypoints.get(gpxWaypoints.size()-1);
+                marker = addMarkerAndCallback(gpxpoint, "", ColorMarker.RED_MARKER, MarkerType.MARKER, 2000, false);
+                markers.put(marker, gpxpoint);
+            }
             
             if (gpxpoint.isGPXTrackWaypoint()) {
                 // show track

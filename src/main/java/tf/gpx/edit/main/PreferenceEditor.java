@@ -122,7 +122,8 @@ public class PreferenceEditor extends AbstractStage {
     private final ChoiceBox<OpacityDistribution> opacDistChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(OpacityDistribution.class, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
     private final TextField eventText = new TextField();
-    private MapLayerTable mapLayerTable = new MapLayerTable();
+    private final MapLayerTable mapLayerTable = new MapLayerTable();
+    private final CheckBox trackSymbolChkBox = new CheckBox();
 
     private PreferenceEditor() {
         super();
@@ -405,6 +406,19 @@ public class PreferenceEditor extends AbstractStage {
         numShowText.setTooltip(t);
         getGridPane().add(numShowText, 1, rowNum, 1, 1);
         GridPane.setMargin(numShowText, INSET_TOP);        
+
+        rowNum++;
+        // 3rd row: alway show waypoints from file level in maps
+        t = new Tooltip("Show start/end symbols for tracks");
+        final Label trackSymbolLbl = new Label("Show track symbols:");
+        trackSymbolLbl.setTooltip(t);
+        getGridPane().add(trackSymbolLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(trackSymbolLbl, VPos.TOP);
+        GridPane.setMargin(trackSymbolLbl, INSET_TOP);
+        
+        trackSymbolChkBox.setTooltip(t);
+        getGridPane().add(trackSymbolChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(trackSymbolChkBox, INSET_TOP);        
 
         rowNum++;
         // 3rd row: select search radius
@@ -702,6 +716,7 @@ public class PreferenceEditor extends AbstractStage {
         neighbourText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_COUNT.getAsType()));
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
         numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
+        trackSymbolChkBox.setSelected(GPXEditorPreferences.SHOW_TRACK_SYMBOLS.getAsType());
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
@@ -724,6 +739,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(assignHeightChkBox.isSelected());
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
         GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
+        GPXEditorPreferences.SHOW_TRACK_SYMBOLS.put(trackSymbolChkBox.isSelected());
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());

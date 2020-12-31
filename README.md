@@ -23,6 +23,11 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.4
+
+* bugfix delete extensions
+* start / end symbol of tracks can be switched on/off in preferences
+
 ### Update v5.3
 
 * show gpx file if passed as parameter

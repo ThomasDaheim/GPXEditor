@@ -351,16 +351,21 @@ public class EditGPXMetadata extends AbstractStage {
             metaCopyLicenseTxt.setText(metadata.getCopyright().getLicense());
         }
 
-        // time is set in setHeaderAndMeta()
-        metaTimeLbl.setText(metadata.getTime().toString());
+        metaTimeLbl.setText("");
+        if (metadata.getTime() != null) {
+            metaTimeLbl.setText(metadata.getTime().toString());
+        }
         metaKeywordsTxt.setText(metadata.getKeywords());
         // bounds is set in setHeaderAndMeta()
         // maxlat="51.645707" maxlon="10.020920" minlat="49.570030" minlon="8.106567"
-        String bounds = 
-                "minLat=" + metadata.getBounds().getMinLat() +
-                " maxLat=" + metadata.getBounds().getMaxLat() +
-                " minLon=" + metadata.getBounds().getMinLon() +
-                " maxLon=" + metadata.getBounds().getMaxLon();
+        String bounds = "";
+        if (metadata.getBounds() != null) {
+            bounds = 
+                    "minLat=" + metadata.getBounds().getMinLat() +
+                    " maxLat=" + metadata.getBounds().getMaxLat() +
+                    " minLon=" + metadata.getBounds().getMinLon() +
+                    " maxLon=" + metadata.getBounds().getMaxLon();
+        }
         metaBoundsLbl.setText(bounds);
         
         metaLinkTable.getItems().clear();

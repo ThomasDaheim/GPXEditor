@@ -709,7 +709,7 @@ public class GPXTableView implements IPreferencesHolder {
                                         }
                                         if (tooltext.length() > 0) {
                                             final Tooltip t = new Tooltip(tooltext.toString());
-                                            t.getStyleClass().addAll("extension-popup");
+                                            t.getStyleClass().add("extension-popup");
                                             TooltipHelper.updateTooltipBehavior(t, 0, 10000, 0, true);
 
                                             Tooltip.install(fontAwesomeIcon, t);
