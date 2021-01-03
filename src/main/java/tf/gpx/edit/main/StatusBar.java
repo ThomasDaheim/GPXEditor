@@ -48,7 +48,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.util.Duration;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.ITaskExecutionConsumer;

@@ -63,7 +63,7 @@ import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;

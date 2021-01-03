@@ -49,7 +49,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -243,6 +243,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             }
         }
         
+        // TODO: improve performance or make optional!
+        // - run as (parallel) tasks and re-paint series once its completed: https://docs.oracle.com/javafx/2/threads/jfxpub-threads.htm 
+        // - use better algorithm <- for some limit of trackpoints and waypoints
+        //   http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree, view-source:https://www.oc.nps.edu/oc2902w/coord/geodesy.js
+        //   https://gis.stackexchange.com/a/4857
+        //   https://github.com/jelmerk/hnswlib
         if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
             int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
             int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType();
@@ -262,7 +268,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                 XYChart.Data<Number, Number> closest = null;
                 double mindistance = Double.MAX_VALUE;
                 for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
-                    final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
+                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+                            fileWaypoint.getWaypoint(), 
+                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
+                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
                     if (distance < mindistance) {
                         closest = waypoint;
                         mindistance = distance;
@@ -295,7 +306,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                     data.setNode(text);
                 }
 
-                // add each file waypoint as own series - we don't want to have aera or linees drawn...
+                // add each file waypoint as own series - we don't want to have aera or lines drawn...
                 final XYChart.Series<Number, Number> series = new XYChart.Series<>();
                 series.getData().add(data);
                 setSeriesUserData(series, fileWaypoint);

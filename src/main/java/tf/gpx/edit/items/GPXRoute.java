@@ -40,7 +40,7 @@ import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
 

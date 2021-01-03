@@ -1,5 +1,6 @@
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.algorithms.EarthGeometry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

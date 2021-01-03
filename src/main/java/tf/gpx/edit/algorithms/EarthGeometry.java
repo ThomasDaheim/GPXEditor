@@ -1,4 +1,4 @@
-package tf.gpx.edit.helper;
+package tf.gpx.edit.algorithms;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,9 +30,10 @@ public class EarthGeometry {
     // values for WGS84 reference ellipsoid
     public static final double EarthLongRadius = 6378137.0;
     public static final double EarthLongRadius2 = EarthLongRadius * EarthLongRadius;
-    public static final double EarthShortRadius = 6356752.314245;
-    public static final double EarthShortRadius2 = EarthShortRadius * EarthShortRadius;
     public static final double EarthFlattening = 1.0 / 298.257223563;
+    public static final double EarthShortRadius = EarthLongRadius * (1.0 - EarthFlattening);
+    public static final double EarthShortRadius2 = EarthShortRadius * EarthShortRadius;
+    public static final double EarthEccentricity2 = 1.0 - EarthShortRadius2/EarthLongRadius2;
     
     // https://math.wikia.org/wiki/Ellipsoidal_quadratic_mean_radius
     public static final double EarthEQMRadius = FastMath.sqrt(3.0 * EarthLongRadius2 + EarthShortRadius2) / 2.0;
@@ -116,8 +117,10 @@ public class EarthGeometry {
         final double latAverage = (lat2 + lat1) / 2.0;
 
         // https://github.com/mapbox/cheap-ruler but only first correction term
-        final double xDiff = EarthShortRadius * (1.0 - 0.00509 * FastMath.cos(2.0 * latAverage)) * lat21;
-        final double yDiff = EarthLongRadius * (FastMath.cos(latAverage) - 0.00085 * FastMath.cos(3.0 * latAverage)) * lon21;
+        final double cosLatAverage = FastMath.cos(latAverage);
+        final double cosLatAverage2 = cosLatAverage*cosLatAverage;
+        final double xDiff = EarthShortRadius * (1.0 - 0.00509 * (2.0 * cosLatAverage2 - 1.0)) * lat21;
+        final double yDiff = EarthLongRadius * (cosLatAverage - 0.00085 * cosLatAverage*(4.0 * cosLatAverage2 - 3.0)) * lon21;
         final double zDiff = p2.getElevation() - p1.getElevation();
         
 //        System.out.println("xDiff: " + xDiff + ", " + EarthShortRadius * lat21);
@@ -412,5 +415,34 @@ public class EarthGeometry {
         
         return (p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation()) /
                 distanceGPXWaypoints(p1, p2) * 100.0;
+    }
+    
+    public static double[] toCartesionCoordinates(final GPXWaypoint p1) {
+        return toCartesionCoordinates(p1.getWaypoint());
+
+    }
+    public static double[] toCartesionCoordinates(final Waypoint p1) {
+        // calculate x, y, z from lat, lng, height
+        // https://www.oc.nps.edu/oc2902w/coord/geodesy.js
+        final double flat = FastMath.toRadians(p1.getLatitude());
+        final double flon = FastMath.toRadians(p1.getLongitude());
+        final double altkm = p1.getElevation() / 1000.0;
+
+        final double clat = FastMath.cos(flat);
+        final double slat = FastMath.sin(flat);
+        final double clon = FastMath.cos(flon);
+        final double slon = FastMath.sin(flon);
+
+        // earth radius at given lat
+        final double d = FastMath.sqrt(1.0 - EarthEccentricity2 * slat * slat);
+        final double rn = EarthLongRadius/d;
+        
+        // formulas for ellipsoid
+        final double x = (rn + altkm) * clat * clon;
+        final double y = (rn + altkm) * clat * slon;
+        final double z = ((1.0-EarthEccentricity2)*rn + altkm) * slat;
+        
+        final double[] result = {x, y, z};
+        return result;
     }
 }

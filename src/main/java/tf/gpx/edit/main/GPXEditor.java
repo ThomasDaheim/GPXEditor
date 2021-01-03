@@ -113,7 +113,7 @@ import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;

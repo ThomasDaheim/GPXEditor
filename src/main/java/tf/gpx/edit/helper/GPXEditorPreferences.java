@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.algorithms.EarthGeometry;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.util.function.Function;
