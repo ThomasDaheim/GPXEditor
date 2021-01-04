@@ -110,7 +110,7 @@ public class GPXWaypoint extends GPXLineItem {
         
         // set waypoint via cloner
         myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
-
+        
         // nothing else to clone, needs to be set by caller
         return ObjectsHelper.uncheckedCast(myClone);
     }
@@ -416,23 +416,30 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public String getCombinedID() {
         // count of wayoint in parent + count of parent in parent-parent + ... til GPXFile
-        String result = "";
-        switch (getParent().getType()) {
+        StringBuilder result = new StringBuilder();
+        switch (myGPXParent.getType()) {
             case GPXFile:
-                result = GPXLineItemType.GPXFile.getShortDescription() + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXFile.getShortDescription())
+                        .append(getNumber());
                 break;
             case GPXRoute:
-                result = GPXLineItemType.GPXRoute.getShortDescription() + Integer.toString(getParent().getNumber()) +
-                        "." + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXRoute.getShortDescription())
+                        .append(myGPXParent.getNumber())
+                        .append(".")
+                        .append(getNumber());
                 break;
             case GPXTrackSegment:
-                result = GPXLineItemType.GPXTrack.getShortDescription() + Integer.toString(getParent().getParent().getNumber()) +
-                        "." + GPXLineItemType.GPXTrackSegment.getShortDescription() + Integer.toString(getParent().getNumber()) +
-                        "." + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXTrack.getShortDescription())
+                        .append(myGPXParent.getParent().getNumber())
+                        .append(".")
+                        .append(GPXLineItemType.GPXTrackSegment.getShortDescription())
+                        .append(myGPXParent.getNumber())
+                        .append(".")
+                        .append(getNumber());
                 break;
             default:
         }
-        return result;
+        return result.toString();
     }
     
     public static Comparator<String> getCombinedIDComparator() {

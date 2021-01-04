@@ -262,7 +262,7 @@ public abstract class GPXLineItem implements IStylableItem {
     }
     public String getCombinedID() {
         // count of item in parent - override if something more fancy is required (e.g. GPXWaypoint)
-        return getType().getShortDescription() + Integer.toString(getNumber());
+        return getType().getShortDescription() + getNumber();
     }
     
     // get children of the diffferent types - but only direct children and not hierarchically!

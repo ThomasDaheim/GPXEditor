@@ -28,9 +28,11 @@ package tf.gpx.edit.viewer;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -50,6 +52,8 @@ import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.INearestNeighborSearcher;
+import tf.gpx.edit.algorithms.NearestNeighbor;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -149,6 +153,11 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     // only extensions of XYChart allowed
     public abstract T getChart();
     public abstract Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
+    
+        // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
+    public abstract boolean getInShowData();
+    public abstract void setInShowData(final boolean value);
+    public abstract void doShowData();
     
     // as default I don't shown file waypoints
     default boolean fileWaypointsInChart() {
@@ -256,33 +265,49 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType();
 
             // merge seriesList into one big series to iterate all in one loop
-            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
-            for (XYChart.Series<Number, Number> series : seriesList) {
-                flatSeries.getData().addAll(series.getData());
-            }
+//            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
+//            for (XYChart.Series<Number, Number> series : seriesList) {
+//                flatSeries.getData().addAll(series.getData());
+//            }
+            
+            final List<GPXWaypoint> flatWaypoints = seriesList.stream().map((t) -> {
+                    return t.getData();
+                }
+            ).flatMap(Collection::stream).map((t) -> {
+                return ((GPXWaypoint) t.getExtraValue());
+            }).collect(Collectors.toList());
+            final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
+                    EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
             
             for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
                 // 1. check file waypoints against other waypoints for minimum distance
                 final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
                 
-                XYChart.Data<Number, Number> closest = null;
-                double mindistance = Double.MAX_VALUE;
-                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
-                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
-                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
-                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
-                            fileWaypoint.getWaypoint(), 
-                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
-                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
-                    if (distance < mindistance) {
-                        closest = waypoint;
-                        mindistance = distance;
-                    }
-                }
+//                XYChart.Data<Number, Number> closest = null;
+//                double mindistance = Double.MAX_VALUE;
+//                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
+//                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
+//                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+//                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+//                            fileWaypoint.getWaypoint(), 
+//                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
+//                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+//                    if (distance < mindistance) {
+//                        closest = waypoint;
+//                        mindistance = distance;
+//                    }
+//                }
+
+                final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
                 
-                if (closest != null && (mindistance < waypointThreshold || waypointThreshold == 0)) {
+                if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
 //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
-                    data.setXValue(closest.getXValue());
+
+                    final double xValue = getPoints().stream().filter((t) -> {
+                        return t.getLeft().equals(closest.getLeft());
+                    }).findFirst().get().getRight().doubleValue() / 1000.0;
+
+                    data.setXValue(xValue);
                 
                     // 2. add text & icon as label to node
                     final Label text = new Label(fileWaypoint.getName());
@@ -329,6 +354,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     }
     
     private void showData(final List<XYChart.Series<Number, Number>> seriesList, final int dataCount) {
+        setInShowData(true);
+        
         // TFE, 20180516: ignore fileWaypointsCount in count of waypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...
         // file fileWaypointsCount don't count into MAX_WAYPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
@@ -341,7 +368,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         
         // TFE, 20191125: only show up to GPXEditorPreferenceStore.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
-        int count = 0, i = 0, j = 0;
+        int count = 0, i = 0;
         for (XYChart.Series<Number, Number> series : seriesList) {
             if (!series.getData().isEmpty()) {
                 final XYChart.Series<Number, Number> reducedSeries = new XYChart.Series<>();
@@ -363,19 +390,6 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                }
 
                 getChart().getData().add(reducedSeries); 
-                
-                if (!firstWaypoint.isGPXFile()) {
-                    // and now color the series nodes according to lineitem color
-                    // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
-                    reducedSeries.getNode().pseudoClassStateChanged(color, true);
-                    Set<Node> nodes = getChart().lookupAll(".series" + j);
-                    for (Node n : nodes) {
-                        n.pseudoClassStateChanged(color, true);
-                    }
-                }
-                
-                j++;
             }
         }
 
@@ -411,6 +425,32 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                         getChart().getData().add(idSeries); 
                     }
                 }
+            }
+        }
+
+        setInShowData(false);
+        doShowData();
+        getChartsPane().applyCss();
+        getChartsPane().requestLayout();
+
+        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged delets all styling...
+        int j = 0;
+        for (XYChart.Series<Number, Number> series : getChart().getData()) {
+            if (!series.getData().isEmpty()) {
+                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
+                if (!firstWaypoint.isGPXFile() && series.getName() != null) {
+                    // and now color the series nodes according to lineitem color
+                    // https://gist.github.com/jewelsea/2129306
+                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
+                    series.getNode().pseudoClassStateChanged(color, true);
+                    // TFE, 20210104: doesn't seem to be required to color all nodes - and speeds things up a bit :-)
+//                    final Set<Node> nodes = getChart().lookupAll(".series" + j);
+//                    for (Node n : nodes) {
+//                        n.pseudoClassStateChanged(color, true);
+//                    }
+                }
+                
+                j++;
             }
         }
 
@@ -558,11 +598,13 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         ((NumberAxis) getChart().getXAxis()).setTickUnit(tickUnit);
 
         // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
+        getChart().getXAxis().setAutoRanging(false);
         ((NumberAxis) getChart().getXAxis()).setLowerBound(minDist / 1000.0);
         ((NumberAxis) getChart().getXAxis()).setUpperBound(maxDist / 1000.0);
 
 //        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
         ((NumberAxis) getChart().getYAxis()).setTickUnit(10.0);
+        getChart().getYAxis().setAutoRanging(false);
         ((NumberAxis) getChart().getYAxis()).setLowerBound(minHght);
         ((NumberAxis) getChart().getYAxis()).setUpperBound(maxHght);
     }

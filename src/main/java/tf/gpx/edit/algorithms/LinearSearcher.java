@@ -27,6 +27,7 @@ package tf.gpx.edit.algorithms;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -38,6 +39,11 @@ public class LinearSearcher implements INearestNeighborSearcher {
     private EarthGeometry.DistanceAlgorithm myAlgo;
 
     @Override
+    public NearestNeighbor.SearchAlgorithm getSearchAlgorithm() {
+        return NearestNeighbor.SearchAlgorithm.Linear;
+    }
+
+    @Override
     public void init(final EarthGeometry.DistanceAlgorithm algo, final List<GPXWaypoint> points) {
         myAlgo = algo;
         myGPXWaypoint.clear();
@@ -45,7 +51,7 @@ public class LinearSearcher implements INearestNeighborSearcher {
     }
 
     @Override
-    public GPXWaypoint getNearestNeighbor(final GPXWaypoint gpxWaypoint) {
+    public Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint gpxWaypoint) {
         GPXWaypoint closest = null;
         double mindistance = Double.MAX_VALUE;
         for (GPXWaypoint waypoint : myGPXWaypoint) {
@@ -59,6 +65,6 @@ public class LinearSearcher implements INearestNeighborSearcher {
             }
         }
         
-        return closest;
+        return Pair.of(closest, mindistance);
     }
 }

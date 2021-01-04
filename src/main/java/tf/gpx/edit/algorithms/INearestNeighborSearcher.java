@@ -26,6 +26,7 @@
 package tf.gpx.edit.algorithms;
 
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -34,6 +35,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public interface INearestNeighborSearcher {
+    public NearestNeighbor.SearchAlgorithm getSearchAlgorithm();
     public void init(final EarthGeometry.DistanceAlgorithm algo, final List<GPXWaypoint> points);
-    public abstract GPXWaypoint getNearestNeighbor(final GPXWaypoint point);
+    public abstract Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint point);
 }

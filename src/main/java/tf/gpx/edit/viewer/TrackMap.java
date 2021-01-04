@@ -1549,18 +1549,34 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         } else {
             layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker, zIndex);
         
-            execScript("addMouseOverToLayer(\"" + layer + "\");");
+            // TFE, 20210104: performance - combind all args into only one call to execScript()
+            double latParm = -1.0;
+            double lngParm = -1.0;
+            String lineParm = "";
             if (interactive) {
-                execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
-
+                latParm = point.getLatitude();
+                lngParm = point.getLongitude();
+                
                 // TFE, 20190905: pass line marker name as well - if any
                 final GPXLineItem parent = gpxWaypoint.getParent();
                 if (parent.isGPXTrackSegment()) {
-                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
-                } else {
-                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"\");");
+                    lineParm = trackSegments.getKey(parent);
                 }
             }
+            execScript("initCallback(\"" + layer + "\", " + latParm + ", " + lngParm + ", \"" + lineParm + "\");");
+            
+//            execScript("addMouseOverToLayer(\"" + layer + "\");");
+//            if (interactive) {
+//                execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
+//
+//                // TFE, 20190905: pass line marker name as well - if any
+//                final GPXLineItem parent = gpxWaypoint.getParent();
+//                if (parent.isGPXTrackSegment()) {
+//                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"" + trackSegments.getKey(parent) + "\");");
+//                } else {
+//                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"\");");
+//                }
+//            }
         }
 
         return layer;

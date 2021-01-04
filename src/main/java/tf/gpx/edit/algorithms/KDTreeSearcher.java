@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -41,6 +43,11 @@ public class KDTreeSearcher implements INearestNeighborSearcher {
 
     private static final int K = 3; // 3-d tree
     private Node tree;
+
+    @Override
+    public NearestNeighbor.SearchAlgorithm getSearchAlgorithm() {
+        return NearestNeighbor.SearchAlgorithm.KDTree;
+    }
 
     @Override
     public void init(final EarthGeometry.DistanceAlgorithm algo, final List<GPXWaypoint> points) {
@@ -56,29 +63,44 @@ public class KDTreeSearcher implements INearestNeighborSearcher {
     }
 
     @Override
-    public GPXWaypoint getNearestNeighbor(final GPXWaypoint point) {
-        final Node node = findNearest(tree, new Node(point), 0);
-        return node == null ? null : node.location;
+    public Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint point) {
+        final Node target = new Node(point);
+        final MutablePair<Node, Double> node = findNearest(MutablePair.of(tree, -1.0), target, 0);
+        return node == null ? null : Pair.of(node.getLeft().location, EarthGeometry.distanceWaypointsForAlgorithm(
+                    node.getLeft().location.getWaypoint(), 
+                    point.getWaypoint(),
+                    myAlgo));
     }
     
-    private static Node findNearest(final Node current, final Node target, final int depth) {
+    private static MutablePair<Node, Double> findNearest(final MutablePair<Node, Double> current, final Node target, final int depth) {
+        initEuclideanDistance(current, target);
+        final Node currentNode = current.getLeft();
+        
         final int axis = depth % K;
-        final int direction = getComparator(axis).compare(target, current);
-        final Node next = (direction < 0) ? current.left : current.right;
-        final Node other = (direction < 0) ? current.right : current.left;
-        Node best = (next == null) ? current : findNearest(next, target, depth + 1);
-        if (current.euclideanDistance(target) < best.euclideanDistance(target)) {
+        final int direction = getComparator(axis).compare(target, currentNode);
+        final MutablePair<Node, Double> next = MutablePair.of((direction < 0) ? currentNode.left : currentNode.right, -1.0);
+        final MutablePair<Node, Double> other = MutablePair.of((direction < 0) ? currentNode.right : currentNode.left, -1.0);
+        MutablePair<Node, Double> best = (next.getLeft() == null) ? current : findNearest(next, target, depth + 1);
+        
+        initEuclideanDistance(best, target);
+        if (current.getRight() < best.getRight()) {
             best = current;
         }
-        if (other != null) {
-            if (current.verticalDistance(target, axis) < best.euclideanDistance(target)) {
-                final Node possibleBest = findNearest(other, target, depth + 1);
-                if (possibleBest.euclideanDistance(target) < best.euclideanDistance(target)) {
+        if (other.getLeft() != null) {
+            if (current.getLeft().verticalDistance(target, axis) < best.getRight()) {
+                final MutablePair<Node, Double> possibleBest = findNearest(other, target, depth + 1);
+                if (possibleBest.getRight() < best.getRight()) {
                     best = possibleBest;
                 }
             }
         }
         return best;
+    }
+    
+    private static void initEuclideanDistance(final MutablePair<Node, Double> current, final Node target) {
+        if (current.getRight() < 0.0) {
+            current.setRight(current.getLeft().euclideanDistance(target));
+        }
     }
 
     private static Node buildTree(final List<Node> items, final int depth) {

@@ -46,6 +46,8 @@ public class NearestNeighbor {
         KDTree
     }
     
+    public static final int KDTREE_LIMIT = 20;
+    
     private NearestNeighbor() {
         super();
         // Exists only to defeat instantiation.
@@ -54,8 +56,22 @@ public class NearestNeighbor {
     public static NearestNeighbor getInstance() {
         return INSTANCE;
     }
+    
+    public INearestNeighborSearcher getOptimalSearcher(
+            final EarthGeometry.DistanceAlgorithm distAlgo, 
+            final List<GPXWaypoint> points, 
+            final int searchPoints) {
+        if (searchPoints < KDTREE_LIMIT) {
+            return getSearcher(SearchAlgorithm.Linear, distAlgo, points);
+        } else {
+            return getSearcher(SearchAlgorithm.KDTree, distAlgo, points);
+        }
+    }
 
-    public INearestNeighborSearcher getSearcher(final SearchAlgorithm searchAlgo, final EarthGeometry.DistanceAlgorithm distAlgo, final List<GPXWaypoint> points) {
+    public INearestNeighborSearcher getSearcher(
+            final SearchAlgorithm searchAlgo, 
+            final EarthGeometry.DistanceAlgorithm distAlgo, 
+            final List<GPXWaypoint> points) {
         INearestNeighborSearcher result = null;
         
         switch(searchAlgo) {

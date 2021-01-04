@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Side;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -52,6 +53,8 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
 
     private final List<Pair<GPXWaypoint, Number>> myPoints = new ArrayList<>();
     
+    private boolean inShowData = false;
+
     private double minDistance;
     private double maxDistance;
     private double minSpeed;
@@ -75,6 +78,7 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
         
         yAxis.setSide(Side.RIGHT);
         yAxis.setLabel("Speed [km/h]");
+        getYAxis().setAutoRanging(false);
         
         initialize();
         setCreateSymbols(false);
@@ -182,5 +186,36 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
     @Override
     public void setNonZeroData(final boolean value) {
         nonZeroData = value;
+    }
+
+    @Override
+    public boolean getInShowData() {
+        return inShowData;
+    }
+
+    @Override
+    public void setInShowData(final boolean value) {
+        inShowData = value;
+    }
+    
+    @Override
+    protected void updateLegend() {
+        if (inShowData) {
+            return;
+        }
+        super.updateLegend();
+    }
+    
+    @Override
+    protected void seriesChanged(ListChangeListener.Change<? extends Series> c) {
+        if (inShowData) {
+            return;
+        }
+        super.seriesChanged(c);
+    }
+    
+    @Override
+    public void doShowData() {
+        super.updateLegend();
     }
 }
