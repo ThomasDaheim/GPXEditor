@@ -36,7 +36,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import static tf.gpx.edit.values.EditGPXWaypoint.KEEP_MULTIPLE_VALUES;
+import tf.gpx.edit.values.EditGPXWaypoint;
 import tf.gpx.edit.viewer.MarkerManager;
 
 /**
@@ -118,13 +118,17 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
 
         return result;
     }
+    
+    private static boolean doSetValue(final String value) {
+        return (value != null && !EditGPXWaypoint.KEEP_MULTIPLE_VALUES.equals(value));
+    }
 
     private void setMultipleProperties() {
         // set only if different from KEEP_MULTIPLE_VALUES or initial value
         
         final GPXWaypoint waypoint = myWaypoints.get(0);
         
-        if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getName())) {
+        if (doSetValue(myDatapoint.getName())) {
             setMultipleStringValues(myDatapoint.getName(), GPXWaypoint::setName);
         }
         // value has changed: 1) was set and has changed OR 2) was null and has changed from default
@@ -132,22 +136,17 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
             ((waypoint.getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(myDatapoint.getSym()))) {
             setMultipleSymbols(myDatapoint.getSym());
         }
-        if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getDescription())) {
+        if (doSetValue(myDatapoint.getDescription())) {
             setMultipleStringValues(myDatapoint.getDescription(), GPXWaypoint::setDescription);
         }
-        if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getComment())) {
+        if (doSetValue(myDatapoint.getComment())) {
             setMultipleStringValues(myDatapoint.getComment(), GPXWaypoint::setComment);
         }
-        if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getSrc())) {
+        if (doSetValue(myDatapoint.getSrc())) {
             setMultipleStringValues(myDatapoint.getSrc(), GPXWaypoint::setSrc);
         }
-        if (!KEEP_MULTIPLE_VALUES.equals(myDatapoint.getWaypointType())) {
+        if (doSetValue(myDatapoint.getWaypointType())) {
             setMultipleStringValues(myDatapoint.getWaypointType(), GPXWaypoint::setWaypointType);
-        }
-        if (myDatapoint.getLinks() != null && !myDatapoint.getLinks().isEmpty()) {
-            setMultipleLinkValues(myDatapoint.getLinks(), GPXWaypoint::setLinks);
-        } else {
-            setMultipleLinkValues(null, GPXWaypoint::setLinks);
         }
         
         // TFE, 20200925: set date as well - if different from date of first waypoint
@@ -157,6 +156,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         
         if (myWaypoints.size() == 1) {
             // single update - allows more values
+            waypoint.setLinks(myDatapoint.getLinks());
             waypoint.setLatitude(myDatapoint.getLatitude());
             waypoint.setLongitude(myDatapoint.getLongitude());
             waypoint.setElevation(myDatapoint.getElevation());

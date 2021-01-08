@@ -28,6 +28,7 @@ package tf.gpx.edit.helper;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -373,7 +374,12 @@ public class GPXTableView implements IPreferencesHolder {
 
             final MenuItem editWaypoints = new MenuItem("Edit properties");
             editWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.editGPXWaypoints(myTableView.getSelectionModel().getSelectedItems());
+                // TFE, 20210108: context menu is also shown without a selection!
+                if (myTableView.getSelectionModel().getSelectedItems().isEmpty()) {
+                    myEditor.editGPXWaypoints(new ArrayList<>(Arrays.asList(row.getItem())));
+                } else {
+                    myEditor.editGPXWaypoints(myTableView.getSelectionModel().getSelectedItems());
+                }
             });
             editWaypoints.disableProperty().bind(row.emptyProperty());
             waypointMenu.getItems().add(editWaypoints);

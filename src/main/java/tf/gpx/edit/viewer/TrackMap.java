@@ -464,6 +464,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
             final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
             chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
+            chartsPane.setMinHeight(60.0);
             chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 // store height in percentage as preference
                 if (newValue != null && newValue != oldValue) {
@@ -476,8 +477,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     // reload preference - might have changed in the meantime
                     final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
                     final double newHeight = newValue.doubleValue() * perc;
-                    chartsPane.setMinHeight(newHeight);
-                    chartsPane.setMaxHeight(newHeight);
                     chartsPane.setPrefHeight(newHeight);
 //                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
                 }

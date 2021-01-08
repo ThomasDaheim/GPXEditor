@@ -631,6 +631,7 @@ public class EditGPXWaypoint extends AbstractStage {
         waypointSrcTxt.setText(setNullStringToEmpty(waypoint.getSrc()));
         waypointTypeTxt.setText(setNullStringToEmpty(waypoint.getWaypointType()));
 
+        waypointLinkTable.setDisable(false);
         waypointLinkTable.getItems().clear();
         if (waypoint.getLinks() != null) {
             waypointLinkTable.getItems().addAll(waypoint.getLinks());
@@ -688,11 +689,6 @@ public class EditGPXWaypoint extends AbstractStage {
         waypointSrcTxt.setText(KEEP_MULTIPLE_VALUES);
         waypointTypeTxt.setText(KEEP_MULTIPLE_VALUES);
 
-        waypointLinkTable.getItems().clear();
-        if (waypoint.getLinks() != null) {
-            waypointLinkTable.getItems().addAll(waypoint.getLinks());
-        }
-        
         // TFE, 20200925: edit time of first waypoint and set all others accordingly...
         waypointTimeLbl.setText("Start Date:");
         waypointTimeTxt.setDisable(false);
@@ -705,6 +701,8 @@ public class EditGPXWaypoint extends AbstractStage {
         }
 
         // all of those can't be edited in multiple mode - until I find a way to do it properly
+        waypointLinkTable.setDisable(true);
+        waypointLinkTable.getItems().clear();
         waypointLatitudeTxt.setDisable(true);
         waypointLatitudeTxt.setText("");
         waypointLongitudeTxt.setDisable(true);

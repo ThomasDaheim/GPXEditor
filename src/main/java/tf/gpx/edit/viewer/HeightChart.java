@@ -205,6 +205,11 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         // TFE. 20190819: support for marking waypoints with drag
         // setOnDragDetected not too usefull since it gets triggered only after a few setOnMouseDragged :-(
         setOnMouseDragged((e) -> {
+            // TFE, 20210107: check for shift modifier as well to avoid dragging when resizing of pane with DragResizer...
+            if (!e.isShiftDown()) {
+                return;
+            }
+
             if (!dragActive) {
                 // reset previous start / end points of dragging
                 dragStartDistance = Double.MAX_VALUE;
