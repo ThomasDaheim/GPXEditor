@@ -123,6 +123,10 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
         
         installMousePointer();
+        
+//        visibleProperty().addListener((ov, oldValue, newValue) -> {
+//            System.out.println("visible changed: " + newValue);
+//        });
     }
     
     private void installMousePointer() {

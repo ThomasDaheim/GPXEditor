@@ -90,6 +90,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         getChildren().clear();
 
         // set up margins, ... for xAxis depending on side of yAxis
+        baseChart.setVisible(false);
         baseChart.setChartsPane(this);
         final XYChart chart = baseChart.getChart();
         setFixedAxisWidth(chart);
@@ -97,6 +98,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         getChildren().add(resizeChart(chart, true));
         
         additionalCharts.stream().forEach((t) -> {
+            t.setVisible(false);
             t.setChartsPane(this);
             final XYChart addChart = t.getChart();
             

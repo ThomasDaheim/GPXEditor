@@ -350,7 +350,10 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide chart if no waypoints have been set
-        getChart().setVisible(dataCount > 0);
+        // TFE, 20210108: don't switch on here in case there are data points
+        if (dataCount == 0) {
+            getChart().setVisible(false);
+        }
     }
     
     private void showData(final List<XYChart.Series<Number, Number>> seriesList, final int dataCount) {
