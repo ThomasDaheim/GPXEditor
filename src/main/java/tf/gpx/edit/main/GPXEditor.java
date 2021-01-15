@@ -2032,16 +2032,11 @@ public class GPXEditor implements Initializable {
     }
     
     public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        final List<GPXWaypoint> copiedWaypoints = new ArrayList<>(gpxWaypoints);
-        
-        if (EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints)) {
-            GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
-            // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
-            showGPXWaypoints(getShownGPXMeasurables(), true, false);
+        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
+    }
 
-            // TFE, 20191205: select waypoints again
-            selectGPXWaypoints(copiedWaypoints, false, false);
-        }
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {

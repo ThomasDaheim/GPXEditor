@@ -1161,7 +1161,19 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         // TFE, 20190707: after edit of a waypoint its icon and other features might have changed
-        // TODO: fill with life
+        // TFE, 20210115: only a short time later things get implemented - at least for file waypoints
+        
+        for (GPXWaypoint gpxWaypoint : gpxWaypoints) {
+            if (gpxWaypoint.isGPXFileWaypoint() && fileWaypoints.containsValue(gpxWaypoint)) {
+                // redraw it
+                updateGPXWaypointMarker(
+                        fileWaypoints.getKey(gpxWaypoint),
+                        gpxWaypoint, 
+                        gpxWaypoint.getTooltip(),
+                        MarkerManager.getInstance().getMarkerForWaypoint(gpxWaypoint), 
+                        MarkerType.MARKER);
+            }
+        }
     }
 
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
@@ -1605,6 +1617,35 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // reduce number of calls to execScript()
         execScript("addClickToLayer(\"" + layer + "\", 0.0, 0.0);" + "\n" + "addNameToLayer(\"" + layer + "\", \"" + StringEscapeUtils.escapeEcmaScript(trackName) + "\");");
         return layer;
+    }
+    
+    private void updateGPXWaypointMarker(
+            final String layer,
+            final GPXWaypoint gpxWaypoint, 
+            final String pointTitle, 
+            final IMarker marker, 
+            final MarkerType markerType) {
+        if (!MarkerType.MARKER.equals(markerType)) {
+            // sorry, only for standard markers (so far)
+            return;
+        }
+        
+        final LatLong point = new LatLong(gpxWaypoint.getLatitude(), gpxWaypoint.getLongitude());
+
+        String markerTitle = "";
+        if ((pointTitle != null) && !pointTitle.isEmpty()) {
+            markerTitle = pointTitle + "\n";
+        }
+        markerTitle = markerTitle + LatLongHelper.LatLongToString(point);
+
+        // make sure the icon has been loaded and added in js
+        if (marker instanceof MarkerIcon && !((MarkerIcon) marker).getAvailableInLeaflet()) {
+            final MarkerIcon markerIcon = (MarkerIcon) marker;
+            addPNGIcon(markerIcon.getIconName(), MarkerManager.DEFAULT_ICON_SIZE, MarkerManager.getInstance().getIcon(markerIcon.getIconName()));
+            markerIcon.setAvailableInLeaflet(true);
+        }
+        
+        updateMarker(layer, point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker);
     }
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {

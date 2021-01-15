@@ -281,6 +281,32 @@ public class LeafletMapView extends StackPane {
     }
 
     /**
+     * Updates the existing marker specified by the variable name to show the new icon at the new position.
+     *
+     * @param markerName variable name of the marker
+     * @param title marker title shown in tooltip (pass empty string when tooltip not needed)
+     * @param position new marker position
+     * @param marker new marker icon
+     */
+    public void updateMarker(final String markerName, final LatLong position, final String title, final IMarker marker) {
+        // TODO: optimize execScript() calls...
+        moveMarker(markerName, position);
+        
+        final StringBuilder mapCmd = new StringBuilder();
+
+        // title is the popup tooltip...
+        // https://gis.stackexchange.com/a/141557 - marker._popup.setContent('something else')
+        // TODO: doesn't change anything
+        mapCmd.append(String.format(Locale.US, "%s.setTooltipContent('%s');", markerName, title));
+        mapCmd.append(String.format(Locale.US, "%s.setPopupContent('%s');", markerName, title));
+        
+        mapCmd.append(String.format(Locale.US, "%s.setIcon(%s);", markerName, marker.getIconName()));
+
+//        System.out.println("updateMarker: " + mapCmd.toString());
+        execScript(mapCmd.toString());
+    }
+
+    /**
      * Removes the existing marker specified by the variable name.
      *
      * @param markerName variable name of the marker

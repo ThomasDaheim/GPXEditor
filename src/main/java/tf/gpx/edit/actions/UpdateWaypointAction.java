@@ -97,7 +97,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         setMultipleProperties();
         
         myEditor.refresh();
-        myEditor.refillGPXWaypointList(true);
+        myEditor.updateGPXWaypoints(myWaypoints);
         
         return result;
     }
@@ -114,7 +114,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         }
         
         myEditor.refresh();
-        myEditor.refillGPXWaypointList(true);
+        myEditor.updateGPXWaypoints(myWaypoints);
 
         return result;
     }
@@ -132,8 +132,8 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
             setMultipleStringValues(myDatapoint.getName(), GPXWaypoint::setName);
         }
         // value has changed: 1) was set and has changed OR 2) was null and has changed from default
-        if ((waypoint.getSym() != null) && !waypoint.getSym().equals(myDatapoint.getSym()) ||
-            ((waypoint.getSym() == null) && !MarkerManager.DEFAULT_MARKER.getMarkerName().equals(myDatapoint.getSym()))) {
+        // this logic is already done in EditGPXWaypoint.getWaypointData() - so if a value is here set it!
+        if (myDatapoint.getSym() != null) {
             setMultipleSymbols(myDatapoint.getSym());
         }
         if (doSetValue(myDatapoint.getDescription())) {
