@@ -2066,7 +2066,11 @@ public class GPXEditor implements Initializable {
     private void heightForCoordinate(final Event event) {
         // TODO: remove ugly hack to pass HostServices
         FindSRTMHeight.getInstance().findSRTMHeight(
-            (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"));
+            ObjectsHelper.uncheckedCast(gpxFileList.getScene().getWindow().getProperties().get("hostServices")));
+    }
+    
+    public HostServices getHostServices() {
+        return ObjectsHelper.uncheckedCast(gpxFileList.getScene().getWindow().getProperties().get("hostServices"));
     }
 
     //

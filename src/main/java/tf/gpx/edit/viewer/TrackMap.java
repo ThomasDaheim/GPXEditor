@@ -33,6 +33,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -96,6 +98,7 @@ import tf.gpx.edit.srtm.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.ObjectsHelper;
 
 /**
  * Show GPXWaypoints of a GPXLineItem in a customized LeafletMapView using own markers and highlight selected ones
@@ -230,6 +233,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
+    private final static String SEARCH_URL = "https://www.google.com/search?q=";
+    
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
     // rectangle to select fileWaypointsCount
@@ -327,6 +332,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             window = (JSObject) execScript("window"); 
             jscallback = new JSCallback(this);
             window.setMember("jscallback", jscallback);
+            // TFE, 20210116: support any console.log() calls from any loaded js
+            window.setMember("console", jscallback); // "console" object is now known to JavaScript
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
 
             addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
@@ -621,7 +628,42 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         // only a placeholder :-) text will be overwritten, when context menu is shown
         final MenuItem showCord = new MenuItem("Show coordinate");
+        // TFE; 20210115: open coordinate in browser (hopefully google...)
+        showCord.setOnAction((t) -> {
+            if (myGPXEditor.getHostServices() != null) {
+                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+                final LatLong latlong = ObjectsHelper.uncheckedCast(contextMenu.getUserData());
+
+                GPXWaypoint curWaypoint = null;
+                if ((showCord.getUserData() != null) && (showCord.getUserData() instanceof GPXWaypoint)) {
+                    curWaypoint = ObjectsHelper.uncheckedCast(showCord.getUserData());
+                }
+                
+                String searchString;
+                if (curWaypoint != null && curWaypoint.getName() != null && !curWaypoint.getName().isEmpty()) {
+                    searchString = curWaypoint.getName();
+                } else {
+                    searchString = latlong.getLatitude().toString() + " " + latlong.getLongitude().toString();
+                }
+
+                try {
+                    // https://stackoverflow.com/a/57147734
+                    final String asciiString = SEARCH_URL + new URI(null, searchString, null).toASCIIString();
+                    myGPXEditor.getHostServices().showDocument(asciiString);
+                } catch (URISyntaxException ex) {
+                    Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
         
+        final MenuItem editWaypoint = new MenuItem("Edit Waypoint");
+        editWaypoint.setOnAction((event) -> {
+            if ((editWaypoint.getUserData() != null) && (editWaypoint.getUserData() instanceof GPXWaypoint)) {
+                final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(showCord.getUserData());
+                myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
+            }
+        });
+
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
             final Object userData = addWaypoint.getUserData();
@@ -632,90 +674,92 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
 
             if (curWaypoint == null) {
-                // we might be routing...
-                execScript("stopRouting(false);");
+                if (!CollectionUtils.isEmpty(myGPXLineItems)) {
+                    // we might be routing...
+                    execScript("stopRouting(false);");
 
-                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
-                LatLong latlong = (LatLong) contextMenu.getUserData();
+                    assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLong);
+                    LatLong latlong = (LatLong) contextMenu.getUserData();
 
-                // check if a marker is under the cursor in leaflet - if yes, use its values
-                CurrentMarker curMarker = null;
-                if (userData != null && (userData instanceof CurrentMarker)) {
-                    curMarker = (CurrentMarker) userData;
-                    latlong = curMarker.latlong;
+                    // check if a marker is under the cursor in leaflet - if yes, use its values
+                    CurrentMarker curMarker = null;
+                    if (userData != null && (userData instanceof CurrentMarker)) {
+                        curMarker = (CurrentMarker) userData;
+                        latlong = curMarker.latlong;
+                    }
+
+                    final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+
+                    if (curMarker != null) {
+                        // set name / description / comment from search cmdString marker options (if any)
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Name.name())) {
+                            newGPXWaypoint.setName(curMarker.markerOptions.get(MarkerOptions.Name.name()));
+                        }
+
+                        String description = "";
+                        if (curMarker.markerOptions.containsKey(MarkerOptions.Description.name())) {
+                            description = description + curMarker.markerOptions.get(MarkerOptions.Description.name());
+                        } else {
+                            // lets see if we have other values from the marker in leaflet...
+                            if (curMarker.markerOptions.containsKey(MarkerOptions.Cousine.name())) {
+                                description = description + "Cousine: " + curMarker.markerOptions.get(MarkerOptions.Cousine.name());
+                            }
+                            if (curMarker.markerOptions.containsKey(MarkerOptions.Phone.name())) {
+                                if (!description.isEmpty()) {
+                                    description += "; ";
+                                }
+                                description = description + "Phone: " + curMarker.markerOptions.get(MarkerOptions.Phone.name());
+                            }
+                            if (curMarker.markerOptions.containsKey(MarkerOptions.Email.name())) {
+                                if (!description.isEmpty()) {
+                                    description += "; ";
+                                }
+                                description = description + "Email: " + curMarker.markerOptions.get(MarkerOptions.Email.name());
+                            }
+                            if (curMarker.markerOptions.containsKey(MarkerOptions.Website.name())) {
+                                if (!description.isEmpty()) {
+                                    description += "; ";
+                                }
+                                description = description + "Website: " + curMarker.markerOptions.get(MarkerOptions.Website.name());
+                            }
+                        }
+                        if (!description.isEmpty()) {
+                            newGPXWaypoint.setDescription(description);
+                        }
+
+                        newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
+
+                        // remove marker from leaflet search results to avoid double markers
+                        execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
+                    }
+
+                    final String waypoint = addMarkerAndCallback(
+                                    newGPXWaypoint, 
+                                    "", 
+                                    MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
+                                    MarkerType.MARKER,
+                                    0, 
+                                    true);
+                    fileWaypoints.put(waypoint, newGPXWaypoint);
+
+                    myGPXEditor.insertWaypointsAtPosition(myGPXLineItems.get(0).getGPXFile(), Arrays.asList(newGPXWaypoint), GPXEditor.RelativePosition.BELOW);
+
+                    // TODO: wouldn't it be better to enable UpdateLineItemInformationAction to work on non-assigned items?
+                    // TFE, 20200511: with do/undo this needs to be done after adding to gpxfile
+                    // which itself is done as runlater...
+                    Platform.runLater(() -> {
+                        if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
+                            // assign height - but to clone that has been inserted
+                            final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
+                            AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
+                        }
+                    });
+
+                    // redraw height chartsPane
+                    ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
                 }
-
-                final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
-
-                if (curMarker != null) {
-                    // set name / description / comment from search cmdString marker options (if any)
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Name.name())) {
-                        newGPXWaypoint.setName(curMarker.markerOptions.get(MarkerOptions.Name.name()));
-                    }
-
-                    String description = "";
-                    if (curMarker.markerOptions.containsKey(MarkerOptions.Description.name())) {
-                        description = description + curMarker.markerOptions.get(MarkerOptions.Description.name());
-                    } else {
-                        // lets see if we have other values from the marker in leaflet...
-                        if (curMarker.markerOptions.containsKey(MarkerOptions.Cousine.name())) {
-                            description = description + "Cousine: " + curMarker.markerOptions.get(MarkerOptions.Cousine.name());
-                        }
-                        if (curMarker.markerOptions.containsKey(MarkerOptions.Phone.name())) {
-                            if (!description.isEmpty()) {
-                                description += "; ";
-                            }
-                            description = description + "Phone: " + curMarker.markerOptions.get(MarkerOptions.Phone.name());
-                        }
-                        if (curMarker.markerOptions.containsKey(MarkerOptions.Email.name())) {
-                            if (!description.isEmpty()) {
-                                description += "; ";
-                            }
-                            description = description + "Email: " + curMarker.markerOptions.get(MarkerOptions.Email.name());
-                        }
-                        if (curMarker.markerOptions.containsKey(MarkerOptions.Website.name())) {
-                            if (!description.isEmpty()) {
-                                description += "; ";
-                            }
-                            description = description + "Website: " + curMarker.markerOptions.get(MarkerOptions.Website.name());
-                        }
-                    }
-                    if (!description.isEmpty()) {
-                        newGPXWaypoint.setDescription(description);
-                    }
-
-                    newGPXWaypoint.setSym(curMarker.searchItem.getResultMarker().getMarkerName());
-
-                    // remove marker from leaflet search results to avoid double markers
-                    execScript("removeSearchResult(\"" + curMarker.markerCount + "\");");
-                }
-
-                final String waypoint = addMarkerAndCallback(
-                                newGPXWaypoint, 
-                                "", 
-                                MarkerManager.getInstance().getMarkerForWaypoint(newGPXWaypoint), 
-                                MarkerType.MARKER,
-                                0, 
-                                true);
-                fileWaypoints.put(waypoint, newGPXWaypoint);
-
-                myGPXEditor.insertWaypointsAtPosition(myGPXLineItems.get(0).getGPXFile(), Arrays.asList(newGPXWaypoint), GPXEditor.RelativePosition.BELOW);
-
-                // TODO: wouldn't it be better to enable UpdateLineItemInformationAction to work on non-assigned items?
-                // TFE, 20200511: with do/undo this needs to be done after adding to gpxfile
-                // which itself is done as runlater...
-                Platform.runLater(() -> {
-                    if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
-                        // assign height - but to clone that has been inserted
-                        final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
-                        AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
-                    }
-                });
-
-                // redraw height chartsPane
-                ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
             } else {
-                myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
+                myGPXEditor.deleteWaypoints(Arrays.asList(curWaypoint));
             }
         });
 
@@ -782,14 +826,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
         }
 
-        contextMenu.getItems().addAll(showCord, addWaypoint, addRoute, separator, searchPoints);
+        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
+            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, editWaypoint, addWaypoint, addRoute);
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, addWaypoint, addRoute);
+            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, editWaypoint, addWaypoint, addRoute);
         });
 
         getWebView().setOnMousePressed(e -> {
@@ -869,7 +913,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private void updateContextMenu(
             final String coord,
             final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue,
-            final ContextMenu contextMenu, final MenuItem showCord, final MenuItem addWaypoint, final MenuItem addRoute) {
+            final ContextMenu contextMenu, final MenuItem showCord, final MenuItem editWaypoint, final MenuItem addWaypoint, final MenuItem addRoute) {
         // TFE, 20200316: first time not all values are set...
         if (newValue != null && !Double. isNaN(contextMenu.getAnchorX()) && !Double. isNaN(contextMenu.getAnchorY())) {
             LatLong latLong;
@@ -887,9 +931,15 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             } else {
                 showCord.setText(LatLongHelper.LatLongToString(latLong));
             }
+            showCord.setUserData(currentGPXWaypoint);
 
+            // TFE, 20210116: separate add & edit waypoint
+            editWaypoint.setUserData(currentGPXWaypoint);
+            editWaypoint.setDisable((currentGPXWaypoint == null));
+            editWaypoint.setVisible(!editWaypoint.isDisable());
+            
             if (currentGPXWaypoint != null) {
-                addWaypoint.setText("Edit Waypoint");
+                addWaypoint.setText("Delete Waypoint");
                 addWaypoint.setUserData(currentGPXWaypoint);
             } else {
                 if (currentMarker != null) {
@@ -899,6 +949,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 }
                 addWaypoint.setUserData(currentMarker);
             }
+            // TFE, 20210116: don't show for nor items
+            addWaypoint.setDisable(CollectionUtils.isEmpty(myGPXLineItems));
+            addWaypoint.setVisible(!addWaypoint.isDisable());
 
             if (currentGPXRoute != null) {
                 addRoute.setText("Start autorouting");
@@ -906,6 +959,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 addRoute.setText("Add Route");
             }
             addRoute.setUserData(currentGPXRoute);
+            // TFE, 20210116: don't show for nor items
+            addRoute.setDisable(CollectionUtils.isEmpty(myGPXLineItems));
+            addRoute.setVisible(!addRoute.isDisable());
         }
     }
 
@@ -967,6 +1023,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // for use with Leaflet.Draw
 //        execScript("clearEditable();");
         execScript("destroyPlayback();");
+        setVisible(true);
 
         // TFE, 20191230: avoid mess up when metadata is selected - nothing  todo after clearing
         if (CollectionUtils.isEmpty(myGPXLineItems) || myGPXLineItems.get(0).isGPXMetadata()) {
@@ -1031,7 +1088,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ", " + doFitBounds + ");");
 //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
         }
-        setVisible(bounds[4] > 0d);
 //        System.out.println("setGPXWaypoints End:  " + Instant.now());
     }
     private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final int waypointCount, final boolean ignoreFileWayPointsInBounds) {
@@ -1544,7 +1600,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         if ((pointTitle != null) && !pointTitle.isEmpty()) {
             markerTitle = pointTitle + "\n";
         }
-        markerTitle = markerTitle + LatLongHelper.LatLongToString(point);
+        // TFE; 20210115: show elevation as well - like in context menu
+        markerTitle = markerTitle + LatLongHelper.LatLongToString(point) + ", " + GPXLineItem.DOUBLE_FORMAT_2.format(gpxWaypoint.getElevation()) + " m";
         
         // make sure the icon has been loaded and added in js
         if (marker instanceof MarkerIcon && !((MarkerIcon) marker).getAvailableInLeaflet()) {
@@ -1865,6 +1922,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             System.out.println(output);
         }
         
+        public void error(String text) {
+            System.err.println(text);
+        }
+
         public void registerMarker(final String marker, final Double lat, final Double lon) {
             myTrackMap.setCurrentMarker(marker, lat, lon);
             //System.out.println("Marker registered: " + marker + ", " + lat + ", " + lon);
