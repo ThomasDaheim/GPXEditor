@@ -31,7 +31,6 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
@@ -158,6 +157,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     public abstract boolean getInShowData();
     public abstract void setInShowData(final boolean value);
     public abstract void doShowData();
+    public abstract void layoutPlotChildren();
     
     // as default I don't shown file waypoints
     default boolean fileWaypointsInChart() {
@@ -436,7 +436,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         getChartsPane().applyCss();
         getChartsPane().requestLayout();
 
-        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged delets all styling...
+        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
         int j = 0;
         for (XYChart.Series<Number, Number> series : getChart().getData()) {
             if (!series.getData().isEmpty()) {

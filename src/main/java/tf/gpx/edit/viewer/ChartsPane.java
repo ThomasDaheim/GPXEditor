@@ -244,6 +244,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
             t.setVisible(visible);
             if (visible) {
                 t.getChart().layout();
+                t.layoutPlotChildren();
             }
         });
         layout();

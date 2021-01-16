@@ -197,6 +197,11 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
     public void setInShowData(final boolean value) {
         inShowData = value;
     }
+
+    @Override
+    public void layoutPlotChildren() {
+        super.layoutPlotChildren();
+    }
     
     @Override
     protected void updateLegend() {

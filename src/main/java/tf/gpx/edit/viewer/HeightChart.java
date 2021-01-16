@@ -544,7 +544,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
 
     @Override
-    protected void layoutPlotChildren() {
+    public void layoutPlotChildren() {
 //        System.out.println("layoutPlotChildren: " + noLayout);
 //        System.out.println("Printing stack trace:");
 //        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
