@@ -40,6 +40,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -232,8 +233,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static String NOT_SHOWN = "Not shown";
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
-    
-    private final static String SEARCH_URL = "https://www.google.com/search?q=";
     
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
@@ -648,9 +647,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
                 try {
                     // https://stackoverflow.com/a/57147734
-                    final String asciiString = SEARCH_URL + new URI(null, searchString, null).toASCIIString();
+                    final String asciiString = String.format(Locale.US, GPXEditorPreferences.SEARCH_URL.getAsString(), new URI(null, searchString, null).toASCIIString());
+                    
                     myGPXEditor.getHostServices().showDocument(asciiString);
-                } catch (URISyntaxException ex) {
+                } catch (IllegalFormatException | URISyntaxException ex) {
                     Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -1645,6 +1645,21 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //                    execScript("makeDraggable(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ", \"\");");
 //                }
 //            }
+
+            if (((boolean) GPXEditorPreferences.SHOW_WAYPOINT_NAMES.getAsType()) && 
+                    gpxWaypoint.getName() != null && !gpxWaypoint.getName().isEmpty()) {
+                // add name as permanent tooltip
+                // https://leafletjs.com/reference-1.0.3.html#layer-bindtooltip
+                final String cmdString = 
+                        String.format(Locale.US, "%s.bindTooltip('%s', {permanent: true, direction: 'right', className: 'waypoint-name'});", 
+                                layer, StringEscapeUtils.escapeEcmaScript(gpxWaypoint.getName()));
+                
+                // TODO: some clever logic in the case of too many tooltips
+                // https://stackoverflow.com/questions/42364619/hide-tooltip-in-leaflet-for-a-zoom-range
+
+        //        System.out.println("addMarker: " + cmdString);
+                execScript(cmdString);
+            }
         }
 
         return layer;

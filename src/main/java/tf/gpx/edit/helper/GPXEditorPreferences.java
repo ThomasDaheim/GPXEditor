@@ -77,7 +77,11 @@ public enum GPXEditorPreferences  {
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
     HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf),
     // TFE, 20201231: show/hide the star/end track symbols
-    SHOW_TRACK_SYMBOLS("showTrackSymbols", Boolean.toString(true), Boolean::valueOf);
+    SHOW_TRACK_SYMBOLS("showTrackSymbols", Boolean.toString(true), Boolean::valueOf),
+    // TFE, 20210117: search string for coordinates / names
+    SEARCH_URL("searchUrl", "https://www.google.com/search?q=%s", String::valueOf),
+    // TFE, 20210117: show/hide waypoint names
+    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean::valueOf);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

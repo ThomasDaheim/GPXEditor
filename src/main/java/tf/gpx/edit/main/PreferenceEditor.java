@@ -124,6 +124,8 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField eventText = new TextField();
     private final MapLayerTable mapLayerTable = new MapLayerTable();
     private final CheckBox trackSymbolChkBox = new CheckBox();
+    private final CheckBox waypointNameChkBox = new CheckBox();
+    private final TextField searchUrlText = new TextField();
 
     private PreferenceEditor() {
         super();
@@ -393,6 +395,19 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(waypointChkBox, INSET_TOP);        
 
         rowNum++;
+        // 3rd row: alway show waypoints from file level in maps
+        t = new Tooltip("Show waypoint names");
+        final Label waypointNameLbl = new Label("Show waypoint names:");
+        waypointNameLbl.setTooltip(t);
+        getGridPane().add(waypointNameLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(waypointNameLbl, VPos.TOP);
+        GridPane.setMargin(waypointNameLbl, INSET_TOP);
+        
+        waypointNameChkBox.setTooltip(t);
+        getGridPane().add(waypointNameChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(waypointNameChkBox, INSET_TOP);        
+
+        rowNum++;
         // 3rd row: number of waypoints to show
         t = new Tooltip("Number of waypoints to show on map");
         final Label numShowLbl = new Label("No. waypoints to show:");
@@ -435,6 +450,21 @@ public class PreferenceEditor extends AbstractStage {
         getGridPane().add(searchText, 1, rowNum, 1, 1);
         GridPane.setMargin(searchText, INSET_TOP);
         
+        rowNum++;
+        // 4th row: search URL
+        t = new Tooltip("Search URL using '%s' for String.format()");
+        final Label searchUrlTextLbl = new Label("Search URL:");
+        searchUrlTextLbl.setTooltip(t);
+        getGridPane().add(searchUrlTextLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(searchUrlTextLbl, VPos.TOP);
+        GridPane.setMargin(searchUrlTextLbl, INSET_TOP);
+        
+        searchUrlText.setPrefWidth(400);
+        searchUrlText.setMaxWidth(400);
+        searchUrlText.setTooltip(t);
+        getGridPane().add(searchUrlText, 1, rowNum, 1, 1);
+        GridPane.setMargin(searchUrlText, INSET_TOP);
+
         rowNum++;
         // https://stackoverflow.com/a/22838050
         final TextFlow mapLayerLbl = new TextFlow();
@@ -715,9 +745,11 @@ public class PreferenceEditor extends AbstractStage {
         durationText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_DURATION.getAsType()));
         neighbourText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_COUNT.getAsType()));
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
+        waypointNameChkBox.setSelected(GPXEditorPreferences.SHOW_WAYPOINT_NAMES.getAsType());
         numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
         trackSymbolChkBox.setSelected(GPXEditorPreferences.SHOW_TRACK_SYMBOLS.getAsType());
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
+        searchUrlText.setText(GPXEditorPreferences.SEARCH_URL.getAsType());
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
@@ -738,9 +770,11 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataStore.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
         GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(assignHeightChkBox.isSelected());
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
+        GPXEditorPreferences.SHOW_WAYPOINT_NAMES.put(waypointNameChkBox.isSelected());
         GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
         GPXEditorPreferences.SHOW_TRACK_SYMBOLS.put(trackSymbolChkBox.isSelected());
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
+        GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
