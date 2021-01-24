@@ -399,7 +399,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // https://github.com/gokertanrisever/leaflet-ruler
             addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Rouler" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
 
             // support for custom buttons
             // https://github.com/CliffCloud/Leaflet.EasyButton
