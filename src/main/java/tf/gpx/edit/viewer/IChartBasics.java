@@ -276,67 +276,71 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             ).flatMap(Collection::stream).map((t) -> {
                 return ((GPXWaypoint) t.getExtraValue());
             }).collect(Collectors.toList());
-            final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
-                    EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
             
-            for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
-                // 1. check file waypoints against other waypoints for minimum distance
-                final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
-                
-//                XYChart.Data<Number, Number> closest = null;
-//                double mindistance = Double.MAX_VALUE;
-//                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
-//                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
-//                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
-//                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
-//                            fileWaypoint.getWaypoint(), 
-//                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
-//                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
-//                    if (distance < mindistance) {
-//                        closest = waypoint;
-//                        mindistance = distance;
-//                    }
-//                }
+            // TFE, 20210124: could be empty waypoint list!
+            if (!flatWaypoints.isEmpty()) {
+                final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
+                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
 
-                final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
-                
-                if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
-//                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
+                for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
+                    // 1. check file waypoints against other waypoints for minimum distance
+                    final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
 
-                    final double xValue = getPoints().stream().filter((t) -> {
-                        return t.getLeft().equals(closest.getLeft());
-                    }).findFirst().get().getRight().doubleValue() / 1000.0;
+    //                XYChart.Data<Number, Number> closest = null;
+    //                double mindistance = Double.MAX_VALUE;
+    //                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
+    //                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
+    //                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+    //                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+    //                            fileWaypoint.getWaypoint(), 
+    //                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
+    //                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+    //                    if (distance < mindistance) {
+    //                        closest = waypoint;
+    //                        mindistance = distance;
+    //                    }
+    //                }
 
-                    data.setXValue(xValue);
-                
-                    // 2. add text & icon as label to node
-                    final Label text = new Label(fileWaypoint.getName());
-                    text.getStyleClass().add("item-id");
-                    text.setFont(Font.font("Verdana", waypointLabelSize));
-                    text.setRotate(360.0 - waypointLabelAngle);
-                    text.setBorder(Border.EMPTY);
-                    text.setBackground(Background.EMPTY);
-                    text.setPadding(Insets.EMPTY);
-                    text.setVisible(true);
-                    text.setMouseTransparent(true);
-                    // nodes are shown center-center aligned, hack needed to avoid that
-                    text.setUserData(SHIFT_LABEL);
+                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
 
-                    // add waypoint icon
-                    final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
-                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
-                    text.setGraphic(new ImageView(image));
-                    text.setGraphicTextGap(0);
+                    if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
+    //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
 
-                    data.setNode(text);
+                        final double xValue = getPoints().stream().filter((t) -> {
+                            return t.getLeft().equals(closest.getLeft());
+                        }).findFirst().get().getRight().doubleValue() / 1000.0;
+
+                        data.setXValue(xValue);
+
+                        // 2. add text & icon as label to node
+                        final Label text = new Label(fileWaypoint.getName());
+                        text.getStyleClass().add("item-id");
+                        text.setFont(Font.font("Verdana", waypointLabelSize));
+                        text.setRotate(360.0 - waypointLabelAngle);
+                        text.setBorder(Border.EMPTY);
+                        text.setBackground(Background.EMPTY);
+                        text.setPadding(Insets.EMPTY);
+                        text.setVisible(true);
+                        text.setMouseTransparent(true);
+                        // nodes are shown center-center aligned, hack needed to avoid that
+                        text.setUserData(SHIFT_LABEL);
+
+                        // add waypoint icon
+                        final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
+                        final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
+                        text.setGraphic(new ImageView(image));
+                        text.setGraphicTextGap(0);
+
+                        data.setNode(text);
+                    }
+
+                    // add each file waypoint as own series - we don't want to have aera or lines drawn...
+                    final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                    series.getData().add(data);
+                    setSeriesUserData(series, fileWaypoint);
+
+                    seriesList.add(series);
                 }
-
-                // add each file waypoint as own series - we don't want to have aera or lines drawn...
-                final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                series.getData().add(data);
-                setSeriesUserData(series, fileWaypoint);
-
-                seriesList.add(series);
             }
         }
         
