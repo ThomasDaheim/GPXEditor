@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -37,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -72,6 +74,7 @@ import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -315,7 +318,36 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
      */
     private void enableFirebug() {
         // TFE, 20200722: getfirebug.com not active anymore...
-//        execScript("if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', './firebug/firebug-lite.min.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', './firebug/firebug-lite.min.js' + '#startOpened');}");
+        // TFE, 20210204: lets try a local version
+        try { 
+            final InputStream js = TrackMap.class.getResourceAsStream("/firebug/firebug.min.js");
+            final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset())) + "#startOpened";
+            execScript(script);
+
+//            final String cmdString = 
+//                String.format(Locale.US, "var script = document.createElement('script');\nscript.type = 'text/javascript';\nscript.text = \"%s\";\ndocument.getElementsByTagName('head')[0].appendChild(script);", 
+//                        script);
+//            System.out.println(cmdString);
+//            execScript(cmdString);
+
+//            final StringBuilder firebugString = new StringBuilder();
+//            firebugString.append("if (!document.getElementById('FirebugLite')) {");
+//            firebugString.append("  E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;");
+//            firebugString.append("  E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');");
+//            firebugString.append("  E['setAttribute']('id', 'FirebugLite');");
+//            firebugString.append("  E['setAttribute']('innerHTML', ");
+//            firebugString.append(script);
+//            firebugString.append(");");
+//            firebugString.append("  E['setAttribute']('FirebugLite', '4');");
+//            firebugString.append("  (document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);");
+////            firebugString.append("  E = new Image;");
+////            firebugString.append("  E['setAttribute']('src', './firebug/firebug-lite.min.js' + '#startOpened');");
+//            firebugString.append("}");
+//
+//            execScript(firebugString.toString());
+        } catch (Exception ex) {
+            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void initialize() {
@@ -531,6 +563,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             setOverlaysForBaselayer();
             // set current layer
             setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+
+//            enableFirebug();
                     
             isInitialized = true;
             
@@ -541,8 +575,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // center to current location - NOT WORKING, see LeafletMapView
 //            execScript("centerToLocation();");
             setVisible(true);
-
-//            enableFirebug();
         }
     }
     

@@ -216,6 +216,7 @@ sourceSets {
             exclude { 
                 FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.')) 
             }
+            exclude ( '/**/firebug-lite.min.js' )
         } 
     }  
 }
