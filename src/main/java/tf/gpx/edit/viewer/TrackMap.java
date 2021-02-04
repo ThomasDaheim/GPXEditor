@@ -312,43 +312,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         getWebView().setDisable(!enabled);
         getWebView().setVisible(enabled);
     }
-    
-    /**
-     * Enables Firebug Lite for debugging a webEngine.
-     */
-    private void enableFirebug() {
-        // TFE, 20200722: getfirebug.com not active anymore...
-        // TFE, 20210204: lets try a local version
-        try { 
-            final InputStream js = TrackMap.class.getResourceAsStream("/firebug/firebug.min.js");
-            final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset())) + "#startOpened";
-            execScript(script);
-
-//            final String cmdString = 
-//                String.format(Locale.US, "var script = document.createElement('script');\nscript.type = 'text/javascript';\nscript.text = \"%s\";\ndocument.getElementsByTagName('head')[0].appendChild(script);", 
-//                        script);
-//            System.out.println(cmdString);
-//            execScript(cmdString);
-
-//            final StringBuilder firebugString = new StringBuilder();
-//            firebugString.append("if (!document.getElementById('FirebugLite')) {");
-//            firebugString.append("  E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;");
-//            firebugString.append("  E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');");
-//            firebugString.append("  E['setAttribute']('id', 'FirebugLite');");
-//            firebugString.append("  E['setAttribute']('innerHTML', ");
-//            firebugString.append(script);
-//            firebugString.append(");");
-//            firebugString.append("  E['setAttribute']('FirebugLite', '4');");
-//            firebugString.append("  (document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);");
-////            firebugString.append("  E = new Image;");
-////            firebugString.append("  E['setAttribute']('src', './firebug/firebug-lite.min.js' + '#startOpened');");
-//            firebugString.append("}");
-//
-//            execScript(firebugString.toString());
-        } catch (Exception ex) {
-            Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
 
     private void initialize() {
         if (!isInitialized) {
@@ -563,8 +526,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             setOverlaysForBaselayer();
             // set current layer
             setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-
-//            enableFirebug();
                     
             isInitialized = true;
             
