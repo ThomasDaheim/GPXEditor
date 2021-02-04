@@ -86,7 +86,7 @@ public class FindSRTMHeight extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(FindSRTMHeight.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(FindSRTMHeight.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();

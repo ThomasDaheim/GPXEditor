@@ -97,7 +97,7 @@ public class EditGPXMetadata extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(EditGPXMetadata.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(EditGPXMetadata.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         //<metadata>
         //  <name>GPS Receiver track log</name>

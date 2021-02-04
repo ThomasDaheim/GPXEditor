@@ -134,7 +134,7 @@ public class EditGPXWaypoint extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(EditGPXWaypoint.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(EditGPXWaypoint.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene
         setTitle("Edit Waypoint Properties");

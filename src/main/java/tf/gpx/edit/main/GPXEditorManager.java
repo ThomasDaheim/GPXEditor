@@ -177,7 +177,7 @@ public class GPXEditorManager extends Application {
                 myStage.setTitle("GPX Editor");
                 myStage.getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
                 (new JMetro(Style.LIGHT)).setScene(myStage.getScene());
-                myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.css").toExternalForm());
+                myStage.getScene().getStylesheets().add(GPXEditorManager.class.getResource("/GPXEditor.min.css").toExternalForm());
                 if (Platform.isSupported(ConditionalFeature.UNIFIED_WINDOW)) {
                     // TFE, 20200508: not working in some environments!
                     // https://stackoverflow.com/a/58406995

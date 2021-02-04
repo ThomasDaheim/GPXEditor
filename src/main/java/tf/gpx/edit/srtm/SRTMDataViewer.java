@@ -253,7 +253,7 @@ public class SRTMDataViewer {
         imagePane.prefWidthProperty().bind(vbox.widthProperty());
         
         final Scene scene = new Scene(vbox);
-        scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.css").toExternalForm());
+        scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
         vbox.prefHeightProperty().bind(scene.heightProperty());
         vbox.prefWidthProperty().bind(scene.widthProperty());
         scene.setOnKeyPressed((KeyEvent t) -> {

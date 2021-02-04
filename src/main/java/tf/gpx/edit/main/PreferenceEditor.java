@@ -142,7 +142,7 @@ public class PreferenceEditor extends AbstractStage {
     
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
