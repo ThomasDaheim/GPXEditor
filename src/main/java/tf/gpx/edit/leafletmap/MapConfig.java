@@ -55,7 +55,12 @@ public class MapConfig {
         myInitialCenter = new LatLong(51.505, -0.09);
     }
     
-    public MapConfig(final List<MapLayer> baselayers, final List<MapLayer> overlays, final ZoomControlConfig zoomControlConfig, final ScaleControlConfig scaleControlConfig, final LatLong latLong) {
+    public MapConfig(
+            final List<MapLayer> baselayers, 
+            final List<MapLayer> overlays, 
+            final ZoomControlConfig zoomControlConfig, 
+            final ScaleControlConfig scaleControlConfig, 
+            final LatLong latLong) {
         myBaselayer = new ArrayList<>(baselayers);
         myOverlays = new ArrayList<>(overlays);
         myZoomControlConfig = zoomControlConfig;

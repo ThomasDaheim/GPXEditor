@@ -371,11 +371,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
             
-            // add support for lat / lon lines
-            // https://github.com/cloudybay/leaflet.latlng-graticule
-            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule.min.js");
-            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
-            
             // https://github.com/smeijer/leaflet-geosearch
             // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
             addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
@@ -400,6 +395,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
             addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
+
+            // add support for lat / lon lines
+            // https://github.com/cloudybay/leaflet.latlng-graticule
+            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule" + MIN_EXT + ".js");
+            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
 
             // support for custom buttons
             // https://github.com/CliffCloud/Leaflet.EasyButton
