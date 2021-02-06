@@ -29,7 +29,7 @@ import tf.gpx.edit.algorithms.EarthGeometry;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.util.function.Function;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;

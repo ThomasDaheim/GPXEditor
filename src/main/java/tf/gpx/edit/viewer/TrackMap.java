@@ -29,7 +29,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -38,7 +37,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -74,7 +72,6 @@ import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
@@ -97,8 +94,8 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.leafletmap.ScaleControlConfig;
 import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.srtm.AssignSRTMHeight;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.elevation.AssignSRTMHeight;
+import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.general.IPreferencesHolder;
@@ -960,7 +957,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
     public void setCurrentMarker(final String options, final Double lat, final Double lng) {
         try {
-            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<Map<String,String>>(){}), new LatLong(lat, lng));
+            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<HashMap<String,String>>(){}), new LatLong(lat, lng));
         } catch (IOException ex) {
             currentMarker = null;
         }

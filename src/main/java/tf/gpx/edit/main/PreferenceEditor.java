@@ -70,7 +70,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.leafletmap.MapLayerTable;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.javafx.AbstractStage;

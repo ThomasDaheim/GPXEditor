@@ -88,7 +88,7 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.srtm.SRTMDataViewer;
+import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.IPreferencesStore;

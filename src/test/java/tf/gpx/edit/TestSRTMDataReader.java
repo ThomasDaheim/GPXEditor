@@ -25,9 +25,9 @@
  */
 package tf.gpx.edit;
 
-import tf.gpx.edit.srtm.ISRTMDataReader;
-import tf.gpx.edit.srtm.SRTMData;
-import tf.gpx.edit.srtm.SRTMDataReader;
+import tf.gpx.edit.elevation.ISRTMDataReader;
+import tf.gpx.edit.elevation.SRTMData;
+import tf.gpx.edit.elevation.SRTMDataReader;
 
 /**
  *

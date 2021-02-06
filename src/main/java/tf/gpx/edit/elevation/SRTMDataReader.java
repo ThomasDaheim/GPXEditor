@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.srtm;
+package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +33,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tf.gpx.edit.srtm.SRTMData.SRTMDataType;
+import tf.gpx.edit.elevation.SRTMData.SRTMDataType;
 
 /**
  *

@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLong;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.elevation.SRTMDataStore;
 
 /**
  *

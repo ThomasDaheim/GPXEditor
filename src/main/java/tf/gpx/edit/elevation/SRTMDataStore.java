@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.srtm;
+package tf.gpx.edit.elevation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,13 +33,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.srtm.SRTMData.SRTMDataKey;
+import tf.gpx.edit.elevation.SRTMData.SRTMDataKey;
 
 /**
  *
  * @author Thomas
  */
-public class SRTMDataStore {
+public class SRTMDataStore implements IElevationProvider {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
@@ -168,7 +168,7 @@ public class SRTMDataStore {
         return result;
     }
 
-    public double getValueForCoordinate(final double longitude, final double latitude) {
+    public Double getValueForCoordinate(final double longitude, final double latitude) {
         double result = NODATA;
         
         // construct name from coordinates

@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.srtm;
+package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -334,7 +334,7 @@ public class SRTMDataViewer {
             @Override
             public double f(double x, double y) {
                 // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                return Math.max(0f, (float) SRTMDataStore.getInstance().getValueForCoordinate(-x, y));
+                return Math.max(0f, SRTMDataStore.getInstance().getValueForCoordinate(-x, y).floatValue());
             }
         };
 

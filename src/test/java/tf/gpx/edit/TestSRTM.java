@@ -40,8 +40,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.srtm.SRTMData;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.elevation.SRTMData;
+import tf.gpx.edit.elevation.SRTMDataStore;
 
 /**
  *
