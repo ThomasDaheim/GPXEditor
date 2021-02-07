@@ -85,7 +85,7 @@ public class SRTMData {
         assert rowNum > -1;
         assert colNum > -1;
 
-        short result = SRTMDataStore.NODATA;
+        short result = SRTMDataStore.NO_DATA;
         
         // check if in bounds
         if (rowNum < numberRows && colNum < numberCols) {
@@ -118,7 +118,7 @@ public class SRTMData {
         short[] result = new short[numberCols];
         
         for (int i = 0; i < numberCols; i++) {
-            result[i] = SRTMDataStore.NODATA;
+            result[i] = SRTMDataStore.NO_DATA;
         }
         
         return result;
@@ -159,7 +159,7 @@ public class SRTMData {
 //        error source in the elevation data has the characteristics of random noise this reduces that error 
 //        by roughly a factor of three.
 
-        double result = SRTMDataStore.NODATA;
+        double result = SRTMDataStore.NO_DATA;
         
         // convert lon & lat to name & check against self
         if (SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
@@ -249,7 +249,7 @@ public class SRTMData {
 
                 // first, the grid that contains the coordinates
                 // height value might not be set
-                if (result != SRTMDataStore.NODATA) {
+                if (result != SRTMDataStore.NO_DATA) {
                     weight = 1d / distanceOnGrid(latFractional, lonFractional);
                     weightedResult = result * weight;
                     normalization = weight;
@@ -270,7 +270,7 @@ public class SRTMData {
                 if (isInArray(nextRowNum, data.getNumberRows())) {
                     neighbourValue = data.getValue(nextRowNum, colNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NODATA) {
+                    if (neighbourValue != SRTMDataStore.NO_DATA) {
                         weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), lonFractional);
                         weightedResult += neighbourValue * weight;
                         normalization += weight;
@@ -280,7 +280,7 @@ public class SRTMData {
                 if (isInArray(nextColNum, data.getNumberColumns())) {
                     neighbourValue = data.getValue(rowNum, nextColNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NODATA) {
+                    if (neighbourValue != SRTMDataStore.NO_DATA) {
                         weight = 1d / distanceOnGrid(latFractional, 1d - Math.abs(lonFractional));
                         weightedResult += neighbourValue * weight;
                         normalization += weight;
@@ -290,7 +290,7 @@ public class SRTMData {
                 if (isInArray(nextRowNum, data.getNumberRows()) && isInArray(nextColNum, data.getNumberColumns())) {
                     neighbourValue = data.getValue(nextRowNum, nextColNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NODATA) {
+                    if (neighbourValue != SRTMDataStore.NO_DATA) {
                         weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), 1d - Math.abs(lonFractional));
                         weightedResult += neighbourValue * weight;
                         normalization += weight;

@@ -53,7 +53,7 @@ import tf.gpx.edit.elevation.SRTMDataStore;
  *
  * @author thomas
  */
-public class TestOpenElevationService implements IElevationProvider {
+public class TestOpenElevationService {
     private final static double delta = 1.0;
     private static final HttpClient client = HttpClient.newHttpClient();
     private final static String API_KEY = GPXEditorPreferences.ROUTING_API_KEY.getAsType();
@@ -153,7 +153,6 @@ public class TestOpenElevationService implements IElevationProvider {
         Assert.assertTrue(isCloseEnough(6868, heightValue));
     }
     
-    @Override
     public Double getValueForCoordinate(final double longitude, final double latitude) {
         final String httpResponse = 
                 httpPostResponse(
@@ -164,7 +163,7 @@ public class TestOpenElevationService implements IElevationProvider {
     }
 
     private Double deserializePointResponse(final String response) {
-        double result = SRTMDataStore.NODATA;
+        double result = SRTMDataStore.NO_DATA;
         
         try {
             // https://github.com/opendatalab-de/geojson-jackson

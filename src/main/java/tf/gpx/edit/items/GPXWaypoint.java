@@ -44,13 +44,14 @@ import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-public class GPXWaypoint extends GPXLineItem {
+public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     // TFE, 20180214: waypoints can be in segments, routes and files
     private GPXLineItem myGPXParent;
     private Waypoint myWaypoint;
@@ -710,7 +711,8 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     // used for setting from SRTM data
-    public double getElevation() {
+    @Override
+    public Double getElevation() {
         return myWaypoint.getElevation();
     }
     
@@ -719,11 +721,13 @@ public class GPXWaypoint extends GPXLineItem {
         setHasUnsavedChanges();
     }
     
-    public double getLatitude() {
+    @Override
+    public Double getLatitude() {
         return myWaypoint.getLatitude();
     }
 
-    public double getLongitude() {
+    @Override
+    public Double getLongitude() {
         return myWaypoint.getLongitude();
     }
 

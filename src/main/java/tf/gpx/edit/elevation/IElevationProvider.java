@@ -25,6 +25,10 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
+
 /**
  * Interface for all services thart provide elevations.
  * 
@@ -34,5 +38,38 @@ package tf.gpx.edit.elevation;
  * @author thomas
  */
 public interface IElevationProvider {
-    public abstract Double getValueForCoordinate(final double longitude, final double latitude);
+    public final static double NO_ELEVATION = 0.01d;
+
+    public abstract ElevationProviderOptions getOptions();
+    
+    // the only thing you need to implement - basic coordinates + options
+    // this will always determine an elevation since ElevationProviderOptions.AssignMode can't be checked without an elevation
+    public abstract Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options);
+    
+    public default Double getElevationForCoordinate(final double longitude, final double latitude) {
+        return getElevationForCoordinate(longitude, latitude, getOptions());
+    }
+
+    // since we have elevation here as well, we can check against options
+    public default Double getElevationForCoordinate(final IGeoCoordinate coord, final ElevationProviderOptions options) {
+        double result = coord.getElevation();
+        if (result < IElevationProvider.NO_ELEVATION || ElevationProviderOptions.AssignMode.ALWAYS.equals(options.getAssignMode())) {
+            result = getElevationForCoordinate(coord.getLongitude(), coord.getLatitude(), options);
+        }
+        return result;
+    }
+    
+    public default Double getElevationForCoordinate(final IGeoCoordinate coord) {
+        return getElevationForCoordinate(coord, getOptions());
+    }
+    
+    public default List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords, final ElevationProviderOptions options) {
+        return coords.stream().map((t) -> {
+            return getElevationForCoordinate(t, options);
+        }).collect(Collectors.toList());
+    }
+    
+    public default List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+        return getElevationsForCoordinates(coords, getOptions());
+    }
 }

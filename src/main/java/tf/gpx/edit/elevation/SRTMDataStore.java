@@ -48,9 +48,9 @@ public class SRTMDataStore implements IElevationProvider {
     
     private final Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
 
-    public final static short NODATA = Short.MIN_VALUE; 
+    public final static Short NO_DATA = Short.MIN_VALUE; 
     public final static String HGT_EXT = "hgt";
-    
+
     public enum SRTMDataAverage {
         NEAREST_ONLY("Use only nearest data point"),
         AVERAGE_NEIGHBOURS("Average over neighbouring data points");
@@ -168,8 +168,19 @@ public class SRTMDataStore implements IElevationProvider {
         return result;
     }
 
-    public Double getValueForCoordinate(final double longitude, final double latitude) {
-        double result = NODATA;
+    @Override
+    public ElevationProviderOptions getOptions() {
+        return new ElevationProviderOptions();
+    }
+
+    @Override
+    public Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options) {
+        return getElevationForCoordinate(longitude, latitude);
+    }
+
+    @Override
+    public Double getElevationForCoordinate(final double longitude, final double latitude) {
+        double result = NO_DATA;
         
         // construct name from coordinates
         final String dataName = getNameForCoordinate(longitude, latitude);

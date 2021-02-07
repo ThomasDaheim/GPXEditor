@@ -26,23 +26,39 @@
 package tf.gpx.edit.leafletmap;
 
 /**
- * Immutable value class for defining a geo position.
+ * Immutable value class for defining a geo position - including elevation.
+ * 
  * @author thomas
  */
-public class LatLong {
+public class LatLongElev implements IGeoCoordinate {
+    public final static Double NO_ELEVATION = Double.MIN_VALUE;
+    
     private final Double myLatitude;
     private final Double myLongitude;
+    private final Double myElevation;
     
-    public LatLong (final Double latitude, final Double longitude) {
-        myLatitude = latitude;
-        myLongitude = longitude;
+    public LatLongElev (final Double latitude, final Double longitude) {
+        this(latitude, longitude, NO_ELEVATION);
     }
     
+    public LatLongElev (final Double latitude, final Double longitude, final Double elevation) {
+        myLatitude = latitude;
+        myLongitude = longitude;
+        myElevation = elevation;
+    }
+    
+    @Override
     public Double getLatitude() {
         return myLatitude;
     }
     
+    @Override
     public Double getLongitude() {
         return myLongitude;
+    }
+    
+    @Override
+    public Double getElevation() {
+        return myElevation;
     }
 }

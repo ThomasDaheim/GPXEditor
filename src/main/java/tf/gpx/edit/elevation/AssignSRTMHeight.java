@@ -63,7 +63,7 @@ public class AssignSRTMHeight extends AbstractStage  {
     
     private String mySRTMDataPath;
     private SRTMDataStore.SRTMDataAverage myAverageMode;
-    private GPXAssignSRTMHeightWorker.AssignMode myAssignMode;
+    private ElevationProviderOptions.AssignMode myAssignMode;
 
     // UI elements used in various methods need to be class-wide
     private final CheckListView<String> fileList = new CheckListView<>();
@@ -175,7 +175,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         rescan.setOnAction((ActionEvent event) -> {
             mySRTMDataPath = srtmPathLbl.getText();
             myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
-            myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
+            myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
             checkSRTMFiles();
         });
@@ -201,7 +201,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         GridPane.setMargin(hghtAsgnLbl, INSET_TOP);
         GridPane.setValignment(hghtAsgnLbl, VPos.TOP);
         
-        asgnModeChoiceBox = EnumHelper.getInstance().createToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, myAssignMode);
+        asgnModeChoiceBox = EnumHelper.getInstance().createToggleGroup(ElevationProviderOptions.AssignMode.class, myAssignMode);
         getGridPane().add(asgnModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(asgnModeChoiceBox, INSET_TOP);
 
@@ -215,7 +215,7 @@ public class AssignSRTMHeight extends AbstractStage  {
                     fileList.getCheckModel().getCheckedItems().stream().filter(e -> e != null).count()) {
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
-                myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(GPXAssignSRTMHeightWorker.AssignMode.class, asgnModeChoiceBox);
+                myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
                 final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, true);
                 visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);

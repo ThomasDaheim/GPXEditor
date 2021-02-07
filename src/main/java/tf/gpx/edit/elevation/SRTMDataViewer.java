@@ -124,7 +124,7 @@ public class SRTMDataViewer {
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
         final SRTMDataStore.SRTMDataAverage myAverageMode = 
                 GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
-        GPXAssignSRTMHeightWorker.AssignMode myAssignMode = 
+        ElevationProviderOptions.AssignMode myAssignMode = 
                 GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType();
 
         final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
@@ -334,7 +334,7 @@ public class SRTMDataViewer {
             @Override
             public double f(double x, double y) {
                 // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                return Math.max(0f, SRTMDataStore.getInstance().getValueForCoordinate(-x, y).floatValue());
+                return Math.max(0f, SRTMDataStore.getInstance().getElevationForCoordinate(-x, y).floatValue());
             }
         };
 

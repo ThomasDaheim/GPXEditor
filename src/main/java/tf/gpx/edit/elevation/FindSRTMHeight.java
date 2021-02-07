@@ -45,7 +45,7 @@ import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
-import tf.gpx.edit.leafletmap.LatLong;
+import tf.gpx.edit.leafletmap.LatLongElev;
 import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
@@ -205,14 +205,14 @@ public class FindSRTMHeight extends AbstractStage {
         assignButton.setOnAction((ActionEvent event) -> {
             // only do something if srtm file are available
 //            if (!waypointLatitudeTxt.getText().isEmpty() && !waypointLongitudeTxt.getText().isEmpty()) {
-                final LatLong latLong = new LatLong(LatLongHelper.latFromString(waypointLatitudeTxt.getText()), LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
+                final LatLongElev latLong = new LatLongElev(LatLongHelper.latFromString(waypointLatitudeTxt.getText()), LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
                 
-                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, GPXAssignSRTMHeightWorker.AssignMode.ALWAYS, false);
-                final double elevation = worker.getElevation(latLong);
+                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, ElevationProviderOptions.AssignMode.ALWAYS, false);
+                final double elevation = worker.getElevationForCoordinate(latLong);
                 
-                if (elevation != SRTMDataStore.NODATA) {
+                if (elevation != SRTMDataStore.NO_DATA) {
                     elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
                 } else {
                     elevationVal.setText("No elevation data available!");

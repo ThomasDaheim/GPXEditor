@@ -47,11 +47,17 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     
     protected GPXEditor myEditor;
 
-    public GPXEmptyWorker() {
+    protected GPXEmptyWorker() {
         super ();
     }
 
-    public GPXEmptyWorker(final double parameter) {
+    protected GPXEmptyWorker(final boolean deepth) {
+        super ();
+        
+        deepthFirst = deepth;
+    }
+
+    protected GPXEmptyWorker(final double parameter) {
         super ();
         
         myParameter = parameter;

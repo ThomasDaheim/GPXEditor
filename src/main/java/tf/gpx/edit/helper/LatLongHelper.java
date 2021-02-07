@@ -28,7 +28,7 @@ package tf.gpx.edit.helper;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLong;
+import tf.gpx.edit.leafletmap.LatLongElev;
 
 /**
  *
@@ -66,7 +66,7 @@ public class LatLongHelper {
         return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
     }
             
-    public static String LatLongToString(final LatLong waypoint) {
+    public static String LatLongToString(final LatLongElev waypoint) {
         return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
     }
             

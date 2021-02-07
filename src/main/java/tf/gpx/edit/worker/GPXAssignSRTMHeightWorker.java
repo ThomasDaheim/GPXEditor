@@ -25,64 +25,54 @@
  */
 package tf.gpx.edit.worker;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
+import tf.gpx.edit.elevation.ElevationProviderOptions;
+import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLong;
 import tf.gpx.edit.elevation.SRTMDataStore;
+import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
 
 /**
  *
  * @author Thomas
  */
-public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
-
+public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker implements IElevationProvider {
     public enum WorkMode {
         CHECK_DATA_FILES,
         ASSIGN_ELEVATION_VALUES
     }
     
-    public enum AssignMode {
-        ALWAYS("Always assign elevation"),
-        MISSING_ONLY("Only assign for missing elevations");
-
-        private final String description;
-
-        AssignMode(String value) {
-            description = value;
-        }
-
-        @Override
-        public String toString() {
-            return description;
-        }
-    }
-    
-    private final static double epsilon = 0.01d;
-    
     private WorkMode myWorkMode = WorkMode.CHECK_DATA_FILES;
-    private AssignMode myAssignMode = AssignMode.ALWAYS;
     private boolean myDoUndo;
     private Set<String> requiredDataFiles = new LinkedHashSet<>();
     
     private int assignedHeightCount = 0;
     private int noHeightCount = 0;
     private int alreadyHeightCount = 0;
+    
+    private GPXFile workingFile = null;
             
+    private ElevationProviderOptions options = new ElevationProviderOptions();
+
     private GPXAssignSRTMHeightWorker() {
-        super ();
+        super (false);
     }
 
-    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final AssignMode assignMode, final boolean doUndo) {
-        super ();
+    public GPXAssignSRTMHeightWorker(final String path, final SRTMDataStore.SRTMDataAverage averageMode, final ElevationProviderOptions.AssignMode assignMode, final boolean doUndo) {
+        super (false);
         
         SRTMDataStore.getInstance().setStorePath(path);
         SRTMDataStore.getInstance().setDataAverage(averageMode);
-        myAssignMode = assignMode;
+        options.setAssignMode(assignMode);
         myDoUndo = doUndo;
     }
     
@@ -115,30 +105,98 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
     }
 
     @Override
-    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
-            // file a set with the required data fiel names
-            requiredDataFiles.add(SRTMDataStore.getInstance().getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
-        } else {
-            final double currentElevation = gpxWayPoint.getElevation();
-            
-            if (Math.abs(currentElevation) < GPXAssignSRTMHeightWorker.epsilon || AssignMode.ALWAYS.equals(myAssignMode)) {
-                final double elevation = SRTMDataStore.getInstance().getValueForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude());
+    public void visitGPXFile(final GPXFile gpxFile) {
+        workingFile = gpxFile;
+        assignElevation(gpxFile.getCombinedGPXWaypoints(null));
+    }
 
-                if (elevation != SRTMDataStore.NODATA) {
-//                    gpxWayPoint.setElevation(elevation);
-                    myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
-                    assignedHeightCount++;
+    @Override
+    public void visitGPXTrack(final GPXTrack gpxTrack) {
+        // TFE, 20210207: have we already visited the gpxfile?
+        if (gpxTrack.getGPXFile() != null && !gpxTrack.getGPXFile().equals(workingFile)) {
+            assignElevation(gpxTrack.getCombinedGPXWaypoints(null));
+        }
+    }
+
+    @Override
+    public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
+        // TFE, 20210207: have we already visited the gpxfile?
+        if (gpxTrackSegment.getGPXFile() != null && !gpxTrackSegment.getGPXFile().equals(workingFile)) {
+            assignElevation(gpxTrackSegment.getCombinedGPXWaypoints(null));
+        }
+    }
+
+    @Override
+    public void visitGPXRoute(final GPXRoute gpxRoute) {
+        // TFE, 20210207: have we already visited the gpxfile?
+        if (gpxRoute.getGPXFile() != null && !gpxRoute.getGPXFile().equals(workingFile)) {
+            assignElevation(gpxRoute.getCombinedGPXWaypoints(null));
+        }
+    }
+
+    @Override
+    public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
+        // TFE, 20210207: have we already visited the gpxfile?
+        if (gpxWayPoint.getGPXFile() != null && !gpxWayPoint.getGPXFile().equals(workingFile)) {
+            assignElevation(Arrays.asList(gpxWayPoint));
+        }
+    }
+    
+    private void assignElevation(final List<GPXWaypoint> gpxWayPoints) {
+        // TFE, 20210207: wherever possible do complete list of waypoints!
+        if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
+            // file a set with the required data field names
+            for (GPXWaypoint gpxWayPoint : gpxWayPoints) {
+                requiredDataFiles.add(SRTMDataStore.getInstance().getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
+            }
+        } else {
+            final List<GPXWaypoint> assignPoints = new ArrayList<>();
+
+            // find the waypoints that need attention
+            for (GPXWaypoint gpxWayPoint : gpxWayPoints) {
+                final double currentElevation = gpxWayPoint.getElevation();
+
+                if (currentElevation < IElevationProvider.NO_ELEVATION || ElevationProviderOptions.AssignMode.ALWAYS.equals(options.getAssignMode())) {
+                    assignPoints.add(gpxWayPoint);
                 } else {
-                    noHeightCount++;
+                    alreadyHeightCount++;
                 }
-            } else {
-                alreadyHeightCount++;
+            }
+
+            if (!assignPoints.isEmpty()) {
+                // if using OpenElevationService its only one POST call instead of multiple
+                final List<Double> assignHeigths = SRTMDataStore.getInstance().getElevationsForCoordinates(assignPoints); 
+                
+                int i = 0;
+                for (GPXWaypoint gpxWayPoint : assignPoints) {
+                    final double elevation = assignHeigths.get(i);
+
+                    if (elevation != SRTMDataStore.NO_DATA) {
+                        gpxWayPoint.setElevation(elevation);
+                        myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
+                        assignedHeightCount++;
+                    } else {
+                        noHeightCount++;
+                    }
+                    
+                    i++;
+                }
             }
         }
     }
     
-    public double getElevation(final LatLong latlong) {
-        return SRTMDataStore.getInstance().getValueForCoordinate(latlong.getLatitude(), latlong.getLongitude());        
+    @Override
+    public ElevationProviderOptions getOptions() {
+        return options;
+    }
+
+    @Override
+    public Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options) {
+        return SRTMDataStore.getInstance().getElevationForCoordinate(longitude, latitude, options);        
+    }
+
+    @Override
+    public Double getElevationForCoordinate(final double longitude, final double latitude) {
+        return SRTMDataStore.getInstance().getElevationForCoordinate(longitude, latitude);        
     }
 }
