@@ -3,16 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.extension;
 
 import java.io.File;
 import me.himanshusoni.gpxparser.modal.Extension;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import tf.gpx.edit.extension.GarminColor;
-import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.LineStyle;
@@ -22,14 +18,6 @@ import tf.gpx.edit.items.LineStyle;
  * @author thomas
  */
 public class TestLineStyle {
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
-
     @Test
     public void testDEFAULT_LINESTYLE() {
           testIsDefaultExceptColor(LineStyle.DEFAULT_LINESTYLE, LineStyle.DEFAULT_COLOR);

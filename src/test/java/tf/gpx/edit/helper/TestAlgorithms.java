@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.helper;
 
 import java.io.File;
 import java.text.DecimalFormatSymbols;
@@ -31,14 +31,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.helper.GPXAlgorithms;
-import tf.gpx.edit.helper.GPXWaypointNeighbours;
-import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
@@ -56,14 +51,6 @@ public class TestAlgorithms {
     public TestAlgorithms() {
         // TFE, 20181005: with proper support for locals also the test values change
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
     }
     
     @Before

@@ -37,7 +37,6 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.values.EditGPXWaypoint;
-import tf.gpx.edit.viewer.MarkerManager;
 
 /**
  *

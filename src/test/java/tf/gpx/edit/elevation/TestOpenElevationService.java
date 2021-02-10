@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.elevation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -42,12 +42,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
-import org.junit.Assert;
 import org.geojson.Point;
+import org.junit.Assert;
 import org.junit.Test;
-import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.elevation.SRTMDataStore;
 
 /**
  *
@@ -123,10 +121,10 @@ public class TestOpenElevationService {
                 deserializeLineResponse(
                         httpPostResponse(
                                 "https://api.openrouteservice.org/elevation/line", 
-                                "{\"format_in\":\"polyline\",\"format_out\":\"geojson\",\"geometry\":[[13.349762,38.11295],[12.638397,37.645772]]}"));
+                                "{\"format_in\":\"polyline\",\"format_out\":\"geojson\",\"geometry\":[[13.349762,38.11295],[86.925,27.9881]]}"));
             
         Assert.assertTrue(isCloseEnough(38, result.get(0)));
-        Assert.assertTrue(isCloseEnough(13, result.get(1)));
+        Assert.assertTrue(isCloseEnough(8794, result.get(1)));
     }
     
     @Test
@@ -153,17 +151,17 @@ public class TestOpenElevationService {
         Assert.assertTrue(isCloseEnough(6868, heightValue));
     }
     
-    public Double getValueForCoordinate(final double longitude, final double latitude) {
+    public Double getValueForCoordinate(final double latitude, final double longitude) {
         final String httpResponse = 
                 httpPostResponse(
                         "https://api.openrouteservice.org/elevation/point", 
-                        "{\"format_in\":\"point\",\"geometry\":["+String.valueOf(latitude)+","+String.valueOf(longitude)+"]}");
+                        "{\"format_in\":\"point\",\"geometry\":["+String.valueOf(longitude)+","+String.valueOf(latitude)+"]}");
         
         return deserializePointResponse(httpResponse);
     }
 
     private Double deserializePointResponse(final String response) {
-        double result = SRTMDataStore.NO_DATA;
+        double result = IElevationProvider.NO_ELEVATION;
         
         try {
             // https://github.com/opendatalab-de/geojson-jackson

@@ -31,14 +31,14 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
  *
  * @author thomas
  */
-public class ElevationProviderOptions {
-    public enum AssignMode {
-        ALWAYS("Always assign elevation"),
-        MISSING_ONLY("Only assign for missing elevations");
+public class SRTMDataOptions {
+    public enum SRTMDataAverage {
+        NEAREST_ONLY("Use only nearest data point"),
+        AVERAGE_NEIGHBOURS("Average over neighbouring data points");
 
         private final String description;
 
-        AssignMode(String value) {
+        SRTMDataAverage(String value) {
             description = value;
         }
 
@@ -48,59 +48,51 @@ public class ElevationProviderOptions {
         }
     }
     
-    public enum LookUpMode {
-        SRTM_ONLY("Using SRTM data only"),
-        SRTM_FIRST("SRTM data if available"),
-        SRTM_LAST("SRTM data if non other available"),
-        SRTM_NONE("Not using SRTM data");
-
-        private final String description;
-
-        LookUpMode(String value) {
-            description = value;
-        }
-
-        @Override
-        public String toString() {
-            return description;
-        }
-    }
+    private SRTMDataAverage dataAverage;
+    private String dataPath;
+    private ISRTMDataReader dataReader;
     
-    private AssignMode assignMode;
-    private LookUpMode lookUpMode;
-    
-    public ElevationProviderOptions() {
-        this(GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(), GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
-    }
-    
-    public ElevationProviderOptions(final AssignMode assign) {
-        this(assign, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
-    }
-    
-    public ElevationProviderOptions(final LookUpMode lookup) {
-        this(GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType(), lookup);
-    }
-    
-    public ElevationProviderOptions(final AssignMode assign, final LookUpMode lookup) {
-        assignMode = assign;
-        lookUpMode = lookup;
+    public SRTMDataOptions() {
+        this(GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(), GPXEditorPreferences.SRTM_DATA_PATH.getAsType(), SRTMDataReader.getInstance());
     }
 
-    public AssignMode getAssignMode() {
-        return assignMode;
+    public SRTMDataOptions(final SRTMDataAverage average) {
+        this(average, GPXEditorPreferences.SRTM_DATA_PATH.getAsType(), SRTMDataReader.getInstance());
+    }
+    
+    public SRTMDataOptions(final SRTMDataAverage average, final String path) {
+        this(average, path, SRTMDataReader.getInstance());
+    }
+    
+    public SRTMDataOptions(final SRTMDataAverage average, final String path, final ISRTMDataReader reader) {
+        dataAverage = average;
+        dataPath = path;
+        dataReader = reader;
     }
 
-    public ElevationProviderOptions setAssignMode(final AssignMode assign) {
-        assignMode = assign;
+    public SRTMDataAverage getSRTMDataAverage() {
+        return dataAverage;
+    }
+
+    public void setSRTMDataAverage(final SRTMDataAverage average) {
+        dataAverage = average;
+    }
+
+    public String getSRTMDataPath() {
+        return dataPath;
+    }
+
+    public SRTMDataOptions setSRTMDataPath(final String path) {
+        dataPath = path;
         return this;
     }
 
-    public LookUpMode getLookUpMode() {
-        return lookUpMode;
+    public ISRTMDataReader getSRTMDataReader() {
+        return dataReader;
     }
 
-    public ElevationProviderOptions setLookUpMode(final LookUpMode lookup) {
-        lookUpMode = lookup;
+    public SRTMDataOptions setSRTMDataReader(final ISRTMDataReader reader) {
+        dataReader = reader;
         return this;
     }
 }

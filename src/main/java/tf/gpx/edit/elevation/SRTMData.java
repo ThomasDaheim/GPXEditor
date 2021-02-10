@@ -31,8 +31,8 @@ import javafx.util.Pair;
  *
  * @author Thomas
  */
-public class SRTMData {
-    public  enum SRTMDataType{
+class SRTMData {
+    public enum SRTMDataType{
         SRTM1(3601, 1),
         SRTM3(1201, 3),
         INVALID(1, 1);
@@ -57,7 +57,8 @@ public class SRTMData {
         }
     }
     
-    private final static double epsilon = 0.1d;
+    private final static double EPSILON = 0.1d;
+    private final static double NO_DATA = Double.MIN_VALUE;
 
     private final String myDataFile;
     private final SRTMDataKey myDataKey;
@@ -81,11 +82,11 @@ public class SRTMData {
         return myDataValues;
     }
     
-    private short getValue(final int rowNum, final int colNum) {
+    public short getValue(final int rowNum, final int colNum) {
         assert rowNum > -1;
         assert colNum > -1;
 
-        short result = SRTMDataStore.NO_DATA;
+        short result = (short) IElevationProvider.NO_ELEVATION;
         
         // check if in bounds
         if (rowNum < numberRows && colNum < numberCols) {
@@ -118,7 +119,7 @@ public class SRTMData {
         short[] result = new short[numberCols];
         
         for (int i = 0; i < numberCols; i++) {
-            result[i] = SRTMDataStore.NO_DATA;
+            result[i] = (short) IElevationProvider.NO_ELEVATION;
         }
         
         return result;
@@ -132,12 +133,12 @@ public class SRTMData {
         return numberCols;
     }
 
-    public double getValueForCoordinate(final double latitude, final double longitude, final SRTMDataStore.SRTMDataAverage avarageMode) {
+    protected double getValueForCoordinate(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode) {
         // actual calculation is the same for all SRTMData instances - so either use helper or static method
         return getValueForCoordinateStatic(latitude, longitude, avarageMode, this);
     }
 
-    private static double getValueForCoordinateStatic(final double latitude, final double longitude, final SRTMDataStore.SRTMDataAverage avarageMode, final SRTMData data) {
+    private static double getValueForCoordinateStatic(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode, final SRTMData data) {
         // https://gis.stackexchange.com/questions/43743/extracting-elevation-from-hgt-file
 //        SRTM data are distributed in two levels: SRTM1 (for the U.S. and its territories and possessions)
 //        with data sampled at one arc-second intervals in latitude and longitude, and SRTM3 (for the world)
@@ -159,7 +160,7 @@ public class SRTMData {
 //        error source in the elevation data has the characteristics of random noise this reduces that error 
 //        by roughly a factor of three.
 
-        double result = SRTMDataStore.NO_DATA;
+        double result = NO_DATA;
         
         // convert lon & lat to name & check against self
         if (SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
@@ -196,7 +197,7 @@ public class SRTMData {
 
             result = data.getValue(rowNum, colNum);
             
-            if (SRTMDataStore.SRTMDataAverage.AVERAGE_NEIGHBOURS.equals(avarageMode)) {
+            if (SRTMDataOptions.SRTMDataAverage.AVERAGE_NEIGHBOURS.equals(avarageMode)) {
                 // "neighbour" can mean a few things... here its the following:
                 // on a grid you can have up to 4 neighbours for a point
                 // a: 1 neighbour: point is on center of grid tile => neighbour is this grid (upper left)
@@ -249,7 +250,7 @@ public class SRTMData {
 
                 // first, the grid that contains the coordinates
                 // height value might not be set
-                if (result != SRTMDataStore.NO_DATA) {
+                if (result != NO_DATA) {
                     weight = 1d / distanceOnGrid(latFractional, lonFractional);
                     weightedResult = result * weight;
                     normalization = weight;
@@ -258,11 +259,11 @@ public class SRTMData {
                 
                 // what are the neighbouring cells? use them only if point is not too close to tile center
                 int nextRowNum = -1;
-                if (Math.abs(latFractional) > epsilon * epsilon) {
+                if (Math.abs(latFractional) > EPSILON * EPSILON) {
                     nextRowNum = rowNum - (int) Math.signum(latFractional);
                 }
                 int nextColNum = -1;
-                if (Math.abs(lonFractional) > epsilon * epsilon) {
+                if (Math.abs(lonFractional) > EPSILON * EPSILON) {
                     nextColNum = colNum + (int) Math.signum(lonFractional);
                 }
                 
@@ -270,7 +271,7 @@ public class SRTMData {
                 if (isInArray(nextRowNum, data.getNumberRows())) {
                     neighbourValue = data.getValue(nextRowNum, colNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NO_DATA) {
+                    if (neighbourValue != NO_DATA) {
                         weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), lonFractional);
                         weightedResult += neighbourValue * weight;
                         normalization += weight;
@@ -280,7 +281,7 @@ public class SRTMData {
                 if (isInArray(nextColNum, data.getNumberColumns())) {
                     neighbourValue = data.getValue(rowNum, nextColNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NO_DATA) {
+                    if (neighbourValue != NO_DATA) {
                         weight = 1d / distanceOnGrid(latFractional, 1d - Math.abs(lonFractional));
                         weightedResult += neighbourValue * weight;
                         normalization += weight;
@@ -290,7 +291,7 @@ public class SRTMData {
                 if (isInArray(nextRowNum, data.getNumberRows()) && isInArray(nextColNum, data.getNumberColumns())) {
                     neighbourValue = data.getValue(nextRowNum, nextColNum);
                     // height value might not be set
-                    if (neighbourValue != SRTMDataStore.NO_DATA) {
+                    if (neighbourValue != NO_DATA) {
                         weight = 1d / distanceOnGrid(1d - Math.abs(latFractional), 1d - Math.abs(lonFractional));
                         weightedResult += neighbourValue * weight;
                         normalization += weight;
@@ -306,11 +307,11 @@ public class SRTMData {
             //System.out.println("latitude: " + latitude + ", longitude: " + longitude + ", latarcsecs: " + latarcsecs + ", lonarcsecs: " + lonarcsecs + ", rowNum: " + rowNum + ", colNum: " + colNum + ", result: " + result + ", result2: " + result2);
         }
 
-        return result;
+        return result == NO_DATA ? IElevationProvider.NO_ELEVATION : result;
     }
     
     private static double distanceOnGrid(final double latDist, final double lonDist) {
-        return Math.max(latDist*latDist + lonDist*lonDist, epsilon*epsilon);
+        return Math.max(latDist*latDist + lonDist*lonDist, EPSILON*EPSILON);
     }
     
     private static boolean isInArray(final int check, final int arraySize) {

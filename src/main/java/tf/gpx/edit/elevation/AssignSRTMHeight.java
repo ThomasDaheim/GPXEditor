@@ -62,7 +62,7 @@ public class AssignSRTMHeight extends AbstractStage  {
     private final static AssignSRTMHeight INSTANCE = new AssignSRTMHeight();
     
     private String mySRTMDataPath;
-    private SRTMDataStore.SRTMDataAverage myAverageMode;
+    private SRTMDataOptions.SRTMDataAverage myAverageMode;
     private ElevationProviderOptions.AssignMode myAssignMode;
 
     // UI elements used in various methods need to be class-wide
@@ -174,7 +174,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         final Button rescan = new Button("Rescan");
         rescan.setOnAction((ActionEvent event) -> {
             mySRTMDataPath = srtmPathLbl.getText();
-            myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
+            myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
             myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
             checkSRTMFiles();
@@ -190,7 +190,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         GridPane.setMargin(srtmAvgLbl, INSET_TOP);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
-        avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
+        avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataOptions.SRTMDataAverage.class, myAverageMode);
         getGridPane().add(avgModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(avgModeChoiceBox, INSET_TOP);
         
@@ -214,11 +214,15 @@ public class AssignSRTMHeight extends AbstractStage  {
             if (fileList.getItems().size() == 
                     fileList.getCheckModel().getCheckedItems().stream().filter(e -> e != null).count()) {
                 mySRTMDataPath = srtmPathLbl.getText();
-                myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
+                myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
-                final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, true);
-                visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+                final GPXAssignSRTMHeightWorker visitor = 
+                        new GPXAssignSRTMHeightWorker(
+                                new ElevationProviderOptions(myAssignMode),
+                                new SRTMDataOptions(myAverageMode, mySRTMDataPath),
+                                true,
+                                GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
                 GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
@@ -275,8 +279,12 @@ public class AssignSRTMHeight extends AbstractStage  {
         
         hasUpdated = false;
         if (checkSRTMFiles()) {
-            final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
-            visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+            final GPXAssignSRTMHeightWorker visitor = 
+                    new GPXAssignSRTMHeightWorker(
+                            new ElevationProviderOptions(myAssignMode),
+                            new SRTMDataOptions(myAverageMode, mySRTMDataPath),
+                            true,
+                            GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
             GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
 
             hasUpdated = true;
@@ -286,9 +294,14 @@ public class AssignSRTMHeight extends AbstractStage  {
     }
 
     private boolean checkSRTMFiles() {
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
-
-        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
+        final SRTMDataOptions srtmOptions = new SRTMDataOptions(myAverageMode, mySRTMDataPath);
+        
+        final GPXAssignSRTMHeightWorker visitor = 
+                new GPXAssignSRTMHeightWorker(
+                        new ElevationProviderOptions(myAssignMode),
+                        srtmOptions,
+                        false,
+                        GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
         GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
         
         // sorted list of files and mark missing ones
@@ -299,7 +312,7 @@ public class AssignSRTMHeight extends AbstractStage  {
         // known bug: https://github.com/controlsfx/controlsfx/issues/1098
 
         final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
-        final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles());
+        final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles(), srtmOptions);
         
         // creates various warnings on second usage!
         // Mar 31, 2018 8:49:31 PM javafx.scene.CssStyleHelper calculateValue

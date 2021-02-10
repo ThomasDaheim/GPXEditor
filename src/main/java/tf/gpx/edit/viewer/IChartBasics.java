@@ -70,9 +70,9 @@ import tf.helper.general.ObjectsHelper;
  * @param <T>
  */
 public interface IChartBasics<T extends XYChart<Number, Number>> extends IPreferencesHolder {
-    static String DATA_SEP = "-";
-    static String SHIFT_LABEL = "ShiftNode";
-    static String SHIFT_TEXT = "ShiftText";
+    final static String DATA_SEP = "-";
+    final static String SHIFT_LABEL = "ShiftNode";
+    final static String SHIFT_TEXT = "ShiftText";
     
     public static enum ChartType {
         HEIGHTCHART,
@@ -136,28 +136,28 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     }
     
     // what any decent Chart needs to implement
-    public abstract List<GPXMeasurable> getGPXMeasurables();
-    public void setGPXMeasurables(final List<GPXMeasurable> lineItems);
-    public abstract double getMinimumDistance();
-    public abstract void setMinimumDistance(final double value);
-    public abstract double getMaximumDistance();
-    public abstract void setMaximumDistance(final double value);
-    public abstract double getMinimumYValue();
-    public abstract void setMinimumYValue(final double value);
-    public abstract double getMaximumYValue();
-    public abstract void setMaximumYValue(final double value);
-    public abstract List<Pair<GPXWaypoint, Number>> getPoints();
-    public abstract ChartsPane getChartsPane();
-    public abstract void setChartsPane(final ChartsPane pane);
+    List<GPXMeasurable> getGPXMeasurables();
+    void setGPXMeasurables(final List<GPXMeasurable> lineItems);
+    double getMinimumDistance();
+    void setMinimumDistance(final double value);
+    double getMaximumDistance();
+    void setMaximumDistance(final double value);
+    double getMinimumYValue();
+    void setMinimumYValue(final double value);
+    double getMaximumYValue();
+    void setMaximumYValue(final double value);
+    List<Pair<GPXWaypoint, Number>> getPoints();
+    ChartsPane getChartsPane();
+    void setChartsPane(final ChartsPane pane);
     // only extensions of XYChart allowed
-    public abstract T getChart();
-    public abstract Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
+    T getChart();
+    Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
     
         // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
-    public abstract boolean getInShowData();
-    public abstract void setInShowData(final boolean value);
-    public abstract void doShowData();
-    public abstract void layoutPlotChildren();
+    boolean getInShowData();
+    void setInShowData(final boolean value);
+    void doShowData();
+    void layoutPlotChildren();
     
     // as default I don't shown file waypoints
     default boolean fileWaypointsInChart() {
@@ -168,11 +168,11 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     default void initForNewGPXWaypoints() {
     }
     
-    public abstract void setCallback(final GPXEditor gpxEditor);
+    void setCallback(final GPXEditor gpxEditor);
     
     // optimization: set hasNonZeroData during setGPXWaypoints() since we iterate over all data there anyways...
-    public abstract boolean hasNonZeroData();
-    public abstract void setNonZeroData(final boolean value);
+    boolean hasNonZeroData();
+    void setNonZeroData(final boolean value);
     
     default void setEnable(final boolean enabled) {
         getChart().setDisable(!enabled);
@@ -584,7 +584,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         return series.getName().split(DATA_SEP)[1];
     }
 
-    public abstract double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
+    double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
 
     default void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;

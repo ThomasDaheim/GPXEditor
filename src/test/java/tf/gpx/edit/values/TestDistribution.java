@@ -23,50 +23,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.values;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.values.BinValue;
-import tf.gpx.edit.values.BinValueDistribution;
 
 /**
  *
  * @author thomas
  */
 public class TestDistribution {
-    private DoubleDistribution myDoubleDistribution = new DoubleDistribution();
+    private final DoubleDistribution myDoubleDistribution = new DoubleDistribution();
 
     private List<Double> myList;
     private List<BinValue> myBinValues;
 
-    public TestDistribution() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-    
     @Test
     public void linearDistributions() {
         //

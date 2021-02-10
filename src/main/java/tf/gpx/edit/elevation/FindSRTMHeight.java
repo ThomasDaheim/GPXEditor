@@ -46,7 +46,6 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
 import tf.gpx.edit.leafletmap.LatLongElev;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 import tf.helper.javafx.RestrictiveTextField;
@@ -62,7 +61,7 @@ public class FindSRTMHeight extends AbstractStage {
     private final static FindSRTMHeight INSTANCE = new FindSRTMHeight();
     
     private String mySRTMDataPath;
-    private SRTMDataStore.SRTMDataAverage myAverageMode;
+    private SRTMDataOptions.SRTMDataAverage myAverageMode;
 
     private final RestrictiveTextField waypointLatitudeTxt = new RestrictiveTextField();
     private final RestrictiveTextField waypointLongitudeTxt = new RestrictiveTextField();
@@ -195,7 +194,7 @@ public class FindSRTMHeight extends AbstractStage {
         GridPane.setMargin(srtmAvgLbl, INSET_TOP);
         GridPane.setValignment(srtmAvgLbl, VPos.TOP);
 
-        avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataStore.SRTMDataAverage.class, myAverageMode);
+        avgModeChoiceBox = EnumHelper.getInstance().createToggleGroup(SRTMDataOptions.SRTMDataAverage.class, myAverageMode);
         getGridPane().add(avgModeChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(avgModeChoiceBox, INSET_TOP);
 
@@ -207,12 +206,15 @@ public class FindSRTMHeight extends AbstractStage {
 //            if (!waypointLatitudeTxt.getText().isEmpty() && !waypointLongitudeTxt.getText().isEmpty()) {
                 final LatLongElev latLong = new LatLongElev(LatLongHelper.latFromString(waypointLatitudeTxt.getText()), LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
                 mySRTMDataPath = srtmPathLbl.getText();
-                myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataStore.SRTMDataAverage.class, avgModeChoiceBox);
+                myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
                 
-                final GPXAssignSRTMHeightWorker worker = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, ElevationProviderOptions.AssignMode.ALWAYS, false);
+                final IElevationProvider worker = 
+                        new ElevationProviderBuilder(
+                                new ElevationProviderOptions(),
+                                new SRTMDataOptions(myAverageMode, mySRTMDataPath)).build();
                 final double elevation = worker.getElevationForCoordinate(latLong);
                 
-                if (elevation != SRTMDataStore.NO_DATA) {
+                if (elevation != IElevationProvider.NO_ELEVATION) {
                     elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
                 } else {
                     elevationVal.setText("No elevation data available!");

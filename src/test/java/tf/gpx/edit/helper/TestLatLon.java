@@ -23,17 +23,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.helper;
 
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.helper.LatLongHelper;
 
 /**
  *
@@ -45,22 +40,6 @@ public class TestLatLon {
     public TestLatLon() {
         // TFE, 20181005: with proper support for locals also the test values change
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
     }
     
     @Test

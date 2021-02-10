@@ -23,18 +23,48 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
-
-import tf.gpx.edit.values.ValueDistribution;
+package tf.gpx.edit.elevation;
 
 /**
  *
- * @author thomas
+ * @author Thomas
  */
-
-public class DoubleDistribution extends ValueDistribution<Double> {
-    @Override
-    public double getValueAsDouble(Double value) {
-        return value;
+public class TestSRTMDataReader implements ISRTMDataReader {
+    // TFE, 20181023: delegate word for test cases on real values
+    private SRTMDataReader INSTANCE;
+    
+    private boolean useInstance;
+    
+    public TestSRTMDataReader() {
+        INSTANCE = SRTMDataReader.getInstance();
+        useInstance = false;
     }
+    
+    public void setUseInstance(final boolean value) {
+        useInstance = value;
+    }
+    
+    @Override
+    public boolean checkSRTMDataFile(String name, String path) {
+        return true;
+    }
+
+    @Override
+    public SRTMData readSRTMData(String name, String path) {
+        if (!useInstance) {
+            final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
+            final SRTMData result = new SRTMData(name, name, dataType);
+
+            for (int row = 0; row < dataType.getDataCount(); row++) { 
+                for (int col = 0; col < dataType.getDataCount(); col++) { 
+                    result.setValue(row, col, (short) (row + col)); 
+                } 
+            } 
+
+            return result;
+        } else {
+            return INSTANCE.readSRTMData(name, path);
+        }
+    }
+    
 }

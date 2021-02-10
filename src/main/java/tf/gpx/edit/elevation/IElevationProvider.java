@@ -25,9 +25,10 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.leafletmap.LatLongElev;
 
 /**
  * Interface for all services thart provide elevations.
@@ -38,38 +39,35 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
  * @author thomas
  */
 public interface IElevationProvider {
-    public final static double NO_ELEVATION = 0.01d;
+    // TFE, 20210208: gpxparser sets elevation to 0.0 if not in gpx file...
+    public final static double NO_ELEVATION = 0.0d;
 
-    public abstract ElevationProviderOptions getOptions();
+    ElevationProviderOptions getElevationProviderOptions();
     
-    // the only thing you need to implement - basic coordinates + options
-    // this will always determine an elevation since ElevationProviderOptions.AssignMode can't be checked without an elevation
-    public abstract Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options);
-    
-    public default Double getElevationForCoordinate(final double longitude, final double latitude) {
-        return getElevationForCoordinate(longitude, latitude, getOptions());
-    }
-
-    // since we have elevation here as well, we can check against options
-    public default Double getElevationForCoordinate(final IGeoCoordinate coord, final ElevationProviderOptions options) {
-        double result = coord.getElevation();
-        if (result < IElevationProvider.NO_ELEVATION || ElevationProviderOptions.AssignMode.ALWAYS.equals(options.getAssignMode())) {
-            result = getElevationForCoordinate(coord.getLongitude(), coord.getLatitude(), options);
+    // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
+    // even so this code makes more calls for individual waypoints...
+    default Double getElevationForCoordinate(final double latitude, final double longitude) {
+        final List<Double> results = getElevationsForCoordinates(Arrays.asList(new LatLongElev(latitude, longitude)));
+        
+        if (!results.isEmpty()) {
+            return results.get(0);
+        } else {
+            return NO_ELEVATION;
         }
-        return result;
+    }
+
+    // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
+    // even so this code makes more calls for individual waypoints...
+    default Double getElevationForCoordinate(final IGeoCoordinate coord) {
+        final List<Double> results = getElevationsForCoordinates(Arrays.asList(coord));
+        
+        if (!results.isEmpty()) {
+            return results.get(0);
+        } else {
+            return NO_ELEVATION;
+        }
     }
     
-    public default Double getElevationForCoordinate(final IGeoCoordinate coord) {
-        return getElevationForCoordinate(coord, getOptions());
-    }
-    
-    public default List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords, final ElevationProviderOptions options) {
-        return coords.stream().map((t) -> {
-            return getElevationForCoordinate(t, options);
-        }).collect(Collectors.toList());
-    }
-    
-    public default List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
-        return getElevationsForCoordinates(coords, getOptions());
-    }
+    // the only thing you need to implement - list of coordinates
+    List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords);
 }

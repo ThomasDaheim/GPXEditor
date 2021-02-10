@@ -23,57 +23,51 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.algorithms;
 
-import tf.gpx.edit.elevation.ISRTMDataReader;
-import tf.gpx.edit.elevation.SRTMData;
-import tf.gpx.edit.elevation.SRTMDataReader;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 
 /**
  *
- * @author Thomas
+ * @author thomas
  */
-public class TestSRTMDataReader implements ISRTMDataReader {
-    // TFE, 20181023: delegate word for test cases on real values
-    private SRTMDataReader INSTANCE;
-    private String filePath;
-    
-    private boolean useInstance;
-    
-    public TestSRTMDataReader() {
-        INSTANCE = SRTMDataReader.getInstance();
-        useInstance = false;
-    }
-    
-    public void setUseInstance(final boolean value) {
-        useInstance = value;
-    }
-    
-    public void setFilePath(final String path) {
-        filePath = path;
+public class TestPointPair {
+    public String description;
+    public Waypoint p1;
+    public Waypoint p2;
+    public double bearingRef;
+    public double distanceHaversineRef;
+    public double distanceVincentyRef;
+
+    private TestPointPair() {
     }
 
-    @Override
-    public boolean checkSRTMDataFile(String name, String path) {
-        return true;
+    public TestPointPair(
+            final String desc,
+            final double lat1, final double lon1, final double elev1,
+            final double lat2, final double lon2, final double elev2,
+            final double bearing, final double distanceHaversine, final double distanceVincenty) {
+        description = desc;
+        p1 = new Waypoint(lat1, lon1);
+        p1.setElevation(elev1);
+        p2 = new Waypoint(lat2, lon2);
+        p2.setElevation(elev2);
+
+        bearingRef = bearing;
+        distanceHaversineRef = distanceHaversine;
+        distanceVincentyRef = distanceVincenty;
     }
 
-    @Override
-    public SRTMData readSRTMData(String name, String path) {
-        if (!useInstance) {
-            final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
-            final SRTMData result = new SRTMData(name, name, dataType);
-
-            for (int row = 0; row < dataType.getDataCount(); row++) { 
-                for (int col = 0; col < dataType.getDataCount(); col++) { 
-                    result.setValue(row, col, (short) (row + col)); 
-                } 
-            } 
-
-            return result;
-        } else {
-            return INSTANCE.readSRTMData(name, filePath);
-        }
+    public TestPointPair(
+            final String desc,
+            final double lat1, final double lon1,
+            final double lat2, final double lon2,
+            final double bearing, final double distanceHaversine, final double distanceVincenty) {
+        this(
+            desc,
+            lat1, lon1, 0.0,
+            lat2, lon2, 0.0,
+            bearing, distanceHaversine, distanceVincenty
+        );
     }
-    
 }

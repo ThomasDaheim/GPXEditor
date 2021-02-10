@@ -39,76 +39,29 @@ import tf.gpx.edit.elevation.SRTMData.SRTMDataKey;
  *
  * @author Thomas
  */
-public class SRTMDataStore implements IElevationProvider {
+public class SRTMDataStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
     
-    private ISRTMDataReader mySRTMDataReader;
-    
     private final Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
 
-    public final static Short NO_DATA = Short.MIN_VALUE; 
     public final static String HGT_EXT = "hgt";
 
-    public enum SRTMDataAverage {
-        NEAREST_ONLY("Use only nearest data point"),
-        AVERAGE_NEIGHBOURS("Average over neighbouring data points");
-
-        private final String description;
-
-        SRTMDataAverage(String value) {
-            description = value;
-        }
-
-        @Override
-        public String toString() {
-            return description;
-        }
-    }
-    
     public final static String DOWNLOAD_LOCATION_SRTM1 = "https://step.esa.int/auxdata/dem/SRTMGL1";
     public final static String DOWNLOAD_LOCATION_SRTM3 = "http://viewfinderpanoramas.org/dem3.html";
     
-    private final Map<SRTMDataKey, SRTMData> srtmStore;
-    private String myStorePath = "";
-    private SRTMDataAverage myDataAverage = SRTMDataAverage.NEAREST_ONLY;
+    private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
 
+    // this only makes sense with options
     private SRTMDataStore() {
-        mySRTMDataReader = SRTMDataReader.getInstance();
-        
-        srtmStore = new HashMap<>();
     }
 
     public static SRTMDataStore getInstance() {
         return INSTANCE;
     }
     
-   public ISRTMDataReader getSRTMDataReader() {
-        return mySRTMDataReader;
-    }
-
-    public void setSRTMDataReader(ISRTMDataReader SRTMDataReader) {
-        mySRTMDataReader = SRTMDataReader;
-    }
-
-     public String getStorePath() {
-        return myStorePath;
-    }
-    
-    public void setStorePath(final String path) {
-        myStorePath = path;
-    }
-    
-    public SRTMDataAverage getDataAverage() {
-        return myDataAverage;
-    }
-
-    public void setDataAverage(final SRTMDataAverage dataAverage) {
-        myDataAverage = dataAverage;
-    }
-    
-    public SRTMData getDataForName(final String dataName) {
+    protected SRTMData getDataForName(final String dataName, final SRTMDataOptions srtmOptions) {
         SRTMData result;
 
         String name = dataName;
@@ -121,7 +74,7 @@ public class SRTMDataStore implements IElevationProvider {
         
         if (dataKey == null) {
             // if not found: try to read file and add to store
-            result = mySRTMDataReader.readSRTMData(name, myStorePath);
+            result = srtmOptions.getSRTMDataReader().readSRTMData(name, srtmOptions.getSRTMDataPath());
             
             if (result != null) {
                 srtmStore.put(result.getKey(), result);
@@ -133,7 +86,7 @@ public class SRTMDataStore implements IElevationProvider {
         return result;
     }
     
-    public void addMissingDataToStore(final SRTMData newData) {
+    protected void addMissingDataToStore(final SRTMData newData) {
         assert newData != null;
         
         // check validity of data
@@ -168,40 +121,12 @@ public class SRTMDataStore implements IElevationProvider {
         return result;
     }
 
-    @Override
-    public ElevationProviderOptions getOptions() {
-        return new ElevationProviderOptions();
-    }
-
-    @Override
-    public Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options) {
-        return getElevationForCoordinate(longitude, latitude);
-    }
-
-    @Override
-    public Double getElevationForCoordinate(final double longitude, final double latitude) {
-        double result = NO_DATA;
-        
-        // construct name from coordinates
-        final String dataName = getNameForCoordinate(longitude, latitude);
-        
-        // check store for matching data
-        SRTMData data = getDataForName(dataName);
-        
-        // ask data for value
-        if (data != null) {
-            result = data.getValueForCoordinate(longitude, latitude, myDataAverage);
-        }
-        
-        return result;
-    }
-    
-    public List<String> findMissingDataFiles(final List<String> srtmnames) {
+    public List<String> findMissingDataFiles(final List<String> srtmnames, final SRTMDataOptions srtmOptions) {
         final List<String> result = new ArrayList<>();
 
         // check if files are there and are valid SRTM files
         for (String srtmname : srtmnames) {
-            if (!SRTMDataReader.getInstance().checkSRTMDataFile(srtmname, myStorePath)) {
+            if (!SRTMDataReader.getInstance().checkSRTMDataFile(srtmname, srtmOptions.getSRTMDataPath())) {
                 result.add(srtmname + "." + HGT_EXT);
             }
         }

@@ -23,51 +23,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
-
-import me.himanshusoni.gpxparser.modal.Waypoint;
+package tf.gpx.edit.values;
 
 /**
  *
  * @author thomas
  */
-public class TestPointPair {
-    public String description;
-    public Waypoint p1;
-    public Waypoint p2;
-    public double bearingRef;
-    public double distanceHaversineRef;
-    public double distanceVincentyRef;
 
-    private TestPointPair() {
-    }
-
-    public TestPointPair(
-            final String desc,
-            final double lat1, final double lon1, final double elev1,
-            final double lat2, final double lon2, final double elev2,
-            final double bearing, final double distanceHaversine, final double distanceVincenty) {
-        description = desc;
-        p1 = new Waypoint(lat1, lon1);
-        p1.setElevation(elev1);
-        p2 = new Waypoint(lat2, lon2);
-        p2.setElevation(elev2);
-
-        bearingRef = bearing;
-        distanceHaversineRef = distanceHaversine;
-        distanceVincentyRef = distanceVincenty;
-    }
-
-    public TestPointPair(
-            final String desc,
-            final double lat1, final double lon1,
-            final double lat2, final double lon2,
-            final double bearing, final double distanceHaversine, final double distanceVincenty) {
-        this(
-            desc,
-            lat1, lon1, 0.0,
-            lat2, lon2, 0.0,
-            bearing, distanceHaversine, distanceVincenty
-        );
+public class DoubleDistribution extends ValueDistribution<Double> {
+    @Override
+    public double getValueAsDouble(Double value) {
+        return value;
     }
 }

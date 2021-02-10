@@ -3,16 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.extension;
 
 import javafx.scene.paint.Color;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import tf.gpx.edit.extension.GarminColor;
 
 /**
  *
@@ -21,14 +18,6 @@ import tf.gpx.edit.extension.GarminColor;
 public class TestGarminColor {
     @Rule
     public ExpectedException exceptionRule = ExpectedException.none();
-
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     @Test
     public void isGarminDisplayColor() {

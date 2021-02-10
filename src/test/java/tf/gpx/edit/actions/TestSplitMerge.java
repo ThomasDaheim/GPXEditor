@@ -23,21 +23,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.actions;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.actions.MergeDeleteRoutesAction;
-import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
-import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
@@ -54,22 +47,6 @@ import tf.helper.doundo.IDoUndoAction;
 public class TestSplitMerge extends GPXEditor {
     public TestSplitMerge() {
         super(false);
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
     }
     
     @Test

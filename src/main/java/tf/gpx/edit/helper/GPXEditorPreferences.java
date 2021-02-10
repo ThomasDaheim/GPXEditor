@@ -25,12 +25,12 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.algorithms.EarthGeometry;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.util.function.Function;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
-import tf.gpx.edit.elevation.SRTMDataStore;
+import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
@@ -49,7 +49,7 @@ public enum GPXEditorPreferences  {
     FIX_EPSILON("fixDistance", Double.toString(1000), Double::valueOf),
     // TFE, 20200508: empty string is not a good default...
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String::valueOf),
-    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataStore.SRTMDataAverage::valueOf),
+    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataOptions.SRTMDataAverage::valueOf),
     HEIGHT_ASSIGN_MODE("heightAssignMode", ElevationProviderOptions.AssignMode.ALWAYS.name(), ElevationProviderOptions.AssignMode::valueOf),
     // TFE, 20210107: we now can also use OpenElevationService :-)
     HEIGHT_LOOKUP_MODE("heightLookUpMode", ElevationProviderOptions.LookUpMode.SRTM_FIRST.name(), ElevationProviderOptions.LookUpMode::valueOf),

@@ -25,32 +25,113 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
+
 /**
  *
  * @author thomas
  */
 public class ElevationProvider implements IElevationProvider {
-    private ElevationProviderOptions options;
+    private ElevationProviderOptions elevOptions;
+    private SRTMDataOptions srtmOptions;
     
-    public ElevationProvider() {
-        options = new ElevationProviderOptions();
+    // the ones I call in the hour of need
+    private OpenElevationService olServices;
+    private SRTMElevationService srtmService;
+    
+    // this only makes sense with options
+    private ElevationProvider() {
     }
 
-    public ElevationProvider(final ElevationProviderOptions opts) {
-        options = opts;
+    // only my builder can create me
+    protected ElevationProvider(final ElevationProviderOptions elevOpts, final SRTMDataOptions srtmOpts) {
+        elevOptions = elevOpts;
+        srtmOptions = srtmOpts;
+        
+        olServices = new OpenElevationService(elevOpts, srtmOpts);
+        srtmService = new SRTMElevationService(elevOpts, srtmOpts);
     }
 
     @Override
-    public ElevationProviderOptions getOptions() {
-        return options;
-    }
-
-    public void setOptions(final ElevationProviderOptions opts) {
-        options = opts;
+    public ElevationProviderOptions getElevationProviderOptions() {
+        return elevOptions;
     }
 
     @Override
-    public Double getElevationForCoordinate(final double longitude, final double latitude, final ElevationProviderOptions options) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+        // use map for easier replacement of elevations
+        // https://www.baeldung.com/java-collectors-tomap
+        final Map<IGeoCoordinate, Double> coordElevMap = 
+                coords.stream().collect(Collectors.toMap(Function.identity(), IGeoCoordinate::getElevation, (existing, replacement) -> existing));
+        final List<IGeoCoordinate> distinctCoords = new ArrayList<>(coordElevMap.keySet());
+        
+        // SRTM_ONLY + SRTM_FIRST: check srtm data first for values
+        if (ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(elevOptions.getLookUpMode()) ||
+                ElevationProviderOptions.LookUpMode.SRTM_FIRST.equals(elevOptions.getLookUpMode())) {
+            // srtm: does checking against NO_ELEVATION via IElevationProvider default implementation
+            final List<Double> elevations = srtmService.getElevationsForCoordinates(distinctCoords);
+            int i = 0;
+            for (IGeoCoordinate coord: distinctCoords) {
+                coordElevMap.put(coord, elevations.get(i));
+                i++;
+            }
+        }
+        
+        // SRTM_ONLY: we're done here
+        if (ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(elevOptions.getLookUpMode())) {
+            return flattenMap(coordElevMap, coords);
+        }
+        
+        // SRTM_LAST + SRTM_NONE: check openelevationservice first for all values 
+        if (ElevationProviderOptions.LookUpMode.SRTM_LAST.equals(elevOptions.getLookUpMode()) ||
+                ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(elevOptions.getLookUpMode())) {
+            final List<Double> elevations = olServices.getElevationsForCoordinates(distinctCoords);
+            int i = 0;
+            for (IGeoCoordinate coord: distinctCoords) {
+                coordElevMap.put(coord, elevations.get(i));
+                i++;
+            }
+        }
+        
+        // SRTM_NONE: we're done here
+        if (ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(elevOptions.getLookUpMode())) {
+            return flattenMap(coordElevMap, coords);
+        }
+        
+        // if nothing from srtm service maybe we have a fallback...
+        if (ElevationProviderOptions.LookUpMode.SRTM_FIRST.equals(elevOptions.getLookUpMode())) {
+            // possible optimization: collect all coords with missing elevation and use getElevationsForCoordinates
+            for (IGeoCoordinate coord: distinctCoords) {
+                if (coordElevMap.get(coord) == NO_ELEVATION) {
+                    coordElevMap.put(coord, olServices.getElevationForCoordinate(coord));
+                }
+            }
+        }
+        
+        // if nothing from elevation service maybe we have a fallback...
+        if (ElevationProviderOptions.LookUpMode.SRTM_LAST.equals(elevOptions.getLookUpMode())) {
+            for (IGeoCoordinate coord: distinctCoords) {
+                if (coordElevMap.get(coord) == NO_ELEVATION) {
+                    coordElevMap.put(coord, srtmService.getElevationForCoordinate(coord));
+                }
+            }
+        }
+        
+        return flattenMap(coordElevMap, coords);
+    }
+    
+    private List<Double> flattenMap(final Map<IGeoCoordinate, Double> coordElevMap, final List<? extends IGeoCoordinate> coords) {
+        final List<Double> result = new ArrayList<>();
+        
+        for (IGeoCoordinate coord: coords) {
+            result.add(coordElevMap.get(coord));
+        }
+        
+        return result;
     }
 }

@@ -64,13 +64,14 @@ import javafx.util.converter.IntegerStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.elevation.ElevationProviderOptions;
+import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.leafletmap.MapLayerTable;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
-import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.javafx.AbstractStage;
@@ -100,9 +101,13 @@ public class PreferenceEditor extends AbstractStage {
             EnumHelper.getInstance().createChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
     private final TextField epsilonText = new TextField();
     private final CheckBox assignHeightChkBox = new CheckBox();
+    private final ChoiceBox<ElevationProviderOptions.AssignMode> assignModeChoiceBox = 
+            EnumHelper.getInstance().createChoiceBox(ElevationProviderOptions.AssignMode.class, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
+    private final ChoiceBox<ElevationProviderOptions.LookUpMode> lookupModeChoiceBox = 
+            EnumHelper.getInstance().createChoiceBox(ElevationProviderOptions.LookUpMode.class, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
     private final TextField srtmPathText = new TextField();
-    private final ChoiceBox<SRTMDataStore.SRTMDataAverage> srtmAvrgChoiceBox = 
-            EnumHelper.getInstance().createChoiceBox(SRTMDataStore.SRTMDataAverage.class, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
+    private final ChoiceBox<SRTMDataOptions.SRTMDataAverage> srtmAvrgChoiceBox = 
+            EnumHelper.getInstance().createChoiceBox(SRTMDataOptions.SRTMDataAverage.class, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
     private final TextField breakText = new TextField();
     private final TextField radiusText = new TextField();
     private final TextField durationText = new TextField();
@@ -256,7 +261,7 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20200508: also add SRTM settings to have all in one place (for export/import)
         rowNum++;
         // separator
-        final Label lblHor6 = new Label("SRTM");
+        final Label lblHor6 = new Label("Elevation");
         lblHor6.setStyle("-fx-font-weight: bold");
         getGridPane().add(lblHor6, 0, rowNum, 1, 1);
         GridPane.setMargin(lblHor6, INSET_TOP);
@@ -267,6 +272,33 @@ public class PreferenceEditor extends AbstractStage {
         getGridPane().add(sepHor6, 1, rowNum, 1, 1);
         GridPane.setMargin(sepHor6, INSET_TOP);
         
+        // TFE, 20210210: OpenElevationService is heere!
+        rowNum++;
+        // assign mode
+        t = new Tooltip("Assign Mode");
+        final Label assignModeLbl = new Label("AssignMode:");
+        assignModeLbl.setTooltip(t);
+        getGridPane().add(assignModeLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(assignModeLbl, VPos.TOP);
+        GridPane.setMargin(assignModeLbl, INSET_TOP);
+
+        assignModeChoiceBox.setTooltip(t);
+        getGridPane().add(assignModeChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(assignModeChoiceBox, INSET_TOP);
+
+        rowNum++;
+        // lookup mode
+        t = new Tooltip("Lookup Mode");
+        final Label lookupModeLbl = new Label("Lookup Mode:");
+        lookupModeLbl.setTooltip(t);
+        getGridPane().add(lookupModeLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(lookupModeLbl, VPos.TOP);
+        GridPane.setMargin(lookupModeLbl, INSET_TOP);
+
+        lookupModeChoiceBox.setTooltip(t);
+        getGridPane().add(lookupModeChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(lookupModeChoiceBox, INSET_TOP);
+
         rowNum++;
         // srtm file path
         t = new Tooltip("SRTM data file path");
@@ -283,7 +315,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(srtmPathText, INSET_TOP);
 
         rowNum++;
-        // srtm file path
+        // srtm average mode
         t = new Tooltip("SRTM averaging mode");
         final Label srtmAvrgLbl = new Label("SRTM data average:");
         srtmAvrgLbl.setTooltip(t);
@@ -740,6 +772,8 @@ public class PreferenceEditor extends AbstractStage {
         fixText.setText(decimalFormat.format(GPXEditorPreferences.FIX_EPSILON.getAsType()));
         epsilonText.setText(decimalFormat.format(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
         assignHeightChkBox.setSelected(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType());
+        EnumHelper.getInstance().selectEnum(assignModeChoiceBox, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
+        EnumHelper.getInstance().selectEnum(lookupModeChoiceBox, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
         srtmPathText.setText(GPXEditorPreferences.SRTM_DATA_PATH.getAsType());
         radiusText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_RADIUS.getAsType()));
         durationText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_DURATION.getAsType()));
@@ -766,8 +800,10 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf(epsilonText.getText().trim()), 0));
         GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(fixText.getText().trim()), 0));
+        GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
+        GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
         GPXEditorPreferences.SRTM_DATA_PATH.put(srtmPathText.getText().trim());
-        GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataStore.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
+        GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
         GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(assignHeightChkBox.isSelected());
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
         GPXEditorPreferences.SHOW_WAYPOINT_NAMES.put(waypointNameChkBox.isSelected());

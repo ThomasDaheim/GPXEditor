@@ -30,6 +30,6 @@ package tf.gpx.edit.elevation;
  * @author Thomas
  */
 public interface ISRTMDataReader {
-    public boolean checkSRTMDataFile(final String name, final String path);
-    public SRTMData readSRTMData(final String name, final String path);
+    boolean checkSRTMDataFile(final String name, final String path);
+    SRTMData readSRTMData(final String name, final String path);
 }

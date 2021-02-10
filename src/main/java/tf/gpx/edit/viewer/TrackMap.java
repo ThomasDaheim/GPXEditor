@@ -73,6 +73,10 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
+import tf.gpx.edit.elevation.AssignSRTMHeight;
+import tf.gpx.edit.elevation.ElevationProviderBuilder;
+import tf.gpx.edit.elevation.ElevationProviderOptions;
+import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLongHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -94,11 +98,7 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.leafletmap.ScaleControlConfig;
 import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.elevation.AssignSRTMHeight;
-import tf.gpx.edit.elevation.ElevationProviderOptions;
-import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
 
@@ -265,7 +265,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private boolean isLoaded = false;
     private boolean isInitialized = false;
     
-    private GPXAssignSRTMHeightWorker heightWorker;
+    private IElevationProvider elevationProvider;
 
     private TrackMap() {
         super();
@@ -273,12 +273,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         currentMarker = null;
         currentGPXRoute = null;
         
-        // TFE, 20200121: show height with coordinate in context menu
-        heightWorker = new GPXAssignSRTMHeightWorker(
-                GPXEditorPreferences.SRTM_DATA_PATH.getAsString(), 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType(), 
-                ElevationProviderOptions.AssignMode.ALWAYS,
-                false);
+        // TFE, 20200121: show height with coordinate in context menu; try local SRTM data first to avoid remote calls
+        elevationProvider = new ElevationProviderBuilder(new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_FIRST)).build();
         
         setVisible(false);
     }
@@ -916,8 +912,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             contextMenu.setUserData(latLong);
 
             // TFE, 20200121: show height with coordinate in context menu
-            final double elevation = heightWorker.getElevationForCoordinate(latLong);
-            if (elevation != SRTMDataStore.NO_DATA) {
+            final double elevation = elevationProvider.getElevationForCoordinate(latLong);
+            if (elevation != IElevationProvider.NO_ELEVATION) {
                 showCord.setText(LatLongHelper.LatLongToString(latLong) + ", " + GPXLineItem.DOUBLE_FORMAT_2.format(elevation) + " m");
             } else {
                 showCord.setText(LatLongHelper.LatLongToString(latLong));

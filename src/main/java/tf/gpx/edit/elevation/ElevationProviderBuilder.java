@@ -23,19 +23,44 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
-
-import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.items.GPXWaypoint;
+package tf.gpx.edit.elevation;
 
 /**
- * Common interface for all algorithms that can implement a nearest neighbor search.
+ * Builder to handle all attributes that can be used in determining elevation.
  * 
  * @author thomas
  */
-public interface INearestNeighborSearcher {
-    NearestNeighbor.SearchAlgorithm getSearchAlgorithm();
-    void init(final EarthGeometry.DistanceAlgorithm algo, final List<GPXWaypoint> points);
-    Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint point);
+public class ElevationProviderBuilder {
+    private ElevationProviderOptions elevOptions = new ElevationProviderOptions();
+    private SRTMDataOptions srtmOptions = new SRTMDataOptions();
+    
+    public ElevationProviderBuilder() {
+    }
+    
+    public ElevationProviderBuilder(final ElevationProviderOptions elevOpts) {
+        elevOptions = elevOpts;
+    }
+    
+    public ElevationProviderBuilder(final SRTMDataOptions srtmOpts) {
+        srtmOptions = srtmOpts;
+    }
+    
+    public ElevationProviderBuilder(final ElevationProviderOptions elevOpts, final SRTMDataOptions srtmOpts) {
+        elevOptions = elevOpts;
+        srtmOptions = srtmOpts;
+    }
+    
+    public ElevationProviderBuilder setElevationProviderOptions(final ElevationProviderOptions elevOpts) {
+        elevOptions = elevOpts;
+        return this;
+    }
+    
+    public ElevationProviderBuilder setSRTMDataOptions(final SRTMDataOptions srtmOpts) {
+        srtmOptions = srtmOpts;
+        return this;
+    }
+    
+    public ElevationProvider build() {
+        return new ElevationProvider(elevOptions, srtmOptions);
+    }
 }

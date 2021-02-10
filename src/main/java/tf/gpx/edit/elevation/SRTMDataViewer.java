@@ -119,18 +119,9 @@ public class SRTMDataViewer {
     }
     
     public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
-        // getAsString all required files
-        final String mySRTMDataPath = 
-                GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
-        final SRTMDataStore.SRTMDataAverage myAverageMode = 
-                GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType();
-        ElevationProviderOptions.AssignMode myAssignMode = 
-                GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType();
-
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(mySRTMDataPath, myAverageMode, myAssignMode, false);
-
-        visitor.setWorkMode(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
+        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
         gpxFile.acceptVisitor(visitor);
+
         final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         
         // calculate min / max lat & lon
@@ -139,7 +130,7 @@ public class SRTMDataViewer {
         boolean dataFound = false;
         for (String dataFile : dataFiles) {
             // read that data into store
-            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(dataFile);
+            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(dataFile, new SRTMDataOptions());
             if (srtmData != null) {
                 dataFound = true;
                 
@@ -174,6 +165,8 @@ public class SRTMDataViewer {
             }
         }
         
+        final SRTMDataOptions srtmOptions = new SRTMDataOptions();
+        
         // support multiple data files, not only first one
         int latMin = Integer.MAX_VALUE, latMax = Integer.MIN_VALUE;
         int lonMin = Integer.MAX_VALUE, lonMax = Integer.MIN_VALUE;
@@ -181,7 +174,7 @@ public class SRTMDataViewer {
         for (File hgtFile : hgtFiles) {
             hgtFileName = hgtFile.getAbsolutePath();
             // read that data into store
-            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(FilenameUtils.getBaseName(hgtFileName));
+            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(FilenameUtils.getBaseName(hgtFileName), srtmOptions);
             // if not working, try to read data locally
             if (srtmData == null) {
                 srtmData = SRTMDataReader.getInstance().readSRTMData(FilenameUtils.getBaseName(hgtFileName), FilenameUtils.getFullPath(hgtFileName));
@@ -328,13 +321,17 @@ public class SRTMDataViewer {
             final int latMax, 
             final int lonMax, 
             final GPXFile gpxFile) {
+        final IElevationProvider elevation = new ElevationProviderBuilder(
+                new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY),
+                new SRTMDataOptions()).build();
+        
         // -------------------------------
         // Define a function to plot
         final Mapper mapper = new Mapper() {
             @Override
             public double f(double x, double y) {
                 // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                return Math.max(0f, SRTMDataStore.getInstance().getElevationForCoordinate(-x, y).floatValue());
+                return Math.max(0f, elevation.getElevationForCoordinate(-x, y).floatValue());
             }
         };
 

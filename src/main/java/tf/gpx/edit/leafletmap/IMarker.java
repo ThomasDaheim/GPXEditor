@@ -30,5 +30,5 @@ package tf.gpx.edit.leafletmap;
  * @author thomas
  */
 public interface IMarker {
-    public abstract String getIconName();
+    String getIconName();
 }

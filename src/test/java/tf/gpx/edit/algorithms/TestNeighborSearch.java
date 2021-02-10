@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.algorithms;
 
 import java.io.File;
 import java.time.Duration;
@@ -31,14 +31,9 @@ import java.time.Instant;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.algorithms.INearestNeighborSearcher;
-import tf.gpx.edit.algorithms.NearestNeighbor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -56,14 +51,6 @@ public class TestNeighborSearch {
         gpxfile = new GPXFile(new File("src/test/resources/testneighborsearch.gpx"));
         searchPoints = gpxfile.getGPXWaypoints().sorted();
         trackPoints = gpxfile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
     }
     
     @Before

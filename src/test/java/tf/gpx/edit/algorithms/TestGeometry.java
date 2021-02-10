@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.algorithms;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -31,12 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.algorithms.EarthGeometry;
 
 /**
  *
@@ -55,17 +52,6 @@ public class TestGeometry {
     private final List<TestPointTriple> testPointTriples = new ArrayList<>();
     
     private boolean doSystemOut = true;
-    
-    public TestGeometry() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
     
     @Before
     public void setUp() {

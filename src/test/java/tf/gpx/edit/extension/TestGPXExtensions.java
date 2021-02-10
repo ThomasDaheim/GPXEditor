@@ -23,15 +23,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit;
+package tf.gpx.edit.extension;
 
 import java.io.File;
 import java.util.HashMap;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 
 /**
@@ -39,14 +36,6 @@ import tf.gpx.edit.items.GPXFile;
  * @author thomas
  */
 public class TestGPXExtensions extends GPXFile {
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
-    
     @Test
     public void newGPXFile() {
         final GPXFile newFile = new GPXFile();
