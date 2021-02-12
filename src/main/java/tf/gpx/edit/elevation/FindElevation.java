@@ -55,10 +55,10 @@ import tf.helper.javafx.TooltipHelper;
  *
  * @author thomas
  */
-public class FindSRTMHeight extends AbstractStage {
+public class FindElevation extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static FindSRTMHeight INSTANCE = new FindSRTMHeight();
+    private final static FindElevation INSTANCE = new FindElevation();
     
     private String mySRTMDataPath;
     private SRTMDataOptions.SRTMDataAverage myAverageMode;
@@ -72,20 +72,20 @@ public class FindSRTMHeight extends AbstractStage {
     // host services from main application
     private HostServices myHostServices;
 
-    private FindSRTMHeight() {
+    private FindElevation() {
         super();
         // Exists only to defeat instantiation.
         
         initViewer();
     }
 
-    public static FindSRTMHeight getInstance() {
+    public static FindElevation getInstance() {
         return INSTANCE;
     }
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(FindSRTMHeight.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(FindElevation.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();
@@ -104,10 +104,9 @@ public class FindSRTMHeight extends AbstractStage {
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
         // minimum is N/S°'"
-        waypointLatitudeTxt.setMaxLength(14);
-        waypointLatitudeTxt.setRestrict(LatLongHelper.LAT_REGEXP);
+        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLongHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
-        final Tooltip latTooltip = new Tooltip("Format: N/S DD°MM'SS.SS\"");
+        final Tooltip latTooltip = new Tooltip("Formats: N/S DD°MM'SS.SS\" or DD°MM'SS.SS\" N/S or +/-dd.dddddd");
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
         waypointLatitudeTxt.setTooltip(latTooltip);
 
@@ -121,10 +120,9 @@ public class FindSRTMHeight extends AbstractStage {
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
         // minimum is E/W°'"
-        waypointLongitudeTxt.setMaxLength(15);
-        waypointLongitudeTxt.setRestrict(LatLongHelper.LON_REGEXP);
+        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLongHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
-        final Tooltip lonTooltip = new Tooltip("Format: E/W DDD°MM'SS.SS\"");
+        final Tooltip lonTooltip = new Tooltip("Formats: E/W DDD°MM'SS.SS\" or DDD°MM'SS.SS\" E/W or +/-ddd.dddddd");
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
         waypointLongitudeTxt.setTooltip(lonTooltip);
 
@@ -200,30 +198,29 @@ public class FindSRTMHeight extends AbstractStage {
 
         rowNum++;
         // 7th row: assign height values
-        final Button assignButton = new Button("Get SRTM height value");
-        assignButton.setOnAction((ActionEvent event) -> {
-            // only do something if srtm file are available
-//            if (!waypointLatitudeTxt.getText().isEmpty() && !waypointLongitudeTxt.getText().isEmpty()) {
+        final Button findButton = new Button("Get elevation");
+        findButton.setOnAction((ActionEvent event) -> {
+            if (Double.NaN == LatLongHelper.latFromString(waypointLatitudeTxt.getText())) {
+                elevationVal.setText(LatLongHelper.INVALID_LATITUDE);
+            } else if (Double.NaN == LatLongHelper.lonFromString(waypointLongitudeTxt.getText())) {
+                elevationVal.setText(LatLongHelper.INVALID_LONGITUDE);
+            } else {
                 final LatLongElev latLong = new LatLongElev(LatLongHelper.latFromString(waypointLatitudeTxt.getText()), LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
-                
+
                 final IElevationProvider worker = 
                         new ElevationProviderBuilder(
                                 new ElevationProviderOptions(),
                                 new SRTMDataOptions(myAverageMode, mySRTMDataPath)).build();
                 final double elevation = worker.getElevationForCoordinate(latLong);
-                
-                if (elevation != IElevationProvider.NO_ELEVATION) {
-                    elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
-                } else {
-                    elevationVal.setText("No elevation data available!");
-                }
-//            }
+
+                elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
+            }
         });
-        getGridPane().add(assignButton, 0, rowNum, 2, 1);
-        GridPane.setHalignment(assignButton, HPos.CENTER);
-        GridPane.setMargin(assignButton, INSET_TOP_BOTTOM);
+        getGridPane().add(findButton, 0, rowNum, 2, 1);
+        GridPane.setHalignment(findButton, HPos.CENTER);
+        GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
    }
     
     public void findSRTMHeight(final HostServices hostServices) {

@@ -56,10 +56,10 @@ import tf.helper.javafx.EnumHelper;
  *
  * @author thomas
  */
-public class AssignSRTMHeight extends AbstractStage  {
+public class AssignElevation extends AbstractStage  {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static AssignSRTMHeight INSTANCE = new AssignSRTMHeight();
+    private final static AssignElevation INSTANCE = new AssignElevation();
     
     private String mySRTMDataPath;
     private SRTMDataOptions.SRTMDataAverage myAverageMode;
@@ -78,20 +78,20 @@ public class AssignSRTMHeight extends AbstractStage  {
 
     private boolean hasUpdated = false;
 
-    private AssignSRTMHeight() {
+    private AssignElevation() {
         super();
         // Exists only to defeat instantiation.
         
         initViewer();
     }
 
-    public static AssignSRTMHeight getInstance() {
+    public static AssignElevation getInstance() {
         return INSTANCE;
     }
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(AssignSRTMHeight.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(AssignElevation.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         mySRTMDataPath = 
                 GPXEditorPreferences.SRTM_DATA_PATH.getAsString();

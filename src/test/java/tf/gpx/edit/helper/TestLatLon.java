@@ -84,20 +84,20 @@ public class TestLatLon {
         // 0 lat <- N" + LatLongHelper.DEG + "" + LatLongHelper.MIN + "."
         Assert.assertEquals(0.0, LatLongHelper.latFromString("N" + LatLongHelper.DEG + "" + LatLongHelper.MIN + "" + dS + "" + LatLongHelper.SEC), 0.0);
         // 0 lat <- N   " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  .  "
-        Assert.assertEquals(0.0, LatLongHelper.latFromString("N   " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  " + dS + "  " + LatLongHelper.SEC), 0.0);
+        Assert.assertEquals(Double.NaN, LatLongHelper.latFromString("N   " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  " + dS + "  " + LatLongHelper.SEC), 0.0);
         // 0 lon <- E 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         Assert.assertEquals(0.0, LatLongHelper.lonFromString("E 0" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0" + dS + "00" + LatLongHelper.SEC), 0.0);
         // 0 lon <- E" + LatLongHelper.DEG + "" + LatLongHelper.MIN + "."
         Assert.assertEquals(0.0, LatLongHelper.lonFromString("E" + LatLongHelper.DEG + "" + LatLongHelper.MIN + "" + dS + "" + LatLongHelper.SEC), 0.0);
         // 0 lon <- E    " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  .  "
-        Assert.assertEquals(0.0, LatLongHelper.lonFromString("E    " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  " + dS + "  " + LatLongHelper.SEC), 0.0);
+        Assert.assertEquals(Double.NaN, LatLongHelper.lonFromString("E    " + LatLongHelper.DEG + "  " + LatLongHelper.MIN + "  " + dS + "  " + LatLongHelper.SEC), 0.0);
 
         // 89.99999999999 lat <- N 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59.99"
-        Assert.assertEquals(89.99999999999, LatLongHelper.latFromString("N 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(89.999999999, LatLongHelper.latFromString("N 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
         // 90.0 lat -> N 90" + LatLongHelper.DEG + "00" + LatLongHelper.MIN + "00.00"
         Assert.assertEquals(90.0, LatLongHelper.latFromString("N 90" + LatLongHelper.DEG + "00" + LatLongHelper.MIN + "00" + dS + "00" + LatLongHelper.SEC), 0.0);
         // -89.99999999999 lat <- S 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59.99"
-        Assert.assertEquals(-89.99999999999, LatLongHelper.latFromString("S 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(-89.999999999, LatLongHelper.latFromString("S 89" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
         // -90.0 lat -> S 90" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         //Assert.assertEquals(-90.0, LatLongHelper.latFromString("S 90" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00" + LatLongHelper.SEC), 0.0);
         // 5.08486 lat <- N 5" + LatLongHelper.DEG + "5" + LatLongHelper.MIN + "5.5"
@@ -106,13 +106,59 @@ public class TestLatLon {
         Assert.assertEquals(5.08486, LatLongHelper.latFromString("N  5" + LatLongHelper.DEG + " 5" + LatLongHelper.MIN + " 5" + dS + "5" + LatLongHelper.SEC), 0.0001);
 
         // 179.99999999999 lon <- E 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59.99"
-        Assert.assertEquals(179.99999999999, LatLongHelper.lonFromString("E 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(179.999999999, LatLongHelper.lonFromString("E 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
         // 180.0 lon <- E 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         //Assert.assertEquals(180.0, LatLongHelper.lonFromString("E 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00" + LatLongHelper.SEC), 0.0);
         // -179.99999999999 lon <- W 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59.99"
-        Assert.assertEquals(-179.99999999999, LatLongHelper.lonFromString("W 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(-179.999999999, LatLongHelper.lonFromString("W 179" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "59" + dS + "999999999" + LatLongHelper.SEC), 0.0001);
         // -180.0 lon <- W 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00"
         //Assert.assertEquals(-180.0, LatLongHelper.lonFromString("W 180" + LatLongHelper.DEG + "0" + LatLongHelper.MIN + "0.00" + LatLongHelper.SEC), 0.0);
+
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27.988056"), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86.925278"), 0.0001);
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27.988056" + LatLongHelper.DEG), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86.925278" + LatLongHelper.DEG), 0.0001);
+        Assert.assertEquals(0, LatLongHelper.latFromString("0"), 0.0001);
+        Assert.assertEquals(0, LatLongHelper.latFromString("-0"), 0.0001);
+        Assert.assertEquals(0, LatLongHelper.lonFromString("0"), 0.0001);
+        Assert.assertEquals(0, LatLongHelper.lonFromString("-0"), 0.0001);
+        Assert.assertEquals(89.999999999, LatLongHelper.latFromString("89.999999999"), 0.0001);
+        Assert.assertEquals(-89.999999999, LatLongHelper.latFromString("-89.999999999"), 0.0001);
+        Assert.assertEquals(90, LatLongHelper.latFromString("90"), 0.0001);
+        Assert.assertEquals(-90, LatLongHelper.latFromString("-90"), 0.0001);
+        Assert.assertEquals(179.999999999, LatLongHelper.lonFromString("179.999999999"), 0.0001);
+        Assert.assertEquals(-179.999999999, LatLongHelper.lonFromString("-179.999999999"), 0.0001);
+    }
+    
+    @Test
+    public void testRealLife() {
+        // Mt. Everest
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "17" + dS + "00" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + "55" + LatLongHelper.MIN + "31" + dS + "00" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + "59" + LatLongHelper.MIN + "17" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + "55" + LatLongHelper.MIN + "31" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + " 59" + LatLongHelper.MIN + " 17" + LatLongHelper.SEC), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + " 55" + LatLongHelper.MIN + " 31" + LatLongHelper.SEC), 0.0001);
+
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + " 59' 17\""), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + " 55' 31\""), 0.0001);
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + "59'17\""), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + "55'31\""), 0.0001);
+        
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27" + LatLongHelper.DEG + " 59' 17\" N"), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86" + LatLongHelper.DEG + " 55' 31\" E"), 0.0001);
+        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27" + LatLongHelper.DEG + "59'17\" N"), 0.0001);
+        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86" + LatLongHelper.DEG + "55'31\" E"), 0.0001);
+
+        // TODO: prime & double prime not working in regex
+//        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + " 59? 17?"), 0.0001);
+//        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + " 55? 31?"), 0.0001);
+//        Assert.assertEquals(27.988056, LatLongHelper.latFromString("N 27" + LatLongHelper.DEG + "59?17?"), 0.0001);
+//        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("E 86" + LatLongHelper.DEG + "55?31?"), 0.0001);
+//        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27" + LatLongHelper.DEG + " 59? 17? N"), 0.0001);
+//        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86" + LatLongHelper.DEG + " 55? 31? E"), 0.0001);
+//        Assert.assertEquals(27.988056, LatLongHelper.latFromString("27" + LatLongHelper.DEG + "59?17? N"), 0.0001);
+//        Assert.assertEquals(86.925278, LatLongHelper.lonFromString("86" + LatLongHelper.DEG + "55?31? E"), 0.0001);
     }
     
     @Test

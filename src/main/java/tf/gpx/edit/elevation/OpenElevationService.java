@@ -156,8 +156,10 @@ public class OpenElevationService implements IElevationProvider {
                 final JsonNode jsonNode = objectMapper.readTree(response);
                 final JsonNode geometry = jsonNode.get("geometry");
 
-                final Point point = objectMapper.readValue(geometry.toString(), Point.class);
-                result.add(point.getCoordinates().getAltitude());
+                if (geometry != null) {
+                    final Point point = objectMapper.readValue(geometry.toString(), Point.class);
+                    result.add(point.getCoordinates().getAltitude());
+                }
             } catch (JsonProcessingException ex) {
                 Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -179,9 +181,11 @@ public class OpenElevationService implements IElevationProvider {
                 final JsonNode jsonNode = objectMapper.readTree(response);
                 final JsonNode geometry = jsonNode.get("geometry");
 
-                final LineString line = objectMapper.readValue(geometry.toString(), LineString.class);
-                for (LngLatAlt point : line.getCoordinates()) {
-                    result.add(point.getAltitude());
+                if (geometry != null) {
+                    final LineString line = objectMapper.readValue(geometry.toString(), LineString.class);
+                    for (LngLatAlt point : line.getCoordinates()) {
+                        result.add(point.getAltitude());
+                    }
                 }
             } catch (JsonProcessingException ex) {
                 Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);

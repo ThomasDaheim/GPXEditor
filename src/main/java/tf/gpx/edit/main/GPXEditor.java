@@ -114,8 +114,8 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.elevation.AssignSRTMHeight;
-import tf.gpx.edit.elevation.FindSRTMHeight;
+import tf.gpx.edit.elevation.AssignElevation;
+import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.helper.GPXAlgorithms;
@@ -236,11 +236,11 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem showSRTMDataMenu;
     @FXML
-    private Menu assignSRTMheightsMenu;
+    private Menu assignElevationMenu;
     @FXML
-    private MenuItem assignSRTMheightsTracksMenu;
+    private MenuItem assignElevationTracksMenu;
     @FXML
-    private MenuItem assignSRTMheightsFilesMenu;
+    private MenuItem assignElevationFilesMenu;
     @FXML
     private Menu recentFilesMenu;
     @FXML
@@ -364,7 +364,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem onlineHelpMenu;
     @FXML
-    private MenuItem heightForCoordinateMenu;
+    private MenuItem elevationForCoordinateMenu;
     @FXML
     private MenuItem findStationariesMenu;
     @FXML
@@ -639,16 +639,16 @@ public class GPXEditor implements Initializable {
         //
         // SRTM
         //
-        assignSRTMheightsFilesMenu.setOnAction((ActionEvent event) -> {
+        assignElevationFilesMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event, true);
         });
-        assignSRTMheightsTracksMenu.setOnAction((ActionEvent event) -> {
+        assignElevationTracksMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event, false);
         });
-        assignSRTMheightsMenu.disableProperty().bind(
+        assignElevationMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        heightForCoordinateMenu.setOnAction((ActionEvent event) -> {
+        elevationForCoordinateMenu.setOnAction((ActionEvent event) -> {
             heightForCoordinate(event);
         });
                 
@@ -2050,7 +2050,7 @@ public class GPXEditor implements Initializable {
 
         // TODO: remove ugly hack to pass HostServices
         startAction();
-        final boolean result = AssignSRTMHeight.getInstance().assignSRTMHeight(
+        final boolean result = AssignElevation.getInstance().assignSRTMHeight(
                 (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
                 gpxLineItems);
         endAction(result);
@@ -2065,7 +2065,7 @@ public class GPXEditor implements Initializable {
     
     private void heightForCoordinate(final Event event) {
         // TODO: remove ugly hack to pass HostServices
-        FindSRTMHeight.getInstance().findSRTMHeight(
+        FindElevation.getInstance().findSRTMHeight(
             ObjectsHelper.uncheckedCast(gpxFileList.getScene().getWindow().getProperties().get("hostServices")));
     }
     

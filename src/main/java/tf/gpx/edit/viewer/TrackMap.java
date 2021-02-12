@@ -73,7 +73,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
-import tf.gpx.edit.elevation.AssignSRTMHeight;
+import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
@@ -738,7 +738,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                             // assign height - but to clone that has been inserted
                             final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
-                            AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
+                            AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
                         }
                     });
 
@@ -770,7 +770,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
                 if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                     // assign height
-                    AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+                    AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
                 }
 
                 myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
@@ -1468,7 +1468,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
             // assign height
-            AssignSRTMHeight.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+            AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
         }
 
         gpxRoute.setGPXWaypoints(newGPXWaypoints);

@@ -371,10 +371,9 @@ public class EditGPXWaypoint extends AbstractStage {
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
         // minimum is N/S°'"
-        waypointLatitudeTxt.setMaxLength(14);
-        waypointLatitudeTxt.setRestrict(LatLongHelper.LAT_REGEXP);
+        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLongHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
-        final Tooltip latTooltip = new Tooltip("Format: N/S DD°MM'SS.SS\"");
+        final Tooltip latTooltip = new Tooltip("Formats: N/S DD°MM'SS.SS\" or DD°MM'SS.SS\" N/S or +/-dd.dddddd");
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
         waypointLatitudeTxt.setTooltip(latTooltip);
 
@@ -387,10 +386,9 @@ public class EditGPXWaypoint extends AbstractStage {
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
         // minimum is E/W°'"
-        waypointLongitudeTxt.setMaxLength(15);
-        waypointLongitudeTxt.setRestrict(LatLongHelper.LON_REGEXP);
+        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLongHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
-        final Tooltip lonTooltip = new Tooltip("Format: E/W DDD°MM'SS.SS\"");
+        final Tooltip lonTooltip = new Tooltip("Formats: E/W DDD°MM'SS.SS\" or DDD°MM'SS.SS\" E/W or +/-ddd.dddddd");
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
         waypointLongitudeTxt.setTooltip(lonTooltip);
 
