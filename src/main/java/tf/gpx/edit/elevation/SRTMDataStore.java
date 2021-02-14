@@ -51,6 +51,8 @@ public class SRTMDataStore {
     public final static String DOWNLOAD_LOCATION_SRTM1 = "https://step.esa.int/auxdata/dem/SRTMGL1";
     public final static String DOWNLOAD_LOCATION_SRTM3 = "http://viewfinderpanoramas.org/dem3.html";
     
+    public final static String SRTM1_EXTENSION = "SRTMGL1";
+    
     private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
 
     // this only makes sense with options
@@ -121,7 +123,7 @@ public class SRTMDataStore {
         return result;
     }
 
-    public List<String> findMissingDataFiles(final List<String> srtmnames, final SRTMDataOptions srtmOptions) {
+    protected List<String> findMissingDataFiles(final List<String> srtmnames, final SRTMDataOptions srtmOptions) {
         final List<String> result = new ArrayList<>();
 
         // check if files are there and are valid SRTM files
@@ -176,7 +178,7 @@ public class SRTMDataStore {
         return result;
     }
     
-    public int getLatitudeForName(final String name) {
+    protected int getLatitudeForName(final String name) {
         int result = Integer.MIN_VALUE;
         
         final Matcher matcher = namePattern.matcher(name);
@@ -191,7 +193,7 @@ public class SRTMDataStore {
         return result;
     }
     
-    public int getLongitudeForName(final String name) {
+    protected int getLongitudeForName(final String name) {
         int result = Integer.MIN_VALUE;
         
         final Matcher matcher = namePattern.matcher(name);

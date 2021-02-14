@@ -47,7 +47,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  *
  * @author Thomas
  */
-public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
+public class GPXAssignElevationWorker extends GPXEmptyWorker {
     public enum WorkMode {
         CHECK_DATA_FILES,
         ASSIGN_ELEVATION_VALUES
@@ -65,11 +65,11 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
 
     private final IElevationProvider elevationProvider;
 
-    public GPXAssignSRTMHeightWorker(final WorkMode workMode) {
+    public GPXAssignElevationWorker(final WorkMode workMode) {
         this(new ElevationProviderOptions(), new SRTMDataOptions(), false, workMode);
     }
 
-    public GPXAssignSRTMHeightWorker(final ElevationProviderOptions elevOptions, final SRTMDataOptions srtmOptions, final boolean doUndo, final WorkMode workMode) {
+    public GPXAssignElevationWorker(final ElevationProviderOptions elevOptions, final SRTMDataOptions srtmOptions, final boolean doUndo, final WorkMode workMode) {
         super (false);
         
         elevationProvider = new ElevationProviderBuilder(elevOptions, srtmOptions).build();
@@ -85,11 +85,11 @@ public class GPXAssignSRTMHeightWorker extends GPXEmptyWorker {
         myWorkMode = workMode;
     }
     
-    public List<String> getRequiredDataFiles() {
+    public List<String> getRequiredSRTMDataFiles() {
         return requiredDataFiles.stream().collect(Collectors.toList());
     }
     
-    public void clearRequiredDataFiles() {
+    public void clearRequiredSRTMDataFiles() {
         requiredDataFiles = new LinkedHashSet<>();
     }
 

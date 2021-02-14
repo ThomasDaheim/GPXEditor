@@ -48,7 +48,8 @@ import org.junit.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
- *
+ * See https://openrouteservice.org/dev/#/api-docs/elevation
+ * 
  * @author thomas
  */
 public class TestOpenElevationService {

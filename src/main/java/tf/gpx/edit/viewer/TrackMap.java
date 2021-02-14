@@ -738,7 +738,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                             // assign height - but to clone that has been inserted
                             final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
-                            AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
+                            AssignElevation.getInstance().assignElevationNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
                         }
                     });
 
@@ -770,7 +770,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
                 if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
                     // assign height
-                    AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+                    AssignElevation.getInstance().assignElevationNoUI(Arrays.asList(gpxRoute));
                 }
 
                 myGPXLineItems.get(0).getGPXFile().getGPXRoutes().add(gpxRoute);
@@ -1311,6 +1311,12 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
             selectedWaypoints.put(waypoint, gpxWaypoint);
         }
+        
+        // TFE, 20210213: if only one waypoint selected, panTo it
+        if (selectedWaypoints.size() == 1) {
+            final Map.Entry<String, GPXWaypoint> entry = selectedWaypoints.entrySet().iterator().next();
+            panTo(entry.getValue().getLatitude(), entry.getValue().getLongitude());
+        }
 //        System.out.println("Map End:      " + Instant.now() + ", " + notShownCount + " not shown");
     }
     
@@ -1468,7 +1474,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
             // assign height
-            AssignElevation.getInstance().assignSRTMHeightNoUI(Arrays.asList(gpxRoute));
+            AssignElevation.getInstance().assignElevationNoUI(Arrays.asList(gpxRoute));
         }
 
         gpxRoute.setGPXWaypoints(newGPXWaypoints);

@@ -223,8 +223,13 @@ public class FindElevation extends AbstractStage {
         GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
    }
     
-    public void findSRTMHeight(final HostServices hostServices) {
+    public void findElevation(final HostServices hostServices) {
         myHostServices = hostServices;
+        
+        // in case SRTM_NONE is set, disable srtm related fields
+        final boolean disableSRTM = ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
+        srtmPathLbl.setDisable(disableSRTM);
+        avgModeChoiceBox.setDisable(disableSRTM);
 
         showAndWait();
     }

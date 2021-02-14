@@ -223,7 +223,18 @@ public class LeafletMapView extends StackPane {
      * @param zoomLevel zoom level (0 - 19 for OpenStreetMap)
      */
     public void setView(final LatLongElev position, final int zoomLevel) {
-        final String cmdString = String.format(Locale.US, "myMap.setView([%f, %f], %d);", position.getLatitude(), position.getLongitude(), zoomLevel);
+        setView(position.getLatitude(), position.getLongitude(), zoomLevel);
+    }
+
+    /**
+     * Sets the view of the map to the specified geographical center position and zoom level.
+     *
+     * @param latitude map latitude position
+     * @param longitude map longitude position
+     * @param zoomLevel zoom level (0 - 19 for OpenStreetMap)
+     */
+    public void setView(final double latitude, final double longitude, final int zoomLevel) {
+        final String cmdString = String.format(Locale.US, "myMap.setView([%f, %f], %d);", latitude, longitude, zoomLevel);
         execScript(cmdString);
     }
 
@@ -233,7 +244,17 @@ public class LeafletMapView extends StackPane {
      * @param position map center position
      */
     public void panTo(final LatLongElev position) {
-        final String cmdString = String.format(Locale.US, "myMap.panTo([%f, %f]);", position.getLatitude(), position.getLongitude());
+        panTo(position.getLatitude(), position.getLongitude());
+    }
+
+    /**
+     * Pans the map to the specified geographical center position.
+     *
+     * @param latitude map latitude position
+     * @param longitude map longitude position
+     */
+    public void panTo(final double latitude, final double longitude) {
+        final String cmdString = String.format(Locale.US, "myMap.panTo([%f, %f]);", latitude, longitude);
         execScript(cmdString);
     }
 

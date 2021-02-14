@@ -83,7 +83,7 @@ import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.javafx.ShowAlerts;
 
 /**
@@ -119,10 +119,10 @@ public class SRTMDataViewer {
     }
     
     public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
-        final GPXAssignSRTMHeightWorker visitor = new GPXAssignSRTMHeightWorker(GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
+        final GPXAssignElevationWorker visitor = new GPXAssignElevationWorker(GPXAssignElevationWorker.WorkMode.CHECK_DATA_FILES);
         gpxFile.acceptVisitor(visitor);
 
-        final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
+        final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         
         // calculate min / max lat & lon
         int latMin = Integer.MAX_VALUE, latMax = Integer.MIN_VALUE;

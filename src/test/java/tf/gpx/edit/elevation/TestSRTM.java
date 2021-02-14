@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -263,5 +264,33 @@ public class TestSRTM {
     
     private boolean isCloseEnough(final double val1, final double val2) {
         return (Math.abs(val1 - val2) < delta);
+    }
+    
+    @Test
+    public void testDownload() {
+        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+        
+        // file is there as SRTM3 as part of the test-data
+        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        
+        // download without overwrite shouldn't change anything
+        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName), testpath.toString(), false);
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        
+        // download with overwrite should change to SRTM1
+        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName + "." + SRTMDataStore.HGT_EXT), testpath.toString(), true);
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM1, srtmFile.length());
     }
 }

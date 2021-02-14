@@ -26,6 +26,7 @@
 package tf.gpx.edit.elevation;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,7 +49,7 @@ import org.controlsfx.control.CheckListView;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
+import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 
@@ -66,6 +67,8 @@ public class AssignElevation extends AbstractStage  {
     private ElevationProviderOptions.AssignMode myAssignMode;
 
     // UI elements used in various methods need to be class-wide
+    private final Button downloadBtn = new Button("Download Missing");
+    private final Button rescanBtn = new Button("Rescan");
     private final CheckListView<String> fileList = new CheckListView<>();
     private TextField srtmPathLbl;
     private VBox avgModeChoiceBox;
@@ -154,34 +157,42 @@ public class AssignElevation extends AbstractStage  {
         GridPane.setMargin(fileList, INSET_TOP);
         
         rowNum++;
-        // 3rd row: rescan button
-        // download from http://viewfinderpanoramas.org/dem3.html
-        final Button download = new Button("Download");
-        download.setTooltip(new Tooltip("Download from http://viewfinderpanoramas.org/dem3.html"));
-        download.setOnAction((ActionEvent event) -> {
-            // open links in the default browser
-            // https://stackoverflow.com/questions/36842025/javafx-htmleditor-hyperlinks/36844879#36844879
-            if (myHostServices != null) {
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
+        // 3rd row: rescanBtn button
+        downloadBtn.setTooltip(new Tooltip("Download from https://step.esa.int/auxdata/dem/SRTMGL1"));
+        downloadBtn.setOnAction((ActionEvent event) -> {
+//            // open links in the default browser
+//            // https://stackoverflow.com/questions/36842025/javafx-htmleditor-hyperlinks/36844879#36844879
+//            if (myHostServices != null) {
+//                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
+//            }
+            // TFE, 20210214: lets actually download the file!
+            final List<String> missingFiles = fileList.getItems().stream().filter((t) -> {
+                return fileList.getCheckModel().isChecked(t);
+            }).collect(Collectors.toList());
+            
+            for (String filename : missingFiles) {
+                System.out.println("Downloading file: " + filename);
+                SRTMDownloader.downloadSRTM1Files(Arrays.asList(filename), mySRTMDataPath, false);
             }
+
+            downloadBtn.setDisable(checkSRTMFiles());
         });
-        getGridPane().add(download, 0, rowNum, 1, 1);
-        GridPane.setMargin(download, INSET_TOP);
-        GridPane.setValignment(download, VPos.TOP);
+        getGridPane().add(downloadBtn, 0, rowNum, 1, 1);
+        GridPane.setMargin(downloadBtn, INSET_TOP);
+        GridPane.setValignment(downloadBtn, VPos.TOP);
 
         rowNum++;
-        // 4th row: rescan button
-        final Button rescan = new Button("Rescan");
-        rescan.setOnAction((ActionEvent event) -> {
+        // 4th row: rescanBtn button
+        rescanBtn.setOnAction((ActionEvent event) -> {
             mySRTMDataPath = srtmPathLbl.getText();
             myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
             myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
-            checkSRTMFiles();
+            downloadBtn.setDisable(checkSRTMFiles());
         });
-        getGridPane().add(rescan, 0, rowNum, 1, 1);
-        GridPane.setMargin(rescan, INSET_TOP);
-        GridPane.setValignment(rescan, VPos.TOP);
+        getGridPane().add(rescanBtn, 0, rowNum, 1, 1);
+        GridPane.setMargin(rescanBtn, INSET_TOP);
+        GridPane.setValignment(rescanBtn, VPos.TOP);
 
         rowNum++;
         // 5th row: srtm averging mode
@@ -196,7 +207,7 @@ public class AssignElevation extends AbstractStage  {
         
         rowNum++;
         // 6th row: height asigning mode
-        final Label hghtAsgnLbl = new Label("Assign SRTM height:");
+        final Label hghtAsgnLbl = new Label("Assign Elevation:");
         getGridPane().add(hghtAsgnLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(hghtAsgnLbl, INSET_TOP);
         GridPane.setValignment(hghtAsgnLbl, VPos.TOP);
@@ -207,7 +218,7 @@ public class AssignElevation extends AbstractStage  {
 
         rowNum++;
         // 7th row: assign height values
-        final Button assignButton = new Button("Assign SRTM height values");
+        final Button assignButton = new Button("Assign elevations");
         assignButton.setOnAction((ActionEvent event) -> {
             // only do something if all srtm files are available
             // TFE, 20190809: check against number of not-null entries in getCheckedItems()
@@ -217,12 +228,12 @@ public class AssignElevation extends AbstractStage  {
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
                 myAssignMode = EnumHelper.getInstance().selectedEnumToggleGroup(ElevationProviderOptions.AssignMode.class, asgnModeChoiceBox);
 
-                final GPXAssignSRTMHeightWorker visitor = 
-                        new GPXAssignSRTMHeightWorker(
+                final GPXAssignElevationWorker visitor = 
+                        new GPXAssignElevationWorker(
                                 new ElevationProviderOptions(myAssignMode),
                                 new SRTMDataOptions(myAverageMode, mySRTMDataPath),
                                 true,
-                                GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+                                GPXAssignElevationWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
                 GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
                 
                 // save preferences
@@ -232,7 +243,7 @@ public class AssignElevation extends AbstractStage  {
 
                 hasUpdated = true;
 
-                // done, lets getAsString out of here...
+                // done, lets get out of here...
                 close();
             }
         });
@@ -250,7 +261,7 @@ public class AssignElevation extends AbstractStage  {
         setCancelAccelerator(cancelBtn);
     }
     
-    public boolean assignSRTMHeight(final HostServices hostServices, final List<? extends GPXLineItem> gpxLineItems) {
+    public boolean assignElevation(final HostServices hostServices, final List<? extends GPXLineItem> gpxLineItems) {
         if (CollectionUtils.isEmpty(gpxLineItems)) {
             // nothing to do
             return false;
@@ -261,15 +272,25 @@ public class AssignElevation extends AbstractStage  {
         
         hasUpdated = false;
         
+        // in case SRTM_NONE is set, disable srtm related fields
+        final boolean disableSRTM = ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
+        downloadBtn.setDisable(disableSRTM);
+        rescanBtn.setDisable(disableSRTM);
+        fileList.setDisable(disableSRTM);
+        srtmPathLbl.setDisable(disableSRTM);
+        avgModeChoiceBox.setDisable(disableSRTM);
+        asgnModeChoiceBox.setDisable(disableSRTM);
         // first check if all data files are available
-        checkSRTMFiles();
+        if (!disableSRTM) {
+            downloadBtn.setDisable(checkSRTMFiles());
+        }
         
         showAndWait();
         
         return hasUpdated;
     }
     
-    public boolean assignSRTMHeightNoUI(final List<? extends GPXLineItem> gpxLineItems) {
+    public boolean assignElevationNoUI(final List<? extends GPXLineItem> gpxLineItems) {
         if (CollectionUtils.isEmpty(gpxLineItems)) {
             // nothing to do
             return false;
@@ -278,13 +299,14 @@ public class AssignElevation extends AbstractStage  {
         myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;
-        if (checkSRTMFiles()) {
-            final GPXAssignSRTMHeightWorker visitor = 
-                    new GPXAssignSRTMHeightWorker(
+        if (ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType()) ||
+                checkSRTMFiles()) {
+            final GPXAssignElevationWorker visitor = 
+                    new GPXAssignElevationWorker(
                             new ElevationProviderOptions(myAssignMode),
                             new SRTMDataOptions(myAverageMode, mySRTMDataPath),
                             true,
-                            GPXAssignSRTMHeightWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
+                            GPXAssignElevationWorker.WorkMode.ASSIGN_ELEVATION_VALUES);
             GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
 
             hasUpdated = true;
@@ -296,12 +318,12 @@ public class AssignElevation extends AbstractStage  {
     private boolean checkSRTMFiles() {
         final SRTMDataOptions srtmOptions = new SRTMDataOptions(myAverageMode, mySRTMDataPath);
         
-        final GPXAssignSRTMHeightWorker visitor = 
-                new GPXAssignSRTMHeightWorker(
+        final GPXAssignElevationWorker visitor = 
+                new GPXAssignElevationWorker(
                         new ElevationProviderOptions(myAssignMode),
                         srtmOptions,
                         false,
-                        GPXAssignSRTMHeightWorker.WorkMode.CHECK_DATA_FILES);
+                        GPXAssignElevationWorker.WorkMode.CHECK_DATA_FILES);
         GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
         
         // sorted list of files and mark missing ones
@@ -311,8 +333,8 @@ public class AssignElevation extends AbstractStage  {
         // and might be longer than the list of files added here --> check in assignButton.setOnAction fails...
         // known bug: https://github.com/controlsfx/controlsfx/issues/1098
 
-        final List<String> dataFiles = visitor.getRequiredDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
-        final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredDataFiles(), srtmOptions);
+        final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
+        final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredSRTMDataFiles(), srtmOptions);
         
         // creates various warnings on second usage!
         // Mar 31, 2018 8:49:31 PM javafx.scene.CssStyleHelper calculateValue

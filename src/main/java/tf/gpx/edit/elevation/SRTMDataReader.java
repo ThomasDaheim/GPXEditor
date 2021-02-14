@@ -44,9 +44,9 @@ public class SRTMDataReader implements ISRTMDataReader {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();
     
-    private final int DATA_SIZE = 2;
-    private final long DATA_SIZE_SRTM1 = SRTMDataType.SRTM1.getDataCount() * SRTMDataType.SRTM1.getDataCount() * DATA_SIZE;
-    private final long DATA_SIZE_SRTM3 = SRTMDataType.SRTM3.getDataCount() * SRTMDataType.SRTM3.getDataCount() * DATA_SIZE;
+    private final static int DATA_SIZE = 2;
+    protected final static long DATA_SIZE_SRTM1 = SRTMDataType.SRTM1.getDataCount() * SRTMDataType.SRTM1.getDataCount() * DATA_SIZE;
+    protected final static long DATA_SIZE_SRTM3 = SRTMDataType.SRTM3.getDataCount() * SRTMDataType.SRTM3.getDataCount() * DATA_SIZE;
 
     private SRTMDataReader() {
     }

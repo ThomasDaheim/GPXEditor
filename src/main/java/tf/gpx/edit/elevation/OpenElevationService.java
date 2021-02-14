@@ -49,6 +49,8 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
 /**
  * Use OpenElevationService to provide elevations.
  * 
+ * See https://openrouteservice.org/dev/#/api-docs/elevation
+ * 
  * @author thomas
  */
 public class OpenElevationService implements IElevationProvider {
