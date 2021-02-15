@@ -32,7 +32,7 @@ import javafx.util.Pair;
  * @author Thomas
  */
 class SRTMData {
-    public enum SRTMDataType{
+    public enum SRTMDataType {
         SRTM1(3601, 1),
         SRTM3(1201, 3),
         INVALID(1, 1);

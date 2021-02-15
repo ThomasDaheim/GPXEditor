@@ -116,8 +116,8 @@ import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
-import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.elevation.SRTMDataViewer;
+import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -659,8 +659,8 @@ public class GPXEditor implements Initializable {
             final HostServices myHostServices = (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices");
             if (myHostServices != null) {
                 // TFE, 20201020: show download link for SRTM1 as well
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM1);
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
+                myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM1);
+                myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM3);
             }
         });
 

@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -266,31 +265,99 @@ public class TestSRTM {
         return (Math.abs(val1 - val2) < delta);
     }
     
+//    @Test
+//    public void testDownloadSRTM1() {
+//        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+//        
+//        // file is there as SRTM3 as part of the test-data
+//        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+//        Assert.assertTrue(srtmFile.exists());
+//        Assert.assertTrue(srtmFile.isFile());
+//        Assert.assertTrue(srtmFile.canRead());
+//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+//        
+//        // download without overwrite shouldn't change anything
+//        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName), testpath.toString(), false);
+//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+//        Assert.assertTrue(srtmFile.exists());
+//        Assert.assertTrue(srtmFile.isFile());
+//        Assert.assertTrue(srtmFile.canRead());
+//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+//        
+//        // download with overwrite should change to SRTM1
+//        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName + "." + SRTMDataStore.HGT_EXT), testpath.toString(), true);
+//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+//        Assert.assertTrue(srtmFile.exists());
+//        Assert.assertTrue(srtmFile.isFile());
+//        Assert.assertTrue(srtmFile.canRead());
+//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM1, srtmFile.length());
+//
+//        // zip shouldn't have been stored
+//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT + "." + SRTMDownloader.ZIP_EXT).toFile();
+//        Assert.assertFalse(srtmFile.exists());
+//    }
+    
     @Test
-    public void testDownload() {
-        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+    public void testSRTM3Names() {
+        // names accoding to pattern
+        Assert.assertEquals("A31", SRTMDownloader.getSRTM3NameForCoordinates(0, 0));
+        Assert.assertEquals("L10", SRTMDownloader.getSRTM3NameForCoordinates(45, -121));
+        Assert.assertEquals("H30", SRTMDownloader.getSRTM3NameForCoordinates(30, -4));
+        Assert.assertEquals("E31", SRTMDownloader.getSRTM3NameForCoordinates(19, 5));
+        Assert.assertEquals("A43", SRTMDownloader.getSRTM3NameForCoordinates(0, 73));
+        Assert.assertEquals("U44", SRTMDownloader.getSRTM3NameForCoordinates(80, 80));
+        Assert.assertEquals("SA19", SRTMDownloader.getSRTM3NameForCoordinates(-1, -72));
+        Assert.assertEquals("SB20", SRTMDownloader.getSRTM3NameForCoordinates(-8, -61));
+        Assert.assertEquals("SE21", SRTMDownloader.getSRTM3NameForCoordinates(-20, -60));
         
-        // file is there as SRTM3 as part of the test-data
-        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-        Assert.assertTrue(srtmFile.exists());
-        Assert.assertTrue(srtmFile.isFile());
-        Assert.assertTrue(srtmFile.canRead());
-        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        // all around 0/0
+        Assert.assertEquals("A31", SRTMDownloader.getSRTM3NameForCoordinates(1, 1));
+        Assert.assertEquals("SA31", SRTMDownloader.getSRTM3NameForCoordinates(-1, 1));
+        Assert.assertEquals("A30", SRTMDownloader.getSRTM3NameForCoordinates(1, -1));
+        Assert.assertEquals("SA30", SRTMDownloader.getSRTM3NameForCoordinates(-1, -1));
         
-        // download without overwrite shouldn't change anything
-        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName), testpath.toString(), false);
-        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-        Assert.assertTrue(srtmFile.exists());
-        Assert.assertTrue(srtmFile.isFile());
-        Assert.assertTrue(srtmFile.canRead());
-        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        // and now for the non-standard ones...
+        // greenland
+        Assert.assertEquals("GL-North", SRTMDownloader.getSRTM3NameForCoordinates(81, -20));
+        Assert.assertEquals("GL-South", SRTMDownloader.getSRTM3NameForCoordinates(62, -48));
+        Assert.assertEquals("GL-East", SRTMDownloader.getSRTM3NameForCoordinates(70, -30));
+        Assert.assertEquals("GL-West", SRTMDownloader.getSRTM3NameForCoordinates(70, -50));
         
-        // download with overwrite should change to SRTM1
-        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName + "." + SRTMDataStore.HGT_EXT), testpath.toString(), true);
-        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-        Assert.assertTrue(srtmFile.exists());
-        Assert.assertTrue(srtmFile.isFile());
-        Assert.assertTrue(srtmFile.canRead());
-        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM1, srtmFile.length());
+        // antarctica
+        Assert.assertEquals("01-15", SRTMDownloader.getSRTM3NameForCoordinates(-80, -144));
+        Assert.assertEquals("16-30", SRTMDownloader.getSRTM3NameForCoordinates(-72, -64));
+        Assert.assertEquals("31-45", SRTMDownloader.getSRTM3NameForCoordinates(-72, 64));
+        Assert.assertEquals("46-60", SRTMDownloader.getSRTM3NameForCoordinates(-72, 152));
+        
+        // v2 files
+        Assert.assertEquals("Q37v2", SRTMDownloader.getSRTM3NameForCoordinates(67, 40));
+        
+        // SVALBARD files
+        Assert.assertEquals("SVALBARD", SRTMDownloader.getSRTM3NameForCoordinates(80, 25));
+        
+        // FJ files
+        Assert.assertEquals("FJ", SRTMDownloader.getSRTM3NameForCoordinates(80, 51));
+        
+        // FAR, SHL, JANMAYEN, BEAR, ISL
+        Assert.assertEquals("FAR", SRTMDownloader.getSRTM3NameForCoordinates(62, -7));
+        Assert.assertEquals("SHL", SRTMDownloader.getSRTM3NameForCoordinates(61, -1));
+        Assert.assertEquals("JANMAYEN", SRTMDownloader.getSRTM3NameForCoordinates(71, -7));
+        Assert.assertEquals("BEAR", SRTMDownloader.getSRTM3NameForCoordinates(75, 19));
+        Assert.assertEquals("ISL", SRTMDownloader.getSRTM3NameForCoordinates(65, -20));
+    }
+
+    @Test
+    public void testDownloadSRTM1() {
+        // single hgt from standard zip - no store zip
+
+        // single hgt from standard zip - store zip
+
+        // single hgt from stored zip - no download
+
+        // multiple hgts from standard zip - store zip
+
+        // single hgt from anarctica - store zip
+
+        // multiple hgt from anarctica - no download
     }
 }

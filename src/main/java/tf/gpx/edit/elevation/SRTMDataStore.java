@@ -48,11 +48,6 @@ public class SRTMDataStore {
 
     public final static String HGT_EXT = "hgt";
 
-    public final static String DOWNLOAD_LOCATION_SRTM1 = "https://step.esa.int/auxdata/dem/SRTMGL1";
-    public final static String DOWNLOAD_LOCATION_SRTM3 = "http://viewfinderpanoramas.org/dem3.html";
-    
-    public final static String SRTM1_EXTENSION = "SRTMGL1";
-    
     private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
 
     // this only makes sense with options
