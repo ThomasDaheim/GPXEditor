@@ -25,10 +25,7 @@
  */
 package tf.gpx.edit.elevation;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -36,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +41,11 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
  * Download SRTM files and unzip on the fly.
@@ -141,16 +141,32 @@ public class SRTMDownloader {
         }
     }
 
+    public enum SRTMDataFormat {
+        SRTM1,
+        SRTM3;
+    }
+
     private SRTMDownloader() {
         // Exists only to defeat instantiation.
     }
     
+    public static boolean downloadSRTMFiles(final List<String> dataNames, final String directory, final boolean overwrite) {
+        if (SRTMDataFormat.SRTM1.equals(GPXEditorPreferences.SRTM_DOWNLOAD_FORMAT.getAsType())) {
+            return downloadSRTM1Files(dataNames, directory, overwrite);
+        } else {
+            return downloadSRTM3Files(dataNames, directory, overwrite);
+        }
+    }
+
     public static boolean downloadSRTM3Files(final List<String> dataNames, final String directory, final boolean overwrite) {
         boolean result = true;
         
         // more difficult - SRTM3 data is stored in bulks in zip files AND its not always the zip you would expect...
         final Map<String, List<String>> zipFiles = new HashMap<>();
         for (String dataName : dataNames) {
+            // thats easy - each tile is stored in its own zip-file
+            dataName = dataName.replaceAll("." + SRTMDataStore.HGT_EXT, "");
+
             final String zipName = 
                     getSRTM3NameForCoordinates(SRTMDataStore.getInstance().getLatitudeForName(dataName), SRTMDataStore.getInstance().getLongitudeForName(dataName));
             
@@ -160,7 +176,7 @@ public class SRTMDownloader {
             } else {
                 fileNames = new ArrayList<>();
             }
-            fileNames.add(dataName);
+            fileNames.add(dataName + "." + SRTMDataStore.HGT_EXT);
             zipFiles.put(zipName, fileNames);
         }
         
@@ -174,7 +190,7 @@ public class SRTMDownloader {
             }
             System.out.println("Downloading: \"" + url + "\"");
 
-//            zipName = zipName && downloadFilesInto(url, zipFile.getValue(), new File(directory), zipFile.getKey(), false, overwrite);
+            result = result && downloadFilesInto(url, zipFile.getValue(), new File(directory), zipFile.getKey(), false, overwrite);
         }
         
         return result;
@@ -323,7 +339,7 @@ public class SRTMDownloader {
         
         for (String filename : filenames) {
             final File target = new File(directory.getPath() + '/' + filename);
-            if (target.isFile() && (!target.exists() || overwrite)) {
+            if (!target.exists() || overwrite) {
                 result.add(filename);
             }
         }
@@ -331,7 +347,13 @@ public class SRTMDownloader {
         return result;
     }
      
-    public static boolean downloadFilesInto(final String stringURL, final List<String> filenames, final File directory, final String filename, final boolean useSubdirectories, final boolean overwrite) {
+    public static boolean downloadFilesInto(
+            final String stringURL, 
+            final List<String> filenames, 
+            final File directory, 
+            final String filename, 
+            final boolean useSubdirectories, 
+            final boolean overwrite) {
         if (CollectionUtils.isEmpty(filenames)) {
             return true;
         }
@@ -345,17 +367,19 @@ public class SRTMDownloader {
         Path tempDir = null;
         try {
             File tempFile;
-            if (filename != null) {
+            if (filename == null) {
                 tempDir = Files.createTempDirectory("GPXEditor-SRTMDownloader");
                 tempFile = new File(tempDir.toFile(), "Temp" + "." + ZIP_EXT);
             } else {
                 // store file to given location
-                tempFile = new File(directory.getPath() + '/' + filename);
+                tempFile = new File(directory.getPath() + '/' + filename + "." + ZIP_EXT);
             }
 
             // only download if not already there
             if (!tempFile.exists() || !tempFile.isFile() || overwrite) {
                 FileUtils.copyURLToFile(new URL(stringURL), tempFile, 1000, 1000);
+            } else {
+                System.out.println("  Already downloaded: \"" + stringURL + "\"");
             }
 
             if (tempFile.exists() && tempFile.isFile()) {
@@ -382,15 +406,15 @@ public class SRTMDownloader {
         }
         
         try {
-            return unzipIntoDirectory(new FileInputStream(file), filenames, directory, useSubdirectories, overwrite);
-        } catch (FileNotFoundException ex) {
+            return unzipIntoDirectory(new ZipFile(file), filenames, directory, useSubdirectories, overwrite);
+        } catch (IOException ex) {
             Logger.getLogger(SRTMDownloader.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         return false;
     }
     
-    public static boolean unzipIntoDirectory(InputStream inputStream, final List<String> filenames, final File directory, final boolean useSubdirectories, final boolean overwrite) {
+    public static boolean unzipIntoDirectory(final ZipFile zipFile, final List<String> filenames, final File directory, final boolean useSubdirectories, final boolean overwrite) {
         if (CollectionUtils.isEmpty(filenames)) {
             return true;
         }
@@ -406,41 +430,63 @@ public class SRTMDownloader {
             return false;
         directory.mkdirs();
 
-        try (final BufferedInputStream bis = new BufferedInputStream(inputStream); final ZipInputStream zis = new ZipInputStream(bis);) {
-            for (ZipEntry entry = null; (entry = zis.getNextEntry()) != null;) {
+        try {
+            // http://tutorials.jenkov.com/java-zip/zipfile.html#getting-a-zip-entry
+            final Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while(entries.hasMoreElements()){
+                final ZipEntry entry = entries.nextElement();
+                // should we extract into flat folder?
+                if (entry.isDirectory() && !useSubdirectories) {
+                    continue;
+                }
+
+                // for files and no subdirectories we can ignore the path in the zipentry
+                String entryName;
+                if (!entry.isDirectory() && !useSubdirectories) {
+                    entryName = FilenameUtils.getName(entry.getName());
+                } else {
+                    entryName = entry.getName();
+                }
+                
                 // https://www.baeldung.com/java-compress-and-uncompress
-                final File target = newFile(directory, entry);
+                final File target = newFile(directory, entryName);
 
                 // should we extract into flat folder?
-                if (entry.isDirectory() && useSubdirectories) {
+                if (entry.isDirectory()) {
                     target.mkdirs();
                     continue;
                 }
 
-                if (workFilenames.contains(entry.getName())) {
+                // zipentries contain full path...
+                if (workFilenames.contains(FilenameUtils.getName(entry.getName()))) {
                     // found you!
-                    FileUtils.copyInputStreamToFile(zis, target);
+                    try(InputStream is = zipFile.getInputStream(entry);){
+                        FileUtils.copyInputStreamToFile(is, target);
+                    }
                     workFilenames.remove(entry.getName());
-                    break;
                 }
             }
-
-            inputStream.close();
         } catch (IOException ex) {
             Logger.getLogger(SRTMDownloader.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                zipFile.close();
+            } catch (IOException ex) {
+                Logger.getLogger(SRTMDownloader.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
         return workFilenames.isEmpty();
     }
     
-    public static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
+    public static File newFile(File destinationDir, String zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry);
 
         String destDirPath = destinationDir.getCanonicalPath();
         String destFilePath = destFile.getCanonicalPath();
 
         if (!destFilePath.startsWith(destDirPath + File.separator)) {
-            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+            throw new IOException("Entry is outside of the target dir: " + zipEntry);
         }
 
         return destFile;

@@ -170,7 +170,7 @@ public class AssignElevation extends AbstractStage  {
                 return fileList.getCheckModel().isChecked(t);
             }).collect(Collectors.toList());
             
-            SRTMDownloader.downloadSRTM1Files(missingFiles, mySRTMDataPath, false);
+            SRTMDownloader.downloadSRTMFiles(missingFiles, mySRTMDataPath, false);
 
             downloadBtn.setDisable(checkSRTMFiles());
         });

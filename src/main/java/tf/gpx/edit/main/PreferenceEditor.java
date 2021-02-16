@@ -66,6 +66,7 @@ import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
+import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -105,9 +106,11 @@ public class PreferenceEditor extends AbstractStage {
             EnumHelper.getInstance().createChoiceBox(ElevationProviderOptions.AssignMode.class, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
     private final ChoiceBox<ElevationProviderOptions.LookUpMode> lookupModeChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(ElevationProviderOptions.LookUpMode.class, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
-    private final TextField srtmPathText = new TextField();
     private final ChoiceBox<SRTMDataOptions.SRTMDataAverage> srtmAvrgChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(SRTMDataOptions.SRTMDataAverage.class, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
+    private final TextField srtmPathText = new TextField();
+    private final ChoiceBox<SRTMDownloader.SRTMDataFormat> srtmDownChoiceBox = 
+            EnumHelper.getInstance().createChoiceBox(SRTMDownloader.SRTMDataFormat.class, GPXEditorPreferences.SRTM_DOWNLOAD_FORMAT.getAsType());
     private final TextField breakText = new TextField();
     private final TextField radiusText = new TextField();
     private final TextField durationText = new TextField();
@@ -257,7 +260,6 @@ public class PreferenceEditor extends AbstractStage {
         getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
         GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
 
-
         // TFE, 20200508: also add SRTM settings to have all in one place (for export/import)
         rowNum++;
         // separator
@@ -300,6 +302,19 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(lookupModeChoiceBox, INSET_TOP);
 
         rowNum++;
+        // srtm average mode
+        t = new Tooltip("SRTM averaging mode");
+        final Label srtmAvrgLbl = new Label("SRTM data average:");
+        srtmAvrgLbl.setTooltip(t);
+        getGridPane().add(srtmAvrgLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(srtmAvrgLbl, VPos.TOP);
+        GridPane.setMargin(srtmAvrgLbl, INSET_TOP);
+
+        srtmAvrgChoiceBox.setTooltip(t);
+        getGridPane().add(srtmAvrgChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmAvrgChoiceBox, INSET_TOP);
+
+        rowNum++;
         // srtm file path
         t = new Tooltip("SRTM data file path");
         final Label srtmPathLbl = new Label("SRTM data path:");
@@ -315,17 +330,17 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(srtmPathText, INSET_TOP);
 
         rowNum++;
-        // srtm average mode
-        t = new Tooltip("SRTM averaging mode");
-        final Label srtmAvrgLbl = new Label("SRTM data average:");
-        srtmAvrgLbl.setTooltip(t);
-        getGridPane().add(srtmAvrgLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(srtmAvrgLbl, VPos.TOP);
-        GridPane.setMargin(srtmAvrgLbl, INSET_TOP);
+        // srtm download
+        t = new Tooltip("SRTM download format");
+        final Label srtmDownLbl = new Label("SRTM download format:");
+        srtmDownLbl.setTooltip(t);
+        getGridPane().add(srtmDownLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(srtmDownLbl, VPos.TOP);
+        GridPane.setMargin(srtmDownLbl, INSET_TOP);
 
-        srtmAvrgChoiceBox.setTooltip(t);
-        getGridPane().add(srtmAvrgChoiceBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(srtmAvrgChoiceBox, INSET_TOP);
+        srtmDownChoiceBox.setTooltip(t);
+        getGridPane().add(srtmDownChoiceBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmDownChoiceBox, INSET_TOP);
 
         rowNum++;
         // separator
@@ -766,6 +781,7 @@ public class PreferenceEditor extends AbstractStage {
         EnumHelper.getInstance().selectEnum(distAlgoChoiceBox, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
         EnumHelper.getInstance().selectEnum(reduceAlgoChoiceBox, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
         EnumHelper.getInstance().selectEnum(srtmAvrgChoiceBox, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
+        EnumHelper.getInstance().selectEnum(srtmDownChoiceBox, GPXEditorPreferences.SRTM_DOWNLOAD_FORMAT.getAsType());
         EnumHelper.getInstance().selectEnum(profileChoiceBox, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
         EnumHelper.getInstance().selectEnum(heatColorChoiceBox, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
         EnumHelper.getInstance().selectEnum(opacDistChoiceBox, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
@@ -802,8 +818,9 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(fixText.getText().trim()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
         GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
-        GPXEditorPreferences.SRTM_DATA_PATH.put(srtmPathText.getText().trim());
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
+        GPXEditorPreferences.SRTM_DATA_PATH.put(srtmPathText.getText().trim());
+        GPXEditorPreferences.SRTM_DOWNLOAD_FORMAT.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDownloader.SRTMDataFormat.class, srtmDownChoiceBox).name());
         GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(assignHeightChkBox.isSelected());
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
         GPXEditorPreferences.SHOW_WAYPOINT_NAMES.put(waypointNameChkBox.isSelected());

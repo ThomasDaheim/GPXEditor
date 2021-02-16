@@ -25,11 +25,15 @@
  */
 package tf.gpx.edit.elevation;
 
+import static com.github.stefanbirkner.systemlambda.SystemLambda.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -55,6 +59,7 @@ public class TestSRTM {
     private static double tileDist;
             
     private static Path testpath;
+    private static List<String> dataNames = new ArrayList<>();
 
     public TestSRTM() {
         mySRTMDataReader = ObjectsHelper.uncheckedCast(srtmOptions.getSRTMDataReader());
@@ -265,37 +270,37 @@ public class TestSRTM {
         return (Math.abs(val1 - val2) < delta);
     }
     
-//    @Test
-//    public void testDownloadSRTM1() {
-//        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
-//        
-//        // file is there as SRTM3 as part of the test-data
-//        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-//        Assert.assertTrue(srtmFile.exists());
-//        Assert.assertTrue(srtmFile.isFile());
-//        Assert.assertTrue(srtmFile.canRead());
-//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
-//        
-//        // download without overwrite shouldn't change anything
-//        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName), testpath.toString(), false);
-//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-//        Assert.assertTrue(srtmFile.exists());
-//        Assert.assertTrue(srtmFile.isFile());
-//        Assert.assertTrue(srtmFile.canRead());
-//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
-//        
-//        // download with overwrite should change to SRTM1
-//        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName + "." + SRTMDataStore.HGT_EXT), testpath.toString(), true);
-//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
-//        Assert.assertTrue(srtmFile.exists());
-//        Assert.assertTrue(srtmFile.isFile());
-//        Assert.assertTrue(srtmFile.canRead());
-//        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM1, srtmFile.length());
-//
-//        // zip shouldn't have been stored
-//        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT + "." + SRTMDownloader.ZIP_EXT).toFile();
-//        Assert.assertFalse(srtmFile.exists());
-//    }
+    @Test
+    public void testDownloadSRTM1() {
+        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+        
+        // file is there as SRTM3 as part of the test-data
+        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        
+        // download without overwrite shouldn't change anything
+        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName), testpath.toString(), false);
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+        
+        // download with overwrite should change to SRTM1
+        SRTMDownloader.downloadSRTM1Files(Arrays.asList(dataName + "." + SRTMDataStore.HGT_EXT), testpath.toString(), true);
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM1, srtmFile.length());
+
+        // zip shouldn't have been stored
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT + "." + SRTMDownloader.ZIP_EXT).toFile();
+        Assert.assertFalse(srtmFile.exists());
+    }
     
     @Test
     public void testSRTM3Names() {
@@ -347,17 +352,105 @@ public class TestSRTM {
     }
 
     @Test
-    public void testDownloadSRTM1() {
-        // single hgt from standard zip - no store zip
-
+    public void testDownloadSRTM3() throws Exception {
         // single hgt from standard zip - store zip
+        String dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -4);
+        dataNames.clear();
+        dataNames.add(dataName);
+        String resultOut = tapSystemOut(() -> {
+            SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
+          });
+        System.out.println(resultOut);
+        Assert.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/H30.zip\""));
+
+        File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+
+        srtmFile = Paths.get(testpath.toString(), "H30" + "." + SRTMDownloader.ZIP_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from stored zip - no download
+        dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -3);
+        dataNames.clear();
+        dataNames.add(dataName);
+        resultOut = tapSystemOut(() -> {
+            SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
+          });
+        System.out.println(resultOut);
+        Assert.assertTrue(resultOut.contains("Already downloaded:"));
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
 
         // multiple hgts from standard zip - store zip
+        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-5, -63);
+        dataNames.clear();
+        dataNames.addAll(Arrays.asList(
+                dataName, 
+                SRTMDataStore.getInstance().getNameForCoordinate(-5, -64), 
+                SRTMDataStore.getInstance().getNameForCoordinate(-5, -65)));
+        resultOut = tapSystemOut(() -> {
+            SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
+          });
+        System.out.println(resultOut);
+        Assert.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/SB20.zip\""));
+
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+
+        srtmFile = Paths.get(testpath.toString(), "SB20" + "." + SRTMDownloader.ZIP_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from anarctica - store zip
+        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-78, -154);
+        dataNames.clear();
+        dataNames.add(dataName);
+        resultOut = tapSystemOut(() -> {
+            SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
+          });
+        System.out.println(resultOut);
+        Assert.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/ANTDEM3/01-15.zip\""));
+
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
+
+        srtmFile = Paths.get(testpath.toString(), "01-15" + "." + SRTMDownloader.ZIP_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
 
         // multiple hgt from anarctica - no download
+        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-89, -107);
+        dataNames.clear();
+        dataNames.addAll(Arrays.asList(
+                dataName, 
+                SRTMDataStore.getInstance().getNameForCoordinate(-89, -108), 
+                SRTMDataStore.getInstance().getNameForCoordinate(-89, -109)));
+        resultOut = tapSystemOut(() -> {
+            SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
+          });
+        System.out.println(resultOut);
+        Assert.assertTrue(resultOut.contains("Already downloaded:"));
+
+        srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
+        Assert.assertTrue(srtmFile.exists());
+        Assert.assertTrue(srtmFile.isFile());
+        Assert.assertTrue(srtmFile.canRead());
+        Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
     }
 }
