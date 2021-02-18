@@ -443,7 +443,11 @@ public class SRTMDownloader {
                 // for files and no subdirectories we can ignore the path in the zipentry
                 String entryName;
                 if (!entry.isDirectory() && !useSubdirectories) {
-                    entryName = FilenameUtils.getName(entry.getName());
+                    // uppercase name with lowercase extension...
+                    entryName = 
+                            FilenameUtils.getBaseName(entry.getName()).toUpperCase() + 
+                            "." + 
+                            FilenameUtils.getExtension(entry.getName()).toLowerCase();
                 } else {
                     entryName = entry.getName();
                 }
@@ -458,9 +462,10 @@ public class SRTMDownloader {
                 }
 
                 // zipentries contain full path...
-                if (workFilenames.contains(FilenameUtils.getName(entry.getName()))) {
+                if (!entry.isDirectory()&& workFilenames.contains(entryName)) {
                     // found you!
                     try(InputStream is = zipFile.getInputStream(entry);){
+                        System.out.println("  Extracting: \"" + entryName + "\"");
                         FileUtils.copyInputStreamToFile(is, target);
                     }
                     workFilenames.remove(entry.getName());

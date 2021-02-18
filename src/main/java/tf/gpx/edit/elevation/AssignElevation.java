@@ -26,12 +26,12 @@
 package tf.gpx.edit.elevation;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -116,6 +116,7 @@ public class AssignElevation extends AbstractStage  {
         srtmPathLbl = new TextField(mySRTMDataPath);
         srtmPathLbl.setEditable(false);
         srtmPathLbl.setMinWidth(400);
+        
         final Button srtmPathBtn = new Button("...");
         // add action to the button - open a directory search dialogue...
         srtmPathBtn.setOnAction((ActionEvent event) -> {
@@ -139,7 +140,8 @@ public class AssignElevation extends AbstractStage  {
             }
         });
 
-        final HBox srtmPathBox = new HBox();
+        final HBox srtmPathBox = new HBox(2);
+        srtmPathBox.setAlignment(Pos.CENTER_LEFT);
         srtmPathBox.getChildren().addAll(srtmPathLbl, srtmPathBtn);
 
         getGridPane().add(srtmPathBox, 1, rowNum, 1, 1);
@@ -158,7 +160,7 @@ public class AssignElevation extends AbstractStage  {
         
         rowNum++;
         // 3rd row: rescanBtn button
-        downloadBtn.setTooltip(new Tooltip("Download from https://step.esa.int/auxdata/dem/SRTMGL1"));
+        downloadBtn.setTooltip(new Tooltip("Download from provider"));
         downloadBtn.setOnAction((ActionEvent event) -> {
 //            // open links in the default browser
 //            // https://stackoverflow.com/questions/36842025/javafx-htmleditor-hyperlinks/36844879#36844879
@@ -167,7 +169,7 @@ public class AssignElevation extends AbstractStage  {
 //            }
             // TFE, 20210214: lets actually download the file!
             final List<String> missingFiles = fileList.getItems().stream().filter((t) -> {
-                return fileList.getCheckModel().isChecked(t);
+                return !fileList.getCheckModel().isChecked(t);
             }).collect(Collectors.toList());
             
             SRTMDownloader.downloadSRTMFiles(missingFiles, mySRTMDataPath, false);

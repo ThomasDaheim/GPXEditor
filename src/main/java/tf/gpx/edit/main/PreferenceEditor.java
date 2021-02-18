@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -57,6 +58,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
@@ -154,6 +156,7 @@ public class PreferenceEditor extends AbstractStage {
 
         setTitle("Preferences");
         initModality(Modality.APPLICATION_MODAL); 
+        setResizable(true);
         getGridPane().getChildren().clear();
         setHeight(800.0);
         setWidth(1000.0);
@@ -323,11 +326,43 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(srtmPathLbl, VPos.TOP);
         GridPane.setMargin(srtmPathLbl, INSET_TOP);
         
+        // TFE, 20210217: add directory chooser :-)
+        srtmPathText.setEditable(false);
         srtmPathText.setPrefWidth(400);
         srtmPathText.setMaxWidth(400);
         srtmPathText.setTooltip(t);
-        getGridPane().add(srtmPathText, 1, rowNum, 1, 1);
-        GridPane.setMargin(srtmPathText, INSET_TOP);
+
+        t = new Tooltip("SRTM data file path");
+        final Button srtmPathBtn = new Button("...");
+        srtmPathBtn.setTooltip(t);
+        // add action to the button - open a directory search dialogue...
+        srtmPathBtn.setOnAction((ActionEvent event) -> {
+            // open directory chooser dialog - starting from current path, if any
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select SRTM data files directory");
+            if (!srtmPathText.getText().isEmpty()) {
+                final File ownFile = new File(srtmPathText.getText());
+                // TF, 20160820: directory might not exist anymore!
+                // in that case directoryChooser.showDialog throws an error and you can't change to an existing dir...
+                if (ownFile.exists() && ownFile.isDirectory() && ownFile.canRead()) {
+                    directoryChooser.setInitialDirectory(ownFile);
+                }
+            }
+            File selectedDirectory = directoryChooser.showDialog(srtmPathBtn.getScene().getWindow());
+
+            if(selectedDirectory == null){
+                //System.out.println("No Directory selected");
+            } else {
+                srtmPathText.setText(selectedDirectory.getAbsolutePath());
+            }
+        });
+
+        final HBox srtmPathBox = new HBox(2);
+        srtmPathBox.setAlignment(Pos.CENTER_LEFT);
+        srtmPathBox.getChildren().addAll(srtmPathText, srtmPathBtn);
+        
+        getGridPane().add(srtmPathBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(srtmPathBox, INSET_TOP);
 
         rowNum++;
         // srtm download
