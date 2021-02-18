@@ -113,7 +113,11 @@ import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.elevation.AssignElevation;
+import tf.gpx.edit.elevation.FindElevation;
+import tf.gpx.edit.elevation.SRTMDataViewer;
+import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferenceStore;
@@ -136,10 +140,6 @@ import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
-import tf.gpx.edit.srtm.AssignSRTMHeight;
-import tf.gpx.edit.srtm.FindSRTMHeight;
-import tf.gpx.edit.srtm.SRTMDataStore;
-import tf.gpx.edit.srtm.SRTMDataViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditGPXWaypoint;
@@ -236,11 +236,11 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem showSRTMDataMenu;
     @FXML
-    private Menu assignSRTMheightsMenu;
+    private Menu assignElevationMenu;
     @FXML
-    private MenuItem assignSRTMheightsTracksMenu;
+    private MenuItem assignElevationTracksMenu;
     @FXML
-    private MenuItem assignSRTMheightsFilesMenu;
+    private MenuItem assignElevationFilesMenu;
     @FXML
     private Menu recentFilesMenu;
     @FXML
@@ -364,7 +364,7 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem onlineHelpMenu;
     @FXML
-    private MenuItem heightForCoordinateMenu;
+    private MenuItem elevationForCoordinateMenu;
     @FXML
     private MenuItem findStationariesMenu;
     @FXML
@@ -421,7 +421,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.3", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.4", "https://github.com/ThomasDaheim/GPXEditor");
         
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
@@ -639,16 +639,16 @@ public class GPXEditor implements Initializable {
         //
         // SRTM
         //
-        assignSRTMheightsFilesMenu.setOnAction((ActionEvent event) -> {
+        assignElevationFilesMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event, true);
         });
-        assignSRTMheightsTracksMenu.setOnAction((ActionEvent event) -> {
+        assignElevationTracksMenu.setOnAction((ActionEvent event) -> {
             assignSRTMHeight(event, false);
         });
-        assignSRTMheightsMenu.disableProperty().bind(
+        assignElevationMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        heightForCoordinateMenu.setOnAction((ActionEvent event) -> {
+        elevationForCoordinateMenu.setOnAction((ActionEvent event) -> {
             heightForCoordinate(event);
         });
                 
@@ -659,8 +659,8 @@ public class GPXEditor implements Initializable {
             final HostServices myHostServices = (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices");
             if (myHostServices != null) {
                 // TFE, 20201020: show download link for SRTM1 as well
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM1);
-                myHostServices.showDocument(SRTMDataStore.DOWNLOAD_LOCATION_SRTM3);
+                myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM1);
+                myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM3);
             }
         });
 
@@ -2032,16 +2032,11 @@ public class GPXEditor implements Initializable {
     }
     
     public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        final List<GPXWaypoint> copiedWaypoints = new ArrayList<>(gpxWaypoints);
-        
-        if (EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints)) {
-            GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
-            // repaint everything until GPXTrackviewer.getInstance().updateGPXWaypoints is implemented...
-            showGPXWaypoints(getShownGPXMeasurables(), true, false);
+        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
+    }
 
-            // TFE, 20191205: select waypoints again
-            selectGPXWaypoints(copiedWaypoints, false, false);
-        }
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {
@@ -2055,7 +2050,7 @@ public class GPXEditor implements Initializable {
 
         // TODO: remove ugly hack to pass HostServices
         startAction();
-        final boolean result = AssignSRTMHeight.getInstance().assignSRTMHeight(
+        final boolean result = AssignElevation.getInstance().assignElevation(
                 (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"),
                 gpxLineItems);
         endAction(result);
@@ -2070,8 +2065,12 @@ public class GPXEditor implements Initializable {
     
     private void heightForCoordinate(final Event event) {
         // TODO: remove ugly hack to pass HostServices
-        FindSRTMHeight.getInstance().findSRTMHeight(
-            (HostServices) gpxFileList.getScene().getWindow().getProperties().get("hostServices"));
+        FindElevation.getInstance().findElevation(
+            ObjectsHelper.uncheckedCast(gpxFileList.getScene().getWindow().getProperties().get("hostServices")));
+    }
+    
+    public HostServices getHostServices() {
+        return ObjectsHelper.uncheckedCast(gpxFileList.getScene().getWindow().getProperties().get("hostServices"));
     }
 
     //

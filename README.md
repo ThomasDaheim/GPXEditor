@@ -23,6 +23,16 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.4
+
+* download SRTM data from with GPXEditor
+* support OpenElevationService as add. elevation provider besides local SRTM files
+* show waypoint names in map
+* google search (for coordinates or waypoint names) from within map
+* start / end symbol of tracks can be switched on/off in preferences
+* various performance improvements
+* various bugfix 
+
 ### Update v5.3
 
 * show gpx file if passed as parameter

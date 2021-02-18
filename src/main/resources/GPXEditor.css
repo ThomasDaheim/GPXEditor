@@ -98,7 +98,6 @@
 }
 
 .extension-popup {
-    -fx-font-weight: bold;
     -fx-font-size: 0.9em;
 }
 
@@ -193,7 +192,6 @@
     -fx-opacity: 0.1;
 }
 .chart-series-area-fill {
-    -fx-opacity: 0.8;
     -fx-cursor: crosshair;
 }
 .chart-series-area-line {    
@@ -202,8 +200,8 @@
     -fx-cursor: crosshair;
 }
 .chart-series-line {    
-    -fx-stroke: #666;
-    -fx-stroke-width: 0.8px;
+    -fx-stroke: #ccc !important;
+    -fx-stroke-width: 0.4px !important;
     -fx-effect: null;
 }
 

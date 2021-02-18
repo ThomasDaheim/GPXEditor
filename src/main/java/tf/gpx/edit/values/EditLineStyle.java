@@ -64,7 +64,7 @@ public class EditLineStyle extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(EditLineStyle.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(EditLineStyle.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene
         setTitle("Edit LineStyle Properties");

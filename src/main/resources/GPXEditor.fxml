@@ -108,15 +108,15 @@
                   </Menu>
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="SRTM">
+            <Menu mnemonicParsing="false" text="Elevation">
               <items>
-                  <Menu fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height">
+                  <Menu fx:id="assignElevationMenu" mnemonicParsing="false" text="Assign Elevation">
                     <items>
-                      <MenuItem fx:id="assignSRTMheightsTracksMenu" mnemonicParsing="false" text="Items" />
-                        <MenuItem fx:id="assignSRTMheightsFilesMenu" mnemonicParsing="false" text="Files of Items" />
+                      <MenuItem fx:id="assignElevationTracksMenu" mnemonicParsing="false" text="Items" />
+                        <MenuItem fx:id="assignElevationFilesMenu" mnemonicParsing="false" text="Files of Items" />
                     </items>
                   </Menu>
-                  <MenuItem fx:id="heightForCoordinateMenu" mnemonicParsing="false" text="Height for Coordinate" />
+                  <MenuItem fx:id="elevationForCoordinateMenu" mnemonicParsing="false" text="Elevation for Coordinate" />
                 <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
                   <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>

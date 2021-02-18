@@ -25,10 +25,10 @@
  */
 
 var apikey;
-var routingControl;
-var curRoute;
-var curLayer;
-var foundRoute;
+var routingControl = undefined;
+var curRoute = undefined;
+var curLayer = undefined;
+var foundRoute = undefined;
 
 function initRouting(key) {
     apikey = key;
@@ -36,11 +36,11 @@ function initRouting(key) {
 }
         
 function startRouting(layer, routingprofile) {
-//    jscallback.log("startRouting: " + layer + ", " + routingprofile);
+    //jscallback.log("startRouting: " + layer + ", " + routingprofile);
     var polyline = window[layer];
 
     if (polyline instanceof L.Polyline) {
-        if (routingControl instanceof L.Routing.Itinerary) {
+        if (typeof routingControl !== 'undefined') {
             // we're currently routing... STOP IT!
             stopRouting(true);
         }
@@ -103,7 +103,7 @@ function startRouting(layer, routingprofile) {
 function stopRouting(updateRoute) {
 //    jscallback.log("stopRouting: " + updateRoute);
     if (curRoute instanceof L.Polyline) {
-        if (routingControl instanceof L.Routing.Itinerary) {
+        if (typeof routingControl !== 'undefined') {
             myMap.removeControl(routingControl);
 
             if (updateRoute != false) {

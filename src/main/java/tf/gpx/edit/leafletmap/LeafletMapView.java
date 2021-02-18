@@ -222,8 +222,19 @@ public class LeafletMapView extends StackPane {
      * @param position map center position
      * @param zoomLevel zoom level (0 - 19 for OpenStreetMap)
      */
-    public void setView(final LatLong position, final int zoomLevel) {
-        final String cmdString = String.format(Locale.US, "myMap.setView([%f, %f], %d);", position.getLatitude(), position.getLongitude(), zoomLevel);
+    public void setView(final LatLongElev position, final int zoomLevel) {
+        setView(position.getLatitude(), position.getLongitude(), zoomLevel);
+    }
+
+    /**
+     * Sets the view of the map to the specified geographical center position and zoom level.
+     *
+     * @param latitude map latitude position
+     * @param longitude map longitude position
+     * @param zoomLevel zoom level (0 - 19 for OpenStreetMap)
+     */
+    public void setView(final double latitude, final double longitude, final int zoomLevel) {
+        final String cmdString = String.format(Locale.US, "myMap.setView([%f, %f], %d);", latitude, longitude, zoomLevel);
         execScript(cmdString);
     }
 
@@ -232,8 +243,18 @@ public class LeafletMapView extends StackPane {
      *
      * @param position map center position
      */
-    public void panTo(final LatLong position) {
-        final String cmdString = String.format(Locale.US, "myMap.panTo([%f, %f]);", position.getLatitude(), position.getLongitude());
+    public void panTo(final LatLongElev position) {
+        panTo(position.getLatitude(), position.getLongitude());
+    }
+
+    /**
+     * Pans the map to the specified geographical center position.
+     *
+     * @param latitude map latitude position
+     * @param longitude map longitude position
+     */
+    public void panTo(final double latitude, final double longitude) {
+        final String cmdString = String.format(Locale.US, "myMap.panTo([%f, %f]);", latitude, longitude);
         execScript(cmdString);
     }
 
@@ -256,7 +277,7 @@ public class LeafletMapView extends StackPane {
      * @param zIndexOffset zIndexOffset (higher number means on top)
      * @return variable name of the created marker
      */
-    public String addMarker(final LatLong position, final String title, final IMarker marker, final int zIndexOffset) {
+    public String addMarker(final LatLongElev position, final String title, final IMarker marker, final int zIndexOffset) {
         final String varName = String.format(Locale.US, "marker%d", varNameSuffix++);
 
         final String cmdString = 
@@ -274,10 +295,36 @@ public class LeafletMapView extends StackPane {
      * @param markerName variable name of the marker
      * @param position new marker position
      */
-    public void moveMarker(final String markerName, final LatLong position) {
+    public void moveMarker(final String markerName, final LatLongElev position) {
         final String cmdString = String.format(Locale.US, "%s.setLatLng([%f, %f]);", markerName, position.getLatitude(), position.getLongitude());
 //        System.out.println("moveMarker: " + cmdString);
         execScript(cmdString);
+    }
+
+    /**
+     * Updates the existing marker specified by the variable name to show the new icon at the new position.
+     *
+     * @param markerName variable name of the marker
+     * @param title marker title shown in tooltip (pass empty string when tooltip not needed)
+     * @param position new marker position
+     * @param marker new marker icon
+     */
+    public void updateMarker(final String markerName, final LatLongElev position, final String title, final IMarker marker) {
+        // TODO: optimize execScript() calls...
+        moveMarker(markerName, position);
+        
+        final StringBuilder mapCmd = new StringBuilder();
+
+        // title is the popup tooltip...
+        // https://gis.stackexchange.com/a/141557 - marker._popup.setContent('something else')
+        // TODO: doesn't change anything
+        mapCmd.append(String.format(Locale.US, "%s.setTooltipContent('%s');", markerName, title));
+        mapCmd.append(String.format(Locale.US, "%s.setPopupContent('%s');", markerName, title));
+        
+        mapCmd.append(String.format(Locale.US, "%s.setIcon(%s);", markerName, marker.getIconName()));
+
+//        System.out.println("updateMarker: " + mapCmd.toString());
+        execScript(mapCmd.toString());
     }
 
     /**
@@ -303,7 +350,7 @@ public class LeafletMapView extends StackPane {
      * @return variable name of the created track
      */
     public String addTrack(
-            final List<LatLong> positions, 
+            final List<LatLongElev> positions, 
             final String color, 
             final String weight, 
             final String opacity, 
@@ -330,7 +377,7 @@ public class LeafletMapView extends StackPane {
         return varName;
     }
     // convenience method using defaults for weight, ...
-    public String addTrack(final List<LatLong> positions, final String color, final boolean fitBounds) {
+    public String addTrack(final List<LatLongElev> positions, final String color, final boolean fitBounds) {
         return addTrack(positions, color, DEFAULT_TRACK_WEIGHT, DEFAULT_TRACK_OPACITY, DEFAULT_TRACK_LINECAP, fitBounds);
     }
 

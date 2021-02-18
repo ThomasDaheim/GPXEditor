@@ -41,16 +41,17 @@ import me.himanshusoni.gpxparser.modal.Waypoint;
 import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
-public class GPXWaypoint extends GPXLineItem {
+public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     // TFE, 20180214: waypoints can be in segments, routes and files
     private GPXLineItem myGPXParent;
     private Waypoint myWaypoint;
@@ -110,7 +111,7 @@ public class GPXWaypoint extends GPXLineItem {
         
         // set waypoint via cloner
         myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
-
+        
         // nothing else to clone, needs to be set by caller
         return ObjectsHelper.uncheckedCast(myClone);
     }
@@ -416,23 +417,30 @@ public class GPXWaypoint extends GPXLineItem {
     @Override
     public String getCombinedID() {
         // count of wayoint in parent + count of parent in parent-parent + ... til GPXFile
-        String result = "";
-        switch (getParent().getType()) {
+        StringBuilder result = new StringBuilder();
+        switch (myGPXParent.getType()) {
             case GPXFile:
-                result = GPXLineItemType.GPXFile.getShortDescription() + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXFile.getShortDescription())
+                        .append(getNumber());
                 break;
             case GPXRoute:
-                result = GPXLineItemType.GPXRoute.getShortDescription() + Integer.toString(getParent().getNumber()) +
-                        "." + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXRoute.getShortDescription())
+                        .append(myGPXParent.getNumber())
+                        .append(".")
+                        .append(getNumber());
                 break;
             case GPXTrackSegment:
-                result = GPXLineItemType.GPXTrack.getShortDescription() + Integer.toString(getParent().getParent().getNumber()) +
-                        "." + GPXLineItemType.GPXTrackSegment.getShortDescription() + Integer.toString(getParent().getNumber()) +
-                        "." + Integer.toString(getNumber());
+                result.append(GPXLineItemType.GPXTrack.getShortDescription())
+                        .append(myGPXParent.getParent().getNumber())
+                        .append(".")
+                        .append(GPXLineItemType.GPXTrackSegment.getShortDescription())
+                        .append(myGPXParent.getNumber())
+                        .append(".")
+                        .append(getNumber());
                 break;
             default:
         }
-        return result;
+        return result.toString();
     }
     
     public static Comparator<String> getCombinedIDComparator() {
@@ -703,7 +711,8 @@ public class GPXWaypoint extends GPXLineItem {
     }
     
     // used for setting from SRTM data
-    public double getElevation() {
+    @Override
+    public Double getElevation() {
         return myWaypoint.getElevation();
     }
     
@@ -712,11 +721,13 @@ public class GPXWaypoint extends GPXLineItem {
         setHasUnsavedChanges();
     }
     
-    public double getLatitude() {
+    @Override
+    public Double getLatitude() {
         return myWaypoint.getLatitude();
     }
 
-    public double getLongitude() {
+    @Override
+    public Double getLongitude() {
         return myWaypoint.getLongitude();
     }
 

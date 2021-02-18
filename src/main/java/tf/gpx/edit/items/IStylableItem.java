@@ -13,11 +13,11 @@ import me.himanshusoni.gpxparser.modal.Extension;
  * @author thomas
  */
 public interface IStylableItem {
-    public abstract LineStyle getLineStyle();
+    LineStyle getLineStyle();
 
     // get the actual content of me.himanshusoni.gpxparser.* type
-    public abstract Extension getExtension();
+    Extension getExtension();
     
     // callback for changes to LineStyle
-    public abstract void lineStyleHasChanged();
+    void lineStyleHasChanged();
 }

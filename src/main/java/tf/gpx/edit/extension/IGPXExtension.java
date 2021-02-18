@@ -10,12 +10,12 @@ package tf.gpx.edit.extension;
  * @author thomas
  */
 public interface IGPXExtension {
-    abstract public String getName();
-    abstract public String getNamespace();
-    abstract public String getSchemaDefinition();
-    abstract public String getSchemaLocation();
+    String getName();
+    String getNamespace();
+    String getSchemaDefinition();
+    String getSchemaLocation();
     
-    default public String nameWithNamespace(final IGPXExtension ext) {
+    default String nameWithNamespace(final IGPXExtension ext) {
         if (!ext.getNamespace().isEmpty()) {
             return ext.getNamespace() + ":" + getName();
         } else {

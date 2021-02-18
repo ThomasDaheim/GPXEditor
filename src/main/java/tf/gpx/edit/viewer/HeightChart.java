@@ -36,6 +36,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
@@ -77,6 +78,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private final ObservableList<Triple<GPXWaypoint, Number, Node>> selectedWaypoints;
     
     private boolean noLayout = false;
+    private boolean inShowData = false;
     
     private double minDistance;
     private double maxDistance;
@@ -112,6 +114,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         
         yAxis.setSide(Side.LEFT);
         yAxis.setLabel("Height [m]");
+        getYAxis().setAutoRanging(false);
         
         initialize();
         setCreateSymbols(false);
@@ -120,6 +123,10 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         selectedWaypoints.addListener((InvalidationListener)observable -> layoutPlotChildren());
         
         installMousePointer();
+        
+//        visibleProperty().addListener((ov, oldValue, newValue) -> {
+//            System.out.println("visible changed: " + newValue);
+//        });
     }
     
     private void installMousePointer() {
@@ -202,6 +209,11 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         // TFE. 20190819: support for marking waypoints with drag
         // setOnDragDetected not too usefull since it gets triggered only after a few setOnMouseDragged :-(
         setOnMouseDragged((e) -> {
+            // TFE, 20210107: check for shift modifier as well to avoid dragging when resizing of pane with DragResizer...
+            if (!e.isShiftDown()) {
+                return;
+            }
+
             if (!dragActive) {
                 // reset previous start / end points of dragging
                 dragStartDistance = Double.MAX_VALUE;
@@ -532,7 +544,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
 
     @Override
-    protected void layoutPlotChildren() {
+    public void layoutPlotChildren() {
 //        System.out.println("layoutPlotChildren: " + noLayout);
 //        System.out.println("Printing stack trace:");
 //        StackTraceElement[] elements = Thread.currentThread().getStackTrace();
@@ -602,5 +614,37 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     @Override
     public void updateLineStyle(final GPXLineItem lineItem) {
         // TODO: trigger redraw with new color
+    }
+
+    @Override
+    public boolean getInShowData() {
+        return inShowData;
+    }
+
+    @Override
+    public void setInShowData(final boolean value) {
+        inShowData = value;
+    }
+    
+    @Override
+    protected void updateLegend() {
+        if (inShowData) {
+            return;
+        }
+        super.updateLegend();
+    }
+    
+    @Override
+    protected void seriesChanged(ListChangeListener.Change<? extends Series> c) {
+        if (inShowData) {
+            return;
+        }
+        super.seriesChanged(c);
+    }
+    
+    @Override
+    public void doShowData() {
+        super.updateLegend();
+        super.seriesChanged(null);
     }
 }

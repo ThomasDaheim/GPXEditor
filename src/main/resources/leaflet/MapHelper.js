@@ -169,7 +169,7 @@ function addNameToLayer(layer, name) {
  * support for draggable markers including callback at dragend
  */
 function makeDraggable(layer, lat, lng, line) {
-//    jscallback.log('makeDraggable: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
+    //jscallback.log('makeDraggable: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
     var marker = window[layer];
     var markerLine = window[line];
     
@@ -422,6 +422,18 @@ function getTitleFromTags(point, data) {
     }
     
     return title;
+}
+
+/*
+ * TFE, 20210104: central init to avoid multiple execScript() calls
+ */
+function initCallback(layer, lat, lng, line) {
+    //jscallback.log('initCallback: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
+    addMouseOverToLayer(layer);
+    if (lat !== -1.0 && lng !== -1.0) {
+        addClickToLayer(layer, lat, lng);        
+        makeDraggable(layer, lat, lng, line);
+    }
 }
 
 /*

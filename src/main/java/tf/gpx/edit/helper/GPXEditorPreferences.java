@@ -28,11 +28,13 @@ package tf.gpx.edit.helper;
 import eu.hansolo.fx.heatmap.ColorMapping;
 import eu.hansolo.fx.heatmap.OpacityDistribution;
 import java.util.function.Function;
-import tf.gpx.edit.srtm.SRTMDataStore;
+import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.elevation.ElevationProviderOptions;
+import tf.gpx.edit.elevation.SRTMDataOptions;
+import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
 import tf.gpx.edit.viewer.TrackMap;
-import tf.gpx.edit.worker.GPXAssignSRTMHeightWorker;
 import tf.helper.general.ObjectsHelper;
 
 public enum GPXEditorPreferences  {
@@ -48,8 +50,11 @@ public enum GPXEditorPreferences  {
     FIX_EPSILON("fixDistance", Double.toString(1000), Double::valueOf),
     // TFE, 20200508: empty string is not a good default...
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String::valueOf),
-    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataStore.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataStore.SRTMDataAverage::valueOf),
-    HEIGHT_ASSIGN_MODE("heightAssignMode", GPXAssignSRTMHeightWorker.AssignMode.ALWAYS.name(), GPXAssignSRTMHeightWorker.AssignMode::valueOf),
+    SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataOptions.SRTMDataAverage::valueOf),
+    SRTM_DOWNLOAD_FORMAT("SRTMDownloadFormat", SRTMDownloader.SRTMDataFormat.SRTM3.name(), SRTMDownloader.SRTMDataFormat::valueOf),
+    HEIGHT_ASSIGN_MODE("heightAssignMode", ElevationProviderOptions.AssignMode.ALWAYS.name(), ElevationProviderOptions.AssignMode::valueOf),
+    // TFE, 20210107: we now can also use OpenElevationService :-)
+    HEIGHT_LOOKUP_MODE("heightLookUpMode", ElevationProviderOptions.LookUpMode.SRTM_FIRST.name(), ElevationProviderOptions.LookUpMode::valueOf),
     // TFE, 20200716: API keys are now stored as part of map layer information
     // OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
     ROUTING_API_KEY("routingApiKey", "", String::valueOf),
@@ -74,7 +79,13 @@ public enum GPXEditorPreferences  {
     // TFE, 20200401: preferences for heatmap
     HEATMAP_COLORMAPPING("heatMapColorMapping", ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED.name(), ColorMapping::valueOf),
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution::valueOf),
-    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf);
+    HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double::valueOf),
+    // TFE, 20201231: show/hide the star/end track symbols
+    SHOW_TRACK_SYMBOLS("showTrackSymbols", Boolean.toString(true), Boolean::valueOf),
+    // TFE, 20210117: search string for coordinates / names
+    SEARCH_URL("searchUrl", "https://www.google.com/search?q=%s", String::valueOf),
+    // TFE, 20210117: show/hide waypoint names
+    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean::valueOf);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

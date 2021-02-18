@@ -28,9 +28,10 @@ package tf.gpx.edit.viewer;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -49,7 +50,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.INearestNeighborSearcher;
+import tf.gpx.edit.algorithms.NearestNeighbor;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -67,9 +70,9 @@ import tf.helper.general.ObjectsHelper;
  * @param <T>
  */
 public interface IChartBasics<T extends XYChart<Number, Number>> extends IPreferencesHolder {
-    static String DATA_SEP = "-";
-    static String SHIFT_LABEL = "ShiftNode";
-    static String SHIFT_TEXT = "ShiftText";
+    final static String DATA_SEP = "-";
+    final static String SHIFT_LABEL = "ShiftNode";
+    final static String SHIFT_TEXT = "ShiftText";
     
     public static enum ChartType {
         HEIGHTCHART,
@@ -133,22 +136,28 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     }
     
     // what any decent Chart needs to implement
-    public abstract List<GPXMeasurable> getGPXMeasurables();
-    public void setGPXMeasurables(final List<GPXMeasurable> lineItems);
-    public abstract double getMinimumDistance();
-    public abstract void setMinimumDistance(final double value);
-    public abstract double getMaximumDistance();
-    public abstract void setMaximumDistance(final double value);
-    public abstract double getMinimumYValue();
-    public abstract void setMinimumYValue(final double value);
-    public abstract double getMaximumYValue();
-    public abstract void setMaximumYValue(final double value);
-    public abstract List<Pair<GPXWaypoint, Number>> getPoints();
-    public abstract ChartsPane getChartsPane();
-    public abstract void setChartsPane(final ChartsPane pane);
+    List<GPXMeasurable> getGPXMeasurables();
+    void setGPXMeasurables(final List<GPXMeasurable> lineItems);
+    double getMinimumDistance();
+    void setMinimumDistance(final double value);
+    double getMaximumDistance();
+    void setMaximumDistance(final double value);
+    double getMinimumYValue();
+    void setMinimumYValue(final double value);
+    double getMaximumYValue();
+    void setMaximumYValue(final double value);
+    List<Pair<GPXWaypoint, Number>> getPoints();
+    ChartsPane getChartsPane();
+    void setChartsPane(final ChartsPane pane);
     // only extensions of XYChart allowed
-    public abstract T getChart();
-    public abstract Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
+    T getChart();
+    Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
+    
+        // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
+    boolean getInShowData();
+    void setInShowData(final boolean value);
+    void doShowData();
+    void layoutPlotChildren();
     
     // as default I don't shown file waypoints
     default boolean fileWaypointsInChart() {
@@ -159,11 +168,11 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     default void initForNewGPXWaypoints() {
     }
     
-    public abstract void setCallback(final GPXEditor gpxEditor);
+    void setCallback(final GPXEditor gpxEditor);
     
     // optimization: set hasNonZeroData during setGPXWaypoints() since we iterate over all data there anyways...
-    public abstract boolean hasNonZeroData();
-    public abstract void setNonZeroData(final boolean value);
+    boolean hasNonZeroData();
+    void setNonZeroData(final boolean value);
     
     default void setEnable(final boolean enabled) {
         getChart().setDisable(!enabled);
@@ -243,6 +252,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             }
         }
         
+        // TODO: improve performance or make optional!
+        // - run as (parallel) tasks and re-paint series once its completed: https://docs.oracle.com/javafx/2/threads/jfxpub-threads.htm 
+        // - use better algorithm <- for some limit of trackpoints and waypoints
+        //   http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree, view-source:https://www.oc.nps.edu/oc2902w/coord/geodesy.js
+        //   https://gis.stackexchange.com/a/4857
+        //   https://github.com/jelmerk/hnswlib
         if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
             int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
             int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType();
@@ -250,57 +265,82 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType();
 
             // merge seriesList into one big series to iterate all in one loop
-            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
-            for (XYChart.Series<Number, Number> series : seriesList) {
-                flatSeries.getData().addAll(series.getData());
-            }
+//            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
+//            for (XYChart.Series<Number, Number> series : seriesList) {
+//                flatSeries.getData().addAll(series.getData());
+//            }
             
-            for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
-                // 1. check file waypoints against other waypoints for minimum distance
-                final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
-                
-                XYChart.Data<Number, Number> closest = null;
-                double mindistance = Double.MAX_VALUE;
-                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
-                    final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
-                    if (distance < mindistance) {
-                        closest = waypoint;
-                        mindistance = distance;
+            final List<GPXWaypoint> flatWaypoints = seriesList.stream().map((t) -> {
+                    return t.getData();
+                }
+            ).flatMap(Collection::stream).map((t) -> {
+                return ((GPXWaypoint) t.getExtraValue());
+            }).collect(Collectors.toList());
+            
+            // TFE, 20210124: could be empty waypoint list!
+            if (!flatWaypoints.isEmpty()) {
+                final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
+                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
+
+                for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
+                    // 1. check file waypoints against other waypoints for minimum distance
+                    final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
+
+    //                XYChart.Data<Number, Number> closest = null;
+    //                double mindistance = Double.MAX_VALUE;
+    //                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
+    //                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
+    //                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+    //                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+    //                            fileWaypoint.getWaypoint(), 
+    //                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
+    //                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+    //                    if (distance < mindistance) {
+    //                        closest = waypoint;
+    //                        mindistance = distance;
+    //                    }
+    //                }
+
+                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
+
+                    if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
+    //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
+
+                        final double xValue = getPoints().stream().filter((t) -> {
+                            return t.getLeft().equals(closest.getLeft());
+                        }).findFirst().get().getRight().doubleValue() / 1000.0;
+
+                        data.setXValue(xValue);
+
+                        // 2. add text & icon as label to node
+                        final Label text = new Label(fileWaypoint.getName());
+                        text.getStyleClass().add("item-id");
+                        text.setFont(Font.font("Verdana", waypointLabelSize));
+                        text.setRotate(360.0 - waypointLabelAngle);
+                        text.setBorder(Border.EMPTY);
+                        text.setBackground(Background.EMPTY);
+                        text.setPadding(Insets.EMPTY);
+                        text.setVisible(true);
+                        text.setMouseTransparent(true);
+                        // nodes are shown center-center aligned, hack needed to avoid that
+                        text.setUserData(SHIFT_LABEL);
+
+                        // add waypoint icon
+                        final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
+                        final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
+                        text.setGraphic(new ImageView(image));
+                        text.setGraphicTextGap(0);
+
+                        data.setNode(text);
                     }
+
+                    // add each file waypoint as own series - we don't want to have aera or lines drawn...
+                    final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                    series.getData().add(data);
+                    setSeriesUserData(series, fileWaypoint);
+
+                    seriesList.add(series);
                 }
-                
-                if (closest != null && (mindistance < waypointThreshold || waypointThreshold == 0)) {
-//                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
-                    data.setXValue(closest.getXValue());
-                
-                    // 2. add text & icon as label to node
-                    final Label text = new Label(fileWaypoint.getName());
-                    text.getStyleClass().add("item-id");
-                    text.setFont(Font.font("Verdana", waypointLabelSize));
-                    text.setRotate(360.0 - waypointLabelAngle);
-                    text.setBorder(Border.EMPTY);
-                    text.setBackground(Background.EMPTY);
-                    text.setPadding(Insets.EMPTY);
-                    text.setVisible(true);
-                    text.setMouseTransparent(true);
-                    // nodes are shown center-center aligned, hack needed to avoid that
-                    text.setUserData(SHIFT_LABEL);
-
-                    // add waypoint icon
-                    final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
-                    final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
-                    text.setGraphic(new ImageView(image));
-                    text.setGraphicTextGap(0);
-
-                    data.setNode(text);
-                }
-
-                // add each file waypoint as own series - we don't want to have aera or linees drawn...
-                final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                series.getData().add(data);
-                setSeriesUserData(series, fileWaypoint);
-
-                seriesList.add(series);
             }
         }
         
@@ -314,10 +354,15 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide chart if no waypoints have been set
-        getChart().setVisible(dataCount > 0);
+        // TFE, 20210108: don't switch on here in case there are data points
+        if (dataCount == 0) {
+            getChart().setVisible(false);
+        }
     }
     
     private void showData(final List<XYChart.Series<Number, Number>> seriesList, final int dataCount) {
+        setInShowData(true);
+        
         // TFE, 20180516: ignore fileWaypointsCount in count of waypoints to show. Otherwise no trackSegments getAsString shown if already enough waypoints...
         // file fileWaypointsCount don't count into MAX_WAYPOINTS
         //final long fileWaypointsCount = lineItem.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile).size();
@@ -330,7 +375,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         
         // TFE, 20191125: only show up to GPXEditorPreferenceStore.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
-        int count = 0, i = 0, j = 0;
+        int count = 0, i = 0;
         for (XYChart.Series<Number, Number> series : seriesList) {
             if (!series.getData().isEmpty()) {
                 final XYChart.Series<Number, Number> reducedSeries = new XYChart.Series<>();
@@ -352,19 +397,6 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                }
 
                 getChart().getData().add(reducedSeries); 
-                
-                if (!firstWaypoint.isGPXFile()) {
-                    // and now color the series nodes according to lineitem color
-                    // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(reducedSeries));
-                    reducedSeries.getNode().pseudoClassStateChanged(color, true);
-                    Set<Node> nodes = getChart().lookupAll(".series" + j);
-                    for (Node n : nodes) {
-                        n.pseudoClassStateChanged(color, true);
-                    }
-                }
-                
-                j++;
             }
         }
 
@@ -400,6 +432,32 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                         getChart().getData().add(idSeries); 
                     }
                 }
+            }
+        }
+
+        setInShowData(false);
+        doShowData();
+        getChartsPane().applyCss();
+        getChartsPane().requestLayout();
+
+        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
+        int j = 0;
+        for (XYChart.Series<Number, Number> series : getChart().getData()) {
+            if (!series.getData().isEmpty()) {
+                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
+                if (!firstWaypoint.isGPXFile() && series.getName() != null) {
+                    // and now color the series nodes according to lineitem color
+                    // https://gist.github.com/jewelsea/2129306
+                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
+                    series.getNode().pseudoClassStateChanged(color, true);
+                    // TFE, 20210104: doesn't seem to be required to color all nodes - and speeds things up a bit :-)
+//                    final Set<Node> nodes = getChart().lookupAll(".series" + j);
+//                    for (Node n : nodes) {
+//                        n.pseudoClassStateChanged(color, true);
+//                    }
+                }
+                
+                j++;
             }
         }
 
@@ -526,7 +584,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         return series.getName().split(DATA_SEP)[1];
     }
 
-    public abstract double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
+    double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
 
     default void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;
@@ -547,11 +605,13 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         ((NumberAxis) getChart().getXAxis()).setTickUnit(tickUnit);
 
         // TFE, 20181124: set lower limit as well since it might have changed in setViewLimits
+        getChart().getXAxis().setAutoRanging(false);
         ((NumberAxis) getChart().getXAxis()).setLowerBound(minDist / 1000.0);
         ((NumberAxis) getChart().getXAxis()).setUpperBound(maxDist / 1000.0);
 
 //        System.out.println("minHght: " + minHght + ", maxHght:" + maxHght);
         ((NumberAxis) getChart().getYAxis()).setTickUnit(10.0);
+        getChart().getYAxis().setAutoRanging(false);
         ((NumberAxis) getChart().getYAxis()).setLowerBound(minHght);
         ((NumberAxis) getChart().getYAxis()).setUpperBound(maxHght);
     }

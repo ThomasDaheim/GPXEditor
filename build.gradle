@@ -40,7 +40,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.3'
+version='5.4'
 
 repositories {
     mavenLocal() {
@@ -75,7 +75,7 @@ dependencies {
     compile "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.9'
+    compile 'tf.JavaHelper:JavaHelper:1.10'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
@@ -91,9 +91,10 @@ dependencies {
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
     compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
     compile 'de.jensd:fontawesomefx:8.9'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.9.9'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
-    compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '10.0-r1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
+    compile group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
+    compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '14-r1'
     compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
     compile 'uk.com.robust-it:cloning:1.9.12'
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
@@ -101,6 +102,8 @@ dependencies {
     compile group: 'org.jfxtras', name: 'jmetro', version: '11.6.14'
     
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    // TFE, 20210216: capture System.err() easily
+    testCompile group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
 }
 
 task unzip(type: Copy) {
@@ -207,6 +210,18 @@ jar {
             'App-URL'        : "https://github.com/ThomasDaheim/GPXEditor"
         )
     }
+}
+
+sourceSets {
+    main {
+        resources { 
+            // only use minified files
+            exclude { 
+                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.')) 
+            }
+            exclude ( '/**/firebug-lite.min.js' )
+        } 
+    }  
 }
 
 build.finalizedBy(install)

@@ -72,7 +72,7 @@ public class EditSplitValues extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(EditSplitValues.class.getResource("/GPXEditor.css").toExternalForm());
+        getScene().getStylesheets().add(EditSplitValues.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene
         setTitle("Edit Split Values");
