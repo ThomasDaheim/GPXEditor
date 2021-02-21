@@ -293,9 +293,18 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         final CompletableFuture<Worker.State> cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
-            isLoaded = true;
+            // TFE, 20210219: things could also go wrong here...
+            if (u != null) {
+                Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, u);
+            } else {
+                if (Worker.State.SUCCEEDED.equals(workerState)) {
+                    isLoaded = true;
 
-            initialize();
+                    initialize();
+                } else {
+                    Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, "Map initialization failed!");
+                }
+            }
         });
     }
     
