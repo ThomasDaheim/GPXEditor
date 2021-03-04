@@ -85,7 +85,7 @@ public class LeafletMapView extends StackPane {
         
         // TODO: load file somehow as https - otherwise navigator.geolocation isn't working
         // https://stackoverflow.com/a/23782959
-        // setup SSL cehck to accept everything
+        // setup SSL check to accept everything
 //        final TrustManager[] trustAllCerts = new TrustManager[] {  
 //            new X509TrustManager() {  
 //              @Override

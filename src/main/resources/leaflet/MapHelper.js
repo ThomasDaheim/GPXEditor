@@ -24,7 +24,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-//jscallback.log('addClickToLayer: ' + layer + ", " + marker);
+// wrap around world borders
+// https://stackoverflow.com/a/28323349
+myMap.options.worldCopyJump = true;
+myMap.options.zoomAnimation = false;
+myMap.options.preferCanvas = true;
+myMap.options.renderer = L.canvas();
 
 /*
  * Support for selecting with cntrl + mouse
@@ -33,13 +38,6 @@
  * function to retrieve bounds of the currently shown map to scale javafx rect to lat/lon
  * 
  */
-
-// wrap around world borders
-// https://stackoverflow.com/a/28323349
-myMap.options.worldCopyJump = true;
-myMap.options.zoomAnimation = false;
-myMap.options.preferCanvas = true;
-myMap.options.renderer = L.canvas();
 
 // disable drag & zoom for events with control key
 function disableCntrlDrag(e) {

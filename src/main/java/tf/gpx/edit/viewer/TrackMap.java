@@ -435,7 +435,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
 //            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
 //            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
-            
+
             myMapPane = (Pane) getParent();
             
             // TFE, 20200317: add heat map
