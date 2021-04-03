@@ -70,7 +70,6 @@ import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.leafletmap.MapLayerTable;
@@ -799,7 +798,7 @@ public class PreferenceEditor extends AbstractStage {
         
         final Button clearBtn = new Button("Clear");
         clearBtn.setOnAction((ActionEvent arg0) -> {
-            GPXEditorPreferenceStore.getInstance().clear();
+            GPXEditorPreferences.INSTANCE.clear();
         });
         buttonBox.getChildren().add(clearBtn);
         HBox.setMargin(clearBtn, INSET_SMALL);
@@ -864,7 +863,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
-        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
+        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
@@ -928,7 +927,7 @@ public class PreferenceEditor extends AbstractStage {
         
         // TFE, 20200626: use methods from PreferenceStore
         try (final BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(fileName))) {
-            GPXEditorPreferenceStore.getInstance().exportSubtree(os);
+            GPXEditorPreferences.INSTANCE.exportPreferences(os);
         } catch (IOException ex) {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -946,7 +945,7 @@ public class PreferenceEditor extends AbstractStage {
 
         // TFE, 20200626: use methods from PreferenceStore
         try (final BufferedInputStream is = new BufferedInputStream(new FileInputStream(fileName))) {
-            GPXEditorPreferenceStore.getInstance().importPreferences(is);
+            GPXEditorPreferences.INSTANCE.importPreferences(is);
         } catch (IOException ex) {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.general.IPreferencesHolder;
@@ -59,7 +58,7 @@ public class MapLayerUsage implements IPreferencesHolder {
     // struct to hold the info per layer (both baselayer and overlays)
     private class LayerConfig {
         private static final String DEFAULT_PREF_STRING = 
-                GPXEditorPreferenceStore.PREF_STRING_PREFIX + "0" + GPXEditorPreferenceStore.PREF_STRING_SEP + "true" + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+                GPXEditorPreferences.PREF_STRING_PREFIX + "0" + GPXEditorPreferences.PREF_STRING_SEP + "true" + GPXEditorPreferences.PREF_STRING_SUFFIX;
         
         private final MapLayer myLayer;
         public int index;
@@ -72,7 +71,7 @@ public class MapLayerUsage implements IPreferencesHolder {
         }
         
         public String toPreferenceString() {
-            return GPXEditorPreferenceStore.PREF_STRING_PREFIX + index + GPXEditorPreferenceStore.PREF_STRING_SEP + isEnabled + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+            return GPXEditorPreferences.PREF_STRING_PREFIX + index + GPXEditorPreferences.PREF_STRING_SEP + isEnabled + GPXEditorPreferences.PREF_STRING_SUFFIX;
         }
         
         public void fromPreferenceString(final String prefString) {
@@ -86,19 +85,19 @@ public class MapLayerUsage implements IPreferencesHolder {
             if (temp.length() < DEFAULT_PREF_STRING.length()) {
                 temp = DEFAULT_PREF_STRING;
             }
-            if (!temp.startsWith(GPXEditorPreferenceStore.PREF_STRING_PREFIX)) {
+            if (!temp.startsWith(GPXEditorPreferences.PREF_STRING_PREFIX)) {
                 temp = DEFAULT_PREF_STRING;
             }
-            if (!temp.endsWith(GPXEditorPreferenceStore.PREF_STRING_SUFFIX)) {
+            if (!temp.endsWith(GPXEditorPreferences.PREF_STRING_SUFFIX)) {
                 temp = DEFAULT_PREF_STRING;
             }
             // no two elements in preference string
-            if (temp.split(GPXEditorPreferenceStore.PREF_STRING_SEP).length < 2) {
+            if (temp.split(GPXEditorPreferences.PREF_STRING_SEP).length < 2) {
                 temp = DEFAULT_PREF_STRING;
             }
             
-            String [] prefs = temp.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
-                    strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
+            String [] prefs = temp.substring(GPXEditorPreferences.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferences.PREF_STRING_SUFFIX.length()).
+                    strip().split(GPXEditorPreferences.PREF_STRING_SEP);
             
             index = Integer.valueOf(prefs[0]);
             isEnabled = Boolean.valueOf(prefs[1]);
@@ -340,23 +339,23 @@ public class MapLayerUsage implements IPreferencesHolder {
     private String toPreferenceString(final List<MapLayer> layers) {
         final String result = layers.stream().map((t) -> {
             return t.getKey();
-        }).collect( Collectors.joining(GPXEditorPreferenceStore.PREF_STRING_SEP) );
-        return GPXEditorPreferenceStore.PREF_STRING_PREFIX + result + GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+        }).collect( Collectors.joining(GPXEditorPreferences.PREF_STRING_SEP) );
+        return GPXEditorPreferences.PREF_STRING_PREFIX + result + GPXEditorPreferences.PREF_STRING_SUFFIX;
     }
     
     private List<MapLayer> fromPreferenceString(final MapLayer.LayerType layerType, final String prefString) {
         final List<MapLayer> result = new ArrayList<>();
         
         String temp = prefString;
-        if (!temp.startsWith(GPXEditorPreferenceStore.PREF_STRING_PREFIX)) {
+        if (!temp.startsWith(GPXEditorPreferences.PREF_STRING_PREFIX)) {
             return result;
         }
-        if (!temp.endsWith(GPXEditorPreferenceStore.PREF_STRING_SUFFIX)) {
+        if (!temp.endsWith(GPXEditorPreferences.PREF_STRING_SUFFIX)) {
             return result;
         }
 
-        String[] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
-                strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
+        String[] prefs = prefString.substring(GPXEditorPreferences.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferences.PREF_STRING_SUFFIX.length()).
+                strip().split(GPXEditorPreferences.PREF_STRING_SEP);
         
         for (String pref : prefs) {
             if (!pref.isEmpty() && !pref.isBlank()) {
@@ -402,7 +401,7 @@ public class MapLayerUsage implements IPreferencesHolder {
         
         for (MapLayer overlay : overlayList) {
             // properties per overlay
-             overlay.fromPreferenceString(GPXEditorPreferenceStore.getInstance().get(prefKeyMaplayer(overlay), ""));
+             overlay.fromPreferenceString(GPXEditorPreferences.INSTANCE.get(prefKeyMaplayer(overlay), ""));
              myLayerConfig.get(overlay).fromPreferenceString(store.get(prefKeyOverlay(overlay), LayerConfig.DEFAULT_PREF_STRING));
         }
     }
@@ -452,18 +451,18 @@ public class MapLayerUsage implements IPreferencesHolder {
         // 2a. if baselayer: enabled/disabled overlays
         // 2b. if overlay: enabled/disabled for each baselayer
         if (MapLayer.LayerType.BASELAYER.equals(layer.getLayerType())) {
-            GPXEditorPreferenceStore.getInstance().remove(prefKeyMaplayer(layer));
-            GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayer(layer));
+            GPXEditorPreferences.INSTANCE.remove(prefKeyMaplayer(layer));
+            GPXEditorPreferences.INSTANCE.remove(prefKeyBaselayer(layer));
             
             for (MapLayer overlay : getKnownOverlays()) {
-                GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayerOverlay(layer, overlay));
+                GPXEditorPreferences.INSTANCE.remove(prefKeyBaselayerOverlay(layer, overlay));
             }
         } else {
-            GPXEditorPreferenceStore.getInstance().remove(prefKeyMaplayer(layer));
-            GPXEditorPreferenceStore.getInstance().remove(prefKeyOverlay(layer));
+            GPXEditorPreferences.INSTANCE.remove(prefKeyMaplayer(layer));
+            GPXEditorPreferences.INSTANCE.remove(prefKeyOverlay(layer));
             
             for (MapLayer base : getKnownBaselayer()) {
-                GPXEditorPreferenceStore.getInstance().remove(prefKeyBaselayerOverlay(base, layer));
+                GPXEditorPreferences.INSTANCE.remove(prefKeyBaselayerOverlay(base, layer));
             }
         }
     }
@@ -471,26 +470,26 @@ public class MapLayerUsage implements IPreferencesHolder {
     // helper to create key for pref store
     private static String prefKeyMaplayer(final MapLayer layer) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.MAPLAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + layer.getKey().replaceAll("\\s+", "");
+        return GPXEditorPreferences.MAPLAYER_PREFIX + GPXEditorPreferences.SEPARATOR + layer.getKey().replaceAll("\\s+", "");
     }
     private static String prefKeyAdditionalMaplayer(final MapLayer.LayerType layerType) {
         // no spaces in preference names, please
         if (MapLayer.LayerType.BASELAYER.equals(layerType)) {
-            return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + GPXEditorPreferenceStore.ADDITIONAL_MAPLAY_PREFIX;
+            return GPXEditorPreferences.BASELAYER_PREFIX + GPXEditorPreferences.SEPARATOR + GPXEditorPreferences.ADDITIONAL_MAPLAY_PREFIX;
         } else {
-            return GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + GPXEditorPreferenceStore.ADDITIONAL_MAPLAY_PREFIX;
+            return GPXEditorPreferences.OVERLAY_PREFIX + GPXEditorPreferences.SEPARATOR + GPXEditorPreferences.ADDITIONAL_MAPLAY_PREFIX;
         }
     }
     private static String prefKeyBaselayer(final MapLayer baselayer) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.BASELAYER_PREFIX + GPXEditorPreferenceStore.SEPARATOR + baselayer.getKey().replaceAll("\\s+", "");
+        return GPXEditorPreferences.BASELAYER_PREFIX + GPXEditorPreferences.SEPARATOR + baselayer.getKey().replaceAll("\\s+", "");
     }
     private static String prefKeyOverlay(final MapLayer overlay) {
         // no spaces in preference names, please
-        return GPXEditorPreferenceStore.OVERLAY_PREFIX + GPXEditorPreferenceStore.SEPARATOR + overlay.getKey().replaceAll("\\s+", "");
+        return GPXEditorPreferences.OVERLAY_PREFIX + GPXEditorPreferences.SEPARATOR + overlay.getKey().replaceAll("\\s+", "");
     }
     private static String prefKeyBaselayerOverlay(final MapLayer baselayer, final MapLayer overlay) {
         // no spaces in preference names, please
-        return prefKeyBaselayer(baselayer) + GPXEditorPreferenceStore.SEPARATOR + prefKeyOverlay(overlay);
+        return prefKeyBaselayer(baselayer) + GPXEditorPreferences.SEPARATOR + prefKeyOverlay(overlay);
     }
 }
