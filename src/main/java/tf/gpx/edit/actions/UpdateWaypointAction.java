@@ -194,6 +194,8 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         myWaypoints.stream().forEach((t) -> {
             if (t.getDate() != null) {
                 t.getDate().setTime(t.getDate().getTime() + diffInMillies);
+                // TFE, 20210606: getDate().setTime) doesn't call setHasUnsavedChanges() behind the scenes
+                t.setHasUnsavedChanges();
             }
         });
     }
