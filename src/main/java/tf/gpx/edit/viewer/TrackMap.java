@@ -525,12 +525,13 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // now we can set the search icon to use
             execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
             
+            // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
+            isInitialized = true;
+
             // TFE, 20200713: now we can enable the overlays per baselayer
             setOverlaysForBaselayer();
             // set current layer
             setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-                    
-            isInitialized = true;
             
             // TFE, 20190901: load preferences - now things are up & running
             myGPXEditor.initializeAfterMapLoaded();

@@ -205,6 +205,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         if (myTaskText.getValue().isEmpty()) {
             myLabel.setText(text);
         }
+        requestLayout();
     }
     
     // to be used as parameter for TaskExecutor.executeTask
@@ -215,6 +216,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         
         myTaskText.setValue(text);
         myLabel.setText(text);
+        requestLayout();
     }
     
     public void clearTaskText() {
@@ -224,6 +226,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         
         setTaskText("");
         myLabel.setText(myStatusText.getValue());
+        requestLayout();
     }
     
     public void setTaskProgress(final double value) {
@@ -232,6 +235,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         }
         
         myTaskProgress.setProgress(value);
+        requestLayout();
     }
 
     // to be used as parameter for TaskExecutor.executeTask
@@ -248,7 +252,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
             return;
         }
         
-        myTaskProgress.setProgress(0.0);
+        setTaskProgress(0.0);
     }
     
     public void setCntrlPressedProvider(final BooleanProperty cntrlPressed) {
@@ -360,7 +364,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                 }
 
                 // label will be filled in getFinalizeTaskConsumer - so we can avoid "Platform.runlater" here
-                myStatusText.setValue(String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed));
+                setStatusText(String.format(FORMAT_WAYPOINTS_STRING, gpxWaypoints.size(), directDist, trackDist, directDuration, trackDuration, directSpeed, trackSpeed));
 
                 break;
         }
