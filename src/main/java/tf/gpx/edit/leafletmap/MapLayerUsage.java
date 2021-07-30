@@ -96,7 +96,7 @@ public class MapLayerUsage implements IPreferencesHolder {
                 temp = DEFAULT_PREF_STRING;
             }
             
-            String [] prefs = temp.substring(GPXEditorPreferences.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferences.PREF_STRING_SUFFIX.length()).
+            final String [] prefs = temp.substring(GPXEditorPreferences.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferences.PREF_STRING_SUFFIX.length()).
                     strip().split(GPXEditorPreferences.PREF_STRING_SEP);
             
             index = Integer.valueOf(prefs[0]);

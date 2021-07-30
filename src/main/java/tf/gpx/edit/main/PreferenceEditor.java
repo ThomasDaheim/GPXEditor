@@ -836,10 +836,10 @@ public class PreferenceEditor extends AbstractStage {
         searchUrlText.setText(GPXEditorPreferences.SEARCH_URL.getAsType());
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
-        wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
-        wayLblAngleText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
+        wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType()));
+        wayLblAngleText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType()));
         wayIcnSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
-        wayThshldText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
+        wayThshldText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType()));
         eventText.setText(decimalFormat.format(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
         breakText.setText(decimalFormat.format(GPXEditorPreferences.BREAK_DURATION.getAsType()));
     }
