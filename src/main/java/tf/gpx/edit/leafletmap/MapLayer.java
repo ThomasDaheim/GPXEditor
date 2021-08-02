@@ -444,7 +444,7 @@ public class MapLayer {
                     "https://ecn.t{s}.tiles.virtualearth.net/tiles/r{q}?g=864&mkt=en-gb&lbl=l1&stl=h&shading=hill&n=z", 
                     "", 
                     3, 
-                    19, 
+                    20, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
                     TileLayerClass.QUADKEY);
@@ -456,7 +456,7 @@ public class MapLayer {
                     "https://ecn.t{s}.tiles.virtualearth.net/tiles/a{q}?g=737&n=z", 
                     "", 
                     3, 
-                    19, 
+                    20, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
                     TileLayerClass.QUADKEY);

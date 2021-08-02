@@ -81,7 +81,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     private static final String SEPERATOR = "|";
     
     private static final String FORMAT_WAYPOINT_STRING = "Waypoint: %s";
-    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: overall: %s, cumul.: %s, Duration: overall: %s, cumul.: %s, Speed [km/h]: overall: %s, cumul.: %s";
+    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: start-end: %s, cumul.: %s, Duration: overall: %s, cumul.: %s, Speed [km/h]: overall: %s, cumul.: %s";
     private static final String CNTRL_TEXT = "CNTRL";
     private static final String CLIPBOARD_TEXT = "CLPB: ";
     private static final String WAYPOINT_TEXT = "WPTS";
