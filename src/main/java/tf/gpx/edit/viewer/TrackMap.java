@@ -1482,13 +1482,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
         }
         
+        gpxRoute.setGPXWaypoints(newGPXWaypoints);
+        
+        // TFE, update only after setting new waypoints...
         if (GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType()) {
             // assign height
             AssignElevation.getInstance().assignElevationNoUI(Arrays.asList(gpxRoute));
         }
 
-        gpxRoute.setGPXWaypoints(newGPXWaypoints);
-        
         if (!newGPXWaypoints.isEmpty()) {
             // add new start / end markers
             GPXWaypoint gpxWaypoint = newGPXWaypoints.get(0);
@@ -1613,29 +1614,31 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             markerIcon.setAvailableInLeaflet(true);
         }
         
+        // TFE, 20210801: allow dragging of circlemarkers (= selected waypoints)
         String layer;
         // TFE, 20191125: use CircleMarker for MarkerManager.SpecialMarker.TrackPointIcon
         if (MarkerType.CIRCLEMARKER.equals(markerType)) {
             layer = addCircleMarker(point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker, zIndex);
         } else {
             layer = addMarker(point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker, zIndex);
+        }
         
-            // TFE, 20210104: performance - combind all args into only one call to execScript()
-            double latParm = -1.0;
-            double lngParm = -1.0;
-            String lineParm = "";
-            if (interactive) {
-                latParm = point.getLatitude();
-                lngParm = point.getLongitude();
-                
-                // TFE, 20190905: pass line marker name as well - if any
-                final GPXLineItem parent = gpxWaypoint.getParent();
-                if (parent.isGPXTrackSegment()) {
-                    lineParm = trackSegments.getKey(parent);
-                }
+        // TFE, 20210104: performance - combind all args into only one call to execScript()
+        double latParm = -1.0;
+        double lngParm = -1.0;
+        String lineParm = "";
+        if (interactive) {
+            latParm = point.getLatitude();
+            lngParm = point.getLongitude();
+
+            // TFE, 20190905: pass line marker name as well - if any
+            final GPXLineItem parent = gpxWaypoint.getParent();
+            if (parent.isGPXTrackSegment()) {
+                lineParm = trackSegments.getKey(parent);
             }
-            execScript("initCallback(\"" + layer + "\", " + latParm + ", " + lngParm + ", \"" + lineParm + "\");");
-            
+        }
+        execScript("initCallback(\"" + layer + "\", " + latParm + ", " + lngParm + ", \"" + lineParm + "\");");
+
 //            execScript("addMouseOverToLayer(\"" + layer + "\");");
 //            if (interactive) {
 //                execScript("addClickToLayer(\"" + layer + "\", " + point.getLatitude() + ", " + point.getLongitude() + ");");
@@ -1649,20 +1652,19 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //                }
 //            }
 
-            if (((boolean) GPXEditorPreferences.SHOW_WAYPOINT_NAMES.getAsType()) && 
-                    gpxWaypoint.getName() != null && !gpxWaypoint.getName().isEmpty()) {
-                // add name as permanent tooltip
-                // https://leafletjs.com/reference-1.0.3.html#layer-bindtooltip
-                final String cmdString = 
-                        String.format(Locale.US, "%s.bindTooltip('%s', {permanent: true, direction: 'right', className: 'waypoint-name'});", 
-                                layer, StringEscapeUtils.escapeEcmaScript(gpxWaypoint.getName()));
-                
-                // TODO: some clever logic in the case of too many tooltips
-                // https://stackoverflow.com/questions/42364619/hide-tooltip-in-leaflet-for-a-zoom-range
+        if (((boolean) GPXEditorPreferences.SHOW_WAYPOINT_NAMES.getAsType()) && 
+                gpxWaypoint.getName() != null && !gpxWaypoint.getName().isEmpty()) {
+            // add name as permanent tooltip
+            // https://leafletjs.com/reference-1.0.3.html#layer-bindtooltip
+            final String cmdString = 
+                    String.format(Locale.US, "%s.bindTooltip('%s', {permanent: true, direction: 'right', className: 'waypoint-name'});", 
+                            layer, StringEscapeUtils.escapeEcmaScript(gpxWaypoint.getName()));
 
-        //        System.out.println("addMarker: " + cmdString);
-                execScript(cmdString);
-            }
+            // TODO: some clever logic in the case of too many tooltips
+            // https://stackoverflow.com/questions/42364619/hide-tooltip-in-leaflet-for-a-zoom-range
+
+    //        System.out.println("addMarker: " + cmdString);
+            execScript(cmdString);
         }
 
         return layer;
