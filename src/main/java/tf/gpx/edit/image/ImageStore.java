@@ -25,7 +25,17 @@
  */
 package tf.gpx.edit.image;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javafx.geometry.BoundingBox;
 import javafx.scene.image.Image;
+import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.elevation.SRTMDataHelper;
+import tf.gpx.edit.elevation.SRTMDataKey;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
  * Store / cache for images to be shown on map.
@@ -35,6 +45,10 @@ class ImageStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static ImageStore INSTANCE = new ImageStore();
+    
+    public final static String JSON_EXT = "json";
+    
+    private final Map<SRTMDataKey, ImageData> imageStore = new HashMap<>();
     
     // this only makes sense with options
     private ImageStore() {
@@ -48,5 +62,77 @@ class ImageStore {
         return null;
         
         //TODO: implement cache :-)
+    }
+
+    public List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
+        final List<MapImage> result = new ArrayList<>();
+        
+        // iterate over all image json files from top left to lower right and add all relevant images to list
+        final String topleft = SRTMDataHelper.getNameForCoordinate(boundingBox.getMinX(), boundingBox.getMinY());
+        final String bottomright = SRTMDataHelper.getNameForCoordinate(boundingBox.getMaxX(), boundingBox.getMaxY());
+//        System.out.println("BoundingBox: " + boundingBox + ", topleft: " + topleft + ", bottomright: " + bottomright);
+
+        final int topLat = SRTMDataHelper.getLatitudeForName(topleft);
+        final int topLon = SRTMDataHelper.getLongitudeForName(topleft);
+        final int bottomLat = SRTMDataHelper.getLatitudeForName(bottomright);
+        final int bottomLon = SRTMDataHelper.getLongitudeForName(bottomright);
+//        System.out.println("topLat: " + topLat + ", topLon: " + topLon + ", bottomLat: " + bottomLat + ", bottomLon: " + bottomLon);
+        
+        for (int lat = Math.min(topLat, bottomLat); lat <= Math.max(topLat, bottomLat); lat++) {
+            for (int lon = Math.min(topLon, bottomLon); lon <= Math.max(topLon, bottomLon); lon++) {
+                // now read json if not already in store
+                final ImageData imageData = getDataForName(SRTMDataHelper.getNameForCoordinate(lat, lon));
+                for (MapImage image : imageData) {
+                    if (boundingBox.contains(image.getCoordinate().getLatitude(), image.getCoordinate().getLongitude())) {
+                        result.add(image);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+    
+    protected ImageData getDataForName(final String dataName) {
+        ImageData result;
+
+        String name = dataName;
+        if (name.endsWith(JSON_EXT)) {
+            name = FilenameUtils.getBaseName(name);
+        }
+
+        // check store for matching data
+        SRTMDataKey dataKey = dataKeyForName(name);
+        
+        if (dataKey == null) {
+            // if not found: try to read file and add to store
+            result = ImageDataReader.getInstance().readImageData(name, GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
+            
+            if (result != null) {
+                imageStore.put(result.getKey(), result);
+            }
+        } else {
+            result = imageStore.get(dataKey);
+        }
+        
+        return result;
+    }
+    
+    private SRTMDataKey dataKeyForName(final String dataName) {
+        SRTMDataKey result = null;
+        
+        final List<SRTMDataKey> dataEntries = imageStore.keySet().stream().
+                filter((SRTMDataKey key) -> {
+                    return key.getKey().equals(dataName);
+                }).
+                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
+                collect(Collectors.toList());
+        
+        if (!dataEntries.isEmpty()) {
+            // sorted by type and therefore sorted by accuracy :-)
+            result = dataEntries.get(0);
+        }
+        
+        return result;
     }
 }

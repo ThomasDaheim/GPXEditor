@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 
@@ -43,8 +41,6 @@ class SRTMDataStore {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
     
-    private final Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
-
     public final static String HGT_EXT = "hgt";
 
     private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
@@ -86,7 +82,7 @@ class SRTMDataStore {
         assert newData != null;
         
         // check validity of data
-        if (SRTMData.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
+        if (SRTMDataHelper.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
             return;
         }
         
@@ -127,36 +123,6 @@ class SRTMDataStore {
             }
         }
         
-        return result;
-    }
-
-    protected int getLatitudeForName(final String name) {
-        int result = Integer.MIN_VALUE;
-        
-        final Matcher matcher = namePattern.matcher(name);
-        
-        if (matcher.matches()) {
-            result = Integer.parseInt(matcher.group(2));
-            if ("S".equals(matcher.group(1))) {
-                result = -result;
-            }
-        }
-
-        return result;
-    }
-    
-    protected int getLongitudeForName(final String name) {
-        int result = Integer.MIN_VALUE;
-        
-        final Matcher matcher = namePattern.matcher(name);
-        
-        if (matcher.matches()) {
-            result = Integer.parseInt(matcher.group(4));
-            if ("W".equals(matcher.group(3))) {
-                result = -result;
-            }
-        }
-
         return result;
     }
 }

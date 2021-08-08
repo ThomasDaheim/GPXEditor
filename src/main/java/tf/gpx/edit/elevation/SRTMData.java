@@ -25,32 +25,11 @@
  */
 package tf.gpx.edit.elevation;
 
-import javafx.util.Pair;
-
 /**
  *
  * @author Thomas
  */
 class SRTMData {
-    public enum SRTMDataType {
-        SRTM1(3601, 1),
-        SRTM3(1201, 3),
-        INVALID(1, 1);
-        
-        private final int dataCount;
-        private final int gridSize;
-        SRTMDataType(int count, int size) {
-            dataCount = count;
-            gridSize = size;
-        }
-        public int getDataCount() {
-            return dataCount;
-        } 
-        public int getGridSize() {
-            return gridSize;
-        } 
-    }
-    
     private final static double EPSILON = 0.1d;
     private final static double NO_DATA = Double.MIN_VALUE;
 
@@ -60,7 +39,7 @@ class SRTMData {
     private final int numberRows;
     private final int numberCols;
 
-    public SRTMData(final String dataFile, final String name, final SRTMDataType type) {
+    public SRTMData(final String dataFile, final String name, final SRTMDataHelper.SRTMDataType type) {
         myDataFile = dataFile;
         myDataKey = new SRTMDataKey(name, type);
         myDataValues = new short[type.getDataCount()][];

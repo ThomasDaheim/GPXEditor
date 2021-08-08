@@ -52,7 +52,7 @@ public class TestSRTMDataReader implements ISRTMDataReader {
     @Override
     public SRTMData readSRTMData(String name, String path) {
         if (!useInstance) {
-            final SRTMData.SRTMDataType dataType = SRTMData.SRTMDataType.SRTM3;
+            final SRTMDataHelper.SRTMDataType dataType = SRTMDataHelper.SRTMDataType.SRTM3;
             final SRTMData result = new SRTMData(name, name, dataType);
 
             for (int row = 0; row < dataType.getDataCount(); row++) { 

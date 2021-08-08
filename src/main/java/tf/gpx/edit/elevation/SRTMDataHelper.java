@@ -25,12 +25,36 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Helper for various static functions around SRTM data.
  * 
  * @author thomas
  */
 public class SRTMDataHelper {
+    public enum SRTMDataType {
+        SRTM1(3601, 1),
+        SRTM3(1201, 3),
+        INVALID(1, 1);
+        
+        private final int dataCount;
+        private final int gridSize;
+        SRTMDataType(int count, int size) {
+            dataCount = count;
+            gridSize = size;
+        }
+        public int getDataCount() {
+            return dataCount;
+        } 
+        public int getGridSize() {
+            return gridSize;
+        } 
+    }
+    
+    private final static Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
+
     public static String getNameForCoordinate(double latitude, double longitude) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
@@ -70,6 +94,36 @@ public class SRTMDataHelper {
         }
         result += String.format("%03d", (int) longitude);
         
+        return result;
+    }
+
+    public static int getLatitudeForName(final String name) {
+        int result = Integer.MIN_VALUE;
+        
+        final Matcher matcher = namePattern.matcher(name);
+        
+        if (matcher.matches()) {
+            result = Integer.parseInt(matcher.group(2));
+            if ("S".equals(matcher.group(1))) {
+                result = -result;
+            }
+        }
+
+        return result;
+    }
+    
+    public static int getLongitudeForName(final String name) {
+        int result = Integer.MIN_VALUE;
+        
+        final Matcher matcher = namePattern.matcher(name);
+        
+        if (matcher.matches()) {
+            result = Integer.parseInt(matcher.group(4));
+            if ("W".equals(matcher.group(3))) {
+                result = -result;
+            }
+        }
+
         return result;
     }
 }

@@ -72,7 +72,7 @@ public class TestElevationProvider {
     
     @BeforeClass
     public static void setUpClass() throws IOException {
-        tileDist = 1.0 / (SRTMData.SRTMDataType.SRTM3.getDataCount() - 1);
+        tileDist = 1.0 / (SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1);
         // offset from corners in tiles is 0,1% of tile size
         delta = tileDist / 1000.0;
         

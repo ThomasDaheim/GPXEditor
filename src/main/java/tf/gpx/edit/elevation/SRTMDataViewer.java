@@ -135,8 +135,8 @@ public class SRTMDataViewer {
                 dataFound = true;
                 
                 // expand outer bounds of lat & lon
-                final int latitude = SRTMDataStore.getInstance().getLatitudeForName(dataFile);
-                final int longitude = SRTMDataStore.getInstance().getLongitudeForName(dataFile);
+                final int latitude = SRTMDataHelper.getLatitudeForName(dataFile);
+                final int longitude = SRTMDataHelper.getLongitudeForName(dataFile);
                 latMax = Math.max(latMax, latitude);
                 lonMax = Math.max(lonMax, longitude);
                 latMin = Math.min(latMin, latitude);
@@ -187,8 +187,8 @@ public class SRTMDataViewer {
                 dataFound = true;
                 
                 // expand outer bounds of lat & lon
-                final int latitude = SRTMDataStore.getInstance().getLatitudeForName(FilenameUtils.getBaseName(hgtFileName));
-                final int longitude = SRTMDataStore.getInstance().getLongitudeForName(FilenameUtils.getBaseName(hgtFileName));
+                final int latitude = SRTMDataHelper.getLatitudeForName(FilenameUtils.getBaseName(hgtFileName));
+                final int longitude = SRTMDataHelper.getLongitudeForName(FilenameUtils.getBaseName(hgtFileName));
                 latMax = Math.max(latMax, latitude);
                 lonMax = Math.max(lonMax, longitude);
                 latMin = Math.min(latMin, latitude);
@@ -336,7 +336,7 @@ public class SRTMDataViewer {
         };
 
         // we don't want to plot the full set, only 1/4 of it
-        final int dataCount = SRTMData.SRTMDataType.SRTM3.getDataCount();
+        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
         final int steps = dataCount / 4;
         
         // Define range and precision for the function to plot

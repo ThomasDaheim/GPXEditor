@@ -33,8 +33,8 @@ import javafx.util.Pair;
  * 
  * @author thomas
  */
-public class SRTMDataKey extends Pair<String, SRTMData.SRTMDataType> {
-    public SRTMDataKey(String key, SRTMData.SRTMDataType value) {
+public class SRTMDataKey extends Pair<String, SRTMDataHelper.SRTMDataType> {
+    public SRTMDataKey(String key, SRTMDataHelper.SRTMDataType value) {
         super(key, value);
     }
 }

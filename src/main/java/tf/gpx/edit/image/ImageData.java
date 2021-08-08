@@ -26,44 +26,24 @@
 package tf.gpx.edit.image;
 
 import java.util.ArrayList;
-import java.util.List;
-import javafx.geometry.BoundingBox;
-import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.elevation.SRTMDataHelper;
+import tf.gpx.edit.elevation.SRTMDataKey;
 
 /**
- * Class to retrieve images to be shown on a map.
- * Images could be retrieved by name or coordinate range.
+ * List of map images that can be cached by ImageStore.
  * 
  * @author thomas
  */
-public class ImageProvider {
-    // this is a singleton for everyones use
-    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static ImageProvider INSTANCE = new ImageProvider();
-    
-    // this only makes sense with options
-    private ImageProvider() {
-    }
+public class ImageData extends ArrayList<MapImage> {
+    private final String myDataFile;
+    private final SRTMDataKey myDataKey;
 
-    public static ImageProvider getInstance() {
-        return INSTANCE;
+    public ImageData(final String dataFile, final String name) {
+        myDataFile = dataFile;
+        myDataKey = new SRTMDataKey(name, SRTMDataHelper.SRTMDataType.SRTM3);
     }
-    
-    public List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
-        return ImageStore.getInstance().getImagesInBoundingBox(boundingBox);
-    }
-    
-    public List<MapImage> getImagesNearCoordinate(final IGeoCoordinate latlng, final double distance) {
-        // 1st approx: use bounding box and find images in it
-        final BoundingBox boundingBox = new BoundingBox(
-                latlng.getLatitude() - distance, 
-                latlng.getLongitude() - distance, 
-                2*distance, 
-                2*distance);
-        final List<MapImage> result = getImagesInBoundingBox(boundingBox);
-        
-        // calculate actual distances of images from 1st approx.
-
-        return result;
+   
+    public SRTMDataKey getKey() {
+        return myDataKey;
     }
 }

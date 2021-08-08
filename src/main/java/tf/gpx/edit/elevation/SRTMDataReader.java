@@ -33,7 +33,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tf.gpx.edit.elevation.SRTMData.SRTMDataType;
 
 /**
  *
@@ -45,8 +44,8 @@ class SRTMDataReader implements ISRTMDataReader {
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();
     
     private final static int DATA_SIZE = 2;
-    protected final static long DATA_SIZE_SRTM1 = SRTMDataType.SRTM1.getDataCount() * SRTMDataType.SRTM1.getDataCount() * DATA_SIZE;
-    protected final static long DATA_SIZE_SRTM3 = SRTMDataType.SRTM3.getDataCount() * SRTMDataType.SRTM3.getDataCount() * DATA_SIZE;
+    protected final static long DATA_SIZE_SRTM1 = SRTMDataHelper.SRTMDataType.SRTM1.getDataCount() * SRTMDataHelper.SRTMDataType.SRTM1.getDataCount() * DATA_SIZE;
+    protected final static long DATA_SIZE_SRTM3 = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() * SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() * DATA_SIZE;
 
     private SRTMDataReader() {
     }
@@ -91,19 +90,19 @@ class SRTMDataReader implements ISRTMDataReader {
              SRTM-1 has 3601 x 3601 or 12967201 cells and SRTM-3 has 1201 x 1201 
              or 1442401 cells. Each cell is 2 bytes.  
              */ 
-            SRTMDataType srtmType; 
+            SRTMDataHelper.SRTMDataType srtmType; 
             if (fileLength == DATA_SIZE_SRTM1) { 
-                srtmType = SRTMDataType.SRTM1;
+                srtmType = SRTMDataHelper.SRTMDataType.SRTM1;
             } else if (fileLength == DATA_SIZE_SRTM3) { 
-                srtmType = SRTMDataType.SRTM3;
+                srtmType = SRTMDataHelper.SRTMDataType.SRTM3;
             } else { 
-                srtmType = SRTMDataType.INVALID;
+                srtmType = SRTMDataHelper.SRTMDataType.INVALID;
             } 
             final int rows = srtmType.getDataCount(); 
             final int cols = srtmType.getDataCount(); 
 
             // loop through file and retrieve data
-            if (!SRTMDataType.INVALID.equals(srtmType)) {
+            if (!SRTMDataHelper.SRTMDataType.INVALID.equals(srtmType)) {
                 result = new SRTMData(srtmFile.getAbsolutePath(), name, srtmType);
                 
                 RandomAccessFile rIn = null; 

@@ -26,7 +26,7 @@
 package tf.gpx.edit.image;
 
 import javafx.scene.image.Image;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
  * Image that can be displayed on a map.
@@ -37,19 +37,19 @@ import tf.gpx.edit.leafletmap.LatLongElev;
 public class MapImage {
     private final String myFilename;
     private final String myDescription;
-    private final LatLongElev myLatLong;
+    private final IGeoCoordinate myCoordinate;
     
     private MapImage() {
         this("", null);
     }
     
-    public MapImage(final String filename, final LatLongElev latlong) {
+    public MapImage(final String filename, final IGeoCoordinate latlong) {
         this(filename, latlong, "");
     }
     
-    public MapImage(final String filename, final LatLongElev latlong, final String description) {
+    public MapImage(final String filename, final IGeoCoordinate latlong, final String description) {
         myFilename = filename;
-        myLatLong = latlong;
+        myCoordinate = latlong;
         myDescription = description;
     }
 
@@ -61,8 +61,8 @@ public class MapImage {
         return myDescription;
     }
 
-    public LatLongElev getLatLongElev() {
-        return myLatLong;
+    public IGeoCoordinate getCoordinate() {
+        return myCoordinate;
     }
     
     public Image getImage() {
