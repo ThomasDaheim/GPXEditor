@@ -51,12 +51,6 @@ class SRTMData {
         } 
     }
     
-    public class SRTMDataKey extends Pair<String, SRTMDataType> {
-        public SRTMDataKey(String key, SRTMDataType value) {
-            super(key, value);
-        }
-    }
-    
     private final static double EPSILON = 0.1d;
     private final static double NO_DATA = Double.MIN_VALUE;
 
@@ -163,7 +157,7 @@ class SRTMData {
         double result = NO_DATA;
         
         // convert lon & lat to name & check against self
-        if (SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
+        if (SRTMDataHelper.getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
             //System.out.println("SRTM data found: " + data.getKey().getKey());
             // convert lon & lat to col & row
             

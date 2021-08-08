@@ -97,7 +97,10 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // TFE, 20210117: search string for coordinates / names
     SEARCH_URL("searchUrl", "https://www.google.com/search?q=%s", String.class),
     // TFE, 20210117: show/hide waypoint names
-    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class);
+    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class),
+    // TFE, 20210808: show images on map
+    SHOW_IMAGES_ON_MAP("showImagesOnMap", Boolean.toString(true), Boolean.class),
+    IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

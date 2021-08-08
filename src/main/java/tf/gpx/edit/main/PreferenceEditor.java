@@ -135,6 +135,8 @@ public class PreferenceEditor extends AbstractStage {
     private final CheckBox trackSymbolChkBox = new CheckBox();
     private final CheckBox waypointNameChkBox = new CheckBox();
     private final TextField searchUrlText = new TextField();
+    private final CheckBox imageChkBox = new CheckBox();
+    private final TextField imagePathText = new TextField();
 
     private PreferenceEditor() {
         super();
@@ -547,6 +549,63 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setMargin(searchUrlText, INSET_TOP);
 
         rowNum++;
+        t = new Tooltip("Show images on map");
+        final Label showImageTextLbl = new Label("Show images:");
+        showImageTextLbl.setTooltip(t);
+        getGridPane().add(showImageTextLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(showImageTextLbl, VPos.TOP);
+        GridPane.setMargin(showImageTextLbl, INSET_TOP);
+        
+        imageChkBox.setTooltip(t);
+        getGridPane().add(imageChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(imageChkBox, INSET_TOP);        
+
+        rowNum++;
+        t = new Tooltip("Image data file path");
+        final Label imagePathLbl = new Label("Image data path:");
+        imagePathLbl.setTooltip(t);
+        getGridPane().add(imagePathLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(imagePathLbl, VPos.TOP);
+        GridPane.setMargin(imagePathLbl, INSET_TOP);
+        
+        // TFE, 20210217: add directory chooser :-)
+        imagePathText.setEditable(false);
+        imagePathText.setPrefWidth(400);
+        imagePathText.setMaxWidth(400);
+        imagePathText.setTooltip(t);
+
+        final Button imagePathBtn = new Button("...");
+        imagePathBtn.setTooltip(t);
+        // add action to the button - open a directory search dialogue...
+        imagePathBtn.setOnAction((ActionEvent event) -> {
+            // open directory chooser dialog - starting from current path, if any
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select image data files directory");
+            if (!imagePathText.getText().isEmpty()) {
+                final File ownFile = new File(imagePathText.getText());
+                // TF, 20160820: directory might not exist anymore!
+                // in that case directoryChooser.showDialog throws an error and you can't change to an existing dir...
+                if (ownFile.exists() && ownFile.isDirectory() && ownFile.canRead()) {
+                    directoryChooser.setInitialDirectory(ownFile);
+                }
+            }
+            File selectedDirectory = directoryChooser.showDialog(srtmPathBtn.getScene().getWindow());
+
+            if(selectedDirectory == null){
+                //System.out.println("No Directory selected");
+            } else {
+                imagePathText.setText(selectedDirectory.getAbsolutePath());
+            }
+        });
+
+        final HBox imagePathBox = new HBox(2);
+        imagePathBox.setAlignment(Pos.CENTER_LEFT);
+        imagePathBox.getChildren().addAll(imagePathText, imagePathBtn);
+        
+        getGridPane().add(imagePathBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(imagePathBox, INSET_TOP);
+        
+        rowNum++;
         // https://stackoverflow.com/a/22838050
         final TextFlow mapLayerLbl = new TextFlow();
         final Text text1 = new Text("Map Layer settings (");
@@ -834,6 +893,8 @@ public class PreferenceEditor extends AbstractStage {
         trackSymbolChkBox.setSelected(GPXEditorPreferences.SHOW_TRACK_SYMBOLS.getAsType());
         searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
         searchUrlText.setText(GPXEditorPreferences.SEARCH_URL.getAsType());
+        imageChkBox.setSelected(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
+        imagePathText.setText(GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType()));
@@ -862,6 +923,8 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SHOW_TRACK_SYMBOLS.put(trackSymbolChkBox.isSelected());
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
+        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(imageChkBox.isSelected());
+        GPXEditorPreferences.IMAGE_INFO_PATH.put(imagePathText.getText().trim());
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));

@@ -57,7 +57,7 @@ public class SRTMElevationService implements IElevationProvider {
         double result = NO_ELEVATION;
         
         // construct name from coordinates
-        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude);
+        final String dataName = SRTMDataHelper.getNameForCoordinate(latitude, longitude);
         
         // check store for matching data
         SRTMData data = SRTMDataStore.getInstance().getDataForName(dataName, srtmOptions);

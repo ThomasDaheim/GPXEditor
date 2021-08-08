@@ -272,7 +272,7 @@ public class TestSRTM {
     
     @Test
     public void testDownloadSRTM1() {
-        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+        final String dataName = SRTMDataHelper.getNameForCoordinate(27.9881, 86.9250);
         
         // file is there as SRTM3 as part of the test-data
         File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
@@ -354,7 +354,7 @@ public class TestSRTM {
     @Test
     public void testDownloadSRTM3() throws Exception {
         // single hgt from standard zip - store zip
-        String dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -4);
+        String dataName = SRTMDataHelper.getNameForCoordinate(30, -4);
         dataNames.clear();
         dataNames.add(dataName);
         String resultOut = tapSystemOut(() -> {
@@ -375,7 +375,7 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from stored zip - no download
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -3);
+        dataName = SRTMDataHelper.getNameForCoordinate(30, -3);
         dataNames.clear();
         dataNames.add(dataName);
         resultOut = tapSystemOut(() -> {
@@ -390,12 +390,12 @@ public class TestSRTM {
         Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
 
         // multiple hgts from standard zip - store zip
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-5, -63);
+        dataName = SRTMDataHelper.getNameForCoordinate(-5, -63);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(
                 dataName, 
-                SRTMDataStore.getInstance().getNameForCoordinate(-5, -64), 
-                SRTMDataStore.getInstance().getNameForCoordinate(-5, -65)));
+                SRTMDataHelper.getNameForCoordinate(-5, -64), 
+                SRTMDataHelper.getNameForCoordinate(-5, -65)));
         resultOut = tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
@@ -414,7 +414,7 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from anarctica - store zip
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-78, -154);
+        dataName = SRTMDataHelper.getNameForCoordinate(-78, -154);
         dataNames.clear();
         dataNames.add(dataName);
         resultOut = tapSystemOut(() -> {
@@ -435,12 +435,12 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // multiple hgt from anarctica - no download
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-89, -107);
+        dataName = SRTMDataHelper.getNameForCoordinate(-89, -107);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(
                 dataName, 
-                SRTMDataStore.getInstance().getNameForCoordinate(-89, -108), 
-                SRTMDataStore.getInstance().getNameForCoordinate(-89, -109)));
+                SRTMDataHelper.getNameForCoordinate(-89, -108), 
+                SRTMDataHelper.getNameForCoordinate(-89, -109)));
         resultOut = tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });

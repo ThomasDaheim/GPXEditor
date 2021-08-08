@@ -39,7 +39,7 @@ import tf.gpx.edit.elevation.SRTMData.SRTMDataType;
  *
  * @author Thomas
  */
-public class SRTMDataReader implements ISRTMDataReader {
+class SRTMDataReader implements ISRTMDataReader {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();

@@ -35,8 +35,8 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
+import tf.gpx.edit.elevation.SRTMDataHelper;
 import tf.gpx.edit.elevation.SRTMDataOptions;
-import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -148,7 +148,7 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
         if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
             // file a set with the required data field names
             for (GPXWaypoint gpxWayPoint : gpxWayPoints) {
-                requiredDataFiles.add(SRTMDataStore.getInstance().getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
+                requiredDataFiles.add(SRTMDataHelper.getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
             }
         } else {
             final List<GPXWaypoint> assignPoints = new ArrayList<>();
