@@ -23,9 +23,14 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.5
+
+* moving of selected track waypoints
+* Bugfixes! Various bugs that have crept in over time are now fixed
+
 ### Update v5.4
 
-* download SRTM data from with GPXEditor
+* download SRTM data from within GPXEditor
 * support OpenElevationService as add. elevation provider besides local SRTM files
 * show waypoint names in map
 * google search (for coordinates or waypoint names) from within map
