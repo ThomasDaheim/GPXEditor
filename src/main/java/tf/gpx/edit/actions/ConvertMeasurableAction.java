@@ -93,7 +93,14 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                 final List<Pair<Integer, GPXMeasurable>> parentPairs = new ArrayList<>();
                 for (GPXMeasurable pairLineItem : parentLineItem) {
                     // store each lineItem with its position in the list of parent's waypoints
-                    parentPairs.add(Pair.of(parent.getChildren().indexOf(pairLineItem), pairLineItem));
+                    // TFE, 20210613: use getTracks() or getRoutes() and not getChildren() to match calls in undoHook()
+                    if (pairLineItem.isGPXRoute()) {
+                        parentPairs.add(Pair.of(parent.getGPXRoutes().indexOf(pairLineItem), pairLineItem));
+                    } else if (pairLineItem.isGPXTrack()) {
+                        parentPairs.add(Pair.of(parent.getGPXTracks().indexOf(pairLineItem), pairLineItem));
+                    } else if (pairLineItem.isGPXTrackSegment()) {
+                        parentPairs.add(Pair.of(parent.getGPXTrackSegments().indexOf(pairLineItem), pairLineItem));
+                    }
                 }
                 
                 lineItemCluster.put(parent, parentPairs);

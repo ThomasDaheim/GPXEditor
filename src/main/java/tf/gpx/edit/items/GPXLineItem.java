@@ -227,11 +227,11 @@ public abstract class GPXLineItem implements IStylableItem {
         return false;
     }
     public void setHasUnsavedChanges() {
-        this.hasUnsavedChanges = true;
+        hasUnsavedChanges = true;
     }
     public void resetHasUnsavedChanges() {
         // reset me and my children
-        this.hasUnsavedChanges = false;
+        hasUnsavedChanges = false;
 
         for (GPXLineItem child : getChildren()) {
             child.resetHasUnsavedChanges();

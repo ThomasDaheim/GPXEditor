@@ -120,7 +120,6 @@ import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorParameters;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
@@ -398,8 +397,8 @@ public class GPXEditor implements Initializable {
         initDoUndo();
         
         // load stored values for tableviews
-        gpxFileList.loadPreferences(GPXEditorPreferenceStore.getInstance());
-        gpxWaypoints.loadPreferences(GPXEditorPreferenceStore.getInstance());
+        gpxFileList.loadPreferences(GPXEditorPreferences.INSTANCE);
+        gpxWaypoints.loadPreferences(GPXEditorPreferences.INSTANCE);
         
         // they all need to be able to do something in the editor
         GPXFileHelper.getInstance().setCallback(this);
@@ -416,12 +415,12 @@ public class GPXEditor implements Initializable {
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
 
         // TFE, 20200713: needs to happen before map gets loaded
-        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
+        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
         TrackMap.getInstance().initMap();
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.4", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.5", "https://github.com/ThomasDaheim/GPXEditor");
         
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
@@ -440,7 +439,7 @@ public class GPXEditor implements Initializable {
         // TFE, 20200622: now also track map has completed loading...
 
         // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferenceStore.getInstance());
+        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
 
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
@@ -482,12 +481,12 @@ public class GPXEditor implements Initializable {
         GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.put(splitPane.getDividerPositions()[0]);
         
         // store values for tableviews
-        gpxFileList.savePreferences(GPXEditorPreferenceStore.getInstance());
-        gpxWaypoints.savePreferences(GPXEditorPreferenceStore.getInstance());
+        gpxFileList.savePreferences(GPXEditorPreferences.INSTANCE);
+        gpxWaypoints.savePreferences(GPXEditorPreferences.INSTANCE);
 
         // TFE, 20180901: store values for track & height map
-        GPXTrackviewer.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
-        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferenceStore.getInstance());
+        GPXTrackviewer.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
+        MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
     }
     
     public Window getWindow() {
@@ -767,7 +766,7 @@ public class GPXEditor implements Initializable {
         recentFilesMenu.getItems().clear();
 
         // most recent file that was opened
-        final List<String> recentFiles = GPXEditorPreferenceStore.getRecentFiles().getRecentFiles();
+        final List<String> recentFiles = GPXEditorPreferences.INSTANCE.getRecentFiles().getRecentFiles();
         
         if (recentFiles.size() > 0) {
             for (String file : recentFiles) {
@@ -1242,7 +1241,7 @@ public class GPXEditor implements Initializable {
                                 gpxFileList.addGPXFile(new GPXFile(file));
 
                                 // store last filename
-                                GPXEditorPreferenceStore.getRecentFiles().addRecentFile(file.getAbsolutePath());
+                                GPXEditorPreferences.INSTANCE.getRecentFiles().addRecentFile(file.getAbsolutePath());
 
                                 initRecentFilesMenu();
                             },

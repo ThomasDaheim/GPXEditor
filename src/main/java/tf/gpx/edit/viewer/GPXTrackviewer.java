@@ -36,7 +36,7 @@ import tf.helper.general.IPreferencesStore;
 
 
 /**
- * Wrapper for gluon map to show selected waypoints
+ * Holder for all things that show waypoints on a map or an overlay (=chart).
  * 
  * @author Thomas
  */

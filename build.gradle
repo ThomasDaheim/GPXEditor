@@ -40,7 +40,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.4'
+version='5.5'
 
 repositories {
     mavenLocal() {
@@ -53,6 +53,10 @@ repositories {
     }
     mavenCentral()
     jcenter()
+    // bintray
+    maven {
+        url "https://dl.bintray.com"
+    }
     // You may define additional repositories, or even remove "mavenCentral()".
     // Read more about repositories here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:repositories
@@ -75,7 +79,7 @@ dependencies {
     compile "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.10'
+    compile 'tf.JavaHelper:JavaHelper:1.13'
 
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.12'
@@ -86,11 +90,24 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
-    compile 'me.himanshusoni.gpxparser:gpx-parser:1.12'
+    compile 'me.himanshusoni.gpxparser:gpx-parser:1.13'
     compile 'org.jzy3d:jzy3d-api:1.0.2'
     compile 'org.jzy3d:jzy3d-javafx:1.0.2'
     compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
+    
     compile 'de.jensd:fontawesomefx:8.9'
+    // TFE, 20210310: not working since GlyphsDude not found
+    // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
+//    compile 'de.jensd:fontawesomefx-commons:9.1.2'
+//    compile 'de.jensd:fontawesomefx-emojione:3.1.1-9.1.2'
+//    compile 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-icons525:4.6.3'
+//    compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+//    compile 'de.jensd:fontawesomefx-materialicons:2.2.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-materialstackicons:2.1-5-9.1.2'
+//    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
+    
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.1'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
     compile group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'

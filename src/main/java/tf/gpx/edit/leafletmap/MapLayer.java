@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
-import tf.gpx.edit.helper.GPXEditorPreferenceStore;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
  * Class for any valid map layers (baselayer and overlay) for leaflet maps.
@@ -191,34 +191,34 @@ public class MapLayer {
     }
 
     protected String toPreferenceString() {
-        return GPXEditorPreferenceStore.PREF_STRING_PREFIX + 
-                myName + GPXEditorPreferenceStore.PREF_STRING_SEP + 
-                myURL + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myAPIKey + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myMinZoom + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myMaxZoom + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myAttribution + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myLayerType.name() + GPXEditorPreferenceStore.PREF_STRING_SEP +
-                myZIndex + GPXEditorPreferenceStore.PREF_STRING_SEP +
+        return GPXEditorPreferences.PREF_STRING_PREFIX + 
+                myName + GPXEditorPreferences.PREF_STRING_SEP + 
+                myURL + GPXEditorPreferences.PREF_STRING_SEP +
+                myAPIKey + GPXEditorPreferences.PREF_STRING_SEP +
+                myMinZoom + GPXEditorPreferences.PREF_STRING_SEP +
+                myMaxZoom + GPXEditorPreferences.PREF_STRING_SEP +
+                myAttribution + GPXEditorPreferences.PREF_STRING_SEP +
+                myLayerType.name() + GPXEditorPreferences.PREF_STRING_SEP +
+                myZIndex + GPXEditorPreferences.PREF_STRING_SEP +
                 myTileLayerClass.name() + 
-                GPXEditorPreferenceStore.PREF_STRING_SUFFIX;
+                GPXEditorPreferences.PREF_STRING_SUFFIX;
     }
 
     protected void fromPreferenceString(final String prefString) {
         String temp = prefString;
-        if (!temp.startsWith(GPXEditorPreferenceStore.PREF_STRING_PREFIX)) {
+        if (!temp.startsWith(GPXEditorPreferences.PREF_STRING_PREFIX)) {
             return;
         }
-        if (!temp.endsWith(GPXEditorPreferenceStore.PREF_STRING_SUFFIX)) {
+        if (!temp.endsWith(GPXEditorPreferences.PREF_STRING_SUFFIX)) {
             return;
         }
         // no two elements in preference string
-        if (temp.split(GPXEditorPreferenceStore.PREF_STRING_SEP).length != 9) {
+        if (temp.split(GPXEditorPreferences.PREF_STRING_SEP).length != 9) {
             return;
         }
 
-        String[] prefs = prefString.substring(GPXEditorPreferenceStore.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferenceStore.PREF_STRING_SUFFIX.length()).
-                strip().split(GPXEditorPreferenceStore.PREF_STRING_SEP);
+        String[] prefs = prefString.substring(GPXEditorPreferences.PREF_STRING_PREFIX.length(), temp.length()-GPXEditorPreferences.PREF_STRING_SUFFIX.length()).
+                strip().split(GPXEditorPreferences.PREF_STRING_SEP);
 
         // set attributes from strings
         myName = prefs[0]; 
@@ -444,7 +444,7 @@ public class MapLayer {
                     "https://ecn.t{s}.tiles.virtualearth.net/tiles/r{q}?g=864&mkt=en-gb&lbl=l1&stl=h&shading=hill&n=z", 
                     "", 
                     3, 
-                    19, 
+                    20, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
                     TileLayerClass.QUADKEY);
@@ -456,7 +456,7 @@ public class MapLayer {
                     "https://ecn.t{s}.tiles.virtualearth.net/tiles/a{q}?g=737&n=z", 
                     "", 
                     3, 
-                    19, 
+                    20, 
                     "Bing - map data copyright Microsoft and its suppliers", 
                     0,
                     TileLayerClass.QUADKEY);

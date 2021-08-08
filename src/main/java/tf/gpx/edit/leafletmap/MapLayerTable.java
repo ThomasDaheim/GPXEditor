@@ -186,7 +186,7 @@ public class MapLayerTable extends TableView<MapLayer> {
         maxZoomCol.setOnEditCommit((TableColumn.CellEditEvent<MapLayer, Integer> t) -> {
             if (!t.getNewValue().equals(t.getOldValue())) {
                 final MapLayer layer = t.getRowValue();
-                layer.setMinZoom(t.getNewValue());
+                layer.setMaxZoom(t.getNewValue());
             }
         });
         maxZoomCol.setEditable(true);

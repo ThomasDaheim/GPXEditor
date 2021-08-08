@@ -298,7 +298,8 @@ public class AssignElevation extends AbstractStage  {
         myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;
-        if (ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType()) ||
+        // TFE, 20210731: we either allow anything besides SRTM or we have SRTM files - otherwise no height will be found
+        if (!ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType()) ||
                 checkSRTMFiles()) {
             final GPXAssignElevationWorker visitor = 
                     new GPXAssignElevationWorker(
