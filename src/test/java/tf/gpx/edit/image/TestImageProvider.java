@@ -33,6 +33,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.geometry.BoundingBox;
+import javafx.scene.image.Image;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.After;
@@ -41,6 +43,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.LatLongElev;
 
@@ -75,6 +78,7 @@ public class TestImageProvider {
         }
         
         GPXEditorPreferences.IMAGE_INFO_PATH.put(testpath.toString());
+        GPXEditorPreferences.DEFAULT_IMAGE_PATH.put(testpath.toString());
     }
     private static void copyTestFiles(final Path testpath) throws Throwable {
         final File resourcepath = new File("src/test/resources");
@@ -101,6 +105,7 @@ public class TestImageProvider {
         // set path name to old value
         if (currentPath != null) {
             GPXEditorPreferences.IMAGE_INFO_PATH.put(currentPath);
+            GPXEditorPreferences.DEFAULT_IMAGE_PATH.put(currentPath);
         }
         
         try {
@@ -120,11 +125,124 @@ public class TestImageProvider {
     }
     
     @Test
-    public void readImage() {
+    public void readImageSameAreaDegree() {
         // read image for coordinates N55 E8
         LatLongElev latlong = new LatLongElev(55.5, 8.5);
         
-        final List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinate(latlong, 0.1);
+        // exactly on one of the two images
+        List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 0.1);
         Assert.assertEquals("One image at this location", 1, images.size());
+        MapImage image = images.get(0);
+        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
+        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        
+        // wide enough for both images
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 1.0);
+        Assert.assertEquals("Two images at this location", 2, images.size());
+        
+        // not wide enough for both images
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 0.5);
+        Assert.assertEquals("One image in this area", 1, images.size());
+    }
+    
+    @Test
+    public void readImageSameAreaMeter() {
+        // read image for coordinates N55 E8
+        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+        
+        // exactly on one of the two images
+        List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, 100);
+        Assert.assertEquals("One image at this location", 1, images.size());
+        MapImage image = images.get(0);
+        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
+        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        
+        // wide enough for both images
+        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLongElev(55.1, 8.1));
+        images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.01);
+        Assert.assertEquals("Two images at this location", 2, images.size());
+        
+        // not wide enough for both images
+        images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 0.99);
+        Assert.assertEquals("One image in this area", 1, images.size());
+    }
+    
+    @Test
+    public void readImageSameAreaBoundingBox() {
+        // read image for coordinates N55 E8
+        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+        
+        // exactly on one of the two images
+        List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
+        Assert.assertEquals("One image at this location", 1, images.size());
+        MapImage image = images.get(0);
+        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
+        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        
+        // wide enough for both images
+        images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.1, 8.1, 0.4, 0.4));
+        Assert.assertEquals("Two images at this location", 2, images.size());
+        
+        // not wide enough for both images
+        images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.1, 8.1, 0.399, 0.399));
+        Assert.assertEquals("One image in this area", 1, images.size());
+    }
+    
+    @Test
+    public void readImageNeighbourAreaBoundingBox() {
+        // read image for coordinates N55 E8
+        LatLongElev latlong = new LatLongElev(54.5, 7.5);
+        
+        // no image
+        List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 0.2, 0.2));
+        Assert.assertEquals("No image at this location", 0, images.size());
+        
+        // not wide enough for both images
+        images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 0.7, 0.7));
+        Assert.assertEquals("One image in this area", 1, images.size());
+
+        // wide enough for both images
+        images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 1.1, 1.1));
+        Assert.assertEquals("Two images in this area", 2, images.size());
+    }
+    
+    // the followiing can't be tested outside a running javafx application...
+//    @Test
+//    public void readImage() {
+//        // read image for coordinates N55 E8
+//        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+//        
+//        // exactly on one of the two images
+//        List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
+//        Assert.assertEquals("One image at this location", 1, images.size());
+//        MapImage image = images.get(0);
+//        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
+//        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+//        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+//        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+//        
+//        final Image realImage = image.getImage();
+//        Assert.assertNotNull("We should have an image", realImage);
+//    }
+    
+    @Test
+    public void specialCaseNorthPole() {
+        
+    }
+    
+    @Test
+    public void specialCaseAntiMeridian() {
+        
+    }
+    
+    @Test
+    public void specialCaseWrapAround() {
+        
     }
 }

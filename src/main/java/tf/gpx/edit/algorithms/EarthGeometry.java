@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
  * Basic functions to calculate distances, angles, bearings, areas on a globe
@@ -195,6 +196,17 @@ public class EarthGeometry {
 
         // add height difference via pythagoras
         return FastMath.sqrt(EarthShortRadius2 * A*A * (sgm - dsgm)*(sgm - dsgm) + elevDiff*elevDiff);
+    }
+    // TFE, 20210809: calculate distance also for IGeoCoordinate values
+    public static double distanceCoordinates(final IGeoCoordinate c1, final IGeoCoordinate c2) {
+        if ((c1 == null) || (c2 == null)) return 0;
+        
+        final Waypoint p1 = new Waypoint(c1.getLatitude(), c1.getLongitude());
+        p1.setElevation(c1.getElevation());
+        final Waypoint p2 = new Waypoint(c2.getLatitude(), c2.getLongitude());
+        p2.setElevation(c2.getElevation());
+        
+        return distanceWaypoints(p1, p2);
     }
     
     /**

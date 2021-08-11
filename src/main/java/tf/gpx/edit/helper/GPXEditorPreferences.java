@@ -100,7 +100,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class),
     // TFE, 20210808: show images on map
     SHOW_IMAGES_ON_MAP("showImagesOnMap", Boolean.toString(true), Boolean.class),
-    IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class);
+    IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class),
+    DEFAULT_IMAGE_PATH("defaultImagePath", System.getProperty("user.home"), String.class),
+    IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

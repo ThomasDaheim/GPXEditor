@@ -25,11 +25,14 @@
  */
 package tf.gpx.edit.image;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import javafx.scene.image.Image;
 import org.apache.commons.io.FilenameUtils;
@@ -48,7 +51,8 @@ class ImageStore {
     
     public final static String JSON_EXT = "json";
     
-    private final Map<SRTMDataKey, ImageData> imageStore = new HashMap<>();
+    private final Map<SRTMDataKey, ImageData> imageDataStore = new HashMap<>();
+    private final Map<MapImage, Image> imageStore = new HashMap<>();
     
     // this only makes sense with options
     private ImageStore() {
@@ -59,9 +63,32 @@ class ImageStore {
     }
     
     public Image getImage(final MapImage mapImage) {
-        return null;
         
-        //TODO: implement cache :-)
+        if (!imageStore.containsKey(mapImage)) {
+            // try to read image
+            final String filename = FilenameUtils.getName(mapImage.getFilename());
+            String path = FilenameUtils.getFullPath(mapImage.getFilename());
+            if (path.isEmpty()) {
+                // no path in json file name - use default one
+                path = GPXEditorPreferences.DEFAULT_IMAGE_PATH.getAsString();
+            }
+            
+            final File imageFile = Paths.get(path, filename).toFile();
+
+            Image image = null;
+            if (imageFile.exists() && imageFile.isFile() && imageFile.canRead()) {
+                if (Platform.isFxApplicationThread()) {
+                    // this only works inside a running javafx application...
+                    // keep things civilized and load reduceed image size
+                    image = new Image(imageFile.toURI().toString(), 
+                            GPXEditorPreferences.IMAGE_SIZE.getAsType(), GPXEditorPreferences.IMAGE_SIZE.getAsType(), true, true);
+                }
+            }
+            // cache the result for later use...
+            imageStore.put(mapImage, image);
+        }
+
+        return imageStore.get(mapImage);
     }
 
     public List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
@@ -79,12 +106,17 @@ class ImageStore {
 //        System.out.println("topLat: " + topLat + ", topLon: " + topLon + ", bottomLat: " + bottomLat + ", bottomLon: " + bottomLon);
         
         for (int lat = Math.min(topLat, bottomLat); lat <= Math.max(topLat, bottomLat); lat++) {
+            // TODO: lon is tricky, since it wraps around @ 180... So fastest way might be counting backwards with wrapping...
+            // so for 179E to 179W we need to use only 179E, 180E, 179W instead of counting from -179 to 179
             for (int lon = Math.min(topLon, bottomLon); lon <= Math.max(topLon, bottomLon); lon++) {
                 // now read json if not already in store
                 final ImageData imageData = getDataForName(SRTMDataHelper.getNameForCoordinate(lat, lon));
-                for (MapImage image : imageData) {
-                    if (boundingBox.contains(image.getCoordinate().getLatitude(), image.getCoordinate().getLongitude())) {
-                        result.add(image);
+                // if we have one, lets check images
+                if (imageData != null) {
+                    for (MapImage image : imageData) {
+                        if (boundingBox.contains(image.getCoordinate().getLatitude(), image.getCoordinate().getLongitude())) {
+                            result.add(image);
+                        }
                     }
                 }
             }
@@ -109,10 +141,10 @@ class ImageStore {
             result = ImageDataReader.getInstance().readImageData(name, GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
             
             if (result != null) {
-                imageStore.put(result.getKey(), result);
+                imageDataStore.put(result.getKey(), result);
             }
         } else {
-            result = imageStore.get(dataKey);
+            result = imageDataStore.get(dataKey);
         }
         
         return result;
@@ -121,7 +153,7 @@ class ImageStore {
     private SRTMDataKey dataKeyForName(final String dataName) {
         SRTMDataKey result = null;
         
-        final List<SRTMDataKey> dataEntries = imageStore.keySet().stream().
+        final List<SRTMDataKey> dataEntries = imageDataStore.keySet().stream().
                 filter((SRTMDataKey key) -> {
                     return key.getKey().equals(dataName);
                 }).

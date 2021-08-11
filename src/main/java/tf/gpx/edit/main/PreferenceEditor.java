@@ -137,6 +137,8 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField searchUrlText = new TextField();
     private final CheckBox imageChkBox = new CheckBox();
     private final TextField imagePathText = new TextField();
+    private final TextField defaultImagePathText = new TextField();
+    private final TextField imageSizeText = new TextField();
 
     private PreferenceEditor() {
         super();
@@ -400,7 +402,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(breakLbl, VPos.TOP);
         GridPane.setMargin(breakLbl, INSET_TOP);
         
-        breakText.setMaxWidth(40);
+        breakText.setMaxWidth(80);
         breakText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         breakText.setTooltip(t);
         getGridPane().add(breakText, 1, rowNum, 1, 1);
@@ -415,7 +417,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(radiusLbl, VPos.TOP);
         GridPane.setMargin(radiusLbl, INSET_TOP);
         
-        radiusText.setMaxWidth(40);
+        radiusText.setMaxWidth(80);
         radiusText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         radiusText.setTooltip(t);
         getGridPane().add(radiusText, 1, rowNum, 1, 1);
@@ -430,7 +432,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(durationLbl, VPos.TOP);
         GridPane.setMargin(durationLbl, INSET_TOP);
         
-        durationText.setMaxWidth(40);
+        durationText.setMaxWidth(80);
         durationText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         durationText.setTooltip(t);
         getGridPane().add(durationText, 1, rowNum, 1, 1);
@@ -445,7 +447,7 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(neighbourLbl, VPos.TOP);
         GridPane.setMargin(neighbourLbl, INSET_TOP);
         
-        neighbourText.setMaxWidth(40);
+        neighbourText.setMaxWidth(80);
         neighbourText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         neighbourText.setTooltip(t);
         getGridPane().add(neighbourText, 1, rowNum, 1, 1);
@@ -568,7 +570,6 @@ public class PreferenceEditor extends AbstractStage {
         GridPane.setValignment(imagePathLbl, VPos.TOP);
         GridPane.setMargin(imagePathLbl, INSET_TOP);
         
-        // TFE, 20210217: add directory chooser :-)
         imagePathText.setEditable(false);
         imagePathText.setPrefWidth(400);
         imagePathText.setMaxWidth(400);
@@ -605,6 +606,65 @@ public class PreferenceEditor extends AbstractStage {
         getGridPane().add(imagePathBox, 1, rowNum, 1, 1);
         GridPane.setMargin(imagePathBox, INSET_TOP);
         
+        rowNum++;
+        t = new Tooltip("Default Image file path");
+        final Label defaultImagePathLbl = new Label("Default image path:");
+        defaultImagePathLbl.setTooltip(t);
+        getGridPane().add(defaultImagePathLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(defaultImagePathLbl, VPos.TOP);
+        GridPane.setMargin(defaultImagePathLbl, INSET_TOP);
+
+        defaultImagePathText.setEditable(false);
+        defaultImagePathText.setPrefWidth(400);
+        defaultImagePathText.setMaxWidth(400);
+        defaultImagePathText.setTooltip(t);
+
+        final Button defaultImagePathBtn = new Button("...");
+        defaultImagePathBtn.setTooltip(t);
+        // add action to the button - open a directory search dialogue...
+        defaultImagePathBtn.setOnAction((ActionEvent event) -> {
+            // open directory chooser dialog - starting from current path, if any
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Select image data files directory");
+            if (!imagePathText.getText().isEmpty()) {
+                final File ownFile = new File(imagePathText.getText());
+                // TF, 20160820: directory might not exist anymore!
+                // in that case directoryChooser.showDialog throws an error and you can't change to an existing dir...
+                if (ownFile.exists() && ownFile.isDirectory() && ownFile.canRead()) {
+                    directoryChooser.setInitialDirectory(ownFile);
+                }
+            }
+            File selectedDirectory = directoryChooser.showDialog(srtmPathBtn.getScene().getWindow());
+
+            if(selectedDirectory == null){
+                //System.out.println("No Directory selected");
+            } else {
+                defaultImagePathText.setText(selectedDirectory.getAbsolutePath());
+            }
+        });
+
+        final HBox defaultImagePathBox = new HBox(2);
+        defaultImagePathBox.setAlignment(Pos.CENTER_LEFT);
+        defaultImagePathBox.getChildren().addAll(defaultImagePathText, defaultImagePathBtn);
+        
+        getGridPane().add(defaultImagePathBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(defaultImagePathBox, INSET_TOP);
+
+        rowNum++;
+        // imageSizeText
+        t = new Tooltip("Size of image");
+        final Label imageSizeLbl = new Label("Image size (pix):");
+        imageSizeLbl.setTooltip(t);
+        getGridPane().add(imageSizeLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(imageSizeLbl, VPos.TOP);
+        GridPane.setMargin(imageSizeLbl, INSET_TOP);
+        
+        imageSizeText.setMaxWidth(80);
+        imageSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
+        imageSizeText.setTooltip(t);
+        getGridPane().add(imageSizeText, 1, rowNum, 1, 1);
+        GridPane.setMargin(imageSizeText, INSET_TOP);        
+
         rowNum++;
         // https://stackoverflow.com/a/22838050
         final TextFlow mapLayerLbl = new TextFlow();
@@ -895,6 +955,8 @@ public class PreferenceEditor extends AbstractStage {
         searchUrlText.setText(GPXEditorPreferences.SEARCH_URL.getAsType());
         imageChkBox.setSelected(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
         imagePathText.setText(GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
+        defaultImagePathText.setText(GPXEditorPreferences.DEFAULT_IMAGE_PATH.getAsType());
+        imageSizeText.setText(decimalFormat.format(GPXEditorPreferences.IMAGE_SIZE.getAsType()));
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
         wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType()));
@@ -925,6 +987,8 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(imageChkBox.isSelected());
         GPXEditorPreferences.IMAGE_INFO_PATH.put(imagePathText.getText().trim());
+        GPXEditorPreferences.DEFAULT_IMAGE_PATH.put(defaultImagePathText.getText().trim());
+        GPXEditorPreferences.IMAGE_SIZE.put(Math.max(Integer.valueOf(imageSizeText.getText().trim()), 0));
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
