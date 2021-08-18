@@ -106,7 +106,7 @@ public class EarthGeometry {
         
         return result;
     }
-    public double smallDistanceApproximationDistance (final Waypoint p1, final Waypoint p2) {
+    private double smallDistanceApproximationDistance (final Waypoint p1, final Waypoint p2) {
         // https://jonisalonen.com/2014/computing-distance-between-coordinates-can-be-simple-and-fast/
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
@@ -132,7 +132,7 @@ public class EarthGeometry {
                 
         return FastMath.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
     }
-    public double haversineDistance(final Waypoint p1, final Waypoint p2) {
+    private double haversineDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
         final double lon1 = FastMath.toRadians(p1.getLongitude());
@@ -147,7 +147,7 @@ public class EarthGeometry {
         //return 2.0 * Math.atan2(Math.sqrt(EarthLongRadius), Math.sqrt(1.0-EarthLongRadius)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
         return 2.0 * FastMath.atan2(FastMath.sqrt(a), FastMath.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
     }
-    public double vincentyDistance(final Waypoint p1, final Waypoint p2) {
+    private double vincentyDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
         final double lon1 = FastMath.toRadians(p1.getLongitude());

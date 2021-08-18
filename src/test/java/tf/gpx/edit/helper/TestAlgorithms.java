@@ -759,10 +759,10 @@ public class TestAlgorithms {
 
         final List<GPXWaypointNeighbours> clusters = GPXAlgorithms.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
         Assert.assertEquals(17, clusters.size());
-        Assert.assertEquals("N 41" + LatLongHelper.DEG + "22" + LatLongHelper.MIN + "15" + dS + "97" + LatLongHelper.SEC +" E 2" + LatLongHelper.DEG + "10" + LatLongHelper.MIN + "0" + dS + "76" + LatLongHelper.SEC, clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
+        Assert.assertEquals("N 41" + LatLonHelper.DEG + "22" + LatLonHelper.MIN + "15" + dS + "97" + LatLonHelper.SEC +" E 2" + LatLonHelper.DEG + "10" + LatLonHelper.MIN + "0" + dS + "76" + LatLonHelper.SEC, clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
         Assert.assertEquals(32, clusters.get(0).getBackwardCount());
         Assert.assertEquals(17, clusters.get(0).getForwardCount());
-        Assert.assertEquals("N 43" + LatLongHelper.DEG + "43" + LatLongHelper.MIN + "51" + dS + "17" + LatLongHelper.SEC +" E 7" + LatLongHelper.DEG + "25" + LatLongHelper.MIN + "22" + dS + "99" + LatLongHelper.SEC, clusters.get(16).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
+        Assert.assertEquals("N 43" + LatLonHelper.DEG + "43" + LatLonHelper.MIN + "51" + dS + "17" + LatLonHelper.SEC +" E 7" + LatLonHelper.DEG + "25" + LatLonHelper.MIN + "22" + dS + "99" + LatLonHelper.SEC, clusters.get(16).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
         Assert.assertEquals(4, clusters.get(16).getBackwardCount());
         Assert.assertEquals(28, clusters.get(16).getForwardCount());
         

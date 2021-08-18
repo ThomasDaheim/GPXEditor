@@ -54,11 +54,61 @@ public class ImageProvider {
     public List<MapImage> getImagesInBoundingBoxDegree(final BoundingBox boundingBox) {
         // verify bounding box
         // N = 0-90, S = 0-90
+        double minLat = boundingBox.getMinX();
+        double maxLat = boundingBox.getMaxX();
+        
+        // 0) max needs to be greater than min...
+        if (minLat > maxLat) {
+            double temp = maxLat;
+            maxLat = minLat;            
+            minLat = temp;
+        }
+
+        // 1) both need to have abs <= 90
+        minLat = Math.max(-90, minLat);
+        maxLat = Math.min(90, maxLat);
+
         // E = 0-180, W = 0-180
-        double minLat = Math.max(-90, boundingBox.getMinX());
-        double maxLat = Math.min(90, boundingBox.getMaxX());
-        double minLon = Math.max(-180, boundingBox.getMinY());
-        double maxLon = Math.min(180, boundingBox.getMaxY());
+        // we have wrapping @ E180 = W180...
+        // so both max an min need to be in the range -180 to 180
+        // AND max might be less than min if we need to check from W to E to have the shortest path
+        // examples
+        // -1000 to 1000 => -180 to 180 <- in any case the whole circle
+        // 354 to 364 => -6 to 4 <- 364 mods to 4, E354 wraps to W6
+        // 354 to 176 => -6 to 176 <- E354 wraps to W6
+        // 176 to 184 => 176 to -176 <- E184 wraps to W176
+        // -174 to -186 => -174 to 174 <- W186 wraps to E174
+        // https://gis.stackexchange.com/a/17987 has an idea here
+        double minLon = boundingBox.getMinY();
+        double maxLon = boundingBox.getMaxY();
+        
+        // 0) max needs to be greater than min...
+        if (minLon > maxLon) {
+            double temp = maxLon;
+            maxLon = minLon;            
+            minLon = temp;
+        }
+        
+        // 1) check if full circle is covered
+        if (Math.abs(maxLon - minLon) >= 360.0) {
+            minLon = -180.0;
+            maxLon = 180.0;
+        } else {
+            // 2) handle case of > 360 - mod it
+            minLon = minLon % 360;
+            maxLon = maxLon % 360;
+
+            // 3) handle case of > 180 - subtract 360; case of < -180 - add 360
+            if (Math.abs(minLon) > 180.0) {
+                minLon -= Math.signum(minLon) * 360.0;
+            }
+            if (Math.abs(maxLon) > 180.0) {
+                maxLon -= Math.signum(maxLon) * 360.0;
+            }
+            
+            // 4) any further checks required? e.g against the initial "distance between the points to make sure we have the box in the "right" direction?
+        }
+
         final BoundingBox checkedBox = new BoundingBox(minLat, minLon, maxLat - minLat, maxLon - minLon);
         
         return ImageStore.getInstance().getImagesInBoundingBox(checkedBox);
@@ -72,7 +122,13 @@ public class ImageProvider {
         final List<MapImage> result = new ArrayList<>();
         for (MapImage image : images) {
             // not really "actual" for degrees but better than rectangular bounding box
-            if ((Math.abs(image.getCoordinate().getLatitude() - latlng.getLatitude()) + Math.abs(image.getCoordinate().getLongitude()- latlng.getLongitude())) <= distance) {
+            final double latDist = Math.abs(image.getCoordinate().getLatitude() - latlng.getLatitude());
+            // need to take into account wrapping of lon! might be "shorter" to go across antimeridian - distance can't be bigger than 180 degrees
+            double lonDist = Math.abs(image.getCoordinate().getLongitude()- latlng.getLongitude());
+            if (lonDist > 180) {
+                lonDist = 360.0 - lonDist;
+            }
+            if (latDist + lonDist <= distance) {
                 result.add(image);
             }
         }
@@ -90,7 +146,7 @@ public class ImageProvider {
             distLon = distLat / FastMath.cos(FastMath.toRadians(latlng.getLatitude()));
         } else {
             // TODO: what to do now?
-            distLon = distLat / FastMath.cos(FastMath.toRadians(latlng.getLatitude()));
+            distLon = distLat / FastMath.cos(FastMath.toRadians(latlng.getLatitude())) * 1.5;
         }
         
         // 1st approx: use bounding box and find images in it

@@ -52,7 +52,7 @@ import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.ITaskExecutionConsumer;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -311,7 +311,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                 break;
             case 1:
                 final GPXWaypoint gpxWayoint = gpxWaypoints.get(0);
-                setStatusText(String.format(FORMAT_WAYPOINT_STRING, LatLongHelper.GPXWaypointToString(gpxWayoint)));
+                setStatusText(String.format(FORMAT_WAYPOINT_STRING, LatLonHelper.GPXWaypointToString(gpxWayoint)));
                 break;
             default:
                 final int workLoad = gpxWaypoints.size();

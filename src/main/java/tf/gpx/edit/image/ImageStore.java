@@ -38,6 +38,7 @@ import javafx.scene.image.Image;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.elevation.SRTMDataHelper;
 import tf.gpx.edit.elevation.SRTMDataKey;
+import tf.gpx.edit.helper.BoundingBoxHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
@@ -58,12 +59,11 @@ class ImageStore {
     private ImageStore() {
     }
 
-    public static ImageStore getInstance() {
+    protected static ImageStore getInstance() {
         return INSTANCE;
     }
     
-    public Image getImage(final MapImage mapImage) {
-        
+    protected Image getImage(final MapImage mapImage) {
         if (!imageStore.containsKey(mapImage)) {
             // try to read image
             final String filename = FilenameUtils.getName(mapImage.getFilename());
@@ -79,7 +79,7 @@ class ImageStore {
             if (imageFile.exists() && imageFile.isFile() && imageFile.canRead()) {
                 if (Platform.isFxApplicationThread()) {
                     // this only works inside a running javafx application...
-                    // keep things civilized and load reduceed image size
+                    // keep things civilized and load reduced image size
                     image = new Image(imageFile.toURI().toString(), 
                             GPXEditorPreferences.IMAGE_SIZE.getAsType(), GPXEditorPreferences.IMAGE_SIZE.getAsType(), true, true);
                 }
@@ -91,31 +91,62 @@ class ImageStore {
         return imageStore.get(mapImage);
     }
 
-    public List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
+    protected List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
         final List<MapImage> result = new ArrayList<>();
         
         // iterate over all image json files from top left to lower right and add all relevant images to list
-        final String topleft = SRTMDataHelper.getNameForCoordinate(boundingBox.getMinX(), boundingBox.getMinY());
-        final String bottomright = SRTMDataHelper.getNameForCoordinate(boundingBox.getMaxX(), boundingBox.getMaxY());
+        final String topleft = SRTMDataHelper.getNameForCoordinate(boundingBox.getMaxX(), boundingBox.getMinY());
+        final String bottomright = SRTMDataHelper.getNameForCoordinate(boundingBox.getMinX(), boundingBox.getMaxY());
 //        System.out.println("BoundingBox: " + boundingBox + ", topleft: " + topleft + ", bottomright: " + bottomright);
 
-        final int topLat = SRTMDataHelper.getLatitudeForName(topleft);
-        final int topLon = SRTMDataHelper.getLongitudeForName(topleft);
-        final int bottomLat = SRTMDataHelper.getLatitudeForName(bottomright);
-        final int bottomLon = SRTMDataHelper.getLongitudeForName(bottomright);
-//        System.out.println("topLat: " + topLat + ", topLon: " + topLon + ", bottomLat: " + bottomLat + ", bottomLon: " + bottomLon);
+        final int maxLat = SRTMDataHelper.getLatitudeForName(topleft);
+        final int maxLon = SRTMDataHelper.getLongitudeForName(bottomright);
+        final int minLat = SRTMDataHelper.getLatitudeForName(bottomright);
+        final int minLon = SRTMDataHelper.getLongitudeForName(topleft);
+//        System.out.println("maxLat: " + maxLat + ", maxLon: " + maxLon + ", minLat: " + minLat + ", minLon: " + minLon);
         
-        for (int lat = Math.min(topLat, bottomLat); lat <= Math.max(topLat, bottomLat); lat++) {
-            // TODO: lon is tricky, since it wraps around @ 180... So fastest way might be counting backwards with wrapping...
-            // so for 179E to 179W we need to use only 179E, 180E, 179W instead of counting from -179 to 179
-            for (int lon = Math.min(topLon, bottomLon); lon <= Math.max(topLon, bottomLon); lon++) {
-                // now read json if not already in store
-                final ImageData imageData = getDataForName(SRTMDataHelper.getNameForCoordinate(lat, lon));
-                // if we have one, lets check images
-                if (imageData != null) {
-                    for (MapImage image : imageData) {
-                        if (boundingBox.contains(image.getCoordinate().getLatitude(), image.getCoordinate().getLongitude())) {
-                            result.add(image);
+        assert maxLat >= minLat;
+        
+        for (int lat = minLat; lat <= maxLat; lat++) {
+            // lon is tricky, since it wraps around @ 180... So fastest way might be counting backwards with wrapping...
+            // so for 178E to 178W we need to use only 178E, 179E, 180E, 179W, 178W (178, 179, 180, -179, -178) instead of counting from -178 to 178
+            // in this case we should receive max = -178, min = 178 which would be 2 degreee around 180
+            // in order to distinguish from max 178, min -178 which would be 178 degrees around 0
+            if (maxLon < minLon) {
+                // go backwards
+                boolean wrappedIt = false;
+                for (int lon = maxLon; true; lon--) {
+                    if (lon == -180) {
+                        // wrap it, baby
+                        lon = 180;
+                        wrappedIt = true;
+                    }
+                    if (lon < minLon && wrappedIt) {
+                        // now we're done! once around the antimeridian and also beyond endpoint
+                        break;
+                    }
+                    // read json if not already in store
+                    final ImageData imageData = getDataForName(SRTMDataHelper.getNameForCoordinate(lat, lon));
+                    // if we have one, lets check images
+                    if (imageData != null) {
+                        for (MapImage image : imageData) {
+                            // we need to check "contains" taking into account wrapping...
+                            if (BoundingBoxHelper.contains(boundingBox, image.getCoordinate())) {
+                                result.add(image);
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (int lon = minLon; lon <= maxLon; lon++) {
+                    // read json if not already in store
+                    final ImageData imageData = getDataForName(SRTMDataHelper.getNameForCoordinate(lat, lon));
+                    // if we have one, lets check images
+                    if (imageData != null) {
+                        for (MapImage image : imageData) {
+                            if (boundingBox.contains(image.getCoordinate().getLatitude(), image.getCoordinate().getLongitude())) {
+                                result.add(image);
+                            }
                         }
                     }
                 }

@@ -34,8 +34,8 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tf.gpx.edit.helper.LatLongHelper;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *
@@ -88,7 +88,7 @@ class ImageDataReader {
                         final String filename = image.get(JSON_FILENAME).asText();
                         final String lat = image.get(JSON_LATITUDE).asText();
                         final String lon = image.get(JSON_LONGITUDE).asText();
-                        final LatLongElev latlon = new LatLongElev(LatLongHelper.latFromString(lat), LatLongHelper.lonFromString(lon));
+                        final LatLonElev latlon = new LatLonElev(LatLonHelper.latFromString(lat), LatLonHelper.lonFromString(lon));
                         
                         String description = "";
                         if (image.has(JSON_DESCRIPTION)) {

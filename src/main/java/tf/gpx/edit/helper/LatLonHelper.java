@@ -28,13 +28,13 @@ package tf.gpx.edit.helper;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *
  * @author thomas
  */
-public class LatLongHelper {
+public class LatLonHelper {
     public final static String DEG = "\u00B0";
     public final static String MIN = "'"; // how about "\u2032";
     public final static String SEC = "\""; // how about "\u2033";
@@ -209,7 +209,7 @@ public class LatLongHelper {
         W
     }
 
-    private LatLongHelper() {
+    private LatLonHelper() {
         throw new UnsupportedOperationException("Instantiation not allowed");
     }
 
@@ -217,7 +217,7 @@ public class LatLongHelper {
         return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
     }
             
-    public static String LatLongToString(final LatLongElev waypoint) {
+    public static String LatLongToString(final LatLonElev waypoint) {
         return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
     }
             

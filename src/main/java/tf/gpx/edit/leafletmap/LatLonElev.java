@@ -30,7 +30,7 @@ package tf.gpx.edit.leafletmap;
  * 
  * @author thomas
  */
-public class LatLongElev implements IGeoCoordinate {
+public class LatLonElev implements IGeoCoordinate {
     // TFE, 20210208: gpxparser sets elevation to 0.0 if not in gpx file...
     public final static Double NO_ELEVATION = 0.0d;
     
@@ -38,11 +38,11 @@ public class LatLongElev implements IGeoCoordinate {
     private final Double myLongitude;
     private final Double myElevation;
     
-    public LatLongElev (final Double latitude, final Double longitude) {
+    public LatLonElev (final Double latitude, final Double longitude) {
         this(latitude, longitude, NO_ELEVATION);
     }
     
-    public LatLongElev (final Double latitude, final Double longitude, final Double elevation) {
+    public LatLonElev (final Double latitude, final Double longitude, final Double elevation) {
         myLatitude = latitude;
         myLongitude = longitude;
         myElevation = elevation;

@@ -45,7 +45,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *
@@ -127,7 +127,7 @@ public class TestImageProvider {
     @Test
     public void readImageSameAreaDegree() {
         // read image for coordinates N55 E8
-        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+        LatLonElev latlong = new LatLonElev(55.5, 8.5);
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 0.1);
@@ -150,7 +150,7 @@ public class TestImageProvider {
     @Test
     public void readImageSameAreaMeter() {
         // read image for coordinates N55 E8
-        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+        LatLonElev latlong = new LatLonElev(55.5, 8.5);
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, 100);
@@ -161,8 +161,8 @@ public class TestImageProvider {
         Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
         Assert.assertEquals("We know your description!", "Test image", image.getDescription());
         
+        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLonElev(55.1, 8.1));
         // wide enough for both images
-        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLongElev(55.1, 8.1));
         images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.01);
         Assert.assertEquals("Two images at this location", 2, images.size());
         
@@ -174,7 +174,7 @@ public class TestImageProvider {
     @Test
     public void readImageSameAreaBoundingBox() {
         // read image for coordinates N55 E8
-        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+        LatLonElev latlong = new LatLonElev(55.5, 8.5);
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
@@ -197,7 +197,7 @@ public class TestImageProvider {
     @Test
     public void readImageNeighbourAreaBoundingBox() {
         // read image for coordinates N55 E8
-        LatLongElev latlong = new LatLongElev(54.5, 7.5);
+        LatLonElev latlong = new LatLonElev(54.5, 7.5);
         
         // no image
         List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 0.2, 0.2));
@@ -212,11 +212,11 @@ public class TestImageProvider {
         Assert.assertEquals("Two images in this area", 2, images.size());
     }
     
-    // the followiing can't be tested outside a running javafx application...
+    // the following can't be tested outside a running javafx application...
 //    @Test
 //    public void readImage() {
 //        // read image for coordinates N55 E8
-//        LatLongElev latlong = new LatLongElev(55.5, 8.5);
+//        LatLonElev latlong = new LatLonElev(55.5, 8.5);
 //        
 //        // exactly on one of the two images
 //        List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
@@ -233,16 +233,48 @@ public class TestImageProvider {
     
     @Test
     public void specialCaseNorthPole() {
+        // we have two images in N89E008
+        // N89.5 E8.5 and N89.1 E8.1
+        // those should be found from N89.5 E5.5 inside a short distance (<3000m) due to reduced distance between longotudes at the poles
+        LatLonElev latlong = new LatLonElev(89.5, 5.5);
         
+        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLonElev(89.5, 8.5));
+        System.out.println("Short distance: " + distance);
+        // wide enough for image with same latitude but not other latitiude
+        List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.1);
+        Assert.assertEquals("One images at this location", 1, images.size());
     }
     
     @Test
     public void specialCaseAntiMeridian() {
+        LatLonElev latlong = new LatLonElev(55.5, 180.0);
         
-    }
-    
-    @Test
-    public void specialCaseWrapAround() {
+        List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 4.0);
+        Assert.assertEquals("No image at this location", 0, images.size());
         
+        // this should find the images at 175.5 & -175.5
+        // with checking only for E175.5 to W175.5 without going once around the world...
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.0);
+        Assert.assertEquals("Two image at this location", 2, images.size());
+        
+        // this should find the images at 175.1, 175.5 & -175.5, -175.1
+        // with checking only for E175.5 to W175.5 without going once around the world...
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.6);
+        Assert.assertEquals("Four image at this location", 4, images.size());
+
+        latlong = new LatLonElev(55.5, -179.9);
+        
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 4.0);
+        Assert.assertEquals("No image at this location", 0, images.size());
+        
+        // this should find the images at 175.1, 175.5 & -175.5
+        // with checking only for E175.5 to W175.5 without going once around the world...
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.0);
+        Assert.assertEquals("Two image at this location", 2, images.size());
+        
+        // this should find the images at 175.1, 175.5 & -175.5, -175.1
+        // with checking only for E175.5 to W175.5 without going once around the world...
+        images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.6);
+        Assert.assertEquals("Four image at this location", 4, images.size());
     }
 }

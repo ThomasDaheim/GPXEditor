@@ -23,51 +23,54 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.elevation;
+package tf.gpx.edit.helper;
 
-import java.util.Arrays;
-import java.util.List;
+import javafx.geometry.BoundingBox;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Interface for all services thart provide elevations.
- * 
- * Implementations:
- * - SRTMDataStore
- * - OpenElevationService
+ *
  * @author thomas
  */
-public interface IElevationProvider {
-    // TFE, 20210208: gpxparser sets elevation to 0.0 if not in gpx file...
-    public final static double NO_ELEVATION = 0.0d;
-
-    ElevationProviderOptions getElevationProviderOptions();
-    
-    // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
-    // even so this code makes more calls for individual waypoints...
-    default Double getElevationForCoordinate(final double latitude, final double longitude) {
-        final List<Double> results = getElevationsForCoordinates(Arrays.asList(new LatLonElev(latitude, longitude)));
-        
-        if (!results.isEmpty()) {
-            return results.get(0);
-        } else {
-            return NO_ELEVATION;
-        }
+public class BoundingBoxHelper {
+    private BoundingBoxHelper() {
+        throw new UnsupportedOperationException("Instantiation not allowed");
     }
 
-    // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
-    // even so this code makes more calls for individual waypoints...
-    default Double getElevationForCoordinate(final IGeoCoordinate coord) {
-        final List<Double> results = getElevationsForCoordinates(Arrays.asList(coord));
+    public static boolean contains(final BoundingBox box, final IGeoCoordinate coord) {
+        return contains(box, coord.getLatitude(), coord.getLongitude(), coord.getElevation());
+    }
+    
+    public static boolean contains(final BoundingBox box, final double lat, final double lon, final double elev) {
+        if (isEmpty(box)) {
+            return false;
+        }
         
-        if (!results.isEmpty()) {
-            return results.get(0);
+        if (!isWrapped(box)) {
+            return box.contains(lat, lon, elev);
         } else {
-            return NO_ELEVATION;
+            return  lat >= box.getMinX() && 
+                    lat <= box.getMaxX() && 
+                    // things are a bit trickier than standard "contains" - we need to check between (minY and -180 ) OR (maxY and 180)
+                    // ignore the limit +/- 180 - that should be checked outside
+                    (lon >= box.getMaxY() || 
+                    lon <= box.getMinY()) && 
+                    elev >= box.getMinZ() && 
+                    elev <= box.getMaxZ();
         }
     }
     
-    // the only thing you need to implement - list of coordinates
-    List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords);
+    public static boolean isEmpty(final BoundingBox box) {
+        if (!isWrapped(box)) {
+            return box.isEmpty();
+        } else {
+            // ignore lon in check for empty
+            return box.getMaxX() < box.getMinX() || box.getMaxZ() < box.getMinZ();
+        }
+    }
+    
+    private static boolean isWrapped(final BoundingBox box) {
+        // "wrapped" means that lon goes from -(0-180) to +(0-180)
+        return (box.getMaxY() < 0.0 && box.getMinY() > 0.0);
+    }
 }

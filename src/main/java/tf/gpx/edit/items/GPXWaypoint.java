@@ -43,7 +43,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.helper.general.ObjectsHelper;
 
@@ -360,7 +360,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
             case Name:
                 return getName();
             case Position:
-                return LatLongHelper.GPXWaypointToString(this);
+                return LatLonHelper.GPXWaypointToString(this);
             // TFE, 20190722: Start for a Waypoint is same as Date...
             case Start:
             case Date:
