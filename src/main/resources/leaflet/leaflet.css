@@ -35,6 +35,14 @@
 }
 
 #toggleHeatMapButton {
+    padding: 0px; 
+    margin: 0px;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+}
+
+#togglePictureIconsButton {
     margin: 0px;
     padding: 0px;
     width: 36px;

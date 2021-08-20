@@ -79,6 +79,8 @@ import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.image.ImageProvider;
+import tf.gpx.edit.image.MapImage;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -255,6 +257,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
     // store start/end fileWaypointsCount of trackSegments and routes + markers as apache bidirectional map
     private final BidiMap<String, GPXWaypoint> markers = new DualHashBidiMap<>();
+    
+    // TFE, 20210820: keep track of map images that we have visited so far
+    private final Set<MapImage> mapImages = new LinkedHashSet<>();
 
     private BoundingBox mapBounds;
     private JSObject window;
@@ -435,6 +440,13 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
 //            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
 //            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
+
+            // TFE, 2020820: support for images on maps
+            addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
+            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
+            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
+            addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
+            setPictureIconsButtonState(MapButtonState.fromBoolean(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()));
 
             myMapPane = (Pane) getParent();
             
@@ -1732,6 +1744,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             updateHeatMapPane();
         }
         ChartsPane.getInstance().setViewLimits(mapBounds);
+        
+        // TFE, 20210820: look for new pictures in bounding box
+        getPicturesInBoundingBox();
     }
     
     public void mapViewChanging(final BoundingBox newBoundingBox) {
@@ -1786,6 +1801,33 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         HeatMapPane.getInstance().addEvents(point2Ds);
     }
 
+    public void setPictureIconsButtonState(final MapButtonState state) {
+        execScript("setPictureIconsButtonState(\"" + state.toString() + "\");");
+    }
+    public void togglePictureIcons(final Boolean visible) {
+        // save into preferences
+        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
+    }
+    
+    private void getPicturesInBoundingBox() {
+        if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
+            final List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(mapBounds);
+            final StringBuilder cmdArgs = new StringBuilder();
+            for (MapImage image : images) {
+                if (!mapImages.contains(image)) {
+                    // need to add it to set and to markercluster
+                    mapImages.add(image);
+                    // TODO: build up string of values for execScript - don't add each individually!
+                }
+            }
+//            if (cmdArgs.length() > 0) {
+//                execScript("addAndShowPictureIcons(\"" + cmdArgs.toString() + "\");");
+//            } else {
+//                execScript("showPictureIcons();");
+//            }
+        }
+    }
+    
     // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
     // we only have the methods to access the leafletview
     public String getCurrentBaselayer() {
@@ -1994,6 +2036,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         public void toggleHeatMap(final Boolean visible) {
 //            System.out.println("toggleHeatMap: " + visible);
             myTrackMap.toggleHeatMapPane(visible);
+        }
+        
+        public void togglePictureIcons(final Boolean visible) {
+            System.out.println("togglePictureIcons: " + visible);
+            myTrackMap.togglePictureIcons(visible);
         }
     }
 }
