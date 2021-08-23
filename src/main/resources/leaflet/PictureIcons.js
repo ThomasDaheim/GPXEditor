@@ -82,7 +82,6 @@ function setPictureIconsButtonState(state) {
     }
 }
 
-/* 
 // use marker cluster with spiderfy and image group borders - but no zoom in please
 var pictureIconLayer = L.markerClusterGroup({ spiderfyOnMaxZoom: false, showCoverageOnHover: true, zoomToBoundsOnClick: false });
 pictureIconLayer.on('clusterclick', function (a) {
@@ -93,25 +92,71 @@ myMap.addLayer(pictureIconLayer);
 
 // no need to track map bounding box changes here - is done in TrackMap.java and will end up here in either addAndShowPictureIcons or showPictureIcons
 
-// for each map image we need to store: position, title (for hover), id (for callback)
-var pictureImages = [];
+// for each map image we need to store: coordinates, title (for hover), id (for callback)
+var pictureIconList = [];
 
 function addAndShowPictureIcons(pictureIcons) {
-    var pictureImage = { lat: 0, lon: 0, title: 'Test', id = 0 };
-    pictureImages.push(pictureImage);
+//    jscallback.log('addAndShowPictureIcons: ' + pictureIcons);
+    var coordinates = pictureIcons.coordinates;
+    var titles = pictureIcons.titles;
+    var ids = pictureIcons.ids;
+//    jscallback.log('coordinates: ' + coordinates);
+//    jscallback.log('titles: ' + titles);
+//    jscallback.log('ids: ' + ids);
+    
+    for (i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        var pictitle = titles[i];
+        var lat = coordinates[i][0];
+        var lon = coordinates[i][1];
+        
+//        jscallback.log('i: ' + i);
+//        jscallback.log('id: ' + id);
+//        jscallback.log('pictitle: ' + pictitle);
+//        jscallback.log('lat: ' + lat);
+//        jscallback.log('lon: ' + lon);
+        var marker = L.circleMarker([lat, lon], {radius: 4, fillOpacity: 1, color: 'blue', fillColor: 'green', weight: 1, renderer: myMap.options.renderer});
+        marker.id = id;
+        marker.pictitle = pictitle;
+        marker.bindTooltip(pictitle);
+        
+        // tell TrackMap to show/hide the popup with image
+        marker.on('click', function(e){
+            var marker = e.target;
+            jscallback.showPicturePopup(marker.id);
+        });
+        // TODO: when to hide the popup? how does google earth do it?
+        marker.on('mouseout', function(e){
+            var marker = e.target;
+            jscallback.hidePicturePopup(marker.id);
+        });
+
+        pictureIconList.push(marker);
+    }
     
     // and now show the new icons on the map
     showPictureIcons();
 }
 
 function showPictureIcons() {
+//    jscallback.log('showPictureIcons');
+
     // see https://codesandbox.io/s/leaflet-markerclusters-performance-test-addlayersclearlayers-q08xl?file=/src/Leaflet.jsx for how to use with performance improvements
     hidePictureIcons();
     
-    // and check in addition against current boundingbox
+    var markersToAdd = [];
+    for (i = 0; i < pictureIconList.length; i++) {
+        var marker = pictureIconList[i];
+        // check against current boundingbox
+       
+        markersToAdd.push(marker);
+    }
+    pictureIconLayer.addLayers(markersToAdd);
 }
 
 function hidePictureIcons() {
+//    jscallback.log('hidePictureIcons');
+
     pictureIconLayer.clearLayers();
+//    jscallback.log('hidePictureIcons: after clearLayers()');
 }
-*/

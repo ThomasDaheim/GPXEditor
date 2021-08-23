@@ -40,6 +40,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IllegalFormatException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,6 +92,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.leafletmap.ColorMarker;
 import tf.gpx.edit.leafletmap.ControlPosition;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.IMarker;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.leafletmap.LeafletMapView;
@@ -259,7 +261,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final BidiMap<String, GPXWaypoint> markers = new DualHashBidiMap<>();
     
     // TFE, 20210820: keep track of map images that we have visited so far
-    private final Set<MapImage> mapImages = new LinkedHashSet<>();
+    private final List<MapImage> mapImages = new ArrayList<>();
 
     private BoundingBox mapBounds;
     private JSObject window;
@@ -1585,7 +1587,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         String geojson = cmdString.toString();
         
         // create js strings for coordinates, time, altitude
-        final List<LatLonElev> coordinates = new ArrayList<>();
+        final List<IGeoCoordinate> coordinates = new ArrayList<>();
         final List<String> time = new ArrayList<>();
         final List<String> altitude = new ArrayList<>();
         for (GPXWaypoint waypoint : waypoints) {
@@ -1773,7 +1775,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     }
     private void updateHeatMapPane() {
 //        System.out.println("trackWaypoints: " + trackWaypoints.size());
-        final List<LatLonElev> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
+        final List<IGeoCoordinate> trackLatLongs = trackWaypoints.values().stream().map((t) -> {
             return new LatLonElev(t.getLatitude(), t.getLongitude());
         }).collect(Collectors.toList());
 
@@ -1812,20 +1814,53 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private void getPicturesInBoundingBox() {
         if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
             final List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(mapBounds);
-            final StringBuilder cmdArgs = new StringBuilder();
+            
+            final List<MapImage> newImages = new ArrayList<>();
             for (MapImage image : images) {
                 if (!mapImages.contains(image)) {
-                    // need to add it to set and to markercluster
-                    mapImages.add(image);
-                    // TODO: build up string of values for execScript - don't add each individually!
+                    newImages.add(image);
                 }
             }
-//            if (cmdArgs.length() > 0) {
-//                execScript("addAndShowPictureIcons(\"" + cmdArgs.toString() + "\");");
-//            } else {
+            if (!newImages.isEmpty()) {
+                mapImages.addAll(newImages);
+                
+//                System.out.println(pictureIconsJS(newImages));
+                // now build cmd string for javascript to add to pictureIconList
+                execScript("addAndShowPictureIcons(" + pictureIconsJS(newImages) + ");");
+            } else {
+//                System.out.println("No new images for this bounding box");
 //                execScript("showPictureIcons();");
-//            }
+            }
+            
         }
+    }
+    
+    private String pictureIconsJS(final List<MapImage> newImages) {
+        // create variable frame
+        final StringBuilder cmdString = new StringBuilder();
+        cmdString.append("{\n");
+        cmdString.append("    coordinates: %s,\n");
+        cmdString.append("    titles: %s,\n");
+        cmdString.append("    ids: %s\n");
+        cmdString.append("}\n");
+        
+        String geojson = cmdString.toString();
+        
+        // create js strings for coordinates, titles, ids
+        final List<IGeoCoordinate> coordinates = new ArrayList<>();
+        final List<String> title = new ArrayList<>();
+        final List<String> id = new ArrayList<>();
+        for (MapImage image : newImages) {
+            coordinates.add(image.getCoordinate());
+            title.add(image.getDescription());
+            id.add(String.valueOf(mapImages.indexOf(image)));
+        }
+        geojson = String.format(Locale.US, geojson, 
+                transformToJavascriptArray(coordinates),
+                transformToJavascriptArray(title, true), 
+                transformToJavascriptArray(id, false));
+
+        return geojson;
     }
     
     // TFE, 20200622: store & load of preferences has been moved to MapLayerUsage
@@ -1907,13 +1942,15 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             result.add(slotVal.toString());
         }
     }
+    // https://stackoverflow.com/a/40715121
     private static String transformToJavascriptArray(final List<String> arr, final boolean quoteItems) {
         final StringBuffer sb = new StringBuffer();
         sb.append("[");
 
         for (String str : arr) {
             if (quoteItems) {
-                sb.append("\"").append(str).append("\"").append("\n");
+                // TFE, 20210821: and some other thing that wasn't covered in a test case :-)
+                sb.append("\"").append(str).append("\"").append(",\n");
             } else {
                 sb.append(str).append(",\n");
             }
@@ -1927,11 +1964,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         return sb.toString();
     }    
-    private static String transformToJavascriptArray(final List<LatLonElev> arr) {
+    private static String transformToJavascriptArray(final List<IGeoCoordinate> arr) {
         final StringBuffer sb = new StringBuffer();
         sb.append("[");
 
-        for (LatLonElev latlong : arr) {
+        for (IGeoCoordinate latlong : arr) {
             sb.append("[").append(latlong.getLatitude()).append(", ").append(latlong.getLongitude()).append("]").append(",\n");
         }
         if (sb.length() > 1) {
@@ -2041,6 +2078,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         public void togglePictureIcons(final Boolean visible) {
             System.out.println("togglePictureIcons: " + visible);
             myTrackMap.togglePictureIcons(visible);
+        }
+        
+        public void showPicturePopup(final Integer id) {
+            System.out.println("showPicturePopup: " + id);
+        }
+        
+        public void hidePicturePopup(final Integer id) {
+            System.out.println("hidePicturePopup: " + id);
         }
     }
 }

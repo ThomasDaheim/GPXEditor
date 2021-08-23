@@ -462,7 +462,12 @@ public class LeafletMapView extends StackPane {
      * @return Object returned from web engine
      */
     protected Object execScript(final String script) {
-        return myWebEngine.executeScript(script);
+        try {
+            return myWebEngine.executeScript(script);
+        } catch(Exception ex) {
+            Logger.getLogger(LeafletMapView.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
     
     protected List<MapLayer> getBaselayer() {
