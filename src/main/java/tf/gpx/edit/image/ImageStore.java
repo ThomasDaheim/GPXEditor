@@ -80,8 +80,8 @@ class ImageStore {
                 if (Platform.isFxApplicationThread()) {
                     // this only works inside a running javafx application...
                     // keep things civilized and load reduced image size
-                    image = new Image(imageFile.toURI().toString(), 
-                            GPXEditorPreferences.IMAGE_SIZE.getAsType(), GPXEditorPreferences.IMAGE_SIZE.getAsType(), true, true);
+                    final Integer imageSize = GPXEditorPreferences.IMAGE_SIZE.getAsType();
+                    image = new Image(imageFile.toURI().toString(), imageSize * 1.0, imageSize * 1.0, true, true);
                 }
             }
             // cache the result for later use...

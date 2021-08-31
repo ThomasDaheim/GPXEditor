@@ -453,3 +453,7 @@
 .slider .axis {
     -fx-tick-label-fill: -fx-text-inner-color;
 }
+
+/* TFE, 20210828: node showing the mapimage and title */
+.mapImageViewer > * {
+}

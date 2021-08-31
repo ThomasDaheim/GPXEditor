@@ -27,6 +27,7 @@ package tf.gpx.edit.viewer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -63,10 +64,12 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.robot.Robot;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.web.WebEvent;
 import netscape.javascript.JSObject;
@@ -74,6 +77,7 @@ import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.text.StringEscapeUtils;
+import org.controlsfx.control.PopOver;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
@@ -82,6 +86,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.image.MapImage;
+import tf.gpx.edit.image.MapImageViewer;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -262,6 +267,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     
     // TFE, 20210820: keep track of map images that we have visited so far
     private final List<MapImage> mapImages = new ArrayList<>();
+    private final PopOver mapImagePopOver = new PopOver();
+    private Integer currentMapImageId = null;
 
     private BoundingBox mapBounds;
     private JSObject window;
@@ -284,6 +291,19 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         elevationProvider = new ElevationProviderBuilder(new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_FIRST)).build();
         
         setVisible(false);
+        
+        // init popover for images
+        mapImagePopOver.setAutoHide(false);
+        mapImagePopOver.setAutoFix(true);
+        mapImagePopOver.setCloseButtonEnabled(true);
+        mapImagePopOver.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+        mapImagePopOver.setArrowSize(0);
+
+        mapImagePopOver.addEventHandler(KeyEvent.KEY_PRESSED, (t) -> {
+            if (MapImageViewer.isCompleteCode(t.getCode())) {
+                hidePicturePopup(currentMapImageId);
+            }
+        });
     }
     
     public static TrackMap getInstance() {
@@ -1747,7 +1767,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         ChartsPane.getInstance().setViewLimits(mapBounds);
         
-        // TFE, 20210820: look for new pictures in bounding box
+        // TFE, 20210820: look for new pictures in bounding box - and remove current popover - if visible
+        hidePicturePopup(currentMapImageId);
         getPicturesInBoundingBox();
     }
     
@@ -1809,6 +1830,26 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     public void togglePictureIcons(final Boolean visible) {
         // save into preferences
         GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
+        
+        if (!visible) {
+            hidePicturePopup(currentMapImageId);
+        }
+    }
+    
+    public void showPicturePopup(final Integer id) {
+        currentMapImageId = id;
+        
+        mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
+        
+        final Point2D mouseLocation = (new Robot()).getMousePosition();
+        mapImagePopOver.setX(mouseLocation.getX());
+        mapImagePopOver.setY(mouseLocation.getY());
+        mapImagePopOver.show(myMapPane.getScene().getWindow());
+    }
+    
+    public void hidePicturePopup(final Integer id) {
+        currentMapImageId = null;
+        mapImagePopOver.hide();
     }
     
     private void getPicturesInBoundingBox() {
@@ -2076,16 +2117,18 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         
         public void togglePictureIcons(final Boolean visible) {
-            System.out.println("togglePictureIcons: " + visible);
+//            System.out.println("togglePictureIcons: " + visible);
             myTrackMap.togglePictureIcons(visible);
         }
         
         public void showPicturePopup(final Integer id) {
-            System.out.println("showPicturePopup: " + id);
+//            System.out.println("showPicturePopup: " + id);
+            myTrackMap.showPicturePopup(id);
         }
         
         public void hidePicturePopup(final Integer id) {
-            System.out.println("hidePicturePopup: " + id);
+//            System.out.println("hidePicturePopup: " + id);
+            myTrackMap.hidePicturePopup(id);
         }
     }
 }
