@@ -65,15 +65,7 @@ class ImageStore {
     
     protected Image getImage(final MapImage mapImage) {
         if (!imageStore.containsKey(mapImage)) {
-            // try to read image
-            final String filename = FilenameUtils.getName(mapImage.getFilename());
-            String path = FilenameUtils.getFullPath(mapImage.getFilename());
-            if (path.isEmpty()) {
-                // no path in json file name - use default one
-                path = GPXEditorPreferences.DEFAULT_IMAGE_PATH.getAsString();
-            }
-            
-            final File imageFile = Paths.get(path, filename).toFile();
+            final File imageFile = mapImage.getImagePath().toFile();
 
             Image image = null;
             if (imageFile.exists() && imageFile.isFile() && imageFile.canRead()) {

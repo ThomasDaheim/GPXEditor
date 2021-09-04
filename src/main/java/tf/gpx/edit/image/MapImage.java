@@ -25,7 +25,12 @@
  */
 package tf.gpx.edit.image;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javafx.scene.image.Image;
+import org.apache.commons.io.FilenameUtils;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
@@ -67,5 +72,17 @@ public class MapImage {
     
     public Image getImage() {
         return ImageStore.getInstance().getImage(this);
+    }
+    
+    public Path getImagePath() {
+        // try to read image
+        final String filename = FilenameUtils.getName(getFilename());
+        String path = FilenameUtils.getFullPath(getFilename());
+        if (path.isEmpty()) {
+            // no path in json file name - use default one
+            path = GPXEditorPreferences.DEFAULT_IMAGE_PATH.getAsString();
+        }
+
+        return Paths.get(path, filename);
     }
 }

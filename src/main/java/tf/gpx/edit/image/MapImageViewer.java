@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.image;
 
+import java.awt.Desktop;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.geometry.VPos;
@@ -62,6 +64,16 @@ public class MapImageViewer extends GridPane {
         
         int rowNum = 0;
         mapImageViewer.setPreserveRatio(true);
+        mapImageViewer.setOnMouseClicked((t) -> {
+            if (myMapImage != null && myMapImage.getImage() != null && myMapImage.getImagePath()!= null) {
+                try {
+                    Desktop.getDesktop().open(myMapImage.getImagePath().toFile());
+                } catch (IOException ex) {
+                    Logger.getLogger(MapImageViewer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+
         getGridPane().add(mapImageViewer, 0, rowNum, 1, 1);
         GridPane.setValignment(mapImageViewer, VPos.CENTER);
         GridPane.setMargin(mapImageViewer, INSET_TOP);
@@ -80,7 +92,7 @@ public class MapImageViewer extends GridPane {
                 mapImageViewer.setFitHeight(mapImage.getHeight());
                 mapImageViewer.setFitWidth(mapImage.getWidth());
             }
-
+            
             imageDescription.setText(myMapImage.getDescription());
         } catch (Exception ex) {
             Logger.getLogger(MapImageViewer.class.getName()).log(Level.SEVERE, null, ex);
