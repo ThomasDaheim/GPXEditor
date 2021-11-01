@@ -82,6 +82,7 @@ public class MarkerManager {
     private final static String WINERY_ICON = "Winery";
     private final static String FASTFOOD_ICON = "Fast Food";
     private final static String BAR_ICON = "Bar";
+    private final static String IMAGE_ICON = "Image";
     
     public final static String LONG_ICON_SIZE = "Long";
     public final static String DEFAULT_ICON_SIZE = "24";
@@ -109,7 +110,8 @@ public class MarkerManager {
         FastFoodSearchIcon(FASTFOOD_ICON, FASTFOOD_ICON, DEFAULT_ICON_SIZE),
         BarIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
         BarSearchIcon(BAR_ICON, BAR_ICON, DEFAULT_ICON_SIZE),
-        SearchResultIcon("", SEARCHRESULT_ICON, DEFAULT_ICON_SIZE);
+        SearchResultIcon("", SEARCHRESULT_ICON, DEFAULT_ICON_SIZE),
+        ImageIcon("", IMAGE_ICON, DEFAULT_ICON_SIZE);
         
         private final String markerName;
         private final String iconName;

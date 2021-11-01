@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.image;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.BoundingBox;
@@ -172,5 +173,17 @@ public class ImageProvider {
         final BoundingBox boundingBox = new BoundingBox(minLat, minLon, maxLat - minLat, maxLon - minLon);
         
         return getImagesInBoundingBoxDegree(boundingBox);
+    }
+    
+    public void init() {
+        // separate non-FX thread
+        new Thread() {
+            // runnable for that thread
+            public void run() {
+//                System.out.println("ImageProvider.init() START " + Instant.now());
+                ImageStore.getInstance().init();
+//                System.out.println("ImageProvider.init() DONE " + Instant.now());
+            }
+        }.start();
     }
 }

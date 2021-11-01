@@ -26,7 +26,7 @@
 package tf.gpx.edit.image;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +51,8 @@ class ImageStore {
     private final static ImageStore INSTANCE = new ImageStore();
     
     public final static String JSON_EXT = "json";
+    
+    private boolean initDone = false;
     
     private final Map<SRTMDataKey, ImageData> imageDataStore = new HashMap<>();
     private final Map<MapImage, Image> imageStore = new HashMap<>();
@@ -84,6 +86,7 @@ class ImageStore {
     }
 
     protected List<MapImage> getImagesInBoundingBox(final BoundingBox boundingBox) {
+//        System.out.println("  getImagesInBoundingBox START: " + Instant.now());
         final List<MapImage> result = new ArrayList<>();
         
         // iterate over all image json files from top left to lower right and add all relevant images to list
@@ -145,11 +148,13 @@ class ImageStore {
             }
         }
 
+//        System.out.println("  getImagesInBoundingBox END: " + Instant.now());
         return result;
     }
     
     protected ImageData getDataForName(final String dataName) {
-        ImageData result;
+//        System.out.println("    getDataForName START: " + dataName + ", " + Instant.now());
+        ImageData result = null;
 
         String name = dataName;
         if (name.endsWith(JSON_EXT)) {
@@ -160,8 +165,10 @@ class ImageStore {
         SRTMDataKey dataKey = dataKeyForName(name);
         
         if (dataKey == null) {
-            // if not found: try to read file and add to store
-            result = ImageDataReader.getInstance().readImageData(name, GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
+            if (!initDone) {
+                // if not found: try to read file and add to store
+                result = ImageDataReader.getInstance().readImageData(name, GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
+            }
             
             if (result != null) {
                 imageDataStore.put(result.getKey(), result);
@@ -170,6 +177,7 @@ class ImageStore {
             result = imageDataStore.get(dataKey);
         }
         
+//        System.out.println("    getDataForName END: " + dataName + ", " + Instant.now());
         return result;
     }
     
@@ -189,5 +197,17 @@ class ImageStore {
         }
         
         return result;
+    }
+    
+    protected void init() {
+        imageDataStore.clear();
+        
+        // scan path for image files and read them ALL
+        final List<String> dataNames = ImageDataReader.getInstance().readImageDataList(GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
+        for (String dataName : dataNames) {
+            getDataForName(dataName);
+        }
+        
+        initDone = true;
     }
 }

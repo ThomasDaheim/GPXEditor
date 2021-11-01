@@ -27,7 +27,6 @@ package tf.gpx.edit.viewer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,10 +37,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IllegalFormatException;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -449,7 +448,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            // support for locate
 //            // url command in css not working
 //            // https://stackoverflow.com/a/50602814
-//            myWebView.getEngine().setUserStyleSheetLocation(
+//            getWebView().getEngine().setUserStyleSheetLocation(
 //                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
 //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
 //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
@@ -1854,7 +1853,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     
     private void getPicturesInBoundingBox() {
         if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
+//            System.out.println("getPicturesInBoundingBox START: " + Instant.now());
             final List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(mapBounds);
+//            System.out.println("  images loaded: " + Instant.now());
             
             final List<MapImage> newImages = new ArrayList<>();
             for (MapImage image : images) {
@@ -1865,14 +1866,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             if (!newImages.isEmpty()) {
                 mapImages.addAll(newImages);
                 
-//                System.out.println(pictureIconsJS(newImages));
+//                System.out.println("  addAndShowPictureIcons: " + pictureIconsJS(newImages));
                 // now build cmd string for javascript to add to pictureIconList
                 execScript("addAndShowPictureIcons(" + pictureIconsJS(newImages) + ");");
+//            System.out.println("  images shown: " + Instant.now());
             } else {
 //                System.out.println("No new images for this bounding box");
 //                execScript("showPictureIcons();");
             }
             
+//            System.out.println("getPicturesInBoundingBox END: " + Instant.now());
         }
     }
     

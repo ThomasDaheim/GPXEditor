@@ -122,7 +122,7 @@ function addAndShowPictureIcons(pictureIcons) {
 //        jscallback.log('pictitle: ' + pictitle);
 //        jscallback.log('lat: ' + lat);
 //        jscallback.log('lon: ' + lon);
-        var marker = L.circleMarker([lat, lon], {radius: 4, fillOpacity: 1, color: 'blue', fillColor: 'green', weight: 1, renderer: myMap.options.renderer});
+        var marker = L.marker([lat, lon], {icon: iconImage});
         marker.id = id;
         marker.pictitle = pictitle;
         marker.bindTooltip(pictitle);
@@ -132,7 +132,7 @@ function addAndShowPictureIcons(pictureIcons) {
             var marker = e.target;
             jscallback.showPicturePopup(marker.id);
         });
-        // we hide the popup on clicking on gthe cross, pressing esacpe or changing the bounding box - so nothing to see and do here!
+        // we hide the popup on clicking on the cross, pressing esacpe or changing the bounding box - so nothing to see and do here!
 //        marker.on('mouseout', function(e){
 //            var marker = e.target;
 //            jscallback.hidePicturePopup(marker.id);

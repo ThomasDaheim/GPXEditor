@@ -31,9 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
@@ -63,15 +67,17 @@ class ImageDataReader {
     public ImageData readImageData(final String name, final String path) {
         assert name != null;
         
-        ImageData result = null;
+//        System.out.println("readImageData: " + name);
         
         // create filename & try to open
         final File imageFile = Paths.get(path, name + "." + ImageStore.JSON_EXT).toFile();
+
+        ImageData result = null;
         
         if (imageFile.exists() && imageFile.isFile() && imageFile.canRead()) {
-            result = new ImageData(imageFile.getAbsolutePath(), name);
-            
             try {
+                result = new ImageData(imageFile.getAbsolutePath(), name);
+                
                 objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                 // read & parse json
@@ -104,6 +110,21 @@ class ImageDataReader {
             }
         }
 
+        return result;
+    }
+    
+    public List<String> readImageDataList(final String path) {
+        final List<String> result = new ArrayList<>();
+
+        // find all matching JSON files in the given directory
+        final File dir = new File(path);
+        final String[] extensions = new String[] { ImageStore.JSON_EXT };
+        final List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, false);
+
+        for (File file : files) {
+            result.add(FilenameUtils.getBaseName(file.getName()));
+        }
+        
         return result;
     }
 }

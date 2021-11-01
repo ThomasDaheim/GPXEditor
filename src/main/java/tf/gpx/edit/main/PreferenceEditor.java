@@ -72,6 +72,7 @@ import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
+import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.leafletmap.MapLayerTable;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.viewer.HeatMapPane;
@@ -986,7 +987,11 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(imageChkBox.isSelected());
-        GPXEditorPreferences.IMAGE_INFO_PATH.put(imagePathText.getText().trim());
+        if (!GPXEditorPreferences.IMAGE_INFO_PATH.getAsType().equals(imagePathText.getText().trim())) {
+            GPXEditorPreferences.IMAGE_INFO_PATH.put(imagePathText.getText().trim());
+            // TFE, 20211101: init image store
+            ImageProvider.getInstance().init();
+        }
         GPXEditorPreferences.DEFAULT_IMAGE_PATH.put(defaultImagePathText.getText().trim());
         GPXEditorPreferences.IMAGE_SIZE.put(Math.max(Integer.valueOf(imageSizeText.getText().trim()), 0));
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable

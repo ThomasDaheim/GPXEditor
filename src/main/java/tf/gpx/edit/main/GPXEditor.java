@@ -128,6 +128,7 @@ import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.TaskExecutor;
+import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
@@ -468,6 +469,9 @@ public class GPXEditor implements Initializable {
         }
         // System.out.println("Processing " + gpxFileNames.size() + " files.");
         parseAndAddFiles(gpxFileNames);
+        
+        // TFE, 20211101: init image store
+        ImageProvider.getInstance().init();
 
         // TFE, 20201030: select first item if passed as arg
         Platform.runLater(() -> {
