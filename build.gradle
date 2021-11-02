@@ -119,6 +119,8 @@ dependencies {
     implementation group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
     implementation group: 'org.jfxtras', name: 'jmetro', version: '11.6.14'
     
+    implementation group: 'org.im4java', name: 'im4java', version: '1.4.0'
+    
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     // TFE, 20210216: capture System.err() easily
     testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
@@ -185,6 +187,11 @@ run {
     }
 //    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
 }
+
+// TFE, 20211102: not working like below
+//task(runSingle) {
+//    args = ["C:\\WUTemp\\feuster.com\\Pictures*C:\\WUTemp\\Temp"]
+//}
 
 test {
     doFirst {
