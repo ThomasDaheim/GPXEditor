@@ -36,7 +36,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
@@ -195,7 +194,8 @@ public class MakeImageJSON {
                 if (!JSONFiles.containsKey(dataName)) {
                     JSONFiles.put(dataName, new StringBuffer());
                 }
-                addImageInfoToJSON(fileName, latitude, longitude, JSONFiles.get(dataName));
+                // store with full path
+                addImageInfoToJSON(elements[0], latitude, longitude, JSONFiles.get(dataName));
             }
 
             // 5) finalize all JSON Stringbuffer and write to file
@@ -218,12 +218,6 @@ public class MakeImageJSON {
         }
         
         System.out.println("MakeImageJSON completed.");
-        
-        if (result) {
-            System.exit(1);
-        } else {
-            System.exit(0);
-        }
     }
     
     static private void addImageInfoToJSON(final String filename, final String latitude, final String longitude, final StringBuffer JSON) {

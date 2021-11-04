@@ -67,7 +67,7 @@ class ImageDataReader {
     public ImageData readImageData(final String name, final String path) {
         assert name != null;
         
-//        System.out.println("readImageData: " + name);
+//        System.out.println("      readImageData: " + name);
         
         // create filename & try to open
         final File imageFile = Paths.get(path, name + "." + ImageStore.JSON_EXT).toFile();
@@ -97,7 +97,9 @@ class ImageDataReader {
                         final LatLonElev latlon = new LatLonElev(LatLonHelper.latFromString(lat), LatLonHelper.lonFromString(lon));
                         
                         String description = "";
-                        if (image.has(JSON_DESCRIPTION)) {
+                        if (!image.has(JSON_DESCRIPTION) || image.get(JSON_DESCRIPTION).asText().isBlank()) {
+                            description = FilenameUtils.getName(filename);
+                        } else {
                             description = image.get(JSON_DESCRIPTION).asText();
                         }
 //                        System.out.println("filename: " + filename + ", lat: " + lat + ", lon: " + lon + ", description: " + description);

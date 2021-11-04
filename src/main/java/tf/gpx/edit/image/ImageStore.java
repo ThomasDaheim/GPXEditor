@@ -55,6 +55,8 @@ class ImageStore {
     private boolean initDone = false;
     
     private final Map<SRTMDataKey, ImageData> imageDataStore = new HashMap<>();
+    // TFE, 20211104: helper map to speed up dataKeyForName()
+    private final Map<String, SRTMDataKey> imageKeyStore = new HashMap<>();
     private final Map<MapImage, Image> imageStore = new HashMap<>();
     
     // this only makes sense with options
@@ -184,16 +186,15 @@ class ImageStore {
     private SRTMDataKey dataKeyForName(final String dataName) {
         SRTMDataKey result = null;
         
-        final List<SRTMDataKey> dataEntries = imageDataStore.keySet().stream().
-                filter((SRTMDataKey key) -> {
-                    return key.getKey().equals(dataName);
-                }).
-                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
-                collect(Collectors.toList());
-        
-        if (!dataEntries.isEmpty()) {
-            // sorted by type and therefore sorted by accuracy :-)
-            result = dataEntries.get(0);
+//        final List<SRTMDataKey> dataEntries = imageDataStore.keySet().stream().
+//                filter((SRTMDataKey key) -> {
+//                    return key.getKey().equals(dataName);
+//                }).
+//                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
+//                collect(Collectors.toList());
+
+        if (imageKeyStore.containsKey(dataName)) {
+            result = imageKeyStore.get(dataName);
         }
         
         return result;
@@ -206,6 +207,17 @@ class ImageStore {
         final List<String> dataNames = ImageDataReader.getInstance().readImageDataList(GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
         for (String dataName : dataNames) {
             getDataForName(dataName);
+        }
+        
+        // TFE, 20211104: unfortunately, the lookup of an SRTMDataKey from the imageDataStore is slow when only using the "filename" like N13E100
+        // Therefore we use the approach to have an intermediate map to quickly find SRTMDataKey for "filename" first
+        for (SRTMDataKey key : imageDataStore.keySet()) {
+            final String dataKey = key.getKey();
+            
+            // we can't have a file twice
+            assert !imageKeyStore.containsKey(dataKey);
+
+            imageKeyStore.put(dataKey, key);
         }
         
         initDone = true;

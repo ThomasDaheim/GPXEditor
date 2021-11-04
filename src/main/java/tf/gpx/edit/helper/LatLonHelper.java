@@ -49,7 +49,7 @@ public class LatLonHelper {
     private final static String LON_DEG_01 = "((1[0-7]|[0-9 ]?)[0-9]?)";
     private final static String LON_DEG_1 = LON_DEG_01 + DEG;
     private final static String MIN_1 = "([0-5 ]?[0-9]?)" + MIN;
-    private final static String DECIMALS_1 = "([.,][0-9]{0,9})?";
+    private final static String DECIMALS_1 = "([.,][0-9]{0,16})?";
     private final static String SEC_1 = "([0-5 ]?[0-9]?" + DECIMALS_1 + ")" + SEC;
     
     // patterns for DEG, MIN, SEC values == 90 / 180
@@ -58,7 +58,7 @@ public class LatLonHelper {
     private final static String LON_DEG_02 = "(180)";
     private final static String LON_DEG_2 = LON_DEG_02 + DEG;
     private final static String MIN_2 = "(0{0,2})" + MIN;
-    private final static String DECIMALS_2 = "([.,]0{0,9})?";
+    private final static String DECIMALS_2 = "([.,]0{0,16})?";
     private final static String SEC_2 = "(0{0,2}" + DECIMALS_2 + ")" + SEC;
     
     // patterns for pre/suffixes
