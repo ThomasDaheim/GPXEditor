@@ -83,10 +83,15 @@ function setPictureIconsButtonState(state) {
 }
 
 // use marker cluster with spiderfy and image group borders - but no zoom in please
-var pictureIconLayer = L.markerClusterGroup({ spiderfyOnMaxZoom: false, showCoverageOnHover: true, zoomToBoundsOnClick: false });
+var pictureIconLayer = L.markerClusterGroup({ spiderfyOnMaxZoom: false, showCoverageOnHover: true, zoomToBoundsOnClick: false, chunkedLoading: true });
 pictureIconLayer.on('clusterclick', function (a) {
         a.layer.spiderfy();
 });
+// Remove everything outside the current view (Performance)
+// https://github.com/Leaflet/Leaflet.markercluster/issues/278#issuecomment-28925801
+pictureIconLayer._getExpandedVisibleBounds = function () {
+    return pictureIconLayer._map.getBounds();
+};
 
 myMap.addLayer(pictureIconLayer);
 
@@ -148,6 +153,7 @@ function addAndShowPictureIcons(pictureIcons) {
 function showPictureIcons() {
 //    jscallback.log('showPictureIcons');
 
+    // https://github.com/Leaflet/Leaflet.markercluster/issues/59#issuecomment-9320628
     // see https://codesandbox.io/s/leaflet-markerclusters-performance-test-addlayersclearlayers-q08xl?file=/src/Leaflet.jsx for how to use with performance improvements
     hidePictureIcons();
     

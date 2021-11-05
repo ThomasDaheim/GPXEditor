@@ -60,7 +60,7 @@ public class SRTMDataHelper {
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 //        To be more exact, these coordinates refer to the geometric center of the lower left pixel,
 //        which in the case of SRTM3 data will be about 90 meters in extent.        
-        String result;
+        final StringBuilder result = new StringBuilder();
         
         // TFE, 2018015
         // N:  54.1 -> N54
@@ -68,15 +68,18 @@ public class SRTMDataHelper {
         // TFE, 20181023 - BUT
         // S: -54 -> S54 -> 1 only if not int value!
         if (latitude > 0) {
-            result = "N";
+            result.append("N");
         } else {
-            result = "S";
+            result.append("S");
             latitude = Math.abs(latitude);
             if (latitude % 1 != 0) {
                latitude++; 
             }
         }
-        result += String.format("%02d", (int) latitude);
+        if (latitude < 10.0) {
+            result.append("0");
+        }
+        result.append((int) latitude);
         
         // TFE, 2018015
         // N:  65.9 -> N65
@@ -84,17 +87,23 @@ public class SRTMDataHelper {
         // TFE, 20181023 - BUT
         // W: -54 -> W54 -> 1 only if not int value!
         if (longitude > 0) {
-            result += "E";
+            result.append("E");
         } else {
-            result += "W";
+            result.append("W");
             longitude = Math.abs(longitude);
             if (longitude % 1 != 0) {
                longitude++; 
             }
         }
-        result += String.format("%03d", (int) longitude);
+        if (longitude < 100.0) {
+            result.append("0");
+        }
+        if (longitude < 10.0) {
+            result.append("0");
+        }
+        result.append((int) longitude);
         
-        return result;
+        return result.toString();
     }
 
     public static int getLatitudeForName(final String name) {

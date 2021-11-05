@@ -1988,7 +1988,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     }
     // https://stackoverflow.com/a/40715121
     private static String transformToJavascriptArray(final List<String> arr, final boolean quoteItems) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("[");
 
         for (String str : arr) {
@@ -2009,7 +2009,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         return sb.toString();
     }    
     private static String transformToJavascriptArray(final List<IGeoCoordinate> arr) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("[");
 
         for (IGeoCoordinate latlong : arr) {

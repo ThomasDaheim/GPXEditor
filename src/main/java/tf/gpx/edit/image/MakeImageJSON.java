@@ -172,7 +172,7 @@ public class MakeImageJSON {
             System.out.println("  Found " + cmdOutput.size() + " images with gps coordinates.");
             
             // map to hold content of JSON files as stringbuffer
-            final Map<String, StringBuffer> JSONFiles = new HashMap<>();
+            final Map<String, StringBuilder> JSONFiles = new HashMap<>();
 
             for (String cmdOutputLine : cmdOutput) {
                 final String[] elements = cmdOutputLine.split(";");
@@ -192,7 +192,7 @@ public class MakeImageJSON {
                 
                 // 4) add image info to JSON Stringbuffer (create if not yet there)
                 if (!JSONFiles.containsKey(dataName)) {
-                    JSONFiles.put(dataName, new StringBuffer());
+                    JSONFiles.put(dataName, new StringBuilder());
                 }
                 // store with full path
                 addImageInfoToJSON(elements[0], latitude, longitude, JSONFiles.get(dataName));
@@ -200,7 +200,7 @@ public class MakeImageJSON {
 
             // 5) finalize all JSON Stringbuffer and write to file
             System.out.println("  Creating " + JSONFiles.size() + " JSON files.");
-            for (Map.Entry<String, StringBuffer> JSONFile : JSONFiles.entrySet()) {
+            for (Map.Entry<String, StringBuilder> JSONFile : JSONFiles.entrySet()) {
                 System.out.println("    Creating file '" + JSONFile.getKey() + JSON_EXT + "'");
                 final String JSONString = JSON_START + JSONFile.getValue().toString() + JSON_END;
                 
@@ -220,7 +220,7 @@ public class MakeImageJSON {
         System.out.println("MakeImageJSON completed.");
     }
     
-    static private void addImageInfoToJSON(final String filename, final String latitude, final String longitude, final StringBuffer JSON) {
+    static private void addImageInfoToJSON(final String filename, final String latitude, final String longitude, final StringBuilder JSON) {
         if (!JSON.isEmpty()) {
             JSON.append(",").append(LINE_SEP);
         }

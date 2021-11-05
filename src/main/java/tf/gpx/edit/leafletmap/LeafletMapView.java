@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -144,6 +145,11 @@ public class LeafletMapView extends StackPane {
     }
     
     private void executeMapSetupScripts() {
+        // TFE, 20211105: move from leafletmap.html to code
+        addStyleFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".css");
+        addScriptFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".js");
+        addScriptFromPath(LEAFLET_PATH + "/leaflet-color-markers/leaflet-color-markers" + MIN_EXT + ".js");
+
         // collect all required resources for the layers
         final Set<String> jsResources = new HashSet<>();
         
@@ -460,7 +466,7 @@ public class LeafletMapView extends StackPane {
             final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
 
             addScript(script);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -477,7 +483,7 @@ public class LeafletMapView extends StackPane {
             final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
             addStyle(style);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
