@@ -141,12 +141,12 @@ public class MakeImageJSON {
         op.addRawArgs("-charset", "FileName=cp1252");
         // get lat / lon unformated as number with sign
         op.addRawArgs("-n");
+        op.addRawArgs("-ext", "jpg");
+        op.addRawArgs("-ext", "gif");
         // filter images with gps coordinates only
         op.addRawArgs("-if", "$gpslatitude");
         // output path + filename and gps coordinates per match
         op.addRawArgs("-p", "$directory/$filename;$gpslatitude;$gpslongitude");
-        // search for jpg only
-        op.addRawArgs("-ext", ".jpg");
         // search recursively under image path
         op.addRawArgs("-r", imagePathArg);
         

@@ -61,6 +61,10 @@ public class MapImage {
     public String getFilename() {
         return myFilename;
     }
+    
+    public String getBasename() {
+        return FilenameUtils.getName(myFilename);
+    }
 
     public String getDescription() {
         return myDescription;

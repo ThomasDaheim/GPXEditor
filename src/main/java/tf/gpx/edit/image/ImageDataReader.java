@@ -97,9 +97,7 @@ class ImageDataReader {
                         final LatLonElev latlon = new LatLonElev(LatLonHelper.latFromString(lat), LatLonHelper.lonFromString(lon));
                         
                         String description = "";
-                        if (!image.has(JSON_DESCRIPTION) || image.get(JSON_DESCRIPTION).asText().isBlank()) {
-                            description = FilenameUtils.getName(filename);
-                        } else {
+                        if (image.has(JSON_DESCRIPTION) && !image.get(JSON_DESCRIPTION).asText().isBlank()) {
                             description = image.get(JSON_DESCRIPTION).asText();
                         }
 //                        System.out.println("filename: " + filename + ", lat: " + lat + ", lon: " + lon + ", description: " + description);

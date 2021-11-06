@@ -295,6 +295,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         mapImagePopOver.setAutoHide(false);
         mapImagePopOver.setAutoFix(true);
         mapImagePopOver.setCloseButtonEnabled(true);
+        mapImagePopOver.setDetached(true);
         mapImagePopOver.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
         mapImagePopOver.setArrowSize(0);
 
@@ -467,7 +468,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
             addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
-            setPictureIconsButtonState(MapButtonState.fromBoolean(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()));
+            setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
 
             myMapPane = (Pane) getParent();
             
@@ -573,6 +574,19 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // center to current location - NOT WORKING, see LeafletMapView
 //            execScript("centerToLocation();");
             setVisible(true);
+            
+            // TFE, 20211105: initialize bounding box here
+            final Double[] bounds = new Double[4];
+            final JSObject jsValue = (JSObject) execScript("getMapBounds();");
+            Object slotVal;
+            for (int i = 0; i < 4; i++) {
+                slotVal = jsValue.getSlot(i);
+                if ("undefined".equals(slotVal.toString())) {
+                    break;
+                }
+                bounds[i] = Double.valueOf(slotVal.toString());
+            }
+            mapBounds = new BoundingBox(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1]);
         }
     }
     
@@ -1822,11 +1836,25 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         HeatMapPane.getInstance().clearHeatMap();
         HeatMapPane.getInstance().addEvents(point2Ds);
     }
+    
+    public void initPictureIcons() {
+        // set things based on current state of preference
 
-    public void setPictureIconsButtonState(final MapButtonState state) {
-        execScript("setPictureIconsButtonState(\"" + state.toString() + "\");");
+        // clear image list in any case to have a clean slate
+        mapImages.clear();
+        execScript("clearPictureIcons();");
+        
+        setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
+        if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
+            // show all images for current bounding box
+            getPicturesInBoundingBox();
+        }
     }
-    public void togglePictureIcons(final Boolean visible) {
+
+    private void setPictureIconsButtonState(final boolean state) {
+        execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
+    }
+    private void togglePictureIcons(final Boolean visible) {
         // save into preferences
         GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
         
@@ -1834,19 +1862,18 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             hidePicturePopup(currentMapImageId);
         }
     }
-    
-    public void showPicturePopup(final Integer id) {
+    private void showPicturePopup(final Integer id) {
         currentMapImageId = id;
         
         mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
+        mapImagePopOver.setTitle(mapImages.get(id).getBasename());
         
         final Point2D mouseLocation = (new Robot()).getMousePosition();
         mapImagePopOver.setX(mouseLocation.getX());
         mapImagePopOver.setY(mouseLocation.getY());
         mapImagePopOver.show(myMapPane.getScene().getWindow());
     }
-    
-    public void hidePicturePopup(final Integer id) {
+    private void hidePicturePopup(final Integer id) {
         currentMapImageId = null;
         mapImagePopOver.hide();
     }

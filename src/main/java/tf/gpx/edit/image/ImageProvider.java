@@ -28,10 +28,12 @@ package tf.gpx.edit.image;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.geometry.BoundingBox;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.viewer.TrackMap;
 
 /**
  * Class to retrieve images to be shown on a map.
@@ -176,13 +178,17 @@ public class ImageProvider {
     }
     
     public void init() {
-        // separate non-FX thread
         new Thread() {
-            // runnable for that thread
+            @Override
             public void run() {
 //                System.out.println("ImageProvider.init() START " + Instant.now());
                 ImageStore.getInstance().init();
 //                System.out.println("ImageProvider.init() DONE " + Instant.now());
+
+                Platform.runLater(() -> {
+                    // TODO: use some kind of listener here insead of direct call
+                    TrackMap.getInstance().initPictureIcons();
+                });
             }
         }.start();
     }

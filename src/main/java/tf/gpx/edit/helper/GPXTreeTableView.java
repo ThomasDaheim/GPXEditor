@@ -662,7 +662,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                 // TFE, 20191118: text color to color of lineitem
                                 // https://stackoverflow.com/a/33393401
                                 Color color = null;
-                                final GPXMeasurable lineItem = getTreeTableRow().getItem();
+                                final GPXMeasurable lineItem = getTableRow().getItem();
                                 // we need a lineitem that is not null, a file or has a parent
                                 if (lineItem != null && (GPXLineItemType.GPXFile.equals(lineItem.getType()) || (lineItem.getParent() != null))) {
                                     switch (lineItem.getType()) {
@@ -716,7 +716,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                 setText(item);
 
                                 // name can't be edited for TrackSegments
-                                final GPXMeasurable lineItem = getTreeTableRow().getItem();
+                                final GPXMeasurable lineItem = getTableRow().getItem();
                                 if (lineItem == null || lineItem.isGPXTrackSegment()) {
                                     setEditable(false);
                                 } else {
@@ -847,12 +847,12 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                     // https://gist.github.com/jewelsea/1446612, FontAwesomeIcon.CUBES
                                     final Text fontAwesomeIcon = GlyphsDude.createIcon(FontAwesomeIcon.CUBES, "14");
 
-                                    if (getTreeTableRow().getItem() != null &&
-                                        getTreeTableRow().getItem().getExtension() != null &&
-                                        getTreeTableRow().getItem().getExtension().getExtensionData() != null) {
+                                    if (getTableRow().getItem() != null &&
+                                        getTableRow().getItem().getExtension() != null &&
+                                        getTableRow().getItem().getExtension().getExtensionData() != null) {
                                         // add the tooltext that contains the extension data we have parsed
                                         final StringBuilder tooltext = new StringBuilder();
-                                        final HashMap<String, Object> extensionData = getTreeTableRow().getItem().getExtension().getExtensionData();
+                                        final HashMap<String, Object> extensionData = getTableRow().getItem().getExtension().getExtensionData();
                                         for (Map.Entry<String, Object> entry : extensionData.entrySet()) {
                                             if (entry.getValue() instanceof DefaultExtensionHolder) {
                                                 if (tooltext.length() > 0) {

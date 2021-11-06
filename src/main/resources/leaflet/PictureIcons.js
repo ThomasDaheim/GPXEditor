@@ -173,3 +173,12 @@ function hidePictureIcons() {
     pictureIconLayer.clearLayers();
 //    jscallback.log('hidePictureIcons: after clearLayers()');
 }
+
+function clearPictureIcons() {
+//    jscallback.log('clearPictureIcons');
+
+    hidePictureIcons();
+
+    // remove all previous pictures
+    pictureIconList = [];
+}
