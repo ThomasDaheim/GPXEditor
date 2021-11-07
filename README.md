@@ -23,6 +23,11 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.6
+
+* Images on Maps! Images can be shown on maps as camera iconcs. JSON files with image info are used similar to hgt files for heigt info. MakeImageJSON.java gives an implementation that can create such JSON files using exiftool.
+* Upgraded to JavaFX17
+
 ### Update v5.5
 
 * moving of selected track waypoints
@@ -360,30 +365,34 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'tf.JavaHelper:JavaHelper:1.9': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.14': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
-* 'commons-cli:commons-cli:1.4'
-* 'commons-io:commons-io:2.6'
-* 'org.apache.commons:commons-lang3:3.9'
+* 'commons-cli:commons-cli:1.5.0'
+* 'commons-io:commons-io:2.11.0'
+* 'org.apache.commons:commons-lang3:3.12.0'
 * 'org.apache.commons:commons-collections4:4.4'
-* 'org.apache.commons:commons-text:1.8'
+* 'org.apache.commons:commons-text:1.9'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
-* 'me.himanshusoni.gpxparser:gpx-parser:1.12'
-* 'org.jzy3d:jzy3d-api:1.0.2'
-* 'org.jzy3d:jzy3d-javafx:1.0.2'
-* 'org.controlsfx:controlsfx:11.0.1'
+* 'me.himanshusoni.gpxparser:gpx-parser:1.14'
+* 'org.jzy3d:jzy3d-api:1.0.3'
+* 'org.jzy3d:jzy3d-javafx:1.0.3'
+* 'org.controlsfx:controlsfx:11.1.0'
 * 'de.jensd:fontawesomefx:8.9'
 * NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.9.9'
-* 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
-* 'org.jfxtras:jfxtras-controls:10.0-r1'
+* 'com.fasterxml.jackson.core:jackson-core:2.13.0'
+* 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+* 'de.grundid.opendatalab:geojson-jackson:1.14'
+* 'org.jfxtras:jfxtras-controls:15-r2'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'javax.xml.bind:jaxb-api:2.3.1'
-* 'org.eclipse.persistence:eclipselink:2.7.4'
-* 'org.jfxtras:jmetro:11.6.14'
+* 'org.eclipse.persistence:eclipselink:3.0.2'
+* 'org.jfxtras:jmetro:11.6.15'
+* 'org.im4java:im4java:1.4.0'
 * 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+* 'com.github.stefanbirkner:system-lambda:1.2.0'
+
 
 Other things used internally:
 
@@ -399,6 +408,7 @@ Other things used internally:
 * leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
 * leaflet.color-markers: https://github.com/pointhi/leaflet-color-markers
 * leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
+* leaflet.markercluster: https://github.com/Leaflet/Leaflet.markercluster
 * leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
 * leaflet.leafletplayback: https://github.com/hallahan/LeafletPlayback + some own fixes & improvements
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
