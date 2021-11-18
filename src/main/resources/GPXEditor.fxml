@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -33,6 +33,7 @@
                   <Menu fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
                     <items>
                       <MenuItem fx:id="exportKMLMenu" mnemonicParsing="false" text="As KML" />
+                        <MenuItem fx:id="exportKMZMenu" mnemonicParsing="false" text="As KMZ" />
                         <MenuItem fx:id="exportCSVMenu" mnemonicParsing="false" text="As CSV" />
                     </items>
                   </Menu>

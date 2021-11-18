@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.kml;
 
-import java.io.File;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +44,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -336,10 +337,23 @@ public class KMLWriter {
     
     /**
      * Write this KML object to a file.
-     * @param file
+     * @param gpxFile to write out
+     * @param outstream to write KML to
      * @return
      */
-    public boolean writeFile(File file) {
+    public boolean writeGPX(final GPXFile gpxFile, final OutputStream outstream) {
+        // export all waypoints, tracks and routes
+        final List<GPXWaypoint> fileWaypoints = gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
+        fileWaypoints.forEach(waypoint -> {
+            addMark(waypoint);
+        });
+        gpxFile.getGPXTracks().forEach(track -> {
+            addTrack(track);
+        });
+        gpxFile.getGPXRoutes().forEach(route -> {
+            addRoute(route);
+        });
+
         // TFE, 20200909: add only used icons - but all of them
         try {
 //            <Style id="wptSymbol">
@@ -392,7 +406,7 @@ public class KMLWriter {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             final DOMSource src = new DOMSource(doc);
-            final StreamResult out = new StreamResult(file);
+            final StreamResult out = new StreamResult(outstream);
             transformer.transform(src, out);
         } catch(IllegalArgumentException | TransformerException ex) {
             Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);

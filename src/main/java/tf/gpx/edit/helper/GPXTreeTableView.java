@@ -399,13 +399,19 @@ public class GPXTreeTableView implements IPreferencesHolder {
 
                         final MenuItem exportAsKML = new MenuItem("As KML");
                         exportAsKML.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.KML);
+                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.KML);
                         });
                         exportMenu.getItems().add(exportAsKML);
 
+                        final MenuItem exportAsKMZ = new MenuItem("As KMZ");
+                        exportAsKMZ.setOnAction((ActionEvent event) -> {
+                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.KMZ);
+                        });
+                        exportMenu.getItems().add(exportAsKMZ);
+
                         final MenuItem exportAsCSV = new MenuItem("As CSV");
                         exportAsCSV.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.CSV);
+                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.CSV);
                         });
                         exportMenu.getItems().add(exportAsCSV);
 

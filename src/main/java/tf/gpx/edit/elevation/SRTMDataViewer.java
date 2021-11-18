@@ -109,6 +109,7 @@ public class SRTMDataViewer {
     private final static SRTMDataViewer INSTANCE = new SRTMDataViewer();
     
     private final static float ZOOM_STEP = 0.9f;
+    private final static float MOVE_STEP = 250f;
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
@@ -477,13 +478,13 @@ public class SRTMDataViewer {
                 if (move.x != 0) {
 //                    System.out.println("Shifting y: " + move.x / 500f);
                     final Scale current = new Scale(view.getBounds().getYmin(), view.getBounds().getYmax());
-                    final Scale newScale = current.add((move.x / 500f) * current.getRange());
+                    final Scale newScale = current.add((move.x / MOVE_STEP) * current.getRange());
                     view.setScaleY(newScale, true);
                 }
                 if (move.y != 0) {
 //                    System.out.println("Shifting x: " + move.y / 500f);
                     final Scale current = new Scale(view.getBounds().getXmin(), view.getBounds().getXmax());
-                    final Scale newScale = current.add((move.y / 500f) * current.getRange());
+                    final Scale newScale = current.add((move.y / MOVE_STEP) * current.getRange());
                     view.setScaleX(newScale, true);
                 }
             }

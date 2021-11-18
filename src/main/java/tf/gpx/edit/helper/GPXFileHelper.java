@@ -25,7 +25,11 @@
  */
 package tf.gpx.edit.helper;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,6 +43,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -52,10 +59,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXRoute;
-import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.kml.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
@@ -69,11 +72,9 @@ public class GPXFileHelper {
     private final static GPXFileHelper INSTANCE = new GPXFileHelper();
     
     public static final String GPX_EXT = "gpx";
-    public static final String KML_EXT = "kml";
-    public static final String XML_EXT = "xml";
-    public static final String CSV_EXT = "csv";
     public static final String PNG_EXT = "png";
-    public static final String BAK_EXT = ".bak";
+    public static final String XML_EXT = "xml";
+    public static final String BAK_EXT = "bak";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
     private static final String MERGED_FILE_NAME = "Merged.gpx";
@@ -171,7 +172,7 @@ public class GPXFileHelper {
         if (Files.exists(curFile)) {
             try {
                 // add timestamp to name for multipe runs
-                Files.copy(curFile, Paths.get(curFile + "." + DATE_FORMAT.format(new Date()) + BAK_EXT));
+                Files.copy(curFile, Paths.get(curFile + "." + DATE_FORMAT.format(new Date()) + "." + BAK_EXT));
             } catch (IOException ex) {
                 Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
                 result = false;
@@ -197,29 +198,24 @@ public class GPXFileHelper {
         GPXEditorPreferences.getRecentFiles().addRecentFile(curFile.toFile().getAbsolutePath());
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(curFile.toFile());
+        verifyXMLFile(curFile.toFile(),GPXEditor.FileType.GPX);
         
         return result;
     }
 
-    public boolean exportFile(final GPXFile gpxFile, final GPXEditor.ExportFileType type) {
+    public boolean exportFile(final GPXFile gpxFile, final GPXEditor.FileType type) {
         boolean result = false;
         
-        File selectedFile;
-        if (GPXEditor.ExportFileType.KML.equals(type)) {
-            selectedFile = getExportFilename(gpxFile, KML_EXT);
-        } else {
-            selectedFile = getExportFilename(gpxFile, CSV_EXT);
-        }
+        final File selectedFile = getExportFilename(gpxFile, type.getExtension());
         
         if (selectedFile == null) {
             return result;
         }
         
-        if (GPXEditor.ExportFileType.KML.equals(type)) {
-            result = doExportKMLFile(gpxFile, selectedFile);
+        if (!GPXEditor.FileType.CSV.equals(type)) {
+            result = doExportKMLKMZFile(gpxFile, type, selectedFile);
         } else {
-            result = doExportCSVFile(gpxFile, selectedFile);
+            result = doExportCSVFile(gpxFile, type, selectedFile);
         }
 
         return result;
@@ -250,31 +246,35 @@ public class GPXFileHelper {
         return result;
     }
     
-    private boolean doExportKMLFile(final GPXFile gpxFile, final File selectedFile) {
+    private boolean doExportKMLKMZFile(final GPXFile gpxFile, final GPXEditor.FileType type, final File selectedFile) {
         boolean result = false;
         
         final KMLWriter kmlWriter = new KMLWriter();
-        
-        // export all waypoints, tracks and routes
-        final List<GPXWaypoint> fileWaypoints = gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
-        for (GPXWaypoint waypoint : fileWaypoints) {
-            kmlWriter.addMark(waypoint);
+        // TFE, 20211117: move all logic to KMLWriter
+        try {
+            if (type.isZip()) {
+                try (ZipOutputStream outStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(selectedFile)))) {
+                    final ZipEntry zipEntry = new ZipEntry(selectedFile.getName());
+                    outStream.putNextEntry(zipEntry);
+                    
+                    result = kmlWriter.writeGPX(gpxFile, outStream);
+                }
+            } else {
+                final BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(selectedFile));
+
+                result = kmlWriter.writeGPX(gpxFile, outStream);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
-        for (GPXTrack track : gpxFile.getGPXTracks()) {
-            kmlWriter.addTrack(track);
-        }
-        for (GPXRoute route : gpxFile.getGPXRoutes()) {
-            kmlWriter.addRoute(route);
-        }
-        result = kmlWriter.writeFile(selectedFile);
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(selectedFile);
+        verifyXMLFile(selectedFile, type);
         
         return result;
     }
 
-    private boolean doExportCSVFile(final GPXFile gpxFile, final File selectedFile) {
+    private boolean doExportCSVFile(final GPXFile gpxFile, final GPXEditor.FileType type, final File selectedFile) {
         boolean result = false;
         
         final GPXExtractCSVLinesWorker worker = new GPXExtractCSVLinesWorker();
@@ -304,7 +304,7 @@ public class GPXFileHelper {
         return result;
     }
 
-    public void verifyXMLFile(final File gpxFile) {
+    public void verifyXMLFile(final File gpxFile, final GPXEditor.FileType type) {
         try {
             final SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -313,8 +313,15 @@ public class GPXFileHelper {
             final SAXParser parser = factory.newSAXParser();
             final DefaultHandler handler = new DefaultHandler();
 
-            parser.parse(gpxFile, handler);
-            
+            // TFE, 20211118: support for zip files
+            if (type.isZip()) {
+                try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(gpxFile)))) {
+                    zis.getNextEntry();
+                    parser.parse(zis, handler);
+                }
+            } else {
+                parser.parse(gpxFile, handler);
+            }
         } catch(IOException | ParserConfigurationException | SAXException ex) {
             // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
             if (myEditor.getScene() != null) {
