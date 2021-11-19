@@ -34,47 +34,25 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import me.himanshusoni.gpxparser.GPXConstants;
 import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
+import me.himanshusoni.gpxparser.extension.IExtensionParser;
+import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Simple holder for nodelist that can test for type of extension present, see also
- * 
- * https://github.com/pcolby/bipolar/wiki/GPX
- * https://developers.strava.com/docs/uploads/
- * https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd - <TrackExtension>, <TrackPointExtension>
+ * Simple holder for nodelist that can test for type of myExtension present, see also
+ 
+ https://github.com/pcolby/bipolar/wiki/GPX
+ https://developers.strava.com/docs/uploads/
+ https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd - <TrackExtension>, <TrackPointExtension>
  * https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd, <AccelerationExtension>
  * http://gpsbabel.2324879.n4.nabble.com/PATCH-Humminbird-extensions-in-gpx-files-td7330.html - <h:*>
  * https://help.routeyou.com/en/topic/view/262/gpxm-file - <gpxmedia>
  * 
- * pix and more google earth extensions are part of metadata and look like this:
- * 
-<pmx:GoogleEarth>
-    <pmx:LastOutput>C:\WUTemp\Test.kml</pmx:LastOutput>
-    <pmx:FormattedOutput>True</pmx:FormattedOutput>
-    <pmx:WayPoints>
-        <pmx:Visible>False</pmx:Visible>
-        <pmx:Symbol>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</pmx:Symbol>
-    </pmx:WayPoints>
-    <pmx:Routes>
-        <pmx:Visible>False</pmx:Visible>
-        <pmx:Symbol>http://maps.google.com/mapfiles/kml/paddle/pink-blank.png</pmx:Symbol>
-        <pmx:LineColor>FF00FF</pmx:LineColor>
-        <pmx:LineWidth>6</pmx:LineWidth>
-    </pmx:Routes>
-    <pmx:Tracks>
-        <pmx:Visible>False</pmx:Visible>
-        <pmx:SegmentMarker>False</pmx:SegmentMarker>
-        <pmx:PauseMarker>False</pmx:PauseMarker>
-        <pmx:PauseTime>15</pmx:PauseTime>
-        <pmx:ShowHeight>False</pmx:ShowHeight>
-        <pmx:LineColor>0000FF</pmx:LineColor>
-        <pmx:LineWidth>6</pmx:LineWidth>
-    </pmx:Tracks>
-</pmx:GoogleEarth>
  * @author thomas
  */
 public class DefaultExtensionHolder extends DummyExtensionHolder {
@@ -82,18 +60,17 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
     private final static String LINE_SEP_QUOTE = LINE_SEP.replace("\\", "\\\\");
     
     public enum ExtensionClass implements IGPXExtension {
-        GarminGPX("gpxx", "GarminGPX", "http://www.garmin.com/xmlschemas/GpxExtensions/v3", "https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd"),
-        GarminTrkpt("gpxtpx", "GarminTrackPoint", "http://www.garmin.com/xmlschemas/TrackPointExtension/v2", "https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd"),
-        GarminTrksts("gpxtrkx", "GarminTrackStats", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1", "https://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd"),
-        GarminAccl("gpxacc", "GarminAccl", "http://www.garmin.com/xmlschemas/AccelerationExtension/v1", "https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd"),
-        Locus("locus", "LocusMap", "http://www.locusmap.eu", ""),
+        GarminGPX("gpxx", "GarminGPX", "http://www.garmin.com/xmlschemas/GpxExtensions/v3", "https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd", true),
+        GarminTrkpt("gpxtpx", "GarminTrackPoint", "http://www.garmin.com/xmlschemas/TrackPointExtension/v2", "https://www8.garmin.com/xmlschemas/TrackPointExtensionv2.xsd", true),
+        GarminTrksts("gpxtrkx", "GarminTrackStats", "http://www.garmin.com/xmlschemas/TrackStatsExtension/v1", "https://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd", true),
+        GarminAccl("gpxacc", "GarminAccl", "http://www.garmin.com/xmlschemas/AccelerationExtension/v1", "https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd", true),
+        Locus("locus", "LocusMap", "http://www.locusmap.eu", "", false),
         // TFE, 20200802: gpx_style is tricky... no clear usage to be found here
         // 1) as namespace like <gpx_style:line> (https://forum.locusmap.eu/index.php?topic=6749.0)
         // 2) directly without xml namespace like <line xmlns="http://www.topografix.com/GPX/gpx_style/0/2"> (https://www.gpsvisualizer.com/examples/barrett_spur.gpx.txt)
         // we try to handle both here
-        GPXStyle("gpx_style", "GPXStyle", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd"),
-        Line("", "line", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd");
-//        PixAndMore("pmx:GoogleEarth", "PixAndMore", "", ""),
+        GPXStyle("gpx_style", "GPXStyle", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd", true),
+        Line("", "line", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd", true);
 //        Humminbird("h", "Humminbird", "", ""),
 //        GPXM("gpxmedia", "GPXM", "", ""),
 //        ClueTrust("gpxdata", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "");
@@ -102,12 +79,15 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         private final String myName;
         private final String mySchemaDefinition;
         private final String mySchemaLocation;
+        // TFE, 20211118: for locus we have myExtension data that is not enclosed in a specific node but directly under <extensions>...
+        private final boolean useSeparateNode;
         
-        private ExtensionClass(final String namespace, final String name, final String schemaDefinition, final String schemaLocation) {
+        private ExtensionClass(final String namespace, final String name, final String schemaDefinition, final String schemaLocation, final boolean useNode) {
             myNamespace = namespace;
             myName = name;
             mySchemaDefinition = schemaDefinition;
             mySchemaLocation = schemaLocation;
+            useSeparateNode = useNode;
         }
         
         @Override
@@ -129,10 +109,16 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         public String getSchemaLocation() {
             return mySchemaLocation;
         }
+        
+        @Override
+        public boolean useSeparateNode() {
+            return useSeparateNode;
+        }
     }
     
     // "cache" for known extensions: once holdsExtensionType is called the result is stored to speed up further lookups
-    private Map<IGPXExtension, Node> extensionNodes = new HashMap<>();
+    private Map<String, Node> extensionNodes = new HashMap<>();
+    private Extension myExtension = null;
 
     public DefaultExtensionHolder() {
         super();
@@ -140,6 +126,63 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
 
     public DefaultExtensionHolder(final NodeList childNodes) {
         super(childNodes);
+        
+        // TFE, 20211118: extensions can contain other extensions...
+        // so we need to be ale to handle that as well
+        // and since we can't extend from both DummyExtensionHolder AND Extension from gpx-parser
+        // we need to find another way to handle this...
+        // without changing the classes in gpx-parser to interfaces we can only hold an attribute of type myExtension here and add stuff to it (recursively)
+        //<trk>
+        //<name>2021-10-24 11:04</name>
+        //	<extensions>
+        //		<line xmlns="http://www.topografix.com/GPX/gpx_style/0/2">
+        //			<color>0000FF</color>
+        //			<opacity>0.59</opacity>
+        //			<width>8.0</width>
+        //			<extensions>
+        //				<locus:lsColorBase>#960000FF</locus:lsColorBase>
+        //				<locus:lsWidth>8.0</locus:lsWidth>
+        //				<locus:lsUnits>PIXELS</locus:lsUnits>
+        //			</extensions>
+        //		</line>
+        //		<locus:activity>walking</locus:activity>
+        //	</extensions>
+        //</trk>
+        findChildExtensions();
+    }
+    
+    private void findChildExtensions() {
+        final NodeList myNodeList = getNodeList();
+        if (myNodeList != null) {
+            for (int i = 0; i < myNodeList.getLength(); i++) {
+                final Node myNode = myNodeList.item(i);
+
+                // don't have <extensions> directly under <extensions>
+                final NodeList childNodes = myNode.getChildNodes();
+                for (int j = 0; j < childNodes.getLength(); j++) {
+                    final Node childNode = childNodes.item(j);
+
+                    if (GPXConstants.NODE_EXTENSIONS.equals(childNode.getNodeName())) {
+                        if (myExtension == null) {
+                            myExtension = new Extension();
+                        }
+
+                        Object data = DefaultExtensionParser.getInstance().parseExtensions(childNode);
+                        myExtension.addExtensionData(DefaultExtensionParser.getInstance().getId(), data);
+                        
+                        break;
+                    }
+                }
+                
+                if (myExtension != null) {
+                    break;
+                }
+            }
+        }
+    }
+    
+    public Extension getExtension() {
+        return myExtension;
     }
     
     public static String nameWithNamespace(final IGPXExtension ext, final String name) {
@@ -161,8 +204,6 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
             // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
                 for (int i = 0; i < myNodeList.getLength(); i++) {
                     final Node myNode = myNodeList.item(i);
-                    
-                    myNode.getNodeName();
                     
                     // skip empty notes...
                     if (!"#text".equals(myNode.getNodeName())) {
@@ -209,7 +250,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         
         // make sure "cache" gets filled
         if (holdsExtensionClass(type)) {
-            result = extensionNodes.get(type);
+            result = extensionNodes.get(type.toString());
         }
         
         return result;
@@ -218,15 +259,16 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
     private boolean holdsExtensionClass(final IGPXExtension type) {
         boolean result = false;
         
-        if (extensionNodes.containsKey(type)) {
+        if (extensionNodes.containsKey(type.toString())) {
             // been here before
-            return (extensionNodes.get(type) != null);
+            return (extensionNodes.get(type.toString()) != null);
         }
         
         // check all nodes in list for startswith
         final NodeList myNodeList = getNodeList();
         if (myNodeList != null) {
             // TFE, 20200802: we can have extensions without a namespace :-(
+            // TFE, 20211118: we can have extensions without a separate child node for the value :-(
             String compareName;
             if (!type.getNamespace().isEmpty()) {
                 compareName = type.getNamespace() + ":";
@@ -239,7 +281,45 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
                 final Node myNode = myNodeList.item(i);
                 
                 if (myNode.getNodeName() != null && myNode.getNodeName().startsWith(compareName)) {
-                    extensionNodes.put(type, myNode);
+                    extensionNodes.put(type.toString(), myNode);
+                    
+                    result = true;
+                    break;
+                }
+            }
+        }
+        
+        return result;
+    }
+
+    public Node getExtensionForName(final String name) {
+        Node result = null;
+        
+        // make sure "cache" gets filled
+        if (holdsExtensionName(name)) {
+            result = extensionNodes.get(name);
+        }
+        
+        return result;
+    }
+    
+    private boolean holdsExtensionName(final String name) {
+        boolean result = false;
+        
+        if (extensionNodes.containsKey(name)) {
+            // been here before
+            return (extensionNodes.get(name) != null);
+        }
+        
+        // check all nodes in list for equals
+        final NodeList myNodeList = getNodeList();
+        if (myNodeList != null) {
+            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+            for (int i = 0; i < myNodeList.getLength(); i++) {
+                final Node myNode = myNodeList.item(i);
+                
+                if (myNode.getNodeName() != null && myNode.getNodeName().equals(name)) {
+                    extensionNodes.put(name, myNode);
                     
                     result = true;
                     break;

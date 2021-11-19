@@ -26,6 +26,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.6
 
 * Images on Maps! Images can be shown on maps as camera iconcs. JSON files with image info are used similar to hgt files for heigt info. MakeImageJSON.java gives an implementation that can create such JSON files using exiftool.
+* Export KMZ as well
 * Upgraded to JavaFX17
 
 ### Update v5.5

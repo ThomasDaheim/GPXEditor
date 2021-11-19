@@ -12,20 +12,21 @@
 	</metadata>
 <trk>
 <name>Kraftwerk Baierbrunn – Georgenstein Runde von Grünwald</name>
-	<link href="https://www.komoot.de">
-	</link>
-	<extensions>
-		<line xmlns="http://www.topografix.com/GPX/gpx_style/0/2">
-			<color>483D8B</color>
-			<opacity>0.59</opacity>
-			<width>6.0</width>
-			<extensions>
-				<locus:lsColorBase>#96483D8B</locus:lsColorBase>
-				<locus:lsWidth>6.0</locus:lsWidth>
-				<locus:lsUnits>PIXELS</locus:lsUnits>
-			</extensions>
-		</line>
-	</extensions>
+    <link href="https://www.komoot.de">
+    </link>
+    <extensions>
+        <line xmlns="http://www.topografix.com/GPX/gpx_style/0/2">
+            <color>483D8B</color>
+            <opacity>0.59</opacity>
+            <width>6.0</width>
+            <extensions>
+                <locus:lsColorBase>#96483D8B</locus:lsColorBase>
+                <locus:lsWidth>6.0</locus:lsWidth>
+                <locus:lsUnits>PIXELS</locus:lsUnits>
+            </extensions>
+        </line>
+        <locus:activity>walking</locus:activity>
+    </extensions>
 <trkseg>
 <trkpt lat="48.0421450" lon="11.5231510">
 	<ele>634.95</ele>

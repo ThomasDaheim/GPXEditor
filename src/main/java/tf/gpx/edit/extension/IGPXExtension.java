@@ -14,6 +14,7 @@ public interface IGPXExtension {
     String getNamespace();
     String getSchemaDefinition();
     String getSchemaLocation();
+    boolean useSeparateNode();
     
     default String nameWithNamespace(final IGPXExtension ext) {
         if (!ext.getNamespace().isEmpty()) {

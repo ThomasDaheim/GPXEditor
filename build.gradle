@@ -192,7 +192,7 @@ run {
 //}
 
 test {
-    exclude '**/*'
+//    exclude '**/*'
     doFirst {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
         jvmArgs = jvmArgs.plus(newArgs)

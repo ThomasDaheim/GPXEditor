@@ -63,7 +63,7 @@ public class TestLineStyle {
         final LineStyle lineStyle = gpxTrack.getLineStyle();
         final Extension extension = gpxTrack.getExtension();
         
-        // check directly on the extension before calliing lineStyle.getColor() - that adds a garmin segment by default...
+        // check directly on the extension before calling lineStyle.getColor() - that adds a garmin segment by default...
         
         // no garmin color extensions
         String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);

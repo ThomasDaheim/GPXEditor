@@ -50,6 +50,7 @@ public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
     private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
+    private TrackActivity myActivity;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
     
     private GPXTrack() {
@@ -72,6 +73,7 @@ public class GPXTrack extends GPXMeasurable {
         }
         
         myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
+        myActivity = new TrackActivity(this);
 
         myGPXTrackSegments.addListener(changeListener);
     }
@@ -85,6 +87,7 @@ public class GPXTrack extends GPXMeasurable {
         
         // set color from gpxx extension
         myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
+        myActivity = new TrackActivity(this);
         
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
@@ -123,6 +126,10 @@ public class GPXTrack extends GPXMeasurable {
 
     protected Track getTrack() {
         return myTrack;
+    }
+    
+    public TrackActivity.Activity getActivity() {
+        return myActivity.getActivity();
     }
     
     @Override
