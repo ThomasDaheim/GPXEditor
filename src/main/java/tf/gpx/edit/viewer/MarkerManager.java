@@ -290,6 +290,10 @@ public class MarkerManager {
         return result;
     }
     
+    public boolean hasIcon(final String iconName) {
+        return iconMap.containsKey(iconName);
+    }
+    
     public String getIcon(final String iconName) {
         String result = "";
         

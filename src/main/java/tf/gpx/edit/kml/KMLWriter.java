@@ -59,19 +59,6 @@ import tf.helper.javafx.ColorConverter;
  * @author thomas
  */
 public class KMLWriter {
-    private enum PathType {
-        Track,
-        Route
-    }
-    
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-    
-    // TFE, 20200909: use garmin icons from gpsvisualizer
-    // https://www.gpsvisualizer.com/google_maps/icons/garmin/
-    private final String ICON_PATH = "http://maps.gpsvisualizer.com/google_maps/icons/garmin/24x24/";
-    private final String ICON_EXT = ".png";
-    private final String PLACEMARK_ICON = "placemark_square";
-    
     // TFE, 20200909: add only used icons - but all of them
     private final Set<String> iconList = new HashSet<>();
 
@@ -89,11 +76,11 @@ public class KMLWriter {
             final DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             doc = builder.newDocument();
             
-            final Element kml = doc.createElementNS("http://www.opengis.net/kml/2.2", "kml");
-            kml.setAttribute("creator", "GPXEditor");
+            final Element kml = doc.createElementNS(KMLConstants.KML_XSD, KMLConstants.NODE_KML);
+            kml.setAttribute(KMLConstants.ATTR_CREATOR, "GPXEditor");
             doc.appendChild(kml);
             
-            root = doc.createElement("Document");
+            root = doc.createElement(KMLConstants.NODE_DOCUMENT);
             kml.appendChild(root);
             
             // add some style, please!
@@ -106,26 +93,26 @@ public class KMLWriter {
 //                    <color>ffFF0000</color>
 //                </PolyStyle>
 //            </Style>
-            Element style = doc.createElement("Style");
+            Element style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
-            style.setAttribute("id", "tracksLineStyle");
+            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.TRACKS_LINESTYLE);
 
-            Element color = doc.createElement("color");
+            Element color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode("ffFF0000"));
-            Element width = doc.createElement("width");
+            Element width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
 
-            Element lineStyle = doc.createElement("LineStyle");
+            Element lineStyle = doc.createElement(KMLConstants.NODE_STYLE_LINESTYLE);
             lineStyle.appendChild(color);
             lineStyle.appendChild(width);
             style.appendChild(lineStyle);
             
-            color = doc.createElement("color");
+            color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode("ffFF00FF"));
-            width = doc.createElement("width");
+            width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
 
-            Element polyStyle = doc.createElement("PolyStyle");
+            Element polyStyle = doc.createElement(KMLConstants.NODE_STYLE_POLYSTYLE);
             polyStyle.appendChild(color);
             polyStyle.appendChild(width);
             style.appendChild(polyStyle);
@@ -139,26 +126,26 @@ public class KMLWriter {
 //                    <color>ffFF00FF</color>
 //                </PolyStyle>
 //            </Style>
-            style = doc.createElement("Style");
+            style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
-            style.setAttribute("id", "routesLineStyle");
+            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.ROUTES_LINESTYLE);
 
-            color = doc.createElement("color");
+            color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode("ffFF00FF"));
-            width = doc.createElement("width");
+            width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
 
-            lineStyle = doc.createElement("LineStyle");
+            lineStyle = doc.createElement(KMLConstants.NODE_STYLE_LINESTYLE);
             lineStyle.appendChild(color);
             lineStyle.appendChild(width);
             style.appendChild(lineStyle);
             
-            color = doc.createElement("color");
+            color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode("ffFF00FF"));
-            width = doc.createElement("width");
+            width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
 
-            polyStyle = doc.createElement("PolyStyle");
+            polyStyle = doc.createElement(KMLConstants.NODE_STYLE_POLYSTYLE);
             polyStyle.appendChild(color);
             polyStyle.appendChild(width);
             style.appendChild(polyStyle);
@@ -172,9 +159,9 @@ public class KMLWriter {
      * @param foldername
      */
     private Element createFolder(final String foldername) {
-        final Element result = doc.createElement("Folder");
+        final Element result = doc.createElement(KMLConstants.NODE_FOLDER);
 
-        final Element name = doc.createElement("name");
+        final Element name = doc.createElement(KMLConstants.NODE_FOLDER_NAME);
         name.appendChild(doc.createTextNode(foldername));
         result.appendChild(name);
         
@@ -192,24 +179,24 @@ public class KMLWriter {
             root.appendChild(waypoints);
         }
         
-        final Element placemark = doc.createElement("Placemark");
+        final Element placemark = doc.createElement(KMLConstants.NODE_PLACEMARK);
         waypoints.appendChild(placemark);
 
         if(mark.getName() != null) {
-            final Element name = doc.createElement("name");
+            final Element name = doc.createElement(KMLConstants.NODE_PLACEMARK_NAME);
             name.appendChild(doc.createTextNode(mark.getName()));
             placemark.appendChild(name);
         }
 
-        final Element styleUrl = doc.createElement("styleUrl");
+        final Element styleUrl = doc.createElement(KMLConstants.NODE_PLACEMARK_STYLEURL);
         styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getMarkerForWaypoint(mark).getMarkerName()));
         placemark.appendChild(styleUrl);
 
-        final Element desc = doc.createElement("description");
+        final Element desc = doc.createElement(KMLConstants.NODE_PLACEMARK_DESCRIPTION);
         if (mark.getDate() != null) {
             desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
                             " Altitude: " + mark.getElevation() + " meters" +
-                            " Time: " + sdf.format(mark.getDate())));
+                            " Time: " + KMLConstants.KML_DATEFORMAT.format(mark.getDate())));
         } else {
             desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
                             " Altitude: " + mark.getElevation() + " meters" +
@@ -217,16 +204,16 @@ public class KMLWriter {
         }
         placemark.appendChild(desc);
 
-        final Element point = doc.createElement("Point");
+        final Element point = doc.createElement(KMLConstants.NODE_PLACEMARK_POINT);
         placemark.appendChild(point);
 
         if(mark.getElevation() > 0) {
-            final Element altitudeMode = doc.createElement("altitudeMode");
+            final Element altitudeMode = doc.createElement(KMLConstants.NODE_LINESTRING_ALTITUDEMODE);
             altitudeMode.appendChild(doc.createTextNode("clampToGround"));
             point.appendChild(altitudeMode);
         }
 
-        final Element coords = doc.createElement("coordinates");
+        final Element coords = doc.createElement(KMLConstants.NODE_LINESTRING_COORDINATES);
         coords.appendChild(doc.createTextNode(mark.getLongitude() + ", " + mark.getLatitude() + ", " + mark.getElevation()));
         point.appendChild(coords);
         
@@ -245,7 +232,7 @@ public class KMLWriter {
             root.appendChild(tracks);
         }
         
-        addPath(track, PathType.Track);
+        addPath(track, KMLConstants.PathType.Track);
     }
 
     /**
@@ -259,7 +246,7 @@ public class KMLWriter {
             root.appendChild(routes);
         }
         
-        addPath(route, PathType.Route);
+        addPath(route, KMLConstants.PathType.Route);
     }
         
     /**
@@ -267,31 +254,31 @@ public class KMLWriter {
      * @param path
      * @param pathName
      */
-    private void addPath(final GPXLineItem item, final PathType type) {
+    private void addPath(final GPXLineItem item, final KMLConstants.PathType type) {
         if (!item.isGPXTrack() && !item.isGPXRoute()) {
             return;
         }
         
         final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(item.getType());
         
-        final Element placemark = doc.createElement("Placemark");
-        if (PathType.Track.equals(type)) {
+        final Element placemark = doc.createElement(KMLConstants.NODE_PLACEMARK);
+        if (KMLConstants.PathType.Track.equals(type)) {
             tracks.appendChild(placemark);
         } else {
             routes.appendChild(placemark);
         }
 
         if(item.getName() != null) {
-            final Element name = doc.createElement("name");
+            final Element name = doc.createElement(KMLConstants.NODE_PLACEMARK_NAME);
             name.appendChild(doc.createTextNode(item.getName()));
             placemark.appendChild(name);
         }
 
-        final Element styleUrl = doc.createElement("styleUrl");
-        if (PathType.Track.equals(type)) {
-            styleUrl.appendChild(doc.createTextNode("#tracksLineStyle"));
+        final Element styleUrl = doc.createElement(KMLConstants.NODE_PLACEMARK_STYLEURL);
+        if (KMLConstants.PathType.Track.equals(type)) {
+            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.TRACKS_LINESTYLE));
         } else {
-            styleUrl.appendChild(doc.createTextNode("#routesLineStyle"));
+            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.ROUTES_LINESTYLE));
         }
         placemark.appendChild(styleUrl);
 
@@ -301,32 +288,32 @@ public class KMLWriter {
 //              <color>ffffff00</color>
 //            </LineStyle>
 //          </Style>
-        final Element style = doc.createElement("Style");
+        final Element style = doc.createElement(KMLConstants.NODE_STYLE);
         placemark.appendChild(style);
 
-        final Element lineStyle = doc.createElement("LineStyle");
+        final Element lineStyle = doc.createElement(KMLConstants.NODE_STYLE_LINESTYLE);
         style.appendChild(lineStyle);
 
-        final Element color = doc.createElement("color");
+        final Element color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
         color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(item.getLineStyle().getColor().getJavaFXColor())));
         lineStyle.appendChild(color);
 
-        final Element lineString = doc.createElement("LineString");
+        final Element lineString = doc.createElement(KMLConstants.NODE_PLACEMARK_LINESTRING);
         placemark.appendChild(lineString);
 
-        final Element extrude = doc.createElement("extrude");
+        final Element extrude = doc.createElement(KMLConstants.NODE_LINESTRING_EXTRUDE);
         extrude.appendChild(doc.createTextNode("1"));
         lineString.appendChild(extrude);
 
-        final Element tesselate = doc.createElement("tesselate");
+        final Element tesselate = doc.createElement(KMLConstants.NODE_LINESTRING_TESSELATE);
         tesselate.appendChild(doc.createTextNode("1"));
         lineString.appendChild(tesselate);
 
-        final Element altitudeMode = doc.createElement("altitudeMode");
+        final Element altitudeMode = doc.createElement(KMLConstants.NODE_LINESTRING_ALTITUDEMODE);
         altitudeMode.appendChild(doc.createTextNode("clampToGround"));
         lineString.appendChild(altitudeMode);
 
-        final Element coords = doc.createElement("coordinates");
+        final Element coords = doc.createElement(KMLConstants.NODE_LINESTRING_COORDINATES);
         String points = "";
         for (GPXWaypoint p : path) {
             points += p.getLongitude() + "," + p.getLatitude() + "," + p.getElevation() + "\n";
@@ -365,9 +352,9 @@ public class KMLWriter {
 //            </Style>
 
             // there is always a special case... in our case its the placemark icon
-            Element style = doc.createElement("Style");
+            Element style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
-            style.setAttribute("id", "Placemark");
+            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.NODE_PLACEMARK);
 
             Element iconStyle = doc.createElement("IconStyle");
             style.appendChild(iconStyle);
@@ -380,18 +367,18 @@ public class KMLWriter {
             iconStyle.appendChild(icon);
 
             for (String iconName : iconList) {
-                if (!PLACEMARK_ICON.equals(iconName)) {
-                    style = doc.createElement("Style");
+                if (!KMLConstants.PLACEMARK_ICON.equals(iconName)) {
+                    style = doc.createElement(KMLConstants.NODE_STYLE);
                     root.appendChild(style);
-                    style.setAttribute("id", iconName);
+                    style.setAttribute(KMLConstants.ATTR_STYLE_ID, iconName);
 
-                    iconStyle = doc.createElement("IconStyle");
+                    iconStyle = doc.createElement(KMLConstants.NODE_STYLE_ICONSTYLE);
                     style.appendChild(iconStyle);
 
-                    href = doc.createElement("href");
-                    href.appendChild(doc.createTextNode(ICON_PATH + iconName + ICON_EXT));
+                    href = doc.createElement(KMLConstants.NODE_STYLE_HREF);
+                    href.appendChild(doc.createTextNode(KMLConstants.ICON_PATH + iconName + KMLConstants.ICON_EXT));
 
-                    icon = doc.createElement("Icon");
+                    icon = doc.createElement(KMLConstants.NODE_STYLE_ICON);
                     icon.appendChild(href);
                     iconStyle.appendChild(icon);
                 }
