@@ -63,6 +63,7 @@ import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.gpx.edit.kml.KMLParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 import tf.helper.general.AppInfo;
 import tf.helper.general.ObjectsHelper;
@@ -107,13 +108,23 @@ public class GPXFile extends GPXMeasurable {
         
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
-        final GPXParser parser = new GPXParser();
+        GPXParser parser = null;
+        if (GPXFileHelper.FileType.GPX.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
+            parser = new GPXParser();
+        } else if (GPXFileHelper.FileType.KML.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
+            parser = new KMLParser();
+        } else {
+            Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
+        }
+        assert (parser != null);
+        
         parser.addExtensionParser(DefaultExtensionParser.getInstance());
         
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
         } catch (Exception ex) {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
+            myGPX = new GPX();
         }
 
         if (myGPX.getMetadata() != null) {

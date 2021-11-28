@@ -81,7 +81,7 @@ public class GPXEditorBatch extends GPXEditor {
                 final DirectoryStream<Path> dirStream = Files.newDirectoryStream(gpxPath, gpxFileName);
                 dirStream.forEach(path -> {
                     // if really a gpx, than add to file list
-                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(path.getFileName().toString()).toLowerCase())) {
+                    if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(path.getFileName().toString()).toLowerCase())) {
                         gpxFileNames.add(path.toFile());
                     }
                 });

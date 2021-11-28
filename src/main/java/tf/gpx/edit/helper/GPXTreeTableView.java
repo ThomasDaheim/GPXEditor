@@ -393,29 +393,11 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                 break;
                         }
 
-                        fileMenu.getItems().add(new SeparatorMenuItem());
-                        // Export is a sub menu
-                        final Menu exportMenu = new Menu("Export");
-
-                        final MenuItem exportAsKML = new MenuItem("As KML");
-                        exportAsKML.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.KML);
+                        final MenuItem exportFile = new MenuItem("Export");
+                        exportFile.setOnAction((ActionEvent event) -> {
+                            myEditor.exportFile(item.getGPXFile());
                         });
-                        exportMenu.getItems().add(exportAsKML);
-
-                        final MenuItem exportAsKMZ = new MenuItem("As KMZ");
-                        exportAsKMZ.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.KMZ);
-                        });
-                        exportMenu.getItems().add(exportAsKMZ);
-
-                        final MenuItem exportAsCSV = new MenuItem("As CSV");
-                        exportAsCSV.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.FileType.CSV);
-                        });
-                        exportMenu.getItems().add(exportAsCSV);
-
-                        fileMenu.getItems().add(exportMenu);
+                        fileMenu.getItems().add(exportFile);
                         
                         if (!item.isGPXMetadata()) {
                             fileMenu.getItems().add(new SeparatorMenuItem());
@@ -991,7 +973,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
             final List<File> files = new ArrayList<>();
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                     files.add(file);
                 }
             }
@@ -1049,7 +1031,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
         } else if (AppClipboard.getInstance().hasFiles()) {
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                     result = TargetForDragDrop.DROP_ON_ME;
                     break;
                 }

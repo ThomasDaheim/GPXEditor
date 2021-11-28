@@ -179,35 +179,6 @@ public class GPXEditor implements Initializable {
         DOWN
     }
     
-    public static enum FileType {
-        GPX("gpx", "application/gpx+xml", false),
-        KML("kml", "application/vnd.google-earth.kml+xml", false),
-        KMZ("kmz", "application/vnd.google-earth.kmz", true),
-        CSV("csv", "text/csv", false);
-        
-        private final String extension;
-        private final String mimeType;
-        private final boolean isZip;
-        
-        private FileType(final String ext, final String mime, final boolean zip) {
-            extension = ext;
-            mimeType = mime;
-            isZip = zip;
-        }
-        
-        public String getExtension() {
-            return extension;
-        }
-                
-        public String getMimeType() {
-            return mimeType;
-        }
-        
-        public boolean isZip() {
-            return isZip;
-        }
-    }
-    
     public static enum RelativePosition {
         ABOVE,
         BELOW
@@ -250,13 +221,9 @@ public class GPXEditor implements Initializable {
     private boolean useTransactions = true;
     
     @FXML
-    private MenuItem exportKMLMenu;
+    private MenuItem exportFileMenu;
     @FXML
-    private MenuItem exportKMZMenu;
-    @FXML
-    private MenuItem exportCSVMenu;
-    @FXML
-    private Menu exportFileMenu;
+    private MenuItem importFileMenu;
     @FXML
     private MenuItem newFileMenu;
     @FXML
@@ -485,7 +452,7 @@ public class GPXEditor implements Initializable {
                 final DirectoryStream<Path> dirStream = Files.newDirectoryStream(gpxPath, gpxFileName);
                 dirStream.forEach(path -> {
                     // if really a gpx, than add to file list
-                    if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(path.getFileName().toString()).toLowerCase())) {
+                    if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(path.getFileName().toString()).toLowerCase())) {
                         gpxFileNames.add(path.toFile());
                     }
                 });
@@ -550,16 +517,13 @@ public class GPXEditor implements Initializable {
         addFileMenu.setOnAction((ActionEvent event) -> {
             addFileAction(event);
         });
+        exportFileMenu.setOnAction((ActionEvent event) -> {
+            exportFilesAction(event);
+        });
         exportFileMenu.disableProperty().bind(
                 Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
-        exportKMLMenu.setOnAction((ActionEvent event) -> {
-            exportFilesAction(event, FileType.KML);
-        });
-        exportKMZMenu.setOnAction((ActionEvent event) -> {
-            exportFilesAction(event, FileType.KMZ);
-        });
-        exportCSVMenu.setOnAction((ActionEvent event) -> {
-            exportFilesAction(event, FileType.CSV);
+        importFileMenu.setOnAction((ActionEvent event) -> {
+            importFilesAction(event);
         });
         closeFileMenu.setOnAction((ActionEvent event) -> {
             saveAllFilesAction(event);
@@ -1269,7 +1233,7 @@ public class GPXEditor implements Initializable {
                         TaskExecutor.executeTask(
                             getScene(), () -> {
                                 // TFE, 20191024 add warning for format issues
-                                GPXFileHelper.getInstance().verifyXMLFile(file, FileType.GPX);
+                                GPXFileHelper.getInstance().verifyXMLFile(file, GPXFileHelper.FileType.GPX);
 
                                 gpxFileList.addGPXFile(new GPXFile(file));
 
@@ -1392,21 +1356,27 @@ public class GPXEditor implements Initializable {
         return result;
     }
 
-    private Boolean exportFilesAction(final ActionEvent event, final FileType type) {
+    private Boolean exportFilesAction(final ActionEvent event) {
         Boolean result = true;
         
         // iterate over selected files
         for (GPXFile gpxFile : GPXStructureHelper.getInstance().uniqueGPXFilesFromGPXMeasurables(gpxFileList.getSelectionModel().getSelectedItems())) {
-            result = result && exportFile(gpxFile, type);
+            result = result && exportFile(gpxFile);
         }
 
         return result;
     }
 
-    public Boolean exportFile(final GPXFile gpxFile, final FileType type) {
-        return GPXFileHelper.getInstance().exportFile(gpxFile, type);
+    public Boolean exportFile(final GPXFile gpxFile) {
+        return GPXFileHelper.getInstance().exportFile(gpxFile);
     }
 
+
+    private Boolean importFilesAction(final ActionEvent event) {
+        parseAndAddFiles(GPXFileHelper.getInstance().importFiles());
+
+        return true;
+    }
     private Boolean closeAllFiles() {
         Boolean result = true;
         

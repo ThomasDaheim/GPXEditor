@@ -436,6 +436,9 @@ public class StatisticsViewer extends AbstractStage {
         // gps-track-analyser.net
         // pause > preference_value
 
+        // TODO: extend to recognize locus activity if present
+        // for tracks sum the statistics values as well separately per activity
+        // (most probably you don't have too many different activities)
         GPXWaypoint prevGPXWaypoint = null;
         for (GPXWaypoint waypoint : gpxWaypoints) {
             // TFE, 20190908: start & end don't need to be first & last waypoint...

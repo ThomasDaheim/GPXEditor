@@ -31,8 +31,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.XMLConstants;
@@ -100,17 +102,17 @@ public class KMLParser extends GPXParser {
         final Validator validator = schema.newValidator();
 
         // validate the DOM tree
-        try {
-            validator.validate(new DOMSource(doc));
-        } catch (SAXException ex) {
-            Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
-            throw new IllegalAccessException("Not a valid KML file.");
-        }        
+//        try {
+//            validator.validate(new DOMSource(doc));
+//        } catch (SAXException ex) {
+//            Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
+//            throw new IllegalAccessException("Not a valid KML file.");
+//        }        
         
         Node firstChild = doc.getFirstChild();
         if (firstChild != null && KMLConstants.NODE_KML.equals(firstChild.getNodeName())) {
-            firstChild = doc.getFirstChild();
-            if (firstChild != null && KMLConstants.NODE_DOCUMENT.equals(firstChild.getNodeName())) {
+            final NodeList nodeList = getChildNodesByName(firstChild, KMLConstants.NODE_DOCUMENT);
+            if (nodeList != null) {
                 // a valid KML contains <Document> inside <kml>
                 final GPX gpx = new GPX();
                 
@@ -120,7 +122,8 @@ public class KMLParser extends GPXParser {
                 // parse fill "bottom-up" since there is no notion of "track", "route", "tracksegment" in KML
                 // there are only <coordinates> under <LineString> under <Placemark> and <point> under <Placemark>
                 // <Folder> is the highest level entity
-                // everything with <coordinates> could be a route or a tracksegment - if we have written it ourselves we might use the name; default is a route (since there is no date value in KML)
+                // everything with <coordinates> could be a route or a tracksegment - if we have written it ourselves we might use the name
+                // default is a route (since there is no date value in KML)
                 // everything with <point> is a waypoint directly under the GPXFile
                 findPoints(doc, gpx);
 
@@ -225,6 +228,8 @@ public class KMLParser extends GPXParser {
     }
     
     private void findPoints(final Document doc, final GPX gpx) {
+        final Set<Waypoint> waypoints = new HashSet<>();
+        
         // find all placemarks that contain points - find points and move "upwards" :-)
         final NodeList nodeList = findPlacemarksContaining(doc, KMLConstants.NODE_PLACEMARK_POINT);
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -248,7 +253,7 @@ public class KMLParser extends GPXParser {
                 Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Point doesn't contain coordinates: %s", point);
                 continue;
             }
-            final String[] coordValues = coordinateNode.getNodeValue().split(",");
+            final String[] coordValues = coordinateNode.getFirstChild().getNodeValue().split(",");
             if (coordValues.length < 2) {
                 Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Not enough coordinates: %s", coordValues);
                 continue;
@@ -299,7 +304,11 @@ public class KMLParser extends GPXParser {
                     }
                 }
             }
+            
+            waypoints.add(wpt);
         }
+        
+        gpx.getWaypoints().addAll(waypoints);
     }
     
     private void findCoordinates(final Document doc, final GPX gpx) {
@@ -344,7 +353,7 @@ public class KMLParser extends GPXParser {
             }
             // parse into list of waypoints
             coordinates = coordinateNode.getNodeValue().split(System.lineSeparator());
-            final List<Waypoint> waypoints = new ArrayList<>();
+            final Set<Waypoint> waypoints = new HashSet<>();
             for (String coordString : coordinates) {
                 final String[] coordValues = coordString.split(",");
                 if (coordValues.length < 2) {
