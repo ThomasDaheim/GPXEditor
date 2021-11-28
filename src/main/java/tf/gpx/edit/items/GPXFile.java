@@ -109,12 +109,18 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         GPXParser parser = null;
-        if (GPXFileHelper.FileType.GPX.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
-            parser = new GPXParser();
-        } else if (GPXFileHelper.FileType.KML.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
-            parser = new KMLParser();
-        } else {
+        if (null == GPXFileHelper.FileType.fromFileName(myGPXFileName)) {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
+        } else switch (GPXFileHelper.FileType.fromFileName(myGPXFileName)) {
+            case GPX:
+                parser = new GPXParser();
+                break;
+            case KML:
+                parser = new KMLParser();
+                break;
+            default:
+                Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
+                break;
         }
         assert (parser != null);
         

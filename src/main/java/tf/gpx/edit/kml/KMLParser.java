@@ -260,7 +260,7 @@ public class KMLParser extends GPXParser {
             }
             
             // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
-            final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[0]), Double.valueOf(coordValues[1]));
+            final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[1]), Double.valueOf(coordValues[2]));
             if (coordValues.length > 2) {
                 wpt.setElevation(Double.valueOf(coordValues[2]));
             }
@@ -352,8 +352,10 @@ public class KMLParser extends GPXParser {
                 continue;
             }
             // parse into list of waypoints
-            coordinates = coordinateNode.getNodeValue().split(System.lineSeparator());
-            final Set<Waypoint> waypoints = new HashSet<>();
+            String rawCoords = coordinateNode.getFirstChild().getNodeValue();
+            rawCoords = rawCoords.replaceAll("\\n\\r", "\\n");
+            coordinates = rawCoords.split("\\n");
+            final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
                 final String[] coordValues = coordString.split(",");
                 if (coordValues.length < 2) {
@@ -362,7 +364,7 @@ public class KMLParser extends GPXParser {
                 }
                 
                 // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
-                final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[0]), Double.valueOf(coordValues[1]));
+                final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[1]), Double.valueOf(coordValues[0]));
                 if (coordValues.length > 2) {
                     wpt.setElevation(Double.valueOf(coordValues[2]));
                 }
@@ -377,7 +379,7 @@ public class KMLParser extends GPXParser {
             if (style != null) {
                 // <styleUrl>#tracksLineStyle</styleUrl>
                 // <styleUrl>#routesLineStyle</styleUrl>
-                String styleUrl = style.getNodeValue();
+                String styleUrl = style.getFirstChild().getNodeValue();
                 if (styleUrl.startsWith("#")) {
                     styleUrl = styleUrl.substring(1);
                     
@@ -389,7 +391,7 @@ public class KMLParser extends GPXParser {
                 }
             }
             
-            // we might have an explicit style as well - overrrides the other one
+            // we might have an explicit style as well - overrides the other one
             style = getFirstChildNodeByName(placemark, KMLConstants.NODE_STYLE);
             if ((style != null) && (style instanceof Element)) {
                 final Element styleElem = (Element) style;
@@ -413,7 +415,7 @@ public class KMLParser extends GPXParser {
                 
                 route.setName(name);
                 route.setNumber(number);
-                route.getRoutePoints().addAll(waypoints);
+                route.setRoutePoints(waypoints);
                 
                 if (styleExtension != null) {
                     //route.addExtensionData(name, name);
@@ -423,11 +425,11 @@ public class KMLParser extends GPXParser {
             } else {
                 final Track track = new Track();
                 final TrackSegment tracksegment  = new TrackSegment();
-                track.getTrackSegments().add(tracksegment);
+                track.addTrackSegment(tracksegment);
 
                 track.setName(name);
                 track.setNumber(number);
-                tracksegment.getWaypoints().addAll(waypoints);
+                tracksegment.setWaypoints(waypoints);
                 
                 if (styleExtension != null) {
                     //track.addExtensionData(name, name);
