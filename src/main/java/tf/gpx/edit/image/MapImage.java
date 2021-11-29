@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.image;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javafx.scene.image.Image;

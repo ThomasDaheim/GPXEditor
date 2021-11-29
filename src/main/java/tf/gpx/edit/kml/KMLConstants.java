@@ -39,18 +39,23 @@ public interface KMLConstants {
         Track,
         Route
     }
+    
+    final String ALTITUDE_LABEL = "Altitude: ";
+    final String ALTITUDE_UNIT = " meters";
+    final String TIME_LABEL = "Time: ";
+    final String TIME_NO_VALUE = "---";
 
     // TFE, 20200909: use garmin icons from gpsvisualizer
     // https://www.gpsvisualizer.com/google_maps/icons/garmin/
     final String ICON_PATH = "http://maps.gpsvisualizer.com/google_maps/icons/garmin/24x24/";
     final String ICON_EXT = ".png";
-    final String PLACEMARK_ICON = "placemark_square";
+    final String PLACEMARK_ICON = "Placemark";
     
     final String TRACKS_LINESTYLE = "tracksLineStyle";
     final String ROUTES_LINESTYLE = "routesLineStyle";
 
     // constants to match XSD definition of nodes and attributes
-    final String KML_XSD = "http://www.opengis.net/kml/2.2";
+    final String KML_XSD = "http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd"; //http://www.opengis.net/kml/2.2";
 
     /* Root Node */
     final String NODE_KML = "kml";

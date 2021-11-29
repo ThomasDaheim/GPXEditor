@@ -36,7 +36,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import me.himanshusoni.gpxparser.GPXConstants;
 import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
-import me.himanshusoni.gpxparser.extension.IExtensionParser;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;

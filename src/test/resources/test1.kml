@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Folder>
+      <name>Waypoints</name>
+        <Placemark>
+          <name>A simple placemark on the ground</name>
+          <styleUrl>#Winery</styleUrl>
+          <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 2021-09-06 09:55:49 MESZ</description>
+          <Point>
+              <coordinates>8.542952335953721,47.36685263064198,99.0</coordinates>
+          </Point>
+        </Placemark>
+    </Folder>
+    <Style id="Winery">
+      <IconStyle>
+        <Icon>
+          <href>http://maps.gpsvisualizer.com/google_maps/icons/garmin/24x24/Winery.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+  </Document>
+</kml>

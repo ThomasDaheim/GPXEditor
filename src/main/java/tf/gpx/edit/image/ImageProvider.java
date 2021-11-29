@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.image;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.application.Platform;

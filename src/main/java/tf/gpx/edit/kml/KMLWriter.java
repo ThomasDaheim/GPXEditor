@@ -26,7 +26,6 @@
 package tf.gpx.edit.kml;
 
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -195,12 +194,12 @@ public class KMLWriter {
         final Element desc = doc.createElement(KMLConstants.NODE_PLACEMARK_DESCRIPTION);
         if (mark.getDate() != null) {
             desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
-                            " Altitude: " + mark.getElevation() + " meters" +
-                            " Time: " + KMLConstants.KML_DATEFORMAT.format(mark.getDate())));
+                            " " + KMLConstants.ALTITUDE_LABEL + mark.getElevation() + KMLConstants.ALTITUDE_UNIT +
+                            " " + KMLConstants.TIME_LABEL + KMLConstants.KML_DATEFORMAT.format(mark.getDate())));
         } else {
             desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
-                            " Altitude: " + mark.getElevation() + " meters" +
-                            " Time: ---"));
+                            " " + KMLConstants.ALTITUDE_LABEL + mark.getElevation() + KMLConstants.ALTITUDE_UNIT +
+                            " " + KMLConstants.TIME_LABEL + KMLConstants.TIME_NO_VALUE));
         }
         placemark.appendChild(desc);
 
