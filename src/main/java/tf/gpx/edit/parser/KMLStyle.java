@@ -23,49 +23,29 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
+package tf.gpx.edit.parser;
 
-import org.apache.commons.io.FilenameUtils;
-import org.w3c.dom.Node;
-import tf.gpx.edit.viewer.MarkerManager;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Class for Icon Style in KML files.
+ * Base class for <Style> node in KML files. A holder for KMLStyleItems
  * 
  * @author t.feuster
  */
-public class KMLIconStyle extends KMLStyleItem {
-    private String myHref;
-    private String myIcon;
-
-    public KMLIconStyle() {
-        super(KMLStyleItem.KMLStyleType.IconStyle);
+public class KMLStyle {
+    private final Map<KMLStyleItem.KMLStyleType, KMLStyleItem> myKMLStyleItems = new HashMap<>();
+    private final String myID;
+    
+    public KMLStyle(final String id) {
+        myID = id;
     }
     
-    public String getHref() {
-        return myHref;
-    }
-
-    public String getIcon() {
-        return myIcon;
-    }
-
-    public void setHref(final String href) {
-        myHref = href;
-        
-        // extract icon name & match against known icons for later use
-        myIcon = FilenameUtils.getBaseName(href);
-        if (!MarkerManager.getInstance().hasIcon(myIcon)) {
-            myIcon = MarkerManager.DEFAULT_MARKER.getMarkerName();
-        }
+    public String getID() {
+        return myID;
     }
     
-    @Override
-    public void setFromNode(final Node node) {
-        // we only need href
-        Node attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_HREF);
-        if (attr != null) {
-            setHref(attr.getNodeValue());
-        }
+    public Map<KMLStyleItem.KMLStyleType, KMLStyleItem> getKMLStyleItems() {
+        return myKMLStyleItems;
     }
 }

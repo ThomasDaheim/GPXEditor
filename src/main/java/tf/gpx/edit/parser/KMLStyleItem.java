@@ -23,49 +23,47 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
+package tf.gpx.edit.parser;
 
 import org.w3c.dom.Node;
 
 /**
- * Abstract base class for KML Style nodes that have color & width associated.
+ * Base class for <Style> node content in KML files.
  * 
- * @author t.feuster
+ * @author Thomas
  */
-public abstract class KMLColorWidthStyle extends KMLStyleItem {
-    private String myColor;
-    private String myWidth;
+public abstract class KMLStyleItem {
+    public static enum KMLStyleType {
+        LineStyle(KMLConstants.NODE_STYLE_LINESTYLE),
+        PolyStyle(KMLConstants.NODE_STYLE_POLYSTYLE),
+        IconStyle(KMLConstants.NODE_STYLE_ICONSTYLE);
+        
+        private final String myKMLNodeName;
+        
+        KMLStyleType(final String nodeName) {
+            myKMLNodeName = nodeName;
+        }
+        
+        public String getKMLNodeName() {
+            return myKMLNodeName;
+        }
+    }
 
-    public KMLColorWidthStyle(final KMLStyleType type) {
-        super(type);
+    private KMLStyleType myKMLStyleType;
+    
+    private KMLStyleItem() {
+        this(null);
     }
     
-    public String getColor() {
-        return myColor;
+    protected KMLStyleItem(final KMLStyleType type) {
+        super();
+        
+        myKMLStyleType = type;
     }
-
-    public void setColor(final String color) {
-        myColor = color;
+    
+    public KMLStyleType getKMLStyleType() {
+        return myKMLStyleType;
     }
-
-    public String getWidth() {
-        return myWidth;
-    }
-
-    public void setWidth(final String width) {
-        myWidth = width;
-    }
-
-    @Override
-    public void setFromNode(final Node node) {
-        // we need color & width
-        Node attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_COLOR);
-        if (attr != null) {
-            myColor = attr.getNodeValue();
-        }
-        attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_WIDTH);
-        if (attr != null) {
-            myWidth = attr.getNodeValue();
-        }
-    }
+    
+    abstract public void setFromNode(final Node node);
 }

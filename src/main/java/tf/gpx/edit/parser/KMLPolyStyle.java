@@ -23,47 +23,15 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
-
-import org.w3c.dom.Node;
+package tf.gpx.edit.parser;
 
 /**
- * Base class for <Style> node content in KML files.
+ * Class for Line Style in KML files.
  * 
- * @author Thomas
+ * @author t.feuster
  */
-public abstract class KMLStyleItem {
-    public static enum KMLStyleType {
-        LineStyle(KMLConstants.NODE_STYLE_LINESTYLE),
-        PolyStyle(KMLConstants.NODE_STYLE_POLYSTYLE),
-        IconStyle(KMLConstants.NODE_STYLE_ICONSTYLE);
-        
-        private final String myKMLNodeName;
-        
-        KMLStyleType(final String nodeName) {
-            myKMLNodeName = nodeName;
-        }
-        
-        public String getKMLNodeName() {
-            return myKMLNodeName;
-        }
+public class KMLPolyStyle extends KMLColorWidthStyle {
+    public KMLPolyStyle() {
+        super(KMLStyleItem.KMLStyleType.PolyStyle);
     }
-
-    private KMLStyleType myKMLStyleType;
-    
-    private KMLStyleItem() {
-        this(null);
-    }
-    
-    protected KMLStyleItem(final KMLStyleType type) {
-        super();
-        
-        myKMLStyleType = type;
-    }
-    
-    public KMLStyleType getKMLStyleType() {
-        return myKMLStyleType;
-    }
-    
-    abstract public void setFromNode(final Node node);
 }

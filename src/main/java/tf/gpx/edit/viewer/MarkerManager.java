@@ -205,7 +205,7 @@ public class MarkerManager {
         }
     }
     
-    private static String jsCompatibleIconName(final String iconName) {
+    public static String jsCompatibleIconName(final String iconName) {
         // don't crash on null input...
         String result = Objects.requireNonNullElse(iconName, "");
         
@@ -298,7 +298,7 @@ public class MarkerManager {
         String result = "";
         
         // tricky, because name is jsName...
-        if (iconMap.containsKey(iconName)) {
+        if (hasIcon(iconName)) {
             final MarkerIcon markerIcon = iconMap.get(iconName);
             result = markerIcon.getIconBase64();
             

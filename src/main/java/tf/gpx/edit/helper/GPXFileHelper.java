@@ -60,7 +60,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.kml.KMLWriter;
+import tf.gpx.edit.parser.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.helper.javafx.ShowAlerts;
@@ -157,8 +157,7 @@ public class GPXFileHelper {
         final List<String> extFilter = Arrays.asList("*." + FileType.GPX.getExtension());
         final List<String> extValues = Arrays.asList(FileType.GPX.getExtension());
 
-        final File curPath = new File(".");
-        final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
+        final File curPath = new File("user.home");
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Insert GPX-Files");
@@ -197,7 +196,7 @@ public class GPXFileHelper {
         }
         final String extConcat = extValues.stream().collect( Collectors.joining( "/" ) );
 
-        final File curPath = new File(".");
+        final File curPath = new File(System.getProperty("user.home"));
         final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
 
         FileChooser fileChooser = new FileChooser();

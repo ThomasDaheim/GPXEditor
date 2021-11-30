@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
+package tf.gpx.edit.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -172,7 +172,7 @@ public class KMLParser extends GPXParser {
 
             if (!(node instanceof Element)) {
                 // not what we're looking for
-                break;
+                continue;
             }
             final Element nodeElem = (Element) node;
 
@@ -188,7 +188,7 @@ public class KMLParser extends GPXParser {
             }
             if (nodeId == null) {
                 // missing data -> lets get out of here
-                break;
+                continue;
             }
 
 //            <Style id="routesLineStyle">

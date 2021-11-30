@@ -23,15 +23,15 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
+package tf.gpx.edit.parser;
 
 /**
  * Class for Line Style in KML files.
  * 
  * @author t.feuster
  */
-public class KMLPolyStyle extends KMLColorWidthStyle {
-    public KMLPolyStyle() {
-        super(KMLStyleItem.KMLStyleType.PolyStyle);
+public class KMLLineStyle extends KMLColorWidthStyle {
+    public KMLLineStyle() {
+        super(KMLStyleItem.KMLStyleType.LineStyle);
     }
 }

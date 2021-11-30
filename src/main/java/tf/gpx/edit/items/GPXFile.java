@@ -26,10 +26,6 @@
 package tf.gpx.edit.items;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -42,15 +38,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import me.himanshusoni.gpxparser.GPXParser;
-import me.himanshusoni.gpxparser.GPXWriter;
 import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
 import me.himanshusoni.gpxparser.modal.Link;
@@ -59,11 +49,10 @@ import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.kml.KMLParser;
+import tf.gpx.edit.parser.FileParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
 import tf.helper.general.AppInfo;
 import tf.helper.general.ObjectsHelper;
@@ -108,30 +97,8 @@ public class GPXFile extends GPXMeasurable {
         
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
-        GPXParser parser = null;
-        if (null == GPXFileHelper.FileType.fromFileName(myGPXFileName)) {
-            Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
-        } else switch (GPXFileHelper.FileType.fromFileName(myGPXFileName)) {
-            case GPX:
-                parser = new GPXParser();
-                break;
-            case KML:
-                parser = new KMLParser();
-                break;
-            default:
-                Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
-                break;
-        }
-        assert (parser != null);
         
-        parser.addExtensionParser(DefaultExtensionParser.getInstance());
-        
-        try {
-            myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
-        } catch (Exception ex) {
-            Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
-            myGPX = new GPX();
-        }
+        myGPX = FileParser.getInstance().loadFromFile(gpxFile);
 
         if (myGPX.getMetadata() != null) {
             myGPXMetadata.add(new GPXMetadata(this, myGPX.getMetadata()));
@@ -172,6 +139,12 @@ public class GPXFile extends GPXMeasurable {
         myGPXTracks.addListener(changeListener);
         myGPXRoutes.addListener(changeListener);
         myGPXWaypoints.addListener(changeListener);
+        
+        if (!GPXFileHelper.FileType.GPX.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
+            // we have done an import
+            myGPXFileName = myGPXFileName.replace(GPXFileHelper.FileType.fromFileName(myGPXFileName).getExtension(), GPXFileHelper.FileType.GPX.getExtension());
+            setHasUnsavedChanges();
+        }
     }
     
     @Override
@@ -212,31 +185,13 @@ public class GPXFile extends GPXMeasurable {
     }
 
     public boolean writeToFile(final File gpxFile) {
-        boolean result = true;
-        
         // update all numbers
         acceptVisitor(new GPXRenumberWorker());
         
         // update bounds
         updateMetadata();
-        
-        final GPXWriter writer = new GPXWriter();
-        writer.addExtensionParser(DefaultExtensionParser.getInstance());
 
-        final FileOutputStream out;
-        try {
-            out = new FileOutputStream(gpxFile);
-            writer.writeGPX(getGPX(), out);
-            out.close();        
-        } catch (FileNotFoundException | ParserConfigurationException | TransformerException ex) {
-            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
-            result = false;
-        } catch (IOException ex) {
-            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
-            result = false;
-        }
-        
-        return result;
+        return FileParser.getInstance().writeToFile(this, gpxFile);
     }
     
     public final void setHeader() {

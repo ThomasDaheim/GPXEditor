@@ -23,15 +23,49 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.kml;
+package tf.gpx.edit.parser;
+
+import org.w3c.dom.Node;
 
 /**
- * Class for Line Style in KML files.
+ * Abstract base class for KML Style nodes that have color & width associated.
  * 
  * @author t.feuster
  */
-public class KMLLineStyle extends KMLColorWidthStyle {
-    public KMLLineStyle() {
-        super(KMLStyleItem.KMLStyleType.LineStyle);
+public abstract class KMLColorWidthStyle extends KMLStyleItem {
+    private String myColor;
+    private String myWidth;
+
+    public KMLColorWidthStyle(final KMLStyleType type) {
+        super(type);
+    }
+    
+    public String getColor() {
+        return myColor;
+    }
+
+    public void setColor(final String color) {
+        myColor = color;
+    }
+
+    public String getWidth() {
+        return myWidth;
+    }
+
+    public void setWidth(final String width) {
+        myWidth = width;
+    }
+
+    @Override
+    public void setFromNode(final Node node) {
+        // we need color & width
+        Node attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_COLOR);
+        if (attr != null) {
+            myColor = attr.getNodeValue();
+        }
+        attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_WIDTH);
+        if (attr != null) {
+            myWidth = attr.getNodeValue();
+        }
     }
 }
