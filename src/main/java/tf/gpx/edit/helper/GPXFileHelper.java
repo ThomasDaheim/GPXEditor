@@ -115,7 +115,7 @@ public class GPXFileHelper {
         }
         
         public boolean isImportFormat() {
-            return KML.equals(this);
+            return KML.equals(this) || KMZ.equals(this);
         }
         
         public static FileType fromFileName(final String fileName) {
@@ -357,7 +357,7 @@ public class GPXFileHelper {
         try {
             if (type.isZip()) {
                 try (ZipOutputStream outStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(selectedFile)))) {
-                    final ZipEntry zipEntry = new ZipEntry(selectedFile.getName());
+                    final ZipEntry zipEntry = new ZipEntry(selectedFile.getName().replace(FileType.KMZ.getExtension(), FileType.KML.getExtension()));
                     outStream.putNextEntry(zipEntry);
                     
                     result = kmlWriter.writeGPX(gpxFile, outStream);

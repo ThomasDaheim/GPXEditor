@@ -40,20 +40,29 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public class TestKMLTracksRoutes {
-    final static GPXFile myGPX = new GPXFile(new File("src/test/resources/test3.kml"));
+    final static GPXFile myGPXFromKML = new GPXFile(new File("src/test/resources/test3.kml"));
+    final static GPXFile myGPXFromKMZ = new GPXFile(new File("src/test/resources/test3.kmz"));
 
-    @Test
-    public void testGPXStructure() {
-        Assert.assertNotNull(myGPX);
-        Assert.assertEquals(0, myGPX.getGPXWaypoints().size());
-        Assert.assertEquals(1, myGPX.getGPXTracks().size());
-        Assert.assertEquals(1, myGPX.getGPXRoutes().size());
-        Assert.assertNull(myGPX.getGPXMetadata());
+    public void testGPXStructure(final GPXFile gpxFile) {
+        Assert.assertNotNull(gpxFile);
+        Assert.assertEquals(0, gpxFile.getGPXWaypoints().size());
+        Assert.assertEquals(1, gpxFile.getGPXTracks().size());
+        Assert.assertEquals(1, gpxFile.getGPXRoutes().size());
+        Assert.assertNull(gpxFile.getGPXMetadata());
     }
 
     @Test
-    public void testTrack() {
-        final GPXTrack track = myGPX.getGPXTracks().get(0);
+    public void testGPXStructureKML() {
+        testGPXStructure(myGPXFromKML);
+    }
+
+    @Test
+    public void testGPXStructureKMZ() {
+        testGPXStructure(myGPXFromKMZ);
+    }
+
+    public void testTrack(final GPXFile gpxFile) {
+        final GPXTrack track = gpxFile.getGPXTracks().get(0);
         Assert.assertEquals(1, track.getGPXTrackSegments().size());
 
 //        <name>Test a track</name>
@@ -74,8 +83,17 @@ public class TestKMLTracksRoutes {
     }
 
     @Test
-    public void testRoute() {
-        final GPXRoute route = myGPX.getGPXRoutes().get(0);
+    public void testTrackKML() {
+        testTrack(myGPXFromKML);
+    }
+    
+    @Test
+    public void testTrackKMZ() {
+        testTrack(myGPXFromKMZ);
+    }
+    
+    public void testRoute(final GPXFile gpxFile) {
+        final GPXRoute route = gpxFile.getGPXRoutes().get(0);
         Assert.assertEquals(5, route.getGPXWaypoints().size());
         
 //        <name>Test a route</name>
@@ -90,5 +108,15 @@ public class TestKMLTracksRoutes {
         Assert.assertEquals(-1.5970470104, waypoint.getLongitude(), 0.01);
         Assert.assertEquals(47.1589407977, waypoint.getLatitude(), 0.01);
         Assert.assertEquals(27.0, waypoint.getElevation(), 0.01);
+    }
+    
+    @Test
+    public void testRouteKML() {
+        testRoute(myGPXFromKML);
+    }
+    
+    @Test
+    public void testRouteKMZ() {
+        testRoute(myGPXFromKMZ);
     }
 }

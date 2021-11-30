@@ -37,20 +37,28 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public class TestKMLPoints {
-    final static GPXFile myGPX = new GPXFile(new File("src/test/resources/test1.kml"));
-
-    @Test
-    public void testGPXStructure() {
-        Assert.assertNotNull(myGPX);
-        Assert.assertEquals(1, myGPX.getGPXWaypoints().size());
-        Assert.assertEquals(0, myGPX.getGPXTracks().size());
-        Assert.assertEquals(0, myGPX.getGPXRoutes().size());
-        Assert.assertNull(myGPX.getGPXMetadata());
+    final static GPXFile myGPXFromKML = new GPXFile(new File("src/test/resources/test1.kml"));
+    final static GPXFile myGPXFromKMZ = new GPXFile(new File("src/test/resources/test1.kmz"));
+    
+    private void testGPXStructure(final GPXFile gpxFile) {
+        Assert.assertNotNull(gpxFile);
+        Assert.assertEquals(1, gpxFile.getGPXWaypoints().size());
+        Assert.assertEquals(0, gpxFile.getGPXTracks().size());
+        Assert.assertEquals(0, gpxFile.getGPXRoutes().size());
+        Assert.assertNull(gpxFile.getGPXMetadata());
     }
 
     @Test
-    public void testWaypoint() {
-        final GPXWaypoint waypoint =  myGPX.getGPXWaypoints().get(0);
+    public void testGPXStructureKML() {
+        testGPXStructure(myGPXFromKML);
+    }
+
+    @Test
+    public void testGPXStructureKMZ() {
+        testGPXStructure(myGPXFromKMZ);
+    }
+
+    private void testWaypoint(final GPXWaypoint waypoint) {
 //        <name>A simple placemark on the ground</name>
         Assert.assertEquals("A simple placemark on the ground", waypoint.getName());
 //        <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 2021-09-06 09:55:49 MESZ</description>
@@ -63,5 +71,16 @@ public class TestKMLPoints {
 //        <styleUrl>#Winery</styleUrl>
         Assert.assertNotNull(waypoint.getSym());
         Assert.assertEquals("Winery", waypoint.getSym());
+    }
+
+    @Test
+    public void testWaypointKML() {
+        testWaypoint(myGPXFromKML.getGPXWaypoints().get(0));
+    }
+
+    @Test
+    public void testWaypointKMZ() {
+        testWaypoint(myGPXFromKMZ.getGPXWaypoints().get(0));
+        final GPXWaypoint waypoint = myGPXFromKMZ.getGPXWaypoints().get(0);
     }
 }

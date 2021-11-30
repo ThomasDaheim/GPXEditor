@@ -55,7 +55,7 @@ public interface KMLConstants {
     final String ROUTES_LINESTYLE = "routesLineStyle";
 
     // constants to match XSD definition of nodes and attributes
-    final String KML_XSD = "http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd"; //http://www.opengis.net/kml/2.2";
+    final String KML_XSD = "http://www.opengis.net/kml/2.2";
 
     /* Root Node */
     final String NODE_KML = "kml";

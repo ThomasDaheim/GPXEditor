@@ -29,8 +29,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import me.himanshusoni.gpxparser.GPXParser;
@@ -59,10 +64,11 @@ public class FileParser {
     public GPX loadFromFile(final File gpxFile) {
         GPX result;
             
+        InputStream inputStream = null;
+        ZipInputStream zipStream = null;
         try {
             final String fileName = gpxFile.getName();
             GPXParser parser = null;
-            FileInputStream inputStream = null;
             if (null == GPXFileHelper.FileType.fromFileName(fileName)) {
                 Logger.getLogger(FileParser.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
             } else switch (GPXFileHelper.FileType.fromFileName(fileName)) {
@@ -73,6 +79,16 @@ public class FileParser {
                 case KML:
                     parser = new KMLParser();
                     inputStream = new FileInputStream(gpxFile.getPath());
+                    break;
+                case KMZ:
+                    parser = new KMLParser();
+                    // zipped input stream...
+                    final ZipFile zipFile = new ZipFile(gpxFile);
+                    zipStream = new ZipInputStream(new FileInputStream(gpxFile.getPath()));
+                    final ZipEntry zipEntry = zipStream.getNextEntry();
+                    if (zipEntry != null) {
+                        inputStream = zipFile.getInputStream(zipEntry);
+                    }
                     break;
                 default:
                     Logger.getLogger(FileParser.class.getName()).log(Level.SEVERE, null, "Unsupported file type.");
@@ -86,6 +102,19 @@ public class FileParser {
         } catch (Exception ex) {
             Logger.getLogger(FileParser.class.getName()).log(Level.SEVERE, null, ex);
             result = new GPX();
+        } finally {
+            // TODO: any better way to do that???
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (zipStream != null) {
+                    zipStream.closeEntry();
+                    zipStream.close();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(FileParser.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         return result;
@@ -97,9 +126,8 @@ public class FileParser {
         final GPXWriter writer = new GPXWriter();
         writer.addExtensionParser(DefaultExtensionParser.getInstance());
 
-        final FileOutputStream out;
         try {
-            out = new FileOutputStream(file);
+            final OutputStream out = new FileOutputStream(file);
             writer.writeGPX(gpxFile.getGPX(), out);
             out.close();        
         } catch (ParserConfigurationException | TransformerException | IOException ex) {
