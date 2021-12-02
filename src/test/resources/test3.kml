@@ -28,7 +28,7 @@
         <styleUrl>#tracksLineStyle</styleUrl>
         <Style>
           <LineStyle>
-            <color>ffFFFF00</color>
+            <color>808B008B</color>
           </LineStyle>
         </Style>
         <LineString>
@@ -47,7 +47,7 @@
         <styleUrl>#routesLineStyle</styleUrl>
         <Style>
           <LineStyle>
-            <color>ffFFFF00</color>
+            <color>8000FF7F</color>
           </LineStyle>
         </Style>
         <LineString>

@@ -35,7 +35,6 @@ import org.w3c.dom.Node;
 public abstract class KMLStyleItem {
     public static enum KMLStyleType {
         LineStyle(KMLConstants.NODE_STYLE_LINESTYLE),
-        PolyStyle(KMLConstants.NODE_STYLE_POLYSTYLE),
         IconStyle(KMLConstants.NODE_STYLE_ICONSTYLE);
         
         private final String myKMLNodeName;

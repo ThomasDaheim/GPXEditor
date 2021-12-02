@@ -80,6 +80,11 @@ public class TestKMLTracksRoutes {
         Assert.assertEquals(-1.5970470104, waypoint.getLongitude(), 0.01);
         Assert.assertEquals(47.1589407977, waypoint.getLatitude(), 0.01);
         Assert.assertEquals(27.0, waypoint.getElevation(), 0.01);
+        
+//        <color>808B008B</color>
+        Assert.assertEquals("8B008B", track.getLineStyle().getColor().getHexColor());
+        Assert.assertEquals(0.5, track.getLineStyle().getOpacity(), 0.01);
+        Assert.assertEquals(6, track.getLineStyle().getWidth().intValue());
     }
 
     @Test
@@ -108,6 +113,11 @@ public class TestKMLTracksRoutes {
         Assert.assertEquals(-1.5970470104, waypoint.getLongitude(), 0.01);
         Assert.assertEquals(47.1589407977, waypoint.getLatitude(), 0.01);
         Assert.assertEquals(27.0, waypoint.getElevation(), 0.01);
+        
+//        <color>8000FF7F</color> but we don't have that as GarminColor...
+        Assert.assertEquals("FFFF00", route.getLineStyle().getColor().getHexColor());
+        Assert.assertEquals(0.5, route.getLineStyle().getOpacity(), 0.01);
+        Assert.assertEquals(6, route.getLineStyle().getWidth().intValue());
     }
     
     @Test

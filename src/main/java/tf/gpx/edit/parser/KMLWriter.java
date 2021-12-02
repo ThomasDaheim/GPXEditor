@@ -88,9 +88,6 @@ public class KMLWriter {
 //                    <width>6</width>
 //                    <color>ffFF0000</color>
 //                </LineStyle>
-//                <PolyStyle>
-//                    <color>ffFF0000</color>
-//                </PolyStyle>
 //            </Style>
             Element style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
@@ -111,19 +108,11 @@ public class KMLWriter {
             width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
 
-            Element polyStyle = doc.createElement(KMLConstants.NODE_STYLE_POLYSTYLE);
-            polyStyle.appendChild(color);
-            polyStyle.appendChild(width);
-            style.appendChild(polyStyle);
-
 //            <Style id="routesLineStyle">
 //                <LineStyle>
 //                    <width>6</width>
 //                    <color>ffFF00FF</color>
 //                </LineStyle>
-//                <PolyStyle>
-//                    <color>ffFF00FF</color>
-//                </PolyStyle>
 //            </Style>
             style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
@@ -143,11 +132,6 @@ public class KMLWriter {
             color.appendChild(doc.createTextNode("ffFF00FF"));
             width = doc.createElement(KMLConstants.NODE_STYLE_WIDTH);
             width.appendChild(doc.createTextNode("6"));
-
-            polyStyle = doc.createElement(KMLConstants.NODE_STYLE_POLYSTYLE);
-            polyStyle.appendChild(color);
-            polyStyle.appendChild(width);
-            style.appendChild(polyStyle);
         } catch (ParserConfigurationException | DOMException ex) {
             Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -294,7 +278,7 @@ public class KMLWriter {
         style.appendChild(lineStyle);
 
         final Element color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
-        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(item.getLineStyle().getColor().getJavaFXColor())));
+        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(item.getLineStyle().getColor().getJavaFXColor(), item.getLineStyle().getOpacity())));
         lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement(KMLConstants.NODE_PLACEMARK_LINESTRING);

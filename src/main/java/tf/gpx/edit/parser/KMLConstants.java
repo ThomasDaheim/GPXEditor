@@ -26,6 +26,7 @@
 package tf.gpx.edit.parser;
 
 import java.text.SimpleDateFormat;
+import tf.gpx.edit.items.GPXLineItem;
 
 /**
  *
@@ -36,8 +37,18 @@ public interface KMLConstants {
     final SimpleDateFormat KML_DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 
     public enum PathType {
-        Track,
-        Route
+        Track(GPXLineItem.GPXLineItemType.GPXTrack),
+        Route(GPXLineItem.GPXLineItemType.GPXRoute);
+        
+        private final GPXLineItem.GPXLineItemType myItemType;
+        
+        private PathType(final GPXLineItem.GPXLineItemType type) {
+            myItemType = type;
+        }
+        
+        public GPXLineItem.GPXLineItemType toGPXLineItemType() {
+            return myItemType;
+        }
     }
     
     final String ALTITUDE_LABEL = "Altitude: ";
@@ -75,7 +86,6 @@ public interface KMLConstants {
     /* style nodes and attributes */
     final String ATTR_STYLE_ID = "id";
     final String NODE_STYLE_LINESTYLE = "LineStyle";
-    final String NODE_STYLE_POLYSTYLE = "PolyStyle";
     final String NODE_STYLE_COLOR = "color";
     final String NODE_STYLE_WIDTH = "width";
     final String NODE_STYLE_ICONSTYLE = "IconStyle";

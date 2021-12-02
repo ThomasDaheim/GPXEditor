@@ -79,7 +79,7 @@ public class GPXRoute extends GPXMeasurable {
             ((GPX) content).addRoute(myRoute);
         }
 
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         myGPXWaypoints.addListener(changeListener);
     }
@@ -92,7 +92,7 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {

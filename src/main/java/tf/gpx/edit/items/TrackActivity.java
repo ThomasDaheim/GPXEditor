@@ -39,6 +39,7 @@ public class TrackActivity {
     public static enum Activity {
         WALKING("walking"),
         DRIVING("driving"),
+        CYCLING("cycling"),
         NONE("none");
         
         private final String locusValue;

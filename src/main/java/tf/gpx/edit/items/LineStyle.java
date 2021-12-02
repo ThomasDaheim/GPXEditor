@@ -52,6 +52,18 @@ public class LineStyle {
     public static final Linecap DEFAULT_CAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
     
+    public static final GarminColor DEFAULT_ROUTE_COLOR = GarminColor.Blue;
+    public static final GarminColor DEFAULT_TRACK_COLOR = GarminColor.Red;
+    
+    public static enum StyleAttribute {
+        Color,
+        Width,
+        Opacity,
+        Linecap,
+        Pattern,
+        Dash
+    }
+
     public static enum Linecap {
         Round,
         Butt,
@@ -100,6 +112,15 @@ public class LineStyle {
     public LineStyle(final IStylableItem item, final KnownExtensionAttributes.KnownAttribute colorAttribute, final GarminColor defaultCol) {
         myItem = item;
         myExtension = item.getExtension();
+        myColorAttribute = colorAttribute;
+        
+        myDefaultColor = defaultCol;
+    }
+    
+    // TFE; 20211202: during KMLParsing we have an extension but not yet a GPXTrack/GPXRoute
+    public LineStyle(final Extension extension, final KnownExtensionAttributes.KnownAttribute colorAttribute, final GarminColor defaultCol) {
+        myItem = null;
+        myExtension = extension;
         myColorAttribute = colorAttribute;
         
         myDefaultColor = defaultCol;
@@ -164,7 +185,9 @@ public class LineStyle {
                     
                     // store as germin extension as well - convert anything back to garmin since it can't read other color values
                     KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, nodeValue);
-                    myItem.lineStyleHasChanged();
+                    if (myItem != null) {
+                        myItem.lineStyleHasChanged();
+                    }
                 }
             }
 
@@ -265,8 +288,10 @@ public class LineStyle {
         // set both our variable and the gpx extension
         myColor = Optional.of(inColor);
         
-        if (myItem != null) {
+        if (myExtension != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, inColor.name());
+        }
+        if (myItem != null) {
             myItem.lineStyleHasChanged();
         }
     }
@@ -283,8 +308,10 @@ public class LineStyle {
         // set both our variable and the gpx extension
         myColor = Optional.of(GarminColor.valueOf(inColor));
         
-        if (myItem != null) {
+        if (myExtension != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, myColorAttribute, inColor);
+        }
+        if (myItem != null) {
             myItem.lineStyleHasChanged();
         }
     }
@@ -293,7 +320,7 @@ public class LineStyle {
         // set both our variable and the gpx extension
         myWidth = Optional.of(width);
         
-        if (myItem != null) {
+        if (myExtension != null) {
             // we work in pixel, gpx_style in millimeter
             KnownExtensionAttributes.setValueForAttribute(
                     myExtension, 
@@ -302,6 +329,8 @@ public class LineStyle {
                             Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
                             )
                     );
+        }
+        if (myItem != null) {
             myItem.lineStyleHasChanged();
         }
     }
@@ -310,8 +339,10 @@ public class LineStyle {
         // set both our variable and the gpx extension
         myOpacity = Optional.of(Precision.round(opacity, 2));
         
-        if (myItem != null) {
+        if (myExtension != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.opacity, Double.toString(myOpacity.get()));
+        }
+        if (myItem != null) {
             myItem.lineStyleHasChanged();
         }
     }
@@ -320,8 +351,10 @@ public class LineStyle {
         // set both our variable and the gpx extension
         myLinecap = Optional.of(linecap);
         
-        if (myItem != null) {
+        if (myExtension != null) {
             KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.linecap, linecap.toString());
+        }
+        if (myItem != null) {
             myItem.lineStyleHasChanged();
         }
     }
@@ -332,5 +365,16 @@ public class LineStyle {
         myOpacity = null;
         myWidth = null;
         myLinecap = null;
+    }
+    
+    public static GarminColor defaultColor(final GPXLineItem.GPXLineItemType type) {
+        switch (type) {
+            case GPXRoute:
+                return DEFAULT_ROUTE_COLOR;
+            case GPXTrack, GPXTrackSegment:
+                return DEFAULT_TRACK_COLOR;
+            default:
+                return DEFAULT_COLOR;
+        }
     }
 }

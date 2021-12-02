@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.scene.paint.Color;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -55,6 +56,10 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.items.LineStyle;
+import tf.gpx.edit.viewer.MarkerManager;
+import tf.helper.javafx.ColorConverter;
 
 /**
  * Read KML files and create the structure from gpx-parser classes for a gpx file.
@@ -215,6 +220,18 @@ public class KMLParser extends GPXParser {
             for (KMLStyleItem.KMLStyleType styleType : KMLStyleItem.KMLStyleType.values()) { 
                 final KMLStyleItem styleItem = getStyleItem(nodeElem, styleType.getKMLNodeName());
                 if (styleItem != null) {
+                    // for line style we might need to modify the default color!
+                    if (KMLStyleItem.KMLStyleType.LineStyle.equals(styleType)) {
+                        switch (nodeId) {
+                            case KMLConstants.TRACKS_LINESTYLE:
+                                ((KMLLineStyle) styleItem).setDefaultColor(LineStyle.DEFAULT_TRACK_COLOR.getHexColor());
+                                break;
+                            case KMLConstants.ROUTES_LINESTYLE:
+                                ((KMLLineStyle) styleItem).setDefaultColor(LineStyle.DEFAULT_ROUTE_COLOR.getHexColor());
+                                break;
+                            default:
+                        }
+                    }
                     style.getKMLStyleItems().put(styleItem.getKMLStyleType(), styleItem);
                 }
             }
@@ -241,8 +258,6 @@ public class KMLParser extends GPXParser {
             styleItem = new KMLIconStyle();
         } else if (KMLConstants.NODE_STYLE_LINESTYLE.equals(nodeName)) {
             styleItem = new KMLLineStyle();
-        } else if (KMLConstants.NODE_STYLE_POLYSTYLE.equals(nodeName)) {
-            styleItem = new KMLPolyStyle();
         }
         if (styleItem == null) {
             // none or multiple style nodes
@@ -402,7 +417,7 @@ public class KMLParser extends GPXParser {
                 waypoints.add(wpt);
             }
 
-            KMLStyleItem styleItem = null;
+            KMLLineStyle styleItem = null;
             // we encode in <styleurl> whether its a track or a route - lets look for that
             KMLConstants.PathType pathType = KMLConstants.PathType.Route;
             Node style = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_STYLEURL);
@@ -417,7 +432,7 @@ public class KMLParser extends GPXParser {
                         pathType = KMLConstants.PathType.Track;
                     }
                     
-                    styleItem = styleMap.get(styleUrl).getKMLStyleItems().get(KMLStyleItem.KMLStyleType.LineStyle);
+                    styleItem = (KMLLineStyle) styleMap.get(styleUrl).getKMLStyleItems().get(KMLStyleItem.KMLStyleType.LineStyle);
                 }
             }
             
@@ -426,16 +441,15 @@ public class KMLParser extends GPXParser {
             if ((style != null) && (style instanceof Element)) {
                 final Element styleElem = (Element) style;
 
-                final KMLStyleItem styleItem2 = getStyleItem(styleElem, KMLConstants.NODE_STYLE_LINESTYLE);
+                final KMLLineStyle styleItem2 = (KMLLineStyle) getStyleItem(styleElem, KMLConstants.NODE_STYLE_LINESTYLE);
                 if (styleItem2 != null) {
+                    // need to merge style items since styleItem && styleItem2 might not have all attributes set
+                    // attributes set in styleItem2 should remain, any default should be overwritten with styleItem
+                    styleItem2.setColorIfDefault(styleItem.getColor());
+                    styleItem2.setWidthIfDefault(styleItem.getWidth());
+
                     styleItem = styleItem2;
                 }
-            }
-            
-            // create extension from style item - only o have it parsed back into a GPX LineStyle later on...
-            Extension styleExtension = null;
-            if (styleItem != null) {
-                
             }
             
             // noew we have all attributes :-)
@@ -447,8 +461,8 @@ public class KMLParser extends GPXParser {
                 route.setNumber(number);
                 route.setRoutePoints(waypoints);
                 
-                if (styleExtension != null) {
-                    //route.addExtensionData(name, name);
+                if ((styleItem != null) && (isDifferentFromDefaultStyle(pathType, styleItem, null))) {
+                    populateLineStyle(route, styleItem);
                 }
                 
                 gpx.addRoute(route);
@@ -461,8 +475,8 @@ public class KMLParser extends GPXParser {
                 track.setNumber(number);
                 tracksegment.setWaypoints(waypoints);
                 
-                if (styleExtension != null) {
-                    //track.addExtensionData(name, name);
+                if ((styleItem != null) && (isDifferentFromDefaultStyle(pathType, styleItem, null))) {
+                    populateLineStyle(track, styleItem);
                 }
 
                 gpx.addTrack(track);
@@ -470,11 +484,35 @@ public class KMLParser extends GPXParser {
         }
     }
     
+    protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {
+        if (KMLStyleItem.KMLStyleType.IconStyle.equals(styleItem.getKMLStyleType())) {
+            // check against default icon
+            if (!MarkerManager.DEFAULT_MARKER.getIconName().equals(((KMLIconStyle) styleItem).getIcon())) {
+                return true;
+            }
+        } else {
+            // we can differ in color, width
+            // null checks all for linestyle
+            if (attribute == null || LineStyle.StyleAttribute.Color.equals(attribute)) {
+                if (!LineStyle.defaultColor(pathType.toGPXLineItemType()).getHexColor().equals(((KMLLineStyle) styleItem).getColor())) {
+                    return true;
+                }
+            }
+            if (attribute == null || LineStyle.StyleAttribute.Width.equals(attribute)) {
+                if (!LineStyle.DEFAULT_WIDTH.equals(((KMLLineStyle) styleItem).getWidth())) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
     private NodeList findPlacemarksContaining(final Document doc, final String nodeName) {
         return doc.getElementsByTagName(nodeName);
     }
     
-    public static NodeList getChildNodesByName(final Node node, final String name) {
+    private static NodeList getChildNodesByName(final Node node, final String name) {
         if (node == null || !(node instanceof Element)) {
             // not what we're looking for
             return null;
@@ -490,5 +528,21 @@ public class KMLParser extends GPXParser {
         }
         
         return getChildNodesByName(node, name).item(0);
+    }
+    
+    private void populateLineStyle(final Extension extension, final KMLLineStyle styleItem) {
+        LineStyle lineStyle = null;
+        if (extension instanceof Track) {
+            lineStyle = new LineStyle(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);
+        } else if (extension instanceof Route) {
+            lineStyle = new LineStyle(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
+        } else {
+            return;
+        }
+
+        final Color styleColor = styleItem.getJavaFXColor();
+        lineStyle.setColorFromHexColor(ColorConverter.JavaFXtoRGBHex(styleColor).substring(0, 6));
+        lineStyle.setOpacity(styleColor.getOpacity());
+        lineStyle.setWidth(styleItem.getWidth());
     }
 }

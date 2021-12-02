@@ -25,13 +25,77 @@
  */
 package tf.gpx.edit.parser;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.scene.paint.Color;
+import org.w3c.dom.Node;
+import tf.gpx.edit.items.LineStyle;
+import tf.helper.javafx.ColorConverter;
+
 /**
  * Class for Line Style in KML files.
  * 
  * @author t.feuster
  */
-public class KMLLineStyle extends KMLColorWidthStyle {
+public class KMLLineStyle extends KMLStyleItem {
+    private String myDefaultColor = LineStyle.DEFAULT_COLOR.getHexColor();
+    private String myColor = myDefaultColor;
+    private Integer myWidth = LineStyle.DEFAULT_WIDTH;
+
     public KMLLineStyle() {
         super(KMLStyleItem.KMLStyleType.LineStyle);
+    }
+    public String getColor() {
+        return myColor;
+    }
+
+    public void setColor(final String color) {
+        myColor = color;
+    }
+    
+    // we have different default colors for tracks & routes
+    public void setDefaultColor(final String color) {
+        myDefaultColor = color;
+    }
+    
+    public void setColorIfDefault(final String color) {
+        if (myDefaultColor.equals(myColor)) {
+            myColor = color;
+        }
+    }
+
+    public Color getJavaFXColor() {
+        return ColorConverter.KMLToJavaFX(myColor);
+    }
+
+    public Integer getWidth() {
+        return myWidth;
+    }
+
+    public void setWidth(final Integer width) {
+        myWidth = width;
+    }
+    
+    public void setWidthIfDefault(final Integer width) {
+        if (LineStyle.DEFAULT_WIDTH.equals(myWidth)) {
+            myWidth = width;
+        }
+    }
+
+    @Override
+    public void setFromNode(final Node node) {
+        // we need color & width
+        Node attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_COLOR);
+        if (attr != null) {
+            myColor = attr.getTextContent();
+        }
+        attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_WIDTH);
+        if (attr != null) {
+            try {
+                myWidth = Integer.valueOf(attr.getTextContent());
+            } catch (NumberFormatException ex) {
+                Logger.getLogger(KMLLineStyle.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }

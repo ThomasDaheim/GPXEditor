@@ -137,10 +137,10 @@ public enum GarminColor {
         double g = ((hexColor & 0xFF00) >> 8) / 255.0;
         double b = (hexColor & 0xFF) / 255.0;
 
-        return getGarminDisplayColorForRGB(r, g, b);
+        return getGarminColorForRGB(r, g, b);
     }
     
-    private static GarminColor getGarminDisplayColorForRGB(final double r, final double g, final double b) {
+    private static GarminColor getGarminColorForRGB(final double r, final double g, final double b) {
         GarminColor closestMatch = GarminColor.Black;
         double minMSE = Double.MAX_VALUE;
         double mse;
@@ -148,11 +148,12 @@ public enum GarminColor {
 //        System.out.println("Searching for: " + r + ", " + g + ", " + b);
         for (GarminColor color : GarminColor.values()) {
             mse = computeMSE(color, r, g, b);
+//            System.out.println("Distance: " + mse + " - " + color.getJavaFXColor().getRed() + ", " + color.getJavaFXColor().getGreen()+ ", " + color.getJavaFXColor().getBlue()+ " - " + color);
             if (mse < minMSE) {
                 minMSE = mse;
                 closestMatch = color;
                 
-//                System.out.println("Closest found: " + closestMatch.getJavaFXColor().getRed() + ", " + closestMatch.getJavaFXColor().getGreen()+ ", " + closestMatch.getJavaFXColor().getBlue()+ " - " + closestMatch);
+//                System.out.println("Closest found!");
                 // shortcut - it doesn't get better than this
                 if (minMSE < 0.0001) {
                     break;
