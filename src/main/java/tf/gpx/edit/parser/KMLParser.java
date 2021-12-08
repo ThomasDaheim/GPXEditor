@@ -319,7 +319,7 @@ public class KMLParser extends GPXParser {
                 // <description>47.23454062939539, 0.001 Altitude: 37.488440304870444 meters Time: ---</description>
                 String time = desc.getTextContent();
                 if (time.lastIndexOf(KMLConstants.TIME_LABEL) > 0 && time.lastIndexOf(KMLConstants.TIME_LABEL) + KMLConstants.TIME_LABEL.length() + 1 < time.length()) {
-                    time = time.substring(time.lastIndexOf(KMLConstants.TIME_LABEL) + KMLConstants.TIME_LABEL.length() + 1);
+                    time = time.substring(time.lastIndexOf(KMLConstants.TIME_LABEL) + KMLConstants.TIME_LABEL.length());
                     if (!KMLConstants.TIME_NO_VALUE.equals(time)) {
                         // try to parse string with date formatter
                         try {

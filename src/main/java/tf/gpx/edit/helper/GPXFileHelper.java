@@ -56,6 +56,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -330,7 +331,11 @@ public class GPXFileHelper {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save " + extConcat + "-File");
-        fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+        if (gpxFile.getPath() != null) {
+            fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
+        } else {
+            fileChooser.setInitialDirectory(FileUtils.getUserDirectory());
+        }
         fileChooser.setInitialFileName(gpxFile.getName().replace(FileType.GPX.getExtension(), FileType.KML.getExtension()));
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(

@@ -49,7 +49,7 @@ public class LineStyle {
     // we work in pixel
     public static final Integer DEFAULT_WIDTH = 2;
     public static final String DEFAULT_PATTERN = "";
-    public static final Linecap DEFAULT_CAP = Linecap.Round;
+    public static final Linecap DEFAULT_LINECAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
     
     public static final GarminColor DEFAULT_ROUTE_COLOR = GarminColor.Blue;
@@ -154,7 +154,7 @@ public class LineStyle {
         myDashes = Optional.of(lineStyle.getDashes());
     }
 
-    public static final LineStyle DEFAULT_LINESTYLE = new LineStyle(DEFAULT_COLOR, DEFAULT_OPACITY, DEFAULT_WIDTH, DEFAULT_PATTERN, DEFAULT_CAP, DEFAULT_DASHES);
+    public static final LineStyle DEFAULT_LINESTYLE = new LineStyle(DEFAULT_COLOR, DEFAULT_OPACITY, DEFAULT_WIDTH, DEFAULT_PATTERN, DEFAULT_LINECAP, DEFAULT_DASHES);
     
     private IStylableItem getItem() {
         return myItem;
@@ -262,7 +262,7 @@ public class LineStyle {
 
             // worst case: use default
             if (nodeValue == null || nodeValue.isBlank()) {
-                nodeValue = DEFAULT_CAP.name();
+                nodeValue = DEFAULT_LINECAP.name();
             }
 
             myLinecap = Optional.of(Linecap.fromString(nodeValue));
@@ -271,7 +271,7 @@ public class LineStyle {
     }
     
     public Linecap getDefaultLinecap() {
-        return DEFAULT_CAP;
+        return DEFAULT_LINECAP;
     }
 
     public List<Dash> getDashes() {
@@ -377,4 +377,22 @@ public class LineStyle {
                 return DEFAULT_COLOR;
         }
     }
+    
+    public static boolean isDifferentFromDefault(final LineStyle lineStyle, final GarminColor defaultCol) {
+        boolean result = false;
+        
+        GarminColor testDefault = defaultCol;
+        if (testDefault == null) {
+            testDefault = DEFAULT_COLOR;
+        }
+        result = result || !lineStyle.getColor().equals(testDefault);
+        
+        result = result || !lineStyle.getOpacity().equals(DEFAULT_OPACITY);
+ 
+        result = result || !lineStyle.getLinecap().equals(DEFAULT_LINECAP);
+        
+        result = result || !lineStyle.getWidth().equals(DEFAULT_WIDTH);
+
+        return result;
+    } 
 }
