@@ -149,8 +149,8 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         }
         
         // TFE, 20200925: set date as well - if different from date of first waypoint
-        if ((waypoint.getDate() != null ) && !waypoint.getDate().equals(myDatapoint.getDate())) {
-            setMultipleDateValues(myDatapoint.getDate());
+        if (((waypoint.getDate() == null) && (myDatapoint.getDate() != null)) || !waypoint.getDate().equals(myDatapoint.getDate())) {
+            setMultipleDateValues(waypoint.getDate(), myDatapoint.getDate());
         }
         
         if (myWaypoints.size() == 1) {
@@ -187,16 +187,31 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         });
     }
     
-    private void setMultipleDateValues(final Date startDate) {
-        final long diffInMillies = Math.abs(startDate.getTime() - myWaypoints.get(0).getDate().getTime());
+    private void setMultipleDateValues(final Date oldDate, final Date newDate) {
+        long diffInMillies;
+        if (oldDate != null) {
+            diffInMillies = Math.abs(newDate.getTime() - oldDate.getTime());
+        } else {
+            // no previous date - the diff is the whole value!
+            diffInMillies = newDate.getTime();
+        }
         
         // set date accordingly
         myWaypoints.stream().forEach((t) -> {
             if (t.getDate() != null) {
-                t.getDate().setTime(t.getDate().getTime() + diffInMillies);
-                // TFE, 20210606: getDate().setTime) doesn't call setHasUnsavedChanges() behind the scenes
-                t.setHasUnsavedChanges();
+                if (oldDate != null) {
+                    t.getDate().setTime(t.getDate().getTime() + diffInMillies);
+                } else {
+                    // tricky, first waypoint didn't have a date but this one has
+                    // what would we do in this case? nothing? overwrite with new value and foce all dates to same value?
+                    t.setDate(newDate);
+                }
+            } else {
+                // no previous date - use the new value
+                t.setDate(newDate);
             }
+            // TFE, 20210606: getDate().setTime) doesn't call setHasUnsavedChanges() behind the scenes
+            t.setHasUnsavedChanges();
         });
     }
     
