@@ -88,12 +88,20 @@ public interface KMLConstants {
     final String NODE_STYLE_LINESTYLE = "LineStyle";
     final String NODE_STYLE_COLOR = "color";
     final String NODE_STYLE_WIDTH = "width";
+    // TFE, 20211209: we can add more date but we need to hide it from display in google
+    final String NODE_STYLE_BALLOONSTYLE = "BalloonStyle";
+    final String NODE_STYLE_DISPLAYMODE = "displayMode";
+    final String NODE_STYLE_DISPLAYMODE_HIDE = "hide";
     final String NODE_STYLE_ICONSTYLE = "IconStyle";
     final String NODE_STYLE_ICON = "Icon";
     final String NODE_STYLE_HREF = "href";
 
     /* folder nodes and attributes */
     final String NODE_FOLDER_NAME = "name";
+    final String VALUE_FOLDER_WAYPOINTS = "Waypoints";
+    final String VALUE_FOLDER_TRACKS = "Tracks";
+    final String VALUE_FOLDER_ROUTES = "Routes";
+    final String VALUE_FOLDER_METADATA = "Metadata";
     final String NODE_PLACEMARK = "Placemark";
 
     /* placemark nodes and attributes */
@@ -109,8 +117,18 @@ public interface KMLConstants {
     final String NODE_LINESTRING_ALTITUDEMODE = "altitudeMode";
     final String NODE_LINESTRING_COORDINATES = "coordinates";
     final String NODE_POINT_COORDINATES = NODE_LINESTRING_COORDINATES;
+    final String NODE_LINESTRING_EXTENDEDDATA = "ExtendedData";
     /* end of linestring nodes and attributes */
+
+    /* extendeddata nodes and attributes */
+    final String NODE_EXTENDEDDATA_DATA = "Data";
+    final String ATTR_EXTENDEDDATA_NAME = "name";
+    // store data of waypoint timestamps (in tracks)
+    final String VALUE_EXTENDEDDATA_TIMESTAMPS = "gpx:WaypointTimestamps";
+    // store size of track segments (in tracks)
+    final String VALUE_EXTENDEDDATA_SEGMENTSIZES = "gpx:TrackSegmentSizes";
+    
+    /* end of extendeddata nodes and attributes */
     /* end of placemark nodes and attributes */
     /* end of folder nodes and attributes */
-
 }

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -181,16 +182,7 @@ public class KMLParser extends GPXParser {
             }
             final Element nodeElem = (Element) node;
 
-            NamedNodeMap attrs = nodeElem.getAttributes();
-
-            // id is the reference used in the rest of the KML
-            String nodeId = null;
-            for (int idx = 0; idx < attrs.getLength(); idx++) {
-                final Node attr = attrs.item(idx);
-                if (KMLConstants.ATTR_STYLE_ID.equals(attr.getNodeName())) {
-                    nodeId = attr.getNodeValue();
-                }
-            }
+            final String nodeId = nodeElem.getAttribute(KMLConstants.ATTR_STYLE_ID);
             if (nodeId == null) {
                 // missing data -> lets get out of here
                 continue;
@@ -390,16 +382,13 @@ public class KMLParser extends GPXParser {
                 name = nameNode.getTextContent();
             }
             
-            String[] coordinates;
             final Node coordinateNode = getFirstChildNodeByName(node, KMLConstants.NODE_POINT_COORDINATES);
             if (coordinateNode == null) {
                 Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "LineString doesn't contain coordinates: %s", node);
                 continue;
             }
             // parse into list of waypoints
-            String rawCoords = coordinateNode.getTextContent();
-            rawCoords = rawCoords.replaceAll("\\n\\r", "\\n");
-            coordinates = rawCoords.split("\\n");
+            final String[] coordinates = splitList(coordinateNode);
             final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
                 final String[] coordValues = coordString.split(",");
@@ -468,13 +457,16 @@ public class KMLParser extends GPXParser {
                 gpx.addRoute(route);
             } else {
                 final Track track = new Track();
-                final TrackSegment tracksegment  = new TrackSegment();
-                track.addTrackSegment(tracksegment);
-
                 track.setName(name);
                 track.setNumber(number);
-                tracksegment.setWaypoints(waypoints);
                 
+                // try to find extended data to setup track segments
+                final List<TrackSegment> tracksegments = addExtendedDataForTrack(placemark, waypoints);
+                // need to add them one by one...
+                tracksegments.stream().forEach((t) -> {
+                    track.addTrackSegment(t);
+                });
+
                 if ((styleItem != null) && (isDifferentFromDefaultStyle(pathType, styleItem, null))) {
                     populateLineStyle(track, styleItem);
                 }
@@ -482,6 +474,101 @@ public class KMLParser extends GPXParser {
                 gpx.addTrack(track);
             }
         }
+    }
+    
+    protected List<TrackSegment> addExtendedDataForTrack(final Node placemark, final ArrayList<Waypoint> waypoints) {
+        final List<Integer> segmentSizes = new ArrayList<>();
+        
+        final Node node = getFirstChildNodeByName(placemark, KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
+        if (node != null) {
+            final NodeList dataList = getChildNodesByName(node, KMLConstants.NODE_EXTENDEDDATA_DATA);
+            for (int i = 0; i < dataList.getLength(); i++) {
+                final Node data = dataList.item(i);
+
+                if (!(data instanceof Element)) {
+                    // not what we're looking for
+                    continue;
+                }
+                final Element dataElem = (Element) data;
+
+                final String dataName = dataElem.getAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME);
+                if (dataName == null) {
+                    // missing data -> lets get out of here
+                    continue;
+                }
+                
+                // we can handle timestamps and track segments...
+                switch (dataName) {
+                    case KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS:
+                        final String[] timestamps = splitList(dataElem);
+                        
+                        if (waypoints.size() == timestamps.length) {
+                            for (int j = 0; j < timestamps.length; j++) {
+                                if (!KMLConstants.TIME_NO_VALUE.equals(timestamps[j])) {
+                                    // try to parse string with date formatter
+                                    try {
+                                        final Date date = KMLConstants.KML_DATEFORMAT.parse(timestamps[j]);
+
+                                        waypoints.get(j).setTime(date);
+                                    } catch (ParseException ex) {
+                                        Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }
+                        } else {
+                            System.out.println("Not enough timestamps in KML file! Expected: " + waypoints.size() + ", Found: " + timestamps.length);
+                        }
+
+                        break;
+                    case KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES:
+                        final String[] sizes = splitList(dataElem);
+
+                        for (int j = 0; j < sizes.length; j++) {
+                            try {
+                                segmentSizes.add(Integer.valueOf(sizes[j]));
+                            } catch (NumberFormatException ex) {
+                                Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        
+                        // sum of sizes must add up to total size!
+                        final int sumOfSegments = segmentSizes.stream().mapToInt(Integer::intValue).sum();
+                        if (waypoints.size() != sumOfSegments) {
+                            // if not, throw values away...
+                            segmentSizes.clear();
+
+                            System.out.println("Segments don't add up to coordinates in KML file! Expected: " + waypoints.size() + ", Found: " + sumOfSegments);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        
+        // if we didn't find any sizes, its one for all waypoints
+        if (segmentSizes.isEmpty()) {
+            segmentSizes.add(waypoints.size());
+        }
+        
+        // and now do lets create some track segments :-)
+        final List<TrackSegment> result = new ArrayList<>();
+        
+        int segmentStart = 0;
+        for (Integer segmentSize : segmentSizes) {
+            final TrackSegment tracksegment  = new TrackSegment();
+            // gpx package wants explicit types...
+            tracksegment.setWaypoints(new ArrayList<>(waypoints.subList(segmentStart, segmentStart + segmentSize)));
+            result.add(tracksegment);
+            
+            segmentStart += segmentSize;
+        }
+        
+        return result;
+    }
+    
+    private static String[] splitList(final Node node) {
+        return node.getTextContent().replaceAll("\\n\\r", "\\n").split("\\n");
     }
     
     protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {

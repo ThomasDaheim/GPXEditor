@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,6 +49,7 @@ import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
+import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.viewer.MarkerManager;
@@ -90,6 +92,9 @@ public class KMLWriter {
 //                    <width>6</width>
 //                    <color>ffFF0000</color>
 //                </LineStyle>
+//		<BalloonStyle>
+//			<displayMode>hide</displayMode>
+//		</BalloonStyle>
 //            </Style>
             Element style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
@@ -104,12 +109,17 @@ public class KMLWriter {
             lineStyle.appendChild(color);
             lineStyle.appendChild(width);
             style.appendChild(lineStyle);
+            
+            style.appendChild(getBalloonStyle());
 
 //            <Style id="routesLineStyle">
 //                <LineStyle>
 //                    <width>6</width>
 //                    <color>ffFF00FF</color>
 //                </LineStyle>
+//		<BalloonStyle>
+//			<displayMode>hide</displayMode>
+//		</BalloonStyle>
 //            </Style>
             style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
@@ -124,9 +134,21 @@ public class KMLWriter {
             lineStyle.appendChild(color);
             lineStyle.appendChild(width);
             style.appendChild(lineStyle);
+
+            style.appendChild(getBalloonStyle());
         } catch (ParserConfigurationException | DOMException ex) {
             Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    private Element getBalloonStyle() {
+        final Element displayMode = doc.createElement(KMLConstants.NODE_STYLE_DISPLAYMODE);
+        displayMode.appendChild(doc.createTextNode(KMLConstants.NODE_STYLE_DISPLAYMODE_HIDE));
+        
+        final Element balloonStyle = doc.createElement(KMLConstants.NODE_STYLE_BALLOONSTYLE);
+        balloonStyle.appendChild(displayMode);
+        
+        return balloonStyle;
     }
     
     /**
@@ -149,7 +171,7 @@ public class KMLWriter {
      */
     public void addMark(final GPXWaypoint mark) {
         if (waypoints == null) {
-            waypoints = createFolder("Waypoints");
+            waypoints = createFolder(KMLConstants.VALUE_FOLDER_WAYPOINTS);
 
             root.appendChild(waypoints);
         }
@@ -202,7 +224,7 @@ public class KMLWriter {
      */
     public void addTrack(final GPXTrack track) {
         if (tracks == null) {
-            tracks = createFolder("Tracks");
+            tracks = createFolder(KMLConstants.VALUE_FOLDER_TRACKS);
 
             root.appendChild(tracks);
         }
@@ -216,7 +238,7 @@ public class KMLWriter {
      */
     public void addRoute(final GPXRoute route) {
         if (routes == null) {
-            routes = createFolder("Routes");
+            routes = createFolder(KMLConstants.VALUE_FOLDER_ROUTES);
 
             root.appendChild(routes);
         }
@@ -294,12 +316,51 @@ public class KMLWriter {
         lineString.appendChild(altitudeMode);
 
         final Element coords = doc.createElement(KMLConstants.NODE_LINESTRING_COORDINATES);
-        String points = "";
-        for (GPXWaypoint p : path) {
-            points += p.getLongitude() + "," + p.getLatitude() + "," + p.getElevation() + "\n";
-        }
+//        String points = "";
+        // TODO: replace by stream with concatenator
+//        for (GPXWaypoint p : path) {
+//            points += p.getLongitude() + "," + p.getLatitude() + "," + p.getElevation() + "\n";
+//        }
+        final String points = path.stream().map((t) -> {
+                return t.getLongitude() + "," + t.getLatitude() + "," + t.getElevation();
+            }).collect(Collectors.joining("\n"));
         coords.appendChild(doc.createTextNode(points));
         lineString.appendChild(coords);
+        
+        if (KMLConstants.PathType.Track.equals(type)) {
+            lineString.appendChild(getExtendedData(item));
+        }
+    }
+    
+    private Element getExtendedData(final GPXLineItem item) {
+        // extended data can be timestamps of waypoints, length of track segements
+        assert GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType());
+        
+        final Element extendedData = doc.createElement(KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
+        
+        final Element timeStampData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA_DATA);
+        timeStampData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME, KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS);
+        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(item.getType());
+        final String points = path.stream().map((t) -> {
+                if (t.getDate() != null) {
+                    return KMLConstants.KML_DATEFORMAT.format(t.getDate());
+                } else {
+                    return KMLConstants.TIME_NO_VALUE;
+                }
+            }).collect(Collectors.joining("\n"));
+        timeStampData.appendChild(doc.createTextNode(points));
+        extendedData.appendChild(timeStampData);
+
+        final Element segmentData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA_DATA);
+        segmentData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME, KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES);
+        final List<GPXTrackSegment> segments = item.getGPXTrackSegments();
+        final String segment = segments.stream().map((t) -> {
+                return String.valueOf(t.getGPXWaypoints().size());
+            }).collect(Collectors.joining("\n"));
+        segmentData.appendChild(doc.createTextNode(segment));
+        extendedData.appendChild(segmentData);
+
+        return extendedData;
     }
     
     /**
