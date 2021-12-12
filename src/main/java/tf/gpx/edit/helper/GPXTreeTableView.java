@@ -27,13 +27,17 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -263,6 +267,22 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                     myEditor.closeFile(item);
                                 });
                                 fileMenu.getItems().add(closeFile);
+
+                                // TFE, 20211211: quick way to navigate to file location
+                                if (Desktop.isDesktopSupported()) {
+                                    final MenuItem openDirectory = new MenuItem("Open file location");
+                                    openDirectory.setOnAction((ActionEvent event) -> {
+                                        try {
+                                            if (item.getGPXFile().getPath() != null) {
+                                                Desktop.getDesktop().open(new File(item.getGPXFile().getPath()));
+                                            } else {
+                                                Desktop.getDesktop().open(new File(System.getProperty("user.home")));                                            }
+                                        } catch (IOException ex) {
+                                            Logger.getLogger(GPXTreeTableView.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    });
+                                    fileMenu.getItems().add(openDirectory);
+                                }
 
                                 final MenuItem mergeFiles = new MenuItem("Merge Files");
                                 mergeFiles.setOnAction((ActionEvent event) -> {

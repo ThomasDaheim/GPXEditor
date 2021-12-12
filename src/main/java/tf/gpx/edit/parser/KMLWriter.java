@@ -41,12 +41,16 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import me.himanshusoni.gpxparser.modal.Email;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -98,7 +102,7 @@ public class KMLWriter {
 //            </Style>
             Element style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
-            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.TRACKS_LINESTYLE);
+            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.LINESTYLE_TRACKS);
 
             Element color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(LineStyle.DEFAULT_TRACK_COLOR.getJavaFXColor())));
@@ -123,7 +127,7 @@ public class KMLWriter {
 //            </Style>
             style = doc.createElement(KMLConstants.NODE_STYLE);
             root.appendChild(style);
-            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.ROUTES_LINESTYLE);
+            style.setAttribute(KMLConstants.ATTR_STYLE_ID, KMLConstants.LINESTYLE_ROUTES);
 
             color = doc.createElement(KMLConstants.NODE_STYLE_COLOR);
             color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(LineStyle.DEFAULT_ROUTE_COLOR.getJavaFXColor())));
@@ -197,7 +201,7 @@ public class KMLWriter {
         } else {
             desc.appendChild(doc.createTextNode(mark.getLatitude() + ", " + mark.getLongitude() +
                             " " + KMLConstants.ALTITUDE_LABEL + mark.getElevation() + KMLConstants.ALTITUDE_UNIT +
-                            " " + KMLConstants.TIME_LABEL + KMLConstants.TIME_NO_VALUE));
+                            " " + KMLConstants.TIME_LABEL + KMLConstants.VALUE_NO_VALUE));
         }
         placemark.appendChild(desc);
 
@@ -273,9 +277,9 @@ public class KMLWriter {
 
         final Element styleUrl = doc.createElement(KMLConstants.NODE_PLACEMARK_STYLEURL);
         if (KMLConstants.PathType.Track.equals(type)) {
-            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.TRACKS_LINESTYLE));
+            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.LINESTYLE_TRACKS));
         } else {
-            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.ROUTES_LINESTYLE));
+            styleUrl.appendChild(doc.createTextNode("#" + KMLConstants.LINESTYLE_ROUTES));
         }
         placemark.appendChild(styleUrl);
 
@@ -322,7 +326,7 @@ public class KMLWriter {
 //            points += p.getLongitude() + "," + p.getLatitude() + "," + p.getElevation() + "\n";
 //        }
         final String points = path.stream().map((t) -> {
-                return t.getLongitude() + "," + t.getLatitude() + "," + t.getElevation();
+                return waypointToString(t);
             }).collect(Collectors.joining("\n"));
         coords.appendChild(doc.createTextNode(points));
         lineString.appendChild(coords);
@@ -338,29 +342,120 @@ public class KMLWriter {
         
         final Element extendedData = doc.createElement(KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
         
-        final Element timeStampData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA_DATA);
-        timeStampData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME, KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS);
-        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(item.getType());
-        final String points = path.stream().map((t) -> {
+        final String points = item.getCombinedGPXWaypoints(item.getType()).stream().map((t) -> {
                 if (t.getDate() != null) {
                     return KMLConstants.KML_DATEFORMAT.format(t.getDate());
                 } else {
-                    return KMLConstants.TIME_NO_VALUE;
+                    return KMLConstants.VALUE_NO_VALUE;
                 }
             }).collect(Collectors.joining("\n"));
-        timeStampData.appendChild(doc.createTextNode(points));
-        extendedData.appendChild(timeStampData);
+        extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS, points));
 
-        final Element segmentData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA_DATA);
-        segmentData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME, KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES);
-        final List<GPXTrackSegment> segments = item.getGPXTrackSegments();
-        final String segment = segments.stream().map((t) -> {
+        final String segment = item.getGPXTrackSegments().stream().map((t) -> {
                 return String.valueOf(t.getGPXWaypoints().size());
             }).collect(Collectors.joining("\n"));
-        segmentData.appendChild(doc.createTextNode(segment));
-        extendedData.appendChild(segmentData);
+        extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES, segment));
 
         return extendedData;
+    }
+    
+    private void addMetadata(final GPXMetadata data) {
+        final Metadata dataM = data.getMetadata();
+
+        final Element extendedData = doc.createElement(KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
+        
+        // 1) name
+        if (dataM.getName() != null) {
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_NAME, dataM.getName()));
+        }
+        
+        // 2) date
+        if (dataM.getTime()!= null) {
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_DATE, KMLConstants.KML_DATEFORMAT.format(dataM.getTime())));
+        }
+        
+        // 3) description
+        if (dataM.getDesc() != null) {
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_DESCRIPTION, dataM.getDesc()));
+        }
+        
+        // 4) copyright
+        if (dataM.getCopyright()!= null) {
+            final String value = 
+                    stringOrNoValue(dataM.getCopyright().getAuthor()) + KMLConstants.VALUE_SEPARATOR + 
+                    stringOrNoValue(dataM.getCopyright().getLicense()) + KMLConstants.VALUE_SEPARATOR + 
+                    stringOrNoValue(dataM.getCopyright().getYear());
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_COPYRIGHT, value));
+        }
+        
+        // 5) author
+        if (dataM.getAuthor()!= null) {
+            final String value = 
+                    stringOrNoValue(dataM.getAuthor().getName()) + KMLConstants.VALUE_SEPARATOR + 
+                    emailToString(dataM.getAuthor().getEmail()) + KMLConstants.VALUE_SEPARATOR + 
+                    linkToString(dataM.getAuthor().getLink());
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_AUTHOR, value));
+        }
+        
+        // 6) links
+        if (dataM.getLinks() != null && !dataM.getLinks().isEmpty()) {
+            final String value = dataM.getLinks().stream().map((t) -> {
+                        return linkToString(t);
+                    }).collect(Collectors.joining("\n"));
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_LINKS, value));
+        }
+        
+        // 7) keywords
+        if (dataM.getKeywords()!= null) {
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_KEYWORDS, dataM.getKeywords()));
+        }
+        
+        // 8) bounds
+        if (dataM.getBounds()!= null) {
+            final String value = 
+                    dataM.getBounds().getMinLat() + KMLConstants.VALUE_SEPARATOR +
+                    dataM.getBounds().getMaxLat() + KMLConstants.VALUE_SEPARATOR +
+                    dataM.getBounds().getMinLon() + KMLConstants.VALUE_SEPARATOR +
+                    dataM.getBounds().getMaxLon();
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_BOUNDS, value));
+        }
+
+        root.appendChild(extendedData);
+    }
+    
+    private Element buildExtendedDataEntry(final String attrName, final String data) {
+        final Element elem = doc.createElement(KMLConstants.NODE_EXTENDEDDATA_DATA);
+        elem.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME, attrName);
+        elem.appendChild(doc.createTextNode(data));
+        return elem;
+    }
+    
+    private String stringOrNoValue(final String string) {
+        if (string != null) {
+            return string;
+        } else {
+            return KMLConstants.VALUE_NO_VALUE;
+        }
+    }
+    
+    private String waypointToString(final GPXWaypoint wpt) {
+        return wpt.getLongitude() + KMLConstants.VALUE_SEPARATOR + 
+                wpt.getLatitude()+ KMLConstants.VALUE_SEPARATOR + 
+                wpt.getElevation();
+    }
+    
+    private String linkToString(final Link link) {
+        return stringOrNoValue(link.getHref()) + KMLConstants.VALUE_SEPARATOR + 
+                stringOrNoValue(link.getText()) + KMLConstants.VALUE_SEPARATOR + 
+                stringOrNoValue(link.getType());
+    }
+    
+    private String emailToString(final Email email) {
+        if (email != null) {
+            return email.getId() + "@" + email.getDomain();
+        } else {
+            return KMLConstants.VALUE_NO_VALUE;
+        }
     }
     
     /**
@@ -370,6 +465,10 @@ public class KMLWriter {
      * @return
      */
     public boolean writeGPX(final GPXFile gpxFile, final OutputStream outstream) {
+        // TFE, 20211211: export metadata as hidden extension
+        if (gpxFile.getGPXMetadata() != null) {
+            addMetadata(gpxFile.getGPXMetadata());
+        }
         // export all waypoints, tracks and routes
         final List<GPXWaypoint> fileWaypoints = gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile);
         fileWaypoints.forEach(waypoint -> {

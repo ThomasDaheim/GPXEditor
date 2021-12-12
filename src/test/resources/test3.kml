@@ -3,23 +3,26 @@
   <Document>
     <Style id="tracksLineStyle">
       <LineStyle>
-        <color>ffFF0000</color>
-        <width>6</width>
+        <color>FF0000FF</color>
+        <width>2</width>
       </LineStyle>
-      <PolyStyle>
-        <color>ffFF00FF</color>
-        <width>6</width>
-      </PolyStyle>
+      <BalloonStyle>
+        <displayMode>hide</displayMode>
+      </BalloonStyle>
     </Style>
     <Style id="routesLineStyle">
       <LineStyle>
-        <color>ffFF00FF</color>
-        <width>6</width>
+        <color>FFFF0000</color>
+        <width>2</width>
       </LineStyle>
-      <PolyStyle>
-        <color>ffFF00FF</color>
-        <width>6</width>
-      </PolyStyle>
+      <BalloonStyle>
+        <displayMode>hide</displayMode>
+      </BalloonStyle>
+    </Style>
+    <Style id="metadataLineStyle">
+      <BalloonStyle>
+        <displayMode>hide</displayMode>
+      </BalloonStyle>
     </Style>
     <Folder>
       <name>Tracks</name>

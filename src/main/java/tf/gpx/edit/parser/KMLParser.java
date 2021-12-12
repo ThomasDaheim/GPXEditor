@@ -215,10 +215,10 @@ public class KMLParser extends GPXParser {
                     // for line style we might need to modify the default color!
                     if (KMLStyleItem.KMLStyleType.LineStyle.equals(styleType)) {
                         switch (nodeId) {
-                            case KMLConstants.TRACKS_LINESTYLE:
+                            case KMLConstants.LINESTYLE_TRACKS:
                                 ((KMLLineStyle) styleItem).setDefaultColor(LineStyle.DEFAULT_TRACK_COLOR.getHexColor());
                                 break;
-                            case KMLConstants.ROUTES_LINESTYLE:
+                            case KMLConstants.LINESTYLE_ROUTES:
                                 ((KMLLineStyle) styleItem).setDefaultColor(LineStyle.DEFAULT_ROUTE_COLOR.getHexColor());
                                 break;
                             default:
@@ -288,7 +288,7 @@ public class KMLParser extends GPXParser {
                 Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Point doesn't contain coordinates: %s", point);
                 continue;
             }
-            final String[] coordValues = coordinateNode.getTextContent().split(",");
+            final String[] coordValues = coordinateNode.getTextContent().split(KMLConstants.VALUE_SEPARATOR);
             if (coordValues.length < 2) {
                 Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Not enough coordinates: %s", coordValues);
                 continue;
@@ -312,7 +312,7 @@ public class KMLParser extends GPXParser {
                 String time = desc.getTextContent();
                 if (time.lastIndexOf(KMLConstants.TIME_LABEL) > 0 && time.lastIndexOf(KMLConstants.TIME_LABEL) + KMLConstants.TIME_LABEL.length() + 1 < time.length()) {
                     time = time.substring(time.lastIndexOf(KMLConstants.TIME_LABEL) + KMLConstants.TIME_LABEL.length());
-                    if (!KMLConstants.TIME_NO_VALUE.equals(time)) {
+                    if (!KMLConstants.VALUE_NO_VALUE.equals(time)) {
                         // try to parse string with date formatter
                         try {
                             final Date date = KMLConstants.KML_DATEFORMAT.parse(time);
@@ -391,7 +391,7 @@ public class KMLParser extends GPXParser {
             final String[] coordinates = splitList(coordinateNode);
             final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
-                final String[] coordValues = coordString.split(",");
+                final String[] coordValues = coordString.split(KMLConstants.VALUE_SEPARATOR);
                 if (coordValues.length < 2) {
                     Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Not enough coordinates: %s", coordString);
                     continue;
@@ -417,7 +417,7 @@ public class KMLParser extends GPXParser {
                 if (styleUrl.startsWith("#")) {
                     styleUrl = styleUrl.substring(1);
                     
-                    if (KMLConstants.TRACKS_LINESTYLE.equals(styleUrl)) {
+                    if (KMLConstants.LINESTYLE_TRACKS.equals(styleUrl)) {
                         pathType = KMLConstants.PathType.Track;
                     }
                     
@@ -504,7 +504,7 @@ public class KMLParser extends GPXParser {
                         
                         if (waypoints.size() == timestamps.length) {
                             for (int j = 0; j < timestamps.length; j++) {
-                                if (!KMLConstants.TIME_NO_VALUE.equals(timestamps[j])) {
+                                if (!KMLConstants.VALUE_NO_VALUE.equals(timestamps[j])) {
                                     // try to parse string with date formatter
                                     try {
                                         final Date date = KMLConstants.KML_DATEFORMAT.parse(timestamps[j]);

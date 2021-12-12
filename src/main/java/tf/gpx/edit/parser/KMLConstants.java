@@ -54,7 +54,8 @@ public interface KMLConstants {
     final String ALTITUDE_LABEL = "Altitude: ";
     final String ALTITUDE_UNIT = " meters";
     final String TIME_LABEL = "Time: ";
-    final String TIME_NO_VALUE = "---";
+    final String VALUE_NO_VALUE = "---";
+    final String VALUE_SEPARATOR = ",";
 
     // TFE, 20200909: use garmin icons from gpsvisualizer
     // https://www.gpsvisualizer.com/google_maps/icons/garmin/
@@ -62,8 +63,8 @@ public interface KMLConstants {
     final String ICON_EXT = ".png";
     final String PLACEMARK_ICON = "Placemark";
     
-    final String TRACKS_LINESTYLE = "tracksLineStyle";
-    final String ROUTES_LINESTYLE = "routesLineStyle";
+    final String LINESTYLE_TRACKS = "tracksLineStyle";
+    final String LINESTYLE_ROUTES = "routesLineStyle";
 
     // constants to match XSD definition of nodes and attributes
     final String KML_XSD = "http://www.opengis.net/kml/2.2";
@@ -101,7 +102,6 @@ public interface KMLConstants {
     final String VALUE_FOLDER_WAYPOINTS = "Waypoints";
     final String VALUE_FOLDER_TRACKS = "Tracks";
     final String VALUE_FOLDER_ROUTES = "Routes";
-    final String VALUE_FOLDER_METADATA = "Metadata";
     final String NODE_PLACEMARK = "Placemark";
 
     /* placemark nodes and attributes */
@@ -127,6 +127,15 @@ public interface KMLConstants {
     final String VALUE_EXTENDEDDATA_TIMESTAMPS = "gpx:WaypointTimestamps";
     // store size of track segments (in tracks)
     final String VALUE_EXTENDEDDATA_SEGMENTSIZES = "gpx:TrackSegmentSizes";
+    // metadata info
+    final String VALUE_EXTENDEDDATA_NAME = "gpx:Name";
+    final String VALUE_EXTENDEDDATA_DATE = "gpx:Date";
+    final String VALUE_EXTENDEDDATA_DESCRIPTION = "gpx:Description";
+    final String VALUE_EXTENDEDDATA_COPYRIGHT = "gpx:Copyright";
+    final String VALUE_EXTENDEDDATA_AUTHOR = "gpx:Author";
+    final String VALUE_EXTENDEDDATA_LINKS = "gpx:Links";
+    final String VALUE_EXTENDEDDATA_KEYWORDS = "gpx:Keywords";
+    final String VALUE_EXTENDEDDATA_BOUNDS = "gpx:Bounds";
     
     /* end of extendeddata nodes and attributes */
     /* end of placemark nodes and attributes */
