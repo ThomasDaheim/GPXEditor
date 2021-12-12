@@ -41,6 +41,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import me.himanshusoni.gpxparser.modal.Bounds;
 import me.himanshusoni.gpxparser.modal.Email;
 import me.himanshusoni.gpxparser.modal.Link;
 import me.himanshusoni.gpxparser.modal.Metadata;
@@ -175,7 +176,7 @@ public class KMLWriter {
      */
     public void addMark(final GPXWaypoint mark) {
         if (waypoints == null) {
-            waypoints = createFolder(KMLConstants.VALUE_FOLDER_WAYPOINTS);
+            waypoints = createFolder(KMLConstants.VALUE_NAME_WAYPOINTS);
 
             root.appendChild(waypoints);
         }
@@ -228,7 +229,7 @@ public class KMLWriter {
      */
     public void addTrack(final GPXTrack track) {
         if (tracks == null) {
-            tracks = createFolder(KMLConstants.VALUE_FOLDER_TRACKS);
+            tracks = createFolder(KMLConstants.VALUE_NAME_TRACKS);
 
             root.appendChild(tracks);
         }
@@ -242,7 +243,7 @@ public class KMLWriter {
      */
     public void addRoute(final GPXRoute route) {
         if (routes == null) {
-            routes = createFolder(KMLConstants.VALUE_FOLDER_ROUTES);
+            routes = createFolder(KMLConstants.VALUE_NAME_ROUTES);
 
             root.appendChild(routes);
         }
@@ -327,7 +328,7 @@ public class KMLWriter {
 //        }
         final String points = path.stream().map((t) -> {
                 return waypointToString(t);
-            }).collect(Collectors.joining("\n"));
+            }).collect(Collectors.joining(KMLConstants.LINE_SEPARATOR));
         coords.appendChild(doc.createTextNode(points));
         lineString.appendChild(coords);
         
@@ -340,7 +341,8 @@ public class KMLWriter {
         // extended data can be timestamps of waypoints, length of track segements
         assert GPXLineItem.GPXLineItemType.GPXTrack.equals(item.getType());
         
-        final Element extendedData = doc.createElement(KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
+        final Element extendedData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA);
+        extendedData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_TYPE, KMLConstants.VALUE_NAME_TRACKS);
         
         final String points = item.getCombinedGPXWaypoints(item.getType()).stream().map((t) -> {
                 if (t.getDate() != null) {
@@ -348,12 +350,12 @@ public class KMLWriter {
                 } else {
                     return KMLConstants.VALUE_NO_VALUE;
                 }
-            }).collect(Collectors.joining("\n"));
+            }).collect(Collectors.joining(KMLConstants.LINE_SEPARATOR));
         extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS, points));
 
         final String segment = item.getGPXTrackSegments().stream().map((t) -> {
                 return String.valueOf(t.getGPXWaypoints().size());
-            }).collect(Collectors.joining("\n"));
+            }).collect(Collectors.joining(KMLConstants.LINE_SEPARATOR));
         extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES, segment));
 
         return extendedData;
@@ -362,7 +364,8 @@ public class KMLWriter {
     private void addMetadata(final GPXMetadata data) {
         final Metadata dataM = data.getMetadata();
 
-        final Element extendedData = doc.createElement(KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
+        final Element extendedData = doc.createElement(KMLConstants.NODE_EXTENDEDDATA);
+        extendedData.setAttribute(KMLConstants.ATTR_EXTENDEDDATA_TYPE, KMLConstants.VALUE_NAME_METADATA);
         
         // 1) name
         if (dataM.getName() != null) {
@@ -370,7 +373,7 @@ public class KMLWriter {
         }
         
         // 2) date
-        if (dataM.getTime()!= null) {
+        if (dataM.getTime() != null) {
             extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_DATE, KMLConstants.KML_DATEFORMAT.format(dataM.getTime())));
         }
         
@@ -392,7 +395,7 @@ public class KMLWriter {
         if (dataM.getAuthor()!= null) {
             final String value = 
                     stringOrNoValue(dataM.getAuthor().getName()) + KMLConstants.VALUE_SEPARATOR + 
-                    emailToString(dataM.getAuthor().getEmail()) + KMLConstants.VALUE_SEPARATOR + 
+                    emailToString(dataM.getAuthor().getEmail()) + KMLConstants.LINE_SEPARATOR + 
                     linkToString(dataM.getAuthor().getLink());
             extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_AUTHOR, value));
         }
@@ -401,7 +404,7 @@ public class KMLWriter {
         if (dataM.getLinks() != null && !dataM.getLinks().isEmpty()) {
             final String value = dataM.getLinks().stream().map((t) -> {
                         return linkToString(t);
-                    }).collect(Collectors.joining("\n"));
+                    }).collect(Collectors.joining(KMLConstants.LINE_SEPARATOR));
             extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_LINKS, value));
         }
         
@@ -411,13 +414,7 @@ public class KMLWriter {
         }
         
         // 8) bounds
-        if (dataM.getBounds()!= null) {
-            final String value = 
-                    dataM.getBounds().getMinLat() + KMLConstants.VALUE_SEPARATOR +
-                    dataM.getBounds().getMaxLat() + KMLConstants.VALUE_SEPARATOR +
-                    dataM.getBounds().getMinLon() + KMLConstants.VALUE_SEPARATOR +
-                    dataM.getBounds().getMaxLon();
-            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_BOUNDS, value));
+        if (dataM.getBounds() != null) {
         }
 
         root.appendChild(extendedData);
@@ -453,6 +450,16 @@ public class KMLWriter {
     private String emailToString(final Email email) {
         if (email != null) {
             return email.getId() + "@" + email.getDomain();
+        } else {
+            return KMLConstants.VALUE_NO_VALUE;
+        }
+    }
+    
+        if (bounds != null) {
+            return bounds.getMinLat() + KMLConstants.VALUE_SEPARATOR +
+                    bounds.getMaxLat() + KMLConstants.VALUE_SEPARATOR +
+                    bounds.getMinLon() + KMLConstants.VALUE_SEPARATOR +
+                    bounds.getMaxLon();
         } else {
             return KMLConstants.VALUE_NO_VALUE;
         }

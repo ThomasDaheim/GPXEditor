@@ -56,6 +56,7 @@ public interface KMLConstants {
     final String TIME_LABEL = "Time: ";
     final String VALUE_NO_VALUE = "---";
     final String VALUE_SEPARATOR = ",";
+    final String LINE_SEPARATOR = "\n";
 
     // TFE, 20200909: use garmin icons from gpsvisualizer
     // https://www.gpsvisualizer.com/google_maps/icons/garmin/
@@ -99,9 +100,10 @@ public interface KMLConstants {
 
     /* folder nodes and attributes */
     final String NODE_FOLDER_NAME = "name";
-    final String VALUE_FOLDER_WAYPOINTS = "Waypoints";
-    final String VALUE_FOLDER_TRACKS = "Tracks";
-    final String VALUE_FOLDER_ROUTES = "Routes";
+    final String VALUE_NAME_METADATA = "Metadata";
+    final String VALUE_NAME_WAYPOINTS = "Waypoints";
+    final String VALUE_NAME_TRACKS = "Tracks";
+    final String VALUE_NAME_ROUTES = "Routes";
     final String NODE_PLACEMARK = "Placemark";
 
     /* placemark nodes and attributes */
@@ -117,10 +119,12 @@ public interface KMLConstants {
     final String NODE_LINESTRING_ALTITUDEMODE = "altitudeMode";
     final String NODE_LINESTRING_COORDINATES = "coordinates";
     final String NODE_POINT_COORDINATES = NODE_LINESTRING_COORDINATES;
-    final String NODE_LINESTRING_EXTENDEDDATA = "ExtendedData";
     /* end of linestring nodes and attributes */
 
     /* extendeddata nodes and attributes */
+    final String NODE_EXTENDEDDATA = "ExtendedData";
+    final String ATTR_EXTENDEDDATA_TYPE = "type";
+
     final String NODE_EXTENDEDDATA_DATA = "Data";
     final String ATTR_EXTENDEDDATA_NAME = "name";
     // store data of waypoint timestamps (in tracks)

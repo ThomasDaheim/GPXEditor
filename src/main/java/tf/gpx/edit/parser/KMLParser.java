@@ -43,15 +43,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import me.himanshusoni.gpxparser.GPXParser;
+import me.himanshusoni.gpxparser.modal.Bounds;
+import me.himanshusoni.gpxparser.modal.Copyright;
+import me.himanshusoni.gpxparser.modal.Email;
 import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Person;
 import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
@@ -129,6 +134,7 @@ public class KMLParser extends GPXParser {
                 // start by find all styles since they contain e.g. icons for waypoints - for later reference
                 findStyles(doc);
                 
+                findMetadata(doc, gpx);
                 // parse fill "bottom-up" since there is no notion of "track", "route", "tracksegment" in KML
                 // there are only <coordinates> under <LineString> under <Placemark> and <point> under <Placemark>
                 // <Folder> is the highest level entity
@@ -262,11 +268,216 @@ public class KMLParser extends GPXParser {
         return styleItem;
     }
     
+    private void findMetadata(final Document doc, final GPX gpx) {
+        Metadata metadata = null;
+        
+        final Node node = getFirstChildNodeByName(doc, KMLConstants.NODE_EXTENDEDDATA);
+        if (node != null && 
+                (node instanceof Element) && 
+                KMLConstants.VALUE_NAME_METADATA.equals(((Element) node).getAttribute(KMLConstants.ATTR_EXTENDEDDATA_TYPE))) {
+            final NodeList dataList = getChildNodesByName(node, KMLConstants.NODE_EXTENDEDDATA_DATA);
+            for (int i = 0; i < dataList.getLength(); i++) {
+                final Node data = dataList.item(i);
+
+                if (!(data instanceof Element)) {
+                    // not what we're looking for
+                    continue;
+                }
+                final Element dataElem = (Element) data;
+
+                final String dataName = dataElem.getAttribute(KMLConstants.ATTR_EXTENDEDDATA_NAME);
+                if (dataName == null) {
+                    // missing data -> lets get out of here
+                    continue;
+                }
+                
+                final String dataValue = dataElem.getTextContent();
+                String[] values;
+                
+                // we can handle various
+                switch (dataName) {
+                    // 1) name
+                    case KMLConstants.VALUE_EXTENDEDDATA_NAME:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        metadata.setName(valueFromString(dataValue));
+
+                        break;
+                    // 2) date
+                    case KMLConstants.VALUE_EXTENDEDDATA_DATE:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+
+                        if (!KMLConstants.VALUE_NO_VALUE.equals(dataValue)) {
+                            // try to parse string with date formatter
+                            try {
+                                final Date date = KMLConstants.KML_DATEFORMAT.parse(dataValue);
+
+                                metadata.setTime(date);
+                            } catch (ParseException ex) {
+                                Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+
+                        break;
+                    // 3) description
+                    case KMLConstants.VALUE_EXTENDEDDATA_DESCRIPTION:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        metadata.setDesc(valueFromString(dataValue));
+
+                        break;
+                    // 4) copyright
+                    case KMLConstants.VALUE_EXTENDEDDATA_COPYRIGHT:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        
+                        values = dataValue.split(KMLConstants.VALUE_SEPARATOR);
+                        if (values.length == 3) {
+                            final Copyright copyright = new Copyright(valueFromString(values[0]));
+                            copyright.setLicense(valueFromString(values[1]));
+                            copyright.setYear(valueFromString(values[2]));
+                            
+                            metadata.setCopyright(copyright);
+                        } else {
+                            System.out.println("Not enough copyright data in KML file! Expected: 3, Found: " + values.length);
+                        }
+
+                        break;
+                    // 5) author
+                    case KMLConstants.VALUE_EXTENDEDDATA_AUTHOR:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        
+                        values = dataValue.split(KMLConstants.LINE_SEPARATOR);
+                        final String[] authValues = values[0].split(KMLConstants.VALUE_SEPARATOR);
+                        if (values.length == 2 && authValues.length == 2) {
+                            final Person author = new Person();
+                            author.setName(valueFromString(authValues[0]));
+                            author.setEmail(emailFromString(valueFromString(authValues[1])));
+                            author.setLink(linkFromString(values[1]));
+                            
+                            metadata.setAuthor(author);
+                        } else {
+                            System.out.println("Not enough copyright data in KML file! Expected: 2+2, Found: " + values.length + "+" + authValues.length);
+                        }
+
+                        break;
+                    // 6) links
+                    case KMLConstants.VALUE_EXTENDEDDATA_LINKS:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        
+                        values = dataValue.split(KMLConstants.LINE_SEPARATOR);
+                        for (int j = 0; j < values.length; j++) {
+                            final Link link = linkFromString(values[j]);
+                            if (link != null) {
+                                metadata.addLink(link);
+                            }
+                        }
+
+                        break;
+                    // 7) keywords
+                    case KMLConstants.VALUE_EXTENDEDDATA_KEYWORDS:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        metadata.setKeywords(valueFromString(dataValue));
+
+                        break;
+                    // 8) bounds
+                    case KMLConstants.VALUE_EXTENDEDDATA_BOUNDS:
+                        if (metadata == null) {
+                            metadata = new Metadata();
+                        }
+                        metadata.setBounds(boundsFromString(dataValue));
+
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        
+        if (metadata != null) {
+            gpx.setMetadata(metadata);
+        }
+    }
+    
+    private String valueFromString(final String string) {
+        if (KMLConstants.VALUE_NO_VALUE.equals(string)) {
+            return null;
+        } else {
+            return string;
+        }
+    }
+    
+    private Waypoint waypointFromString(final String[] string) {
+        // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
+        final Waypoint wpt = new Waypoint(Double.valueOf(string[1]), Double.valueOf(string[0]));
+        if (string.length > 2) {
+            wpt.setElevation(Double.valueOf(string[2]));
+        }
+        
+        return wpt;
+    }
+    
+    private Email emailFromString(final String string) {
+        if (KMLConstants.VALUE_NO_VALUE.equals(string)) {
+            return null;
+        } else {
+            return new Email(string);
+        }
+    }
+    
+    private Link linkFromString(final String string) {
+        if (KMLConstants.VALUE_NO_VALUE.equals(string)) {
+            return null;
+        } else {
+            final String[] values = string.split(KMLConstants.VALUE_SEPARATOR);
+            if (values.length == 3) {
+                final Link link = new Link(valueFromString(values[0]));
+                link.setText(valueFromString(values[1]));
+                link.setType(valueFromString(values[2]));
+                
+                return link;
+            } else {
+                System.out.println("Not enough link data in KML file! Expected: 2, Found: " + values.length);
+                return null;
+            }
+        }
+    }
+    
+    private Bounds boundsFromString(final String string) {
+        if (KMLConstants.VALUE_NO_VALUE.equals(string)) {
+            return null;
+        } else {
+            final String[] values = string.split(KMLConstants.VALUE_SEPARATOR);
+            if (values.length == 4) {
+                try {
+                    return new Bounds(Double.valueOf(values[0]), Double.valueOf(values[1]), Double.valueOf(values[2]), Double.valueOf(values[3]));
+                } catch (NumberFormatException ex) {
+                    Logger.getLogger(KMLParser.class.getName()).log(Level.SEVERE, null, ex);
+                    return null;
+                }
+            } else {
+                System.out.println("Not enough bounds data in KML file! Expected: 4, Found: " + values.length);
+                return null;
+            }
+        }
+    }
+    
     private void findPoints(final Document doc, final GPX gpx) {
         final Set<Waypoint> waypoints = new HashSet<>();
         
         // find all placemarks that contain points - find points and move "upwards" :-)
-        final NodeList nodeList = findPlacemarksContaining(doc, KMLConstants.NODE_PLACEMARK_POINT);
+        final NodeList nodeList = getChildNodesByName(doc, KMLConstants.NODE_PLACEMARK_POINT);
         for (int i = 0; i < nodeList.getLength(); i++) {
             final Node point = nodeList.item(i);
             
@@ -295,10 +506,7 @@ public class KMLParser extends GPXParser {
             }
             
             // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
-            final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[1]), Double.valueOf(coordValues[0]));
-            if (coordValues.length > 2) {
-                wpt.setElevation(Double.valueOf(coordValues[2]));
-            }
+            final Waypoint wpt = waypointFromString(coordValues);
             
             final Node nameNode = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_NAME);
             if (nameNode != null) {
@@ -350,7 +558,7 @@ public class KMLParser extends GPXParser {
     
     private void findCoordinates(final Document doc, final GPX gpx) {
         // find all placemarks that contain line strings - find line strings and move "upwards" :-)
-        final NodeList nodeList = findPlacemarksContaining(doc, KMLConstants.NODE_PLACEMARK_LINESTRING);
+        final NodeList nodeList = getChildNodesByName(doc, KMLConstants.NODE_PLACEMARK_LINESTRING);
         for (int i = 0; i < nodeList.getLength(); i++) {
             final Node node = nodeList.item(i);
             
@@ -398,12 +606,7 @@ public class KMLParser extends GPXParser {
                 }
                 
                 // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
-                final Waypoint wpt = new Waypoint(Double.valueOf(coordValues[1]), Double.valueOf(coordValues[0]));
-                if (coordValues.length > 2) {
-                    wpt.setElevation(Double.valueOf(coordValues[2]));
-                }
-                
-                waypoints.add(wpt);
+                waypoints.add(waypointFromString(coordValues));
             }
 
             KMLLineStyle styleItem = null;
@@ -479,8 +682,10 @@ public class KMLParser extends GPXParser {
     protected List<TrackSegment> addExtendedDataForTrack(final Node placemark, final ArrayList<Waypoint> waypoints) {
         final List<Integer> segmentSizes = new ArrayList<>();
         
-        final Node node = getFirstChildNodeByName(placemark, KMLConstants.NODE_LINESTRING_EXTENDEDDATA);
-        if (node != null) {
+        final Node node = getFirstChildNodeByName(placemark, KMLConstants.NODE_EXTENDEDDATA);
+        if (node != null && 
+                (node instanceof Element) && 
+                KMLConstants.VALUE_NAME_TRACKS.equals(((Element) node).getAttribute(KMLConstants.ATTR_EXTENDEDDATA_TYPE))) {
             final NodeList dataList = getChildNodesByName(node, KMLConstants.NODE_EXTENDEDDATA_DATA);
             for (int i = 0; i < dataList.getLength(); i++) {
                 final Node data = dataList.item(i);
@@ -568,7 +773,7 @@ public class KMLParser extends GPXParser {
     }
     
     private static String[] splitList(final Node node) {
-        return node.getTextContent().replaceAll("\\n\\r", "\\n").split("\\n");
+        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(KMLConstants.LINE_SEPARATOR);
     }
     
     protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {
@@ -595,26 +800,31 @@ public class KMLParser extends GPXParser {
         return false;
     }
     
-    private NodeList findPlacemarksContaining(final Document doc, final String nodeName) {
-        return doc.getElementsByTagName(nodeName);
-    }
-    
     private static NodeList getChildNodesByName(final Node node, final String name) {
-        if (node == null || !(node instanceof Element)) {
+        if (node == null) {
             // not what we're looking for
             return null;
         }
         
-        return ((Element) node).getElementsByTagName(name);
+        switch (node.getNodeType()) {
+            case 1:
+                return ((Element) node).getElementsByTagName(name);
+            case 9:
+                return ((Document) node).getElementsByTagName(name);
+            default:
+                return null;
+        }
     }
     
     public static Node getFirstChildNodeByName(final Node node, final String name) {
-        if (node == null || !(node instanceof Element)) {
+        final NodeList nodeList = getChildNodesByName(node, name);
+        
+        if (nodeList != null) {
+            return nodeList.item(0);
+        } else {
             // not what we're looking for
             return null;
         }
-        
-        return getChildNodesByName(node, name).item(0);
     }
     
     private void populateLineStyle(final Extension extension, final KMLLineStyle styleItem) {
