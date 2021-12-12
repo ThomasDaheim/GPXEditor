@@ -415,6 +415,7 @@ public class KMLWriter {
         
         // 8) bounds
         if (dataM.getBounds() != null) {
+            extendedData.appendChild(buildExtendedDataEntry(KMLConstants.VALUE_EXTENDEDDATA_BOUNDS, boundsToString(dataM.getBounds())));
         }
 
         root.appendChild(extendedData);
@@ -455,6 +456,7 @@ public class KMLWriter {
         }
     }
     
+    private String boundsToString(final Bounds bounds) {
         if (bounds != null) {
             return bounds.getMinLat() + KMLConstants.VALUE_SEPARATOR +
                     bounds.getMaxLat() + KMLConstants.VALUE_SEPARATOR +
