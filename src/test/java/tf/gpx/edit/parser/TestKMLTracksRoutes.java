@@ -63,17 +63,16 @@ public class TestKMLTracksRoutes {
 
     public void testTrack(final GPXFile gpxFile) {
         final GPXTrack track = gpxFile.getGPXTracks().get(0);
-        Assert.assertEquals(1, track.getGPXTrackSegments().size());
+        Assert.assertEquals(2, track.getGPXTrackSegments().size());
+        Assert.assertEquals(2, track.getGPXTrackSegments().get(0).getGPXWaypoints().size());
+        Assert.assertEquals(2, track.getGPXTrackSegments().get(1).getGPXWaypoints().size());
 
 //        <name>Test a track</name>
         Assert.assertEquals("Test a track", track.getName());
         
-        final GPXTrackSegment trackSegment = track.getGPXTrackSegments().get(0);
-        Assert.assertEquals(4, trackSegment.getGPXWaypoints().size());
-        
-        final GPXWaypoint waypoint = trackSegment.getGPXWaypoints().get(0);
+        final GPXWaypoint waypoint = track.getGPXTrackSegments().get(0).getGPXWaypoints().get(0);
         Assert.assertNull(waypoint.getName());
-        Assert.assertNull(waypoint.getDate());
+        Assert.assertEquals("Mon Sep 06 09:55:49 CEST 2021", waypoint.getDate().toString());
         Assert.assertNull(waypoint.getDescription());
         Assert.assertNull(waypoint.getSym());
 //        <coordinates>-1.5970470104,47.1589407977,27.0
@@ -84,7 +83,7 @@ public class TestKMLTracksRoutes {
 //        <color>808B008B</color>
         Assert.assertEquals("8B008B", track.getLineStyle().getColor().getHexColor());
         Assert.assertEquals(0.5, track.getLineStyle().getOpacity(), 0.01);
-        Assert.assertEquals(6, track.getLineStyle().getWidth().intValue());
+        Assert.assertEquals(2, track.getLineStyle().getWidth().intValue());
     }
 
     @Test
@@ -117,7 +116,7 @@ public class TestKMLTracksRoutes {
 //        <color>8000FF7F</color> but we don't have that as GarminColor...
         Assert.assertEquals("FFFF00", route.getLineStyle().getColor().getHexColor());
         Assert.assertEquals(0.5, route.getLineStyle().getOpacity(), 0.01);
-        Assert.assertEquals(6, route.getLineStyle().getWidth().intValue());
+        Assert.assertEquals(2, route.getLineStyle().getWidth().intValue());
     }
     
     @Test

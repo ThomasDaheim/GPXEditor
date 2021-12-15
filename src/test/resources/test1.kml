@@ -19,17 +19,24 @@
         <displayMode>hide</displayMode>
       </BalloonStyle>
     </Style>
-    <Style id="metadataLineStyle">
-      <BalloonStyle>
-        <displayMode>hide</displayMode>
-      </BalloonStyle>
-    </Style>
+    <ExtendedData type="Metadata">
+      <Data name="gpx:Name">test1</Data>
+      <Data name="gpx:Date">2021-09-25 21:28:54 MESZ</Data>
+      <Data name="gpx:Description">test kml file</Data>
+      <Data name="gpx:Copyright">Anyone,NO LICENSE,2021</Data>
+      <Data name="gpx:Author">Anyone,me@myself.i
+www.anyone.com,Homepage,???</Data>
+      <Data name="gpx:Links">https://github.com/ThomasDaheim/GPXEditor,---,---
+http://www.garmin.com,Garmin International,---</Data>
+      <Data name="gpx:Keywords">test</Data>
+      <Data name="gpx:Bounds">45.7575917,47.906826,-1.5981159545,4.8609037</Data>
+    </ExtendedData>
     <Folder>
       <name>Waypoints</name>
         <Placemark>
           <name>A simple placemark on the ground</name>
           <styleUrl>#Winery</styleUrl>
-          <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 2021-09-06 09:55:49 MESZ</description>
+          <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 0021-09-06 08:55:49 MEZ</description>
           <Point>
               <coordinates>8.542952335953721,47.36685263064198,99.0</coordinates>
           </Point>

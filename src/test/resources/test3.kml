@@ -19,11 +19,6 @@
         <displayMode>hide</displayMode>
       </BalloonStyle>
     </Style>
-    <Style id="metadataLineStyle">
-      <BalloonStyle>
-        <displayMode>hide</displayMode>
-      </BalloonStyle>
-    </Style>
     <Folder>
       <name>Tracks</name>
       <Placemark>
@@ -41,9 +36,16 @@
           <coordinates>-1.5970470104,47.1589407977,27.0
 -1.5970911831,47.1589514427,26.0
 -1.5971021634,47.1589507721,26.0
--1.597096296,47.158955466,26.0
-</coordinates>
+-1.597096296,47.158955466,26.0</coordinates>
         </LineString>
+        <ExtendedData type="Tracks">
+            <Data name="gpx:WaypointTimestamps">2021-09-06 09:55:49 MESZ
+2021-09-06 09:56:04 MESZ
+2021-09-06 09:56:06 MESZ
+2021-09-06 09:56:11 MESZ</Data>
+            <Data name="gpx:TrackSegmentSizes">2
+2</Data>
+          </ExtendedData>
       </Placemark>
       <Placemark>
         <name>Test a route</name>
