@@ -63,7 +63,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
-import tf.gpx.edit.items.LineStyle;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.viewer.MarkerManager;
 import tf.helper.javafx.ColorConverter;
 

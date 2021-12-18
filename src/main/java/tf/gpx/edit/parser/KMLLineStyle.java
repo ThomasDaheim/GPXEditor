@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.scene.paint.Color;
 import org.w3c.dom.Node;
-import tf.gpx.edit.items.LineStyle;
+import tf.gpx.edit.extension.LineStyle;
 import tf.helper.javafx.ColorConverter;
 
 /**

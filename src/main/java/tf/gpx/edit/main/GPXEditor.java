@@ -138,7 +138,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.LineStyle;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;

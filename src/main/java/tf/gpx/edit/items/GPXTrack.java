@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.items;
 
+import tf.gpx.edit.extension.TrackActivity;
+import tf.gpx.edit.extension.LineStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;

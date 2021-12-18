@@ -23,11 +23,10 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.items;
 
-import java.util.Optional;
+package tf.gpx.edit.extension;
+
 import me.himanshusoni.gpxparser.modal.Extension;
-import tf.gpx.edit.extension.KnownExtensionAttributes;
 
 /**
  * Holder class for the locus extension attribute <locus:activity> for tracks. Includes lazy loading from extension data.
@@ -63,7 +62,7 @@ public class TrackActivity {
     }
     
     private final Extension myExtension;
-    private Optional<Activity> myActivity;
+    private Activity myActivity = null;
     
     private TrackActivity() {
         myExtension = null;
@@ -83,13 +82,13 @@ public class TrackActivity {
                 nodeValue = DEFAULT_ACTIVITY.name();
             }
 
-            myActivity = Optional.of(Activity.fromString(nodeValue));
+            myActivity = Activity.fromString(nodeValue);
         }
-        return myActivity.get();
+        return myActivity;
     }
     
     public void setActivity(final Activity activity) {
-        myActivity = Optional.of(activity);
+        myActivity = activity;
 
         KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.activity, activity.toString());
     }

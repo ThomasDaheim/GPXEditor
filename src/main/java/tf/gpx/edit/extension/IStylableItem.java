@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tf.gpx.edit.items;
+package tf.gpx.edit.extension;
 
+import tf.gpx.edit.extension.LineStyle;
 import me.himanshusoni.gpxparser.modal.Extension;
 
 /**

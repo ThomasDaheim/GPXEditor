@@ -24,7 +24,7 @@ import javafx.stage.WindowEvent;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.extension.GarminColor;
-import tf.gpx.edit.items.LineStyle;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.ColorSelection;

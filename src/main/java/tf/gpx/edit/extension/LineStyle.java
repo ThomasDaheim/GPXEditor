@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.items;
+package tf.gpx.edit.extension;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.helper.javafx.UnitConverter;
 
 /**

@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.items;
 
+import tf.gpx.edit.extension.IStylableItem;
+import tf.gpx.edit.extension.LineStyle;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
