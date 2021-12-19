@@ -27,7 +27,9 @@ package tf.gpx.edit.kml;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -42,8 +44,12 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXRoute;
+import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.viewer.MarkerManager;
+import tf.helper.javafx.ColorConverter;
 
 /**
  * Writer for KML Files
@@ -58,6 +64,15 @@ public class KMLWriter {
     }
     
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+    
+    // TFE, 20200909: use garmin icons from gpsvisualizer
+    // https://www.gpsvisualizer.com/google_maps/icons/garmin/
+    private final String ICON_PATH = "http://maps.gpsvisualizer.com/google_maps/icons/garmin/24x24/";
+    private final String ICON_EXT = ".png";
+    private final String PLACEMARK_ICON = "placemark_square";
+    
+    // TFE, 20200909: add only used icons - but all of them
+    private final Set<String> iconList = new HashSet<>();
 
     private Document doc;
     private Element root;
@@ -146,57 +161,8 @@ public class KMLWriter {
             polyStyle.appendChild(color);
             polyStyle.appendChild(width);
             style.appendChild(polyStyle);
-
-//            <Style id="wptSymbol">
-//              <IconStyle>
-//                <Icon>
-//                  <href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href>
-//                </Icon>
-//              </IconStyle>
-//            </Style>
-            // add all icons that we know in the application
-            style = doc.createElement("Style");
-            root.appendChild(style);
-            style.setAttribute("id", "placemarkIcon");
-
-            Element iconStyle = doc.createElement("IconStyle");
-            style.appendChild(iconStyle);
-
-            Element href = doc.createElement("href");
-            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/placemark_square.png"));
-
-            Element icon = doc.createElement("Icon");
-            icon.appendChild(href);
-            iconStyle.appendChild(icon);
-
-            style = doc.createElement("Style");
-            root.appendChild(style);
-            style.setAttribute("id", "hotelIcon");
-
-            iconStyle = doc.createElement("IconStyle");
-            style.appendChild(iconStyle);
-
-            href = doc.createElement("href");
-            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/lodging.png"));
-
-            icon = doc.createElement("Icon");
-            icon.appendChild(href);
-            iconStyle.appendChild(icon);
-
-            style = doc.createElement("Style");
-            root.appendChild(style);
-            style.setAttribute("id", "restaurantIcon");
-
-            iconStyle = doc.createElement("IconStyle");
-            style.appendChild(iconStyle);
-
-            href = doc.createElement("href");
-            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/dining.png"));
-
-            icon = doc.createElement("Icon");
-            icon.appendChild(href);
-            iconStyle.appendChild(icon);
-        } catch (ParserConfigurationException | DOMException e) {
+        } catch (ParserConfigurationException | DOMException ex) {
+            Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -235,7 +201,7 @@ public class KMLWriter {
         }
 
         final Element styleUrl = doc.createElement("styleUrl");
-        styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getMarkerForSymbol(mark.getSym()).getIconName()));
+        styleUrl.appendChild(doc.createTextNode("#" + MarkerManager.getInstance().getMarkerForWaypoint(mark).getMarkerName()));
         placemark.appendChild(styleUrl);
 
         final Element desc = doc.createElement("description");
@@ -262,36 +228,37 @@ public class KMLWriter {
         final Element coords = doc.createElement("coordinates");
         coords.appendChild(doc.createTextNode(mark.getLongitude() + ", " + mark.getLatitude() + ", " + mark.getElevation()));
         point.appendChild(coords);
+        
+        // TFE, 20200909: add only used icons - but all of them
+        iconList.add(MarkerManager.getInstance().getMarkerForWaypoint(mark).getMarkerName());
     }
 
     /**
      * Add a track to this KML object.
      * @param track
-     * @param trackName
      */
-    public void addTrack(final List<GPXWaypoint> track, final String trackName) {
+    public void addTrack(final GPXTrack track) {
         if (tracks == null) {
             tracks = createFolder("Tracks");
 
             root.appendChild(tracks);
         }
         
-        addPath(track, trackName, PathType.Track);
+        addPath(track, PathType.Track);
     }
 
     /**
      * Add a route to this KML object.
      * @param route
-     * @param routeName
      */
-    public void addRoute(final List<GPXWaypoint> route, final String routeName) {
+    public void addRoute(final GPXRoute route) {
         if (routes == null) {
             routes = createFolder("Routes");
 
             root.appendChild(routes);
         }
         
-        addPath(route, routeName, PathType.Route);
+        addPath(route, PathType.Route);
     }
         
     /**
@@ -299,7 +266,13 @@ public class KMLWriter {
      * @param path
      * @param pathName
      */
-    private void addPath(final List<GPXWaypoint> path, final String pathName, final PathType type) {
+    private void addPath(final GPXLineItem item, final PathType type) {
+        if (!item.isGPXTrack() && !item.isGPXRoute()) {
+            return;
+        }
+        
+        final List<GPXWaypoint> path = item.getCombinedGPXWaypoints(item.getType());
+        
         final Element placemark = doc.createElement("Placemark");
         if (PathType.Track.equals(type)) {
             tracks.appendChild(placemark);
@@ -307,9 +280,9 @@ public class KMLWriter {
             routes.appendChild(placemark);
         }
 
-        if(pathName != null) {
+        if(item.getName() != null) {
             final Element name = doc.createElement("name");
-            name.appendChild(doc.createTextNode(pathName));
+            name.appendChild(doc.createTextNode(item.getName()));
             placemark.appendChild(name);
         }
 
@@ -320,6 +293,22 @@ public class KMLWriter {
             styleUrl.appendChild(doc.createTextNode("#routesLineStyle"));
         }
         placemark.appendChild(styleUrl);
+
+        // support individual track/route colors
+//          <Style>
+//            <LineStyle>
+//              <color>ffffff00</color>
+//            </LineStyle>
+//          </Style>
+        final Element style = doc.createElement("Style");
+        placemark.appendChild(style);
+
+        final Element lineStyle = doc.createElement("LineStyle");
+        style.appendChild(lineStyle);
+
+        final Element color = doc.createElement("color");
+        color.appendChild(doc.createTextNode(ColorConverter.JavaFXtoKML(item.getLineStyle().getColor().getJavaFXColor())));
+        lineStyle.appendChild(color);
 
         final Element lineString = doc.createElement("LineString");
         placemark.appendChild(lineString);
@@ -344,13 +333,59 @@ public class KMLWriter {
         coords.appendChild(doc.createTextNode(points));
         lineString.appendChild(coords);
     }
-
+    
     /**
      * Write this KML object to a file.
      * @param file
      * @return
      */
     public boolean writeFile(File file) {
+        // TFE, 20200909: add only used icons - but all of them
+        try {
+//            <Style id="wptSymbol">
+//              <IconStyle>
+//                <Icon>
+//                  <href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href>
+//                </Icon>
+//              </IconStyle>
+//            </Style>
+
+            // there is always a special case... in our case its the placemark icon
+            Element style = doc.createElement("Style");
+            root.appendChild(style);
+            style.setAttribute("id", "Placemark");
+
+            Element iconStyle = doc.createElement("IconStyle");
+            style.appendChild(iconStyle);
+
+            Element href = doc.createElement("href");
+            href.appendChild(doc.createTextNode("http://maps.google.com/mapfiles/kml/shapes/placemark_square.png"));
+
+            Element icon = doc.createElement("Icon");
+            icon.appendChild(href);
+            iconStyle.appendChild(icon);
+
+            for (String iconName : iconList) {
+                if (!PLACEMARK_ICON.equals(iconName)) {
+                    style = doc.createElement("Style");
+                    root.appendChild(style);
+                    style.setAttribute("id", iconName);
+
+                    iconStyle = doc.createElement("IconStyle");
+                    style.appendChild(iconStyle);
+
+                    href = doc.createElement("href");
+                    href.appendChild(doc.createTextNode(ICON_PATH + iconName + ICON_EXT));
+
+                    icon = doc.createElement("Icon");
+                    icon.appendChild(href);
+                    iconStyle.appendChild(icon);
+                }
+            }
+        } catch (DOMException ex) {
+            Logger.getLogger(KMLWriter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
         try {
             final TransformerFactory factory = TransformerFactory.newInstance();
             final Transformer transformer = factory.newTransformer();

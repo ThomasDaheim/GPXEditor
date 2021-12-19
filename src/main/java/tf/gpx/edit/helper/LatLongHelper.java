@@ -25,26 +25,183 @@
  */
 package tf.gpx.edit.helper;
 
-import de.saring.leafletmap.LatLong;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.LatLongElev;
 
 /**
  *
  * @author thomas
  */
 public class LatLongHelper {
-    public final static String LAT_REGEXP = "([NS][ ]?([0-8 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([NS][ ]?90°0{0,2}'0{0,2}[.,]0{0,2}\")";
-    public final static String LON_REGEXP = "([EW][ ]?(1?[0-7 ]?[0-9]?)°([0-5 ]?[0-9]?)'([0-5 ]?[0-9]?[.,][0-9]{0,2})\")|([EW][ ]?180°0{0,2}'0{0,2}[.,]0{0,2}\")";
+    public final static String DEG = "\u00B0";
+    public final static String MIN = "'"; // how about "\u2032";
+    public final static String SEC = "\""; // how about "\u2033";
     
+    // TFE, 20210212: lets collect the valid building blocks first...
+    private final static String SPACE = "[ ]*";
+
+    // patterns for DEG, MIN, SEC values <> 90 / 180
+    private final static String LAT_DEG_01 = "([0-8 ]?[0-9]?)";
+    private final static String LAT_DEG_1 = LAT_DEG_01 + DEG;
+    // with three digits on 100-179 are valid, otherwise 0-99
+    private final static String LON_DEG_01 = "((1[0-7]|[0-9 ]?)[0-9]?)";
+    private final static String LON_DEG_1 = LON_DEG_01 + DEG;
+    private final static String MIN_1 = "([0-5 ]?[0-9]?)" + MIN;
+    private final static String DECIMALS_1 = "([.,][0-9]{0,9})?";
+    private final static String SEC_1 = "([0-5 ]?[0-9]?" + DECIMALS_1 + ")" + SEC;
+    
+    // patterns for DEG, MIN, SEC values == 90 / 180
+    private final static String LAT_DEG_02 = "(90)";
+    private final static String LAT_DEG_2 = LAT_DEG_02 + DEG;
+    private final static String LON_DEG_02 = "(180)";
+    private final static String LON_DEG_2 = LON_DEG_02 + DEG;
+    private final static String MIN_2 = "(0{0,2})" + MIN;
+    private final static String DECIMALS_2 = "([.,]0{0,9})?";
+    private final static String SEC_2 = "(0{0,2}" + DECIMALS_2 + ")" + SEC;
+    
+    // patterns for pre/suffixes
+    private final static String LAT = "[NS]";
+    private final static String LON = "[EW]";
+
+    // patterns for everything except pre/suffixes
+    private final static String LAT_VAL_DEG_MIN_SEC_1 = LAT_DEG_1 + SPACE + MIN_1 + SPACE + SEC_1;
+    private final static String LAT_VAL_DEG_MIN_SEC_2 = LAT_DEG_2 + SPACE + MIN_2 + SPACE + SEC_2;
+    private final static String LAT_VAL_DEG_MIN_1 = LAT_DEG_1 + SPACE + MIN_1;
+    private final static String LAT_VAL_DEG_MIN_2 = LAT_DEG_2 + SPACE + MIN_2;
+    // also valid: only degrees specified
+    private final static String LAT_VAL_DEG_1 = LAT_DEG_1;
+    private final static String LAT_VAL_DEG_2 = LAT_DEG_2;
+    
+    protected final static String LAT_REGEXP_1 = 
+            "(" + 
+            // N/S followed by DEG + MIN + SEC
+            LAT + SPACE + LAT_VAL_DEG_MIN_SEC_1 + 
+            ")|(" + 
+            // N/S followed by 90 + 00' + 00.000"
+            LAT + SPACE + LAT_VAL_DEG_MIN_SEC_2 + 
+            ")|(" + 
+            // DEG + MIN + SEC followed by N/S
+            LAT_VAL_DEG_MIN_SEC_1 + SPACE + LAT  + 
+            ")|(" + 
+            // 90 + 00' + 00.000" followed by N/S
+            LAT_VAL_DEG_MIN_SEC_2 + SPACE + LAT + 
+            ")|(" + 
+            // N/S followed by DEG + MIN
+            LAT + SPACE + LAT_VAL_DEG_MIN_1 + 
+            ")|(" + 
+            // N/S followed by 90 + 00'
+            LAT + SPACE + LAT_VAL_DEG_MIN_2 + 
+            ")|(" + 
+            // DEG + MIN followed by N/S
+            LAT_VAL_DEG_MIN_1 + SPACE + LAT  + 
+            ")|(" + 
+            // 90 + 00' followed by N/S
+            LAT_VAL_DEG_MIN_2 + SPACE + LAT + 
+            ")|(" + 
+            // N/S followed by DEG
+            LAT + SPACE + LAT_VAL_DEG_1 + 
+            ")|(" + 
+            // N/S followed by 90
+            LAT + SPACE + LAT_VAL_DEG_2 + 
+            ")|(" + 
+            // DEG followed by N/S
+            LAT_VAL_DEG_1 + SPACE + LAT  + 
+            ")|(" + 
+            // 90 followed by N/S
+            LAT_VAL_DEG_2 + SPACE + LAT + 
+            ")";
+    
+    // patterns for everything except pre/suffixes
+    private final static String LON_VAL_DEG_MIN_SEC_1 = LON_DEG_1 + SPACE + MIN_1 + SPACE + SEC_1;
+    private final static String LON_VAL_DEG_MIN_SEC_2 = LON_DEG_2 + SPACE + MIN_2 + SPACE + SEC_2;
+    private final static String LON_VAL_DEG_MIN_1 = LON_DEG_1 + SPACE + MIN_1;
+    private final static String LON_VAL_DEG_MIN_2 = LON_DEG_2 + SPACE + MIN_2;
+    // also valid: only degrees specified
+    private final static String LON_VAL_DEG_1 = LON_DEG_1;
+    private final static String LON_VAL_DEG_2 = LON_DEG_2;
+
+    protected final static String LON_REGEXP_1 = 
+            "(" + 
+            // E/W followed by DEG + MIN + SEC
+            LON + SPACE + LON_VAL_DEG_MIN_SEC_1 + 
+            ")|(" + 
+            // E/W followed by 180 + 00' + 00.000"
+            LON + SPACE + LON_VAL_DEG_MIN_SEC_2 + 
+            ")|(" + 
+            // DEG + MIN + SEC followed by E/W
+            LON_VAL_DEG_MIN_SEC_1 + SPACE + LON  + 
+            ")|(" + 
+            // 180 + 00' + 00.000" followed by E/W
+            LON_VAL_DEG_MIN_SEC_2 + SPACE + LON + 
+            ")|(" + 
+            // E/W followed by DEG + MIN
+            LON + SPACE + LON_VAL_DEG_MIN_1 + 
+            ")|(" + 
+            // E/W followed by 180 + 00'
+            LON + SPACE + LON_VAL_DEG_MIN_2 + 
+            ")|(" + 
+            // DEG + MIN followed by E/W
+            LON_VAL_DEG_MIN_1 + SPACE + LON  + 
+            ")|(" + 
+            // 180 + 00' followed by E/W
+            LON_VAL_DEG_MIN_2 + SPACE + LON + 
+            ")|(" + 
+            // E/W followed by DEG
+            LON + SPACE + LON_VAL_DEG_1 + 
+            ")|(" + 
+            // E/W followed by 180
+            LON + SPACE + LON_VAL_DEG_2 + 
+            ")|(" + 
+            // DEG followed by E/W
+            LON_VAL_DEG_1 + SPACE + LON  + 
+            ")|(" + 
+            // 180 followed by E/W
+            LON_VAL_DEG_2 + SPACE + LON + 
+            ")";
+    
+    protected final static Pattern LAT_PATTERN_1 = Pattern.compile(LAT_REGEXP_1);
+    protected final static Pattern LON_PATTERN_1 = Pattern.compile(LON_REGEXP_1);
+
+    // TFE, 20210211: allow decimal represenation as well
+    // note, that DEG is allowed here as well https://en.wikipedia.org/wiki/Decimal_degrees
+
+    private final static String SIGN_REGEXP = "[-]?";
+    protected final static String LAT_REGEXP_2 = 
+            "(" + 
+            SIGN_REGEXP + 
+            LAT_DEG_01 +
+            DECIMALS_1 + 
+            "[" + DEG + "]?" + 
+            ")|(" + 
+            SIGN_REGEXP + 
+            LAT_DEG_02 +
+            DECIMALS_2 + 
+            "[" + DEG + "]?" + 
+            ")";
+    protected final static String LON_REGEXP_2 = 
+            "(" + 
+            SIGN_REGEXP + 
+            LON_DEG_01 +
+            DECIMALS_1 + 
+            "[" + DEG + "]?" + 
+            ")|(" + 
+            SIGN_REGEXP + 
+            LON_DEG_02 +
+            DECIMALS_2 + 
+            "[" + DEG + "]?" + 
+            ")";
+    
+    protected final static Pattern LAT_PATTERN_2 = Pattern.compile(LAT_REGEXP_2);
+    protected final static Pattern LON_PATTERN_2 = Pattern.compile(LON_REGEXP_2);
+    
+    public final static String LAT_REGEXP = "(" + LAT_REGEXP_1 + ")|(" + LAT_REGEXP_2 + ")";
+    public final static String LON_REGEXP = "(" + LON_REGEXP_1 + ")|(" + LON_REGEXP_2 + ")";
+
     public final static String INVALID_LATITUDE = "INVALID LATITUDE";
     public final static String INVALID_LONGITUDE = "INVALID LONGITUDE";
     
-    private final static Pattern latPattern = Pattern.compile(LAT_REGEXP);
-    private final static Pattern lonPattern = Pattern.compile(LON_REGEXP);
-
     private static enum Directions {
         N,
         S,
@@ -57,11 +214,15 @@ public class LatLongHelper {
     }
 
     public static String GPXWaypointToString(final GPXWaypoint waypoint) {
-        return latToString(waypoint.getWaypoint().getLatitude()) + " " + lonToString(waypoint.getWaypoint().getLongitude());
+        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
     }
             
-    public static String LatLongToString(final LatLong waypoint) {
-        return latToString(waypoint.getLatitude()) + " " + lonToString(waypoint.getLongitude());
+    public static String LatLongToString(final LatLongElev waypoint) {
+        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
+    }
+            
+    public static String LatLongToString(final double lat, final double lon) {
+        return latToString(lat) + " " + lonToString(lon);
     }
             
     public static String latToString(final double lat) {
@@ -95,55 +256,75 @@ public class LatLongHelper {
             seconds = 59.99;
         }
         
-        String result = String.format("%2d°%2d'%4.2f\"", degrees, (int) Math.floor(minutes), seconds);
+        // TFE, 20191124: speed things up a little...
+//        String result = String.format("%2d°%2d'%4.2f\"", degrees, (int) Math.floor(minutes), seconds);
         // TFE, 20180601: remove spaces between numbers...
-        result = result.replaceAll(" ", "");
-        return direction + " " + result;
+//        result = result.replaceAll(" ", "");
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(degrees).append(DEG).append((int) Math.floor(minutes)).append(MIN).append(String.format("%4.2f", seconds)).append(SEC);
+        return direction + " " + sb.toString();
     }
     
     public static double latFromString(final String lat) {
-        double result = 0;
-        
+        double result = Double.NaN;
+
         try {
-            // 1) check against pattern
-            if (!latPattern.matcher(lat).matches()) {
-                return result;
+            if (LAT_PATTERN_2.matcher(lat).matches()) {
+                // only a number :-)
+                result = NumberUtils.toDouble(lat.replace(",", ".").replace(DEG, ""));
+            } else if(LAT_PATTERN_1.matcher(lat).matches()) {
+                result = latFromString1(lat);
             }
-
-            // 2) determine sign from N/S
-            final String dir = lat.substring(0, 1);
-            final int sign = "N".equals(dir) ? 1 : -1;
-
-            // 3) determine double from rest of string
-            result = doubleFromString(lat.substring(1).trim());
-
-            // 4) add sign
-            result *= sign;
         } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }
         
         return result;
     }
-    
+
     public static double lonFromString(final String lon) {
-        double result = 0;
+        double result = Double.NaN;
+
+        try {
+            if (LON_PATTERN_2.matcher(lon).matches()) {
+                // only a number :-)
+                result = NumberUtils.toDouble(lon.replace(",", ".").replace(DEG, ""));
+            } else if(LON_PATTERN_1.matcher(lon).matches()) {
+                result = lonFromString1(lon);
+            }
+        } catch (Exception ex){
+            // what should be a good default? lets stick with 0...
+        }
+        
+        return result;
+    }
+
+    private static double latFromString1(final String lat) {
+        double result = Double.NaN;
         
         try {
-            // 1) check against pattern
-            if (!lonPattern.matcher(lon).matches()) {
-                return result;
-            }
-
             // 2) determine sign from N/S
-            final String dir = lon.substring(0, 1);
-            final int sign = "E".equals(dir) ? 1 : -1;
+            // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
+            String dir = lat.substring(0, 1);
+            if ("N".equals(dir) || "S".equals(dir)) {
+                final int sign = "N".equals(dir) ? 1 : -1;
 
-            // 3) determine double from rest of string
-            result = doubleFromString(lon.substring(1).trim());
+                // 3) determine double from rest of string
+                result = doubleFromString(lat.substring(1).trim());
 
-            // 4) add sign
-            result *= sign;
+                // 4) add sign
+                result *= sign;
+            } else {
+                dir = lat.substring(lat.length() - 1);
+                final int sign = "N".equals(dir) ? 1 : -1;
+
+                // 3) determine double from rest of string
+                result = doubleFromString(lat.substring(0, lat.length() - 1).trim());
+
+                // 4) add sign
+                result *= sign;
+            }
         } catch (Exception ex){
             // what should be a good default? lets stick with 0...
         }
@@ -151,22 +332,56 @@ public class LatLongHelper {
         return result;
     }
     
-    private static double doubleFromString(final String latlon) throws ParseException {
+    private static double lonFromString1(final String lon) {
+        double result = Double.NaN;
+        
+        try {
+            // 2) determine sign from E/W
+            // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
+            String dir = lon.substring(0, 1);
+            if ("E".equals(dir) || "W".equals(dir)) {
+                final int sign = "E".equals(dir) ? 1 : -1;
+
+                // 3) determine double from rest of string
+                result = doubleFromString(lon.substring(1).trim());
+
+                // 4) add sign
+                result *= sign;
+            } else {
+                dir = lon.substring(lon.length() - 1);
+                final int sign = "E".equals(dir) ? 1 : -1;
+
+                // 3) determine double from rest of string
+                result = doubleFromString(lon.substring(0, lon.length() - 1).trim());
+
+                // 4) add sign
+                result *= sign;
+            }
+        } catch (Exception ex){
+            // what should be a good default? lets stick with 0...
+        }
+        
+        return result;
+    }
+    
+    private static double doubleFromString(final String latlon) {
         double result = 0;
         String temp = latlon;
         
         // latlon looks like %2d°%2d'%4.2f\"
         
         // 1) split @ ° and convert to int
-        result = Integer.parseInt(temp.split("°")[0]);
-        temp = temp.split("°")[1];
+        String[] tempArray = temp.split(DEG);
+        result = NumberUtils.toInt(tempArray[0], 0);
+        temp = tempArray[1];
         
         // 2) split rest @ ' and convert to double / 60
-        result += NumberFormat.getNumberInstance().parse(temp.split("'")[0].trim()).doubleValue() / 60.0;
-        temp = temp.split("'")[1];
+        tempArray = temp.split(MIN);
+        result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
+        temp = tempArray[1];
         
         // 3) split rest @ \" and convert to double / 3600
-        result += NumberFormat.getNumberInstance().parse(temp.split("\"")[0].trim()).doubleValue() / 3600.0;
+        result += NumberUtils.toDouble(temp.split(SEC)[0].replace(",", "."), 0) / 3600.0;
         
         return result;
     }

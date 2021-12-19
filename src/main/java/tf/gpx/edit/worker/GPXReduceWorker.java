@@ -26,7 +26,8 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXAlgorithms;
+import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 
@@ -35,13 +36,13 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author Thomas
  */
 public class GPXReduceWorker extends GPXEmptyWorker  {
-    private EarthGeometry.Algorithm myAlgorithm;
+    private GPXAlgorithms.ReductionAlgorithm myAlgorithm;
 
     private GPXReduceWorker() {
         super ();
     }
 
-    public GPXReduceWorker(final EarthGeometry.Algorithm algorithm, final double parameter) {
+    public GPXReduceWorker(final GPXAlgorithms.ReductionAlgorithm algorithm, final double parameter) {
         super (parameter);
         
         myAlgorithm = algorithm;
@@ -50,9 +51,17 @@ public class GPXReduceWorker extends GPXEmptyWorker  {
     @Override
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // remove all waypoints using given algorithm an epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
-        
-        final boolean keep[] = EarthGeometry.simplifyTrack(waypoints, myAlgorithm, myParameter);
+        reduceGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
+    }
+
+    @Override
+    public void visitGPXRoute(GPXRoute gpxRoute) {
+        // remove all waypoints using given algorithm an epsilon
+        reduceGPXWaypoints(gpxRoute.getGPXWaypoints());
+    }
+    
+    private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
+        final boolean keep[] = GPXAlgorithms.simplifyTrack(waypoints, myAlgorithm, myParameter);
         
         removeGPXWaypoint(waypoints, keep);
     }

@@ -26,7 +26,7 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.helper.EarthGeometry;
+import tf.gpx.edit.helper.GPXAlgorithms;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 
@@ -49,7 +49,7 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
         // AND distanceGPXWaypoints prev - next below epsilon
         final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
 
-        final boolean keep[] = EarthGeometry.fixTrack(waypoints, myParameter);
+        final boolean keep[] = GPXAlgorithms.fixTrack(waypoints, myParameter);
         
         removeGPXWaypoint(waypoints, keep);
     }

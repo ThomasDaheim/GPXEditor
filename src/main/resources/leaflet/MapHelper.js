@@ -24,6 +24,13 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// wrap around world borders
+// https://stackoverflow.com/a/28323349
+myMap.options.worldCopyJump = true;
+myMap.options.zoomAnimation = false;
+myMap.options.preferCanvas = true;
+myMap.options.renderer = L.canvas();
+
 /*
  * Support for selecting with cntrl + mouse
  * 
@@ -53,9 +60,46 @@ myMap.on('mousedown', disableCntrlDrag);
 // disable on cntrl mouse up
 myMap.on('mouseup', enableCntrlDrag);
 
-// wrap around world borders
-// https://stackoverflow.com/a/28323349
-myMap.options.worldCopyJump = true;
+// TFE, 20181124
+// add callbacks for map move or zoom that send bounds back to java
+function mapViewChanged(e) {
+    var bounds = getMapBounds();
+//    jscallback.log('mapViewChanged: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
+    jscallback.mapViewChanged(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
+} 
+myMap.on('zoomend', mapViewChanged);
+myMap.on('moveend', mapViewChanged);
+myMap.on('resize', mapViewChanged);
+
+// TFE, 2020317: add callbacks for move & zoom start to disable heatmap
+function mapViewChanging(e) {
+    var bounds = getMapBounds();
+//    jscallback.log('mapViewChanging: ' + Date.now() + ', ' + e.type + ', ' + bounds[0] + ', ' + bounds[1] + ', ' + bounds[2] + ', ' + bounds[3]);
+    jscallback.mapViewChanging(e.type, bounds[0], bounds[1], bounds[2], bounds[3]);
+} 
+myMap.on('zoomstart', mapViewChanging);
+myMap.on('movestart', mapViewChanging);
+
+// alternative to use setView - avoids calculating center and zoom from bounds manually
+var mapBounds;
+function setMapBounds(latMin, latMax, lngMin, lngMax, doFitBounds) {
+//    jscallback.log('setMapBounds: ' + latMin + ", " + latMax + ", " + lngMin + ", " + lngMax + ", " + doFitBounds);
+    
+    mapBounds = [
+        [latMin, lngMin],
+        [latMax, lngMax]
+    ];
+    
+    if (doFitBounds) {
+        // delegate to internal function that can also be used from CenterButton.js
+        doSetMapBounds(mapBounds);
+    }
+}
+function doSetMapBounds(bounds) {
+    if (typeof bounds !== 'undefined') {
+        myMap.fitBounds(bounds);
+    }
+}
 
 // return lower left and upper right corners of currently shown map
 function getMapBounds() {
@@ -63,15 +107,27 @@ function getMapBounds() {
     return [bounds.getSouthWest().lat, bounds.getSouthWest().lng, bounds.getNorthEast().lat, bounds.getNorthEast().lng];
 }
 
-// ability to change a marker icon and color (e.g. for highlighting) 
+// ability to change a marker icon, background and color (e.g. for highlighting) 
 function updateMarkerIcon(layer, icon) {
     window[layer].setIcon(window[icon]);
 }
-function updateMarkerColor(layer, color) {
+function updateMarkerStyle(layer, color, weight, opacity, linecap) {
     window[layer].setStyle({
         color: color,
-        weight: 2
+        weight: weight,
+        opacity: opacity,
+        lineCap: linecap
     });
+
+    // TODO: repaint doesn't get trigerred!!!
+    window[layer].remove(myMap);
+    window[layer].addTo(myMap);
+}
+function highlightMarker(layer) {
+    window[layer].valueOf()._icon.style.backgroundColor = 'red';
+}
+function unlightMarker(layer) {
+    window[layer].valueOf()._icon.style.backgroundColor = 'transparent';
 }
 // move marker around
 function updateMarkerLocation(layer, lat, lng) {
@@ -110,14 +166,108 @@ function addNameToLayer(layer, name) {
 /*
  * support for draggable markers including callback at dragend
  */
-function makeDraggable(layer, lat, lng) {
+// TFE, 20210801: extract logic into functions start/do/endDragMarker to be re-used for markers and circle markers
+function startDragMarker(line, markerLine, marker) {
+    if (line !== '') {
+        // Get the polyline's latlngs
+        var latlngs = markerLine.getLatLngs(),
+
+        // Get the marker's start latlng
+        latlng = marker.getLatLng();
+
+        marker.polylineLatlng = -1;
+        // Iterate the polyline's latlngs
+        for (var i = 0; i < latlngs.length; i++) {
+            // Compare each to the marker's latlng
+            if (latlng.equals(latlngs[i])) {
+                // If equals store key in marker instance
+                marker.polylineLatlng = i;
+            }
+        }
+    }
+}
+function doDragMarker(line, markerLine, marker) {
+    // TFE, 20210801: do something ONLY if we have found the marker in the list previously
+    if (line !== '' && marker.polylineLatlng !== -1) {
+        // Get the polyline's latlngs
+        var latlngs = markerLine.getLatLngs(),
+
+        // Get the marker's start latlng
+        latlng = marker.getLatLng();
+
+        // Replace the old latlng with the new
+        latlngs.splice(marker.polylineLatlng, 1, latlng);
+
+        // Update the polyline with the new latlngs
+        markerLine.setLatLngs(latlngs);
+    }
+}
+function endDragMarker(layer, lat, lng, line, markerLine, marker) {
+    var newPos = marker.getLatLng();
+    jscallback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
+
+    if (line !== '') {
+        // Delete key from marker instance
+        delete marker.polylineLatlng;
+    }
+}
+// extract trackCursor as a function so this specific
+// "mousemove" listener can be removed on "mouseup" versus
+// all listeners if we were to use map.off("mousemove")
+function trackCursor(line, markerLine, marker, e) {
+    // same as 'drag' for normal markers
+//    jscallback.log('trackCursor: ' + e + ", " + e.latlng + ".");
+
+    // move marker to cursor
+    marker.setLatLng(e.latlng);
+
+    // let the general function do the work
+    doDragMarker(line, markerLine, marker);
+}
+function makeDraggable(layer, lat, lng, line) {
+//    jscallback.log('makeDraggable: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
     var marker = window[layer];
+    var markerLine = window[line];
     
-    marker.dragging.enable();
-    marker.on('dragend', function(e) {
-        var newPos = marker.getLatLng();
-        jscallback.moveMarker(layer, lat, lng, newPos.lat, newPos.lng);
-    });
+    // TFE, 20210801: circlemarker can't be dragged that way...
+    // https://stackoverflow.com/a/43417693
+    if (layer.startsWith('circleMarker')) {
+//        jscallback.log('makeDraggable: for a circleMarker');
+        
+        // https://stackoverflow.com/a/36234300
+        var callbackFct = trackCursor.bind(null, line, markerLine, marker);
+        // same as 'dragstart' for normal markers
+        marker.on('mousedown', function() {
+//            jscallback.log('makeDraggable: mousedown for a circleMarker');
+            myMap.dragging.disable();
+            myMap.on('mousemove', callbackFct);
+            
+            startDragMarker(line, markerLine, marker);
+        });
+
+        // same as 'dragend' for normal markers
+        marker.on('mouseup', function() {
+//            jscallback.log('makeDraggable: mouseup for a circleMarker');
+            myMap.dragging.enable();
+            myMap.off('mousemove', callbackFct);
+            
+            endDragMarker(layer, lat, lng, line, markerLine, marker);
+        });
+    } else {
+        // redraw line when moving point - if we have a line!
+        // https://stackoverflow.com/a/33520112
+        marker.on('dragstart', function(e) {
+            startDragMarker(line, markerLine, marker);
+        });
+        marker.on('drag', function(e) {
+            doDragMarker(line, markerLine, marker);
+        });
+        marker.on('dragend', function(e) {
+            endDragMarker(layer, lat, lng, line, markerLine, marker);
+        });
+
+        marker.dragging.enable();
+    }
 }
 function setTitle(layer, title) {
     var marker = window[layer];
@@ -142,6 +292,27 @@ function getLatLngForPoint(x, y) {
 function getLatLngForRect(startx, starty, endx, endy) {
     return getLatLngForPoint(startx, starty).concat(getLatLngForPoint(endx, endy));
 }
+function getPointForLatLng(lat, lng) {
+    var latlng = L.latLng(lat, lng);
+    // take pane & zoom into account when transforming - therefore latLngToContainerPoint and not latLngToLayerPoint
+    var point = myMap.latLngToContainerPoint(latlng);
+    return [point.x, point.y];
+}
+function getPointsForLatLngs(latLngs) {
+    var points = [];
+
+    var arrayLength = latLngs.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var latlng = latLngs[i];
+//        jscallback.log('latlng: ' + latlng + ", lat: " + latlng[0] + ", lng: " + latlng[1]);
+        
+        var point = getPointForLatLng(latlng[0], latlng[1]);
+//        jscallback.log('point: ' + point + ", [0]: " + point[0] + ", [1]: " + point[1]);
+        points.push(L.point(point[0], point[1]));
+    }
+
+    return pointsToString(points);
+}
 /*
  * JSON.stringify doesn't work on LatLngs...
  */
@@ -150,15 +321,30 @@ function coordsToString(coords) {
     
     var arrayLength = coords.length;
     for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
+        var latlng = coords[i];
         
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
+        coordsString = coordsString + "lat:" + latlng.lat + ", lon:" + latlng.lng;
         
         if (i < arrayLength-1) {
             coordsString = coordsString + " - "
         }
     }
     return coordsString;
+}
+function pointsToString(points) {
+    var pointString = "";
+    
+    var arrayLength = points.length;
+    for (var i = 0; i < arrayLength; i++) {
+        var point = points[i];
+        
+        pointString = pointString + "x:" + point.x + ", y:" + point.y;
+        
+        if (i < arrayLength-1) {
+            pointString = pointString + " - "
+        }
+    }
+    return pointString;
 }
 
 /*
@@ -197,9 +383,11 @@ function removeSearchResult(markerCount) {
 }
 
 function showSearchResults(searchItem, result, iconName) {
-    //callback.log("result: " + result);
     var data = JSON.parse(result);
     var icon = window[iconName];
+//    jscallback.log("result: " + result);
+//    jscallback.log("iconName: " + iconName);
+//    jscallback.log("icon: " + icon);
     
     if(data.hasOwnProperty("elements")) {
         if(data.elements.length > 0) {
@@ -222,6 +410,8 @@ function showSearchResults(searchItem, result, iconName) {
                 
                 // add result to the big list...
                 point.properties.MarkerCount = searchCount;
+//                jscallback.log("title: " + title);
+//                jscallback.log("point: " + point);
                 searchResults.push(point);
                 searchCount++;
             }
@@ -282,3 +472,77 @@ function getTitleFromTags(point, data) {
     
     return title;
 }
+
+/*
+ * TFE, 20210104: central init to avoid multiple execScript() calls
+ */
+function initCallback(layer, lat, lng, line) {
+//    jscallback.log('initCallback: ' + layer + ", " + lat + ", " + lng + ", " + line + ".");
+    addMouseOverToLayer(layer);
+    if (lat !== -1.0 && lng !== -1.0) {
+        addClickToLayer(layer, lat, lng);        
+        makeDraggable(layer, lat, lng, line);
+    }
+}
+
+/*
+ * track mouseover for waypoints so that context menu can be adapted accordingly
+ */
+// use separate layer for search results for easy removal
+// register / deregister marker under mouse
+function addMouseOverToLayer(layer) {
+    var marker = window[layer];
+
+    marker.on('mouseover', function(e){
+        var marker = e.target;
+        var markerPos = marker.getLatLng();
+        jscallback.registerWaypoint(layer, markerPos.lat, markerPos.lng);
+    });
+    marker.on('mouseout', function(e){
+        var marker = e.target;
+        var markerPos = marker.getLatLng();
+        jscallback.deregisterWaypoint(layer, markerPos.lat, markerPos.lng);
+    });
+}
+
+// TFE, 20200713: add support to center map to user location - NOT WORKING, see LeafletMapView.java
+//function locationFound(e) {
+//    jscallback.log("location found");
+//    jscallback.log(e.latlng.lat + ", " + e.latlng.lng);
+//} 
+//function locationError(e) {
+//    jscallback.log("location error");
+//    jscallback.log(e.message);
+//} 
+//myMap.on('locationfound', locationFound);
+//myMap.on('locationerror', locationError);
+
+// should work in newer webview
+//var options = {
+//  enableHighAccuracy: false,
+//  timeout: 1000,
+//  maximumAge: 0
+//};
+//
+//function success(pos) {
+//  var crd = pos.coords;
+//
+//  jscallback.log('Your current position is:');
+//  jscallback.log(`Latitude : ${crd.latitude}`);
+//  jscallback.log(`Longitude: ${crd.longitude}`);
+//  jscallback.log(`More or less ${crd.accuracy} meters.`);
+//}
+//
+//function error(err) {
+//  jscallback.warn(`ERROR(${err.code}): ${err.message}`);
+//}
+//
+//function centerToLocation() {
+//    navigator.geolocation.getCurrentPosition(success, error, options);
+////    myMap.locate({
+////        setView: true,
+////        timeout: 1000
+////    });
+//}
+
+

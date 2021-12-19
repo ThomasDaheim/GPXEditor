@@ -25,11 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.TrackSegment;
-import com.hs.gpxparser.modal.Waypoint;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,11 +33,16 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
-import tf.gpx.edit.helper.EarthGeometry;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXListHelper;
-import static tf.gpx.edit.items.GPXLineItem.filterGPXWaypointsInBoundingBox;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
@@ -51,8 +51,9 @@ import static tf.gpx.edit.items.GPXLineItem.filterGPXWaypointsInBoundingBox;
 public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
+    private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
-    
+
     private Double myLength = null;
     private Double myCumulativeAscent = null;
     private Double myCumulativeDescent = null;
@@ -73,12 +74,14 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = new Route();
         
         // if possible add route to parent class
-        Extension content = gpxFile.getContent();
+        Extension content = gpxFile.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addRoute(myRoute);
         }
+
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     // constructor for routes from gpx parser
@@ -87,6 +90,9 @@ public class GPXRoute extends GPXMeasurable {
         
         myGPXFile = gpxFile;
         myRoute = route;
+        
+        // set color from gpxx extension (if any)
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
@@ -98,32 +104,36 @@ public class GPXRoute extends GPXMeasurable {
             updatePrevNextGPXWaypoints();
         }
         
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXWaypoints.addListener(changeListener);
     }
     
     @Override
-    public GPXRoute cloneMeWithChildren() {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+
+        myClone.myLineStyle = myLineStyle;
         
         // set route via cloner
         myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
         
-        // clone all my children
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
+        if (withChildren) {
+            // clone all my children
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            GPXLineItemHelper.numberChildren(myClone.myGPXWaypoints);
+
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
         }
-        numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
-
-        myClone.myGPXWaypoints.addListener(getListChangeListener());
+        myClone.myGPXWaypoints.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected Route getRoute() {
@@ -131,39 +141,68 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public GPXLineItem getParent() {
-        return myGPXFile;
+    public LineStyle getLineStyle() {
+        return myLineStyle;
+    }
+    
+    @Override
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void setParent(final GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return ObjectsHelper.uncheckedCast(this);
+        }
+
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXWaypoints);
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXWaypoints;
     }
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
-        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
+        setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
+    }
+
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
     }
     
+    @Override
     public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         //System.out.println("setGPXWaypoints: " + getName() + ", " + gpxWaypoints.size());
+        myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxWaypoints);
+        myGPXWaypoints.addListener(changeListener);
+
+        GPXLineItemHelper.numberChildren(myGPXWaypoints);
+
+        // init prev/next waypoints
+        updatePrevNextGPXWaypoints();
         
         // reset cached values
         myLength = null;
         myCumulativeAscent = null;
         myCumulativeDescent = null;
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     
@@ -208,7 +247,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
     
@@ -247,7 +286,7 @@ public class GPXRoute extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myRoute;
     }
 
@@ -258,11 +297,6 @@ public class GPXRoute extends GPXMeasurable {
             result = myGPXWaypoints;
         }
         return result;
-    }
-
-    @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox);
     }
 
     /**
@@ -434,7 +468,7 @@ public class GPXRoute extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
+            final Set<Waypoint> waypoints = GPXLineItemHelper.numberExtensions(myGPXWaypoints);
             myRoute.setRoutePoints(new ArrayList<>(waypoints));
 
             updatePrevNextGPXWaypoints();

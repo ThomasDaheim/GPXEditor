@@ -25,10 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.TrackSegment;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -36,9 +32,15 @@ import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.TrackSegment;
+import tf.gpx.edit.extension.GarminColor;
+import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
@@ -47,6 +49,7 @@ import tf.gpx.edit.helper.GPXListHelper;
 public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
+    private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
     
     private GPXTrack() {
@@ -63,12 +66,14 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = new Track();
         
         // if possible add track to parent class
-        Extension content = gpxFile.getContent();
+        Extension content = gpxFile.getExtension();
         if (content instanceof GPX) {
             ((GPX) content).addTrack(myTrack);
         }
+        
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
 
-        myGPXTrackSegments.addListener(getListChangeListener());
+        myGPXTrackSegments.addListener(changeListener);
     }
     
     // constructor for tracks from gpx parser
@@ -78,6 +83,9 @@ public class GPXTrack extends GPXMeasurable {
         myGPXFile = gpxFile;
         myTrack = track;
         
+        // set color from gpxx extension
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
+        
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
             for (TrackSegment segment : myTrack.getTrackSegments()) {
@@ -86,33 +94,40 @@ public class GPXTrack extends GPXMeasurable {
             assert (myGPXTrackSegments.size() == myTrack.getTrackSegments().size());
         }
 
-        myGPXTrackSegments.addListener(getListChangeListener());
+        myGPXTrackSegments.addListener(changeListener);
     }
     
     @Override
-    public GPXTrack cloneMeWithChildren() {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXTrack myClone = new GPXTrack();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+        
+        myClone.myLineStyle = myLineStyle;
         
         // set route via cloner
         myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
         
         // clone all my children
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
-            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMeWithChildren());
+            myClone.myGPXTrackSegments.add(gpxTrackSegment.cloneMe(withChildren).setParent(myClone));
         }
-        numberChildren(myClone.myGPXTrackSegments);
+        GPXLineItemHelper.numberChildren(myClone.myGPXTrackSegments);
 
-        myClone.myGPXTrackSegments.addListener(getListChangeListener());
+        myClone.myGPXTrackSegments.addListener(myClone.changeListener);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     protected Track getTrack() {
         return myTrack;
+    }
+    
+    @Override
+    public LineStyle getLineStyle() {
+        return myLineStyle;
     }
     
     @Override
@@ -142,33 +157,56 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public GPXLineItem getParent() {
-        return myGPXFile;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
     
     @Override
-    public void setParent(final GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return ObjectsHelper.uncheckedCast(this);
+        }
+
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    public ObservableList<GPXLineItem> getChildren() {
-        return GPXListHelper.asGPXLineItemList(myGPXTrackSegments);
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return myGPXTrackSegments;
     }
     
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
-        setGPXTrackSegments(castChildren(GPXTrackSegment.class, children));
+        setGPXTrackSegments(GPXLineItemHelper.castChildren(this, GPXTrackSegment.class, children));
+    }
+
+    @Override
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        return myGPXTrackSegments;
+    }
+
+    @Override
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
     }
     
     public void setGPXTrackSegments(final List<GPXTrackSegment> gpxTrackSegments) {
         //System.out.println("setGPXTrackSegments: " + getName() + ", " + gpxTrackSegments.size());
+        myGPXTrackSegments.removeListener(changeListener);
         myGPXTrackSegments.clear();
         myGPXTrackSegments.addAll(gpxTrackSegments);
+        myGPXTrackSegments.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTrackSegments);
         setHasUnsavedChanges();
     }
     
@@ -212,7 +250,7 @@ public class GPXTrack extends GPXMeasurable {
     }
     
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myTrack;
     }
 
@@ -229,15 +267,6 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        List<GPXWaypoint> result = new ArrayList<>();
-        for (GPXTrackSegment trackSegment : myGPXTrackSegments) {
-            result.addAll(trackSegment.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-        return result;
-    }
-
-    @Override
     protected void visitMe(final IGPXLineItemVisitor visitor) {
         visitor.visitGPXTrack(this);
     }
@@ -249,7 +278,7 @@ public class GPXTrack extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<TrackSegment> trackSegments = numberExtensions(myGPXTrackSegments);
+            final Set<TrackSegment> trackSegments = GPXLineItemHelper.numberExtensions(myGPXTrackSegments);
             myTrack.setTrackSegments(new ArrayList<>(trackSegments));
         }
     }

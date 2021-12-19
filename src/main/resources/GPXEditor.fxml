@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -17,7 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -32,6 +30,12 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                  <Menu fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
+                    <items>
+                      <MenuItem fx:id="exportKMLMenu" mnemonicParsing="false" text="As KML" />
+                        <MenuItem fx:id="exportCSVMenu" mnemonicParsing="false" text="As CSV" />
+                    </items>
+                  </Menu>
                   <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="saveAllFilesMenu" mnemonicParsing="false" text="Save All">
                      <accelerator>
@@ -54,14 +58,14 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Structure">
             <items>
-                  <MenuItem fx:id="invertTracksMenu" mnemonicParsing="false" text="Invert Tracks/Segments" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="mergeFilesMenu" mnemonicParsing="false" text="Merge Files" />
-              <MenuItem fx:id="mergeTracksMenu" mnemonicParsing="false" text="Merge Tracks/Segments">
+              <MenuItem fx:id="mergeItemsMenu" mnemonicParsing="false" text="Merge Items">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                  <MenuItem fx:id="deleteTracksMenu" mnemonicParsing="false" text="Delete Tracks/Segments" />
+                  <MenuItem fx:id="deleteItemsMenu" mnemonicParsing="false" text="Delete Items" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="invertItemsMenu" mnemonicParsing="false" text="Invert Items" />
             </items>
                <accelerator>
                   <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
@@ -70,34 +74,62 @@
             <Menu mnemonicParsing="false" text="Values">
               <items>
                 <MenuItem fx:id="distributionsMenu" mnemonicParsing="false" text="Distributions" />
-                  <MenuItem fx:id="specialValuesMenu" mnemonicParsing="false" text="Special Values" />
-                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="statisticsMenu" mnemonicParsing="false" text="Statistics" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
               <items>
                   <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
-                  <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Fix Tracks">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
-                  <MenuItem fx:id="reduceTracksMenu" mnemonicParsing="false" text="Reduce Tracks">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
+                  <Menu fx:id="fixMenu" mnemonicParsing="false" text="Fix">
+                    <items>
+                        <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Items">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                      <MenuItem fx:id="fixFilesMenu" mnemonicParsing="false" text="Files of Items" />
+                    </items>
+                  </Menu>
+                  <Menu mnemonicParsing="false" text="Stationaries">
+                    <items>
+                        <MenuItem fx:id="findStationariesMenu" mnemonicParsing="false" text="Find" />
+                        <MenuItem fx:id="replaceStationariesMenu" mnemonicParsing="false" text="Replace by Center" />
+                    </items>
+                  </Menu>
+                  <Menu fx:id="reduceMenu" mnemonicParsing="false" text="Reduce">
+                    <items>
+                        <MenuItem fx:id="reduceTracksMenu" mnemonicParsing="false" text="Items">
+                           <accelerator>
+                              <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                           </accelerator>
+                        </MenuItem>
+                      <MenuItem fx:id="reduceFilesMenu" mnemonicParsing="false" text="Files of Items" />
+                    </items>
+                  </Menu>
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="SRTM">
+            <Menu mnemonicParsing="false" text="Elevation">
               <items>
-                  <MenuItem fx:id="assignSRTMheightsMenu" mnemonicParsing="false" text="Assign SRTM height values" />
+                  <Menu fx:id="assignElevationMenu" mnemonicParsing="false" text="Assign Elevation">
+                    <items>
+                      <MenuItem fx:id="assignElevationTracksMenu" mnemonicParsing="false" text="Items" />
+                        <MenuItem fx:id="assignElevationFilesMenu" mnemonicParsing="false" text="Files of Items" />
+                    </items>
+                  </Menu>
+                  <MenuItem fx:id="elevationForCoordinateMenu" mnemonicParsing="false" text="Elevation for Coordinate" />
                 <MenuItem fx:id="showSRTMDataMenu" mnemonicParsing="false" text="Show SRTM data" />
                   <MenuItem fx:id="downloadSRTMDataMenu" mnemonicParsing="false" text="Download SRTM data" />
               </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="View">
+            <Menu mnemonicParsing="false" text="Map">
               <items>
-                <MenuItem fx:id="switchMapMenu" mnemonicParsing="false" text="Disable Map" />
+                  <MenuItem fx:id="saveMapMenu" mnemonicParsing="false" text="Save Map" />
+                <MenuItem fx:id="switchMapMenu" disable="true" mnemonicParsing="false" text="Disable Map" visible="false" />
+              </items>
+            </Menu>
+            <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
+              <items>
+                <MenuItem fx:id="onlineHelpMenu" mnemonicParsing="false" text="Online Help" />
               </items>
             </Menu>
         </menus>
@@ -105,10 +137,6 @@
    </top>
    <bottom>
       <HBox fx:id="statusBox" alignment="CENTER_LEFT" depthTest="DISABLE" prefHeight="30.0" prefWidth="600.0" styleClass="statusBox" BorderPane.alignment="CENTER">
-         <children>
-            <Label fx:id="statusLabel" styleClass="statusLabel" />
-            <ProgressBar fx:id="statusBar" prefWidth="200.0" progress="0.0" styleClass="statusBar" />
-         </children>
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
@@ -129,7 +157,7 @@
                                     <TreeTableColumn fx:id="typeGPXCol" prefWidth="55.0" text="Type" />
                                   <TreeTableColumn fx:id="nameGPXCol" prefWidth="220.0" styleClass="nameCol" text="Name" />
                                     <TreeTableColumn fx:id="startGPXCol" prefWidth="200.0" styleClass="startCol" text="Start" />
-                                    <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration" />
+                                    <TreeTableColumn fx:id="durationGPXCol" styleClass="durationCol" text="Duration&#10;Waypoints" />
                                     <TreeTableColumn fx:id="lengthGPXCol" prefWidth="70.0" styleClass="lengthCol" text="Length&#10;[km]" />
                                     <TreeTableColumn fx:id="speedGPXCol" prefWidth="70.0" styleClass="speedCol" text="Speed&#10;[km/h]" />
                                     <TreeTableColumn fx:id="cumAccGPXCol" prefWidth="70.0" styleClass="cumAccCol" text="+dH&#10;[m]" />
@@ -142,7 +170,7 @@
                         </AnchorPane>
                       <AnchorPane fx:id="bottomAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="210.0" prefWidth="158.0">
                            <children>
-                              <TableView id="gpxTrackList" fx:id="gpxTrackXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList" tableMenuButtonVisible="true">
+                              <TableView id="gpxTrackList" fx:id="gpxWaypointsXML" prefHeight="200.0" prefWidth="1007.0" styleClass="gpxTrackList" tableMenuButtonVisible="true">
                                 <columns>
                                   <TableColumn fx:id="idTrackCol" prefWidth="40.0" styleClass="idCol" text="ID" />
                                     <TableColumn fx:id="typeTrackCol" prefWidth="57.0" text="Type" />
@@ -166,12 +194,7 @@
             </AnchorPane>
           <AnchorPane fx:id="rightAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
                <children>
-                  <SplitPane fx:id="viewSplitPane" dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0">
-                    <items>
-                      <AnchorPane fx:id="mapAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                      <AnchorPane fx:id="profileAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
-                    </items>
-                  </SplitPane>
+                <AnchorPane fx:id="mapAnchorPane" minHeight="0.0" minWidth="0.0" prefHeight="100.0" prefWidth="160.0" />
                </children></AnchorPane>
         </items>
       </SplitPane>

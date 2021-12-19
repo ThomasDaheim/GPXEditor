@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.worker;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
@@ -33,6 +35,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  *
@@ -40,12 +43,21 @@ import tf.gpx.edit.items.IGPXLineItemVisitor;
  */
 public class GPXEmptyWorker implements IGPXLineItemVisitor {
     protected double myParameter = Double.MIN_VALUE;
+    protected boolean deepthFirst = true;
+    
+    protected GPXEditor myEditor;
 
-    public GPXEmptyWorker() {
+    protected GPXEmptyWorker() {
         super ();
     }
 
-    public GPXEmptyWorker(final double parameter) {
+    protected GPXEmptyWorker(final boolean deepth) {
+        super ();
+        
+        deepthFirst = deepth;
+    }
+
+    protected GPXEmptyWorker(final double parameter) {
         super ();
         
         myParameter = parameter;
@@ -83,20 +95,29 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
 
     @Override
     public boolean deepthFirst() {
-        return true;
+        return deepthFirst;
     }
     
-    protected List<GPXWaypoint> removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+    protected void removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
         assert gpxWayPoints.size() == keep.length;
+        assert myEditor != null;
+        
+        final List<GPXWaypoint> waypointsToDelete = new ArrayList<>();
         
         // go through keep[] backwards and remove the waypoints with FALSE
         final int size = keep.length;
         for (int i = size - 1; i >= 0; i--) {
             if (!keep[i]) {
-                gpxWayPoints.remove(i);
+                waypointsToDelete.add(gpxWayPoints.get(i));
             }
         }
+        Collections.reverse(waypointsToDelete);
         
-        return gpxWayPoints;
+        myEditor.deleteWaypoints(waypointsToDelete);
+    }
+
+    @Override
+    public void setCallback(final GPXEditor editor) {
+        myEditor = editor;
     }
 }

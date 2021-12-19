@@ -27,11 +27,6 @@ package tf.gpx.edit.values;
  */
 
 
-import com.hs.gpxparser.modal.Copyright;
-import com.hs.gpxparser.modal.Email;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Metadata;
-import com.hs.gpxparser.modal.Person;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -39,7 +34,6 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -47,15 +41,23 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
+import me.himanshusoni.gpxparser.modal.Copyright;
+import me.himanshusoni.gpxparser.modal.Email;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Person;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.javafx.AbstractStage;
 
 /**
  *
  * @author thomas
  */
-public class EditGPXMetadata {
+public class EditGPXMetadata extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXMetadata INSTANCE = new EditGPXMetadata();
@@ -81,12 +83,6 @@ public class EditGPXMetadata {
     private final Label metaBoundsLbl = new Label();
     private LinkTable metaLinkTable;
     
-    private final Insets insetNone = new Insets(0, 0, 0, 0);
-    private final Insets insetSmall = new Insets(0, 10, 0, 10);
-    private final Insets insetTop = new Insets(10, 10, 0, 10);
-    private final Insets insetBottom = new Insets(0, 10, 10, 10);
-    private final Insets insetTopBottom = new Insets(10, 10, 10, 10);
-    
     private GPXFile myGPXFile;
     
     private EditGPXMetadata() {
@@ -100,6 +96,9 @@ public class EditGPXMetadata {
     }
 
     private void initViewer() {
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(EditGPXMetadata.class.getResource("/GPXEditor.min.css").toExternalForm());
+
         //<metadata>
         //  <name>GPS Receiver track log</name>
         //  <desc>Tallinn (car)</desc>
@@ -153,34 +152,34 @@ public class EditGPXMetadata {
         // 1st row: name
         final Label nameLbl = new Label("Name:");
         editMetadataPane.add(nameLbl, 0, rowNum);
-        GridPane.setMargin(nameLbl, insetTop);
+        GridPane.setMargin(nameLbl, INSET_TOP);
 
         editMetadataPane.add(metaNameTxt, 1, rowNum);
-        GridPane.setMargin(metaNameTxt, insetTop);
+        GridPane.setMargin(metaNameTxt, INSET_TOP);
         
         rowNum++;
         // 2nd row: desc
         final Label descLbl = new Label("Description:");
         editMetadataPane.add(descLbl, 0, rowNum);
-        GridPane.setMargin(descLbl, insetTop);
+        GridPane.setMargin(descLbl, INSET_TOP);
 
         editMetadataPane.add(metaDescTxt, 1, rowNum);
-        GridPane.setMargin(metaDescTxt, insetTop);
+        GridPane.setMargin(metaDescTxt, INSET_TOP);
         
         rowNum++;
         // 3rd row: author - name
         final Label authnameLbl = new Label("Author - Name:");
         editMetadataPane.add(authnameLbl, 0, rowNum);
-        GridPane.setMargin(authnameLbl, insetTop);
+        GridPane.setMargin(authnameLbl, INSET_TOP);
 
         editMetadataPane.add(metaAuthNameTxt, 1, rowNum);
-        GridPane.setMargin(metaAuthNameTxt, insetTop);
+        GridPane.setMargin(metaAuthNameTxt, INSET_TOP);
         
         rowNum++;
         // 4th row: author - email - id + author - email - domain
         final Label emailLbl = new Label("Author - Email:");
         editMetadataPane.add(emailLbl, 0, rowNum);
-        GridPane.setMargin(emailLbl, insetTop);
+        GridPane.setMargin(emailLbl, INSET_TOP);
         
         final HBox emailBox = new HBox();
         emailBox.getChildren().add(metaAuthMailIdTxt);
@@ -189,98 +188,97 @@ public class EditGPXMetadata {
         emailBox.setAlignment(Pos.CENTER);
 
         editMetadataPane.add(emailBox, 1, rowNum);
-        GridPane.setMargin(emailBox, insetTop);
+        GridPane.setMargin(emailBox, INSET_TOP);
         
         rowNum++;
         // 5th row: author - link - Href + author - link - text + author - link - type
         final Label linkLbl = new Label("Author - Link - Href, Text, Type:");
         editMetadataPane.add(linkLbl, 0, rowNum);
-        GridPane.setMargin(linkLbl, insetTop);
+        GridPane.setMargin(linkLbl, INSET_TOP);
 
         editMetadataPane.add(metaAuthLinkHrefTxt, 1, rowNum);
-        GridPane.setMargin(metaAuthLinkHrefTxt, insetTop);
+        GridPane.setMargin(metaAuthLinkHrefTxt, INSET_TOP);
 
         rowNum++;
         // 6th row: author - link - Href + author - link - text + author - link - type
         editMetadataPane.add(metaAuthLinkTextTxt, 1, rowNum);
-        GridPane.setMargin(metaAuthLinkTextTxt, insetSmall);
+        GridPane.setMargin(metaAuthLinkTextTxt, INSET_SMALL);
 
         rowNum++;
         // 7th row: author - link - Href + author - link - text + author - link - type
         editMetadataPane.add(metaAuthLinkTypeTxt, 1, rowNum);
-        GridPane.setMargin(metaAuthLinkTypeTxt, insetSmall);
+        GridPane.setMargin(metaAuthLinkTypeTxt, INSET_SMALL);
         
         rowNum++;
         // 8th row: copyright - Author
         final Label copyrightLbl = new Label("Copyright - Author, Year, License:");
         editMetadataPane.add(copyrightLbl, 0, rowNum);
-        GridPane.setMargin(copyrightLbl, insetTop);
+        GridPane.setMargin(copyrightLbl, INSET_TOP);
 
         editMetadataPane.add(metaCopyAuthTxt, 1, rowNum);
-        GridPane.setMargin(metaCopyAuthTxt, insetTop);
+        GridPane.setMargin(metaCopyAuthTxt, INSET_TOP);
         
         rowNum++;
         // 8th row: copyright - Year
         editMetadataPane.add(metaCopyYearTxt, 1, rowNum);
-        GridPane.setMargin(metaCopyYearTxt, insetSmall);
+        GridPane.setMargin(metaCopyYearTxt, INSET_SMALL);
         
         rowNum++;
         // 10th row: copyright - License
         editMetadataPane.add(metaCopyLicenseTxt, 1, rowNum);
-        GridPane.setMargin(metaCopyLicenseTxt, insetSmall);
+        GridPane.setMargin(metaCopyLicenseTxt, INSET_SMALL);
         
         rowNum++;
         // 11th row: time
         final Label timeLbl = new Label("Time:");
         editMetadataPane.add(timeLbl, 0, rowNum);
-        GridPane.setMargin(timeLbl, insetTop);
+        GridPane.setMargin(timeLbl, INSET_TOP);
 
         editMetadataPane.add(metaTimeLbl, 1, rowNum);
-        GridPane.setMargin(metaTimeLbl, insetTop);
+        GridPane.setMargin(metaTimeLbl, INSET_TOP);
         
         rowNum++;
         // 12th row: keywords
         final Label keywordsLbl = new Label("Keywords:");
         editMetadataPane.add(keywordsLbl, 0, rowNum);
-        GridPane.setMargin(keywordsLbl, insetTop);
+        GridPane.setMargin(keywordsLbl, INSET_TOP);
 
         editMetadataPane.add(metaKeywordsTxt, 1, rowNum);
-        GridPane.setMargin(metaKeywordsTxt, insetTop);
+        GridPane.setMargin(metaKeywordsTxt, INSET_TOP);
         
         rowNum++;
         // 13th row: table with links
         final Label linksLbl = new Label("Links:");
         editMetadataPane.add(linksLbl, 0, rowNum, 2, 1);
-        GridPane.setMargin(linksLbl, insetTop);
+        GridPane.setMargin(linksLbl, INSET_TOP);
 
         rowNum++;
         metaLinkTable = new LinkTable();
         editMetadataPane.add(metaLinkTable, 0, rowNum, 2, 1);
-        GridPane.setMargin(metaLinkTable, insetSmall);
+        GridPane.setMargin(metaLinkTable, INSET_SMALL);
         
         rowNum++;
         // 15th row: bounds
         final Label boundsLbl = new Label("Bounds:");
         editMetadataPane.add(boundsLbl, 0, rowNum);
-        GridPane.setMargin(boundsLbl, insetTop);
+        GridPane.setMargin(boundsLbl, INSET_TOP);
 
         editMetadataPane.add(metaBoundsLbl, 1, rowNum);
-        GridPane.setMargin(metaBoundsLbl, insetTop);
+        GridPane.setMargin(metaBoundsLbl, INSET_TOP);
         
         rowNum++;
         // 16th row: store metadata values
         final Button saveButton = new Button("Save Metadata");
         saveButton.setOnAction((ActionEvent event) -> {
-            setMetadata();
-            
-            myGPXEditor.refresh();
+            myGPXEditor.setMetadataInformation(myGPXFile, getMetadata());
         });
+        setActionAccelerator(saveButton);
         editMetadataPane.add(saveButton, 0, rowNum, 2, 1);
         GridPane.setHalignment(saveButton, HPos.CENTER);
-        GridPane.setMargin(saveButton, insetTop);
+        GridPane.setMargin(saveButton, INSET_TOP_BOTTOM);
     }
     
-    public Pane getPane(){
+    public Pane getPane() {
         return editMetadataPane;
     }
     
@@ -288,13 +286,15 @@ public class EditGPXMetadata {
         myGPXEditor = gpxEditor;
     }
     
-    public void editMetadata(final GPXFile gpxFile) {
+    public boolean editMetadata(final GPXFile gpxFile) {
         assert myGPXEditor != null;
         assert gpxFile != null;
         
         myGPXFile = gpxFile;
         
         initMetadata();
+        
+        return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
     private void initMetadata() {
@@ -351,28 +351,31 @@ public class EditGPXMetadata {
             metaCopyLicenseTxt.setText(metadata.getCopyright().getLicense());
         }
 
-        // time is set in setHeaderAndMeta()
-        metaTimeLbl.setText(metadata.getTime().toString());
+        metaTimeLbl.setText("");
+        if (metadata.getTime() != null) {
+            metaTimeLbl.setText(metadata.getTime().toString());
+        }
         metaKeywordsTxt.setText(metadata.getKeywords());
         // bounds is set in setHeaderAndMeta()
         // maxlat="51.645707" maxlon="10.020920" minlat="49.570030" minlon="8.106567"
-        String bounds = 
-                "minLat=" + metadata.getBounds().getMinLat() +
-                " maxLat=" + metadata.getBounds().getMaxLat() +
-                " minLon=" + metadata.getBounds().getMinLon() +
-                " maxLon=" + metadata.getBounds().getMaxLon();
+        String bounds = "";
+        if (metadata.getBounds() != null) {
+            bounds = 
+                    "minLat=" + metadata.getBounds().getMinLat() +
+                    " maxLat=" + metadata.getBounds().getMaxLat() +
+                    " minLon=" + metadata.getBounds().getMinLon() +
+                    " maxLon=" + metadata.getBounds().getMaxLon();
+        }
         metaBoundsLbl.setText(bounds);
         
         metaLinkTable.getItems().clear();
-        metaLinkTable.getItems().addAll(metadata.getLinks());
+        if (metadata.getLinks() != null) {
+            metaLinkTable.getItems().addAll(metadata.getLinks());
+        }
     }
     
-    private void setMetadata() {
-        // save previous values
-        Metadata metadata = myGPXFile.getGPX().getMetadata();
-        if (metadata == null) {
-            metadata = new Metadata();
-        }
+    private Metadata getMetadata() {
+        final Metadata metadata = new Metadata();
         
         metadata.setName(setEmptyToNull(metaNameTxt.getText()));
         metadata.setDesc(setEmptyToNull(metaDescTxt.getText()));
@@ -423,7 +426,7 @@ public class EditGPXMetadata {
         // set links from tableview
         metadata.setLinks(metaLinkTable.getValidLinks().stream().collect(Collectors.toCollection(HashSet::new)));
         
-        myGPXFile.setGPXMetadata(new GPXMetadata(myGPXFile, metadata));
+        return metadata;
     }
     
     private String setEmptyToNull(final String test) {

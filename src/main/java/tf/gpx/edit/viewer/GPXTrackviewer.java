@@ -26,19 +26,23 @@
 package tf.gpx.edit.viewer;
 
 import java.util.List;
+import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
+import tf.helper.general.IPreferencesStore;
 
 
 /**
- * Wrapper for gluon map to show selected waypoints
+ * Holder for all things that show waypoints on a map or an overlay (=chart).
  * 
  * @author Thomas
  */
-public class GPXTrackviewer {
+public class GPXTrackviewer implements IPreferencesHolder {
     // don't show more than this number of points
-    public final static double MAX_DATAPOINTS = 1000d;
+    public final static int MAX_WAYPOINTS = 1000;
     
     private final static GPXTrackviewer INSTANCE = new GPXTrackviewer();
 
@@ -57,33 +61,65 @@ public class GPXTrackviewer {
         
         // pass it on!
         TrackMap.getInstance().setCallback(gpxEditor);
-        HeightChart.getInstance().setCallback(gpxEditor);
+        ChartsPane.getInstance().setCallback(gpxEditor);
     }
     
     public void setEnable(final boolean enabled) {
         TrackMap.getInstance().setEnable(enabled);
-        HeightChart.getInstance().setEnable(enabled);
+        ChartsPane.getInstance().setEnable(enabled);
     }
     
-    public void setGPXWaypoints(final GPXLineItem lineItem) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert myGPXEditor != null;
-        assert lineItem != null;
+        assert lineItems != null;
 
         // show in LeafletMapView map
-        TrackMap.getInstance().setGPXWaypoints(lineItem);
+        TrackMap.getInstance().setGPXWaypoints(lineItems, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
 
-        // show elevation chart
-        HeightChart.getInstance().setGPXWaypoints(lineItem);
-        HeightChart.getInstance().clearSelectedGPXWaypoints();
+        // this can be done a bit later - get the map drawn as early as possible
+        Platform.runLater(() -> {
+            // show all charts
+            ChartsPane.getInstance().setGPXWaypoints(lineItems, doFitBounds);
+            ChartsPane.getInstance().clearSelectedGPXWaypoints();
+        });
     }
 
-    @SuppressWarnings("unchecked")
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
+        TrackMap.getInstance().updateGPXWaypoints(gpxWaypoints);
+        
+        ChartsPane.getInstance().updateGPXWaypoints(gpxWaypoints);
+    }
+
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;
 
-        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
-        HeightChart.getInstance().setSelectedGPXWaypoints(gpxWaypoints);
+        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        
+        // this can be done a bit later - get the map drawn as early as possible
+        Platform.runLater(() -> {
+            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        });
+    }
+    
+    public void updateLineStyle(final GPXLineItem lineItem) {
+        TrackMap.getInstance().updateLineStyle(lineItem);
+
+        ChartsPane.getInstance().updateLineStyle(lineItem);
+    }
+    
+    @Override
+    public void loadPreferences(final IPreferencesStore store) {
+        TrackMap.getInstance().loadPreferences(store);
+
+        ChartsPane.getInstance().loadPreferences(store);
+    }
+    
+    @Override
+    public void savePreferences(final IPreferencesStore store) {
+        TrackMap.getInstance().savePreferences(store);
+
+        ChartsPane.getInstance().savePreferences(store);
     }
 }

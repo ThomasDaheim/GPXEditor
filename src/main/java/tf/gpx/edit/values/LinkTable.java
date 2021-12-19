@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import com.hs.gpxparser.modal.Link;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
@@ -37,6 +36,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
+import me.himanshusoni.gpxparser.modal.Link;
 
 /**
  *
@@ -49,7 +49,6 @@ public class LinkTable extends TableView<Link> {
         initTableView();
     }
     
-    @SuppressWarnings("unchecked")
     private void initTableView() {
         setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         setEditable(true);
@@ -100,7 +99,10 @@ public class LinkTable extends TableView<Link> {
         });
         typeCol.setEditable(true);
         
-        getColumns().addAll(hrefCol, textCol, typeCol);
+        // addAll() leads to unchecked cast - and we don't want that
+        getColumns().add(hrefCol);
+        getColumns().add(textCol);
+        getColumns().add(typeCol);
         
         // add, remove via context menu
         setRowFactory((TableView<Link> tableView) -> {
@@ -124,6 +126,19 @@ public class LinkTable extends TableView<Link> {
                 .then((ContextMenu)null).otherwise(contextMenu));
             return row ;  
         });  
+        
+        // context menu for empty table
+        final ContextMenu contextMenu = new ContextMenu();
+
+        final MenuItem addMenuItem = new MenuItem("Add");
+        addMenuItem.setOnAction((ActionEvent event) -> {
+            getItems().add(new Link("YOUR_HREF"));
+        });
+        
+        contextMenu.getItems().add(addMenuItem);
+        
+        setContextMenu(contextMenu);
+
     }
     
     public List<Link> getValidLinks() {

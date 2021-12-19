@@ -35,7 +35,7 @@ public class GPXEditorParameters {
     private boolean mergeFiles = false;
     private boolean mergeTracks = false;
     private boolean reduceTracks = false;
-    private EarthGeometry.Algorithm reduceAlgorithm;
+    private GPXAlgorithms.ReductionAlgorithm reduceAlgorithm;
     private double reduceEpsilon = Double.MIN_VALUE;
     private boolean fixTracks = false;
     private double fixDistance = Double.MIN_VALUE;
@@ -148,11 +148,11 @@ public class GPXEditorParameters {
                 switch (value) {
                     case "DouglasPeucker":
                         // System.out.println("Option reduceAlgorithm found: " + value);
-                        reduceAlgorithm = EarthGeometry.Algorithm.DouglasPeucker;
+                        reduceAlgorithm = GPXAlgorithms.ReductionAlgorithm.DouglasPeucker;
                         break;
                     case "ReumannWitkam":
                         // System.out.println("Option reduceAlgorithm found: " + value);
-                        reduceAlgorithm = EarthGeometry.Algorithm.ReumannWitkam;
+                        reduceAlgorithm = GPXAlgorithms.ReductionAlgorithm.ReumannWitkam;
                         break;
                     default:
                         System.out.println("Value \"" + value + "\" for option reduceAlgorithm not recognized.");
@@ -260,7 +260,7 @@ public class GPXEditorParameters {
         return reduceTracks;
     }
 
-    public EarthGeometry.Algorithm getReduceAlgorithm() {
+    public GPXAlgorithms.ReductionAlgorithm getReduceAlgorithm() {
         return reduceAlgorithm;
     }
 

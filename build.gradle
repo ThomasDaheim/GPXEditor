@@ -1,9 +1,29 @@
+// support for javafx11 - see https://openjfx.io/openjfx-docs/#gradle
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'com.google.osdetector'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
 apply plugin: 'idea'
-idea.module.downloadJavadoc = true
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -17,11 +37,26 @@ idea.module.downloadJavadoc = true
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'tf.gpx.edit.main.GPXEditorManager'
 }
+mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
+def appName='GPXEditor'
+group='tf.GPXEditor'
+version='5.5'
 
 repositories {
+    mavenLocal() {
+        // breaking change in gradle 6.*: doesn't find jar files automatically when no pom.xml is present...
+        // https://discuss.gradle.org/t/how-to-fetch-maven-artifact-without-pom-file-in-gradle-6-0/33836
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
     mavenCentral()
-    mavenLocal()
     jcenter()
+    // bintray
+    maven {
+        url "https://dl.bintray.com"
+    }
     // You may define additional repositories, or even remove "mavenCentral()".
     // Read more about repositories here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:repositories
@@ -31,34 +66,168 @@ repositories {
 }
 
 dependencies {
-    // The production code uses the SLF4J logging API at compile time
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile 'commons-cli:commons-cli:1.3.1'
-    compile 'commons-io:commons-io:2.4'
-    compile 'org.apache.commons:commons-lang3:3.5'
-    compile 'org.apache.commons:commons-collections4:4.0'
-    compile 'gpx-parser:gpx-parser:1.2'
-    compile 'org.controlsfx:controlsfx:8.40.14'
+    // JavaFX11 explicit dependencies
+//    def javafx_version='11.0.2'
+//    def javafx_version='14'
+    def javafx_version='15.0.1'
+    compile "org.openjfx:javafx-base:$javafx_version:$platform"
+    compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
+    compile "org.openjfx:javafx-controls:$javafx_version:$platform"
+    compile "org.openjfx:javafx-fxml:$javafx_version:$platform"
+    compile "org.openjfx:javafx-swing:$javafx_version:$platform"
+    compile "org.openjfx:javafx-web:$javafx_version:$platform"
+    compile "org.openjfx:javafx-media:$javafx_version:$platform"
+    
+    // TFE, 20191209: our own helper library
+    compile 'tf.JavaHelper:JavaHelper:1.13'
+    
     compile 'de.jensd:fontawesomefx:8.9'
-    compile 'de.saring:leafletmap:1.0.2-SNAPSHOT'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-    compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '8.0-r6'
-    compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '8.0-r6'
-    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    compile 'uk.com.robust-it:cloning:1.9.10'
+    // TFE, 20210310: not working since GlyphsDude not found
+    // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
+//    compile 'de.jensd:fontawesomefx-commons:9.1.2'
+//    compile 'de.jensd:fontawesomefx-emojione:3.1.1-9.1.2'
+//    compile 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-icons525:4.6.3'
+//    compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+//    compile 'de.jensd:fontawesomefx-materialicons:2.2.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-materialstackicons:2.1-5-9.1.2'
+//    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
+//    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
+    
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
+    compile group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
+    compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '14-r1'
+    compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
+    compile 'uk.com.robust-it:cloning:1.9.12'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+    compile group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
+    compile group: 'org.jfxtras', name: 'jmetro', version: '11.6.14'
+    
     compile group: 'com.object-refinery', name: 'orsoncharts', version: '1.7'
     compile group: 'com.object-refinery', name: 'orson-charts-fx', version: '1.0'
-    
-    // You can read more about how to add dependency here:
-    //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    // TFE, 20210216: capture System.err() easily
+    testCompile group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
 }
 
-allprojects {
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-        }
+task unzip(type: Copy) {
+    def zipFile = file("${buildDir}/distributions/GPXEditor-${version}.zip")
+    def outputDir = file("dist")
+ 
+    from zipTree(zipFile)
+    into outputDir
+}
+
+compileJava {
+    doFirst {
+        options.compilerArgs = [
+                '--module-path', classpath.asPath,
+                '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
+                '-Xlint:unchecked',
+                '-Xlint:deprecation',
+        ]
     }
 }
+
+// see https://github.com/kelemen/netbeans-gradle-project/issues/403 on how to extend gradle tasks
+def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
+                // various exports needed at run time - see https://stackoverflow.com/a/52142071
+                '--add-exports', 'javafx.graphics/com.sun.javafx.util=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.reflect=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.beans=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.logging=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.runtime=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.collections=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.event=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.prism=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.sg.prism=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED',
+                '--add-exports', 'javafx.media/com.sun.media.jfxmedia=ALL-UNNAMED',
+                '--add-exports', 'javafx.media/com.sun.media.jfxmedia.events=ALL-UNNAMED',
+                '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
+                '--add-exports', 'javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED',
+                '--add-exports', 'javafx.controls/com.sun.javafx.scene.control.inputmap=ALL-UNNAMED',
+                '--add-exports', 'javafx.controls/com.sun.javafx.charts=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.scene.traversal=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
+                '--add-exports', 'javafx.graphics/com.sun.javafx.scene.input=ALL-UNNAMED',
+                '--add-exports', 'javafx.base/com.sun.javafx.collections=ALL-UNNAMED',
+                '--add-opens', 'javafx.graphics/javafx.scene.layout=ALL-UNNAMED',
+                // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
+                // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
+                '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+    ]
+    
+// extend Netbeans Gradle "Run" task
+run {
+    doFirst {
+        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
+        jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs = jvmArgs.plus('-Xss80M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
+        // profiler not working with netbeans...
+//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
+        enableAssertions = true
+    }
+//    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
+}
+
+test {
+    doFirst {
+        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
+        jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs = jvmArgs.plus('-Xss80M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
+        enableAssertions = true
+    }
+
+    // https://stackoverflow.com/a/35467005
+    testLogging.showStandardStreams true;   
+}
+
+// extend Netbeans Gradle "Debug" task
+task(debug, dependsOn: 'classes', type: JavaExec) {
+    doFirst {
+        main = 'tf.gpx.edit.main.GPXEditorManager'
+        classpath = sourceSets.main.runtimeClasspath
+        jvmArgs = jvmArgs.plus([
+                '--module-path', classpath.asPath,
+                "-Xdebug",
+                "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005",
+        ])
+        jvmArgs = jvmArgs.plus(newArgs)
+        jvmArgs = jvmArgs.plus('-Xss80M')
+        jvmArgs = jvmArgs.plus('-Xmx4096M')
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+            'Built-By'       : System.properties['user.name'],
+            'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            'Created-By'     : "Gradle ${gradle.gradleVersion}",
+            'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+            'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
+            'App-Name'       : appName,
+            'App-Version'    : version,
+            'App-URL'        : "https://github.com/ThomasDaheim/GPXEditor"
+        )
+    }
+}
+
+sourceSets {
+    main {
+        resources { 
+            // only use minified files
+            exclude { 
+                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.')) 
+            }
+            exclude ( '/**/firebug-lite.min.js' )
+        } 
+    }  
+}
+
+build.finalizedBy(install)

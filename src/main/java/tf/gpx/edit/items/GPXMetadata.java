@@ -25,15 +25,17 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.Metadata;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.Metadata;
 import tf.gpx.edit.helper.GPXCloner;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.CumulativeDescent;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.OverallDuration;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
@@ -57,7 +59,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
     
     @Override
-    public GPXMetadata cloneMeWithChildren() {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXMetadata myClone = new GPXMetadata();
         
         // parent needs to be set initially - list functions use this for checking
@@ -67,7 +69,7 @@ public class GPXMetadata extends GPXMeasurable {
         myClone.myMetadata = GPXCloner.getInstance().deepClone(myMetadata);
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
     
     @Override
@@ -78,26 +80,31 @@ public class GPXMetadata extends GPXMeasurable {
             case Name:
                 return getName();
             case Start:
-                return "---";
-            case Duration:
-                return "---";
+                return NO_DATA;
+            case CumulativeDuration:
+            case OverallDuration:
+                return NO_DATA;
             case Length:
-                return "---";
+                return NO_DATA;
             case Speed:
-                return "---";
+                return NO_DATA;
             case CumulativeAscent:
-                return "---";
             case CumulativeDescent:
-                return "---";
+                return NO_DATA;
             case NoItems:
-                return "---";
+                return NO_DATA;
             default:
                 return "";
         }
     }
+    
+    @Override
+    public String getCombinedID() {
+        return "Meta";
+    }
 
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>();
     }
 
@@ -143,7 +150,7 @@ public class GPXMetadata extends GPXMeasurable {
     }
 
     @Override
-    public Extension getContent() {
+    public Extension getExtension() {
         return myMetadata;
     }
 
@@ -152,26 +159,31 @@ public class GPXMetadata extends GPXMeasurable {
         return FXCollections.observableArrayList();
     }
 
-    @Override
-    public ObservableList<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        return FXCollections.observableArrayList();
-    }
-
     public Metadata getMetadata() {
         return myMetadata;
     }
 
     @Override
-    public GPXLineItem getParent() {
-        return myGPXFile;
+    public <T extends GPXLineItem> T getParent() {
+        return ObjectsHelper.uncheckedCast(myGPXFile);
     }
 
     @Override
-    public void setParent(final GPXLineItem parent) {
-        assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
+        // performance: only do something in case of change
+        if (myGPXFile != null && myGPXFile.equals(parent)) {
+            return ObjectsHelper.uncheckedCast(this);
+        }
+
+        // we might have a "loose" line item that has been deleted from its parent...
+        if (parent != null) {
+            assert GPXLineItem.GPXLineItemType.GPXFile.equals(parent.getType());
+        }
         
         myGPXFile = (GPXFile) parent;
         setHasUnsavedChanges();
+        
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
@@ -181,6 +193,15 @@ public class GPXMetadata extends GPXMeasurable {
 
     @Override
     public void setChildren(List<? extends GPXLineItem> children) {
+    }
+
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        return FXCollections.observableArrayList();
+    }
+
+    @Override
+    public void setGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
     }
 
     @Override

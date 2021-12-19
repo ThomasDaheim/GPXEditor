@@ -7,19 +7,177 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 * batch mode to work on multiple files
 * UI mode to work on multiple tracks / tracksegments
-* standard fix for anoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
+* standard fix for annoying Garmin Montana 600 "feature" to start with first point of current.gpx when switched on again (and not with LAST point)
 
 So it was time to start a new self-learning project. And here you see the result.
 
+Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
+Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
+Note on running GPXEditor: Analogous to the --add-modules and --add-exports in build.gradle you also need the same set of commands when trying to run GPXEditor. To show how this should look like please see GPXEditor.bat.
+
+Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
+
+Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
+
 ## Following features are available via UI:
+
+### Update v5.5
+
+* moving of selected track waypoints
+* Bugfixes! Various bugs that have crept in over time are now fixed
+
+### Update v5.4
+
+* download SRTM data from within GPXEditor
+* support OpenElevationService as add. elevation provider besides local SRTM files
+* show waypoint names in map
+* google search (for coordinates or waypoint names) from within map
+* start / end symbol of tracks can be switched on/off in preferences
+* various performance improvements
+* various bugfix 
+
+### Update v5.3
+
+* show gpx file if passed as parameter
+* Switch to JMetro theme
+
+### Update v5.2
+
+* added option to playback tracks / segments with date values
+* some more functions that can be undone
+* fixes around gpx xmnls headers and others
+* support for "line" extension for tracks & routes (read & use color / width / opacity / linecap attributes)
+* linestyle editor for all attributes (except linecap for now)
+* support for openroutingservice V2
+
+### Update v5.1
+
+* added GPXEditor.bat to show usage of --add-modules and --add-exports
+* switch from de.saring:leafletmap to java implementation (based on kotlin code from de.saring)
+* preferences for basemaps and overlays: name, url, sort order, enabled/disable
+* add /delete new layers
+* added splashscreen to make long startup bearable :-)
+
+### Update v5.0 - NoRestForTheWicked
+
+* preferences for heatmap
+* app clipboard to unify copy & paste and drag & drop
+* support for do/undo
+* performance improvements
+* icon groups as in Garmin BaseCamp
+* add. map layers and overlays
+* statusbar that shows info on selected waypoints, copy & paste, do & undo
+
+### Update v4.6
+
+Corona-Time...
+
+* added a heat map using JavaFX; leaflet heatmaps are not working with JavaFX11, seem to work with JavaFX14 so waiting for the next LTR...
+* added a StatusBar that shows summary info on currently selected waypoints
+* introduced tasks for longe running achtions to un-freeze UI (ongoing, will add more in the feature)
+* general ability to replace selected waypoints by their weighted center (the one closest to average lat/lon of the selected waypoints)
+* added algorithm to find "Stationaries" iun tracks: places without "real" movement but only jumping of coordinates due to GPS accuracy; can be found or replaced by weighted center of the cluster
+* various performance improvements in UI (reduce number of layoutPlotChildren() calls) and algorithms (speed up Haversine and Visvalingam-Whyatt)
+* test cases for Algorithms
+
+### Update v4.5
+
+I had some spare time on my hands...
+
+* select multiple items from same gpx file, will all be shown on map
+* split items by distance or time between waypoints
+* get height for coordinate
+* show item ID and waypoint names in height chart; layout as preferences
+* added more layers to leaflet
+* export map to png
+* a lot of refactoring & bug fixes under the hood...
+
+### Update v4.4
+
+* add/delete of metadata segment via context menu
+* usage of JavaHelper repo, no changes to functionality
+
+### Update v4.3
+
+* show track/route colors in table and height chart
+* show speeds together with hight chart
+* performance: include various profiling improvements
+
+### Update v4.2
+
+* edit waypoint from leaflet context menu
+* preference to auto-assign height for new / changed items
+
+### Update v4.1
+
+* link to help pages in github
+* expand / collapse all option in treeview
+* save last used baselayer and overlay settings per baselayer as preference for the next time
+* make selected waypoints of tracks draggable
+* fixed some anyoing issues (e.g. incorrect zooming for files with many tracks)
+
+### Update v4.0
+
+A lot of stuff from my bugs & features list!
+
+* pimped AboutMenu to show build information from MANIFEST.MF
+* show mouse & center position on map, button to re-center map
+* select waypoints in height chart via mouse drag
+* set max number of waypoints shown via preferences
+* set search radius via preferences
+* add labels for cities, streets and contour lines in Satellite & MapBox map where missing
+* identify & show breaks in statistics
+* upgrade SRTM viewer with ability to zoom, shift, rotate & show track colors
+* select colors for tracks & routes and store in Garmin gpx extension
+* export colors of tracks & routes in KML
+* CSV export
+* save tableview settings: column order, width, visibility, sorting
+* menu to delete date, name, extension information of selected waypoints
+* inverse and save autorouting explicitly
+* added support for OpenCycleMap api key
+* option to fix/reduce/assign height for selected items only (instead of always on whole file)
+* bumped up used libraries to current versions
+* various bugfixes
+
+### Update v3.5
+
+* routing: inverse route & save explicitly
+* context menu to delete date(s) & name(s)
+
+### Update v3.4
+
+* improve HeightChart to be more similar to e.g. leaflet-elevation
+* added support for ESRI satellite map tiles
+* minor updates & fixes
+
+### Update v3.3
+
+* minor updates & fixes to menues, search icon, ...
+
+### Update v3.2
+
+Icons, Icons, Icons!
+
+* added all garmin icons as possible markers in leaflet
+
+### Update v3.1
+
+* height chart zooms with map
+* added csv export for statistics
+* performance improvement when deleting multiple waypoints
+* bugfixes
+
+### Update v3.0
+
+* added About menu
 
 ## File and track handling
 
 ### Update v2.6
 
-* support for auto routing: using openroutingservice routes can be calculated for different profiles (car, bike, hike, ...). An api key is requiredd for that
+* support for auto routing: using openroutingservice routes can be calculated for different profiles (car, bike, hike, ...). An api key is required for that
 * support for ruler to measure distances and bearings
 
 ### Update v2.5
@@ -172,7 +330,7 @@ leads to one file containing all tracks combined into one, whereas
 -mergeTracks -mergeFiles
 ```
 
-leads to one file with all tracks combind per input file
+leads to one file with all tracks combined per input file
 
 Also, deletion is done "bottom up". So if your gpx file only contains track segments with less waypoints that the limit the whole file will be deleted.
 
@@ -202,36 +360,57 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
+* 'tf.JavaHelper:JavaHelper:1.9': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 * 'org.slf4j:slf4j-api:1.7.12'
-* 'commons-cli:commons-cli:1.3.1'
-* 'commons-io:commons-io:2.4'
-* 'org.apache.commons:commons-lang3:3.5'
-* 'gpx-parser:gpx-parser:1.2': https://github.com/himanshu-soni/gpx-parser, not available via maven
-* 'org.jzy3d:jzy3d-api:1.0.0'
-* 'org.jzy3d:jzy3d-javafx:1.0.0'
-* 'org.controlsfx:controlsfx:8.40.14'
-* 'de.jensd:fontawesomefx:8.9'
-* 'de.saring:leafletmap:1.0.2-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-* 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
-* 'org.jfxtras:jfxtras-controls:8.0-r6'
-* 'org.jfxtras:jfxtras-labs:8.0-r6'
+* 'commons-cli:commons-cli:1.4'
+* 'commons-io:commons-io:2.6'
+* 'org.apache.commons:commons-lang3:3.9'
+* 'org.apache.commons:commons-collections4:4.4'
+* 'org.apache.commons:commons-text:1.8'
 * 'org.apache.commons:commons-math3:3.6.1'
-* 'uk.com.robust-it:cloning:1.9.10'
+* 'org.apache.commons:commons-csv:1.7'
+* 'me.himanshusoni.gpxparser:gpx-parser:1.12'
+* 'org.jzy3d:jzy3d-api:1.0.2'
+* 'org.jzy3d:jzy3d-javafx:1.0.2'
+* 'org.controlsfx:controlsfx:11.0.1'
+* 'de.jensd:fontawesomefx:8.9'
+* NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
+* 'com.fasterxml.jackson.core:jackson-core:2.9.9'
+* 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
+* 'org.jfxtras:jfxtras-controls:10.0-r1'
+* 'org.jfxtras:jfxtras-labs:9.0-r1'
+* 'uk.com.robust-it:cloning:1.9.12'
+* 'javax.xml.bind:jaxb-api:2.3.1'
+* 'org.eclipse.persistence:eclipselink:2.7.4'
+* 'org.jfxtras:jmetro:11.6.14'
+* 'org.junit.jupiter:junit-jupiter-api:5.6.2'
 
 Other things used internally:
 
-* leaflet: https://leafletjs.com/
-* Leaflet.Editable: https://github.com/Leaflet/Leaflet.Editable
-* leaflet.latlng-graticule: https://github.com/cloudybay/leaflet.latlng-graticule
-* leaflet-search: http://labs.easyblog.it/maps/leaflet-search/
-* leaflet-routing: http://www.liedman.net/leaflet-routing-machine/
-* leaflet-openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
-* leaflet-ruler: https://github.com/gokertanrisever/leaflet-ruler
+* heatmap: https://github.com/HanSolo/FxHeatMap
+
+* leaflet 1.6: https://leafletjs.com/
+* leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
+* leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
+* leaflet.draw: https://github.com/Leaflet/Leaflet.draw
+* leaflet.easybutton: https://github.com/CliffCloud/Leaflet.EasyButton
+* leaflet.editable: https://github.com/Leaflet/Leaflet.Editable
+* leaflet.geocoder: https://github.com/perliedman/leaflet-control-geocoder
+* leaflet.graticule: https://github.com/cloudybay/leaflet.latlng-graticule
+* leaflet.color-markers: https://github.com/pointhi/leaflet-color-markers
+* leaflet.locate: https://github.com/domoritz/leaflet-locatecontrol
+* leaflet.openrouteservice: https://github.com/willmorejg/lrm-openrouteservice
+* leaflet.leafletplayback: https://github.com/hallahan/LeafletPlayback + some own fixes & improvements
+* leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
+* leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
+* leaflet.search: https://github.com/stefanocudini/leaflet-search
 
 * search-plus icon: https://fontawesome.com/license
-* Sleeping Bed Silhouette icon: Icon made by https://www.flaticon.com/authors/scott-de-jonge from www.flaticon.com 
-* Restaurant icon: Icon made by https://www.flaticon.com/authors/freepik from www.flaticon.com 
+* Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
+* placemark icon: http://maps.google.com/mapfiles/kml/pal4/icon56.png
+* route save icon: Icons made by https://www.flaticon.com/authors/srip from https://www.flaticon.com/ is licensed by http://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
+* heat map icon: https://icons8.com/icons/set/heat-map icon by Icons8
+* undo/redo icons: https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/undo-16.png, https://cdn0.iconfinder.com/data/icons/arrows-android-l-lollipop-icon-pack/24/redo-16.png by Ivan Boyko under https://creativecommons.org/licenses/by/3.0/ CC 3.0 BY
 
 ## Roadmap
 
@@ -239,6 +418,4 @@ The following features are still on my todo-list - but I don't promise any timel
 
 * add TestFX UI test cases
 * add task handling for long running activities
-* converting routing results into route waypoints (optionally) so that it can be converted into tracks (for those of us who perfer tracks)
-* support for available garmin offline maps
 * ... any other features from GPS-Track-Analyse.NET that are useful for menu

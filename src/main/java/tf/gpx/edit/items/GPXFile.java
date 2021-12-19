@@ -25,15 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import com.hs.gpxparser.GPXParser;
-import com.hs.gpxparser.GPXWriter;
-import com.hs.gpxparser.modal.Extension;
-import com.hs.gpxparser.modal.GPX;
-import com.hs.gpxparser.modal.Link;
-import com.hs.gpxparser.modal.Metadata;
-import com.hs.gpxparser.modal.Route;
-import com.hs.gpxparser.modal.Track;
-import com.hs.gpxparser.modal.Waypoint;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,33 +33,56 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.BoundingBox;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import me.himanshusoni.gpxparser.GPXParser;
+import me.himanshusoni.gpxparser.GPXWriter;
+import me.himanshusoni.gpxparser.modal.Extension;
+import me.himanshusoni.gpxparser.modal.GPX;
+import me.himanshusoni.gpxparser.modal.Link;
+import me.himanshusoni.gpxparser.modal.Metadata;
+import me.himanshusoni.gpxparser.modal.Route;
+import me.himanshusoni.gpxparser.modal.Track;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import tf.gpx.edit.extension.DefaultExtensionHolder;
+import tf.gpx.edit.extension.DefaultExtensionParser;
 import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.GPXEditorWorker;
+import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.parser.DefaultParser;
 import tf.gpx.edit.worker.GPXRenumberWorker;
+import tf.helper.general.AppInfo;
+import tf.helper.general.ObjectsHelper;
 
 /**
  *
  * @author Thomas
  */
 public class GPXFile extends GPXMeasurable {
+    protected static final String SCHEMALOCATION = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" + " " +
+            DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaLocation() + " " +
+            DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition() + " " + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaLocation();
+
     private String myGPXFilePath;
     private String myGPXFileName;
     private GPX myGPX;
-    private GPXMetadata myGPXMetadata;
+    // TFE, 20191230: need to treat metadata as list as well to be able to use automated update
+    // of treetableview via combined observable list... has 0 or 1 entries
+    private final ObservableList<GPXMetadata> myGPXMetadata = FXCollections.observableArrayList();
     private final ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
     private final ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
     private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
@@ -79,9 +93,12 @@ public class GPXFile extends GPXMeasurable {
         // create empty gpx
         myGPX = new GPX();
         
-        myGPXTracks.addListener(getListChangeListener());
-        myGPXRoutes.addListener(getListChangeListener());
-        myGPXWaypoints.addListener(getListChangeListener());
+        // TFE, 20200726: initialize header data & meta data
+        setHeader();
+
+        myGPXTracks.addListener(changeListener);
+        myGPXRoutes.addListener(changeListener);
+        myGPXWaypoints.addListener(changeListener);
     }
 
     // constructor for gpx from file
@@ -91,16 +108,16 @@ public class GPXFile extends GPXMeasurable {
         myGPXFileName = gpxFile.getName();
         myGPXFilePath = gpxFile.getParent() + "\\";
         final GPXParser parser = new GPXParser();
-        parser.addExtensionParser(DefaultParser.getInstance());
+        parser.addExtensionParser(DefaultExtensionParser.getInstance());
         
         try {
             myGPX = parser.parseGPX(new FileInputStream(gpxFile.getPath()));
         } catch (Exception ex) {
             Logger.getLogger(GPXFile.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         if (myGPX.getMetadata() != null) {
-            myGPXMetadata = new GPXMetadata(this, myGPX.getMetadata());
+            myGPXMetadata.add(new GPXMetadata(this, myGPX.getMetadata()));
         }
 
         // TFE, 20180203: gpx without tracks is valid!
@@ -133,44 +150,48 @@ public class GPXFile extends GPXMeasurable {
         }
 
         // TFE, 20180201: update header data & meta data
-        setHeaderAndMeta();
+        setHeader();
         
-        myGPXTracks.addListener(getListChangeListener());
-        myGPXRoutes.addListener(getListChangeListener());
-        myGPXWaypoints.addListener(getListChangeListener());
+        myGPXTracks.addListener(changeListener);
+        myGPXRoutes.addListener(changeListener);
+        myGPXWaypoints.addListener(changeListener);
     }
     
     @Override
-    public GPXFile cloneMeWithChildren() {
+    public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
         myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
         
-        // clone all my children
-        myClone.myGPXMetadata = myGPXMetadata.cloneMeWithChildren();
-        for (GPXTrack gpxTrack : myGPXTracks) {
-            myClone.myGPXTracks.add(gpxTrack.cloneMeWithChildren());
-        }
-        for (GPXRoute gpxRoute : myGPXRoutes) {
-            myClone.myGPXRoutes.add(gpxRoute.cloneMeWithChildren());
-        }
-        for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
-            myClone.myGPXWaypoints.add(gpxWaypoint.cloneMeWithChildren());
-        }
-        numberChildren(myClone.myGPXTracks);
-        numberChildren(myClone.myGPXRoutes);
-        numberChildren(myClone.myGPXWaypoints);
+        if (withChildren) {
+            // clone all my children
+            for (GPXMetadata gpxMetadata : myGPXMetadata) {
+                myClone.myGPXMetadata.add(gpxMetadata.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXTrack gpxTrack : myGPXTracks) {
+                myClone.myGPXTracks.add(gpxTrack.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXRoute gpxRoute : myGPXRoutes) {
+                myClone.myGPXRoutes.add(gpxRoute.cloneMe(withChildren).setParent(myClone));
+            }
+            for (GPXWaypoint gpxWaypoint : myGPXWaypoints) {
+                myClone.myGPXWaypoints.add(gpxWaypoint.cloneMe(withChildren).setParent(myClone));
+            }
+            GPXLineItemHelper.numberChildren(myClone.myGPXTracks);
+            GPXLineItemHelper.numberChildren(myClone.myGPXRoutes);
+            GPXLineItemHelper.numberChildren(myClone.myGPXWaypoints);
 
-        // init prev/next waypoints
-        myClone.updatePrevNextGPXWaypoints();
+            // init prev/next waypoints
+            myClone.updatePrevNextGPXWaypoints();
 
-        myClone.myGPXTracks.addListener(getListChangeListener());
-        myClone.myGPXRoutes.addListener(getListChangeListener());
-        myClone.myGPXWaypoints.addListener(getListChangeListener());
+            myClone.myGPXTracks.addListener(myClone.changeListener);
+            myClone.myGPXRoutes.addListener(myClone.changeListener);
+            myClone.myGPXWaypoints.addListener(myClone.changeListener);
+        }
 
         // nothing else to clone, needs to be set by caller
-        return myClone;
+        return ObjectsHelper.uncheckedCast(myClone);
     }
 
     public boolean writeToFile(final File gpxFile) {
@@ -180,10 +201,10 @@ public class GPXFile extends GPXMeasurable {
         acceptVisitor(new GPXRenumberWorker());
         
         // update bounds
-        setHeaderAndMeta();
+        updateMetadata();
         
         final GPXWriter writer = new GPXWriter();
-        writer.addExtensionParser(DefaultParser.getInstance());
+        writer.addExtensionParser(DefaultExtensionParser.getInstance());
 
         final FileOutputStream out;
         try {
@@ -191,40 +212,118 @@ public class GPXFile extends GPXMeasurable {
             writer.writeGPX(getGPX(), out);
             out.close();        
         } catch (FileNotFoundException | ParserConfigurationException | TransformerException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         } catch (IOException ex) {
-            Logger.getLogger(GPXEditorWorker.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             result = false;
         }
         
         return result;
     }
     
-    public final void setHeaderAndMeta() {
-        myGPX.setCreator("GPXEditor");
+    public final void setHeader() {
+        myGPX.setCreator(AppInfo.getInstance().getAppName() + " - " + AppInfo.getInstance().getAppVersion());
         myGPX.setVersion("1.1");
+                
+        // extend gpx with garmin xmlns
         myGPX.addXmlns("xmlns", "http://www.topografix.com/GPX/1/1");
+        // TFE, 20200405: url changed for extensions xsd... so sync with authentic garmin header
+        // TODO: add only those that are actually present in the gpx file...
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminGPX.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminGPX.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminTrkpt.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:" + DefaultExtensionHolder.ExtensionClass.GarminTrksts.getNamespace(), DefaultExtensionHolder.ExtensionClass.GarminTrksts.getSchemaDefinition());
+        myGPX.addXmlns("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         
+        // extend existing xsi:schemaLocation, if any
+        myGPX.addXmlns("xsi:schemaLocation", extendSchemaLocation(SCHEMALOCATION));
+    }
+    
+    public void extendHeader(final GPXFile otherFile) {
+        if (this.equals(otherFile)) {
+            // nothing to do
+            return;
+        }
+        
+        // TFE, 20200726: bug found in copy & paste
+        // if you copy items with extensions across files you might also want to copy the necessary Xmlns required for it
+        // and be sure to handle all the NULLs we can have
+        final HashMap<String, String> myXmlns = new HashMap<>();
+        if (myGPX.getXmlns() != null) {
+            myXmlns.putAll(myGPX.getXmlns());
+        }
+        String mySchemaLocation = "";
+        if (myXmlns.containsKey("xsi:schemaLocation")) {
+            mySchemaLocation = myXmlns.remove("xsi:schemaLocation");
+        }
+        
+        final HashMap<String, String> otherXmlns = new HashMap<>();
+        if (otherFile.myGPX.getXmlns() != null) {
+            otherXmlns.putAll(otherFile.myGPX.getXmlns());
+        }
+        String otherSchemaLocation = "";
+        if (otherXmlns.containsKey("xsi:schemaLocation")) {
+            otherSchemaLocation = otherXmlns.remove("xsi:schemaLocation");
+        }
+        
+        // add all other Xmlns to ours - xsi:schemaLocation will be treated in a separate step
+        for (Entry<String, String> otherEntry: otherXmlns.entrySet()) {
+            // check if we have the same entry but with a different value AND SCREAM FOR HELP
+            if (myXmlns.containsKey(otherEntry.getKey())) {
+                if (!myXmlns.get(otherEntry.getKey()).equals(otherXmlns.get(otherEntry.getKey()))) {
+                    System.out.println("Houston, we have a problem with " + otherEntry.getKey() + " xmlns entries.");
+                }
+            } else {
+                // we found a new one
+                myXmlns.put(otherEntry.getKey(), otherEntry.getValue());
+            }
+        }
+        
+        // and now for xsi:schemaLocation
+        myXmlns.put("xsi:schemaLocation", extendSchemaLocation(otherSchemaLocation));
+        
+        myGPX.setXmlns(myXmlns);
+    }
+    
+    private String extendSchemaLocation(final String otherSchemaLocation) {
+        final HashMap<String, String> myXmlns = new HashMap<>();
+        if (myGPX.getXmlns() != null) {
+            myXmlns.putAll(myGPX.getXmlns());
+        }
+        String mySchemaLocation = "";
+        if (myXmlns.containsKey("xsi:schemaLocation")) {
+            mySchemaLocation = myXmlns.remove("xsi:schemaLocation");
+        }
+
+        // xsi:schemaLocation is a list of strings separated by SPACE that we need to compare
+        // use LinkedHashSet to keep same order of entries
+        final Set<String> mySchemaLocations = new LinkedHashSet<>(Arrays.asList(mySchemaLocation.split(" ")));
+        final Set<String> otherSchemaLocations = new LinkedHashSet<>(Arrays.asList(otherSchemaLocation.split(" ")));
+        mySchemaLocations.addAll(otherSchemaLocations);
+
+        return mySchemaLocations.stream().collect(Collectors.joining(" ")).strip();
+    }
+    
+    private void updateMetadata() {
         if (myGPX.getMetadata() != null) {
             final Metadata metadata = myGPX.getMetadata();
 
-            metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            if (metadata.getTime() == null) {
+                metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            }
             metadata.setBounds(getBounds());
 
             // add link to me if not already present
             HashSet<Link> links = metadata.getLinks();
-            if (links == null) {
-                links = new HashSet<>();
+            if (links != null) {
+                if (!links.stream().anyMatch(link -> (link != null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
+                    links.add(new Link(GPXMetadata.HOME_LINK));
+                }
+                metadata.setLinks(links);
             }
-            if (!links.stream().anyMatch(link -> (link!=null && GPXMetadata.HOME_LINK.equals(link.getHref())))) {
-                links.add(new Link(GPXMetadata.HOME_LINK));
-            }
-            metadata.setLinks(links);
 
-            setGPXMetadata(new GPXMetadata(this, metadata));
-            
-            resetHasUnsavedChanges();
+            myGPXMetadata.setAll(new GPXMetadata(this, metadata));
+            myGPX.setMetadata(metadata);
         }
     }
     
@@ -253,27 +352,24 @@ public class GPXFile extends GPXMeasurable {
     }
 
     @Override
-    public GPXLineItem getParent() {
+    public <T extends GPXLineItem> T getParent() {
         // GPXFiles don't have a parent.
         return null;
     }
 
     @Override
-    public void setParent(final GPXLineItem parent) {
+    public <T extends GPXLineItem, S extends GPXLineItem> T setParent(final S parent) {
         // GPXFiles don't have a parent.
+        return ObjectsHelper.uncheckedCast(this);
     }
 
     @Override
-    // children of different typs! so we can only return list of GPXLineItem
-    public ObservableList<GPXLineItem> getChildren() {
-        // iterate over my segments
-        List<ObservableList<GPXLineItem>> children = new ArrayList<>();
-
-        if (myGPXMetadata != null) {
-            children.add(FXCollections.observableArrayList(myGPXMetadata));
-        }
-        // need to down-cast waypoints, tracks, routes to GPXLineItem
+    public ObservableList<? extends GPXLineItem> getChildren() {
+        final List<ObservableList<GPXLineItem>> children = new ArrayList<>();
+        
+        // need to down-cast everything to GPXLineItem
         children.add(GPXListHelper.asGPXLineItemList(myGPXWaypoints));
+        children.add(GPXListHelper.asGPXLineItemList(myGPXMetadata));
         children.add(GPXListHelper.asGPXLineItemList(myGPXTracks));
         children.add(GPXListHelper.asGPXLineItemList(myGPXRoutes));
         
@@ -283,22 +379,40 @@ public class GPXFile extends GPXMeasurable {
     @Override
     public void setChildren(final List<? extends GPXLineItem> children) {
         // children can be any of waypoints, tracks, routes, metadata...
-        final List<GPXMetadata> metaList = castChildren(GPXMetadata.class, children);
-        if (metaList.isEmpty()) {
-            myGPXMetadata = null;
-        } else {
-            myGPXMetadata = metaList.get(0);
+        myGPXMetadata.clear();
+        final List<GPXMetadata> metaList = GPXLineItemHelper.castChildren(this, GPXMetadata.class, children);
+        if (!metaList.isEmpty()) {
+            myGPXMetadata.add(metaList.get(0));
         }
 
-        setGPXWaypoints(castChildren(GPXWaypoint.class, children));
-        setGPXTracks(castChildren(GPXTrack.class, children));
-        setGPXRoutes(castChildren(GPXRoute.class, children));
+        setGPXWaypoints(GPXLineItemHelper.castChildren(this, GPXWaypoint.class, children));
+        setGPXTracks(GPXLineItemHelper.castChildren(this, GPXTrack.class, children));
+        setGPXRoutes(GPXLineItemHelper.castChildren(this, GPXRoute.class, children));
     }
 
+    @Override
+    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+        final List<ObservableList<GPXMeasurable>> children = new ArrayList<>();
+        
+        // need to down-cast everything to GPXMeasurable
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXMetadata));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXTracks));
+        children.add(GPXListHelper.asGPXMeasurableList(myGPXRoutes));
+        
+        return GPXListHelper.concat(FXCollections.observableArrayList(), children);
+    }
+
+    @Override
     public void setGPXWaypoints(final List<GPXWaypoint> gpxGPXWaypoints) {
+        myGPXWaypoints.removeListener(changeListener);
         myGPXWaypoints.clear();
         myGPXWaypoints.addAll(gpxGPXWaypoints);
+        myGPXWaypoints.addListener(changeListener);
+
+        GPXLineItemHelper.numberChildren(myGPXWaypoints);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXWaypoints);
         setHasUnsavedChanges();
     }
     
@@ -318,28 +432,46 @@ public class GPXFile extends GPXMeasurable {
     }
     
     public void setGPXMetadata(final GPXMetadata gpxMetadata) {
-        myGPXMetadata = gpxMetadata;
-        myGPX.setMetadata(gpxMetadata.getMetadata());
+        myGPXMetadata.clear();
+        
+        // TFE, 20191230: need a way to delete metadata as well...
+        if (gpxMetadata != null) {
+            myGPXMetadata.setAll(gpxMetadata);
+            myGPX.setMetadata(gpxMetadata.getMetadata());
+            
+            updateMetadata();
+        } else {
+            myGPXMetadata.clear();
+            myGPX.setMetadata(null);
+        }
 
         setHasUnsavedChanges();
     }
     
     public void setGPXTracks(final List<GPXTrack> gpxTracks) {
+        myGPXTracks.removeListener(changeListener);
         myGPXTracks.clear();
         myGPXTracks.addAll(gpxTracks);
+        myGPXTracks.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXTracks);
         setHasUnsavedChanges();
     }
 
     public void setGPXRoutes(final List<GPXRoute> gpxGPXRoutes) {
+        myGPXRoutes.removeListener(changeListener);
         myGPXRoutes.clear();
         myGPXRoutes.addAll(gpxGPXRoutes);
+        myGPXRoutes.addListener(changeListener);
         
+        // TFE, 20190812: update Extension manually
+        updateListValues(myGPXRoutes);
         setHasUnsavedChanges();
     }
     
     @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
+    public List<? extends GPXMeasurable> getGPXMeasurables() {
         return new ArrayList<>(myGPXTracks);
     }
 
@@ -355,7 +487,11 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public GPXMetadata getGPXMetadata() {
-        return myGPXMetadata;
+        if (!myGPXMetadata.isEmpty()) {
+            return myGPXMetadata.get(0);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -398,41 +534,15 @@ public class GPXFile extends GPXMeasurable {
         }
         return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
     }
-
+    
     @Override
-    public List<GPXWaypoint> getGPXWaypointsInBoundingBox(final BoundingBox boundingBox) {
-        // iterate over my segments
-        final List<GPXWaypoint> result = new ArrayList<>();
-        
-        result.addAll(filterGPXWaypointsInBoundingBox(myGPXWaypoints, boundingBox));
-        for (GPXTrack track : myGPXTracks) {
-            result.addAll(track.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-        for (GPXRoute route : myGPXRoutes) {
-            result.addAll(route.getGPXWaypointsInBoundingBox(boundingBox));
-        }
-
-        return result;
+    public Extension getExtension() {
+        return myGPX;
     }
     
     @Override
-    public Extension getContent() {
-        return myGPX;
-    }
-
-    /**
-     * @return the duration
-     */
-    @Override
-    public long getDuration() {
-        long result = 0;
-
-        // duration isn't end-start for a complet file BUT the sum of its track durations...
-        for (int i = 0; i < myGPXTracks.size(); i++) {
-            result += myGPXTracks.get(i).getDuration();
-        }
-
-        return result;
+    public String getCombinedID() {
+        return "File";
     }
     
     @Override
@@ -447,24 +557,24 @@ public class GPXFile extends GPXMeasurable {
                 t.setParent(this);
             });
             
-            final Set<Waypoint> waypoints = numberExtensions(myGPXWaypoints);
-            myGPX.setWaypoints(new HashSet<>(waypoints));
+            final Set<Waypoint> waypoints = GPXLineItemHelper.numberExtensions(myGPXWaypoints);
+            myGPX.setWaypoints(new LinkedHashSet<>(waypoints));
         }
         if (myGPXRoutes.equals(list)) {
             myGPXRoutes.stream().forEach((t) -> {
                 t.setParent(this);
             });
             
-            final Set<Route> routes = numberExtensions(myGPXRoutes);
-            myGPX.setRoutes(new HashSet<>(routes));
+            final Set<Route> routes = GPXLineItemHelper.numberExtensions(myGPXRoutes);
+            myGPX.setRoutes(new LinkedHashSet<>(routes));
         }
         if (myGPXTracks.equals(list)) {
             myGPXTracks.stream().forEach((t) -> {
                 t.setParent(this);
             });
             
-            final Set<Track> tracks = numberExtensions(myGPXTracks);
-            myGPX.setTracks(new HashSet<>(tracks));
+            final Set<Track> tracks = GPXLineItemHelper.numberExtensions(myGPXTracks);
+            myGPX.setTracks(new LinkedHashSet<>(tracks));
         }
     }
 }

@@ -26,6 +26,7 @@
 package tf.gpx.edit.helper;
 
 import com.rits.cloning.Cloner;
+import java.util.HashMap;
 
 /**
  * Cloner wrapper for cloning of gpx-parser class
@@ -38,19 +39,21 @@ public class GPXCloner {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static GPXCloner INSTANCE = new GPXCloner();
     
-    private final static Cloner cloner = new Cloner();
+    private static Cloner cloner;
     
     private GPXCloner() {
         // Exists only to defeat instantiation.
         
-        // add all exceptions for classes to cloner - cloner.registerConstant(MyClass.class,"MUTEX");
+        cloner = new Cloner();
+        // TFE, 20200207: cloning extension data of waypoints kills the JVM...
+        cloner.dontClone(HashMap.class);
     }
 
     public static GPXCloner getInstance() {
         return INSTANCE;
     }
     
-    public <T> T deepClone(T o) {
+    public <T> T deepClone(final T o) {
         return cloner.deepClone(o);
     }
 }
