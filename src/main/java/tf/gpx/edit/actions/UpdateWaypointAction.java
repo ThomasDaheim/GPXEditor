@@ -63,7 +63,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
             myStoreGPXWaypoints.add(waypoint.cloneMe(true));
         }
         
-        // need to set lineItemCluster ao that it can be counted in getDescription()
+        // need to set lineItemCluster so that it can be counted in getDescription()
         // performance: cluster waypoints by parents
         for (GPXWaypoint waypoint : myWaypoints) {
             final GPXLineItem parent = waypoint.getParent();
@@ -149,7 +149,8 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
         }
         
         // TFE, 20200925: set date as well - if different from date of first waypoint
-        if (((waypoint.getDate() == null) && (myDatapoint.getDate() != null)) || !waypoint.getDate().equals(myDatapoint.getDate())) {
+        if (((waypoint.getDate() == null) && (myDatapoint.getDate() != null)) || 
+                ((waypoint.getDate() != null) && !waypoint.getDate().equals(myDatapoint.getDate()))) {
             setMultipleDateValues(waypoint.getDate(), myDatapoint.getDate());
         }
         

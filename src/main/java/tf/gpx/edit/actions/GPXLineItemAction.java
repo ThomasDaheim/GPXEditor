@@ -158,4 +158,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     public State getStateForFailedUndo() {
         return State.STUCK_IN_UNDO;
     }
+    
+    protected LineItemAction getAction() {
+        return myAction;
+    }
 }

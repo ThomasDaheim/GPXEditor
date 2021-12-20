@@ -363,6 +363,8 @@ public class GPXEditor implements Initializable {
     private MenuItem findStationariesMenu;
     @FXML
     private MenuItem replaceStationariesMenu;
+    @FXML
+    private Menu stationariesMenu;
     
     public GPXEditor() {
         super();
@@ -624,13 +626,10 @@ public class GPXEditor implements Initializable {
         findStationariesMenu.setOnAction((ActionEvent event) -> {
             findReplaceStationaries(event, FindReplaceClusters.FIND);
         });
-        findStationariesMenu.disableProperty().bind(
-                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
-
         replaceStationariesMenu.setOnAction((ActionEvent event) -> {
             findReplaceStationaries(event, FindReplaceClusters.REPLACE);
         });
-        replaceStationariesMenu.disableProperty().bind(
+        stationariesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
 
         //

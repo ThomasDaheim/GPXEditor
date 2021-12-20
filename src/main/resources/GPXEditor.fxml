@@ -86,12 +86,6 @@
                       <MenuItem fx:id="fixFilesMenu" mnemonicParsing="false" text="Files of Items" />
                     </items>
                   </Menu>
-                  <Menu mnemonicParsing="false" text="Stationaries">
-                    <items>
-                        <MenuItem fx:id="findStationariesMenu" mnemonicParsing="false" text="Find" />
-                        <MenuItem fx:id="replaceStationariesMenu" mnemonicParsing="false" text="Replace by Center" />
-                    </items>
-                  </Menu>
                   <Menu fx:id="reduceMenu" mnemonicParsing="false" text="Reduce">
                     <items>
                         <MenuItem fx:id="reduceTracksMenu" mnemonicParsing="false" text="Items">
@@ -100,6 +94,12 @@
                            </accelerator>
                         </MenuItem>
                       <MenuItem fx:id="reduceFilesMenu" mnemonicParsing="false" text="Files of Items" />
+                    </items>
+                  </Menu>
+                  <Menu fx:id="stationariesMenu" mnemonicParsing="false" text="Stationaries">
+                    <items>
+                        <MenuItem fx:id="findStationariesMenu" mnemonicParsing="false" text="Find" />
+                        <MenuItem fx:id="replaceStationariesMenu" mnemonicParsing="false" text="Replace by Center" />
                     </items>
                   </Menu>
               </items>
