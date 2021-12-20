@@ -118,7 +118,8 @@ import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
-import tf.gpx.edit.helper.GPXAlgorithms;
+import tf.gpx.edit.algorithms.WaypointAlgorithms;
+import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
@@ -1749,10 +1750,10 @@ public class GPXEditor implements Initializable {
             final List<GPXTrackSegment> gpxTrackSegments = GPXStructureHelper.getInstance().uniqueGPXTrackSegmentsFromGPXWaypoints(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
+                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
                         GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
                         GPXEditorPreferences.REDUCE_EPSILON.getAsType());
-                final boolean keep2[] = GPXAlgorithms.fixTrack(trackwaypoints, 
+                final boolean keep2[] = WaypointAlgorithms.fixTrack(trackwaypoints, 
                         GPXEditorPreferences.FIX_EPSILON.getAsType());
                 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
@@ -1786,7 +1787,7 @@ public class GPXEditor implements Initializable {
             final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
 
             final List<GPXWaypointNeighbours> clusters = 
-                    GPXAlgorithms.getInstance().findStationaries(
+                    WaypointAlgorithms.getInstance().findStationaries(
                             trackwaypoints, 
                             GPXEditorPreferences.CLUSTER_RADIUS.getAsType(),
                             GPXEditorPreferences.CLUSTER_COUNT.getAsType(), 
@@ -1859,8 +1860,7 @@ public class GPXEditor implements Initializable {
             return;
         }
 
-        TaskExecutor.executeTask(
-            getScene(), () -> {
+        TaskExecutor.executeTask(getScene(), () -> {
                 // make sure we only include waypoints from track segments
                 final List<Integer> trackIndices = selectedIndices.stream().filter((t) -> {
                     return waypoints.get(t).getParent().isGPXTrackSegment();
@@ -1890,7 +1890,7 @@ public class GPXEditor implements Initializable {
                         }
                         // it takes three for a cluster
                         if (endIndex > start + 1) {
-                            final GPXWaypoint centerPoint = GPXAlgorithms.closestToCenter(waypoints.subList(start, endIndex));
+                            final GPXWaypoint centerPoint = WaypointAlgorithms.closestToCenter(waypoints.subList(start, endIndex));
                             // need to re-base all posiions to start of track segment...
                             final int centerPointIndex = prevTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment).indexOf(centerPoint);
                             // don't use width or similar here, since rounding will kill you for an even number of points in range

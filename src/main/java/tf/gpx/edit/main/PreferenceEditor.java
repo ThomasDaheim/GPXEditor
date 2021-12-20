@@ -69,7 +69,7 @@ import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
-import tf.gpx.edit.helper.GPXAlgorithms;
+import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.image.ImageProvider;
@@ -100,8 +100,8 @@ public class PreferenceEditor extends AbstractStage {
     private final ChoiceBox<EarthGeometry.DistanceAlgorithm> distAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(EarthGeometry.DistanceAlgorithm.class, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
     private final TextField fixText = new TextField();
-    private final ChoiceBox<GPXAlgorithms.ReductionAlgorithm> reduceAlgoChoiceBox = 
-            EnumHelper.getInstance().createChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
+    private final ChoiceBox<WaypointReduction.ReductionAlgorithm> reduceAlgoChoiceBox = 
+            EnumHelper.getInstance().createChoiceBox(WaypointReduction.ReductionAlgorithm.class, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
     private final TextField epsilonText = new TextField();
     private final CheckBox assignHeightChkBox = new CheckBox();
     private final ChoiceBox<ElevationProviderOptions.AssignMode> assignModeChoiceBox = 
@@ -971,7 +971,7 @@ public class PreferenceEditor extends AbstractStage {
     private void savePreferences() {
         // read values from stage
         GPXEditorPreferences.DISTANCE_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox).name());
-        GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(GPXAlgorithms.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
+        GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointReduction.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf(epsilonText.getText().trim()), 0));
         GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(fixText.getText().trim()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());

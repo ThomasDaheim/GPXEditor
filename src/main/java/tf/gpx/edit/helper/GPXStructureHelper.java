@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
+import tf.gpx.edit.algorithms.WaypointReduction;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -86,7 +87,7 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
+    public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
     }
 

@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.algorithms;
 
 import java.io.File;
 import java.text.DecimalFormatSymbols;
@@ -34,6 +34,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import tf.gpx.edit.helper.GPXWaypointNeighbours;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;
@@ -91,8 +93,8 @@ public class TestAlgorithms {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
-                        GPXAlgorithms.ReductionAlgorithm.DouglasPeucker,
+                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                        WaypointReduction.ReductionAlgorithm.DouglasPeucker,
                         10.0);
         
                 final int size = keep1.length;
@@ -314,8 +316,8 @@ public class TestAlgorithms {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
-                        GPXAlgorithms.ReductionAlgorithm.VisvalingamWhyatt,
+                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                        WaypointReduction.ReductionAlgorithm.VisvalingamWhyatt,
                         10.0);
                 
                 final int size = keep1.length;
@@ -537,8 +539,8 @@ public class TestAlgorithms {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = GPXAlgorithms.simplifyTrack(trackwaypoints, 
-                        GPXAlgorithms.ReductionAlgorithm.ReumannWitkam,
+                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                        WaypointReduction.ReductionAlgorithm.ReumannWitkam,
                         10.0);
                 
                 final int size = keep1.length;
@@ -757,7 +759,7 @@ public class TestAlgorithms {
     public void testFindStationary() {
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
 
-        final List<GPXWaypointNeighbours> clusters = GPXAlgorithms.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
+        final List<GPXWaypointNeighbours> clusters = WaypointAlgorithms.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
         Assert.assertEquals(17, clusters.size());
         Assert.assertEquals("N 41" + LatLonHelper.DEG + "22" + LatLonHelper.MIN + "15" + dS + "97" + LatLonHelper.SEC +" E 2" + LatLonHelper.DEG + "10" + LatLonHelper.MIN + "0" + dS + "76" + LatLonHelper.SEC, clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
         Assert.assertEquals(32, clusters.get(0).getBackwardCount());

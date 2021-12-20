@@ -36,6 +36,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
@@ -56,7 +57,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     RECENTWINDOWTOP("recentWindowTop", Double.toString(-1), Double.class),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5), Double.class),
     RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58), Double.class),
-    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name(), GPXAlgorithms.ReductionAlgorithm.class),
+    REDUCTION_ALGORITHM("algorithm", WaypointReduction.ReductionAlgorithm.ReumannWitkam.name(), WaypointReduction.ReductionAlgorithm.class),
     DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name(), EarthGeometry.DistanceAlgorithm.class),
     REDUCE_EPSILON("epsilon", Double.toString(50), Double.class),
     FIX_EPSILON("fixDistance", Double.toString(1000), Double.class),
