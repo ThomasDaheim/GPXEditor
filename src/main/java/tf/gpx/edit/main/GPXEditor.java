@@ -114,6 +114,7 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.ExecuteAlgorithm;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataViewer;
@@ -155,6 +156,7 @@ import tf.helper.doundo.DoUndoManager;
 import tf.helper.doundo.IDoUndoAction;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AboutMenu;
+import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.ShowAlerts;
 import tf.helper.javafx.UsefulKeyCodes;
 
@@ -250,17 +252,11 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem exitFileMenu;
     @FXML
-    private Menu fixMenu;
+    private MenuItem smoothenMenu;
     @FXML
-    private Menu reduceMenu;
+    private MenuItem reduceMenu;
     @FXML
-    private MenuItem fixTracksMenu;
-    @FXML
-    private MenuItem reduceTracksMenu;
-    @FXML
-    private MenuItem fixFilesMenu;
-    @FXML
-    private MenuItem reduceFilesMenu;
+    private MenuItem stationariesMenu;
     @FXML
     private MenuItem mergeItemsMenu;
     @FXML
@@ -359,12 +355,6 @@ public class GPXEditor implements Initializable {
     private MenuItem onlineHelpMenu;
     @FXML
     private MenuItem elevationForCoordinateMenu;
-    @FXML
-    private MenuItem findStationariesMenu;
-    @FXML
-    private MenuItem replaceStationariesMenu;
-    @FXML
-    private Menu stationariesMenu;
     
     public GPXEditor() {
         super();
@@ -605,29 +595,20 @@ public class GPXEditor implements Initializable {
         checkTrackMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        fixFilesMenu.setOnAction((ActionEvent event) -> {
-            fixGPXMeasurables(event, true);
+        smoothenMenu.setOnAction((ActionEvent event) -> {
+            smoothenGPXMeasurables(event);
         });
-        fixTracksMenu.setOnAction((ActionEvent event) -> {
-            fixGPXMeasurables(event, false);
-        });
-        fixMenu.disableProperty().bind(
+        smoothenMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        reduceFilesMenu.setOnAction((ActionEvent event) -> {
-            reduceGPXMeasurables(event, true);
-        });
-        reduceTracksMenu.setOnAction((ActionEvent event) -> {
-            reduceGPXMeasurables(event, false);
+        reduceMenu.setOnAction((ActionEvent event) -> {
+            reduceGPXMeasurables(event);
         });
         reduceMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
-        findStationariesMenu.setOnAction((ActionEvent event) -> {
-            findReplaceStationaries(event, FindReplaceClusters.FIND);
-        });
-        replaceStationariesMenu.setOnAction((ActionEvent event) -> {
-            findReplaceStationaries(event, FindReplaceClusters.REPLACE);
+        stationariesMenu.setOnAction((ActionEvent event) -> {
+            findReplaceStationaries(event);
         });
         stationariesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
@@ -1775,15 +1756,29 @@ public class GPXEditor implements Initializable {
         }
     }
     
-    private void findReplaceStationaries(final Event event, final FindReplaceClusters action) {
+    private void findReplaceStationaries(final Event event) {
         if (gpxWaypoints.getItems().size() < (Integer) GPXEditorPreferences.CLUSTER_COUNT.getAsType()) {
             return;
+        }
+
+        if (!ExecuteAlgorithm.getInstance().selectOptions(ExecuteAlgorithm.ExecutionLevel.ITEMS)) {
+            return;
+        }
+
+        FindReplaceClusters action;
+        if (ExecuteAlgorithm.getInstance().checkOnly()) {
+            action = FindReplaceClusters.FIND;
+        } else {
+            action = FindReplaceClusters.REPLACE;
         }
         
         // waypoints can be from different tracksegments!
         final List<GPXTrackSegment> gpxTrackSegments = GPXStructureHelper.getInstance().uniqueGPXTrackSegmentsFromGPXWaypoints(gpxWaypoints.getItems());
         for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
             final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
+            if (trackwaypoints.size() < (Integer) GPXEditorPreferences.CLUSTER_COUNT.getAsType()) {
+                continue;
+            }
 
             final List<GPXWaypointNeighbours> clusters = 
                     WaypointAlgorithms.getInstance().findStationaries(
@@ -1968,7 +1963,13 @@ public class GPXEditor implements Initializable {
         addDoneAction(invertAction, getCurrentGPXFileName());
     }
 
-    private void fixGPXMeasurables(final Event event, final boolean fileLevel) {
+    private void smoothenGPXMeasurables(final Event event) {
+        if (!ExecuteAlgorithm.getInstance().selectOptions(null)) {
+            return;
+        }
+
+        final boolean fileLevel = ExecuteAlgorithm.ExecutionLevel.FILES_OF_ITEMS.equals(ExecuteAlgorithm.getInstance().getExecutionLevel());
+        
         List<? extends GPXMeasurable> gpxLineItems;
 
         if (fileLevel) {
@@ -1986,9 +1987,14 @@ public class GPXEditor implements Initializable {
         refillGPXWaypointList(true);
     }
 
-    private void reduceGPXMeasurables(final Event event, final boolean fileLevel) {
-        List<? extends GPXMeasurable> gpxLineItems;
+    private void reduceGPXMeasurables(final Event event) {
+        if (!ExecuteAlgorithm.getInstance().selectOptions(null)) {
+            return;
+        }
 
+        final boolean fileLevel = ExecuteAlgorithm.ExecutionLevel.FILES_OF_ITEMS.equals(ExecuteAlgorithm.getInstance().getExecutionLevel());
+        
+        List<? extends GPXMeasurable> gpxLineItems;
         if (fileLevel) {
             gpxLineItems = GPXStructureHelper.getInstance().uniqueGPXFilesFromGPXMeasurables(gpxFileList.getSelectionModel().getSelectedItems());
         } else {
