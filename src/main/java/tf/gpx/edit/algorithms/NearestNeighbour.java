@@ -29,7 +29,7 @@ import java.util.List;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- * Find nearest neighbor to a given waypoint in a list of waypoints.
+ * Find nearest neighbour to a given waypoint in a list of waypoints.
  * 
  * - linear search
  * - kdtree
@@ -38,8 +38,8 @@ import tf.gpx.edit.items.GPXWaypoint;
  * 
  * @author thomas
  */
-public class NearestNeighbor {
-    private final static NearestNeighbor INSTANCE = new NearestNeighbor();
+public class NearestNeighbour {
+    private final static NearestNeighbour INSTANCE = new NearestNeighbour();
     
     public static enum SearchAlgorithm {
         Linear,
@@ -48,16 +48,16 @@ public class NearestNeighbor {
     
     public static final int KDTREE_LIMIT = 20;
     
-    private NearestNeighbor() {
+    private NearestNeighbour() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static NearestNeighbor getInstance() {
+    public static NearestNeighbour getInstance() {
         return INSTANCE;
     }
     
-    public INearestNeighborSearcher getOptimalSearcher(
+    public INearestNeighbourSearcher getOptimalSearcher(
             final EarthGeometry.DistanceAlgorithm distAlgo, 
             final List<GPXWaypoint> points, 
             final int searchPoints) {
@@ -68,11 +68,11 @@ public class NearestNeighbor {
         }
     }
 
-    public INearestNeighborSearcher getSearcher(
+    public INearestNeighbourSearcher getSearcher(
             final SearchAlgorithm searchAlgo, 
             final EarthGeometry.DistanceAlgorithm distAlgo, 
             final List<GPXWaypoint> points) {
-        INearestNeighborSearcher result = null;
+        INearestNeighbourSearcher result = null;
         
         switch(searchAlgo) {
             case Linear:

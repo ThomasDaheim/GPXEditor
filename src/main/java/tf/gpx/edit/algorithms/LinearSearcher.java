@@ -34,13 +34,13 @@ import tf.gpx.edit.items.GPXWaypoint;
  *
  * @author thomas
  */
-public class LinearSearcher implements INearestNeighborSearcher {
+public class LinearSearcher implements INearestNeighbourSearcher {
     private final List<GPXWaypoint> myGPXWaypoint = new ArrayList<>();
     private EarthGeometry.DistanceAlgorithm myAlgo;
 
     @Override
-    public NearestNeighbor.SearchAlgorithm getSearchAlgorithm() {
-        return NearestNeighbor.SearchAlgorithm.Linear;
+    public NearestNeighbour.SearchAlgorithm getSearchAlgorithm() {
+        return NearestNeighbour.SearchAlgorithm.Linear;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class LinearSearcher implements INearestNeighborSearcher {
     }
 
     @Override
-    public Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint gpxWaypoint) {
+    public Pair<GPXWaypoint, Double> getNearestNeighbour(final GPXWaypoint gpxWaypoint) {
         GPXWaypoint closest = null;
         double mindistance = Double.MAX_VALUE;
         for (GPXWaypoint waypoint : myGPXWaypoint) {

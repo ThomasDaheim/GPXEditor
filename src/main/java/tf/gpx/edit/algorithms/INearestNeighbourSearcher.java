@@ -30,12 +30,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- * Common interface for all algorithms that can implement a nearest neighbor search.
+ * Common interface for all algorithms that can implement a nearest neighbour search.
  * 
  * @author thomas
  */
-public interface INearestNeighborSearcher {
-    NearestNeighbor.SearchAlgorithm getSearchAlgorithm();
+public interface INearestNeighbourSearcher {
+    NearestNeighbour.SearchAlgorithm getSearchAlgorithm();
     void init(final EarthGeometry.DistanceAlgorithm algo, final List<GPXWaypoint> points);
-    Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint point);
+    Pair<GPXWaypoint, Double> getNearestNeighbour(final GPXWaypoint point);
 }

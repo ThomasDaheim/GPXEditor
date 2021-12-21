@@ -51,8 +51,7 @@ import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.algorithms.INearestNeighborSearcher;
-import tf.gpx.edit.algorithms.NearestNeighbor;
+import tf.gpx.edit.algorithms.NearestNeighbour;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -63,6 +62,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
+import tf.gpx.edit.algorithms.INearestNeighbourSearcher;
 
 /**
  * Helper class to hold stuff required by both HeightChart and LineChart
@@ -279,7 +279,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             
             // TFE, 20210124: could be empty waypoint list!
             if (!flatWaypoints.isEmpty()) {
-                final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
+                final INearestNeighbourSearcher searcher = NearestNeighbour.getInstance().getOptimalSearcher(
                         EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
 
                 for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
@@ -301,7 +301,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     //                    }
     //                }
 
-                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
+                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbour(fileWaypoint);
 
                     if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
     //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());

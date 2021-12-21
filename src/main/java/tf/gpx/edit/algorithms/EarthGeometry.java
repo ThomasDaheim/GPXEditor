@@ -183,7 +183,7 @@ public class EarthGeometry {
         } while (FastMath.abs(lbd - lbdp) > VincentyAccuracy && --iterationLimit > 0);
 
         if (iterationLimit == 0) {
-            Logger.getLogger(EarthGeometry.class.getName()).log(Level.SEVERE, null, "Vincenty algorithm didn't convert. Using result nevertheless.");
+            Logger.getLogger(EarthGeometry.class.getName()).log(Level.SEVERE, null, "Vincenty algorithm didn't converge. Using result nevertheless.");
         }
 
         final double uSq = cosSqAlpha * (EarthLongRadius2 - EarthShortRadius2) / EarthShortRadius2;

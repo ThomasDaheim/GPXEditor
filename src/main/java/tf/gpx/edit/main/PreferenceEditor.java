@@ -99,7 +99,7 @@ public class PreferenceEditor extends AbstractStage {
 
     private final ChoiceBox<EarthGeometry.DistanceAlgorithm> distAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(EarthGeometry.DistanceAlgorithm.class, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
-    private final TextField fixText = new TextField();
+    private final TextField smoothText = new TextField();
     private final ChoiceBox<WaypointReduction.ReductionAlgorithm> reduceAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(WaypointReduction.ReductionAlgorithm.class, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
     private final TextField epsilonText = new TextField();
@@ -201,7 +201,7 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
-        final Label lblHor0 = new Label("Fix & Reduce algorithms");
+        final Label lblHor0 = new Label("Smooth & Reduce algorithms");
         lblHor0.setStyle("-fx-font-weight: bold");
         getGridPane().add(lblHor0, 0, rowNum, 1, 1);
         GridPane.setMargin(lblHor0, INSET_TOP);
@@ -214,17 +214,17 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // 1st row: select fixTrack distance
-        t = new Tooltip("Minimum distance between waypoints for fix track algorithm");
-        final Label fixLbl = new Label("Min. Distance for fixing (m):");
+        t = new Tooltip("Minimum distance between waypoints for smooth algorithm");
+        final Label fixLbl = new Label("Min. Distance for smoothing (m):");
         fixLbl.setTooltip(t);
         getGridPane().add(fixLbl, 0, rowNum, 1, 1);
         GridPane.setMargin(fixLbl, INSET_TOP);
         
-        fixText.setMaxWidth(80);
-        fixText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
-        fixText.setTooltip(t);
-        getGridPane().add(fixText, 1, rowNum, 1, 1);
-        GridPane.setMargin(fixText, INSET_TOP);
+        smoothText.setMaxWidth(80);
+        smoothText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
+        smoothText.setTooltip(t);
+        getGridPane().add(smoothText, 1, rowNum, 1, 1);
+        GridPane.setMargin(smoothText, INSET_TOP);
         
         rowNum++;
         // 2nd row: select reduce algorithm
@@ -253,19 +253,6 @@ public class PreferenceEditor extends AbstractStage {
         epsilonText.setTooltip(t);
         getGridPane().add(epsilonText, 1, rowNum, 1, 1);
         GridPane.setMargin(epsilonText, INSET_TOP);        
-
-        rowNum++;
-        // 3rd row: auto assign height for new waypoints
-        t = new Tooltip("Assign height values for new items automatically");
-        final Label assignHeightLbl = new Label("Auto-assign height:");
-        assignHeightLbl.setTooltip(t);
-        getGridPane().add(assignHeightLbl, 0, rowNum, 1, 1);
-        GridPane.setValignment(assignHeightLbl, VPos.TOP);
-        GridPane.setMargin(assignHeightLbl, INSET_TOP);
-        
-        assignHeightChkBox.setTooltip(t);
-        getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
-        GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
 
         // TFE, 20200508: also add SRTM settings to have all in one place (for export/import)
         rowNum++;
@@ -380,6 +367,19 @@ public class PreferenceEditor extends AbstractStage {
         srtmDownChoiceBox.setTooltip(t);
         getGridPane().add(srtmDownChoiceBox, 1, rowNum, 1, 1);
         GridPane.setMargin(srtmDownChoiceBox, INSET_TOP);
+
+        rowNum++;
+        // 3rd row: auto assign height for new waypoints
+        t = new Tooltip("Assign height values for new items automatically");
+        final Label assignHeightLbl = new Label("Auto-assign height:");
+        assignHeightLbl.setTooltip(t);
+        getGridPane().add(assignHeightLbl, 0, rowNum, 1, 1);
+        GridPane.setValignment(assignHeightLbl, VPos.TOP);
+        GridPane.setMargin(assignHeightLbl, INSET_TOP);
+        
+        assignHeightChkBox.setTooltip(t);
+        getGridPane().add(assignHeightChkBox, 1, rowNum, 1, 1);
+        GridPane.setMargin(assignHeightChkBox, INSET_TOP);   
 
         rowNum++;
         // separator
@@ -939,7 +939,7 @@ public class PreferenceEditor extends AbstractStage {
         EnumHelper.getInstance().selectEnum(profileChoiceBox, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
         EnumHelper.getInstance().selectEnum(heatColorChoiceBox, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
         EnumHelper.getInstance().selectEnum(opacDistChoiceBox, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
-        fixText.setText(decimalFormat.format(GPXEditorPreferences.FIX_EPSILON.getAsType()));
+        smoothText.setText(decimalFormat.format(GPXEditorPreferences.FIX_EPSILON.getAsType()));
         epsilonText.setText(decimalFormat.format(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
         assignHeightChkBox.setSelected(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType());
         EnumHelper.getInstance().selectEnum(assignModeChoiceBox, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
@@ -973,7 +973,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.DISTANCE_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointReduction.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf(epsilonText.getText().trim()), 0));
-        GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(fixText.getText().trim()), 0));
+        GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(smoothText.getText().trim()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
         GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
