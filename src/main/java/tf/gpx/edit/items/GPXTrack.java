@@ -189,7 +189,7 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList() {
         return myGPXTrackSegments;
     }
     
@@ -272,7 +272,7 @@ public class GPXTrack extends GPXMeasurable {
                 waypoints.add(trackSegment.getCombinedGPXWaypoints(itemType));
             }
         }
-        return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
+        return GPXListHelper.concatObservableList(FXCollections.observableArrayList(), waypoints);
     }
 
     @Override

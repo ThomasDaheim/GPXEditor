@@ -1172,7 +1172,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
     }
     
     private TreeItem<GPXMeasurable> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
+        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getGPXMeasurablesAsObservableList, false, new Callback<GPXMeasurable, Boolean>() {
             @Override
             public Boolean call(GPXMeasurable item) {
                 return true;

@@ -1266,7 +1266,7 @@ public class GPXEditor implements Initializable {
                         waypoints.add(lineItem.getCombinedGPXWaypoints(null));
                     }
                     // TODO: automated refresh after insert / delete not working
-                    final SortedList<GPXWaypoint> sortedList = new SortedList<>(GPXListHelper.concat(FXCollections.observableArrayList(), waypoints));
+                    final SortedList<GPXWaypoint> sortedList = new SortedList<>(GPXListHelper.concatObservableList(FXCollections.observableArrayList(), waypoints));
                     sortedList.comparatorProperty().bind(gpxWaypoints.comparatorProperty());
 
                     gpxWaypoints.setItems(sortedList);

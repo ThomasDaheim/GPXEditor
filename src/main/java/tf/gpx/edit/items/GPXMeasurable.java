@@ -36,7 +36,7 @@ import me.himanshusoni.gpxparser.modal.Bounds;
  */
 public abstract class GPXMeasurable extends GPXLineItem {
     public abstract List<? extends GPXMeasurable> getGPXMeasurables();
-    public abstract ObservableList<? extends GPXMeasurable> getMeasurableChildren();
+    public abstract ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList();
     
     private GPXMeasurable() {
         super(null);

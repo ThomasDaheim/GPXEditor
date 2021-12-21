@@ -50,12 +50,12 @@ import tf.gpx.edit.items.GPXMeasurable;
  * @author thomas
  */
 public class GPXListHelper {
-    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, ObservableList<T> list) {
-        return concat(into, Arrays.asList(list));
+    public static <T extends GPXLineItem> ObservableList<T> concatObservableList(ObservableList<T> into, ObservableList<T> list) {
+        return concatObservableList(into, Arrays.asList(list));
     }
 
     // https://stackoverflow.com/a/27646247
-    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, List<ObservableList<T>> lists) {
+    public static <T extends GPXLineItem> ObservableList<T> concatObservableList(ObservableList<T> into, List<ObservableList<T>> lists) {
         final ObservableList<T> list = into;
         for (ObservableList<T> l : lists) {
             list.addAll(l);
@@ -92,7 +92,7 @@ public class GPXListHelper {
     }
     
     // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
-    public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemList(ObservableList<T> input) {
+    public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemObservableList(ObservableList<T> input) {
         final ObservableList<GPXLineItem> result = input.stream().
                 map(t -> { return (GPXLineItem) t; }).
                 collect(Collectors.toCollection(FXCollections::observableArrayList));
@@ -113,7 +113,7 @@ public class GPXListHelper {
     }
 
     // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
-    public static <T extends GPXMeasurable> ObservableList<GPXMeasurable> asGPXMeasurableList(ObservableList<T> input) {
+    public static <T extends GPXMeasurable> ObservableList<GPXMeasurable> asGPXMeasurableObservableList(ObservableList<T> input) {
         final ObservableList<GPXMeasurable> result = input.stream().
                 map(t -> { return (GPXMeasurable) t; }).
                 collect(Collectors.toCollection(FXCollections::observableArrayList));
