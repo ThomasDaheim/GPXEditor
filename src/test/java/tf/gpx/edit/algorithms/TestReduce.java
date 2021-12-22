@@ -34,8 +34,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tf.gpx.edit.helper.GPXWaypointNeighbours;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;

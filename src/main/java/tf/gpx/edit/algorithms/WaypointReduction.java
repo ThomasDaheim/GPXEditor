@@ -25,10 +25,8 @@
  */
 package tf.gpx.edit.algorithms;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -65,6 +63,7 @@ public class WaypointReduction {
 
     /**
      * Simplify track by removing points, using the requested algorithm.
+     * 
      * @param track points of the track
      * @param algorithm What EarthGeometry.ReductionAlgorithm to use
      * @param epsilon tolerance, in meters

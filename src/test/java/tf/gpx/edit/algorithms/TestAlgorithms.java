@@ -38,9 +38,6 @@ import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
-import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  *

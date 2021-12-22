@@ -115,13 +115,14 @@ import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.ExecuteAlgorithm;
+import tf.gpx.edit.algorithms.GarminCrapFilter;
+import tf.gpx.edit.algorithms.WaypointClustering;
+import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
-import tf.gpx.edit.algorithms.WaypointClustering;
-import tf.gpx.edit.algorithms.WaypointReduction;
-import tf.gpx.edit.algorithms.GarminCrapFilter;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
@@ -141,7 +142,6 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
@@ -157,7 +157,6 @@ import tf.helper.doundo.DoUndoManager;
 import tf.helper.doundo.IDoUndoAction;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.AboutMenu;
-import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.ShowAlerts;
 import tf.helper.javafx.UsefulKeyCodes;
 
@@ -411,7 +410,13 @@ public class GPXEditor implements Initializable {
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(GPXEditor.class, borderPane.getScene().getWindow(), helpMenu, "GPXEditor", "v5.6", "https://github.com/ThomasDaheim/GPXEditor");
+        AboutMenu.getInstance().addAboutMenu(
+                GPXEditor.class, 
+                borderPane.getScene().getWindow(), 
+                helpMenu, 
+                "GPXEditor", 
+                "v5.6", 
+                "https://github.com/ThomasDaheim/GPXEditor");
         
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {

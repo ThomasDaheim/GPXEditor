@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.extension.TrackActivity;
 
 /**
  *

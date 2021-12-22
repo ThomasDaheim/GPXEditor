@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import tf.gpx.edit.extension.TrackActivity;
-import tf.gpx.edit.extension.LineStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,8 +36,9 @@ import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
-import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.extension.TrackActivity;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;

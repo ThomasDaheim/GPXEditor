@@ -27,6 +27,7 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Calculates the Median Absolute Deviation based on the code
@@ -45,20 +46,27 @@ public class MedianAbsoluteDeviation {
     }
 
     public static Double mad(final Double[] input, final Double med) {
+        return mad(ArrayUtils.toPrimitive(input, 0), ((med == null) ? Double.NaN : med));
+    }
+
+    public static Double mad(final double[] input, final double med) {
         Double median = med;
-        if (median == null || Double.isNaN(median)) {
+        if (Double.isNaN(median)) {
             median = median(input);
         }
         arrayAbsDistance(input, median);
         return median(input);
     }
 
-
     public static Double median(final List<Double> inputList) {
         return median(inputList.toArray(new Double[inputList.size()]));
     }
 
     public static Double median(final Double[] input) {
+        return median(ArrayUtils.toPrimitive(input, 0));
+    }
+
+    public static Double median(final double[] input) {
         if (input.length==0) {
             throw new IllegalArgumentException("to calculate median we need at least 1 element");
         }
@@ -71,7 +79,7 @@ public class MedianAbsoluteDeviation {
         }
     }
 
-    private static void arrayAbsDistance(final Double[] array, final Double value) {
+    private static void arrayAbsDistance(final double[] array, final double value) {
         for (int i=0; i<array.length;i++) {
             array[i] = Math.abs(array[i] - value);
         }

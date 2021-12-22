@@ -61,8 +61,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.parser.KMLWriter;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.parser.KMLWriter;
 import tf.gpx.edit.worker.GPXExtractCSVLinesWorker;
 import tf.helper.javafx.ShowAlerts;
 

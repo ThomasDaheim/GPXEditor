@@ -31,8 +31,6 @@ import java.util.Optional;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
-import tf.gpx.edit.extension.GarminColor;
-import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.helper.javafx.UnitConverter;
 

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.parser;
 
-import tf.gpx.edit.parser.KMLParser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

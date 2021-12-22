@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import tf.gpx.edit.extension.LineStyle;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -38,6 +37,7 @@ import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXCloner;
 import tf.helper.general.ObjectsHelper;
 

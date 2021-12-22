@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.items;
 
-import tf.gpx.edit.extension.LineStyle;
 import java.io.File;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.junit.Assert;
 import org.junit.Test;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
+import tf.gpx.edit.extension.LineStyle;
 
 /**
  *

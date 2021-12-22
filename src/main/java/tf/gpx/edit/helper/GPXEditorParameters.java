@@ -1,6 +1,5 @@
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.algorithms.WaypointReduction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +11,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import tf.gpx.edit.algorithms.WaypointReduction;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use

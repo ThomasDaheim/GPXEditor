@@ -29,83 +29,54 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import mr.go.sgfilter.Preprocessor;
+import mr.go.sgfilter.SGFilter;
 import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Impementation of the hampel filter (https://asp-eurasipjournals.springeropen.com/articles/10.1186/s13634-016-0383-6)
- * based on the code from https://gist.github.com/judges119/24e4ac8b0e4a988a9d45.
+ * Caller for the Savitzky-Golay filter from https://github.com/ruozhuochen/savitzky-golay-filter.
+ * 
+ * It uses the HampelFilter as preprocessor to fix outliers before smoothing.
  * 
  * @author thomas
  */
-public class HampelFilter implements Preprocessor {
-    private final static HampelFilter INSTANCE = new HampelFilter();
+public class WaypointSmoothing {
+    private final static WaypointSmoothing INSTANCE = new WaypointSmoothing();
     
-    // factor approproriate for gaussian distribution
-    private final static double L_FACTOR = 1.4826;
-    
-    private HampelFilter() {
+    private WaypointSmoothing() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static HampelFilter getInstance() {
+    public static WaypointSmoothing getInstance() {
         return INSTANCE;
-    }
-
-    /**
-     * Entry for Preprocessor of the Savitzky-Golay we use.
-     * 
-     * @param doubles primitive array, will be updated in-place
-     */
-    @Override
-    public void apply(double[] doubles) {
-        apply(doubles, 3, 3.0);
-    }
-    
-    /**
-     * The real executor of the hampel filter.
-     * 
-     * @param doubles primitive array, will be updated in-place
-     */
-    private void apply(double[] data, final int halfWindow, double threshold) {
-        if (threshold < 0.1) {
-            threshold = 3.0;
-        }
-        
-        for (int i = halfWindow; i < data.length - halfWindow; i++) {
-            final double[] subList = Arrays.copyOfRange(data, i - halfWindow, i + halfWindow);
-            final double median = MedianAbsoluteDeviation.median(subList);
-            final double weightedMAD = L_FACTOR * MedianAbsoluteDeviation.mad(subList, median);
-            
-//            System.out.println("i: " + i);
-//            System.out.println("data: " + data.get(i) + ", median: " + median + ", weightedMAD: " + weightedMAD + ", value: " + Math.abs(data.get(i) - median) / weightedMAD);
-            if (Math.abs(data[i] - median) / weightedMAD > threshold) {
-                data[i] = median;
-            }
-        }
     }
     
     /**
      * Entry for list of Doubles.
      * 
      * @param data Double values to process
-     * @param halfWindow Half-width of the window for median calculation
-     * @param threshold treshold for outlier identification
+     * @param dummy Needed to avoid compiler errors due to same signature after erasure as the GPXWaypoint method
      * @return List of processed Double values
      */
-    public List<Double> applyFilter(final List<Double> data, final int halfWindow, double threshold) {
-        if (threshold < 0.1) {
-            threshold = GPXEditorPreferences.HAMPEL_THRESHOLD.getAsType();
-        }
+    public List<Double> smoothData(final List<Double> data, final boolean dummy) {
+        final int order = GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsType();
+        final int nl = data.size() / 2;
+        final int nr = data.size() - nl;
         
-        // got down to primitives since Preprocessor works on those - happy converting...
+        double[] coefficients = SGFilter.computeSGCoefficients(nl, nr, order);
+
         double[] simpleData = ArrayUtils.toPrimitive(data.toArray(new Double[data.size()]), 0);
-        apply(simpleData, halfWindow, threshold);
-        return Arrays.asList(ArrayUtils.toObject(simpleData));
+        final SGFilter filter = new SGFilter(nl, nr);
+        // we might want to use a preprocessor the fixes outliers
+        if (GPXEditorPreferences.SAVITZKYGOLAY_USE_PRE.getAsType()) {
+            filter.appendPreprocessor(HampelFilter.getInstance());
+        }
+        double[] output = filter.smooth(simpleData, coefficients);        
+
+        return Arrays.asList(ArrayUtils.toObject(output));
     }
     
     /**
@@ -116,22 +87,22 @@ public class HampelFilter implements Preprocessor {
      * @param data GPXWaypoints to process
      * @return List of derived LatLonElev values
      */
-    public List<LatLonElev> applyFilter(final List<GPXWaypoint> data) {
+    public List<LatLonElev> smoothData(final List<GPXWaypoint> data) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
-        // we need to apply the algorithm not to the lat / lon values but to the distance in meeters between points calculated from it...
-        final List<Double> newLatValues = applyFilter(
+        // we could apply the algorithm not to the lat / lon values but to the distance/time / course between points calculated from it...
+        final List<Double> newLatValues = smoothData(
                 data.stream().map((t) -> {
                     return t.getLatitude();
-                }).collect(Collectors.toList()), 3, 2.0);
-        final List<Double> newLonValues = applyFilter(
+                }).collect(Collectors.toList()), true);
+        final List<Double> newLonValues = smoothData(
                 data.stream().map((t) -> {
                     return t.getLongitude();
-                }).collect(Collectors.toList()), 3, 2.0);
+                }).collect(Collectors.toList()), true);
         // elevations can fluctuate a lot on small distances
-        final List<Double> newElevValues = applyFilter(
+        final List<Double> newElevValues = smoothData(
                 data.stream().map((t) -> {
                     return t.getElevation();
-                }).collect(Collectors.toList()), 3, 3.0);
+                }).collect(Collectors.toList()), true);
         
         final List<LatLonElev> result = new ArrayList<>();
         for (int i = 0; i< data.size(); i++) {

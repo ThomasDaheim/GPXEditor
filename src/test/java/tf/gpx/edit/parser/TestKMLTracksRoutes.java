@@ -31,7 +31,6 @@ import org.junit.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
-import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**

@@ -5,7 +5,6 @@
  */
 package tf.gpx.edit.extension;
 
-import tf.gpx.edit.extension.LineStyle;
 import me.himanshusoni.gpxparser.modal.Extension;
 
 /**

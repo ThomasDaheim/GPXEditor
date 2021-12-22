@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.items;
 
-import tf.gpx.edit.extension.IStylableItem;
-import tf.gpx.edit.extension.LineStyle;
 import java.text.DecimalFormat;
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -39,6 +37,8 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.lang3.math.NumberUtils;
+import tf.gpx.edit.extension.IStylableItem;
+import tf.gpx.edit.extension.LineStyle;
 
 /**
  *

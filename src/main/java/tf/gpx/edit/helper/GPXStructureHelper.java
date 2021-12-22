@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.algorithms.DouglasPeuckerReducer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;

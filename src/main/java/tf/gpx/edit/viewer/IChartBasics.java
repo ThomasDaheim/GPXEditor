@@ -51,6 +51,7 @@ import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.INearestNeighbourSearcher;
 import tf.gpx.edit.algorithms.NearestNeighbour;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
@@ -62,7 +63,6 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
-import tf.gpx.edit.algorithms.INearestNeighbourSearcher;
 
 /**
  * Helper class to hold stuff required by both HeightChart and LineChart

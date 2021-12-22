@@ -103,7 +103,11 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     SHOW_IMAGES_ON_MAP("showImagesOnMap", Boolean.toString(true), Boolean.class),
     IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class),
     DEFAULT_IMAGE_PATH("defaultImagePath", System.getProperty("user.home"), String.class),
-    IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class);
+    IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class),
+    // TFE, 2021222: parameters for filter algorithms
+    HAMPEL_THRESHOLD("hampelThreshold", Integer.toString(3), Integer.class),
+    SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(2), Integer.class),
+    SAVITZKYGOLAY_USE_PRE("savitzkyGolayUsePre", Boolean.toString(true), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
