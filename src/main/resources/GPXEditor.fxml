@@ -75,7 +75,6 @@
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
               <items>
-                  <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
                   <MenuItem fx:id="smoothenMenu" mnemonicParsing="false" text="Smoothen">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />

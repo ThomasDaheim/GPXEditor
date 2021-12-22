@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.helper;
 
-import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.DouglasPeuckerReducer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
+import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;

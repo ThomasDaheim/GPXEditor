@@ -68,7 +68,7 @@ public class TestAlgorithms {
     public void testFindStationary() {
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
 
-        final List<GPXWaypointNeighbours> clusters = WaypointAlgorithms.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
+        final List<GPXWaypointNeighbours> clusters = WaypointClustering.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
         Assert.assertEquals(17, clusters.size());
         Assert.assertEquals("N 41" + LatLonHelper.DEG + "22" + LatLonHelper.MIN + "15" + dS + "97" + LatLonHelper.SEC +" E 2" + LatLonHelper.DEG + "10" + LatLonHelper.MIN + "0" + dS + "76" + LatLonHelper.SEC, clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
         Assert.assertEquals(32, clusters.get(0).getBackwardCount());

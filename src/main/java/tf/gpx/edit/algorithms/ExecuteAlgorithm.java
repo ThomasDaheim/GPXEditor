@@ -105,8 +105,8 @@ public class ExecuteAlgorithm extends AbstractStage {
 
         rowNum++;
         // 2nd row: check only
-        t = new Tooltip("Check impact only");
-        final Label onlyLbl = new Label("Check impact only:");
+        t = new Tooltip("Find impacted only");
+        final Label onlyLbl = new Label("Find impacted only:");
         onlyLbl.setTooltip(t);
         getGridPane().add(onlyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(onlyLbl, VPos.TOP);
@@ -148,7 +148,7 @@ public class ExecuteAlgorithm extends AbstractStage {
         return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
-    public boolean checkOnly() {
+    public boolean findOnly() {
         return onlyChkBox.isSelected();
     }
     

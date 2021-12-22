@@ -75,14 +75,15 @@ public class HampelFilter {
     
     public List<LatLonElev> applyFilter(final List<GPXWaypoint> track) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
+        // we need to apply the algorithm not to the lat / lon values but to the distance in meeters between points calculated from it...
         final List<Double> newLatValues = applyFilter(
                 track.stream().map((t) -> {
                     return t.getLatitude();
-                }).collect(Collectors.toList()), 3, 1.0);
+                }).collect(Collectors.toList()), 3, 2.0);
         final List<Double> newLonValues = applyFilter(
                 track.stream().map((t) -> {
                     return t.getLongitude();
-                }).collect(Collectors.toList()), 3, 1.0);
+                }).collect(Collectors.toList()), 3, 2.0);
         // elevations can fluctuate a lot on small distances
         final List<Double> newElevValues = applyFilter(
                 track.stream().map((t) -> {

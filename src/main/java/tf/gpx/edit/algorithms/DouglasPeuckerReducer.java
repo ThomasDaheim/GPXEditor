@@ -45,43 +45,71 @@ import tf.gpx.edit.items.GPXWaypoint;
  * http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
  * https://github.com/emcconville/point-reduction-algorithms
  */
-public class WaypointReduction {
-    private final static WaypointReduction INSTANCE = new WaypointReduction();
+public class DouglasPeuckerReducer implements IWaypointReducer {
+    private final static DouglasPeuckerReducer INSTANCE = new DouglasPeuckerReducer();
     
-    public static enum ReductionAlgorithm {
-        DouglasPeucker,
-        VisvalingamWhyatt,
-        ReumannWitkam
-    }
-    
-    private WaypointReduction() {
+    private DouglasPeuckerReducer() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static WaypointReduction getInstance() {
+    public static DouglasPeuckerReducer getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Simplify track by removing points, using the requested algorithm.
+     * Simplify track by removing points, using the Douglas-Peucker algorithm.
      * @param track points of the track
-     * @param algorithm What EarthGeometry.ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
      */
-    public static boolean[] simplifyTrack(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
-        switch (algorithm) {
-            case DouglasPeucker:
-                return DouglasPeuckerReducer.getInstance().simplifyTrack(track, epsilon);
-            case VisvalingamWhyatt:
-                return VisvalingamWhyattReducer.getInstance().simplifyTrack(track, epsilon);
-            case ReumannWitkam:
-                return ReumannWitkamReducer.getInstance().simplifyTrack(track, epsilon);
-            default:
-                boolean[] keep = new boolean[track.size()];
-                Arrays.fill(keep, true);
-                return keep;
+    @Override
+    public boolean[] simplifyTrack(
+            final List<GPXWaypoint> track, 
+            final double epsilon) {
+        final boolean[] keep = new boolean[track.size()];
+
+        keep[0] = true;
+        keep[track.size()-1] = true;
+        
+        if (track.size() <= 2) {
+            return keep;
+        }
+
+        DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, keep);
+        return keep;
+    }
+
+    private static void DouglasPeuckerImpl(
+            final List<GPXWaypoint> track, 
+            final int first, 
+            final int last,
+            final double epsilon, 
+            final boolean[] keep) {
+        if (last < first) {
+            // empty
+        } else if (last == first) {
+            keep[first] = true;
+        } else {
+            keep[first] = true;
+            double max = 0;
+            int index = first;
+            final GPXWaypoint startPt = track.get(first);
+            final GPXWaypoint endPt = track.get(last);
+            for (int i = first+1; i < last; ++i) {
+                double dist = EarthGeometry.distanceToGreatCircleGPXWaypoints(track.get(i), startPt, endPt, epsilon);
+                if (dist > max) {
+                    max = dist;
+                    index = i;
+                }
+            }
+            if (max > epsilon) {
+                keep[index] = true;
+                DouglasPeuckerImpl(track, first, index, epsilon, keep);
+                DouglasPeuckerImpl(track, index, last, epsilon, keep);
+            } else if (EarthGeometry.distanceGPXWaypoints(startPt, endPt) > epsilon) {
+                keep[last] = true;
+            }
         }
     }
 }
