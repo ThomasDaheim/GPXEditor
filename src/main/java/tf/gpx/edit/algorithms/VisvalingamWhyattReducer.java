@@ -62,7 +62,7 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/whyatt.php
     */
     @Override
-    public boolean[] simplifyTrack(List<GPXWaypoint> track, double epsilon) {
+    public boolean[] apply(List<GPXWaypoint> track, double epsilon) {
         final boolean[] keep = new boolean[track.size()];
         keep[0] = true;
         keep[track.size()-1] = true;

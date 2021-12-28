@@ -27,6 +27,7 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -43,9 +44,9 @@ import tf.gpx.edit.items.GPXWaypoint;
  * http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
  * https://github.com/emcconville/point-reduction-algorithms
  */
-public class WaypointReduction {
+public class WaypointReduction implements IWaypointReducer {
     private final static WaypointReduction INSTANCE = new WaypointReduction();
-    
+
     public static enum ReductionAlgorithm {
         DouglasPeucker,
         VisvalingamWhyatt,
@@ -69,18 +70,23 @@ public class WaypointReduction {
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
      */
-    public static boolean[] simplifyTrack(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
+    public static boolean[] apply(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
         switch (algorithm) {
             case DouglasPeucker:
-                return DouglasPeuckerReducer.getInstance().simplifyTrack(track, epsilon);
+                return DouglasPeuckerReducer.getInstance().apply(track, epsilon);
             case VisvalingamWhyatt:
-                return VisvalingamWhyattReducer.getInstance().simplifyTrack(track, epsilon);
+                return VisvalingamWhyattReducer.getInstance().apply(track, epsilon);
             case ReumannWitkam:
-                return ReumannWitkamReducer.getInstance().simplifyTrack(track, epsilon);
+                return ReumannWitkamReducer.getInstance().apply(track, epsilon);
             default:
                 boolean[] keep = new boolean[track.size()];
                 Arrays.fill(keep, true);
                 return keep;
         }
+    }
+
+    @Override
+    public boolean[] apply(List<GPXWaypoint> track, double epsilon) {
+        return apply(track, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
     }
 }

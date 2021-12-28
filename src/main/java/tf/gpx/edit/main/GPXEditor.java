@@ -1951,7 +1951,7 @@ public class GPXEditor implements Initializable {
                     keep = GarminCrapFilter.applyFilter(trackwaypoints, 
                             GPXEditorPreferences.FIX_EPSILON.getAsType());
                 } else {
-                    keep= WaypointReduction.simplifyTrack(trackwaypoints, 
+                    keep= WaypointReduction.apply(trackwaypoints, 
                             GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
                             GPXEditorPreferences.REDUCE_EPSILON.getAsType());
                 }

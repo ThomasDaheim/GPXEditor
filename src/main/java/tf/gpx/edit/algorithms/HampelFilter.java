@@ -41,7 +41,7 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * 
  * @author thomas
  */
-public class HampelFilter implements Preprocessor {
+public class HampelFilter implements Preprocessor, IWaypointSmoother {
     private final static HampelFilter INSTANCE = new HampelFilter();
     
     // factor approproriate for gaussian distribution
@@ -97,15 +97,24 @@ public class HampelFilter implements Preprocessor {
      * @param threshold treshold for outlier identification
      * @return List of processed Double values
      */
-    public List<Double> applyFilter(final List<Double> data, final int halfWindow, double threshold) {
+    public List<Double> apply(final List<Double> data, final int halfWindow, double threshold) {
+        if (data.size() < 2) {
+            return data;
+        }
+        
         if (threshold < 0.1) {
             threshold = GPXEditorPreferences.HAMPEL_THRESHOLD.getAsType();
         }
         
         // got down to primitives since Preprocessor works on those - happy converting...
         double[] simpleData = ArrayUtils.toPrimitive(data.toArray(new Double[data.size()]), 0);
-        apply(simpleData, halfWindow, threshold);
+        HampelFilter.this.apply(simpleData, halfWindow, threshold);
         return Arrays.asList(ArrayUtils.toObject(simpleData));
+    }
+
+    @Override
+    public List<Double> apply(List<Double> data, boolean dummy) {
+        return apply(data, 3, 3.0);
     }
     
     /**
@@ -116,19 +125,20 @@ public class HampelFilter implements Preprocessor {
      * @param data GPXWaypoints to process
      * @return List of derived LatLonElev values
      */
-    public List<LatLonElev> applyFilter(final List<GPXWaypoint> data) {
+    @Override
+    public List<LatLonElev> apply(final List<GPXWaypoint> data) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
         // we need to apply the algorithm not to the lat / lon values but to the distance in meeters between points calculated from it...
-        final List<Double> newLatValues = applyFilter(
+        final List<Double> newLatValues = apply(
                 data.stream().map((t) -> {
                     return t.getLatitude();
                 }).collect(Collectors.toList()), 3, 2.0);
-        final List<Double> newLonValues = applyFilter(
+        final List<Double> newLonValues = apply(
                 data.stream().map((t) -> {
                     return t.getLongitude();
                 }).collect(Collectors.toList()), 3, 2.0);
         // elevations can fluctuate a lot on small distances
-        final List<Double> newElevValues = applyFilter(
+        final List<Double> newElevValues = apply(
                 data.stream().map((t) -> {
                     return t.getElevation();
                 }).collect(Collectors.toList()), 3, 3.0);

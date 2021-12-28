@@ -44,11 +44,11 @@ import tf.gpx.edit.items.GPXWaypoint;
  *
  * @author thomas
  */
-public class TestReduce {
+public class TestReduction {
     private static final double DELTA_DISTANCE = 1.0;
     private final String dS;
 
-    public TestReduce() {
+    public TestReduction() {
         // TFE, 20181005: with proper support for locals also the test values change
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }
@@ -91,7 +91,7 @@ public class TestReduce {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.DouglasPeucker,
                         10.0);
         
@@ -314,7 +314,7 @@ public class TestReduce {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.VisvalingamWhyatt,
                         10.0);
                 
@@ -537,7 +537,7 @@ public class TestReduce {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.simplifyTrack(trackwaypoints, 
+                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.ReumannWitkam,
                         10.0);
                 

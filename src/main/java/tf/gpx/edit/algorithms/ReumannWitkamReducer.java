@@ -61,7 +61,7 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
     */
     @Override
-    public boolean[] simplifyTrack(final List<GPXWaypoint> track, final double epsilon){
+    public boolean[] apply(final List<GPXWaypoint> track, final double epsilon){
         final boolean[] keep = new boolean[track.size()];
         keep[0] = true;
         keep[track.size()-1] = true;
@@ -76,7 +76,7 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     	while( index < list.size()-3 ){
 //            System.out.println("index: " + index);
             // TFE, 20200906: special case alert! distance between index, index+1, index+2 can be 0!
-            // in this case distanceToGreatCircleGPXWaypoints will always return 0 an all points of the track will be removed
+            // in this case distanceToGreatCircleGPXWaypoints will always return 0 and all points of the track will be removed
             if (EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+1)) > 0.0 &&
                     EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+2)) > 0.0 &&
                     EarthGeometry.distanceGPXWaypoints(list.get(index+1), list.get(index+2)) > 0.0) {

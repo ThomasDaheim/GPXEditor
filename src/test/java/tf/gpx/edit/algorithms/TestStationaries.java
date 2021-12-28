@@ -43,10 +43,10 @@ import tf.gpx.edit.items.GPXLineItem;
  *
  * @author thomas
  */
-public class TestAlgorithms {
+public class TestStationaries {
     private final String dS;
 
-    public TestAlgorithms() {
+    public TestStationaries() {
         // TFE, 20181005: with proper support for locals also the test values change
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }

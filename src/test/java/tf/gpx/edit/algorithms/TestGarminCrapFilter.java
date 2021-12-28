@@ -25,19 +25,33 @@
  */
 package tf.gpx.edit.algorithms;
 
+import java.io.File;
 import java.util.List;
-import tf.gpx.edit.helper.GPXEditorPreferences;
+import org.junit.Assert;
+import org.junit.Test;
+import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
- * Common interface for all reduce algorithms.
+ * Test of the hampel filter implementation.
  * 
  * @author thomas
  */
-public interface IWaypointReducer {
-    boolean[] apply(final List<GPXWaypoint> track, final double epsilon);
-    
-    default boolean[] apply(final List<GPXWaypoint> track) {
-        return apply(track, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+public class TestGarminCrapFilter {
+    @Test
+    public void testWithWaypoints() {
+        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testgarmincrapfilter.gpx"));
+        
+        final List<GPXWaypoint> waypoints = gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints();
+        Assert.assertEquals(263, waypoints.size());
+        final boolean[] keep = GarminCrapFilter.applyFilter(waypoints, 1000.0);
+        Assert.assertEquals(263, keep.length);
+        
+        // should remove forst & last waypoint ONLY
+        Assert.assertFalse(keep[0]);
+        Assert.assertFalse(keep[262]);
+        for (int i = 1; i <= 261; i++) {
+            Assert.assertTrue(keep[i]);
+        }
     }
 }

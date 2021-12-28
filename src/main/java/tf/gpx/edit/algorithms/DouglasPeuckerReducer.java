@@ -61,7 +61,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
      * @return the points to keep from the original track
      */
     @Override
-    public boolean[] simplifyTrack(
+    public boolean[] apply(
             final List<GPXWaypoint> track, 
             final double epsilon) {
         final boolean[] keep = new boolean[track.size()];
