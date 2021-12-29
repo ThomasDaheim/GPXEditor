@@ -37,6 +37,7 @@ import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
@@ -60,7 +61,6 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     REDUCTION_ALGORITHM("algorithm", WaypointReduction.ReductionAlgorithm.ReumannWitkam.name(), WaypointReduction.ReductionAlgorithm.class),
     DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name(), EarthGeometry.DistanceAlgorithm.class),
     REDUCE_EPSILON("epsilon", Double.toString(50), Double.class),
-    FIX_EPSILON("fixDistance", Double.toString(1000), Double.class),
     // TFE, 20200508: empty string is not a good default...
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String.class),
     SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataOptions.SRTMDataAverage.class),
@@ -105,9 +105,17 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     DEFAULT_IMAGE_PATH("defaultImagePath", System.getProperty("user.home"), String.class),
     IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class),
     // TFE, 2021222: parameters for filter algorithms
+    SMOOTHING_ALGORITHM("smoothingAlgorithm", WaypointSmoothing.SmoothingAlgorithm.SavitzkyGolay.name(), WaypointSmoothing.SmoothingAlgorithm.class),
+    SMOOTHING_PRE_ALGORITHM("smoothingPreAlgorithm", WaypointSmoothing.PreprocessingAlgorithm.Hampel.name(), WaypointSmoothing.PreprocessingAlgorithm.class),
+    SMOOTHING_USE_PRE("smoothingUsePre", Boolean.toString(true), Boolean.class),
+    SMOOTHING_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
+    FIX_DISTANCE("fixDistance", Double.toString(1000), Double.class),
     HAMPEL_THRESHOLD("hampelThreshold", Integer.toString(3), Integer.class),
-    SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(2), Integer.class),
-    SAVITZKYGOLAY_USE_PRE("savitzkyGolayUsePre", Boolean.toString(true), Boolean.class);
+    // according to https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf order > 2 doesn't improve the quality much
+    // our test cases seems to level of for order = 4
+    SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(4), Integer.class),
+    DOUBLEEXP_ALPHA("doubleExpAlpha", Double.toString(0.6), Double.class),
+    DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

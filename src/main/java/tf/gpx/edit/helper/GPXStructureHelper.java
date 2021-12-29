@@ -50,7 +50,7 @@ import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
-import tf.gpx.edit.worker.GPXReduceWorker;
+import tf.gpx.edit.worker.GPXReductionWorker;
 
 /**
  *
@@ -88,7 +88,7 @@ public class GPXStructureHelper {
     }
 
     public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
-        runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
+        runVisitor(gpxLineItems, new GPXReductionWorker(algorithm, epsilon));
     }
 
     public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {

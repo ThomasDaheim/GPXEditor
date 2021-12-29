@@ -27,8 +27,6 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,7 +35,7 @@ import org.junit.Test;
  * 
  * @author thomas
  */
-public class TestDoubleExponentialSmoothing {
+public class TestDoubleExponentialSmoother {
     @Test
     public void forecastNISTData() {
         // test cases based on https://github.com/navdeep-G/exp-smoothing-java/blob/master/src/test/java/algos/TestDoubleExpSmoothing.java
@@ -70,7 +68,7 @@ public class TestDoubleExponentialSmoothing {
         double alpha = 0.5;
         double gamma = 0.6;
 
-        final double[] prediction = DoubleExponentialSmoothing.doubleExponentialForecast(y, alpha, gamma, 0, m);
+        final double[] prediction = DoubleExponentialSmoother.doubleExponentialForecast(y, alpha, gamma, 0, m);
 //        System.out.println(y);
 //        System.out.println(Arrays.stream(prediction).boxed().collect(Collectors.toList()));
 
@@ -112,6 +110,6 @@ public class TestDoubleExponentialSmoothing {
             803.9218592629109, 
             810.7806665005048};
 
-        Assert.assertArrayEquals(prediction, expected, 0.01);
+        Assert.assertArrayEquals(expected, prediction, 0.01);
     }
 }

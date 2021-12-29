@@ -1949,7 +1949,7 @@ public class GPXEditor implements Initializable {
                 
                 if (ProcessType.SMOOTHEN.equals(processType)) {
                     keep = GarminCrapFilter.applyFilter(trackwaypoints, 
-                            GPXEditorPreferences.FIX_EPSILON.getAsType());
+                            GPXEditorPreferences.FIX_DISTANCE.getAsType());
                 } else {
                     keep= WaypointReduction.apply(trackwaypoints, 
                             GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
@@ -1986,7 +1986,7 @@ public class GPXEditor implements Initializable {
             startAction();
             if (ProcessType.SMOOTHEN.equals(processType)) {
                 GPXStructureHelper.getInstance().fixGPXMeasurables(gpxLineItems,
-                        GPXEditorPreferences.FIX_EPSILON.getAsType());
+                        GPXEditorPreferences.FIX_DISTANCE.getAsType());
             } else {
                 GPXStructureHelper.getInstance().reduceGPXMeasurables(gpxLineItems,
                         GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),

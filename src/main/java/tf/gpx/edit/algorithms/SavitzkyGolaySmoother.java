@@ -27,54 +27,27 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
+import mr.go.sgfilter.SGFilter;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
- * Implementation for double exponential smoothing, based on
- * https://github.com/navdeep-G/exp-smoothing-java/blob/master/src/main/java/algos/expsmoothing/SingleExpSmoothing.java
+ * Caller for the Savitzky-Golay filter from https://github.com/ruozhuochen/savitzky-golay-filter .
+ * 
+ * It uses the HampelFilter as preprocessor to fix outliers before smoothing.
  * 
  * @author thomas
  */
-public class DoubleExponentialSmoothing implements IWaypointSmoother {
-    private final static DoubleExponentialSmoothing INSTANCE = new DoubleExponentialSmoothing();
+public class SavitzkyGolaySmoother implements IWaypointSmoother {
+    private final static SavitzkyGolaySmoother INSTANCE = new SavitzkyGolaySmoother();
     
-    private DoubleExponentialSmoothing() {
+    private SavitzkyGolaySmoother() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static DoubleExponentialSmoothing getInstance() {
+    public static SavitzkyGolaySmoother getInstance() {
         return INSTANCE;
-    }
-    
-    // general method based on https://github.com/navdeep-G/exp-smoothing-java/blob/master/src/main/java/algos/expsmoothing/SingleExpSmoothing.java
-    public static double[] doubleExponentialForecast(List<Double> data, double alpha, double gamma, int initializationMethod, int numForecasts) {
-        double[] y = new double[data.size() + numForecasts];
-        double[] s = new double[data.size()];
-        double[] b = new double[data.size()];
-        s[0] = y[0] = data.get(0);
-
-        if(initializationMethod==0) {
-            b[0] = data.get(1)-data.get(0);
-        } else if(initializationMethod==1 && data.size()>4) {
-            b[0] = (data.get(3) - data.get(0)) / 3;
-        } else if(initializationMethod==2) {
-            b[0] = (data.get(data.size() - 1) - data.get(0))/(data.size() - 1);
-        }
-
-        int i = 1;
-        y[1] = s[0] + b[0];
-        for (i = 1; i < data.size(); i++) {
-            s[i] = alpha * data.get(i) + (1 - alpha) * (s[i - 1]+b[i - 1]);
-            b[i] = gamma * (s[i] - s[i - 1]) + (1-gamma) * b[i-1];
-            y[i+1] = s[i] + b[i];
-        }
-
-        for (int j = 0; j < numForecasts ; j++, i++) {
-            y[i] = s[data.size()-1] + (j+1) * b[data.size()-1];
-        }
-
-        return y;
     }
     
     /**
@@ -90,8 +63,29 @@ public class DoubleExponentialSmoothing implements IWaypointSmoother {
             return data;
         }
         
-        // TODO: use something like https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm to find best values for alpha & gamma
-        final double[] output = doubleExponentialForecast(data, 2.0 / (data.size() - 1.0), 1.0, 2, 0);
+        // limit window to some number and not use whole data set...
+        // https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf suggests order = 2, n ~ 100
+        // our test cases for SIMPLE_DATA seems to level of for order = 4
+        final int nl = Math.min(100, data.size() / 2);
+        final int nr = Math.min(100 , data.size() - nl);
+        // order higher than number of points in the window doesn't make sense
+        final int order = Math.min(GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsType(), nl-1);
+        
+        final double[] coefficients = SGFilter.computeSGCoefficients(nl, nr, order);
+
+        final double[] simpleData = ArrayUtils.toPrimitive(data.toArray(new Double[data.size()]), 0);
+        final SGFilter filter = new SGFilter(nl, nr);
+        // we might want to use a preprocessor the fixes outliers
+        if (GPXEditorPreferences.SMOOTHING_USE_PRE.getAsType()) {
+            final WaypointSmoothing.PreprocessingAlgorithm algo = GPXEditorPreferences.SMOOTHING_PRE_ALGORITHM.getAsType();
+            switch (algo) {
+                case Hampel:
+                    filter.appendPreprocessor(HampelFilter.getInstance());
+                default:
+            }
+        }
+        final double[] output = filter.smooth(simpleData, coefficients);        
+
         return Arrays.asList(ArrayUtils.toObject(output));
     }
 }

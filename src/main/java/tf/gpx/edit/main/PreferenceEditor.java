@@ -692,7 +692,7 @@ public class PreferenceEditor extends AbstractStage {
         rowNum++;
         // 4th row: routing api key
         t = new Tooltip("API key for OpenRouteService");
-        final Label routingApiKeyLbl = new Label("Routing API key:");
+        final Label routingApiKeyLbl = new Label("OpenRouteService API key:");
         routingApiKeyLbl.setTooltip(t);
         getGridPane().add(routingApiKeyLbl, 0, rowNum, 1, 1);
         GridPane.setValignment(routingApiKeyLbl, VPos.TOP);
@@ -939,7 +939,7 @@ public class PreferenceEditor extends AbstractStage {
         EnumHelper.getInstance().selectEnum(profileChoiceBox, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
         EnumHelper.getInstance().selectEnum(heatColorChoiceBox, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
         EnumHelper.getInstance().selectEnum(opacDistChoiceBox, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
-        smoothText.setText(decimalFormat.format(GPXEditorPreferences.FIX_EPSILON.getAsType()));
+        smoothText.setText(decimalFormat.format(GPXEditorPreferences.FIX_DISTANCE.getAsType()));
         epsilonText.setText(decimalFormat.format(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
         assignHeightChkBox.setSelected(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType());
         EnumHelper.getInstance().selectEnum(assignModeChoiceBox, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
@@ -973,7 +973,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.DISTANCE_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointReduction.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf(epsilonText.getText().trim()), 0));
-        GPXEditorPreferences.FIX_EPSILON.put(Math.max(Double.valueOf(smoothText.getText().trim()), 0));
+        GPXEditorPreferences.FIX_DISTANCE.put(Math.max(Double.valueOf(smoothText.getText().trim()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
         GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());

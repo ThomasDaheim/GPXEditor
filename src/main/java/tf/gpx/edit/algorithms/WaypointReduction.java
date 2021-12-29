@@ -66,7 +66,7 @@ public class WaypointReduction implements IWaypointReducer {
      * Simplify track by removing points, using the requested algorithm.
      * 
      * @param track points of the track
-     * @param algorithm What EarthGeometry.ReductionAlgorithm to use
+     * @param algorithm What ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
      */

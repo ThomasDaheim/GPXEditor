@@ -84,7 +84,7 @@ public class TestReduction {
     }
 
     @Test
-    public void testReduceDouglasPeucker() {
+    public void testDouglasPeucker() {
         // results see testReduceDouglasPeucker.txt
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
         
@@ -307,7 +307,7 @@ public class TestReduction {
     }
 
     @Test
-    public void testReduceVisvalingamWhyatt() {
+    public void testVisvalingamWhyatt() {
         // results see testReduceVisvalingamWhyatt.txt
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
         
@@ -530,7 +530,7 @@ public class TestReduction {
     }
 
     @Test
-    public void testReduceReumannWitkam() {
+    public void testReumannWitkam() {
         // results see testReduceReumannWitkam.txt
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
         

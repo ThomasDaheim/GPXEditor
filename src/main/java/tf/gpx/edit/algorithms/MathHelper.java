@@ -27,20 +27,27 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Calculates the Median Absolute Deviation based on the code
+ * Calculates 
+ * 
+ * the Median Absolute Deviation based on the code
  * from https://stackoverflow.com/a/45386673
+ * 
+ * the Root Mean Squared Error (RMSE)
  * 
  * @author thomas
  */
-public class MedianAbsoluteDeviation {
-    private MedianAbsoluteDeviation() {
+public class MathHelper {
+    private MathHelper() {
         super();
         // Exists only to defeat instantiation.
     }
 
+    // calculate the Median Absolute Deviation for various input types
     public static Double mad(final List<Double> inputList, final Double med) {
         return mad(inputList.toArray(new Double[inputList.size()]), med);
     }
@@ -58,6 +65,7 @@ public class MedianAbsoluteDeviation {
         return median(input);
     }
 
+    // calculate the median for various input types
     public static Double median(final List<Double> inputList) {
         return median(inputList.toArray(new Double[inputList.size()]));
     }
@@ -83,5 +91,25 @@ public class MedianAbsoluteDeviation {
         for (int i=0; i<array.length;i++) {
             array[i] = Math.abs(array[i] - value);
         }
+    }
+    
+    // calculate the Root Mean Squared Error for various input types
+    public static Double rmse(final List<Double> array1, final List<Double> array2) {
+        return rmse(array1.toArray(new Double[array1.size()]), array2.toArray(new Double[array2.size()]));
+    }
+
+    public static Double rmse(final Double[] array1, final Double[] array2) {
+        return rmse(ArrayUtils.toPrimitive(array1, 0), ArrayUtils.toPrimitive(array2, 0));
+    }
+    
+    public static double rmse(final double[] array1, final double[] array2) {
+        assert (array1.length == array2.length);
+
+        double result = 0;
+        for (int i=0; i<array1.length;i++) {
+            result += (array1[i] - array2[i])*(array1[i] - array2[i]);
+        }
+        
+        return Math.sqrt(result) / array1.length;
     }
 }

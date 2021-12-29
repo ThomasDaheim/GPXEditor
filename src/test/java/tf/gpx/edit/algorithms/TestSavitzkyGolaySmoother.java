@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.algorithms;
 
-import java.util.Arrays;
-import java.util.List;
 import mr.go.sgfilter.SGFilter;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,8 +34,9 @@ import org.junit.Test;
  * 
  * @author thomas
  */
-public class TestSavitzkyGolayFilter {
-    private final static List<Double> SIMPLE_DATA = Arrays.asList(2.0, 4.0, 6.0, 2.0, 2.0, 2.0, 2.0, 3.0, 1.0);
+public class TestSavitzkyGolaySmoother {
+    private final static double[] SIMPLE_DATA = {2.0, 4.0, 6.0, 2.0, 2.0, 2.0, 2.0, 3.0, 1.0};
+    
     private final static double[] ORDER_1 = {1.612121212121212, 1.8666666666666665, 2.2060606060606056, 2.418181818181818, 2.563636363636363, 2.4424242424242424, 2.042424242424242, 1.3515151515151513, 1.1575757575757577};
     private final static double[] ORDER_2 = {2.4606060606060614, 3.018181818181819, 3.1757575757575767, 3.327272727272728, 3.018181818181819, 2.3818181818181827, 1.7696969696969702, 1.5939393939393942, 1.1272727272727274};
     private final static double[] ORDER_3 = {2.147319347319348, 2.965034965034965, 3.4666666666666663, 3.6377622377622383, 3.106293706293707, 2.269930069930071, 1.5808857808857821, 1.7337995337995342, 1.2937062937062942};
@@ -45,6 +44,34 @@ public class TestSavitzkyGolayFilter {
     private final static double[] ORDER_5 = {2.183682983682975, 3.924475524475503, 4.551981351981326, 3.4363636363636187, 1.9986013986013913, 1.5804195804195738, 2.5081585081584894, 2.1142191142191016, 1.3916083916083826};
     private final static double[] ORDER_6 = {2.2806526806526426, 4.554778554778593, 4.5641025641025905, 3.1454545454545357, 1.5986013986013363, 1.8955710955710674, 2.5808857808857972, 2.30815850815853, 1.2219114219114218};
     private final static double[] ORDER_7 = {1.7661867544230159, 4.524064171122452, 5.026737967913386, 3.0648292883590105, 1.3394487865085674, 2.1220896750303906, 2.3006170300290854, 2.50012340600518, 1.3870012340598339};
+    private final static double[][] ORDER = {
+        {Double.NaN},
+        ORDER_1,
+        ORDER_2,
+        ORDER_3,
+        ORDER_4,
+        ORDER_5,
+        ORDER_6,
+        ORDER_7,
+    };
+    
+    private final static double ORDER_1_RMSE = 0.5273737706933763;
+    private final static double ORDER_2_RMSE = 0.4178552919860599;
+    private final static double ORDER_3_RMSE = 0.4060473469075387;
+    private final static double ORDER_4_RMSE = 0.28040922930842194;
+    private final static double ORDER_5_RMSE = 0.26226886472565963;
+    private final static double ORDER_6_RMSE = 0.2433753537246242;
+    private final static double ORDER_7_RMSE = 0.20341720320184342;
+    private final static double[] ORDER_RMSE = {
+        Double.NaN,
+        ORDER_1_RMSE,
+        ORDER_2_RMSE,
+        ORDER_3_RMSE,
+        ORDER_4_RMSE,
+        ORDER_5_RMSE,
+        ORDER_6_RMSE,
+        ORDER_7_RMSE
+    };
 
     private void assertCoeffsEqual(double[] coeffs, double[] tabularCoeffs) {
         for (int i = 0; i < tabularCoeffs.length; i++) {
@@ -112,55 +139,38 @@ public class TestSavitzkyGolayFilter {
     @Test
     public void testWithSimpleData() {
         // simple test set (modified) from https://github.com/ruozhuochen/savitzky-golay-filter/blob/master/src/test/java/mr/go/sgfilter/SGFilterTest.java
-        final double[] order1 = forOrder(SIMPLE_DATA, 1);
-        testOrder(order1, ORDER_1);
-//        System.out.println(Arrays.stream(order1).boxed().collect(Collectors.toList()));
-
-        final double[] order2 = forOrder(SIMPLE_DATA, 2);
-        testOrder(order2, ORDER_2);
-//        System.out.println(Arrays.stream(order2).boxed().collect(Collectors.toList()));
-
-        final double[] order3 = forOrder(SIMPLE_DATA, 3);
-        testOrder(order3, ORDER_3);
-//        System.out.println(Arrays.stream(order3).boxed().collect(Collectors.toList()));
-
-        final double[] order4 = forOrder(SIMPLE_DATA, 4);
-        testOrder(order4, ORDER_4);
-//        System.out.println(Arrays.stream(order4).boxed().collect(Collectors.toList()));
-
-        final double[] order5 = forOrder(SIMPLE_DATA, 5);
-        testOrder(order5, ORDER_5);
-//        System.out.println(Arrays.stream(order5).boxed().collect(Collectors.toList()));
-
-        final double[] order6 = forOrder(SIMPLE_DATA, 6);
-        testOrder(order6, ORDER_6);
-//        System.out.println(Arrays.stream(order6).boxed().collect(Collectors.toList()));
-
-        final double[] order7 = forOrder(SIMPLE_DATA, 7);
-        testOrder(order7, ORDER_7);
-//        System.out.println(Arrays.stream(order7).boxed().collect(Collectors.toList()));
+        for (int i = 1; i<=7; i++) {
+            testForOrder(i);
+        }
 
         // can't have higher order than points...
         try {
-            forOrder(SIMPLE_DATA, 99);
+            testForOrder(99);
             Assert.assertTrue(false);
         } catch (IllegalArgumentException ex) {
             Assert.assertTrue(true);
         }
     }
     
-    private double[] forOrder(final List<Double> data, final int order) {
-        int nl = data.size() / 2;
-        int nr = data.size() - nl;
+    private void testForOrder(final int order) {
+        int nl = SIMPLE_DATA.length / 2;
+        int nr = SIMPLE_DATA.length - nl;
         double[] coefficients = SGFilter.computeSGCoefficients(nl, nr, order);
-        return (new SGFilter(nl, nr).smooth(data.stream().mapToDouble(Double::doubleValue).toArray(), coefficients));
+        double[] result = (new SGFilter(nl, nr).smooth(SIMPLE_DATA, coefficients));
+        
+        testOrder(result, ORDER[order], ORDER_RMSE[order]);
+
+//        System.out.println(Arrays.stream(result).boxed().collect(Collectors.toList()));
+//        System.out.println(MathHelper.rmse(result, SIMPLE_DATA));
     }
     
-    private void testOrder(final double[] result, final double[] checkValues) {
+    private void testOrder(final double[] result, final double[] checkValues, final double rmse) {
         Assert.assertEquals(result.length, checkValues.length);
         
         for (int i = 0; i < result.length; i++) {
             Assert.assertEquals(result[i], checkValues[i], 0.001);
         }
+
+        Assert.assertEquals(MathHelper.rmse(result, SIMPLE_DATA), rmse, 0.001);
     }
 }

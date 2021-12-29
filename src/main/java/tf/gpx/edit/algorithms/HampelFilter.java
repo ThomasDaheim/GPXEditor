@@ -78,8 +78,8 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
         
         for (int i = halfWindow; i < data.length - halfWindow; i++) {
             final double[] subList = Arrays.copyOfRange(data, i - halfWindow, i + halfWindow);
-            final double median = MedianAbsoluteDeviation.median(subList);
-            final double weightedMAD = L_FACTOR * MedianAbsoluteDeviation.mad(subList, median);
+            final double median = MathHelper.median(subList);
+            final double weightedMAD = L_FACTOR * MathHelper.mad(subList, median);
             
 //            System.out.println("i: " + i);
 //            System.out.println("data: " + data.get(i) + ", median: " + median + ", weightedMAD: " + weightedMAD + ", value: " + Math.abs(data.get(i) - median) / weightedMAD);
@@ -137,6 +137,7 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
                 data.stream().map((t) -> {
                     return t.getLongitude();
                 }).collect(Collectors.toList()), 3, 2.0);
+        // not using GPXEditorPreferences.SMOOTHING_ELEVATION here since this is only fpr WaypointSmoothing class...
         // elevations can fluctuate a lot on small distances
         final List<Double> newElevValues = apply(
                 data.stream().map((t) -> {
