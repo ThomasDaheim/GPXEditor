@@ -99,23 +99,29 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     SEARCH_URL("searchUrl", "https://www.google.com/search?q=%s", String.class),
     // TFE, 20210117: show/hide waypoint names
     SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class),
+
     // TFE, 20210808: show images on map
     SHOW_IMAGES_ON_MAP("showImagesOnMap", Boolean.toString(true), Boolean.class),
     IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class),
     DEFAULT_IMAGE_PATH("defaultImagePath", System.getProperty("user.home"), String.class),
     IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class),
+
     // TFE, 2021222: parameters for filter algorithms
     SMOOTHING_ALGORITHM("smoothingAlgorithm", WaypointSmoothing.SmoothingAlgorithm.SavitzkyGolay.name(), WaypointSmoothing.SmoothingAlgorithm.class),
-    SMOOTHING_PRE_ALGORITHM("smoothingPreAlgorithm", WaypointSmoothing.PreprocessingAlgorithm.Hampel.name(), WaypointSmoothing.PreprocessingAlgorithm.class),
-    SMOOTHING_USE_PRE("smoothingUsePre", Boolean.toString(true), Boolean.class),
-    SMOOTHING_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
-    FIX_DISTANCE("fixDistance", Double.toString(1000), Double.class),
-    HAMPEL_THRESHOLD("hampelThreshold", Integer.toString(3), Integer.class),
     // according to https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf order > 2 doesn't improve the quality much
     // our test cases seems to level of for order = 4
     SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(4), Integer.class),
-    DOUBLEEXP_ALPHA("doubleExpAlpha", Double.toString(0.6), Double.class),
-    DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class);
+    // "In practice, alpha is usually set to a value between 0.1 and 0.3"
+    // in our test samples alpha always ends up with a value of 1.0, meaining that previous points don't enter into the smoothing (except for the trend)
+    DOUBLEEXP_ALPHA("doubleExpAlpha", Double.toString(0.2), Double.class),
+    // For alpha = 0.2 lowest MSE is usually for gamma = 1.0 => no trend
+    DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class),
+    SMOOTHING_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
+    SMOOTHING_USE_PRE("smoothingUsePre", Boolean.toString(false), Boolean.class),
+    SMOOTHING_PRE_ALGORITHM("smoothingPreAlgorithm", WaypointSmoothing.PreprocessingAlgorithm.Hampel.name(), WaypointSmoothing.PreprocessingAlgorithm.class),
+    HAMPEL_THRESHOLD("hampelThreshold", Integer.toString(3), Integer.class),
+    SMOOTHING_USE_FIX("smoothingUseFix", Boolean.toString(false), Boolean.class),
+    FIX_DISTANCE("fixDistance", Double.toString(1000), Double.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

@@ -36,6 +36,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
 import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
@@ -51,6 +52,7 @@ import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
 import tf.gpx.edit.worker.GPXReductionWorker;
+import tf.gpx.edit.worker.GPXSmoothingWorker;
 
 /**
  *
@@ -66,8 +68,6 @@ public class GPXStructureHelper {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
     private static final String MERGED_FILE_NAME = "Merged.gpx";
-    private static final String MERGED_ROUTE_NAME = "Merged Route";
-    private static final String MERGED_TRACK_NAME = "Merged Track";
     
     private GPXEditor myEditor;
     
@@ -85,6 +85,10 @@ public class GPXStructureHelper {
 
     public void fixGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final double distance) {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
+    }
+
+    public void smoothGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointSmoothing.SmoothingAlgorithm algorithm) {
+        runVisitor(gpxLineItems, new GPXSmoothingWorker(algorithm));
     }
 
     public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {

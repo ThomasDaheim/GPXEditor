@@ -28,6 +28,7 @@ package tf.gpx.edit.worker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
@@ -35,6 +36,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
+import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.main.GPXEditor;
 
 /**
@@ -98,7 +100,7 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         return deepthFirst;
     }
     
-    protected void removeGPXWaypoint(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+    protected void removeGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
         assert gpxWayPoints.size() == keep.length;
         assert myEditor != null;
         
@@ -114,6 +116,13 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         Collections.reverse(waypointsToDelete);
         
         myEditor.deleteWaypoints(waypointsToDelete);
+    }
+    
+    protected void smoothGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final List<LatLonElev> smoothed) {
+        assert gpxWayPoints.size() == smoothed.size();
+        assert myEditor != null;
+        
+        myEditor.smoothWaypoints(gpxWayPoints, smoothed);
     }
 
     @Override

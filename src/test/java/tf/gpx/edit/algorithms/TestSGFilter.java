@@ -34,7 +34,7 @@ import org.junit.Test;
  * 
  * @author thomas
  */
-public class TestSavitzkyGolaySmoother {
+public class TestSGFilter {
     private final static double[] SIMPLE_DATA = {2.0, 4.0, 6.0, 2.0, 2.0, 2.0, 2.0, 3.0, 1.0};
     
     private final static double[] ORDER_1 = {1.612121212121212, 1.8666666666666665, 2.2060606060606056, 2.418181818181818, 2.563636363636363, 2.4424242424242424, 2.042424242424242, 1.3515151515151513, 1.1575757575757577};

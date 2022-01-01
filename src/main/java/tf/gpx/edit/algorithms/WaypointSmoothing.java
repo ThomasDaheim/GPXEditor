@@ -66,7 +66,7 @@ public class WaypointSmoothing implements IWaypointSmoother {
      * @param dummy Needed to avoid compiler errors due to same signature after erasure as the GPXWaypoint method
      * @return smoothed list of values
      */
-    public List<Double> apply(final List<Double> data, final SmoothingAlgorithm algorithm, boolean dummy) {
+    public static List<Double> apply(final List<Double> data, final SmoothingAlgorithm algorithm, boolean dummy) {
         switch (algorithm) {
             case SavitzkyGolay:
                 return SavitzkyGolaySmoother.getInstance().apply(data, dummy);
@@ -77,7 +77,7 @@ public class WaypointSmoothing implements IWaypointSmoother {
         }
     }
     
-    public List<LatLonElev> apply(final List<GPXWaypoint> data, final SmoothingAlgorithm algorithm) {
+    public static List<LatLonElev> apply(final List<GPXWaypoint> data, final SmoothingAlgorithm algorithm) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
         // we could apply the algorithm not to the lat / lon values but to the distance/time / course between points calculated from it...
         final List<Double> newLatValues = apply(

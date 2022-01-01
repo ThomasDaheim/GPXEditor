@@ -42,12 +42,12 @@ import tf.gpx.edit.values.EditGPXWaypoint;
  *
  * @author thomas
  */
-public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
+public class UpdateWaypointInformationAction extends GPXLineItemAction<GPXWaypoint> {
     private final List<GPXWaypoint> myWaypoints;
     private final List<GPXWaypoint> myStoreGPXWaypoints = new ArrayList<>();
     private final GPXWaypoint myDatapoint;
     
-    public UpdateWaypointAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final GPXWaypoint datapoint) {
+    public UpdateWaypointInformationAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final GPXWaypoint datapoint) {
         super(LineItemAction.UPDATE_WAYPOINTS, editor);
         
         myWaypoints = new ArrayList<>(waypoints);
@@ -58,7 +58,7 @@ public class UpdateWaypointAction extends GPXLineItemAction<GPXWaypoint> {
 
     @Override
     protected void initAction() {
-        // simple store clone of waypoints to keep data - order etc isn't change by this
+        // simple store clone of waypoints to keep data - order etc isn't changed by this
         for (GPXWaypoint waypoint : myWaypoints) {
             myStoreGPXWaypoints.add(waypoint.cloneMe(true));
         }

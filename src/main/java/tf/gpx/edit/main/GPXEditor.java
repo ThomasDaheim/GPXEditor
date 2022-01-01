@@ -109,10 +109,11 @@ import tf.gpx.edit.actions.MergeDeleteMetadataAction;
 import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
+import tf.gpx.edit.actions.SmoothWaypointAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
-import tf.gpx.edit.actions.UpdateWaypointAction;
+import tf.gpx.edit.actions.UpdateWaypointInformationAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.ExecuteAlgorithm;
 import tf.gpx.edit.algorithms.GarminCrapFilter;
@@ -142,6 +143,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
@@ -178,8 +180,26 @@ public class GPXEditor implements Initializable {
     }
 
     public static enum ProcessType {
-        SMOOTHEN,
-        REDUCE
+        FIXING(null, true),
+        SMOOTHING(null, false),
+        REDUCING(null, true),
+        FINDING(ExecuteAlgorithm.ExecutionLevel.ITEMS, false);
+        
+        private final boolean withFindOption;
+        private final ExecuteAlgorithm.ExecutionLevel execLevel;
+        
+        private ProcessType(final ExecuteAlgorithm.ExecutionLevel level, final boolean opt) {
+            execLevel = level;
+            withFindOption = opt;
+        }
+        
+        public ExecuteAlgorithm.ExecutionLevel getExecutionLevel() {
+            return execLevel;
+        }
+
+        public boolean withFindOption() {
+            return withFindOption;
+        }
     }
 
     private static enum MoveUpDown {
@@ -257,9 +277,11 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem exitFileMenu;
     @FXML
-    private MenuItem smoothenMenu;
+    private MenuItem fixMenu;
     @FXML
     private MenuItem reduceMenu;
+    @FXML
+    private MenuItem smoothenMenu;
     @FXML
     private MenuItem stationariesMenu;
     @FXML
@@ -598,16 +620,22 @@ public class GPXEditor implements Initializable {
         //
         // Algorithms
         //
-        smoothenMenu.setOnAction((ActionEvent event) -> {
-            processGPXMeasurables(event, ProcessType.SMOOTHEN);
+        fixMenu.setOnAction((ActionEvent event) -> {
+            processGPXMeasurables(event, ProcessType.FIXING);
         });
-        smoothenMenu.disableProperty().bind(
+        fixMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         reduceMenu.setOnAction((ActionEvent event) -> {
-            processGPXMeasurables(event, ProcessType.REDUCE);
+            processGPXMeasurables(event, ProcessType.REDUCING);
         });
         reduceMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
+        
+        smoothenMenu.setOnAction((ActionEvent event) -> {
+            processGPXMeasurables(event, ProcessType.SMOOTHING);
+        });
+        smoothenMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
         
         stationariesMenu.setOnAction((ActionEvent event) -> {
@@ -1031,10 +1059,22 @@ public class GPXEditor implements Initializable {
             return;
         }
 
-        final IDoUndoAction updateAction = new UpdateWaypointAction(this, waypoints, datapoint);
+        final IDoUndoAction updateAction = new UpdateWaypointInformationAction(this, waypoints, datapoint);
         updateAction.doAction();
         
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
+    }
+    
+    public void smoothWaypoints(final List<GPXWaypoint> waypoints, final List<LatLonElev> smoothed) {
+        if(waypoints.isEmpty()) {
+            // nothing to delete...
+            return;
+        }
+
+        final IDoUndoAction smoothAction = new SmoothWaypointAction(this, waypoints, smoothed);
+        smoothAction.doAction();
+        
+        addDoneAction(smoothAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
     }
     
     public void setMetadataInformation(final GPXFile file, final Metadata metadata) {
@@ -1732,7 +1772,7 @@ public class GPXEditor implements Initializable {
             return;
         }
 
-        if (!ExecuteAlgorithm.getInstance().selectOptions(ExecuteAlgorithm.ExecutionLevel.ITEMS)) {
+        if (!ExecuteAlgorithm.getInstance().selectOptions(ProcessType.FINDING.getExecutionLevel())) {
             return;
         }
 
@@ -1936,7 +1976,7 @@ public class GPXEditor implements Initializable {
     }
 
     private void processGPXMeasurables(final Event event, final ProcessType processType) {
-        if (!ExecuteAlgorithm.getInstance().selectOptions(null)) {
+        if (!ExecuteAlgorithm.getInstance().selectOptions(processType.getExecutionLevel(), processType.withFindOption())) {
             return;
         }
 
@@ -1947,13 +1987,19 @@ public class GPXEditor implements Initializable {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
                 boolean keep[];
                 
-                if (ProcessType.SMOOTHEN.equals(processType)) {
-                    keep = GarminCrapFilter.applyFilter(trackwaypoints, 
-                            GPXEditorPreferences.FIX_DISTANCE.getAsType());
-                } else {
-                    keep= WaypointReduction.apply(trackwaypoints, 
-                            GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
-                            GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+                switch (processType) {
+                    case FIXING:
+                        keep = GarminCrapFilter.applyFilter(trackwaypoints, 
+                                GPXEditorPreferences.FIX_DISTANCE.getAsType());
+                        break;
+                    case REDUCING:
+                        keep = WaypointReduction.apply(trackwaypoints, 
+                                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                                GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+                        break;
+                    default:
+                        keep = new boolean[trackwaypoints.size()];
+                        Arrays.fill(keep, true);
                 }
 
 //                System.out.println("GPXTrackSegment: " + trackwaypoints.get(0).getCombinedID());
@@ -1984,16 +2030,24 @@ public class GPXEditor implements Initializable {
             }
 
             startAction();
-            if (ProcessType.SMOOTHEN.equals(processType)) {
-                GPXStructureHelper.getInstance().fixGPXMeasurables(gpxLineItems,
-                        GPXEditorPreferences.FIX_DISTANCE.getAsType());
-            } else {
-                GPXStructureHelper.getInstance().reduceGPXMeasurables(gpxLineItems,
-                        GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
-                        GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+            switch (processType) {
+                case FIXING:
+                    GPXStructureHelper.getInstance().fixGPXMeasurables(gpxLineItems,
+                            GPXEditorPreferences.FIX_DISTANCE.getAsType());
+                    break;
+                case REDUCING:
+                    GPXStructureHelper.getInstance().reduceGPXMeasurables(gpxLineItems,
+                            GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                            GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+                    break;
+                case SMOOTHING:
+                    GPXStructureHelper.getInstance().smoothGPXMeasurables(gpxLineItems,
+                            GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
+                    break;
+                default:
             }
             endAction(true);
-
+            
             refreshGPXFileList();
             refillGPXWaypointList(true);
         }

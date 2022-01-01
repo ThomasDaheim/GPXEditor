@@ -135,12 +135,31 @@ public class ExecuteAlgorithm extends AbstractStage {
         setCancelAccelerator(cancelBtn);
     }
     
+    public boolean selectOptions() {
+        return selectOptions(null, true);
+    }
+
     public boolean selectOptions(final ExecutionLevel fixedLevel) {
+        return selectOptions(fixedLevel, true);
+    }
+
+    public boolean selectOptions(final boolean withFindOption) {
+        return selectOptions(null, withFindOption);
+    }
+
+    public boolean selectOptions(final ExecutionLevel fixedLevel, final boolean withFindOption) {
         if (fixedLevel != null) {
             levelChoiceBox.setValue(fixedLevel);
             levelChoiceBox.setDisable(true);
         } else {
             levelChoiceBox.setDisable(false);
+        }
+        
+        if (withFindOption) {
+            onlyChkBox.setDisable(false);
+        } else {
+            onlyChkBox.setSelected(false);
+            onlyChkBox.setDisable(true);
         }
         
         showAndWait();

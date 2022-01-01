@@ -63,11 +63,12 @@ public class SavitzkyGolaySmoother implements IWaypointSmoother {
             return data;
         }
         
+        final int dataSize = data.size();
         // limit window to some number and not use whole data set...
         // https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf suggests order = 2, n ~ 100
         // our test cases for SIMPLE_DATA seems to level of for order = 4
-        final int nl = Math.min(100, data.size() / 2);
-        final int nr = Math.min(100 , data.size() - nl);
+        final int nl = Math.min(10, dataSize / 2);
+        final int nr = Math.min(10 , dataSize - nl);
         // order higher than number of points in the window doesn't make sense
         final int order = Math.min(GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsType(), nl-1);
         
@@ -84,7 +85,13 @@ public class SavitzkyGolaySmoother implements IWaypointSmoother {
                 default:
             }
         }
-        final double[] output = filter.smooth(simpleData, coefficients);        
+        final double[] output = filter.smooth(simpleData, coefficients);
+        
+        // Attention: smoothing fails at start & end of data - for nl points
+        for (int i = 0; i<nl; i++) {
+            output[i] = data.get(i);
+            output[dataSize-1 - i] = data.get(dataSize-1 - i);
+        }
 
         return Arrays.asList(ArrayUtils.toObject(output));
     }

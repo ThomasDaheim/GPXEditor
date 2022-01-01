@@ -142,6 +142,7 @@ public class TestSmoothing {
         // save any preferences we might want to abuse here...
         final double saveAlpha = GPXEditorPreferences.DOUBLEEXP_ALPHA.getAsType();
         final double saveGamma = GPXEditorPreferences.DOUBLEEXP_GAMMA.getAsType();
+        final boolean saveElev = GPXEditorPreferences.SMOOTHING_ELEVATION.getAsType();
 
         final Map<String, Double[]> results = new HashMap<>();
         results.put("T1.S1.1", new Double[]{Double.NaN, 0.2520006731970903, 0.17497574035354144, 0.17497574035354144, 0.1424458894834505, 0.14244588948345052, 0.12322699975484802, 0.12322699975484802, 0.1101496064806467});
@@ -173,25 +174,34 @@ public class TestSmoothing {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                System.out.println(trackwaypoints.get(0).getCombinedID());
+//                System.out.println(trackwaypoints.get(0).getCombinedID());
 
-                final Double[] rmse_results = results.get(trackwaypoints.get(0).getCombinedID());
+//                final Double[] rmse_results = results.get(trackwaypoints.get(0).getCombinedID());
+                final double[] best_result = {Double.MAX_VALUE, Double.NaN, Double.NaN};
                 for (int i = 0; i<=10; i++) {
                     for (int j = 0; j<=10; j++) {
                         GPXEditorPreferences.DOUBLEEXP_ALPHA.put(i/10.0);
                         GPXEditorPreferences.DOUBLEEXP_GAMMA.put(j/10.0);
 
                         List<LatLonElev> smoothed = WaypointSmoothing.getInstance().apply(trackwaypoints, WaypointSmoothing.SmoothingAlgorithm.DoubleExponential);
-                        System.out.println("rmse_" + i/10.0 + "_" + j/10.0 + ": " + rmse(trackwaypoints, smoothed));
+//                        System.out.println("rmse_" + i/10.0 + "_" + j/10.0 + ": " + rmse(trackwaypoints, smoothed));
+                        final double cur_result = rmse(trackwaypoints, smoothed);
+                        if (cur_result < best_result[0]) {
+                            best_result[0] = cur_result;
+                            best_result[1] = i/10.0;
+                            best_result[2] = j/10.0;
+                        }
 //                Assert.assertEquals(rmse(trackwaypoints, smoothed), rmse_results[i], 0.001);
                     }
                 }
+//                System.out.println("rmse: " + best_result[0] + ", alpha: " + best_result[1] + ", gamma: " + best_result[2]);
             }
         }
 
         // restore any preferences we might want to abuse here...
         GPXEditorPreferences.DOUBLEEXP_ALPHA.put(saveAlpha);
         GPXEditorPreferences.DOUBLEEXP_GAMMA.put(saveGamma);
+        GPXEditorPreferences.SMOOTHING_ELEVATION.put(saveElev);
     }
     
     public static double rmse(final List<GPXWaypoint> data, final List<LatLonElev> smoothed) {

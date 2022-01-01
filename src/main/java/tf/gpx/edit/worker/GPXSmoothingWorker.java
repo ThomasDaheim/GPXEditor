@@ -26,31 +26,44 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.algorithms.GarminCrapFilter;
+import tf.gpx.edit.algorithms.WaypointSmoothing;
+import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *
  * @author Thomas
  */
-public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
-    private GPXFixGarminCrapWorker() {
+public class GPXSmoothingWorker extends GPXEmptyWorker  {
+    private WaypointSmoothing.SmoothingAlgorithm myAlgorithm;
+
+    private GPXSmoothingWorker() {
         super ();
     }
 
-    public GPXFixGarminCrapWorker(final double parameter) {
-        super (parameter);
+    public GPXSmoothingWorker(final WaypointSmoothing.SmoothingAlgorithm algorithm) {
+        super (Double.NaN);
+
+        myAlgorithm = algorithm;
     }
 
     @Override
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
-        // go through waypoints and remove all with distanceGPXWaypoints to previous above epsilon
-        // AND distanceGPXWaypoints prev - next below epsilon
-        final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
+        // remove all waypoints using given algorithm an epsilon
+        smoothGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
+    }
 
-        final boolean keep[] = GarminCrapFilter.applyFilter(waypoints, myParameter);
+    @Override
+    public void visitGPXRoute(GPXRoute gpxRoute) {
+        // remove all waypoints using given algorithm an epsilon
+        smoothGPXWaypoints(gpxRoute.getGPXWaypoints());
+    }
+    
+    private void smoothGPXWaypoints(final List<GPXWaypoint> waypoints) {
+        final List<LatLonElev> smoothed = WaypointSmoothing.apply(waypoints, myAlgorithm);
         
-        removeGPXWaypoints(waypoints, keep);
+        smoothGPXWaypoints(waypoints, smoothed);
     }
 }

@@ -50,7 +50,12 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
     }
     
     // general method based on https://github.com/navdeep-G/exp-smoothing-java/blob/master/src/main/java/algos/expsmoothing/SingleExpSmoothing.java
-    public static double[] doubleExponentialForecast(List<Double> data, double alpha, double gamma, int initializationMethod, int numForecasts) {
+    public static double[] doubleExponentialForecast(
+            final List<Double> data, 
+            final double alpha, 
+            final double gamma, 
+            final int initializationMethod, 
+            final int numForecasts) {
         // we might want to use a preprocessor the fixes outliers
         final List<Double> useData = new ArrayList<>();
         if (GPXEditorPreferences.SMOOTHING_USE_PRE.getAsType()) {
@@ -69,32 +74,52 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
         double[] y = new double[useData.size() + numForecasts];
         double[] s = new double[useData.size()];
         double[] b = new double[useData.size()];
+
+        // first smoothed value is equal to real data
         s[0] = y[0] = useData.get(0);
 
-        if(initializationMethod==0) {
+        switch (initializationMethod) {
+            case 1:
+                b[0] = useData.get(1)-data.get(0);
+                break;
+            case 2:
+                if (useData.size() >= 4) {
+                    b[0] = (useData.get(3) - useData.get(0)) / 3;
+                    break;
+                } // "else" case is next switch case (that will earn me a place in coding hell...)
+            case 3:
+                b[0] = (useData.get(useData.size() - 1) - useData.get(0))/(useData.size() - 1);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown initialization method " + initializationMethod);
+        }
+        if (initializationMethod == 0) {
             b[0] = useData.get(1)-data.get(0);
-        } else if(initializationMethod==1 && useData.size()>4) {
+        } else if (initializationMethod == 1 && useData.size()>4) {
             b[0] = (useData.get(3) - useData.get(0)) / 3;
-        } else if(initializationMethod==2) {
+        } else if (initializationMethod==2) {
             b[0] = (useData.get(useData.size() - 1) - useData.get(0))/(useData.size() - 1);
         }
 
-        int i = 1;
+        // second smoothed value depends on initialization
+        // for method #0 its equal to second real data
         y[1] = s[0] + b[0];
+        
         // there is a "one-off" error in the algorithm of navdeep-G!!!
-        // if the loop goes to useData.size() than the last index written to with y[i+1]
+        // if the loop goes to useData.size() than the last index written to
         // is higher than the length of the data array => in case of numForecasts = 0 we get an OutOfIndex error
+        int i;
         for (i = 1; i < useData.size()-1; i++) {
-            s[i] = alpha * useData.get(i) + (1 - alpha) * (s[i - 1]+b[i - 1]);
-            b[i] = gamma * (s[i] - s[i - 1]) + (1-gamma) * b[i-1];
+            s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
+            b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
 //            System.out.println(i+1 + ", " + y.length);
             y[i+1] = s[i] + b[i];
         }
 
         // since loop above only runs up to i < useData.size()-1
         // we need to calculate the final coefficients separately
-        s[i] = alpha * useData.get(i) + (1 - alpha) * (s[i - 1]+b[i - 1]);
-        b[i] = gamma * (s[i] - s[i - 1]) + (1-gamma) * b[i-1];
+        s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
+        b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
 
         // there is a "one-off" error in the algorithm of navdeep-G!!!
         // last index written to in the loop above is y[i+1] and the first one here would be y[i]

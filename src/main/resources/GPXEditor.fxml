@@ -75,7 +75,7 @@
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
               <items>
-                  <MenuItem fx:id="smoothenMenu" mnemonicParsing="false" text="Smoothen">
+                  <MenuItem fx:id="fixMenu" mnemonicParsing="false" text="Fix">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
@@ -85,7 +85,12 @@
                         <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
-                  <MenuItem fx:id="stationariesMenu" mnemonicParsing="false" text="Stationaries" />
+                  <MenuItem fx:id="smoothenMenu" mnemonicParsing="false" text="Smooth">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="stationariesMenu" mnemonicParsing="false" text="Find Stationaries" />
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Elevation">
