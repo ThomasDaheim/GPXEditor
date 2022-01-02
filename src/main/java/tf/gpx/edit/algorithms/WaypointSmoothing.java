@@ -45,7 +45,7 @@ public class WaypointSmoothing implements IWaypointSmoother {
         DoubleExponential
     }
     
-    public static enum PreprocessingAlgorithm {
+    public static enum OutlierAlgorithm {
         Hampel
     }
     
@@ -62,39 +62,66 @@ public class WaypointSmoothing implements IWaypointSmoother {
      * Smoothing a list of values by the requested algorithm.
      * 
      * @param data list of values
-     * @param algorithm What SmoothingAlgorithm to use
+     * @param smoothing Should smoothing be done
+     * @param smoothingAlgo What SmoothingAlgorithm to use
+     * @param outlier Should outlier fixing be done
+     * @param outlierAlgo What OutlierAlgorithm to use
      * @param dummy Needed to avoid compiler errors due to same signature after erasure as the GPXWaypoint method
      * @return smoothed list of values
      */
-    public static List<Double> apply(final List<Double> data, final SmoothingAlgorithm algorithm, boolean dummy) {
-        switch (algorithm) {
-            case SavitzkyGolay:
-                return SavitzkyGolaySmoother.getInstance().apply(data, dummy);
-            case DoubleExponential:
-                return DoubleExponentialSmoother.getInstance().apply(data, dummy);
-            default:
-                return data;
+    protected static List<Double> apply(
+            final List<Double> data, 
+            final boolean smoothing,
+            final SmoothingAlgorithm smoothingAlgo,
+            final boolean outlier,
+            final OutlierAlgorithm outlierAlgo, 
+            boolean dummy) {
+        List<Double> result = new ArrayList<>(data);
+        
+        if (outlier) {
+            switch (outlierAlgo) {
+                case Hampel:
+                    result = HampelFilter.getInstance().apply(result, dummy);
+            }
         }
+        
+        if (smoothing) {
+            switch (smoothingAlgo) {
+                case SavitzkyGolay:
+                    result = SavitzkyGolaySmoother.getInstance().apply(result, dummy);
+                    break;
+                case DoubleExponential:
+                    result = DoubleExponentialSmoother.getInstance().apply(result, dummy);
+                    break;
+            }
+        }
+        
+        return result;
     }
     
-    public static List<LatLonElev> apply(final List<GPXWaypoint> data, final SmoothingAlgorithm algorithm) {
+    public static List<LatLonElev> apply(
+            final List<GPXWaypoint> data, 
+            final boolean smoothing,
+            final SmoothingAlgorithm smoothingAlgo,
+            final boolean outlier,
+            final OutlierAlgorithm outlierAlgo) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
         // we could apply the algorithm not to the lat / lon values but to the distance/time / course between points calculated from it...
         final List<Double> newLatValues = apply(
                 data.stream().map((t) -> {
                     return t.getLatitude();
-                }).collect(Collectors.toList()), algorithm, true);
+                }).collect(Collectors.toList()), smoothing, smoothingAlgo, outlier, outlierAlgo, true);
         final List<Double> newLonValues = apply(
                 data.stream().map((t) -> {
                     return t.getLongitude();
-                }).collect(Collectors.toList()), algorithm, true);
+                }).collect(Collectors.toList()), smoothing, smoothingAlgo, outlier, outlierAlgo, true);
         
         List<Double> newElevValues = 
                 data.stream().map((t) -> {
                     return t.getElevation();
                 }).collect(Collectors.toList());
-        if (GPXEditorPreferences.SMOOTHING_ELEVATION.getAsType()) {
-            newElevValues = apply(newElevValues, algorithm, true);
+        if (GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType()) {
+            newElevValues = apply(newElevValues, smoothing, smoothingAlgo, outlier, outlierAlgo, true);
         }
         
         final List<LatLonElev> result = new ArrayList<>();
@@ -107,11 +134,20 @@ public class WaypointSmoothing implements IWaypointSmoother {
 
     @Override
     public List<Double> apply(List<Double> data, boolean dummy) {
-        return apply(data, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(), dummy);
+        return apply(
+                data, 
+                GPXEditorPreferences.DO_SMOOTHING.getAsType(), 
+                GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(), 
+                GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType(), GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType(), 
+                dummy);
     }
     
     @Override
     public List<LatLonElev> apply(final List<GPXWaypoint> data) {
-        return apply(data, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
+        return apply(
+                data, 
+                GPXEditorPreferences.DO_SMOOTHING.getAsType(), 
+                GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(), 
+                GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType(), GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
     }
 }

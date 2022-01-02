@@ -108,10 +108,13 @@ public class GPXTrack extends GPXMeasurable {
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
         
-        myClone.myLineStyle = myLineStyle;
-        
-        // set route via cloner
+        // set track via cloner
         myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
+        
+        // TFE, 20220102: LineStyle needs to be cloned as well
+        myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);
+        
+        myClone.myActivity = new TrackActivity(myClone);
         
         // clone all my children
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {

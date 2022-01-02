@@ -58,8 +58,8 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
             final int numForecasts) {
         // we might want to use a preprocessor the fixes outliers
         final List<Double> useData = new ArrayList<>();
-        if (GPXEditorPreferences.SMOOTHING_USE_PRE.getAsType()) {
-            final WaypointSmoothing.PreprocessingAlgorithm algo = GPXEditorPreferences.SMOOTHING_PRE_ALGORITHM.getAsType();
+        if (GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType()) {
+            final WaypointSmoothing.OutlierAlgorithm algo = GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType();
             switch (algo) {
                 case Hampel:
                     useData.addAll(HampelFilter.getInstance().apply(data, true));
@@ -79,26 +79,19 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
         s[0] = y[0] = useData.get(0);
 
         switch (initializationMethod) {
-            case 1:
+            case 0:
                 b[0] = useData.get(1)-data.get(0);
                 break;
-            case 2:
+            case 1:
                 if (useData.size() >= 4) {
                     b[0] = (useData.get(3) - useData.get(0)) / 3;
                     break;
                 } // "else" case is next switch case (that will earn me a place in coding hell...)
-            case 3:
+            case 2:
                 b[0] = (useData.get(useData.size() - 1) - useData.get(0))/(useData.size() - 1);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown initialization method " + initializationMethod);
-        }
-        if (initializationMethod == 0) {
-            b[0] = useData.get(1)-data.get(0);
-        } else if (initializationMethod == 1 && useData.size()>4) {
-            b[0] = (useData.get(3) - useData.get(0)) / 3;
-        } else if (initializationMethod==2) {
-            b[0] = (useData.get(useData.size() - 1) - useData.get(0))/(useData.size() - 1);
         }
 
         // second smoothed value depends on initialization
@@ -116,17 +109,19 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
             y[i+1] = s[i] + b[i];
         }
 
-        // since loop above only runs up to i < useData.size()-1
-        // we need to calculate the final coefficients separately
-        s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
-        b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
+        if (numForecasts > 0) {
+            // since loop above only runs up to i < useData.size()-1
+            // we need to calculate the final coefficients separately
+            s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
+            b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
 
-        // there is a "one-off" error in the algorithm of navdeep-G!!!
-        // last index written to in the loop above is y[i+1] and the first one here would be y[i]
-        // so it would be written twice...
-        for (int j = 0; j < numForecasts ; j++, i++) {
-//            System.out.println(i+1 + ", " + y.length);
-            y[i+1] = s[useData.size()-1] + (j+1) * b[useData.size()-1];
+            // there is a "one-off" error in the algorithm of navdeep-G!!!
+            // last index written to in the loop above is y[i+1] and the first one here would be y[i]
+            // so it would be written twice...
+            for (int j = 0; j < numForecasts ; j++, i++) {
+    //            System.out.println(i+1 + ", " + y.length);
+                y[i+1] = s[useData.size()-1] + (j+1) * b[useData.size()-1];
+            }
         }
 
         return y;

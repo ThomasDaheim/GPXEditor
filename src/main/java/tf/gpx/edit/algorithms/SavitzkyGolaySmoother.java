@@ -75,17 +75,7 @@ public class SavitzkyGolaySmoother implements IWaypointSmoother {
         final double[] coefficients = SGFilter.computeSGCoefficients(nl, nr, order);
 
         final double[] simpleData = ArrayUtils.toPrimitive(data.toArray(new Double[data.size()]), 0);
-        final SGFilter filter = new SGFilter(nl, nr);
-        // we might want to use a preprocessor the fixes outliers
-        if (GPXEditorPreferences.SMOOTHING_USE_PRE.getAsType()) {
-            final WaypointSmoothing.PreprocessingAlgorithm algo = GPXEditorPreferences.SMOOTHING_PRE_ALGORITHM.getAsType();
-            switch (algo) {
-                case Hampel:
-                    filter.appendPreprocessor(HampelFilter.getInstance());
-                default:
-            }
-        }
-        final double[] output = filter.smooth(simpleData, coefficients);
+        final double[] output = new SGFilter(nl, nr).smooth(simpleData, coefficients);
         
         // Attention: smoothing fails at start & end of data - for nl points
         for (int i = 0; i<nl; i++) {

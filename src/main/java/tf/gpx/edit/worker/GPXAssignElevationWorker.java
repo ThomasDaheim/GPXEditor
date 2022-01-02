@@ -169,12 +169,12 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
                 // if using OpenElevationService its only one POST call instead of multiple
                 final List<Double> assignHeigths = elevationProvider.getElevationsForCoordinates(assignPoints); 
                 
+                // TODO: replace by new Update-Action used in smoothing to speed things up into one action
                 int i = 0;
                 for (GPXWaypoint gpxWayPoint : assignPoints) {
                     final double elevation = assignHeigths.get(i);
 
                     if (elevation != IElevationProvider.NO_ELEVATION) {
-                        gpxWayPoint.setElevation(elevation);
                         myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
                         assignedHeightCount++;
                     } else {

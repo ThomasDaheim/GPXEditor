@@ -2042,7 +2042,10 @@ public class GPXEditor implements Initializable {
                     break;
                 case SMOOTHING:
                     GPXStructureHelper.getInstance().smoothGPXMeasurables(gpxLineItems,
-                            GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
+                            GPXEditorPreferences.DO_SMOOTHING.getAsType(),
+                            GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(),
+                            GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType(),
+                            GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
                     break;
                 default:
             }

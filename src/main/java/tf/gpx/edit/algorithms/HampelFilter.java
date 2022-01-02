@@ -137,7 +137,7 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
                 data.stream().map((t) -> {
                     return t.getLongitude();
                 }).collect(Collectors.toList()), 3, 2.0);
-        // not using GPXEditorPreferences.SMOOTHING_ELEVATION here since this is only fpr WaypointSmoothing class...
+        // not using GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION here since this is only fpr WaypointSmoothing class...
         // elevations can fluctuate a lot on small distances
         final List<Double> newElevValues = apply(
                 data.stream().map((t) -> {

@@ -87,8 +87,13 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void smoothGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointSmoothing.SmoothingAlgorithm algorithm) {
-        runVisitor(gpxLineItems, new GPXSmoothingWorker(algorithm));
+    public void smoothGPXMeasurables(
+            final List<? extends GPXMeasurable> gpxLineItems, 
+            final boolean smoothing,
+            final WaypointSmoothing.SmoothingAlgorithm smoothingAlgo,
+            final boolean outlier,
+            final WaypointSmoothing.OutlierAlgorithm outlierAlgo) {
+        runVisitor(gpxLineItems, new GPXSmoothingWorker(smoothing, smoothingAlgo, outlier, outlierAlgo));
     }
 
     public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {

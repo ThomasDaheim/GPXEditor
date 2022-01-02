@@ -39,7 +39,10 @@
                   <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="clearFileMenu" mnemonicParsing="false" text="Clear List" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
+                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu fx:id="recentFilesMenu" mnemonicParsing="false" text="Recent Files" />
                   <SeparatorMenuItem mnemonicParsing="false" />
