@@ -31,7 +31,6 @@ import me.himanshusoni.gpxparser.extension.DummyExtensionHolder;
 import me.himanshusoni.gpxparser.modal.Extension;
 import org.w3c.dom.NodeList;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.helper.general.ObjectsHelper;
 
 /**
  * Cloner wrapper for cloning of gpx-parser class

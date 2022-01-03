@@ -62,7 +62,6 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
-import javafx.util.converter.NumberStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.algorithms.EarthGeometry;
@@ -109,10 +108,6 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField epsilonText = initNumberField(new TextField(), true);
     
     // TFE, 20220102: smoothing parameters...
-    private final CheckBox outlierChkBox = new CheckBox();
-    private final ChoiceBox<WaypointSmoothing.OutlierAlgorithm> outlierAlgoChoiceBox = 
-            EnumHelper.getInstance().createChoiceBox(WaypointSmoothing.OutlierAlgorithm.class, GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
-    private final CheckBox smoothingChkBox = new CheckBox();
     private final ChoiceBox<WaypointSmoothing.SmoothingAlgorithm> smoothingAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(WaypointSmoothing.SmoothingAlgorithm.class, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
     private final CheckBox elevationChkBox = new CheckBox();
@@ -239,39 +234,13 @@ public class PreferenceEditor extends AbstractStage {
         addSectionHeader(new Label("Smoothing"), rowNum);
 
         rowNum++;
-        // do outlier removal
-        addPrefInput(
-                "Replace outliers:", outlierChkBox, 
-                "Should outliers be found and interpolated", 
-                0, rowNum);
-        
-        // algo for outlier search
-        addPrefInput(
-                "Outlier Algorithm:", outlierAlgoChoiceBox, 
-                "Algorithm to find outliers", 
-                2, rowNum);
-        
-        rowNum++;
-        // do smoothing
-        addPrefInput(
-                "Smooth tracks/routes:", smoothingChkBox, 
-                "Should smoothing be done", 
-                0, rowNum);
-        
-        // smooth elevation
-        addPrefInput(
-                "Smooth elevation:", elevationChkBox, 
-                "Should elevation be smoothed as well", 
-                2, rowNum);
-
-        rowNum++;
         // algo for smoothing
         addPrefInput(
                 "Smoothing Algorithm:", smoothingAlgoChoiceBox, 
                 "Algorithm to smoothin tracks/routes", 
                 0, rowNum);
         
-        // parameters for algo
+        // parameters for smoothing
         Tooltip t = new Tooltip("Parameters for smoothing algo");
         addLabel("Smoothing parameters:", t, 2, rowNum);
 
@@ -288,6 +257,13 @@ public class PreferenceEditor extends AbstractStage {
             }
         });
         
+        rowNum++;
+        // smooth elevation
+        addPrefInput(
+                "Smooth elevation:", elevationChkBox, 
+                "Should elevation be smoothed as well", 
+                0, rowNum);
+
         // TFE, 20200508: also add SRTM settings to have all in one place (for export/import)
         rowNum++;
         // separator
@@ -801,6 +777,12 @@ public class PreferenceEditor extends AbstractStage {
     
     private void initSmoothingParms(final WaypointSmoothing.SmoothingAlgorithm  algo) {
         switch (algo) {
+            case Hampel:
+                initNumberField(smoothingParm1Text, false);
+                smoothingParm1Text.setText(GPXEditorPreferences.HAMPEL_WINDOW.getAsString());
+                smoothingParm2Text.setDisable(false);
+                smoothingParm2Text.setText(doubleToString(GPXEditorPreferences.HAMPEL_THRESHOLD.getAsType()));
+                break;
             case SavitzkyGolay:
                 initNumberField(smoothingParm1Text, false);
                 smoothingParm1Text.setText(GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsString());
@@ -872,12 +854,9 @@ public class PreferenceEditor extends AbstractStage {
         eventText.setText(doubleToString(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
         breakText.setText(GPXEditorPreferences.BREAK_DURATION.getAsString());
         
-        outlierChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType());
-        EnumHelper.getInstance().selectEnum(outlierAlgoChoiceBox, GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
-        smoothingChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING.getAsType());
-        elevationChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType());
         EnumHelper.getInstance().selectEnum(smoothingAlgoChoiceBox, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
         initSmoothingParms(GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
+        elevationChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType());
     }
     
     private void savePreferences() {
@@ -899,13 +878,12 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf("0"+searchText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         
-        GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.put(outlierChkBox.isSelected());
-        GPXEditorPreferences.OUTLIER_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointSmoothing.OutlierAlgorithm.class, outlierAlgoChoiceBox).name());
-        GPXEditorPreferences.DO_SMOOTHING.put(smoothingChkBox.isSelected());
-        GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.put(elevationChkBox.isSelected());
-        final WaypointSmoothing.SmoothingAlgorithm algo = EnumHelper.getInstance().selectedEnumChoiceBox(WaypointSmoothing.SmoothingAlgorithm.class, smoothingAlgoChoiceBox);
-        GPXEditorPreferences.SMOOTHING_ALGORITHM.put(algo.name());
-        switch (algo) {
+        final WaypointSmoothing.SmoothingAlgorithm smoothingAlgo = EnumHelper.getInstance().selectedEnumChoiceBox(WaypointSmoothing.SmoothingAlgorithm.class, smoothingAlgoChoiceBox);
+        GPXEditorPreferences.SMOOTHING_ALGORITHM.put(smoothingAlgo.name());
+        switch (smoothingAlgo) {
+            case Hampel:
+                GPXEditorPreferences.HAMPEL_WINDOW.put(Math.max(Integer.valueOf("0"+smoothingParm1Text.getText().trim()), 1));
+                GPXEditorPreferences.HAMPEL_THRESHOLD.put(stringToDouble(smoothingParm2Text.getText()));
             case SavitzkyGolay:
                 GPXEditorPreferences.SAVITZKYGOLAY_ORDER.put(Math.max(Integer.valueOf("0"+smoothingParm1Text.getText().trim()), 1));
                 break;
@@ -915,6 +893,7 @@ public class PreferenceEditor extends AbstractStage {
                 break;
             default:
         }
+        GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.put(elevationChkBox.isSelected());
         
         boolean initPictureIcons = false;
         if (!GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType().equals(imageChkBox.isSelected())) {

@@ -127,11 +127,7 @@ public class TestSmoothing {
                 final Double[] rmse_results = results.get(trackwaypoints.get(0).getCombinedID());
                 for (int i = 1; i<=8; i++) {
                     GPXEditorPreferences.SAVITZKYGOLAY_ORDER.put(i);
-                    List<LatLonElev> smoothed = WaypointSmoothing.getInstance().apply(trackwaypoints, 
-                            true,
-                            WaypointSmoothing.SmoothingAlgorithm.SavitzkyGolay,
-                            false,
-                            null);
+                    List<LatLonElev> smoothed = WaypointSmoothing.getInstance().apply(trackwaypoints, WaypointSmoothing.SmoothingAlgorithm.SavitzkyGolay);
 //                    System.out.print(rmse(trackwaypoints, smoothed));
 //                    if (i<8) {
 //                        System.out.print(", ");
@@ -424,11 +420,7 @@ public class TestSmoothing {
                         GPXEditorPreferences.DOUBLEEXP_ALPHA.put(i/10.0);
                         GPXEditorPreferences.DOUBLEEXP_GAMMA.put(j/10.0);
 
-                        List<LatLonElev> smoothed = WaypointSmoothing.getInstance().apply(trackwaypoints, 
-                                true,
-                                WaypointSmoothing.SmoothingAlgorithm.DoubleExponential,
-                                false,
-                                null);
+                        List<LatLonElev> smoothed = WaypointSmoothing.getInstance().apply(trackwaypoints, WaypointSmoothing.SmoothingAlgorithm.DoubleExponential);
 //                        System.out.println("rmse_" + i/10.0 + "_" + j/10.0 + ": " + rmse(trackwaypoints, smoothed));
                         final double cur_result = rmse(trackwaypoints, smoothed);
                         if (cur_result < best_result[0]) {

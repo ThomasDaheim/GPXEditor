@@ -41,18 +41,18 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * 
  * @author thomas
  */
-public class HampelFilter implements Preprocessor, IWaypointSmoother {
-    private final static HampelFilter INSTANCE = new HampelFilter();
+public class HampelSmoother implements Preprocessor, IWaypointSmoother {
+    private final static HampelSmoother INSTANCE = new HampelSmoother();
     
     // factor approproriate for gaussian distribution
     private final static double L_FACTOR = 1.4826;
     
-    private HampelFilter() {
+    private HampelSmoother() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static HampelFilter getInstance() {
+    public static HampelSmoother getInstance() {
         return INSTANCE;
     }
 
@@ -108,13 +108,13 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
         
         // got down to primitives since Preprocessor works on those - happy converting...
         double[] simpleData = ArrayUtils.toPrimitive(data.toArray(new Double[data.size()]), 0);
-        HampelFilter.this.apply(simpleData, halfWindow, threshold);
+        HampelSmoother.this.apply(simpleData, halfWindow, threshold);
         return Arrays.asList(ArrayUtils.toObject(simpleData));
     }
 
     @Override
     public List<Double> apply(List<Double> data, boolean dummy) {
-        return apply(data, 3, 3.0);
+        return apply(data, GPXEditorPreferences.HAMPEL_WINDOW.getAsType(), GPXEditorPreferences.HAMPEL_THRESHOLD.getAsType());
     }
     
     /**
@@ -129,6 +129,7 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
     public List<LatLonElev> apply(final List<GPXWaypoint> data) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
         // we need to apply the algorithm not to the lat / lon values but to the distance in meeters between points calculated from it...
+        // not using GPXEditorPreferences.HAMPEL_THRESHOLD here since this is only for WaypointSmoothing class...
         final List<Double> newLatValues = apply(
                 data.stream().map((t) -> {
                     return t.getLatitude();
@@ -137,7 +138,7 @@ public class HampelFilter implements Preprocessor, IWaypointSmoother {
                 data.stream().map((t) -> {
                     return t.getLongitude();
                 }).collect(Collectors.toList()), 3, 2.0);
-        // not using GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION here since this is only fpr WaypointSmoothing class...
+        // not using GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION here since this is only for WaypointSmoothing class...
         // elevations can fluctuate a lot on small distances
         final List<Double> newElevValues = apply(
                 data.stream().map((t) -> {

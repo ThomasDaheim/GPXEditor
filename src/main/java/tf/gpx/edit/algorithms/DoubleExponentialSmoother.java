@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.algorithms;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
@@ -56,39 +55,24 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
             final double gamma, 
             final int initializationMethod, 
             final int numForecasts) {
-        // we might want to use a preprocessor the fixes outliers
-        final List<Double> useData = new ArrayList<>();
-        if (GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType()) {
-            final WaypointSmoothing.OutlierAlgorithm algo = GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType();
-            switch (algo) {
-                case Hampel:
-                    useData.addAll(HampelFilter.getInstance().apply(data, true));
-                    break;
-                default:
-                    useData.addAll(data);
-            }
-        } else {
-            useData.addAll(data);
-        }
-
-        double[] y = new double[useData.size() + numForecasts];
-        double[] s = new double[useData.size()];
-        double[] b = new double[useData.size()];
+        double[] y = new double[data.size() + numForecasts];
+        double[] s = new double[data.size()];
+        double[] b = new double[data.size()];
 
         // first smoothed value is equal to real data
-        s[0] = y[0] = useData.get(0);
+        s[0] = y[0] = data.get(0);
 
         switch (initializationMethod) {
             case 0:
-                b[0] = useData.get(1)-data.get(0);
+                b[0] = data.get(1)-data.get(0);
                 break;
             case 1:
-                if (useData.size() >= 4) {
-                    b[0] = (useData.get(3) - useData.get(0)) / 3;
+                if (data.size() >= 4) {
+                    b[0] = (data.get(3) - data.get(0)) / 3;
                     break;
                 } // "else" case is next switch case (that will earn me a place in coding hell...)
             case 2:
-                b[0] = (useData.get(useData.size() - 1) - useData.get(0))/(useData.size() - 1);
+                b[0] = (data.get(data.size() - 1) - data.get(0))/(data.size() - 1);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown initialization method " + initializationMethod);
@@ -99,20 +83,20 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
         y[1] = s[0] + b[0];
         
         // there is a "one-off" error in the algorithm of navdeep-G!!!
-        // if the loop goes to useData.size() than the last index written to
+        // if the loop goes to data.size() than the last index written to
         // is higher than the length of the data array => in case of numForecasts = 0 we get an OutOfIndex error
         int i;
-        for (i = 1; i < useData.size()-1; i++) {
-            s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
+        for (i = 1; i < data.size()-1; i++) {
+            s[i] = alpha * data.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
             b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
 //            System.out.println(i+1 + ", " + y.length);
             y[i+1] = s[i] + b[i];
         }
 
         if (numForecasts > 0) {
-            // since loop above only runs up to i < useData.size()-1
+            // since loop above only runs up to i < data.size()-1
             // we need to calculate the final coefficients separately
-            s[i] = alpha * useData.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
+            s[i] = alpha * data.get(i) + (1.0 - alpha) * (s[i-1] + b[i-1]);
             b[i] = gamma * (s[i] - s[i-1]) + (1.0 - gamma) * b[i-1];
 
             // there is a "one-off" error in the algorithm of navdeep-G!!!
@@ -120,7 +104,7 @@ public class DoubleExponentialSmoother implements IWaypointSmoother {
             // so it would be written twice...
             for (int j = 0; j < numForecasts ; j++, i++) {
     //            System.out.println(i+1 + ", " + y.length);
-                y[i+1] = s[useData.size()-1] + (j+1) * b[useData.size()-1];
+                y[i+1] = s[data.size()-1] + (j+1) * b[data.size()-1];
             }
         }
 

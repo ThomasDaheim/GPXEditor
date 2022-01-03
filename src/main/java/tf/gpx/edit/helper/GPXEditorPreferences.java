@@ -116,8 +116,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class),
 
     // TFE, 2021222: parameters for filter algorithms
-    DO_SMOOTHING("doSmoothing", Boolean.toString(true), Boolean.class),
-    SMOOTHING_ALGORITHM("smoothingAlgorithm", WaypointSmoothing.SmoothingAlgorithm.SavitzkyGolay.name(), WaypointSmoothing.SmoothingAlgorithm.class),
+    SMOOTHING_ALGORITHM("smoothingAlgorithm", WaypointSmoothing.SmoothingAlgorithm.Hampel.name(), WaypointSmoothing.SmoothingAlgorithm.class),
     // according to https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf order > 2 doesn't improve the quality much
     // our test cases seems to level of for order = 4
     SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(8), Integer.class),
@@ -126,10 +125,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     DOUBLEEXP_ALPHA("doubleExpAlpha", Double.toString(0.2), Double.class),
     // For alpha = 0.2 lowest MSE is usually for gamma = 1.0 => no trend
     DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class),
-    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
-    DO_SMOOTHING_FOR_OUTLIER("doSmoothingForOutlier", Boolean.toString(false), Boolean.class),
-    OUTLIER_ALGORITHM("outlierAlgorithm", WaypointSmoothing.OutlierAlgorithm.Hampel.name(), WaypointSmoothing.OutlierAlgorithm.class),
-    HAMPEL_THRESHOLD("hampelThreshold", Integer.toString(3), Integer.class);
+    HAMPEL_WINDOW("hampelWindow", Integer.toString(3), Integer.class),
+    HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
+    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

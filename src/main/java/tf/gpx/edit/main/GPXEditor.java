@@ -244,7 +244,7 @@ public class GPXEditor implements Initializable {
 //    private ChangeListener<TreeItem<GPXLineItem>> gpxFileListSelectedItemListener;
     private ListChangeListener<TreeItem<GPXMeasurable>> gpxFileListSelectionListener;
 
-    private SimpleBooleanProperty cntrlPressedProperty = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty cntrlPressedProperty = new SimpleBooleanProperty(false);
     
     private boolean useTransactions = true;
     
@@ -2042,10 +2042,7 @@ public class GPXEditor implements Initializable {
                     break;
                 case SMOOTHING:
                     GPXStructureHelper.getInstance().smoothGPXMeasurables(gpxLineItems,
-                            GPXEditorPreferences.DO_SMOOTHING.getAsType(),
-                            GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(),
-                            GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType(),
-                            GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
+                            GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
                     break;
                 default:
             }

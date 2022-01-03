@@ -69,7 +69,7 @@ public class TestHampelFilter {
             Assert.assertEquals(data.get(t), outlierVal, 0.1);
         });
         
-        final List<Double> hampelData = HampelFilter.getInstance().apply(data, 3, 3.0);
+        final List<Double> hampelData = HampelSmoother.getInstance().apply(data, 3, 3.0);
         for (int i = 0; i<=30; i++) {
             if (outliers.contains(i)) {
                 Assert.assertNotEquals(hampelData.get(i), outlierVal, 0.1);
@@ -87,7 +87,7 @@ public class TestHampelFilter {
         final List<Integer> elevOutliers = Arrays.asList(7, 19);
         
         final List<GPXWaypoint> waypoints = gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints();
-        final List<LatLonElev> filteredWaypoints = HampelFilter.getInstance().apply(waypoints);
+        final List<LatLonElev> filteredWaypoints = HampelSmoother.getInstance().apply(waypoints);
         
         // no one gets left behind
         Assert.assertEquals(waypoints.size(), filteredWaypoints.size());

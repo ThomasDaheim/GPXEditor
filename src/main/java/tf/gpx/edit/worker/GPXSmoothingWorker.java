@@ -37,26 +37,16 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * @author Thomas
  */
 public class GPXSmoothingWorker extends GPXEmptyWorker  {
-    private boolean doOutlier;
-    private WaypointSmoothing.OutlierAlgorithm myOutlierAlgo;
-    private boolean doSmoothing;
-    private WaypointSmoothing.SmoothingAlgorithm mySmoothingAlgo;
+    private WaypointSmoothing.SmoothingAlgorithm myAlgo;
 
     private GPXSmoothingWorker() {
         super ();
     }
 
-    public GPXSmoothingWorker(
-            final boolean smoothing,
-            final WaypointSmoothing.SmoothingAlgorithm smoothingAlgo,
-            final boolean outlier,
-            final WaypointSmoothing.OutlierAlgorithm outlierAlgo) {
+    public GPXSmoothingWorker(final WaypointSmoothing.SmoothingAlgorithm algo) {
         super (Double.NaN);
 
-        doSmoothing = smoothing;
-        mySmoothingAlgo = smoothingAlgo;
-        doOutlier = outlier;
-        myOutlierAlgo = outlierAlgo;
+        myAlgo = algo;
     }
 
     @Override
@@ -72,7 +62,7 @@ public class GPXSmoothingWorker extends GPXEmptyWorker  {
     }
     
     private void smoothGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final List<LatLonElev> smoothed = WaypointSmoothing.apply(waypoints, doSmoothing, mySmoothingAlgo, doOutlier, myOutlierAlgo);
+        final List<LatLonElev> smoothed = WaypointSmoothing.apply(waypoints, myAlgo);
         
         smoothGPXWaypoints(waypoints, smoothed);
     }

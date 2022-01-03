@@ -34,8 +34,14 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                <MenuItem fx:id="exportFileMenu" mnemonicParsing="false" text="Export" />
-                  <MenuItem fx:id="importFileMenu" mnemonicParsing="false" text="Import" />
+                <MenuItem fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="E" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="importFileMenu" mnemonicParsing="false" text="Import">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="I" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
                   <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="clearFileMenu" mnemonicParsing="false" text="Clear List" />
                   <SeparatorMenuItem mnemonicParsing="false" />
@@ -78,7 +84,7 @@
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
               <items>
-                  <MenuItem fx:id="fixMenu" mnemonicParsing="false" text="Fix">
+                  <MenuItem fx:id="fixMenu" mnemonicParsing="false" text="Fix Garmin Crap">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
