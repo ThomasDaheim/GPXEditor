@@ -25,7 +25,9 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -63,13 +65,29 @@ public class GPXListHelper {
                 while (c.next()) {
                     if (c.wasAdded()) {
                         // find index where to add - last index of that type
-                        // TDODO: use info from c.getFrom()
+                        T lastItem = null;
                         for (T item : c.getAddedSubList()) {
                             final GPXLineItem parent = item.getParent();
-                            final T lastT = 
-                                    list.stream().filter((t) -> {
+                            // TFE, 20220103: speed up finding the last element of a list
+//                            T lastT = list.stream().filter((t) -> {
+//                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
+//                                    }).reduce((a, b) -> b).orElse(null);
+                            T lastT;
+                            // only find last item again if type changes
+                            if (lastItem == null || !GPXLineItemHelper.isSameTypeAs(parent, lastItem.getParent())) {
+                                // https://stackoverflow.com/a/61085463
+                                final Deque<T> deque = new ArrayDeque<>();
+                                list.stream().forEach(deque::push);
+                                lastT = deque.stream().filter((t) -> {
                                         return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
-                                    }).reduce((a, b) -> b).orElse(null);
+                                    }).findFirst().orElse(null);
+                            } else {
+                                // if parent type doesn't change lastItem is the lastT
+                                lastT = lastItem;
+                            }
+
+                            // TFE, 20220103: further speedup would be possible if we collect all items with same parent type
+                            // in temporary list (LinkedHashSet?) and only do addAll here once it changes
                             int addIndex;
                             if (lastT != null) {
                                 addIndex = list.indexOf(lastT) + 1;
@@ -78,6 +96,9 @@ public class GPXListHelper {
                                 addIndex = 0;
                             }
                             list.add(addIndex, item);
+
+                            // keep track of last item we handled
+                            lastItem = item;
                         }
                     }
                     if (c.wasRemoved()) {

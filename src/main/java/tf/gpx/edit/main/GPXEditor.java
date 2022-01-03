@@ -1621,7 +1621,9 @@ public class GPXEditor implements Initializable {
                 map(item -> item.getCombinedID()+ " - " + item.getName()).
                 collect(Collectors.joining(",\n"));
 
-        if (!gpxItemNames.isEmpty()) {
+        if (gpxItemNames.isEmpty()) {
+            return;
+        } else {
             String headerText = "Do you want to ";
             String commandText;
             if (MergeDeleteItems.DELETE.equals(mergeOrDelete)) {
