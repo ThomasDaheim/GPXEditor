@@ -41,7 +41,7 @@ import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.ExtensionCloner;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -118,7 +118,7 @@ public class GPXRoute extends GPXMeasurable {
         myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         // set route via cloner
-        myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
+        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
         
         if (withChildren) {
             // clone all my children

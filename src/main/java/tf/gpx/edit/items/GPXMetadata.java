@@ -32,7 +32,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.Metadata;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.ExtensionCloner;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.CumulativeDescent;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemData.OverallDuration;
 import tf.helper.general.ObjectsHelper;
@@ -66,7 +66,7 @@ public class GPXMetadata extends GPXMeasurable {
         myClone.myGPXFile = myGPXFile;
         
         // set route via cloner
-        myClone.myMetadata = GPXCloner.getInstance().deepClone(myMetadata);
+        myClone.myMetadata = ExtensionCloner.getInstance().deepClone(myMetadata);
 
         // nothing else to clone, needs to be set by caller
         return ObjectsHelper.uncheckedCast(myClone);

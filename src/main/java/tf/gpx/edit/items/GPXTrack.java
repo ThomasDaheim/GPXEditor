@@ -39,7 +39,7 @@ import me.himanshusoni.gpxparser.modal.TrackSegment;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.extension.TrackActivity;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.ExtensionCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
 
@@ -109,7 +109,7 @@ public class GPXTrack extends GPXMeasurable {
         myClone.myGPXFile = myGPXFile;
         
         // set track via cloner
-        myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
+        myClone.myTrack = ExtensionCloner.getInstance().deepClone(myTrack);
         
         // TFE, 20220102: LineStyle needs to be cloned as well
         myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);

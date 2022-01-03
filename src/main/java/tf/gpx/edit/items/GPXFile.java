@@ -49,7 +49,7 @@ import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.ExtensionCloner;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.parser.FileParser;
@@ -152,7 +152,7 @@ public class GPXFile extends GPXMeasurable {
         final GPXFile myClone = new GPXFile();
         
         // set gpx via cloner
-        myClone.myGPX = GPXCloner.getInstance().deepClone(myGPX);
+        myClone.myGPX = ExtensionCloner.getInstance().deepClone(myGPX);
         
         if (withChildren) {
             // clone all my children

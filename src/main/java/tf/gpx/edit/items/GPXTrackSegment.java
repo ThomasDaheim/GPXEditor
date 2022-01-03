@@ -38,7 +38,7 @@ import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.extension.LineStyle;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.helper.ExtensionCloner;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -111,7 +111,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myGPXTrack = myGPXTrack;
 
         // set tracksegment via cloner
-        myClone.myTrackSegment = GPXCloner.getInstance().deepClone(myTrackSegment);
+        myClone.myTrackSegment = ExtensionCloner.getInstance().deepClone(myTrackSegment);
         
         myClone.myLength = myLength;
         myClone.myCumulativeAscent = myCumulativeAscent;
