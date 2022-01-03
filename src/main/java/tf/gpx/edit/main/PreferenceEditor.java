@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -61,6 +60,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javafx.util.converter.NumberStringConverter;
 import jfxtras.styles.jmetro.JMetro;
@@ -96,8 +96,10 @@ public class PreferenceEditor extends AbstractStage {
     }
 
     // TFE, 20181005: we also need our own decimalformat to have proper output
-//    private final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.getDefault(Locale.Category.FORMAT));
-    private final static DecimalFormat decimalFormat = new DecimalFormat("##,###.#");
+    // TFE, 20220103: please, stay away with that crap implementation of locale...
+//    private final static DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.getDefault(Locale.Category.FORMAT));
+//    private final static DecimalFormat decimalFormat = new DecimalFormat("##,###.#");
+//    private final static DecimalFormat decimalFormat = new DecimalFormat("0");
 
     private final ChoiceBox<EarthGeometry.DistanceAlgorithm> distAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(EarthGeometry.DistanceAlgorithm.class, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
@@ -774,7 +776,8 @@ public class PreferenceEditor extends AbstractStage {
     private static TextField initNumberField(final TextField field, final boolean isDouble) {
         field.setMaxWidth(80);
         if (isDouble) {
-            field.textFormatterProperty().setValue(new TextFormatter<>(new NumberStringConverter(decimalFormat)));
+//            field.textFormatterProperty().setValue(new TextFormatter<>(new NumberStringConverter(decimalFormat)));
+            field.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         } else {
             field.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         }
@@ -806,16 +809,33 @@ public class PreferenceEditor extends AbstractStage {
                 break;
             case DoubleExponential:
                 initNumberField(smoothingParm1Text, true);
-                smoothingParm1Text.setText(decimalFormat.format(GPXEditorPreferences.DOUBLEEXP_ALPHA.getAsType()));
+                smoothingParm1Text.setText(doubleToString(GPXEditorPreferences.DOUBLEEXP_ALPHA.getAsType()));
                 smoothingParm2Text.setDisable(false);
-                smoothingParm2Text.setText(decimalFormat.format(GPXEditorPreferences.DOUBLEEXP_GAMMA.getAsType()));
+                smoothingParm2Text.setText(doubleToString(GPXEditorPreferences.DOUBLEEXP_GAMMA.getAsType()));
                 break;
             default:
         }
     }
     
+    private String doubleToString(final Double value) {
+//        return decimalFormat.format(value);
+        return value.toString();
+    }
+    
+    private double stringToDouble(final String value) {
+//        try {
+//            return decimalFormat.parse(value.trim()).doubleValue();
+//        } catch (ParseException ex) {
+//            Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
+//            // try something else...
+//            return Double.valueOf("0" + value.trim());
+//        }
+        return Double.valueOf("0" + value.trim());
+    }
+    
     private void initPreferences() {
-        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
+//        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
+//        decimalFormat.applyPattern("##,###.#");
 
         EnumHelper.getInstance().selectEnum(distAlgoChoiceBox, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
         EnumHelper.getInstance().selectEnum(reduceAlgoChoiceBox, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
@@ -824,13 +844,13 @@ public class PreferenceEditor extends AbstractStage {
         EnumHelper.getInstance().selectEnum(profileChoiceBox, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
         EnumHelper.getInstance().selectEnum(heatColorChoiceBox, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
         EnumHelper.getInstance().selectEnum(opacDistChoiceBox, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
-        fixDistanceText.setText(decimalFormat.format(GPXEditorPreferences.FIX_DISTANCE.getAsType()));
-        epsilonText.setText(decimalFormat.format(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
+        fixDistanceText.setText(doubleToString(GPXEditorPreferences.FIX_DISTANCE.getAsType()));
+        epsilonText.setText(doubleToString(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
         assignHeightChkBox.setSelected(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType());
         EnumHelper.getInstance().selectEnum(assignModeChoiceBox, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
         EnumHelper.getInstance().selectEnum(lookupModeChoiceBox, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
         srtmPathText.setText(GPXEditorPreferences.SRTM_DATA_PATH.getAsType());
-        radiusText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_RADIUS.getAsType()));
+        radiusText.setText(doubleToString(GPXEditorPreferences.CLUSTER_RADIUS.getAsType()));
         durationText.setText(GPXEditorPreferences.CLUSTER_DURATION.getAsString());
         neighbourText.setText(GPXEditorPreferences.CLUSTER_COUNT.getAsString());
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
@@ -849,7 +869,7 @@ public class PreferenceEditor extends AbstractStage {
         wayLblAngleText.setText(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsString());
         wayIcnSizeText.setText(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsString());
         wayThshldText.setText(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsString());
-        eventText.setText(decimalFormat.format(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
+        eventText.setText(doubleToString(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
         breakText.setText(GPXEditorPreferences.BREAK_DURATION.getAsString());
         
         outlierChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType());
@@ -864,8 +884,8 @@ public class PreferenceEditor extends AbstractStage {
         // read values from stage
         GPXEditorPreferences.DISTANCE_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointReduction.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
-        GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf("0"+epsilonText.getText().trim()), 0));
-        GPXEditorPreferences.FIX_DISTANCE.put(Math.max(Double.valueOf("0"+fixDistanceText.getText().trim()), 0));
+        GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(stringToDouble(epsilonText.getText()), 0));
+        GPXEditorPreferences.FIX_DISTANCE.put(Math.max(stringToDouble(fixDistanceText.getText()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
         GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
@@ -890,8 +910,8 @@ public class PreferenceEditor extends AbstractStage {
                 GPXEditorPreferences.SAVITZKYGOLAY_ORDER.put(Math.max(Integer.valueOf("0"+smoothingParm1Text.getText().trim()), 1));
                 break;
             case DoubleExponential:
-                GPXEditorPreferences.DOUBLEEXP_ALPHA.put(Math.min(Math.max(Double.valueOf("0"+smoothingParm1Text.getText().trim()), 0.0), 1.0));
-                GPXEditorPreferences.DOUBLEEXP_GAMMA.put(Math.min(Math.max(Double.valueOf("0"+smoothingParm2Text.getText().trim()), 0.0), 1.0));
+                GPXEditorPreferences.DOUBLEEXP_ALPHA.put(Math.min(Math.max(stringToDouble(smoothingParm1Text.getText()), 0.0), 1.0));
+                GPXEditorPreferences.DOUBLEEXP_GAMMA.put(Math.min(Math.max(stringToDouble(smoothingParm2Text.getText()), 0.0), 1.0));
                 break;
             default:
         }
