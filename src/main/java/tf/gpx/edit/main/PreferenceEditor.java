@@ -61,8 +61,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
-import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
+import javafx.util.converter.NumberStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.algorithms.EarthGeometry;
@@ -96,14 +96,15 @@ public class PreferenceEditor extends AbstractStage {
     }
 
     // TFE, 20181005: we also need our own decimalformat to have proper output
-    private final DecimalFormat decimalFormat = new DecimalFormat("0");
+//    private final DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(Locale.getDefault(Locale.Category.FORMAT));
+    private final static DecimalFormat decimalFormat = new DecimalFormat("##,###.#");
 
     private final ChoiceBox<EarthGeometry.DistanceAlgorithm> distAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(EarthGeometry.DistanceAlgorithm.class, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
-    private final TextField smoothText = new TextField();
+    private final TextField fixDistanceText = initNumberField(new TextField(), true);
     private final ChoiceBox<WaypointReduction.ReductionAlgorithm> reduceAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(WaypointReduction.ReductionAlgorithm.class, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
-    private final TextField epsilonText = new TextField();
+    private final TextField epsilonText = initNumberField(new TextField(), true);
     
     // TFE, 20220102: smoothing parameters...
     private final CheckBox outlierChkBox = new CheckBox();
@@ -113,8 +114,8 @@ public class PreferenceEditor extends AbstractStage {
     private final ChoiceBox<WaypointSmoothing.SmoothingAlgorithm> smoothingAlgoChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(WaypointSmoothing.SmoothingAlgorithm.class, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
     private final CheckBox elevationChkBox = new CheckBox();
-    private final TextField smoothingParm1Text = new TextField();
-    private final TextField smoothingParm2Text = new TextField();
+    private final TextField smoothingParm1Text = initNumberField(new TextField(), true);
+    private final TextField smoothingParm2Text = initNumberField(new TextField(), true);
     
     private final CheckBox assignHeightChkBox = new CheckBox();
     private final ChoiceBox<ElevationProviderOptions.AssignMode> assignModeChoiceBox = 
@@ -123,47 +124,45 @@ public class PreferenceEditor extends AbstractStage {
             EnumHelper.getInstance().createChoiceBox(ElevationProviderOptions.LookUpMode.class, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
     private final ChoiceBox<SRTMDataOptions.SRTMDataAverage> srtmAvrgChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(SRTMDataOptions.SRTMDataAverage.class, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
-    private final TextField srtmPathText = new TextField();
+    private final TextField srtmPathText = initWideTextField(new TextField(), 400);
     private final ChoiceBox<SRTMDownloader.SRTMDataFormat> srtmDownChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(SRTMDownloader.SRTMDataFormat.class, GPXEditorPreferences.SRTM_DOWNLOAD_FORMAT.getAsType());
 
-    private final TextField breakText = new TextField();
-    private final TextField radiusText = new TextField();
-    private final TextField durationText = new TextField();
-    private final TextField neighbourText = new TextField();
+    private final TextField breakText = initNumberField(new TextField(), false);
+    private final TextField radiusText = initNumberField(new TextField(), false);
+    private final TextField durationText = initNumberField(new TextField(), false);
+    private final TextField neighbourText = initNumberField(new TextField(), false);
 
     private final CheckBox waypointChkBox = new CheckBox();
-    private final TextField numShowText = new TextField();
-    private final TextField searchText = new TextField();
-    private final TextField routingApiKeyText = new TextField();
+    private final TextField numShowText = initNumberField(new TextField(), false);
+    private final TextField searchText = initNumberField(new TextField(), false);
+    private final TextField routingApiKeyText = initWideTextField(new TextField(), 400);
     private final ChoiceBox<TrackMap.RoutingProfile> profileChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
 
-    private final TextField wayLblSizeText = new TextField();
-    private final TextField wayLblAngleText = new TextField();
-    private final TextField wayIcnSizeText = new TextField();
-    private final TextField wayThshldText = new TextField();
+    private final TextField wayLblSizeText = initNumberField(new TextField(), false);
+    private final TextField wayLblAngleText = initNumberField(new TextField(), false);
+    private final TextField wayIcnSizeText = initNumberField(new TextField(), false);
+    private final TextField wayThshldText = initNumberField(new TextField(), false);
 
     private final ChoiceBox<ColorMapping> heatColorChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(ColorMapping.class, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
     private final ChoiceBox<OpacityDistribution> opacDistChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(OpacityDistribution.class, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
-    private final TextField eventText = new TextField();
+    private final TextField eventText = initNumberField(new TextField(), true);
 
     private final MapLayerTable mapLayerTable = new MapLayerTable();
     private final CheckBox trackSymbolChkBox = new CheckBox();
     private final CheckBox waypointNameChkBox = new CheckBox();
-    private final TextField searchUrlText = new TextField();
+    private final TextField searchUrlText = initWideTextField(new TextField(), 400);
     private final CheckBox imageChkBox = new CheckBox();
-    private final TextField imagePathText = new TextField();
-    private final TextField defaultImagePathText = new TextField();
-    private final TextField imageSizeText = new TextField();
+    private final TextField imagePathText = initWideTextField(new TextField(), 400);
+    private final TextField defaultImagePathText = initWideTextField(new TextField(), 400);
+    private final TextField imageSizeText = initNumberField(new TextField(), false);
 
     private PreferenceEditor() {
         super();
         // Exists only to defeat instantiation.
-
-        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
         
         initViewer();
     }
@@ -213,10 +212,7 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // select fixTrack distance
-        smoothText.setMaxWidth(80);
-        smoothText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
-        addPrefInput(
-                "Min. Distance for fixing (m):", smoothText, 
+        addPrefInput("Min. Distance for fixing (m):", fixDistanceText, 
                 "Minimum distance between waypoints for Garmin crap fixing", 
                 0, rowNum);
         
@@ -230,8 +226,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // select reduce epsilon
-        epsilonText.setMaxWidth(80);
-        epsilonText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         addPrefInput(
                 "Algorithm Epsilon (m):", epsilonText, 
                 "Minimum distance for track reduction algorithms", 
@@ -278,10 +272,6 @@ public class PreferenceEditor extends AbstractStage {
         // parameters for algo
         Tooltip t = new Tooltip("Parameters for smoothing algo");
         addLabel("Smoothing parameters:", t, 2, rowNum);
-
-        smoothingParm1Text.setMaxWidth(80);
-        smoothingParm2Text.setMaxWidth(80);
-        smoothingParm2Text.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
 
         final HBox smoothingParmsBox = new HBox(2);
         smoothingParmsBox.setAlignment(Pos.CENTER_LEFT);
@@ -340,10 +330,7 @@ public class PreferenceEditor extends AbstractStage {
         addLabel("SRTM data path:", t, 0, rowNum);
         
         // TFE, 20210217: add directory chooser :-)
-        srtmPathText.setEditable(false);
-        srtmPathText.setPrefWidth(400);
-        srtmPathText.setMaxWidth(400);
-        srtmPathText.setTooltip(t);
+        initDirectoryField(srtmPathText, t);
 
         final Button srtmPathBtn = new Button("...");
         srtmPathBtn.setTooltip(t);
@@ -389,8 +376,6 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // select Break duration
-        breakText.setMaxWidth(80);
-        breakText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Break duration (mins):", breakText, 
                 "Duration in minutes between waypoints that counts as a break", 
@@ -398,8 +383,6 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // radius for cluster search
-        radiusText.setMaxWidth(80);
-        radiusText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         addPrefInput(
                 "Stationary radius (m):", radiusText, 
                 "Radius to include waypoints for stationary search", 
@@ -408,8 +391,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // duration for cluster search
-        durationText.setMaxWidth(80);
-        durationText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Stationary duration (mins):", durationText, 
                 "Duration in minutes to count as stationary cluster", 
@@ -417,8 +398,6 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // neighbour count for cluster search
-        neighbourText.setMaxWidth(80);
-        neighbourText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Stationary neighbour count:", neighbourText, 
                 "Minimum neighbours to count as stationary point", 
@@ -453,8 +432,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // number of waypoints to show
-        numShowText.setMaxWidth(80);
-        numShowText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "No. waypoints to show:", numShowText, 
                 "Number of waypoints to show on map", 
@@ -462,8 +439,6 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // select search radius
-        searchText.setMaxWidth(80);
-        searchText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Search radius (m):", searchText, 
                 "Radius in meter for searching on map", 
@@ -485,8 +460,6 @@ public class PreferenceEditor extends AbstractStage {
                 0, rowNum);
 
         // imageSizeText
-        imageSizeText.setMaxWidth(80);
-        imageSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Image size (pix):", imageSizeText, 
                 "Size of image in pixel", 
@@ -495,11 +468,8 @@ public class PreferenceEditor extends AbstractStage {
         rowNum++;
         t = new Tooltip("Image data file path");
         addLabel("Image data path:", t, 0, rowNum);
-        
-        imagePathText.setEditable(false);
-        imagePathText.setPrefWidth(400);
-        imagePathText.setMaxWidth(400);
-        imagePathText.setTooltip(t);
+
+        initDirectoryField(imagePathText, t);
 
         final Button imagePathBtn = new Button("...");
         imagePathBtn.setTooltip(t);
@@ -536,10 +506,7 @@ public class PreferenceEditor extends AbstractStage {
         t = new Tooltip("Default Image file path");
         addLabel("Default image path:", t, 0, rowNum);
 
-        defaultImagePathText.setEditable(false);
-        defaultImagePathText.setPrefWidth(400);
-        defaultImagePathText.setMaxWidth(400);
-        defaultImagePathText.setTooltip(t);
+        initDirectoryField(defaultImagePathText, t);
 
         final Button defaultImagePathBtn = new Button("...");
         defaultImagePathBtn.setTooltip(t);
@@ -606,8 +573,6 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // waypointLabelSize
-        wayLblSizeText.setMaxWidth(80);
-        wayLblSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Size of waypoint label (pix):", wayLblSizeText, 
                 "Size of waypoint labels on charts in pixel", 
@@ -616,8 +581,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // waypointLabelAngle
-        wayLblAngleText.setMaxWidth(80);
-        wayLblAngleText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Angle of waypoint label (deg):", wayLblAngleText, 
                 "Angle of waypoint label on charts om degrees", 
@@ -625,8 +588,6 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // waypointIconSize
-        wayIcnSizeText.setMaxWidth(80);
-        wayIcnSizeText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Size of waypoint icons (pix):", wayIcnSizeText, 
                 "Size of waypoint icons on charts in pixel", 
@@ -635,8 +596,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // waypointThreshold
-        wayThshldText.setMaxWidth(80);
-        wayThshldText.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
         addPrefInput(
                 "Max. dist to find track/route (m):", wayThshldText, 
                 "Maxiumum distance in meters to associate waypoint with track/route - 0 for always", 
@@ -656,8 +615,6 @@ public class PreferenceEditor extends AbstractStage {
         // TFE, 20220102: save some rows...
 //        rowNum++;
         // heat map event radius
-        eventText.setMaxWidth(80);
-        eventText.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
         addPrefInput(
                 "Point radius:", eventText, 
                 "Radius around waypoint to fill", 
@@ -796,34 +753,59 @@ public class PreferenceEditor extends AbstractStage {
         addField(field, t, addColNum, rowNum, colSpan, rowSpan);
     }
     
-    private void addLabel(final String labelText, final Tooltip t, final int colNum, final int rowNum) {
+    private Label addLabel(final String labelText, final Tooltip t, final int colNum, final int rowNum) {
         final Label label = new Label(labelText);
         label.setTooltip(t);
         getGridPane().add(label, colNum, rowNum, 1, 1);
         GridPane.setValignment(label, VPos.TOP);
         GridPane.setMargin(label, INSET_TOP);
+        
+        return label;
     }
 
-    private void addField(final Control field, final Tooltip t, final int colNum, final int rowNum) {
-        addField(field, t, colNum, rowNum, 1, 1);
-    }
-
-    private void addField(final Control field, final Tooltip t, final int colNum, final int rowNum, final int colSpan, final int rowSpan) {
+    private Control addField(final Control field, final Tooltip t, final int colNum, final int rowNum, final int colSpan, final int rowSpan) {
         field.setTooltip(t);
         getGridPane().add(field, colNum, rowNum, colSpan, rowSpan);
         GridPane.setMargin(field, INSET_TOP);
+        
+        return field;
+    }
+    
+    private static TextField initNumberField(final TextField field, final boolean isDouble) {
+        field.setMaxWidth(80);
+        if (isDouble) {
+            field.textFormatterProperty().setValue(new TextFormatter<>(new NumberStringConverter(decimalFormat)));
+        } else {
+            field.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
+        }
+        
+        return field;
+    }
+    
+    private static TextField initWideTextField(final TextField field, final int width) {
+        field.setPrefWidth(width);
+        field.setMaxWidth(width);
+        
+        return field;
+    }
+    
+    private TextField initDirectoryField(final TextField field, final Tooltip t) {
+        field.setEditable(false);
+        field.setTooltip(t);
+        
+        return field;
     }
     
     private void initSmoothingParms(final WaypointSmoothing.SmoothingAlgorithm  algo) {
         switch (algo) {
             case SavitzkyGolay:
-                smoothingParm1Text.textFormatterProperty().setValue(new TextFormatter<>(new IntegerStringConverter()));
-                smoothingParm1Text.setText(decimalFormat.format(GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsType()));
+                initNumberField(smoothingParm1Text, false);
+                smoothingParm1Text.setText(GPXEditorPreferences.SAVITZKYGOLAY_ORDER.getAsString());
                 smoothingParm2Text.clear();
                 smoothingParm2Text.setDisable(true);
                 break;
             case DoubleExponential:
-                smoothingParm1Text.textFormatterProperty().setValue(new TextFormatter<>(new DoubleStringConverter()));
+                initNumberField(smoothingParm1Text, true);
                 smoothingParm1Text.setText(decimalFormat.format(GPXEditorPreferences.DOUBLEEXP_ALPHA.getAsType()));
                 smoothingParm2Text.setDisable(false);
                 smoothingParm2Text.setText(decimalFormat.format(GPXEditorPreferences.DOUBLEEXP_GAMMA.getAsType()));
@@ -833,6 +815,8 @@ public class PreferenceEditor extends AbstractStage {
     }
     
     private void initPreferences() {
+        decimalFormat.setMaximumFractionDigits(340); //340 = DecimalFormat.DOUBLE_FRACTION_DIGITS
+
         EnumHelper.getInstance().selectEnum(distAlgoChoiceBox, GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
         EnumHelper.getInstance().selectEnum(reduceAlgoChoiceBox, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType());
         EnumHelper.getInstance().selectEnum(srtmAvrgChoiceBox, GPXEditorPreferences.SRTM_DATA_AVERAGE.getAsType());
@@ -840,33 +824,33 @@ public class PreferenceEditor extends AbstractStage {
         EnumHelper.getInstance().selectEnum(profileChoiceBox, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
         EnumHelper.getInstance().selectEnum(heatColorChoiceBox, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
         EnumHelper.getInstance().selectEnum(opacDistChoiceBox, GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.getAsType());
-        smoothText.setText(decimalFormat.format(GPXEditorPreferences.FIX_DISTANCE.getAsType()));
+        fixDistanceText.setText(decimalFormat.format(GPXEditorPreferences.FIX_DISTANCE.getAsType()));
         epsilonText.setText(decimalFormat.format(GPXEditorPreferences.REDUCE_EPSILON.getAsType()));
         assignHeightChkBox.setSelected(GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.getAsType());
         EnumHelper.getInstance().selectEnum(assignModeChoiceBox, GPXEditorPreferences.HEIGHT_ASSIGN_MODE.getAsType());
         EnumHelper.getInstance().selectEnum(lookupModeChoiceBox, GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
         srtmPathText.setText(GPXEditorPreferences.SRTM_DATA_PATH.getAsType());
         radiusText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_RADIUS.getAsType()));
-        durationText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_DURATION.getAsType()));
-        neighbourText.setText(decimalFormat.format(GPXEditorPreferences.CLUSTER_COUNT.getAsType()));
+        durationText.setText(GPXEditorPreferences.CLUSTER_DURATION.getAsString());
+        neighbourText.setText(GPXEditorPreferences.CLUSTER_COUNT.getAsString());
         waypointChkBox.setSelected(GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType());
         waypointNameChkBox.setSelected(GPXEditorPreferences.SHOW_WAYPOINT_NAMES.getAsType());
-        numShowText.setText(decimalFormat.format(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType()));
+        numShowText.setText(GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsString());
         trackSymbolChkBox.setSelected(GPXEditorPreferences.SHOW_TRACK_SYMBOLS.getAsType());
-        searchText.setText(decimalFormat.format(GPXEditorPreferences.SEARCH_RADIUS.getAsType()));
+        searchText.setText(GPXEditorPreferences.SEARCH_RADIUS.getAsString());
         searchUrlText.setText(GPXEditorPreferences.SEARCH_URL.getAsType());
         imageChkBox.setSelected(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
         imagePathText.setText(GPXEditorPreferences.IMAGE_INFO_PATH.getAsType());
         defaultImagePathText.setText(GPXEditorPreferences.DEFAULT_IMAGE_PATH.getAsType());
-        imageSizeText.setText(decimalFormat.format(GPXEditorPreferences.IMAGE_SIZE.getAsType()));
+        imageSizeText.setText(GPXEditorPreferences.IMAGE_SIZE.getAsString());
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
-        wayLblSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType()));
-        wayLblAngleText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType()));
-        wayIcnSizeText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType()));
-        wayThshldText.setText(decimalFormat.format(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType()));
+        wayLblSizeText.setText(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsString());
+        wayLblAngleText.setText(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsString());
+        wayIcnSizeText.setText(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsString());
+        wayThshldText.setText(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsString());
         eventText.setText(decimalFormat.format(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
-        breakText.setText(decimalFormat.format(GPXEditorPreferences.BREAK_DURATION.getAsType()));
+        breakText.setText(GPXEditorPreferences.BREAK_DURATION.getAsString());
         
         outlierChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.getAsType());
         EnumHelper.getInstance().selectEnum(outlierAlgoChoiceBox, GPXEditorPreferences.OUTLIER_ALGORITHM.getAsType());
@@ -880,8 +864,8 @@ public class PreferenceEditor extends AbstractStage {
         // read values from stage
         GPXEditorPreferences.DISTANCE_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(EarthGeometry.DistanceAlgorithm.class, distAlgoChoiceBox).name());
         GPXEditorPreferences.REDUCTION_ALGORITHM.put(EnumHelper.getInstance().selectedEnumChoiceBox(WaypointReduction.ReductionAlgorithm.class, reduceAlgoChoiceBox).name());
-        GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf(epsilonText.getText().trim()), 0));
-        GPXEditorPreferences.FIX_DISTANCE.put(Math.max(Double.valueOf(smoothText.getText().trim()), 0));
+        GPXEditorPreferences.REDUCE_EPSILON.put(Math.max(Double.valueOf("0"+epsilonText.getText().trim()), 0));
+        GPXEditorPreferences.FIX_DISTANCE.put(Math.max(Double.valueOf("0"+fixDistanceText.getText().trim()), 0));
         GPXEditorPreferences.HEIGHT_ASSIGN_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.AssignMode.class, assignModeChoiceBox).name());
         GPXEditorPreferences.HEIGHT_LOOKUP_MODE.put(EnumHelper.getInstance().selectedEnumChoiceBox(ElevationProviderOptions.LookUpMode.class, lookupModeChoiceBox).name());
         GPXEditorPreferences.SRTM_DATA_AVERAGE.put(EnumHelper.getInstance().selectedEnumChoiceBox(SRTMDataOptions.SRTMDataAverage.class, srtmAvrgChoiceBox).name());
@@ -890,9 +874,9 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.AUTO_ASSIGN_HEIGHT.put(assignHeightChkBox.isSelected());
         GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.put(waypointChkBox.isSelected());
         GPXEditorPreferences.SHOW_WAYPOINT_NAMES.put(waypointNameChkBox.isSelected());
-        GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf(numShowText.getText().trim()), 0));
+        GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.put(Math.max(Integer.valueOf("0"+numShowText.getText().trim()), 0));
         GPXEditorPreferences.SHOW_TRACK_SYMBOLS.put(trackSymbolChkBox.isSelected());
-        GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf(searchText.getText().trim()), 0));
+        GPXEditorPreferences.SEARCH_RADIUS.put(Math.max(Integer.valueOf("0"+searchText.getText().trim()), 0));
         GPXEditorPreferences.SEARCH_URL.put(searchUrlText.getText().trim());
         
         GPXEditorPreferences.DO_SMOOTHING_FOR_OUTLIER.put(outlierChkBox.isSelected());
@@ -903,11 +887,11 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.SMOOTHING_ALGORITHM.put(algo.name());
         switch (algo) {
             case SavitzkyGolay:
-                GPXEditorPreferences.SAVITZKYGOLAY_ORDER.put(Math.max(Integer.valueOf(smoothingParm1Text.getText().trim()), 1));
+                GPXEditorPreferences.SAVITZKYGOLAY_ORDER.put(Math.max(Integer.valueOf("0"+smoothingParm1Text.getText().trim()), 1));
                 break;
             case DoubleExponential:
-                GPXEditorPreferences.DOUBLEEXP_ALPHA.put(Math.min(Math.max(Double.valueOf(smoothingParm1Text.getText().trim()), 0.0), 1.0));
-                GPXEditorPreferences.DOUBLEEXP_GAMMA.put(Math.min(Math.max(Double.valueOf(smoothingParm2Text.getText().trim()), 0.0), 1.0));
+                GPXEditorPreferences.DOUBLEEXP_ALPHA.put(Math.min(Math.max(Double.valueOf("0"+smoothingParm1Text.getText().trim()), 0.0), 1.0));
+                GPXEditorPreferences.DOUBLEEXP_GAMMA.put(Math.min(Math.max(Double.valueOf("0"+smoothingParm2Text.getText().trim()), 0.0), 1.0));
                 break;
             default:
         }
@@ -927,7 +911,7 @@ public class PreferenceEditor extends AbstractStage {
             GPXEditorPreferences.DEFAULT_IMAGE_PATH.put(defaultImagePathText.getText().trim());
             initPictureIcons = true;
         }
-        GPXEditorPreferences.IMAGE_SIZE.put(Math.max(Integer.valueOf(imageSizeText.getText().trim()), 0));
+        GPXEditorPreferences.IMAGE_SIZE.put(Math.max(Integer.valueOf("0"+imageSizeText.getText().trim()), 0));
         if (initPictureIcons) {
             // redraw images on map since something has changes
             TrackMap.getInstance().initPictureIcons();
@@ -935,19 +919,19 @@ public class PreferenceEditor extends AbstractStage {
         
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
-        GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf(breakText.getText().trim()), 0));
+        GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf("0"+breakText.getText().trim()), 0));
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
-        GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf(wayIcnSizeText.getText().trim()), 0));
-        GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Math.max(Integer.valueOf(wayLblSizeText.getText().trim()), 0));
-        GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.valueOf(wayLblAngleText.getText().trim()) % 360);
-        GPXEditorPreferences.WAYPOINT_THRESHOLD.put(Math.max(Integer.valueOf(wayThshldText.getText().trim()), 0));
-        GPXEditorPreferences.CLUSTER_COUNT.put(Math.max(Integer.valueOf(durationText.getText().trim()), 0));
-        GPXEditorPreferences.CLUSTER_DURATION.put(Math.max(Integer.valueOf(neighbourText.getText().trim()), 0));
-        GPXEditorPreferences.CLUSTER_RADIUS.put(Math.max(Double.valueOf(radiusText.getText().trim()), 0));
+        GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf("0"+wayIcnSizeText.getText().trim()), 0));
+        GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Math.max(Integer.valueOf("0"+wayLblSizeText.getText().trim()), 0));
+        GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.valueOf("0"+wayLblAngleText.getText().trim()) % 360);
+        GPXEditorPreferences.WAYPOINT_THRESHOLD.put(Math.max(Integer.valueOf("0"+wayThshldText.getText().trim()), 0));
+        GPXEditorPreferences.CLUSTER_COUNT.put(Math.max(Integer.valueOf("0"+durationText.getText().trim()), 0));
+        GPXEditorPreferences.CLUSTER_DURATION.put(Math.max(Integer.valueOf("0"+neighbourText.getText().trim()), 0));
+        GPXEditorPreferences.CLUSTER_RADIUS.put(Math.max(Double.valueOf("0"+radiusText.getText().trim()), 0));
         GPXEditorPreferences.HEATMAP_COLORMAPPING.put(EnumHelper.getInstance().selectedEnumChoiceBox(ColorMapping.class, heatColorChoiceBox));
         GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.put(EnumHelper.getInstance().selectedEnumChoiceBox(OpacityDistribution.class, opacDistChoiceBox));
-        GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(Math.max(Double.valueOf(eventText.getText().trim()), 0));
+        GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(Math.max(Double.valueOf("0"+eventText.getText().trim()), 0));
 
         HeatMapPane.getInstance().updateSettings();
     }
