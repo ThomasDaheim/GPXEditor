@@ -311,6 +311,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     
     public void initMap() {
         final MapConfig myMapConfig = new MapConfig(
+//                new ArrayList<>(Arrays.asList(MapLayerUsage.getInstance().getEnabledSortedBaselayer().get(0))),
+//                new ArrayList<>(Arrays.asList(MapLayerUsage.getInstance().getEnabledSortedOverlays().get(0))),
+//                new ZoomControlConfig(false, ControlPosition.TOP_RIGHT), 
+//                new ScaleControlConfig(false, ControlPosition.BOTTOM_LEFT, true),
                 MapLayerUsage.getInstance().getEnabledSortedBaselayer(), 
                 MapLayerUsage.getInstance().getEnabledSortedOverlays(), 
                 new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
@@ -344,12 +348,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
     private void initialize() {
         if (!isInitialized) {
+//            // get console.log output in java as well
+//            // https://stackoverflow.com/a/49077436
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
-//                (myWebView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
+//                (webView, message, lineNumber, sourceId)-> System.out.println("Console: [" + sourceId + ":" + lineNumber + "] " + message)
 //            );
-            // show "alert" Javascript messages in stdout (useful to debug)	            
+            // show "alert" Javascript messages in stdout (useful to debug)
             getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
-                System.err.println("TrackMap: " + arg0.getData());
+                System.out.println("TrackMap: " + arg0.getData());
             });
         
             window = (JSObject) execScript("window"); 
