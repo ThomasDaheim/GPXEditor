@@ -75,6 +75,8 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
     ROUTING_API_KEY("routingApiKey", "", String.class),
     ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile.class),
+    // TFE, 20220105: matching of track / route to streets
+    MATCHING_API_KEY("matchingApiKey", "", String.class),
 
     BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer.class),
     SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer.class),

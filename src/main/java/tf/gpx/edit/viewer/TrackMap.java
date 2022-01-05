@@ -127,7 +127,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         CyclingElectric("cycling-electric"),
         FootWalking("foot-walking"),
         FootHiking("foot-hiking"),
-        Wheeelchair("wheelchair");
+        Wheelchair("wheelchair");
 
         private final String profileName;
         
@@ -142,6 +142,40 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         @Override
         public String toString() {
             return name();
+        }
+    }
+
+    public enum MatchingProfile {
+        Driving("driving"),
+        Walking("walking"),
+        Cycling("cycling");
+
+        private final String profileName;
+        
+        MatchingProfile(final String profile) {
+            profileName = profile;
+        }
+        
+        public String getProfileName() {
+            return profileName;
+        }
+
+        @Override
+        public String toString() {
+            return profileName;
+        }
+        
+        public static MatchingProfile fromRoutingProfile(final RoutingProfile profile) {
+            switch(profile) {
+                case CyclingElectric, CyclingMountain, CyclingRegular, CyclingRoad, CyclingSafe, CyclingTour:
+                    return Cycling;
+                case DrivingCar, DrivingHGV:
+                    return Driving;
+                case FootHiking, FootWalking, Wheelchair:
+                    return Walking;
+                default :
+                    return Cycling;
+            }
         }
     }
 

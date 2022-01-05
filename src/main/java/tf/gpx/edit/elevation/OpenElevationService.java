@@ -140,6 +140,9 @@ public class OpenElevationService implements IElevationProvider {
             
             if (response.statusCode() == 200 || response.statusCode() == 201) {
                 result = response.body();
+            } else {
+                Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, 
+                        "OpenElevationService returned: {0}, {1}", new Object[]{response.statusCode(), response.body()});
             }
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);

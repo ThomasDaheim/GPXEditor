@@ -133,9 +133,10 @@ public class PreferenceEditor extends AbstractStage {
     private final CheckBox waypointChkBox = new CheckBox();
     private final TextField numShowText = initNumberField(new TextField(), false);
     private final TextField searchText = initNumberField(new TextField(), false);
-    private final TextField routingApiKeyText = initWideTextField(new TextField(), 400);
+    private final TextField routingApiKeyText = initWideTextField(new TextField(), 700);
     private final ChoiceBox<TrackMap.RoutingProfile> profileChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(TrackMap.RoutingProfile.class, GPXEditorPreferences.ROUTING_PROFILE.getAsType());
+    private final TextField matchingApiKeyText = initWideTextField(new TextField(), 700);
 
     private final TextField wayLblSizeText = initNumberField(new TextField(), false);
     private final TextField wayLblAngleText = initNumberField(new TextField(), false);
@@ -338,7 +339,7 @@ public class PreferenceEditor extends AbstractStage {
         srtmPathBox.setAlignment(Pos.CENTER_LEFT);
         srtmPathBox.getChildren().addAll(srtmPathText, srtmPathBtn);
         
-        getGridPane().add(srtmPathBox, 1, rowNum, 2, 1);
+        getGridPane().add(srtmPathBox, 1, rowNum, 3, 1);
         GridPane.setMargin(srtmPathBox, INSET_TOP);
 
         rowNum++;
@@ -424,12 +425,10 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // search URL
-        searchUrlText.setPrefWidth(400);
-        searchUrlText.setMaxWidth(400);
         addPrefInput(
                 "Search URL:", searchUrlText, 
                 "Search URL using '%s' for String.format()", 
-                0, rowNum, 2, 1);
+                0, rowNum, 3, 1);
 
         rowNum++;
         addPrefInput(
@@ -477,7 +476,7 @@ public class PreferenceEditor extends AbstractStage {
         imagePathBox.setAlignment(Pos.CENTER_LEFT);
         imagePathBox.getChildren().addAll(imagePathText, imagePathBtn);
         
-        getGridPane().add(imagePathBox, 1, rowNum, 2, 1);
+        getGridPane().add(imagePathBox, 1, rowNum, 3, 1);
         GridPane.setMargin(imagePathBox, INSET_TOP);
         
         rowNum++;
@@ -514,7 +513,7 @@ public class PreferenceEditor extends AbstractStage {
         defaultImagePathBox.setAlignment(Pos.CENTER_LEFT);
         defaultImagePathBox.getChildren().addAll(defaultImagePathText, defaultImagePathBtn);
         
-        getGridPane().add(defaultImagePathBox, 1, rowNum, 2, 1);
+        getGridPane().add(defaultImagePathBox, 1, rowNum, 3, 1);
         GridPane.setMargin(defaultImagePathBox, INSET_TOP);
 
         rowNum++;
@@ -531,12 +530,17 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // routing api key
-        routingApiKeyText.setPrefWidth(400);
-        routingApiKeyText.setMaxWidth(400);
         addPrefInput(
                 "OpenRouteService API key:", routingApiKeyText, 
                 "API key for OpenRouteService", 
-                0, rowNum, 2, 1);
+                0, rowNum, 3, 1);
+
+        // matching api key
+        rowNum++;
+        addPrefInput(
+                "MapBox Matching API key:", matchingApiKeyText, 
+                "API key for Mapbox matching service", 
+                0, rowNum, 3, 1);
 
         rowNum++;
         // routing profile
@@ -691,7 +695,7 @@ public class PreferenceEditor extends AbstractStage {
         getRootPane().getChildren().add(buttonBox);
         VBox.setMargin(buttonBox, INSET_TOP_BOTTOM);
         
-//        getGridPane().add(buttonBox, 0, rowNum, 2, 1);
+//        getGridPane().add(buttonBox, 0, rowNum, 3, 1);
 //        GridPane.setMargin(buttonBox, INSET_TOP_BOTTOM);
     }
     
@@ -847,6 +851,7 @@ public class PreferenceEditor extends AbstractStage {
         imageSizeText.setText(GPXEditorPreferences.IMAGE_SIZE.getAsString());
         mapLayerTable.setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
         routingApiKeyText.setText(GPXEditorPreferences.ROUTING_API_KEY.getAsType());
+        matchingApiKeyText.setText(GPXEditorPreferences.MATCHING_API_KEY.getAsType());
         wayLblSizeText.setText(GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsString());
         wayLblAngleText.setText(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsString());
         wayIcnSizeText.setText(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsString());
@@ -921,6 +926,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf("0"+breakText.getText().trim()), 0));
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
+        GPXEditorPreferences.MATCHING_API_KEY.put(matchingApiKeyText.getText().trim());
         GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf("0"+wayIcnSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Math.max(Integer.valueOf("0"+wayLblSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.valueOf("0"+wayLblAngleText.getText().trim()) % 360);
