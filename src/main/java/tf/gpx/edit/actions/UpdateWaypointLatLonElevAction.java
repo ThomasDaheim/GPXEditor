@@ -39,12 +39,12 @@ import tf.gpx.edit.main.GPXEditor;
  *
  * @author thomas
  */
-public class SmoothWaypointAction extends GPXLineItemAction<GPXWaypoint> {
+public class UpdateWaypointLatLonElevAction extends GPXLineItemAction<GPXWaypoint> {
     private final List<GPXWaypoint> myWaypoints;
     private final List<GPXWaypoint> myStoreGPXWaypoints = new ArrayList<>();
     private final List<LatLonElev> myLatLonElevs;
     
-    public SmoothWaypointAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final List<LatLonElev> latLonElevs) {
+    public UpdateWaypointLatLonElevAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final List<LatLonElev> latLonElevs) {
         super(LineItemAction.SMOOTH_WAYPOINTS, editor);
         
         assert waypoints.size() == latLonElevs.size();

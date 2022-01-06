@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.routing;
+package tf.gpx.edit.algorithms;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.viewer.TrackMap;
@@ -56,6 +57,8 @@ import tf.gpx.edit.viewer.TrackMap;
  * @author thomas
  */
 public class MapboxMatchingService {
+    private final static MapboxMatchingService INSTANCE = new MapboxMatchingService();
+    
     private final static String SERVICE_URL = "https://api.mapbox.com/matching/v5/mapbox/";
     private final static String REQUEST_SUFFIX = "?steps=false&overview=false&geometries=geojson&access_token=";
     
@@ -70,10 +73,13 @@ public class MapboxMatchingService {
     private String API_KEY = GPXEditorPreferences.MATCHING_API_KEY.getAsType();
     private static final int CHUNK_SIZE = 100;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = (new ObjectMapper()).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    protected MapboxMatchingService() {
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private MapboxMatchingService() {
+    }
+
+    public static MapboxMatchingService getInstance() {
+        return INSTANCE;
     }
 
     public List<LatLonElev> matchCoordinates(final List<? extends IGeoCoordinate> coords) {
@@ -132,14 +138,10 @@ public class MapboxMatchingService {
 
     private List<LatLonElev> deserializeResponse(final String response, final List<? extends IGeoCoordinate> coords) {
         // initialize with existing values - in case response is empty / incorrect
-        final List<LatLonElev> result = new ArrayList<>(coords.stream().map((t) -> {
-            return new LatLonElev(t.getLatitude(), t.getLongitude(), t.getElevation());
-        }).collect(Collectors.toList()));
+        final List<LatLonElev> result = new ArrayList<>(GPXLineItemHelper.getLatLonElevs(coords));
         
         if (!response.isEmpty()) {
             try {
-                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
                 final JsonNode jsonNode = objectMapper.readTree(response);
 
                 final JsonNode code = jsonNode.get(NODE_CODE);
@@ -160,23 +162,20 @@ public class MapboxMatchingService {
 
                     for (int i = 0; i < tracePoints.size(); i++) {
                         final JsonNode tracePoint = tracePoints.get(i);
-
-                        final int waypoint_index = tracePoint.get(NODE_WAYPOINT_INDEX).asInt();
-                        if (i != waypoint_index) {
-                            // we can work with that but still points to something fishy
-                            Logger.getLogger(MapboxMatchingService.class.getName()).log(Level.SEVERE, 
-                                    "MapboxMatchingService index mismatch: {0}, {1}", new Object[]{i, waypoint_index});
+                        if (tracePoint.isNull() || tracePoint.isEmpty()) {
+                            // no match found for point
+                            continue;
                         }
 
                         final JsonNode location = tracePoint.get(NODE_LOCATION);
                         final Matcher matcher = LOCATION_PATTERN.matcher(location.toString());
                         if (matcher.matches()) {
-                            result.set(waypoint_index,
+                            result.set(i,
                                     new LatLonElev(
                                         LatLonHelper.latFromString(matcher.group(2)),
                                         LatLonHelper.lonFromString(matcher.group(1)),
                                         // take elevation from original coordinate
-                                        coords.get(waypoint_index).getElevation()));
+                                        coords.get(i).getElevation()));
                         }
                     }
                 }

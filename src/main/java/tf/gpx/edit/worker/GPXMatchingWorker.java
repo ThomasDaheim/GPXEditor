@@ -26,7 +26,7 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.algorithms.WaypointSmoothing;
+import tf.gpx.edit.algorithms.WaypointMatching;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -36,14 +36,14 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  *
  * @author Thomas
  */
-public class GPXSmoothingWorker extends GPXEmptyWorker  {
-    private WaypointSmoothing.SmoothingAlgorithm myAlgo;
+public class GPXMatchingWorker extends GPXEmptyWorker  {
+    private WaypointMatching.MatchingAlgorithm myAlgo;
 
-    private GPXSmoothingWorker() {
+    private GPXMatchingWorker() {
         super ();
     }
 
-    public GPXSmoothingWorker(final WaypointSmoothing.SmoothingAlgorithm algo) {
+    public GPXMatchingWorker(final WaypointMatching.MatchingAlgorithm algo) {
         super (Double.NaN);
 
         myAlgo = algo;
@@ -52,18 +52,18 @@ public class GPXSmoothingWorker extends GPXEmptyWorker  {
     @Override
     public void visitGPXTrackSegment(GPXTrackSegment gpxTrackSegment) {
         // remove all waypoints using given algorithm an epsilon
-        smoothGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
+        matchGPXWaypoints(gpxTrackSegment.getGPXWaypoints());
     }
 
     @Override
     public void visitGPXRoute(GPXRoute gpxRoute) {
         // remove all waypoints using given algorithm an epsilon
-        smoothGPXWaypoints(gpxRoute.getGPXWaypoints());
+        matchGPXWaypoints(gpxRoute.getGPXWaypoints());
     }
     
-    private void smoothGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final List<LatLonElev> smoothed = WaypointSmoothing.apply(waypoints, myAlgo);
+    private void matchGPXWaypoints(final List<GPXWaypoint> waypoints) {
+        final List<LatLonElev> matched = WaypointMatching.apply(waypoints, myAlgo);
         
-        updateWaypointLatLonElev(waypoints, smoothed);
+        updateWaypointLatLonElev(waypoints, matched);
     }
 }

@@ -36,6 +36,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.WaypointMatching;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
@@ -77,6 +78,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile.class),
     // TFE, 20220105: matching of track / route to streets
     MATCHING_API_KEY("matchingApiKey", "", String.class),
+    MATCHING_ALGORITHM("matchingAlgorithm", WaypointMatching.MatchingAlgorithm.Mapbox.name(), WaypointMatching.MatchingAlgorithm.class),
 
     BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer.class),
     SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer.class),

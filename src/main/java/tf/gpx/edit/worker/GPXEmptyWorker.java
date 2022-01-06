@@ -117,11 +117,11 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         myEditor.deleteWaypoints(waypointsToDelete);
     }
     
-    protected void smoothGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final List<LatLonElev> smoothed) {
-        assert gpxWayPoints.size() == smoothed.size();
+    protected void updateWaypointLatLonElev(final List<GPXWaypoint> gpxWayPoints, final List<LatLonElev> updates) {
+        assert gpxWayPoints.size() == updates.size();
         assert myEditor != null;
         
-        myEditor.smoothWaypoints(gpxWayPoints, smoothed);
+        myEditor.updateWaypointLatLonElev(gpxWayPoints, updates);
     }
 
     @Override

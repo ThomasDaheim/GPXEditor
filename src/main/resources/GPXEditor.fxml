@@ -96,10 +96,15 @@
                   </MenuItem>
                   <MenuItem fx:id="smoothenMenu" mnemonicParsing="false" text="Smooth">
                      <accelerator>
-                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
                   </MenuItem>
                   <MenuItem fx:id="stationariesMenu" mnemonicParsing="false" text="Find Stationaries" />
+                  <MenuItem fx:id="matchMenu" mnemonicParsing="false" text="Match to path">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Elevation">

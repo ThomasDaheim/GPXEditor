@@ -109,7 +109,7 @@ import tf.gpx.edit.actions.MergeDeleteMetadataAction;
 import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
-import tf.gpx.edit.actions.SmoothWaypointAction;
+import tf.gpx.edit.actions.UpdateWaypointLatLonElevAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
@@ -183,10 +183,11 @@ public class GPXEditor implements Initializable {
         FIXING(null, true),
         SMOOTHING(null, false),
         REDUCING(null, true),
+        MATCHING(null, false),
         FINDING(ExecuteAlgorithm.ExecutionLevel.ITEMS, false);
         
-        private final boolean withFindOption;
         private final ExecuteAlgorithm.ExecutionLevel execLevel;
+        private final boolean withFindOption;
         
         private ProcessType(final ExecuteAlgorithm.ExecutionLevel level, final boolean opt) {
             execLevel = level;
@@ -284,6 +285,8 @@ public class GPXEditor implements Initializable {
     private MenuItem smoothenMenu;
     @FXML
     private MenuItem stationariesMenu;
+    @FXML
+    private MenuItem matchMenu;
     @FXML
     private MenuItem mergeItemsMenu;
     @FXML
@@ -644,6 +647,12 @@ public class GPXEditor implements Initializable {
         stationariesMenu.disableProperty().bind(
                 Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
 
+        matchMenu.setOnAction((ActionEvent event) -> {
+            processGPXMeasurables(event, ProcessType.MATCHING);
+        });
+        matchMenu.disableProperty().bind(
+                Bindings.lessThan(Bindings.size(gpxFileList.getSelectionModel().getSelectedItems()), 1));
+        
         //
         // SRTM
         //
@@ -1065,13 +1074,13 @@ public class GPXEditor implements Initializable {
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
     }
     
-    public void smoothWaypoints(final List<GPXWaypoint> waypoints, final List<LatLonElev> smoothed) {
+    public void updateWaypointLatLonElev(final List<GPXWaypoint> waypoints, final List<LatLonElev> smoothed) {
         if(waypoints.isEmpty()) {
             // nothing to delete...
             return;
         }
 
-        final IDoUndoAction smoothAction = new SmoothWaypointAction(this, waypoints, smoothed);
+        final IDoUndoAction smoothAction = new UpdateWaypointLatLonElevAction(this, waypoints, smoothed);
         smoothAction.doAction();
         
         addDoneAction(smoothAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
@@ -2045,6 +2054,10 @@ public class GPXEditor implements Initializable {
                 case SMOOTHING:
                     GPXStructureHelper.getInstance().smoothGPXMeasurables(gpxLineItems,
                             GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
+                    break;
+                case MATCHING:
+                    GPXStructureHelper.getInstance().matchGPXMeasurables(gpxLineItems,
+                            GPXEditorPreferences.MATCHING_ALGORITHM.getAsType());
                     break;
                 default:
             }

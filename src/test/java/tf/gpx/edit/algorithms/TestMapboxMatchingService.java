@@ -23,8 +23,9 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.routing;
+package tf.gpx.edit.algorithms;
 
+import tf.gpx.edit.algorithms.MapboxMatchingService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,9 +143,7 @@ public class TestMapboxMatchingService {
         coords.add(new LatLonElev(32.71259, -117.17314, 1.0));
         coords.add(new LatLonElev(32.71254, -117.17334, 2.0));
         
-        final MapboxMatchingService service = new MapboxMatchingService();
-
-        final List<LatLonElev> result = service.matchCoordinates(coords);
+        final List<LatLonElev> result = MapboxMatchingService.getInstance().matchCoordinates(coords);
                 
         Assert.assertEquals(7, result.size());
         

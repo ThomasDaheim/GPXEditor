@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
+import tf.gpx.edit.algorithms.WaypointMatching;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.items.GPXFile;
@@ -51,6 +52,7 @@ import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
+import tf.gpx.edit.worker.GPXMatchingWorker;
 import tf.gpx.edit.worker.GPXReductionWorker;
 import tf.gpx.edit.worker.GPXSmoothingWorker;
 
@@ -87,12 +89,16 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void smoothGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointSmoothing.SmoothingAlgorithm smoothingAlgo) {
-        runVisitor(gpxLineItems, new GPXSmoothingWorker(smoothingAlgo));
+    public void smoothGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointSmoothing.SmoothingAlgorithm algorithm) {
+        runVisitor(gpxLineItems, new GPXSmoothingWorker(algorithm));
     }
 
     public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
         runVisitor(gpxLineItems, new GPXReductionWorker(algorithm, epsilon));
+    }
+
+    public void matchGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointMatching.MatchingAlgorithm algorithm) {
+        runVisitor(gpxLineItems, new GPXMatchingWorker(algorithm));
     }
 
     public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {
