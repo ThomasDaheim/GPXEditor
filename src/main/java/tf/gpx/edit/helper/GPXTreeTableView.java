@@ -228,6 +228,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
                         // TFE, 20190812: reset highlight for this rrow - might have been used before ith other gpx...
                         getStyleClass().remove("gpxFileRow");
                         
+                        final MenuItem showItem = new MenuItem("Show with SRTM");
                         switch (item.getType()) {
                             case GPXFile:
                                 getStyleClass().add("gpxFileRow");
@@ -294,12 +295,11 @@ public class GPXTreeTableView implements IPreferencesHolder {
 
                                 fileMenu.getItems().add(new SeparatorMenuItem());
 
-                                final MenuItem showFile = new MenuItem("Show with SRTM");
-                                showFile.setOnAction((ActionEvent event) -> {
+                                showItem.setOnAction((ActionEvent event) -> {
                                     // show gpxfile with srtm data
-                                    SRTMDataViewer.getInstance().showGPXFileWithSRTMData(item.getGPXFile());
+                                    SRTMDataViewer.getInstance().showGPXLineItemWithSRTMData(item);
                                 });
-                                fileMenu.getItems().add(showFile);
+                                fileMenu.getItems().add(showItem);
 
                                 break;
 
@@ -398,6 +398,13 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                         Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                     fileMenu.getItems().add(playbackItem);
                                 }
+
+                                // TFE, 20220601: we can now show everything with SRTM data...
+                                showItem.setOnAction((ActionEvent event) -> {
+                                    // show gpxfile with srtm data
+                                    SRTMDataViewer.getInstance().showGPXLineItemWithSRTMData(item);
+                                });
+                                fileMenu.getItems().add(showItem);
                                 
                                 break;
                             case GPXMetadata:

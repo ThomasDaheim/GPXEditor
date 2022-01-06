@@ -144,7 +144,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public LineStyle getLineStyle() {
-        return myGPXTrack.getLineStyle();
+        return getParent().getLineStyle();
     }
     
     @Override

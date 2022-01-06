@@ -42,6 +42,7 @@ import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.ExtensionCloner;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
@@ -118,6 +119,12 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
 
     public Waypoint getWaypoint() {
         return myWaypoint;
+    }
+
+    // TFE, 20220106: ask your parent for the correct line style...
+    @Override
+    public LineStyle getLineStyle() {
+        return getParent().getLineStyle();
     }
 
     public boolean isHighlight() {

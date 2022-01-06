@@ -333,7 +333,8 @@ public abstract class GPXLineItem implements IStylableItem {
     protected abstract long getCumulativeDuration();
     // duration as difference last - first waypoint
     protected abstract long getOverallDuration();
-    protected abstract Bounds getBounds();
+    // TFE, 20200601: make public so that in can be used in SRTMDataViewer as well
+    public abstract Bounds getBounds();
     
     // TFE, 20180517: you know how your tooltip should look like
     public String getTooltip() {

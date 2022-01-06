@@ -53,6 +53,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.jzy3d.chart.AWTChart;
@@ -73,14 +74,15 @@ import org.jzy3d.plot3d.builder.Builder;
 import org.jzy3d.plot3d.builder.Mapper;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
 import org.jzy3d.plot3d.primitives.LineStrip;
+import org.jzy3d.plot3d.primitives.Point;
 import org.jzy3d.plot3d.primitives.Shape;
 import org.jzy3d.plot3d.primitives.axes.layout.renderers.ITickRenderer;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignElevationWorker;
@@ -110,6 +112,8 @@ public class SRTMDataViewer {
     
     private final static float ZOOM_STEP = 0.9f;
     private final static float MOVE_STEP = 250f;
+    
+    private final static double ITEM_BORDER = 0.2;
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
@@ -119,15 +123,20 @@ public class SRTMDataViewer {
         return INSTANCE;
     }
     
-    public void showGPXFileWithSRTMData(final GPXFile gpxFile) {
+    public void showGPXLineItemWithSRTMData(final GPXLineItem gpxLineItem) {
+        if (gpxLineItem.isGPXMetadata()) {
+            // nothing here for you...
+            return;
+        }
+
         final GPXAssignElevationWorker visitor = new GPXAssignElevationWorker(GPXAssignElevationWorker.WorkMode.CHECK_DATA_FILES);
-        gpxFile.acceptVisitor(visitor);
+        gpxLineItem.acceptVisitor(visitor);
 
         final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         
         // calculate min / max lat & lon
-        int latMin = Integer.MAX_VALUE, latMax = Integer.MIN_VALUE;
-        int lonMin = Integer.MAX_VALUE, lonMax = Integer.MIN_VALUE;
+        double latMin = Float.MAX_VALUE, latMax = -Float.MAX_VALUE;
+        double lonMin = Float.MAX_VALUE, lonMax = -Float.MAX_VALUE;
         boolean dataFound = false;
         for (String dataFile : dataFiles) {
             // read that data into store
@@ -136,6 +145,7 @@ public class SRTMDataViewer {
                 dataFound = true;
                 
                 // expand outer bounds of lat & lon
+                // TODO: not working on west & sothern hemisphere?
                 final int latitude = SRTMDataHelper.getLatitudeForName(dataFile);
                 final int longitude = SRTMDataHelper.getLongitudeForName(dataFile);
                 latMax = Math.max(latMax, latitude);
@@ -144,9 +154,20 @@ public class SRTMDataViewer {
                 lonMin = Math.min(lonMin, longitude);
             }
         }
+        // max lat & lon are one bigger since it marks the end of the srtm data set
+        latMax++;
+        lonMax++;
+
+        // TFE, 20220601: lets take into account the bounding box of the element to avoid too much stuff around
+        final Bounds itemBounds = gpxLineItem.getBounds();
+        // leave some space at the edges...
+        latMax = Math.min(latMax, itemBounds.getMaxLat() + ITEM_BORDER);
+        lonMax = Math.min(lonMax, itemBounds.getMaxLon() + ITEM_BORDER);
+        latMin = Math.max(latMin, itemBounds.getMinLat() - ITEM_BORDER);
+        lonMin = Math.max(lonMin, itemBounds.getMinLon() - ITEM_BORDER);
 
         // show all of it
-        showStage(gpxFile.getName(), latMin, lonMin, latMax, lonMax, gpxFile);
+        showStage(gpxLineItem.getName(), latMin, lonMin, latMax, lonMax, gpxLineItem);
     }
     
     public void showSRTMData() {
@@ -169,8 +190,8 @@ public class SRTMDataViewer {
         final SRTMDataOptions srtmOptions = new SRTMDataOptions();
         
         // support multiple data files, not only first one
-        int latMin = Integer.MAX_VALUE, latMax = Integer.MIN_VALUE;
-        int lonMin = Integer.MAX_VALUE, lonMax = Integer.MIN_VALUE;
+        double latMin = Float.MAX_VALUE, latMax = -Float.MAX_VALUE;
+        double lonMin = Float.MAX_VALUE, lonMax = -Float.MAX_VALUE;
         boolean dataFound = false;
         for (File hgtFile : hgtFiles) {
             hgtFileName = hgtFile.getAbsolutePath();
@@ -196,6 +217,9 @@ public class SRTMDataViewer {
                 lonMin = Math.min(lonMin, longitude);
             }
         }
+        // max lat & lon are one bigger since it marks the end of the srtm data set
+        latMax++;
+        lonMax++;
         
         if (!dataFound) {
             showAlert(FilenameUtils.getName(hgtFiles.get(0).getAbsolutePath()));
@@ -205,7 +229,7 @@ public class SRTMDataViewer {
         showStage(hgtFiles.get(0).getName(), latMin, lonMin, latMax, lonMax, null);
     }
         
-    private void showStage(final String title, final int latMin, final int lonMin, final int latMax, final int lonMax, final GPXFile gpxFile) {
+    private void showStage(final String title, final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 
@@ -216,7 +240,7 @@ public class SRTMDataViewer {
         
         // Jzy3d
         final MyJavaFXChartFactory factory = new MyJavaFXChartFactory();
-        final AWTChart chart = getChartFromSRTMData(factory, "offscreen", latMin, lonMin, latMax, lonMax, gpxFile);
+        final AWTChart chart = getChartFromSRTMData(factory, "offscreen", latMin, lonMin, latMax, lonMax, gpxLineItem);
         
         // JavaFX
         final ImageView imageView = factory.bindImageView(chart);
@@ -274,7 +298,7 @@ public class SRTMDataViewer {
         vbox.setMinWidth(0);
 
         // TFE, 20190810: start with low peaks...
-        View.current().zoomZ(1f / (ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP), true);
+        View.current().zoomZ(1f / (ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP*ZOOM_STEP), true);
     }
     
     private List<File> getFiles() {
@@ -317,11 +341,11 @@ public class SRTMDataViewer {
     private AWTChart getChartFromSRTMData(
             final JavaFXChartFactory factory, 
             final String toolkit, 
-            final int latMin, 
-            final int lonMin, 
-            final int latMax, 
-            final int lonMax, 
-            final GPXFile gpxFile) {
+            final double latMin, 
+            final double lonMin, 
+            final double latMax, 
+            final double lonMax, 
+            final GPXLineItem gpxLineItem) {
         final IElevationProvider elevation = new ElevationProviderBuilder(
                 new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY),
                 new SRTMDataOptions()).build();
@@ -344,8 +368,8 @@ public class SRTMDataViewer {
         // Invert x for latitude since jzy3d always shows from lower to upper values independent of min / max in range
         
         // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-        final Range latrange = new Range(-latMin, -latMax - 1f);
-        final Range lonrange = new Range(lonMin, lonMax + 1f);
+        final Range latrange = new Range(-(float)latMin, -(float)latMax);
+        final Range lonrange = new Range((float)lonMin, (float)lonMax);
         final OrthonormalGrid grid = new OrthonormalGrid(latrange, steps, lonrange, steps);
 
         // Create the object to represent the function over the given range.
@@ -371,28 +395,24 @@ public class SRTMDataViewer {
 
         chart.getScene().getGraph().add(surface);
         
-        // add waypoints from gpxFile (if any)
-        if (gpxFile != null) {
-            // add tracks individually with their color
-            for (GPXTrack gpxTrack : gpxFile.getGPXTracks()) {
-                final List<Coord3d> points = new ArrayList<>();
-                for (GPXWaypoint waypoint : gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
-                    // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-                    points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
-                }
-                final BernsteinInterpolator line = new BernsteinInterpolator();
-                final LineStrip fline = new LineStrip(line.interpolate(points, 1));
-    
-                // Color is not the same as Color...
-                final javafx.scene.paint.Color javaFXColor = gpxTrack.getLineStyle().getColor().getJavaFXColor();
-                final org.jzy3d.colors.Color jzy3dColor = new Color(
-                        (float) javaFXColor.getRed(), 
-                        (float) javaFXColor.getGreen(), 
-                        (float) javaFXColor.getBlue(), 
-                        (float) javaFXColor.getOpacity());
-                fline.setWireframeColor(jzy3dColor);
-                fline.setWireframeWidth(6);
-                chart.getScene().getGraph().add(fline);
+        Coord3d startPoint = null;
+        // add waypoints from gpxLineItem (if any)
+        if (gpxLineItem != null) {
+            // TFE, 20220106: special case: show only one single waypoint in its surrounding...
+            switch (gpxLineItem.getType()) {
+                case GPXWaypoint, GPXTrackSegment:
+                    startPoint = addGPXLineItemToChart(chart, gpxLineItem.getGPXWaypoints());
+                    break;
+                default: // covers tracks, routes and gpxfile...
+                    // add tracks individually with their color
+                    for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
+                        startPoint = addGPXLineItemToChart(chart, gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+                    }
+
+                    // add routes individually with their color
+                    for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
+                        startPoint = addGPXLineItemToChart(chart, gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute));
+                    }
             }
         }
         
@@ -413,8 +433,44 @@ public class SRTMDataViewer {
         
         chart.setViewMode(ViewPositionMode.FREE);
         chart.setViewPoint(new Coord3d(0.05f, 1.1f, 1000f));
+//        chart.setViewMode(ViewPositionMode.PROFILE);
+//        chart.setViewPoint(startPoint);
 
         return chart;
+    }
+    
+    private Coord3d addGPXLineItemToChart(final AWTChart chart, final List<GPXWaypoint> gpxWaypoints) {
+        if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
+            return null;
+        }
+
+        final List<Coord3d> points = new ArrayList<>();
+        for (GPXWaypoint waypoint : gpxWaypoints) {
+            // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
+            points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
+        }
+        
+        // Color is not the same as Color...
+        final javafx.scene.paint.Color javaFXColor = gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor();
+        final org.jzy3d.colors.Color jzy3dColor = new Color(
+                (float) javaFXColor.getRed(), 
+                (float) javaFXColor.getGreen(), 
+                (float) javaFXColor.getBlue(), 
+                (float) javaFXColor.getOpacity());
+        
+        if (points.size() > 1) {
+            final BernsteinInterpolator line = new BernsteinInterpolator();
+            final LineStrip fline = new LineStrip(line.interpolate(points, 1));
+
+            fline.setWireframeColor(jzy3dColor);
+            fline.setWireframeWidth(6);
+            chart.getScene().getGraph().add(fline);
+        } else {
+            final Point point = new Point(points.get(0), jzy3dColor, 6);
+            chart.getScene().getGraph().add(point);
+        }
+        
+        return points.get(0);
     }
     
     // use own mouse controller
