@@ -25,7 +25,11 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.awt.Font;
+import java.awt.RenderingHints;
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,14 +60,30 @@ import javafx.stage.Stage;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
+//import org.jfree.chart3d.Chart3D;
+//import org.jfree.chart3d.Chart3DFactory;
+//import org.jfree.chart3d.Orientation;
+//import org.jfree.chart3d.axis.NumberAxis3D;
+//import org.jfree.chart3d.axis.ValueAxis3D;
+//import org.jfree.chart3d.data.function.Function3D;
+//import org.jfree.chart3d.graphics3d.Dimension3D;
+//import org.jfree.chart3d.graphics3d.ViewPoint3D;
+//import org.jfree.chart3d.legend.LegendAnchor;
+//import org.jfree.chart3d.plot.XYZPlot;
+//import org.jfree.chart3d.renderer.RainbowScale;
+//import org.jfree.chart3d.renderer.xyz.SurfaceRenderer;
+//import org.jfree.chart3d.fx.Chart3DCanvas;
+//import org.jfree.chart3d.fx.Chart3DViewer;
 import org.jzy3d.chart.AWTChart;
 import org.jzy3d.chart.Chart;
+import org.jzy3d.chart.controllers.keyboard.camera.ICameraKeyController;
 import org.jzy3d.chart.controllers.mouse.camera.ICameraMouseController;
 import org.jzy3d.colors.Color;
 import org.jzy3d.colors.ColorMapper;
 import org.jzy3d.colors.colormaps.ColorMapRainbow;
 import org.jzy3d.javafx.JavaFXChartFactory;
 import org.jzy3d.javafx.JavaFXRenderer3d;
+import org.jzy3d.javafx.controllers.keyboard.JavaFXCameraKeyController;
 import org.jzy3d.javafx.controllers.mouse.JavaFXCameraMouseController;
 import org.jzy3d.maths.Coord2d;
 import org.jzy3d.maths.Coord3d;
@@ -81,6 +101,7 @@ import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.View;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -114,6 +135,8 @@ public class SRTMDataViewer {
     private final static float MOVE_STEP = 250f;
     
     private final static double ITEM_BORDER = 0.2;
+    
+    private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'" + LatLonHelper.DEG + "'; #0.0'" + LatLonHelper.DEG + "'");
 
     private SRTMDataViewer() {
         // Exists only to defeat instantiation.
@@ -237,6 +260,11 @@ public class SRTMDataViewer {
         final Stage stage = new Stage();
         // TFE, 20200120: add file name (srtm or gpx) to title
         stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
+
+//        // JavaFX
+//        final StackPane imagePane = new StackPane();
+//        // orson-chart
+//        imagePane.getChildren().add(getChartFromSRTMData(latMin, lonMin, latMax, lonMax, gpxLineItem));
         
         // Jzy3d
         final MyJavaFXChartFactory factory = new MyJavaFXChartFactory();
@@ -275,8 +303,11 @@ public class SRTMDataViewer {
         vbox.prefHeightProperty().bind(scene.heightProperty());
         vbox.prefWidthProperty().bind(scene.widthProperty());
         scene.setOnKeyPressed((KeyEvent t) -> {
-            if (KeyCode.ESCAPE.equals(t.getCode())){
-                stage.close();
+            // TFE, 20220109: add support for wsad keys to change viewpoint & tpf to change viewmode
+            switch (t.getCode()) {
+                case ESCAPE:
+                    stage.close();
+                    break;
             }
         });
 
@@ -286,7 +317,6 @@ public class SRTMDataViewer {
 
         // needs to be done after show()... to not mess up jzy3d
         factory.addRegionSizeChangedListener(chart, imagePane);
-        //factory.addSceneSizeChangedListener(chart, scene);
         stage.setWidth(800);
         stage.setHeight(800);
 
@@ -337,6 +367,164 @@ public class SRTMDataViewer {
         final ButtonType buttonOK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ShowAlerts.getInstance().showAlert(Alert.AlertType.ERROR, "Error opening file", "No SRTM data file", filename, buttonOK);
     }
+    
+//    // TFE, 20220109: second attempt at orson charts
+//    //https://github.com/jfree/orson-charts-fx
+//    private MyChart3DViewer getChartFromSRTMData(
+//            final double latMin, 
+//            final double lonMin, 
+//            final double latMax, 
+//            final double lonMax, 
+//            final GPXLineItem gpxLineItem) {
+//        final IElevationProvider elevation = new ElevationProviderBuilder(
+//                new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY),
+//                new SRTMDataOptions()).build();
+//        
+//        // actual function to plot
+//        final Function3D function = (double x, double z) -> {
+//            final float height;
+//            height = Math.max(0f, elevation.getElevationForCoordinate(z, x).floatValue());
+//            return height;
+//        };
+//        
+//        // tricky from - to naming for graph
+//        double titlelatMin, titlelatMax;
+//        if (latMin > 0) {
+//            titlelatMin = latMin;
+//            titlelatMax = latMax;
+//        } else {
+//            titlelatMax = latMin;
+//            titlelatMin = latMax;
+//        }
+//        double titlelonMin, titlelonMax;
+//        if (lonMin > 0) {
+//            titlelonMin = lonMin;
+//            titlelonMax = lonMax;
+//        } else {
+//            titlelonMax = lonMin;
+//            titlelonMin = lonMax;
+//        }
+//        String title = 
+//                SRTMDataHelper.getNameForCoordinate(titlelatMin, titlelonMin) + 
+//                " - " + 
+//                SRTMDataHelper.getNameForCoordinate(titlelatMax, titlelonMax);
+//                
+//        String lonLabel = "Lon - ";
+//        if (lonMin > 0) {
+//            lonLabel += "E";
+//        } else {
+//            lonLabel += "W";
+//        }
+//        String latLabel = "Lat - ";
+//        if (latMin > 0) {
+//            latLabel += "N";
+//        } else {
+//            latLabel += "S";
+//        }
+//        
+//        final Chart3D chart = Chart3DFactory.createSurfaceChart(
+//                title, 
+//                "", 
+//                function, lonLabel, "Height [m]", latLabel);
+//        
+//        // now set value for axis, ...
+//        final XYZPlot plot = (XYZPlot) chart.getPlot();
+//        plot.setDimensions(new Dimension3D(18, 11, 18));
+//        
+//        ValueAxis3D axis = plot.getXAxis();
+//        axis.setRange(lonMin, lonMax + 0.99f);
+//        Font axisFont = axis.getLabelFont();
+//        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+//        if(axis instanceof NumberAxis3D) {
+//            ((NumberAxis3D) axis).setTickLabelFormatter(AXIS_FORMATTER);
+//        }
+//
+//        axis = plot.getZAxis();
+//        axis.setRange(latMin, latMax + 0.99f);
+//        axisFont = axis.getLabelFont();
+//        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+//        if(axis instanceof NumberAxis3D) {
+//            ((NumberAxis3D) axis).setTickLabelFormatter(AXIS_FORMATTER);
+//        }
+//
+//        axis = plot.getYAxis();
+//        axisFont = axis.getLabelFont();
+//        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+//        
+//        // beautify plot
+//        SurfaceRenderer renderer = (SurfaceRenderer) plot.getRenderer();
+//
+//        // we don't want to plot the full set, only part of it
+//        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
+//        final int steps = dataCount / 10;
+//        renderer.setXSamples(steps);
+//        renderer.setZSamples(steps);
+//        
+//        // some color, please
+//        renderer.setColorScale(new RainbowScale(renderer.findYRange(plot.getDataset())));
+//
+//        // improve speed by switching of outlines & antialiasing
+//        renderer.setDrawFaceOutlines(false);
+//        final RenderingHints renderingHints = chart.getRenderingHints();
+//        renderingHints.remove(RenderingHints.KEY_ANTIALIASING);
+//        renderingHints.put(RenderingHints.KEY_ANTIALIASING,
+//                RenderingHints.VALUE_ANTIALIAS_OFF);
+//        renderingHints.remove(RenderingHints.KEY_TEXT_ANTIALIASING);
+//        renderingHints.put(RenderingHints.KEY_TEXT_ANTIALIASING,
+//                RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+//        chart.setRenderingHints(renderingHints);
+//        
+//        chart.setLegendPosition(LegendAnchor.BOTTOM_RIGHT, 
+//                Orientation.VERTICAL);
+//
+//        // from right upfront please
+//        chart.setViewPoint(ViewPoint3D.createAboveViewPoint(50d));
+//        
+//        final MyChart3DViewer chart3DViewer = new MyChart3DViewer(chart, true);
+//
+//        // add waypoints from gpxFile (if any)
+////        if (gpxFile != null) {
+////            XYZSeriesCollection<String> dataset = new XYZSeriesCollection<>();
+////            XYZSeries<String> gpxTrackData = new XYZSeries<>("Track");
+////            for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
+////                // x,y,z -> lon, height, lat
+////                gpxTrackData.add(waypoint.getLongitude(), waypoint.getElevation(), waypoint.getLatitude());
+////            }
+////            dataset.add(gpxTrackData);
+////            
+////            final Chart3D gpxTrack = Chart3DFactory.createXYZLineChart("", 
+////                    "", dataset, "", "", "");
+////            
+////            chart3DViewer.addChart(gpxTrack);
+////        }
+//
+//        return chart3DViewer;
+//    }
+//        
+//    class MyChart3DViewer extends Chart3DViewer {
+//        /**
+//         * Creates a new viewer to display the supplied chart in JavaFX.
+//         * 
+//         * @param chart  the chart ({@code null} not permitted). 
+//         */
+//        public MyChart3DViewer(Chart3D chart) {
+//            super(chart, true);
+//        }
+//
+//        /**
+//         * Creates a new viewer instance.
+//         * 
+//         * @param chart  the chart ({@code null} not permitted).
+//         * @param contextMenuEnabled  enable the context menu?
+//         */
+//        public MyChart3DViewer(Chart3D chart, boolean contextMenuEnabled) {
+//            super(chart, contextMenuEnabled);
+//        }
+//        
+//        public void addChart(final Chart3D chart) {
+//            getChildren().add(new Chart3DCanvas(chart));
+//        }
+//    }
 
     private AWTChart getChartFromSRTMData(
             final JavaFXChartFactory factory, 
@@ -433,8 +621,8 @@ public class SRTMDataViewer {
         
         chart.setViewMode(ViewPositionMode.FREE);
         chart.setViewPoint(new Coord3d(0.05f, 1.1f, 1000f));
-//        chart.setViewMode(ViewPositionMode.PROFILE);
-//        chart.setViewPoint(startPoint);
+//        chart.setViewMode(ViewPositionMode.FREE);
+//        chart.setViewPoint(new Coord3d(0.0f, 0.0f, startPoint.z));
 
         return chart;
     }
@@ -486,6 +674,12 @@ public class SRTMDataViewer {
             return mouse;
         }
 
+        @Override
+        public ICameraKeyController newKeyboardCameraController(Chart chart) {
+            ICameraKeyController key = new MyJavaFXCameraKeyController(chart, null);
+            return key;
+        }
+
         public void addRegionSizeChangedListener(Chart chart, Region region) {
             region.widthProperty().addListener((ObservableValue<? extends Number> observableValue, Number oldSceneWidth, Number newSceneWidth) -> {
                 // System.out.println("region Width: " + newSceneWidth);
@@ -502,7 +696,7 @@ public class SRTMDataViewer {
     
     // proper checking for left / right mouse button
     // zoom in on mouse wheel
-    private class MyJavaFXCameraMouseController extends JavaFXCameraMouseController {
+    private class MyJavaFXCameraMouseController extends JavaFXCameraMouseController  {
         // TFE, 20190728: count number of times zoomed in (+1) vs. zoomed out (-1)
         // only allow zooming out when count > 0
         private int zoomInOutCount = 0;
@@ -586,10 +780,10 @@ public class SRTMDataViewer {
             }
 
             // Use the source, Luke!
-            // https://github.com/jzy3d/jzy3d-api/blob/master/jzy3d-api/src/api/org/jzy3d/plot3d/rendering/view/View.java
+            // https://github.com/jzy3d/jzy3d-api/blob/master/jzy3d-core/src/main/java/org/jzy3d/plot3d/rendering/view/View.java
             // shows what easy methods are available for zooming :-)
             
-            // scrill with shift -> only zoom z-axis
+            // scroll with shift -> only zoom z-axis
             if (!e.isShiftDown()) {
                 View.current().zoomX(factor, false);
                 View.current().zoomY(factor, false);
@@ -598,6 +792,50 @@ public class SRTMDataViewer {
             
             // zmin should stay -1f
             View.current().getBounds().setZmin(-1f);
+        }
+    }
+    
+    private class MyJavaFXCameraKeyController  extends JavaFXCameraKeyController  {
+        public MyJavaFXCameraKeyController(Node node) {
+            super(node);
+        }
+        
+        public MyJavaFXCameraKeyController(Chart chart, Node node) {
+            super(chart, node);
+        }
+        
+        @Override
+        public void handle(KeyEvent e) {
+            if (!e.isShiftDown()) {
+                Coord3d viewPoint = chart().getViewPoint();
+                // TFE, 20220109: add support for wsad keys to change viewpoint & tpf to change viewmode
+                switch (e.getCode()) {
+                    case W, UP:
+                        chart().setViewPoint(new Coord3d(viewPoint.x, viewPoint.y + 0.1f, viewPoint.z));
+                        break;
+                    case S, DOWN:
+                        chart().setViewPoint(new Coord3d(viewPoint.x, viewPoint.y - 0.1f, viewPoint.z));
+                        break;
+                    case A, LEFT:
+                        chart().setViewPoint(new Coord3d(viewPoint.x + 0.1f, viewPoint.y, viewPoint.z));
+                        break;
+                    case D, RIGHT:
+                        chart().setViewPoint(new Coord3d(viewPoint.x - 0.1f, viewPoint.y, viewPoint.z));
+                        break;
+                    case T:
+                        chart().setViewMode(ViewPositionMode.TOP);
+                        break;
+                    case P:
+                        chart().setViewMode(ViewPositionMode.PROFILE);
+                        break;
+                    case F:
+                        chart().setViewMode(ViewPositionMode.FREE);
+                        break;
+                    default:
+                        // this is default
+                        super.handle(e);
+                }
+            }
         }
     }
 }
