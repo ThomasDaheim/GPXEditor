@@ -347,7 +347,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
                 String directDuration;
                 String directDist;
                 if (start != null && end != null) {
-                    final double directDistance = EarthGeometry.distanceGPXWaypoints(start, end);
+                    final double directDistance = EarthGeometry.distance(start, end);
                     directDist = GPXLineItem.GPXLineItemData.Length.getFormat().format(directDistance/1000d);
                     if (start.getDate() != null && end.getDate() != null) {
                         final double durationValue = end.getDate().getTime() - start.getDate().getTime();

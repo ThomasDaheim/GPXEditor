@@ -66,7 +66,7 @@ public class KDTreeSearcher implements INearestNeighbourSearcher {
     public Pair<GPXWaypoint, Double> getNearestNeighbour(final GPXWaypoint point) {
         final Node target = new Node(point);
         final MutablePair<Node, Double> node = findNearest(MutablePair.of(tree, -1.0), target, 0);
-        return node == null ? null : Pair.of(node.getLeft().location, EarthGeometry.distanceWaypointsForAlgorithm(
+        return node == null ? null : Pair.of(node.getLeft().location, EarthGeometry.distanceForAlgorithm(
                     node.getLeft().location.getWaypoint(), 
                     point.getWaypoint(),
                     myAlgo));

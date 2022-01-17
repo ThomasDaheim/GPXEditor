@@ -76,7 +76,7 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
         final ArrayList<Double> effectiveArea = new ArrayList<>();
         effectiveArea.add(0.0);
         for (int index = 1; index < track.size()-2; index++) {
-            effectiveArea.add(EarthGeometry.triangleAreaGPXWaypoints(track.get(index-1), track.get(index), track.get(index+1), epsilon));
+            effectiveArea.add(EarthGeometry.triangleArea(track.get(index-1), track.get(index), track.get(index+1), epsilon));
 //            System.out.println("effectiveArea[" + index + "]: " + effectiveArea.get(index));
         }
         effectiveArea.add(0.0);
@@ -105,7 +105,7 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
 
             // recalc for neighbouring points ONLY
             for (int index = Math.max(minIndex - 1, 1) ; index <= Math.min(minIndex, workList.size()-2); index++) {
-                effectiveArea.set(index, EarthGeometry.triangleAreaGPXWaypoints(workList.get(index-1), workList.get(index), workList.get(index+1), epsilon));
+                effectiveArea.set(index, EarthGeometry.triangleArea(workList.get(index-1), workList.get(index), workList.get(index+1), epsilon));
 //                System.out.println("effectiveArea[" + index + "]: " + effectiveArea.get(index));
             }
         }

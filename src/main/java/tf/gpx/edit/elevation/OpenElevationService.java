@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
-import org.junit.Assert;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
@@ -146,7 +145,6 @@ public class OpenElevationService implements IElevationProvider {
             }
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.assertTrue(false);
         }
         
         return result;

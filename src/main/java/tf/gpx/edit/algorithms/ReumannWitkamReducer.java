@@ -76,14 +76,14 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     	while( index < list.size()-3 ){
 //            System.out.println("index: " + index);
             // TFE, 20200906: special case alert! distance between index, index+1, index+2 can be 0!
-            // in this case distanceToGreatCircleGPXWaypoints will always return 0 and all points of the track will be removed
-            if (EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+1)) > 0.0 &&
-                    EarthGeometry.distanceGPXWaypoints(list.get(index), list.get(index+2)) > 0.0 &&
-                    EarthGeometry.distanceGPXWaypoints(list.get(index+1), list.get(index+2)) > 0.0) {
+            // in this case distanceToGreatCircle will always return 0 and all points of the track will be removed
+            if (EarthGeometry.distance(list.get(index), list.get(index+1)) > 0.0 &&
+                    EarthGeometry.distance(list.get(index), list.get(index+2)) > 0.0 &&
+                    EarthGeometry.distance(list.get(index+1), list.get(index+2)) > 0.0) {
                 int firstOut= index+2;
 //                System.out.println("firstOut: " + firstOut);
                 // go forward til outside tolerance area
-                while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircleGPXWaypoints(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
+                while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircle(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
 //                    System.out.println("firstOut: " + firstOut);
                     firstOut++;
                 }

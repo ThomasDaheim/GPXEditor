@@ -125,7 +125,7 @@ public class WaypointClustering {
                         int newStart = -1;
                         int newEnd = -1;
                         for (int j = clusterStart; j < clusterEnd; j++) {
-                            final double curBearing = EarthGeometry.bearingGPXWaypoints(
+                            final double curBearing = EarthGeometry.bearing(
                                     neighboursList.get(j).getCenterPoint(), 
                                     neighboursList.get(j+1).getCenterPoint());
 
@@ -163,7 +163,7 @@ public class WaypointClustering {
                                     // is duration long enough?
                                     EarthGeometry.duration(endPoint, startPoint) >= clusterDuration && 
                                     // is overall distance small enough?
-                                    EarthGeometry.distanceWaypointsForAlgorithm(
+                                    EarthGeometry.distanceForAlgorithm(
                                             startPoint.getWaypoint(), 
                                             endPoint.getWaypoint(), 
                                             EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) <= 2.0*radius) {
@@ -220,7 +220,7 @@ public class WaypointClustering {
                     distance = distances[i][i-j];
                     cacheHits++;
                 } else {
-                    distance = EarthGeometry.distanceWaypointsForAlgorithm(
+                    distance = EarthGeometry.distanceForAlgorithm(
                         centerPoint.getWaypoint(), 
                         track.get(i-j).getWaypoint(), 
                         EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
@@ -244,7 +244,7 @@ public class WaypointClustering {
                     distance = distances[i][i+j];
                     cacheHits++;
                 } else {
-                    distance = EarthGeometry.distanceWaypointsForAlgorithm(
+                    distance = EarthGeometry.distanceForAlgorithm(
                         centerPoint.getWaypoint(), 
                         track.get(i+j).getWaypoint(), 
                         EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);

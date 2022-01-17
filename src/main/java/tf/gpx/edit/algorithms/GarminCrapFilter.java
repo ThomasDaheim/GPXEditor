@@ -99,8 +99,8 @@ public class GarminCrapFilter {
             checkPt = track.get(startIndex);
             nextPt = track.get(startIndex+1);
             nextnextPt = track.get(startIndex+2);
-            distance1 = EarthGeometry.distanceGPXWaypoints(checkPt, nextPt);
-            distance2 = EarthGeometry.distanceGPXWaypoints(nextPt, nextnextPt);
+            distance1 = EarthGeometry.distance(checkPt, nextPt);
+            distance2 = EarthGeometry.distance(nextPt, nextnextPt);
             if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
                 // startIndex point is garbage, take next one
                 // System.out.println("  discarding startIndex: " + startIndex + " distance1: " + distance1 + " distance2: " + distance2);
@@ -120,8 +120,8 @@ public class GarminCrapFilter {
             checkPt = track.get(endIndex);
             prevPt = track.get(endIndex-1);
             prevprevPt = track.get(endIndex-2);
-            distance1 = EarthGeometry.distanceGPXWaypoints(checkPt, prevPt);
-            distance2 = EarthGeometry.distanceGPXWaypoints(prevPt, prevprevPt);
+            distance1 = EarthGeometry.distance(checkPt, prevPt);
+            distance2 = EarthGeometry.distance(prevPt, prevprevPt);
             if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
                 // endIndex point is garbage, take prev one
                 // System.out.println("  discarding endIndex: " + endIndex + " distance1: " + distance1 + " distance2: " + distance2);
@@ -156,8 +156,8 @@ public class GarminCrapFilter {
 //            prevPt = track.get(index-1);
 //            nextPt = track.get(index+1);
 //            
-//            distance1 = EarthGeometry.distanceGPXWaypoints(checkPt, prevPt);
-//            distance2 = EarthGeometry.distanceGPXWaypoints(prevPt, nextPt);
+//            distance1 = EarthGeometry.distance(checkPt, prevPt);
+//            distance2 = EarthGeometry.distance(prevPt, nextPt);
 //            if ((distance1 > maxDistance) && (distance2 <= maxDistance)) {
 //                // this point is garbage
 //                // System.out.println("  discarding index: " + index + " distance1: " + distance1 + " distance2: " + distance2);

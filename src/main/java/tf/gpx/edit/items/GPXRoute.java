@@ -28,7 +28,6 @@ package tf.gpx.edit.items;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
@@ -38,6 +37,7 @@ import me.himanshusoni.gpxparser.modal.GPX;
 import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
+import org.apache.commons.collections4.list.TreeList;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
@@ -52,7 +52,7 @@ public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
     private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
-    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new TreeList<>());
 
     private Double myLength = null;
     private Double myCumulativeAscent = null;
@@ -316,13 +316,13 @@ public class GPXRoute extends GPXMeasurable {
         GPXWaypoint currentWaypoint;
         GPXWaypoint previousWaypoint;
 
-        /* Only attempt to calculate the distanceGPXWaypoints if we are not
+        /* Only attempt to calculate the distance if we are not
          * on the first way point of the segment. */
         for (int z = 1; z < myGPXWaypoints.size(); z++) {
             currentWaypoint = myGPXWaypoints.get(z);
             previousWaypoint = myGPXWaypoints.get(z - 1);
 
-            length += EarthGeometry.distanceGPXWaypoints(currentWaypoint, previousWaypoint);
+            length += EarthGeometry.distance(currentWaypoint, previousWaypoint);
         }
 
         myLength = length;

@@ -34,9 +34,9 @@ public class LatLonElev implements IGeoCoordinate {
     // TFE, 20210208: gpxparser sets elevation to 0.0 if not in gpx file...
     public final static Double NO_ELEVATION = 0.0d;
     
-    private final Double myLatitude;
-    private final Double myLongitude;
-    private final Double myElevation;
+    private Double myLatitude;
+    private Double myLongitude;
+    private Double myElevation;
     
     public LatLonElev (final Double latitude, final Double longitude) {
         this(latitude, longitude, NO_ELEVATION);
@@ -61,5 +61,25 @@ public class LatLonElev implements IGeoCoordinate {
     @Override
     public Double getElevation() {
         return myElevation;
+    }
+
+    @Override
+    public IGeoCoordinate cloneMe() {
+        return new LatLonElev(myLatitude, myLongitude, myElevation);
+    }
+
+    @Override
+    public void setLatitude(final double lat) {
+        myLatitude = lat;
+    }
+
+    @Override
+    public void setLongitude(final double lon) {
+        myLongitude = lon;
+    }
+
+    @Override
+    public void setElevation(final double elev) {
+        myElevation = elev;
     }
 }

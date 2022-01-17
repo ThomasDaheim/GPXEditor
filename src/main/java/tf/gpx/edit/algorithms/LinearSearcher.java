@@ -55,7 +55,7 @@ public class LinearSearcher implements INearestNeighbourSearcher {
         GPXWaypoint closest = null;
         double mindistance = Double.MAX_VALUE;
         for (GPXWaypoint waypoint : myGPXWaypoint) {
-            final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+            final double distance = EarthGeometry.distanceForAlgorithm(
                     waypoint.getWaypoint(), 
                     gpxWaypoint.getWaypoint(),
                     myAlgo);

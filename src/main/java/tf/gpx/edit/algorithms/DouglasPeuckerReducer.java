@@ -94,7 +94,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             final GPXWaypoint startPt = track.get(first);
             final GPXWaypoint endPt = track.get(last);
             for (int i = first+1; i < last; ++i) {
-                double dist = EarthGeometry.distanceToGreatCircleGPXWaypoints(track.get(i), startPt, endPt, epsilon);
+                double dist = EarthGeometry.distanceToGreatCircle(track.get(i), startPt, endPt, epsilon);
                 if (dist > max) {
                     max = dist;
                     index = i;
@@ -104,7 +104,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
                 keep[index] = true;
                 DouglasPeuckerImpl(track, first, index, epsilon, keep);
                 DouglasPeuckerImpl(track, index, last, epsilon, keep);
-            } else if (EarthGeometry.distanceGPXWaypoints(startPt, endPt) > epsilon) {
+            } else if (EarthGeometry.distance(startPt, endPt) > epsilon) {
                 keep[last] = true;
             }
         }

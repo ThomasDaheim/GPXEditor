@@ -392,7 +392,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return gpxLineItemData.getFormat().format(EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
+                    return gpxLineItemData.getFormat().format(EarthGeometry.distance(this, myPrevGPXWaypoint));
                 } else {
                     return NO_DATA;
                 }
@@ -557,7 +557,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+                    return EarthGeometry.distance(this, myPrevGPXWaypoint);
                 } else {
                     return NO_VALUE;
                 }
@@ -696,7 +696,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     }
     
     public double getDistance() {
-        return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+        return EarthGeometry.distance(this, myPrevGPXWaypoint);
     }
     
     public double getElevationDiff() {
@@ -723,6 +723,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
         return myWaypoint.getElevation();
     }
     
+    @Override
     public void setElevation(final double elevation) {
         myWaypoint.setElevation(elevation);
         setHasUnsavedChanges();
@@ -741,13 +742,20 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     /*
     * TFE, 20180322: support for move markers in mapview
     */
+    @Override
     public void setLatitude(final double latitude) {
         myWaypoint.setLatitude(latitude);
         setHasUnsavedChanges();
     }
     
+    @Override
     public void setLongitude(final double longitude) {
         myWaypoint.setLongitude(longitude);
         setHasUnsavedChanges();
+    }
+
+    @Override
+    public IGeoCoordinate cloneMe() {
+        return cloneMe(false);
     }
 }

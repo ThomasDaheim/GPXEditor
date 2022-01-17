@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
-// apply plugin: 'maven' - removed for Gradle 7.*
+apply plugin: 'maven' // - to be removed for Gradle 7.*
 apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
@@ -85,9 +85,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-    implementation 'org.jzy3d:jzy3d-api:1.0.3'
-    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
-    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.0'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.1'
     
     implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
@@ -116,9 +114,15 @@ dependencies {
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
     
+//    implementation 'org.jzy3d:jzy3d-api:1.0.3'
+//    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
+    
 //    // TFE, 20220109: orson charts once again
 //    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
 //    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
+
+    // TFE, 20220115: 3rd altrenative: fxyz3d
+    implementation 'org.fxyz3d:fxyz3d:0.5.4'
     
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     // TFE, 20210216: capture System.err() easily

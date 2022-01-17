@@ -160,7 +160,7 @@ public class TestImageProvider {
         Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
         Assert.assertEquals("We know your description!", "Test image", image.getDescription());
         
-        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLonElev(55.1, 8.1));
+        final double distance = EarthGeometry.distance(latlong, new LatLonElev(55.1, 8.1));
         // wide enough for both images
         images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.01);
         Assert.assertEquals("Two images at this location", 2, images.size());
@@ -237,7 +237,7 @@ public class TestImageProvider {
         // those should be found from N89.5 E5.5 inside a short distance (<3000m) due to reduced distance between longotudes at the poles
         LatLonElev latlong = new LatLonElev(89.5, 5.5);
         
-        final double distance = EarthGeometry.distanceCoordinates(latlong, new LatLonElev(89.5, 8.5));
+        final double distance = EarthGeometry.distance(latlong, new LatLonElev(89.5, 8.5));
         System.out.println("Short distance: " + distance);
         // wide enough for image with same latitude but not other latitiude
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.1);

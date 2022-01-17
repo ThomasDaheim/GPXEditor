@@ -259,7 +259,8 @@ public abstract class GPXMeasurable extends GPXLineItem {
      */
     @Override
     public Bounds getBounds() {
-        final Bounds result = new Bounds(Double.MAX_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MIN_VALUE);
+        // TFE, 2020117: that hurts...
+        final Bounds result = new Bounds(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE);
         
         for (GPXLineItem child : getChildren()) {
             result.extendBounds(child.getBounds());

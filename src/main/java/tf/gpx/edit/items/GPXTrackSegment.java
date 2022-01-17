@@ -27,7 +27,6 @@ package tf.gpx.edit.items;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -37,6 +36,7 @@ import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
+import org.apache.commons.collections4.list.TreeList;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.ExtensionCloner;
 import tf.helper.general.ObjectsHelper;
@@ -48,7 +48,7 @@ import tf.helper.general.ObjectsHelper;
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
-    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new TreeList<>());
     
     private Double myLength = null;
     private Double myCumulativeAscent = null;

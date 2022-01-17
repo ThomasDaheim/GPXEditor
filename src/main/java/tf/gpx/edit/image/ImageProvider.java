@@ -157,7 +157,7 @@ public class ImageProvider {
         // check against actual distances of images from 1st approx
         final List<MapImage> result = new ArrayList<>();
         for (MapImage image : images) {
-            if (EarthGeometry.distanceCoordinates(latlng, image.getCoordinate()) <= distance) {
+            if (EarthGeometry.distance(latlng, image.getCoordinate()) <= distance) {
                 result.add(image);
             }
         }
