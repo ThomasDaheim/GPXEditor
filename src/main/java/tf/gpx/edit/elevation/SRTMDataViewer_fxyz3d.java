@@ -31,37 +31,30 @@ import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import javafx.beans.binding.Bindings;
-import javafx.event.ActionEvent;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.PerspectiveCamera;
+import javafx.scene.PointLight;
 import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.math3.util.FastMath;
 import org.fxyz3d.geometry.MathUtils;
 import org.fxyz3d.geometry.Point3D;
-import org.fxyz3d.shapes.primitives.Surface3DMesh;
+import org.fxyz3d.scene.paint.Palette;
+import org.fxyz3d.shapes.composites.PolyLine3D;
 import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -74,45 +67,55 @@ import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.javafx.ShowAlerts;
 
 /**
- * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.
+ * Show a set of SRTM data in a separate stage.
  * 
- * {@link JavaFXChartFactory} delivers dedicated  {@link JavaFXCameraMouseController}
- * and {@link JavaFXRenderer3d}
+ * Two options:
  * 
- * Support 
- * Rotation control with left mouse button hold+drag
- * Scaling scene using mouse wheel 
- * Animation (camera rotation with thread) 
+ * - select a SRTM file and show it
+ * - show SRTM data for the area covered by a gpxLineItem together with tracks / routes / waypoints from it
  * 
- * TODO : 
- * Mouse right click shift
- * Keyboard support (rotate/shift, etc)
- * 
- * @author Martin Pernollet
+ * @author Thomas Feuster
  */
 public class SRTMDataViewer_fxyz3d {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataViewer_fxyz3d INSTANCE = new SRTMDataViewer_fxyz3d();
     
-    private final static float ZOOM_STEP = 0.9f;
-    private final static float MOVE_STEP = 250f;
-    
     private final static double ITEM_BORDER = 0.2;
     
     private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'" + LatLonHelper.DEG + "'; #0.0'" + LatLonHelper.DEG + "'");
     
-    private final static double MINIMAL_LAT_LON_RATIO = 0.5d;
+    private final static double ELEVATION_SCALING = 1d/3000d;
 
+    private final Stage stage = new Stage();
+    private Scene scene;
+    private final PerspectiveCamera camera = new PerspectiveCamera(true);
+    private final CameraTransformer cameraTransform = new CameraTransformer();
+    
     private double mousePosX;
     private double mousePosY;
     private double mouseOldX;
     private double mouseOldY;
     private double mouseDeltaX;
     private double mouseDeltaY;
+    
+    private final SRTMElevationService elevationService = 
+            new SRTMElevationService(
+                    new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY), 
+                    new SRTMDataOptions(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY));
+
+    // keep track of bounds in y-direction (= height)
+    private double latDist;
+    private double lonDist;
+    private double latCenter;
+    private double lonCenter;
+
+    private double minElevation = Double.MAX_VALUE;
+    private double maxElevation = -Double.MAX_VALUE;
 
     private SRTMDataViewer_fxyz3d() {
         // Exists only to defeat instantiation.
+        initLightAndCamera();
     }
 
     public static SRTMDataViewer_fxyz3d getInstance() {
@@ -131,8 +134,8 @@ public class SRTMDataViewer_fxyz3d {
         final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         
         // calculate min / max lat & lon
-        double latMin = Float.MAX_VALUE, latMax = -Float.MAX_VALUE;
-        double lonMin = Float.MAX_VALUE, lonMax = -Float.MAX_VALUE;
+        double latMin = Double.MAX_VALUE, latMax = -Double.MAX_VALUE;
+        double lonMin = Double.MAX_VALUE, lonMax = -Double.MAX_VALUE;
         boolean dataFound = false;
         for (String dataFile : dataFiles) {
             // read that data into store
@@ -171,23 +174,6 @@ public class SRTMDataViewer_fxyz3d {
                     Math.min(latMax, itemBounds.getMaxLat() + ITEM_BORDER), 
                     Math.max(lonMin, itemBounds.getMinLon() - ITEM_BORDER), 
                     Math.min(lonMax, itemBounds.getMaxLon() + ITEM_BORDER));
-
-            // TFE, extend a bit in case one of the values is too small compared with the other
-            final double latDist = Math.abs(result.getMaxLat() - result.getMinLat());
-            final double lonDist = Math.abs(result.getMaxLon() - result.getMinLon());
-            if (latDist / lonDist < MINIMAL_LAT_LON_RATIO) {
-                // too small in lat-direction
-                final double upScale = FastMath.sqrt(MINIMAL_LAT_LON_RATIO / (latDist / lonDist));
-                result.setMinLat(result.getMinLat() / upScale);
-                result.setMaxLat(result.getMaxLat() * upScale);
-            } else if (lonDist / latDist < MINIMAL_LAT_LON_RATIO) {
-                // too small in lon-direction
-                final double upScale = FastMath.sqrt(MINIMAL_LAT_LON_RATIO / (lonDist / latDist));
-                result.setMinLon(result.getMinLon() / upScale);
-                result.setMaxLon(result.getMaxLon() * upScale);
-            }
-            
-            assert (lonDist / latDist >= MINIMAL_LAT_LON_RATIO);
         } else {
             result = new Bounds(latMin, latMax, lonMin, lonMax);
         }
@@ -254,178 +240,6 @@ public class SRTMDataViewer_fxyz3d {
         showStage(hgtFiles.get(0).getName(), normalizeBounds(latMin, lonMin, latMax, lonMax, null), null);
     }
         
-    private void showStage(final String title, final Bounds dataBounds, final GPXLineItem gpxLineItem) {
-//        File names refer to the latitude and longitude of the lower left corner of the tile -
-//        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
-
-        // finally, we have something to show!
-        final Stage stage = new Stage();
-        // TFE, 20200120: add file name (srtm or gpx) to title
-        stage.setTitle(SRTMDataViewer_fxyz3d.class.getSimpleName() + " - " + title);
-
-        final PerspectiveCamera camera = new PerspectiveCamera(true);
-        camera.setNearClip(0.1);
-        camera.setFarClip(1000.0);
-//        camera.setTranslateX((dataBounds.getMaxLon()+dataBounds.getMinLon())/2d);
-//        camera.setTranslateY(10d);
-        camera.setTranslateZ(dataBounds.getMinLat()-60);
-        camera.setFieldOfView(20);
-        
-        final CameraTransformer cameraTransform = new CameraTransformer();
-        cameraTransform.getChildren().add(camera);
-//        cameraTransform.rx.setAngle(-50.0);
-        
-        // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
-        final TexturedMesh model = getTexturedMesh(dataBounds);
-        
-        final Group group = new Group(cameraTransform, model);
-
-//        // JavaFX
-//        final StackPane imagePane = new StackPane();
-//        // fxyz3d
-//        imagePane.getChildren().add(group);
-//        
-//        // some explanation for rote & zoom
-//        final Label label = new Label("LftBtn: Rotate X+Y+Z" + System.lineSeparator() + "RgtBtn: Shift X+Y" + System.lineSeparator() + "Wheel: Zoom X+Y+Z" + System.lineSeparator() + "ShiftWheel: Zoom Z");
-//        label.getStyleClass().add("srtm-viewer-label");
-//        StackPane.setAlignment(label, Pos.TOP_LEFT);
-//        imagePane.getChildren().add(label);
-//        label.toFront();
-//
-//        final Button closeButton = new Button("Close");
-//        closeButton.setOnAction((ActionEvent event) -> {
-//            stage.close();
-//        });
-//        
-//        final VBox vbox = new VBox();
-//        vbox.setPadding(new Insets(10, 10, 10, 10));
-//        vbox.setAlignment(Pos.CENTER);
-//        vbox.getStyleClass().add("srtm-viewer-button");
-//        
-//        vbox.getChildren().addAll(imagePane, closeButton);
-//        imagePane.prefHeightProperty().bind(Bindings.subtract(vbox.heightProperty(), closeButton.heightProperty()));
-//        imagePane.prefWidthProperty().bind(vbox.widthProperty());
-//        
-//        // needs to be set to allow shrinking scene and shrinking content as well
-//        imagePane.setMinHeight(0);
-//        imagePane.setMinWidth(0);
-//        vbox.setMinHeight(0);
-//        vbox.setMinWidth(0);
-
-        final Scene scene = new Scene(group, 800, 600, true, SceneAntialiasing.BALANCED);
-        scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
-//        vbox.prefHeightProperty().bind(scene.heightProperty());
-//        vbox.prefWidthProperty().bind(scene.widthProperty());
-
-        scene.setFill(Color.BISQUE);
-        scene.setCamera(camera);
-        scene.setOnKeyPressed((t) -> {
-            double scaleFact = 1d;
-            if (t.isShiftDown()) {
-                scaleFact = 10d;
-            }
-            switch (t.getCode()) {
-                case ESCAPE:
-                    stage.close();
-                    break;
-                case UP:
-                    camera.setTranslateY(camera.getTranslateY() + 0.2*scaleFact);
-                    System.out.println("setTranslateY: " + camera.getTranslateY());
-                    break;
-                case DOWN:
-                    camera.setTranslateY(camera.getTranslateY() - 0.2*scaleFact);
-                    System.out.println("setTranslateY: " + camera.getTranslateY());
-                    break;
-                case RIGHT:
-                    camera.setTranslateX(camera.getTranslateX() - 0.2*scaleFact);
-                    System.out.println("setTranslateX: " + camera.getTranslateX());
-                    break;
-                case LEFT:
-                    camera.setTranslateX(camera.getTranslateX() + 0.2*scaleFact);
-                    System.out.println("setTranslateX: " + camera.getTranslateX());
-                    break;
-                case W:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() - 1.0*scaleFact);
-                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
-                    break;
-                case S:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() + 1.0*scaleFact);
-                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
-                    break;
-                case D:
-                    cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() - 1.0*scaleFact);
-                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
-                    break;
-                case A:
-                    cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() + 1.0*scaleFact);
-                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
-                    break;
-            }
-        });
-
-        scene.setOnScroll((t) -> {
-            double scrollDelta = 0d;
-            if (!t.isShiftDown()) {
-                scrollDelta = t.getDeltaY();
-            } else {
-                scrollDelta = t.getDeltaX();
-            }
-            if (scrollDelta > 0) {
-                camera.setTranslateZ(camera.getTranslateZ() + 5.0);
-                System.out.println("setTranslateZ: " + camera.getTranslateZ());
-            } else {
-                camera.setTranslateZ(camera.getTranslateZ() - 5.0);
-                System.out.println("setTranslateZ: " + camera.getTranslateZ());
-            }
-            
-        });
-        
-        scene.setOnMousePressed((MouseEvent me) -> {
-            mousePosX = me.getSceneX();
-            mousePosY = me.getSceneY();
-            mouseOldX = me.getSceneX();
-            mouseOldY = me.getSceneY();            
-        });
-        
-        scene.setOnMouseDragged((MouseEvent me) -> {
-            mouseOldX = mousePosX;
-            mouseOldY = mousePosY;
-            mousePosX = me.getSceneX();
-            mousePosY = me.getSceneY();
-            mouseDeltaX = (mousePosX - mouseOldX);
-            mouseDeltaY = (mousePosY - mouseOldY);
-            
-            double modifier = 10.0;
-            double modifierFactor = 0.1;
-            
-            if (me.isControlDown()) {
-                modifier = 0.1;
-            }
-            if (me.isShiftDown()) {
-                modifier = 50.0;
-            }
-            if (me.isPrimaryButtonDown()) {
-                cameraTransform.ry.setAngle(((cameraTransform.ry.getAngle() + mouseDeltaX * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180); // +
-                cameraTransform.rx.setAngle(
-                        MathUtils.clamp(-60, 
-                        (((cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180),
-                        60)); // - 
-                
-            } else if (me.isSecondaryButtonDown()) {
-                double z = camera.getTranslateZ();
-                double newZ = z + mouseDeltaX * modifierFactor * modifier;
-                camera.setTranslateZ(newZ);
-            } else if (me.isMiddleButtonDown()) {
-                cameraTransform.t.setX(cameraTransform.t.getX() + mouseDeltaX * modifierFactor * modifier * 0.3); // -
-                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.3); // -
-            }
-        });
-        
-        stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL); 
-        stage.show();
-    }
-    
     private List<File> getFiles() {
         final List<File> result = new ArrayList<>();
 
@@ -463,108 +277,310 @@ public class SRTMDataViewer_fxyz3d {
         ShowAlerts.getInstance().showAlert(Alert.AlertType.ERROR, "Error opening file", "No SRTM data file", filename, buttonOK);
     }
     
-//    private Coord3d addGPXLineItemToChart(final AWTChart chart, final List<GPXWaypoint> gpxWaypoints) {
-//        if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
-//            return null;
-//        }
-//
-//        final List<Coord3d> points = new ArrayList<>();
-//        for (GPXWaypoint waypoint : gpxWaypoints) {
-//            // we need to trick jzy3d by changing signs for latitude in range AND in the mapper function AND in the grid tick
-//            points.add(new Coord3d(-waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation()));
-//        }
-//        
-//        // Color is not the same as Color...
-//        final javafx.scene.paint.Color javaFXColor = gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor();
-//        final org.jzy3d.colors.Color jzy3dColor = new Color(
-//                (float) javaFXColor.getRed(), 
-//                (float) javaFXColor.getGreen(), 
-//                (float) javaFXColor.getBlue(), 
-//                (float) javaFXColor.getOpacity());
-//        
-//        if (points.size() > 1) {
-//            final BernsteinInterpolator line = new BernsteinInterpolator();
-//            final LineStrip fline = new LineStrip(line.interpolate(points, 1));
-//
-//            fline.setWireframeColor(jzy3dColor);
-//            fline.setWireframeWidth(6);
-//            chart.getScene().getGraph().add(fline);
-//        } else {
-//            final Point point = new Point(points.get(0), jzy3dColor, 6);
-//            chart.getScene().getGraph().add(point);
-//        }
-//        
-//        return points.get(0);
-//    }
+    private void showStage(final String title, final Bounds dataBounds, final GPXLineItem gpxLineItem) {
+//        File names refer to the latitude and longitude of the lower left corner of the tile -
+//        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 
-    private TexturedMesh getTexturedMesh(Bounds dataBounds) {
-        final SRTMElevationService elevation = 
-                new SRTMElevationService(
-                        new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY), 
-                        new SRTMDataOptions(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY));
+        // TFE, 20200120: add file name (srtm or gpx) to title
+        stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
         
-        // we don't want to plot the full set, only 1/4 of it
-        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
-        final double normFact = dataCount / 2d;
-        final int stepsSize = 100;
+        // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
+//        System.out.println("Bounds: " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());
+//        System.out.println("Moved:  " + latDist + ", " + latCenter + ", " + lonDist + ", " + lonCenter);
+        final TexturedMesh model = getTexturedMesh(dataBounds);
+
+        Group group = null; //= new Group(cameraTransform, model);
         
-//        System.out.println("Bounds: " + dataBounds + ", latDist: " + (dataBounds.getMaxLat()-dataBounds.getMinLat()) + ", lonDist: " + (dataBounds.getMaxLon()-dataBounds.getMinLon()));
-        final double latDist = dataBounds.getMaxLat()-dataBounds.getMinLat();
-        final double lonDist = dataBounds.getMaxLon()-dataBounds.getMinLon();
-        List<Point3D> data = new ArrayList<>();
-        for (int i = 0; i < dataCount; i = i+stepsSize) {
-            double lat = (dataBounds.getMinLat() + ((double)i /(double)dataCount) * latDist);
-            for (int j = 0; j < dataCount; j = j+stepsSize) {
-                double lon = (dataBounds.getMinLon() + ((double)j /(double)dataCount) * lonDist);
-                
-//                double pointY = 2d * Math.sin(new Point2D(lat, lon).magnitude());
-                double pointY = Math.max(0d, elevation.getElevationForCoordinate(lat, lon) / 100d);
-                
-//                System.out.println("Adding point for lat: " + lat + ", lon: " + lon + " with elevation: " + pointY);
-                data.add(new Point3D(i/normFact-1d, pointY, j/normFact-1d));
+        Point3D startPoint = null;
+        // add waypoints from gpxLineItem (if any)
+        if (gpxLineItem != null) {
+            // TFE, 20220106: special case: show only one single waypoint in its surrounding...
+            switch (gpxLineItem.getType()) {
+                case GPXWaypoint, GPXTrackSegment:
+//                    group.getChildren().add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
+                    break;
+                default: // covers tracks, routes and gpxfile...
+                    // add tracks individually with their color
+//                    for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
+//                        startPoint = getPolyLine3D(group, gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
+//                    }
+//
+//                    // add routes individually with their color
+//                    for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
+//                        startPoint = getPolyLine3D(group, gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute));
+//                    }
+                    group = new Group(cameraTransform, getPolyLine3D(gpxLineItem.getGPXTracks().get(1).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
             }
         }
-
-        // original example
-//        for (int y = 0; y <= 50; y++) {
-//            double dy = -5d + ((double)y /(double)50) * 10d;
-//            for (int x = 0; x <= 50; x++) {
-//                double dx = -5d + ((double)x /(double)50) * 10d;
-//                double pointY = 2d * Math.sin(new Point2D(dx,dy).magnitude());
-//                data.add(new Point3D(dx, pointY, dy));
-//            }
-//        }
-
-//        // we directly get the SRTM data to speed things up
-//        final SRTMData srtmData = elevation.getSRTMData(latMin, lonMin);
-//        for (int i = 0; i < dataCount; i = i+stepsSize) {
-//            double lat = (latMin + ((double)i /(double)dataCount) * (latMax-latMin));
-//            for (int j = 0; j < dataCount; j = j+stepsSize) {
-//                double lon = (lonMin + ((double)j /(double)dataCount) * (lonMax-lonMin));
+        
+        // addjust camera position to show all (for the given field of view
+        camera.setTranslateZ(-Math.max(latDist, lonDist));
+        
+//        // some explanation for rote & zoom
+//        final Label label = new Label("LftBtn: Rotate X+Y+Z" + System.lineSeparator() + "RgtBtn: Shift X+Y" + System.lineSeparator() + "Wheel: Zoom X+Y+Z" + System.lineSeparator() + "ShiftWheel: Zoom Z");
+//        label.getStyleClass().add("srtm-viewer-label");
+//        StackPane.setAlignment(label, Pos.TOP_LEFT);
+//        label.toFront();
 //
-//                data.add(new Point3D(lon, Math.max(0d, srtmData.getValue(lat, lon)), lat));
+//        final Button closeButton = new Button("Close");
+//        closeButton.setOnAction((ActionEvent event) -> {
+//            stage.close();
+//        });
+        
+//        // use HiddenSidesPane to show various types of info
+//        final StackPane imagePane = new StackPane();
+//        imagePane.getChildren().add(group);
+////        imagePane.setContent(group);
+////        imagePane.setTop(label);
+////        imagePane.setBottom(closeButton);
+////        imagePane.setPinnedSide(Side.TOP);
 //
-//            }
-//        }
+//        final SubScene subScene = new SubScene(imagePane, 1440, 1080, true, SceneAntialiasing.BALANCED);
+//        subScene.setFill(Color.TRANSPARENT);      
+//        subScene.setCamera(camera);
+//        subScene.setFocusTraversable(false);
 
-//        for (int y = 0; y <= steps; y++) {
-//            double lat = (latMin + ((double)y /(double)steps) * latMax);
-//            for (int x = 0; x <= steps; x++) {
-//                double lon = (lonMin + ((double)x /(double)steps) * lonMax);
-//                
-//                double pointY = Math.max(0d, elevation.getElevationForCoordinate(lat, lon));
-//                
-//                System.out.println("Adding point for lat: " + lat + ", lon: " + lon + " with elevation: " + pointY);
-//                data.add(new Point3D(lon, pointY, lat));
-//            }
-//        }
+        scene = new Scene(group, 1440, 1080, true, SceneAntialiasing.BALANCED);
+        scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        
+        initUserControls();
 
-        final Surface3DMesh model = new Surface3DMesh();
-        model.setSurfaceData(data);
+        stage.setScene(scene);
+//        stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.showAndWait();
+        
+        scene.setCamera(null);
+    }
+    
+    private void initLightAndCamera() {
+        camera.setNearClip(0.1);
+        camera.setFarClip(1000.0);
+        camera.setFieldOfView(60);
+        
+        cameraTransform.getChildren().add(camera);
+        cameraTransform.rx.setAngle(-240.0);
+        cameraTransform.ry.setAngle(-90.0);
+        
+        //add a Point Light for better viewing of the grid coordinate system
+        final PointLight light = new PointLight(Color.WHITE);
+        cameraTransform.getChildren().add(light);
+        light.translateXProperty().bind(camera.translateXProperty());
+        light.translateYProperty().bind(camera.translateYProperty());
+        light.translateZProperty().bind(camera.translateZProperty());
+        light.setLightOn(true);
+    }
+    
+    private void initUserControls() {
+        scene.setFill(Color.WHITE);
+        scene.setCamera(camera);
+        scene.setOnKeyPressed((t) -> {
+            double scaleFact = 1d;
+            if (t.isShiftDown()) {
+                scaleFact = 10d;
+            }
+            switch (t.getCode()) {
+                case ESCAPE:
+                    stage.close();
+                    break;
+                case UP:
+                    camera.setTranslateY(camera.getTranslateY() + 0.1*scaleFact);
+//                    System.out.println("setTranslateY: " + camera.getTranslateY());
+                    break;
+                case DOWN:
+                    camera.setTranslateY(camera.getTranslateY() - 0.1*scaleFact);
+//                    System.out.println("setTranslateY: " + camera.getTranslateY());
+                    break;
+                case RIGHT:
+                    camera.setTranslateX(camera.getTranslateX() - 0.1*scaleFact);
+//                    System.out.println("setTranslateX: " + camera.getTranslateX());
+                    break;
+                case LEFT:
+                    camera.setTranslateX(camera.getTranslateX() + 0.1*scaleFact);
+//                    System.out.println("setTranslateX: " + camera.getTranslateX());
+                    break;
+                case W:
+                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() - 1.0*scaleFact);
+//                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
+                    break;
+                case S:
+                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() + 1.0*scaleFact);
+//                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
+                    break;
+                case D:
+                    cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() - 1.0*scaleFact);
+//                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
+                    break;
+                case A:
+                    cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() + 1.0*scaleFact);
+//                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
+                    break;
+                case C:
+//                    // clamp to ground - but only when we're "inside" the map
+//                    if (isCameraInBounds()) {
+//                        camera.setTranslateZ(
+//                                -Math.max(0d, 
+//                                        elevationService.getElevationForCoordinate(
+//                                                camera.getTranslateX()+latCenter, 
+//                                                camera.getTranslateY()+lonCenter))*ELEVATION_SCALING*2d);
+//                        System.out.println("clampToGround: " + camera.getTranslateZ());
+//                    }
+                    break;
+            }
+
+//            isCameraInBounds();
+        });
+
+        scene.setOnScroll((t) -> {
+            double scaleFact = 1d;
+            if (t.isShiftDown()) {
+                scaleFact = 10d;
+            }
+
+            // https://stackoverflow.com/a/52707611
+            // if shift is pressed with mouse wheel x is changed instead of y...
+            double scrollDelta = 0d;
+            if (!t.isShiftDown()) {
+                scrollDelta = t.getDeltaY();
+            } else {
+                scrollDelta = t.getDeltaX();
+            }
+            
+            if (scrollDelta > 0) {
+                camera.setTranslateZ(camera.getTranslateZ() + 0.05*scaleFact);
+//                System.out.println("setTranslateZ: " + camera.getTranslateZ());
+            } else {
+                camera.setTranslateZ(camera.getTranslateZ() - 0.05*scaleFact);
+//                System.out.println("setTranslateZ: " + camera.getTranslateZ());
+            }
+            
+//            isCameraInBounds();
+        });
+        
+        scene.setOnMousePressed((MouseEvent me) -> {
+            mousePosX = me.getSceneX();
+            mousePosY = me.getSceneY();
+            mouseOldX = me.getSceneX();
+            mouseOldY = me.getSceneY();            
+        });
+        
+        scene.setOnMouseDragged((MouseEvent me) -> {
+            mouseOldX = mousePosX;
+            mouseOldY = mousePosY;
+            mousePosX = me.getSceneX();
+            mousePosY = me.getSceneY();
+            mouseDeltaX = (mousePosX - mouseOldX);
+            mouseDeltaY = (mousePosY - mouseOldY);
+            
+            double modifier = 10.0;
+            double modifierFactor = 0.1;
+            
+            if (me.isControlDown()) {
+                modifier = 0.1;
+            }
+            if (me.isShiftDown()) {
+                modifier = 50.0;
+            }
+            if (me.isPrimaryButtonDown()) {
+                cameraTransform.ry.setAngle(((cameraTransform.ry.getAngle() + mouseDeltaX * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180); // +
+                cameraTransform.rx.setAngle(
+                        MathUtils.clamp(-60, 
+                        (((cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180),
+                        60)); // - 
+                
+            } else if (me.isSecondaryButtonDown()) {
+                cameraTransform.t.setX(cameraTransform.t.getX() + mouseDeltaX * modifierFactor * modifier * 0.3); // -
+                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.3); // -
+            } else if (me.isMiddleButtonDown()) {
+                double z = camera.getTranslateZ();
+                double newZ = z + mouseDeltaX * modifierFactor * modifier;
+                camera.setTranslateZ(newZ);
+            }
+        });
+    }
+    
+    private boolean isCameraInBounds() {
+        boolean result = ((Math.abs(camera.getTranslateX()) < latDist) && (Math.abs(camera.getTranslateY()) < lonDist));
+//        
+//        System.out.println("Camera:          X: " + camera.getTranslateX() + ", Y:" + camera.getTranslateY() + ", Z: " + camera.getTranslateZ());
+//        System.out.println("CameraTransform: X: " + cameraTransform.getTranslateX() + ", Y:" + cameraTransform.getTranslateY() + ", Z: " + cameraTransform.getTranslateZ());
+//        if (result) {
+//            System.out.println("Camera is in bounds!");
+//        } else {
+//            System.out.println("Camera is not in bounds!");
+//        }
+        
+        return result;
+    }
+    
+    private TexturedMesh getTexturedMesh(final Bounds dataBounds) {
+        latDist = (dataBounds.getMaxLat() - dataBounds.getMinLat()) / 2d;
+        lonDist = (dataBounds.getMaxLon() - dataBounds.getMinLon()) / 2d;
+        latCenter = (dataBounds.getMaxLat() + dataBounds.getMinLat()) / 2d;
+        lonCenter = (dataBounds.getMaxLon() + dataBounds.getMinLon()) / 2d;
+        
+        minElevation = Double.MAX_VALUE;
+        maxElevation = -Double.MAX_VALUE;
+        
+        final Function<Point2D,Number> elevationFunction = (t) -> {
+            // convert point into lat & lon = scale & shift properly <- lat = y lon = x
+            final double elevation = Math.max(0d, elevationService.getElevationForCoordinate(t.getX()+latCenter, t.getY()+lonCenter));
+            
+            minElevation = Math.min(minElevation, elevation);
+            maxElevation = Math.max(maxElevation, elevation);
+            
+            return elevation;
+        };
+        
+//        System.out.println("Bounds:  " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());
+//        System.out.println("Shifted: " + latCenter + ", " + latDist + ", " + lonCenter + ", " + lonDist);
+
+        // we don't want to plot the full set, only 1/4 of it
+        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
+        final int steps = dataCount / 4;
+        
+        final SurfacePlotMesh_Fast model = new SurfacePlotMesh_Fast(elevationFunction, latDist, lonDist, steps, steps, ELEVATION_SCALING);
         model.setCullFace(CullFace.NONE);
-        model.setTextureModeVertices3D(1530, p->p.y);
+        model.setTextureModeVertices3D(
+                new Palette.ListColorPalette(
+                        getBrighter(Color.INDIGO), 
+                        getBrighter(Color.BLUE), 
+                        getBrighter(Color.GREEN), 
+                        getBrighter(Color.YELLOW), 
+                        getBrighter(Color.ORANGE), 
+                        getBrighter(Color.RED)), p->p.y);
         model.setDrawMode(DrawMode.FILL);
 
         return model;
+    }
+    
+    private Color getBrighter(final Color color) {
+//        return color.deriveColor(0, 1.0, 50.0, 1.0);
+        return color.desaturate().desaturate();
+    }
+
+    private PolyLine3D getPolyLine3D(final List<GPXWaypoint> gpxWaypoints) {
+        if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
+            return null;
+        }
+
+        final List<Point3D> points = new ArrayList<>();
+        for (GPXWaypoint waypoint : gpxWaypoints) {
+            // shift lat/lon to the window around "0"
+//            points.add(new Point3D(waypoint.getLongitude()-lonCenter, waypoint.getLatitude()-latCenter, waypoint.getElevation()*ELEVATION_SCALING));
+            points.add(new Point3D(waypoint.getLatitude()-latCenter, 50d*ELEVATION_SCALING, waypoint.getLongitude()-lonCenter));
+            System.out.println("{ " + (waypoint.getLongitude()-lonCenter) + ", " + (waypoint.getLatitude()-latCenter) + ", " + (waypoint.getElevation()*ELEVATION_SCALING) + " }, ");
+        }
+        
+        if (points.size() > 1) {
+            return new PolyLine3D(
+                    points, 
+                    6f, 
+                    gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
+                    PolyLine3D.LineType.TRIANGLE);
+        } else {
+//            final Point point = new Point(points.get(0), jzy3dColor, 6);
+//            chart.getScene().getGraph().add(point);
+            return null;
+        }
     }
 }

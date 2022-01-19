@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.algorithms;
 
-import tf.gpx.edit.algorithms.MapboxMatchingService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;

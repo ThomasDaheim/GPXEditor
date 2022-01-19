@@ -59,14 +59,14 @@ import org.jfree.chart3d.Orientation;
 import org.jfree.chart3d.axis.NumberAxis3D;
 import org.jfree.chart3d.axis.ValueAxis3D;
 import org.jfree.chart3d.data.function.Function3D;
+import org.jfree.chart3d.fx.Chart3DCanvas;
+import org.jfree.chart3d.fx.Chart3DViewer;
 import org.jfree.chart3d.graphics3d.Dimension3D;
 import org.jfree.chart3d.graphics3d.ViewPoint3D;
 import org.jfree.chart3d.legend.LegendAnchor;
 import org.jfree.chart3d.plot.XYZPlot;
 import org.jfree.chart3d.renderer.RainbowScale;
 import org.jfree.chart3d.renderer.xyz.SurfaceRenderer;
-import org.jfree.chart3d.fx.Chart3DCanvas;
-import org.jfree.chart3d.fx.Chart3DViewer;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -74,21 +74,14 @@ import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.javafx.ShowAlerts;
 
 /**
- * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.
+ * Show a set of SRTM data in a separate stage.
  * 
- * {@link JavaFXChartFactory} delivers dedicated  {@link JavaFXCameraMouseController}
- * and {@link JavaFXRenderer3d}
+ * Two options:
  * 
- * Support 
- * Rotation control with left mouse button hold+drag
- * Scaling scene using mouse wheel 
- * Animation (camera rotation with thread) 
+ * - select a SRTM file and show it
+ * - show SRTM data for the area covered by a gpxLineItem together with tracks / routes / waypoints from it
  * 
- * TODO : 
- * Mouse right click shift
- * Keyboard support (rotate/shift, etc)
- * 
- * @author Martin Pernollet
+ * @author Thomas Feuster
  */
 public class SRTMDataViewer_orsonchart {
     // this is a singleton for everyones use

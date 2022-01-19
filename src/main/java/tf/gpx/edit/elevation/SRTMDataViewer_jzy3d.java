@@ -45,7 +45,6 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -53,7 +52,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
@@ -66,7 +64,6 @@ import org.jzy3d.colors.Color;
 import org.jzy3d.colors.ColorMapper;
 import org.jzy3d.colors.colormaps.ColorMapRainbow;
 import org.jzy3d.javafx.JavaFXChartFactory;
-import org.jzy3d.javafx.JavaFXRenderer3d;
 import org.jzy3d.javafx.controllers.keyboard.JavaFXCameraKeyController;
 import org.jzy3d.javafx.controllers.mouse.JavaFXCameraMouseController;
 import org.jzy3d.maths.Coord2d;
@@ -94,21 +91,14 @@ import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.javafx.ShowAlerts;
 
 /**
- * Showing how to pipe an offscreen Jzy3d chart image to a JavaFX ImageView.
+ * Show a set of SRTM data in a separate stage.
  * 
- * {@link JavaFXChartFactory} delivers dedicated  {@link JavaFXCameraMouseController}
- * and {@link JavaFXRenderer3d}
+ * Two options:
  * 
- * Support 
- * Rotation control with left mouse button hold+drag
- * Scaling scene using mouse wheel 
- * Animation (camera rotation with thread) 
+ * - select a SRTM file and show it
+ * - show SRTM data for the area covered by a gpxLineItem together with tracks / routes / waypoints from it
  * 
- * TODO : 
- * Mouse right click shift
- * Keyboard support (rotate/shift, etc)
- * 
- * @author Martin Pernollet
+ * @author Thomas Feuster
  */
 public class SRTMDataViewer_jzy3d {
     // this is a singleton for everyones use
@@ -291,7 +281,7 @@ public class SRTMDataViewer_jzy3d {
         });
 
         stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL); 
+//        stage.initModality(Modality.APPLICATION_MODAL); 
         stage.show();
 
         // needs to be done after show()... to not mess up jzy3d
@@ -368,6 +358,8 @@ public class SRTMDataViewer_jzy3d {
                 return Math.max(0f, elevation.getElevationForCoordinate(-x, y).floatValue());
             }
         };
+
+//        System.out.println("Bounds:  " + latMin + ", " + latMax + ", " + lonMin + ", " + lonMax);
 
         // we don't want to plot the full set, only 1/4 of it
         final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();

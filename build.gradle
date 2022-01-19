@@ -114,12 +114,12 @@ dependencies {
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
     
-//    implementation 'org.jzy3d:jzy3d-api:1.0.3'
-//    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
+    implementation 'org.jzy3d:jzy3d-api:1.0.3'
+    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
     
 //    // TFE, 20220109: orson charts once again
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
+    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
+    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
 
     // TFE, 20220115: 3rd altrenative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.5.4'

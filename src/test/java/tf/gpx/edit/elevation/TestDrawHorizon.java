@@ -26,13 +26,11 @@
 package tf.gpx.edit.elevation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Assert;
 import org.junit.Test;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.leafletmap.LatLonElev;
