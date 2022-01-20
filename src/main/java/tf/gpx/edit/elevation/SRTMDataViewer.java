@@ -52,7 +52,7 @@ public class SRTMDataViewer {
     }
     
     public void showGPXLineItemWithSRTMData(final GPXLineItem gpxLineItem) {
-        Instant start = Instant.now();
+//        Instant start = Instant.now();
 
 //        System.out.println("showGPXLineItemWithSRTMData: " + start);
         SRTMDataViewer_fxyz3d.getInstance().showGPXLineItemWithSRTMData(gpxLineItem);

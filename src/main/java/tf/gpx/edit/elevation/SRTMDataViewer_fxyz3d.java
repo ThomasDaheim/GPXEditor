@@ -86,6 +86,8 @@ public class SRTMDataViewer_fxyz3d {
     private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'" + LatLonHelper.DEG + "'; #0.0'" + LatLonHelper.DEG + "'");
     
     private final static double ELEVATION_SCALING = 1d/3000d;
+    private final static float LINE_WIDTH = 0.01f;
+    private final static float LINE_RAISE = 0.5f*LINE_WIDTH;
 
     private final Stage stage = new Stage();
     private Scene scene;
@@ -284,37 +286,30 @@ public class SRTMDataViewer_fxyz3d {
         // TFE, 20200120: add file name (srtm or gpx) to title
         stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
         
-        // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
-//        System.out.println("Bounds: " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());
-//        System.out.println("Moved:  " + latDist + ", " + latCenter + ", " + lonDist + ", " + lonCenter);
-        final TexturedMesh model = getTexturedMesh(dataBounds);
-
-        Group group = null; //= new Group(cameraTransform, model);
+        final Group group = new Group(cameraTransform, getTexturedMesh(dataBounds));
         
-        Point3D startPoint = null;
         // add waypoints from gpxLineItem (if any)
         if (gpxLineItem != null) {
             // TFE, 20220106: special case: show only one single waypoint in its surrounding...
             switch (gpxLineItem.getType()) {
                 case GPXWaypoint, GPXTrackSegment:
-//                    group.getChildren().add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
+                    group.getChildren().add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
                     break;
                 default: // covers tracks, routes and gpxfile...
                     // add tracks individually with their color
-//                    for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
-//                        startPoint = getPolyLine3D(group, gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack));
-//                    }
-//
-//                    // add routes individually with their color
-//                    for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
-//                        startPoint = getPolyLine3D(group, gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute));
-//                    }
-                    group = new Group(cameraTransform, getPolyLine3D(gpxLineItem.getGPXTracks().get(1).getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
+                    for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
+                        group.getChildren().add(getPolyLine3D(gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
+                    }
+
+                    // add routes individually with their color
+                    for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
+                        group.getChildren().add(getPolyLine3D(gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute)));
+                    }
             }
         }
         
-        // addjust camera position to show all (for the given field of view
-        camera.setTranslateZ(-Math.max(latDist, lonDist));
+        // addjust camera position to show all (for the given field of view)
+        resetLightAndCamera();
         
 //        // some explanation for rote & zoom
 //        final Label label = new Label("LftBtn: Rotate X+Y+Z" + System.lineSeparator() + "RgtBtn: Shift X+Y" + System.lineSeparator() + "Wheel: Zoom X+Y+Z" + System.lineSeparator() + "ShiftWheel: Zoom Z");
@@ -344,12 +339,17 @@ public class SRTMDataViewer_fxyz3d {
         scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
         
         initUserControls();
-
+        
         stage.setScene(scene);
 //        stage.initModality(Modality.APPLICATION_MODAL); 
-        stage.showAndWait();
+
+        stage.setOnCloseRequest((t) -> {
+            // cleanup for next call
+            scene.setCamera(null);
+        });
+
+        stage.show();
         
-        scene.setCamera(null);
     }
     
     private void initLightAndCamera() {
@@ -358,8 +358,7 @@ public class SRTMDataViewer_fxyz3d {
         camera.setFieldOfView(60);
         
         cameraTransform.getChildren().add(camera);
-        cameraTransform.rx.setAngle(-240.0);
-        cameraTransform.ry.setAngle(-90.0);
+        cameraTransform.rx.setAngle(120.0);
         
         //add a Point Light for better viewing of the grid coordinate system
         final PointLight light = new PointLight(Color.WHITE);
@@ -368,6 +367,14 @@ public class SRTMDataViewer_fxyz3d {
         light.translateYProperty().bind(camera.translateYProperty());
         light.translateZProperty().bind(camera.translateZProperty());
         light.setLightOn(true);
+    }
+    
+    private void resetLightAndCamera() {
+        cameraTransform.rx.setAngle(120.0);
+        cameraTransform.ry.setAngle(0.0);
+        camera.setTranslateX(0.0);
+        camera.setTranslateY(0.0);
+        camera.setTranslateZ(-Math.max(latDist, lonDist));
     }
     
     private void initUserControls() {
@@ -413,6 +420,9 @@ public class SRTMDataViewer_fxyz3d {
                 case A:
                     cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() + 1.0*scaleFact);
 //                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
+                    break;
+                case R:
+                    resetLightAndCamera();
                     break;
                 case C:
 //                    // clamp to ground - but only when we're "inside" the map
@@ -513,8 +523,8 @@ public class SRTMDataViewer_fxyz3d {
     }
     
     private TexturedMesh getTexturedMesh(final Bounds dataBounds) {
-        latDist = (dataBounds.getMaxLat() - dataBounds.getMinLat()) / 2d;
-        lonDist = (dataBounds.getMaxLon() - dataBounds.getMinLon()) / 2d;
+        latDist = (dataBounds.getMaxLat() - dataBounds.getMinLat());
+        lonDist = (dataBounds.getMaxLon() - dataBounds.getMinLon());
         latCenter = (dataBounds.getMaxLat() + dataBounds.getMinLat()) / 2d;
         lonCenter = (dataBounds.getMaxLon() + dataBounds.getMinLon()) / 2d;
         
@@ -522,8 +532,8 @@ public class SRTMDataViewer_fxyz3d {
         maxElevation = -Double.MAX_VALUE;
         
         final Function<Point2D,Number> elevationFunction = (t) -> {
-            // convert point into lat & lon = scale & shift properly <- lat = y lon = x
-            final double elevation = Math.max(0d, elevationService.getElevationForCoordinate(t.getX()+latCenter, t.getY()+lonCenter));
+            // convert point into lat & lon = scale & shift properly <- lat = y lon = x AND we need to go lat "backwards"
+            final double elevation = Math.max(0d, elevationService.getElevationForCoordinate(-t.getY()+latCenter, t.getX()+lonCenter));
             
             minElevation = Math.min(minElevation, elevation);
             maxElevation = Math.max(maxElevation, elevation);
@@ -538,7 +548,8 @@ public class SRTMDataViewer_fxyz3d {
         final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
         final int steps = dataCount / 4;
         
-        final SurfacePlotMesh_Fast model = new SurfacePlotMesh_Fast(elevationFunction, latDist, lonDist, steps, steps, ELEVATION_SCALING);
+        // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
+        final SurfacePlotMesh_Fast model = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, ELEVATION_SCALING);
         model.setCullFace(CullFace.NONE);
         model.setTextureModeVertices3D(
                 new Palette.ListColorPalette(
@@ -554,7 +565,6 @@ public class SRTMDataViewer_fxyz3d {
     }
     
     private Color getBrighter(final Color color) {
-//        return color.deriveColor(0, 1.0, 50.0, 1.0);
         return color.desaturate().desaturate();
     }
 
@@ -565,22 +575,23 @@ public class SRTMDataViewer_fxyz3d {
 
         final List<Point3D> points = new ArrayList<>();
         for (GPXWaypoint waypoint : gpxWaypoints) {
-            // shift lat/lon to the window around "0"
-//            points.add(new Point3D(waypoint.getLongitude()-lonCenter, waypoint.getLatitude()-latCenter, waypoint.getElevation()*ELEVATION_SCALING));
-            points.add(new Point3D(waypoint.getLatitude()-latCenter, 50d*ELEVATION_SCALING, waypoint.getLongitude()-lonCenter));
-            System.out.println("{ " + (waypoint.getLongitude()-lonCenter) + ", " + (waypoint.getLatitude()-latCenter) + ", " + (waypoint.getElevation()*ELEVATION_SCALING) + " }, ");
+//            if (Math.abs(waypoint.getLatitude()-latCenter) > latDist) {
+//                System.err.println("Latitude outside bounds! " + (waypoint.getLatitude()-latCenter));
+//            }
+//            if (Math.abs(waypoint.getLongitude()-lonCenter) > lonDist) {
+//                System.err.println("Longitude outside bounds! " + (waypoint.getLongitude()-lonCenter));
+//            }
+            // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
+            points.add(new Point3D(
+                    waypoint.getLongitude()-lonCenter, 
+                    waypoint.getElevation()*ELEVATION_SCALING + LINE_RAISE, 
+                    latCenter-waypoint.getLatitude()));
         }
         
-        if (points.size() > 1) {
-            return new PolyLine3D(
-                    points, 
-                    6f, 
-                    gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
-                    PolyLine3D.LineType.TRIANGLE);
-        } else {
-//            final Point point = new Point(points.get(0), jzy3dColor, 6);
-//            chart.getScene().getGraph().add(point);
-            return null;
-        }
+        return new PolyLine3D(
+                points, 
+                LINE_WIDTH, 
+                gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
+                PolyLine3D.LineType.TRIANGLE);
     }
 }
