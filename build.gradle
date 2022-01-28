@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
-apply plugin: 'maven' // - to be removed for Gradle 7.*
+//apply plugin: 'maven' // - to be removed for Gradle 7.*
 apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
@@ -121,7 +121,7 @@ dependencies {
     implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
     implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
 
-    // TFE, 20220115: 3rd altrenative: fxyz3d
+    // TFE, 20220115: 3rd alternative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.5.4'
     
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
@@ -197,7 +197,7 @@ run {
 //}
 
 test {
-//    exclude '**/*'
+    exclude '**/*'
     doFirst {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
         jvmArgs = jvmArgs.plus(newArgs)

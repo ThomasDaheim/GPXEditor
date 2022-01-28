@@ -365,12 +365,12 @@ public class GPXFileHelper {
                     final ZipEntry zipEntry = new ZipEntry(selectedFile.getName().replace(FileType.KMZ.getExtension(), FileType.KML.getExtension()));
                     outStream.putNextEntry(zipEntry);
                     
-                    result = kmlWriter.writeGPX(gpxFile, outStream);
+                    result = kmlWriter.writeKML(gpxFile, outStream);
                 }
             } else {
                 final BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(selectedFile));
 
-                result = kmlWriter.writeGPX(gpxFile, outStream);
+                result = kmlWriter.writeKML(gpxFile, outStream);
             }
         } catch (IOException ex) {
             Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);

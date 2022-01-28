@@ -471,7 +471,7 @@ public class KMLWriter {
      * @param outstream to write KML to
      * @return
      */
-    public boolean writeGPX(final GPXFile gpxFile, final OutputStream outstream) {
+    public boolean writeKML(final GPXFile gpxFile, final OutputStream outstream) {
         // TFE, 20211211: export metadata as hidden extension
         if (gpxFile.getGPXMetadata() != null) {
             addMetadata(gpxFile.getGPXMetadata());
