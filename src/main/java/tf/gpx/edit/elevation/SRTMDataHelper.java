@@ -37,6 +37,7 @@ public class SRTMDataHelper {
     public enum SRTMDataType {
         SRTM1(3601, 1),
         SRTM3(1201, 3),
+        EMPTY(0, 0),
         INVALID(1, 1);
         
         private final int dataCount;
@@ -51,6 +52,9 @@ public class SRTMDataHelper {
         public int getGridSize() {
             return gridSize;
         } 
+        public boolean isEmpty() {
+            return EMPTY.equals(this);
+        }
     }
     
     private final static Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");

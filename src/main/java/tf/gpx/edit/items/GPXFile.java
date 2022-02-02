@@ -73,9 +73,9 @@ public class GPXFile extends GPXMeasurable {
     // TFE, 20191230: need to treat metadata as list as well to be able to use automated update
     // of treetableview via combined observable list... has 0 or 1 entries
     private final ObservableList<GPXMetadata> myGPXMetadata = FXCollections.observableArrayList();
-    private final ObservableList<GPXRoute> myGPXRoutes = FXCollections.observableArrayList();
-    private final ObservableList<GPXTrack> myGPXTracks = FXCollections.observableArrayList();
-    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableArrayList();
+    private ObservableList<GPXRoute> myGPXRoutes = GPXListHelper.initEmptyList();
+    private ObservableList<GPXTrack> myGPXTracks = GPXListHelper.initEmptyList();
+    private ObservableList<GPXWaypoint> myGPXWaypoints = GPXListHelper.initEmptyList();
     
     public GPXFile() {
         super(GPXLineItemType.GPXFile);
@@ -106,6 +106,7 @@ public class GPXFile extends GPXMeasurable {
 
         // TFE, 20180203: gpx without tracks is valid!
         if (myGPX.getTracks() != null) {
+            myGPXTracks = GPXListHelper.initForCapacity(myGPXTracks, myGPX.getTracks());
             for (Track track : myGPX.getTracks()) {
                 myGPXTracks.add(new GPXTrack(this, track));
             }
@@ -113,12 +114,14 @@ public class GPXFile extends GPXMeasurable {
         }
         // TFE, 20180214: gpx can have routes and waypoints too
         if (myGPX.getRoutes()!= null) {
+            myGPXRoutes = GPXListHelper.initForCapacity(myGPXRoutes, myGPX.getRoutes());
             for (Route route : myGPX.getRoutes()) {
                 myGPXRoutes.add(new GPXRoute(this, route));
             }
             assert (myGPXRoutes.size() == myGPX.getRoutes().size());
         }
         if (myGPX.getWaypoints()!= null) {
+            myGPXWaypoints = GPXListHelper.initForCapacity(myGPXWaypoints, myGPX.getWaypoints());
             for (Waypoint waypoint : myGPX.getWaypoints()) {
                 myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
             }

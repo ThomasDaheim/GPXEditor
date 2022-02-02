@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -348,8 +349,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         for (XYChart.Series<Number, Number> series : seriesList) {
             dataCount += series.getData().size();
         }
+        final Integer dataInt = dataCount;
         
-        showData(seriesList, dataCount);
+        // TFE, 20220201: showData takes a long time... lets do it a bit later
+        Platform.runLater(() -> {
+            showData(seriesList, dataInt);
+        });
         
         setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         

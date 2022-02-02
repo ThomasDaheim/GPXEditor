@@ -68,9 +68,7 @@ class SRTMDataStore {
             // if not found: try to read file and add to store
             result = srtmOptions.getSRTMDataReader().readSRTMData(name, srtmOptions.getSRTMDataPath());
             
-            if (result != null) {
-                srtmStore.put(result.getKey(), result);
-            }
+            srtmStore.put(result.getKey(), result);
         } else {
             result = srtmStore.get(dataKey);
         }
@@ -98,6 +96,7 @@ class SRTMDataStore {
     private SRTMDataKey dataKeyForName(final String dataName) {
         SRTMDataKey result = null;
         
+        // TODO: speed this up! called umpteen times for data viewer...
         final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
                 filter((SRTMDataKey key) -> {
                     return key.getKey().equals(dataName);

@@ -82,6 +82,7 @@ class SRTMDataReader implements ISRTMDataReader {
         final File srtmFile = Paths.get(path, name + "." + SRTMDataStore.HGT_EXT).toFile();
         
         if (srtmFile.exists() && srtmFile.isFile() && srtmFile.canRead()) {
+//            System.out.println("readSRTMData: " + name);
             // determine data type & init srmtdata
             long fileLength = srtmFile.length(); 
 
@@ -155,6 +156,12 @@ class SRTMDataReader implements ISRTMDataReader {
                     }
                 }                  
             }
+        }
+        
+        if (result == null) {
+            // TFE, 20220201: always return data - even if file not found
+            // so that we can distinguish between no data & never tried AND no data & tried to read
+            result = new SRTMData(srtmFile.getAbsolutePath(), name, SRTMDataHelper.SRTMDataType.EMPTY);
         }
         
         return result;

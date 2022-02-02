@@ -31,6 +31,7 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -41,6 +42,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.magicwerk.brownies.collections.GapList;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -249,5 +251,25 @@ public class GPXListHelper {
         s.forEachRemaining(holder::accept);
         // we control this, so that Holder::t is only T
         return (T) holder.t;
+    }
+    
+    public static <T> ObservableList<T> initForCapacity(final ObservableList<T> list, final Set<?> set) {
+        if (set != null && set.size() > list.size()) {
+            return FXCollections.observableArrayList(new GapList<>((int) (set.size() * 1.1)));
+        } else {
+            return list;
+        }
+    }
+    
+    public static <T> ObservableList<T> initForCapacity(final ObservableList<T> list, final List<?> set) {
+        if (set != null && set.size() > list.size()) {
+            return FXCollections.observableArrayList(new GapList<>((int) (set.size() * 1.1)));
+        } else {
+            return list;
+        }
+    }
+    
+    public static <T> ObservableList<T> initEmptyList() {
+        return FXCollections.observableArrayList(new GapList<>());
     }
 }

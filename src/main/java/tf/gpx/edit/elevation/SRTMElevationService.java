@@ -57,11 +57,11 @@ public class SRTMElevationService implements IElevationProvider {
         double result = NO_ELEVATION;
         
         // check store for matching data
-        final SRTMData data = getSRTMData(latitude, longitude);
+        final SRTMData srtmData = getSRTMData(latitude, longitude);
         
         // ask data for value
-        if (data != null) {
-            result = data.getValueForCoordinate(latitude, longitude, srtmOptions.getSRTMDataAverage());
+        if (srtmData != null && !srtmData.isEmpty()) {
+            result = srtmData.getValueForCoordinate(latitude, longitude, srtmOptions.getSRTMDataAverage());
         }
         
         return result;

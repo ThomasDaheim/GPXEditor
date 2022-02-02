@@ -50,6 +50,10 @@ class SRTMData {
     public SRTMDataKey getKey() {
         return myDataKey;
     }
+    
+    public boolean isEmpty() {
+        return myDataKey.getValue().isEmpty();
+    }
 
     public short[][] getValues() {
         return myDataValues;
@@ -107,6 +111,10 @@ class SRTMData {
     }
 
     protected double getValueForCoordinate(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode) {
+        if (isEmpty()) {
+            return NO_DATA;
+        }
+        
         // actual calculation is the same for all SRTMData instances - so either use helper or static method
         return getValueForCoordinateStatic(latitude, longitude, avarageMode, this);
     }
