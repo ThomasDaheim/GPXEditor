@@ -25,19 +25,20 @@
  */
 package tf.gpx.edit.elevation;
 
+import tf.gpx.edit.fxyz3d.SurfacePlotMesh_Fast;
 import java.io.File;
-import java.text.DecimalFormat;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
 import javafx.scene.Scene;
@@ -49,16 +50,11 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.CullFace;
-import javafx.scene.shape.Cylinder;
 import javafx.scene.shape.DrawMode;
 import javafx.scene.shape.Shape3D;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.transform.Rotate;
-import javafx.scene.transform.Translate;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
@@ -70,7 +66,6 @@ import org.fxyz3d.shapes.composites.PolyLine3D;
 import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -98,21 +93,16 @@ public class SRTMDataViewer_fxyz3d {
     
     private final static double ITEM_BORDER = 0.2;
     
-    private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'" + LatLonHelper.DEG + "'; #0.0'" + LatLonHelper.DEG + "'");
-    
     private final int DATA_FRACTION = 4;
     
     private final static double ELEVATION_SCALING = 1d/1000d;
     private final static float LINE_WIDTH = 0.02f;
     private final static float LINE_RAISE = 0.5f*LINE_WIDTH;
     
-    private final static double SPHERE_SIZE = 0.05;
-    private final static boolean SPHERE_VISIBLE = false;
-    private final static double AXES_DIST = 1.025;
-    private final static double AXES_THICKNESS = 0.005;
-    private final static double TIC_LENGTH = 20*AXES_THICKNESS;
-    private final static int AXIS_FONT_SIZE = 16;
-    private HashMap<Shape3D, Label> shape3DToLabel;
+    private final Map<Shape3D, Label> shape3DToLabel = new HashMap<>();
+    private TexturedMesh surface;
+    private Group axes;
+    private List<PolyLine3D> lines;
 
     private final Stage stage = new Stage();
     private Scene scene;
@@ -348,31 +338,32 @@ public class SRTMDataViewer_fxyz3d {
         // TFE, 20200120: add file name (srtm or gpx) to title
         stage.setTitle(SRTMDataViewer.class.getSimpleName() + " - " + title);
         
-        final Group group = new Group(cameraTransform, getTexturedMesh(dataBounds));
+        setSurface(dataBounds);
+        final Group nodeGroup = new Group(cameraTransform, surface);
         
+        lines = new ArrayList<>();
         // add waypoints from gpxLineItem (if any)
         if (gpxLineItem != null) {
             // TFE, 20220106: special case: show only one single waypoint in its surrounding...
             switch (gpxLineItem.getType()) {
                 case GPXWaypoint, GPXTrackSegment:
-                    group.getChildren().add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
+                    lines.add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
                     break;
                 default: // covers tracks, routes and gpxfile...
                     // add tracks individually with their color
                     for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
-                        group.getChildren().add(getPolyLine3D(gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
+                        lines.add(getPolyLine3D(gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
                     }
 
                     // add routes individually with their color
                     for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
-                        group.getChildren().add(getPolyLine3D(gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute)));
+                        lines.add(getPolyLine3D(gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute)));
                     }
             }
         }
+        nodeGroup.getChildren().addAll(lines);
         
-        group.getChildren().add(getAxes(dataBounds));
         final Group labelGroup = new Group();
-        labelGroup.getChildren().addAll(shape3DToLabel.values());
         
         // addjust camera position to show all (for the given field of view)
         resetLightAndCamera();
@@ -401,7 +392,7 @@ public class SRTMDataViewer_fxyz3d {
 //        subScene.setCamera(camera);
 //        subScene.setFocusTraversable(false);
 
-        final SubScene subScene = new SubScene(group, MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
+        final SubScene subScene = new SubScene(nodeGroup, MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
         subScene.setFill(Color.WHITE);
         subScene.setCamera(camera);
 
@@ -413,15 +404,21 @@ public class SRTMDataViewer_fxyz3d {
         initUserControls(scene);
         
         stage.setScene(scene);
-//        stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.initModality(Modality.APPLICATION_MODAL); 
 
         stage.setOnCloseRequest((t) -> {
             // cleanup for next call
             subScene.setCamera(null);
         });
-        Platform.runLater(()-> updateLabels());
 
         stage.show();
+
+        // runLater since we need to have min/maxElevation calculated from rendering
+        Platform.runLater(()-> {
+            nodeGroup.getChildren().add(axes);
+            labelGroup.getChildren().addAll(shape3DToLabel.values());
+            // runLater since we need to have width/height of labels from rendering
+        });
     }
     
     private void initLightAndCamera() {
@@ -494,21 +491,9 @@ public class SRTMDataViewer_fxyz3d {
                 case R:
                     resetLightAndCamera();
                     break;
-                case C:
-//                    // clamp to ground - but only when we're "inside" the map
-//                    if (isCameraInBounds()) {
-//                        camera.setTranslateZ(
-//                                -Math.max(0d, 
-//                                        elevationService.getElevationForCoordinate(
-//                                                camera.getTranslateX()+latCenter, 
-//                                                camera.getTranslateY()+lonCenter))*ELEVATION_SCALING*2d);
-//                        System.out.println("clampToGround: " + camera.getTranslateZ());
-//                    }
-                    break;
             }
 
 //            isCameraInBounds();
-            updateLabels();
         });
 
         node.setOnScroll((t) -> {
@@ -526,16 +511,19 @@ public class SRTMDataViewer_fxyz3d {
                 scrollDelta = t.getDeltaX();
             }
             
+            final double value = 0.05*scaleFact;
             if (scrollDelta > 0) {
-                camera.setTranslateZ(camera.getTranslateZ() + 0.05*scaleFact);
-//                System.out.println("setTranslateZ: " + camera.getTranslateZ());
+                if (!t.isControlDown()) {
+                    camera.setScaleZ(camera.getScaleZ() + value);
+                } else {
+                }
             } else {
-                camera.setTranslateZ(camera.getTranslateZ() - 0.05*scaleFact);
-//                System.out.println("setTranslateZ: " + camera.getTranslateZ());
+                if (!t.isControlDown()) {
+                    camera.setScaleZ(camera.getScaleZ() - value);
+                } else {
+                }
             }
             
-//            isCameraInBounds();
-            updateLabels();
         });
         
         node.setOnMousePressed((MouseEvent me) -> {
@@ -577,15 +565,39 @@ public class SRTMDataViewer_fxyz3d {
                 double newZ = z + mouseDeltaX * modifierFactor * modifier;
                 camera.setTranslateZ(newZ);
             }
-            updateLabels();
         });
+    }
+    
+        switch (direction) {
+            case X:
+                if (surface.getScaleX() + scaleValue < 0) {
+                    return;
+                }
+                for (PolyLine3D line : lines) {
+                }
+                break;
+            case Y:
+                if (surface.getScaleY() + scaleValue < 0) {
+                    return;
+                }
+                for (PolyLine3D line : lines) {
+                }
+                break;
+            case Z:
+                if (surface.getScaleZ() + scaleValue < 0) {
+                    return;
+                }
+                for (PolyLine3D line : lines) {
+                }
+                break;
+        }
     }
     
     // scale the height values to match lat / lon scaling
 //    private Function<Double, Double> elevationScaler = (value) -> Math.sqrt(value) / 40d;
     private Function<Double, Double> elevationScaler = (value) -> value * ELEVATION_SCALING;
     
-    private TexturedMesh getTexturedMesh(final Bounds dataBounds) {
+    private void setSurface(final Bounds dataBounds) {
         latDist = (dataBounds.getMaxLat() - dataBounds.getMinLat());
         lonDist = (dataBounds.getMaxLon() - dataBounds.getMinLon());
         latCenter = (dataBounds.getMaxLat() + dataBounds.getMinLat()) / 2d;
@@ -612,9 +624,9 @@ public class SRTMDataViewer_fxyz3d {
         final int steps = dataCount / DATA_FRACTION;
         
         // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
-        final SurfacePlotMesh_Fast model = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
-        model.setCullFace(CullFace.NONE);
-        model.setTextureModeVertices3D(
+        surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
+        surface.setCullFace(CullFace.NONE);
+        surface.setTextureModeVertices3D(
                 new ElevationColors(
                         Color.TRANSPARENT,
 //                        adaptColor(Color.INDIGO), 
@@ -635,9 +647,7 @@ public class SRTMDataViewer_fxyz3d {
                         return - 200d * elevationScaler.apply(maxElevation);
                     }
                         });
-        model.setDrawMode(DrawMode.FILL);
-
-        return model;
+        surface.setDrawMode(DrawMode.FILL);
     }
     
     private Color adaptColor(final Color color) {
@@ -678,153 +688,4 @@ public class SRTMDataViewer_fxyz3d {
                 gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
                 PolyLine3D.LineType.TRIANGLE);
     }
-    
-    private Group getAxes(final Bounds dataBounds) {
-        // org.fxyz3d.scene.Axes
-        
-        shape3DToLabel = new HashMap<>();
-        final Group result = new Group();
-        
-        // add a sphere for each integer value of lat
-        final int startLat = (int) Math.ceil(dataBounds.getMinLat());
-        final int endLat = (int) Math.ceil(dataBounds.getMaxLat());
-        final double lonShift = (dataBounds.getMaxLon()-lonCenter) * AXES_DIST;
-        Cylinder ticCylinder;
-        Label label;
-        for (int i = startLat; i<= endLat; i++) {
-//            System.out.println("Adding Sphere for lat: " + i);
-//            final Sphere sphere = new Sphere(SPHERE_SIZE);
-//            sphere.setMaterial(new PhongMaterial(Color.YELLOW));
-//            sphere.setTranslateX(lonShift);
-//            sphere.setTranslateZ(latCenter-i);
-//            sphere.setVisible(SPHERE_VISIBLE);
-//            result.getChildren().addAll(sphere);
-            
-            // add tic here as well
-            ticCylinder = new Cylinder(AXES_THICKNESS, TIC_LENGTH);
-            ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-            ticCylinder.setTranslateX(lonShift);
-            ticCylinder.setTranslateY(-TIC_LENGTH*0.5);
-            ticCylinder.setTranslateZ(latCenter-i);
-            result.getChildren().add(ticCylinder);
-            
-            label = new Label(" " + String.valueOf(i) + LatLonHelper.DEG);
-            label.setFont(new Font("Arial", AXIS_FONT_SIZE));
-            label.setTextAlignment(TextAlignment.LEFT);
-            shape3DToLabel.put(ticCylinder, label);
-            
-            // add tic here as well
-            ticCylinder = new Cylinder(AXES_THICKNESS, TIC_LENGTH);
-            ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-            ticCylinder.setTranslateX(-lonShift);
-            ticCylinder.setTranslateY(-TIC_LENGTH*0.5);
-            ticCylinder.setTranslateZ(latCenter-i);
-            result.getChildren().add(ticCylinder);
-            
-            label = new Label(String.valueOf(i) + LatLonHelper.DEG + " ");
-            label.setFont(new Font("Arial", AXIS_FONT_SIZE));
-            label.setTextAlignment(TextAlignment.RIGHT);
-            shape3DToLabel.put(ticCylinder, label);
-        }
-        // add a cylinder over the whole lat range
-        final Cylinder lat1 = new Cylinder(AXES_THICKNESS, latDist*AXES_DIST);
-        lat1.setMaterial(new PhongMaterial(Color.BLACK));
-        lat1.getTransforms().setAll(new Rotate(90, Rotate.X_AXIS));
-        lat1.setTranslateX(lonShift);
-        lat1.setTranslateZ(0);
-        result.getChildren().add(lat1);
-        final Cylinder lat2 = new Cylinder(AXES_THICKNESS, latDist*AXES_DIST);
-        lat2.setMaterial(new PhongMaterial(Color.BLACK));
-        lat2.getTransforms().setAll(new Rotate(90, Rotate.X_AXIS));
-        lat2.setTranslateX(-lonShift);
-        lat2.setTranslateZ(0);
-        result.getChildren().add(lat2);
-        
-        // add a sphere for each integer value of lon
-        final int startLon = (int) Math.ceil(dataBounds.getMinLon());
-        final int endLon = (int) Math.ceil(dataBounds.getMaxLon());
-        final double latShift = (latCenter-dataBounds.getMinLat()) * AXES_DIST;
-        for (int i = startLon; i<= endLon; i++) {
-//            System.out.println("Adding Sphere for lon: " + i);
-//            final Sphere sphere = new Sphere(SPHERE_SIZE);
-//            sphere.setMaterial(new PhongMaterial(Color.SKYBLUE));
-//            sphere.setTranslateX(i-lonCenter);
-//            sphere.setTranslateZ(latShift);
-//            sphere.setVisible(SPHERE_VISIBLE);
-//            result.getChildren().addAll(sphere);
-            
-            // add tic here as well
-            ticCylinder = new Cylinder(AXES_THICKNESS, TIC_LENGTH);
-            ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-            ticCylinder.setTranslateX(i-lonCenter);
-            ticCylinder.setTranslateY(-TIC_LENGTH*0.5);
-            ticCylinder.setTranslateZ(latShift);
-            result.getChildren().add(ticCylinder);
-            
-            label = new Label(" " + String.valueOf(i) + LatLonHelper.DEG);
-            label.setFont(new Font("Arial", AXIS_FONT_SIZE));
-            label.setTextAlignment(TextAlignment.LEFT);
-            shape3DToLabel.put(ticCylinder, label);
-            
-            // add tic here as well
-            ticCylinder = new Cylinder(AXES_THICKNESS, TIC_LENGTH);
-            ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-            ticCylinder.setTranslateX(i-lonCenter);
-            ticCylinder.setTranslateY(-TIC_LENGTH*0.5);
-            ticCylinder.setTranslateZ(-latShift);
-            result.getChildren().add(ticCylinder);
-            
-            label = new Label(String.valueOf(i) + LatLonHelper.DEG + " ");
-            label.setFont(new Font("Arial", AXIS_FONT_SIZE));
-            label.setTextAlignment(TextAlignment.RIGHT);
-            shape3DToLabel.put(ticCylinder, label);
-        }
-        // add a cylinder over the whole lon range
-        final Cylinder lon1 = new Cylinder(AXES_THICKNESS, lonDist*AXES_DIST);
-        lon1.getTransforms().setAll(new Rotate(90));
-        lon1.setMaterial(new PhongMaterial(Color.BLACK));
-        lon1.setTranslateX(0);
-        lon1.setTranslateZ(latShift);
-        result.getChildren().add(lon1);
-        final Cylinder lon2 = new Cylinder(AXES_THICKNESS, lonDist*AXES_DIST);
-        lon2.getTransforms().setAll(new Rotate(90));
-        lon2.setMaterial(new PhongMaterial(Color.BLACK));
-        lon2.setTranslateX(0);
-        lon2.setTranslateZ(-latShift);
-        result.getChildren().add(lon2);
-        
-        return result;
-    }
-    
-    private void updateLabels() {
-        shape3DToLabel.forEach((node, label) -> {
-            javafx.geometry.Point3D coordinates = node.localToScene(javafx.geometry.Point3D.ZERO, true);
-             //@DEBUG SMP  useful debugging print
-//            System.out.println("scene Coordinates: " + coordinates.toString());
-            //Clipping Logic
-            //if coordinates are outside of the scene it could
-            //stretch the screen so don't transform them 
-            double x = coordinates.getX();
-            double y = coordinates.getY();
-            //is it left of the view?
-            if(x < 0) {
-                x = 0;
-            }
-            //is it right of the view?
-            if((x+label.getWidth()+5) > scene.getWidth()) {
-                x = scene.getWidth() - (label.getWidth()+5);
-            }
-            //is it above the view?
-            if(y < 0) {
-                y = 0;
-            }
-            //is it below the view
-            if((y+label.getHeight()) > scene.getHeight())
-                y = scene.getHeight() - (label.getHeight()+5);
-            //@DEBUG SMP  useful debugging print
-//            System.out.println("clipping Coordinates: " + x + ", " + y);
-            //update the local transform of the label.
-            label.getTransforms().setAll(new Translate(x, y));
-        });
-    }  
 }
