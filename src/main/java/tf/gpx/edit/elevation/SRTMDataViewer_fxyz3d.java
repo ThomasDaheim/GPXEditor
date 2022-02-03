@@ -65,6 +65,7 @@ import org.fxyz3d.scene.paint.Palette;
 import org.fxyz3d.shapes.composites.PolyLine3D;
 import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
+import tf.gpx.edit.fxyz3d.Fxyz3dHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXRoute;
@@ -415,9 +416,11 @@ public class SRTMDataViewer_fxyz3d {
 
         // runLater since we need to have min/maxElevation calculated from rendering
         Platform.runLater(()-> {
+            axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, minElevation, maxElevation, ELEVATION_SCALING, shape3DToLabel);
             nodeGroup.getChildren().add(axes);
             labelGroup.getChildren().addAll(shape3DToLabel.values());
             // runLater since we need to have width/height of labels from rendering
+            Platform.runLater(()->Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel));
         });
     }
     
@@ -494,6 +497,7 @@ public class SRTMDataViewer_fxyz3d {
             }
 
 //            isCameraInBounds();
+            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
         });
 
         node.setOnScroll((t) -> {
@@ -516,14 +520,17 @@ public class SRTMDataViewer_fxyz3d {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() + value);
                 } else {
+                    scaleAndShift(Fxyz3dHelper.Direction.Y, value, 0d);
                 }
             } else {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() - value);
                 } else {
+                    scaleAndShift(Fxyz3dHelper.Direction.Y, -value, 0d);
                 }
             }
             
+            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
         });
         
         node.setOnMousePressed((MouseEvent me) -> {
@@ -565,32 +572,41 @@ public class SRTMDataViewer_fxyz3d {
                 double newZ = z + mouseDeltaX * modifierFactor * modifier;
                 camera.setTranslateZ(newZ);
             }
+            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
         });
     }
     
+    private void scaleAndShift(final Fxyz3dHelper.Direction direction, final double scaleValue, final double shiftValue) {
         switch (direction) {
             case X:
                 if (surface.getScaleX() + scaleValue < 0) {
                     return;
                 }
+                Fxyz3dHelper.scaleAndShift(surface::getScaleX, surface::setScaleX, scaleValue, surface::getTranslateX, surface::setTranslateX, shiftValue);
                 for (PolyLine3D line : lines) {
+                    Fxyz3dHelper.scaleAndShift(line::getScaleX, line::setScaleX, scaleValue, line::getTranslateX, line::setTranslateX, shiftValue);
                 }
                 break;
             case Y:
                 if (surface.getScaleY() + scaleValue < 0) {
                     return;
                 }
+                Fxyz3dHelper.scaleAndShift(surface::getScaleY, surface::setScaleY, scaleValue, surface::getTranslateY, surface::setTranslateY, shiftValue);
                 for (PolyLine3D line : lines) {
+                    Fxyz3dHelper.scaleAndShift(line::getScaleY, line::setScaleY, scaleValue, line::getTranslateY, line::setTranslateY, shiftValue);
                 }
                 break;
             case Z:
                 if (surface.getScaleZ() + scaleValue < 0) {
                     return;
                 }
+                Fxyz3dHelper.scaleAndShift(surface::getScaleZ, surface::setScaleZ, scaleValue, surface::getTranslateZ, surface::setTranslateZ, shiftValue);
                 for (PolyLine3D line : lines) {
+                    Fxyz3dHelper.scaleAndShift(line::getScaleZ, line::setScaleZ, scaleValue, line::getTranslateZ, line::setTranslateZ, shiftValue);
                 }
                 break;
         }
+        Fxyz3dHelper.scaleAndShift(axes, direction, scaleValue, shiftValue);
     }
     
     // scale the height values to match lat / lon scaling
