@@ -127,7 +127,10 @@ dependencies {
     // TFE, 20220201: faster list
     implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.16'
     
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    // TFE, 20220205: not working, "No test cases executed" after all the code changes...
+    // new versions of the code are in "junit5.zip" for some later time when I have stamina to check this fuck-up
+//    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     // TFE, 20210216: capture System.err() easily
     testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
 }
