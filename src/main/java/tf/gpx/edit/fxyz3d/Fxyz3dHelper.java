@@ -34,15 +34,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Cylinder;
 import javafx.scene.shape.Shape3D;
-import javafx.scene.text.Font;
-import javafx.scene.text.TextAlignment;
-import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 import me.himanshusoni.gpxparser.modal.Bounds;
+import org.apache.commons.lang3.EnumUtils;
 import tf.gpx.edit.helper.LatLonHelper;
 
 /**
@@ -54,21 +49,6 @@ public class Fxyz3dHelper {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static Fxyz3dHelper INSTANCE = new Fxyz3dHelper();
-    
-    public static enum Direction {
-        // x-Direction is left-right
-        X(Rotate.Z_AXIS),
-        // y-Direction is up-down
-        Y(null),
-        // z-Direction is front-back
-        Z(Rotate.X_AXIS);
-        
-        private final Point3D rotationPoint;
-        
-        private Direction(final Point3D rotate) {
-            rotationPoint = rotate;
-        }
-    }
     
     private final static double SPHERE_SIZE = 0.05;
     private final static boolean SPHERE_VISIBLE = false;
@@ -112,6 +92,18 @@ public class Fxyz3dHelper {
         final int startElev = Math.max((int) Math.round(minElevation/elevationScaling/100d) * 100, 200);
         final int endElev = (int) Math.round(maxElevation/elevationScaling/100d) * 100;
 
+        // add lat axis for min/max values
+        Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        result.getChildren().add(lataxis1);
+        Axis lataxis2 = Axis.getAxisLine(-lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        result.getChildren().add(lataxis2);
+
+        // add lon axis for min/max values
+        Axis lonaxis1 = Axis.getAxisLine(0, 0, latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        result.getChildren().add(lonaxis1);
+        Axis lonaxis2 = Axis.getAxisLine(0, 0, -latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        result.getChildren().add(lonaxis2);
+        
         // lat lines & tics
         for (int i = startLat; i<= endLat; i++) {
 //            System.out.println("Adding Sphere for lat: " + i);
@@ -124,19 +116,20 @@ public class Fxyz3dHelper {
 
             // add axis line across whole lon range for this lat
             result.getChildren().add(
-                    getAxisLine(0, 0, latCenter-i, Direction.X, AXES_THICKNESS / 2d, lonDist*AXES_DIST));
+                    Axis.getAxisLine(0, 0, latCenter-i, Axis.Direction.X, AXES_THICKNESS / 2d, lonDist*AXES_DIST));
 
             // add tic here as well
             result.getChildren().add(
-                    getTicAndLabel(shape3DToLabel, lonShift, -TIC_LENGTH*0.5, latCenter-i, Direction.Y, i, LatLonHelper.DEG, ContentDisplay.TOP));
+                    AxisTic.getTicAndLabel(shape3DToLabel, 
+                            lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, AXES_THICKNESS, TIC_LENGTH, 
+                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
 
             // add tic here as well
             result.getChildren().add(
-                    getTicAndLabel(shape3DToLabel, -lonShift, -TIC_LENGTH*0.5, latCenter-i, Direction.Y, i, LatLonHelper.DEG, ContentDisplay.TOP));
+                    AxisTic.getTicAndLabel(shape3DToLabel, 
+                            -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, AXES_THICKNESS, TIC_LENGTH, 
+                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
-        // add axis for min/max values
-        result.getChildren().add(getAxisLine(0, 0, latShift, Direction.X, AXES_THICKNESS, lonDist*AXES_DIST));
-        result.getChildren().add(getAxisLine(0, 0, -latShift, Direction.X, AXES_THICKNESS, lonDist*AXES_DIST));
         
         // lon lines & tics
         for (int i = startLon; i<= endLon; i++) {
@@ -150,73 +143,33 @@ public class Fxyz3dHelper {
             
             // add axis line across whole lat range for this lon
             result.getChildren().add(
-                    getAxisLine(i-lonCenter, 0, 0, Direction.Z, AXES_THICKNESS / 2d, latDist*AXES_DIST));
+                    Axis.getAxisLine(i-lonCenter, 0, 0, Axis.Direction.Z, AXES_THICKNESS / 2d, latDist*AXES_DIST));
 
             // add tic here as well
             result.getChildren().add(
-                    getTicAndLabel(shape3DToLabel, i-lonCenter, -TIC_LENGTH*0.5, latShift, Direction.Y, i, LatLonHelper.DEG, ContentDisplay.TOP));
+                    AxisTic.getTicAndLabel(shape3DToLabel, 
+                            i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, AXES_THICKNESS, TIC_LENGTH, 
+                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
             
             // add tic here as well
             result.getChildren().add(
-                    getTicAndLabel(shape3DToLabel, i-lonCenter, -TIC_LENGTH*0.5, -latShift, Direction.Y, i, LatLonHelper.DEG, ContentDisplay.TOP));
+                    AxisTic.getTicAndLabel(shape3DToLabel, 
+                            i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, AXES_THICKNESS, TIC_LENGTH, 
+                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
-        // add axis for min/max values
-        result.getChildren().add(getAxisLine(lonShift, 0, 0, Direction.Z, AXES_THICKNESS, latDist*AXES_DIST));
-        result.getChildren().add(getAxisLine(-lonShift, 0, 0, Direction.Z, AXES_THICKNESS, latDist*AXES_DIST));
-        
+
         // elevation lines & tics
+        final Axis elevaxis = Axis.getAxisLine(lonShift, maxElevation/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, maxElevation);
+        result.getChildren().add(elevaxis);
         for (int i = startElev; i<= endElev; i = i+200) {
             // add tic here as well
             result.getChildren().add(
-                    getTicAndLabel(shape3DToLabel, lonShift + TIC_LENGTH*0.5, Double.valueOf(i)*elevationScaling, -latShift, Direction.X, i, " m", ContentDisplay.LEFT));
+                    AxisTic.getTicAndLabel(shape3DToLabel, 
+                            lonShift + TIC_LENGTH*0.5, Double.valueOf(i)*elevationScaling, -latShift, elevaxis, AXES_THICKNESS, TIC_LENGTH, 
+                            i, " m", ContentDisplay.LEFT, AXIS_FONT_SIZE));
         }
-        result.getChildren().add(getAxisLine(lonShift, maxElevation/2d, -latShift, Direction.Y, AXES_THICKNESS, maxElevation));
 
         return result;
-    }
-    
-    private Cylinder getTicAndLabel(
-            final Map<Shape3D, Label> shape3DToLabel,
-            final double transX, final double transY, final double transZ, 
-            final Direction direction, 
-            final int value, final String unit, final ContentDisplay contentDisplay) {
-        final Cylinder ticCylinder = new Cylinder(AXES_THICKNESS, TIC_LENGTH);
-        ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-        if (direction.rotationPoint != null) {
-            ticCylinder.getTransforms().setAll(new Rotate(90, direction.rotationPoint));
-        }
-        ticCylinder.setTranslateX(transX);
-        ticCylinder.setTranslateY(transY);
-        ticCylinder.setTranslateZ(transZ);
-        ticCylinder.setUserData(direction);
-
-        String labelText = String.valueOf(value) + unit;
-        final Label label = new Label(labelText);
-        label.setFont(new Font("Arial", AXIS_FONT_SIZE));
-        label.setTextAlignment(TextAlignment.CENTER);
-        label.setContentDisplay(contentDisplay);
-        label.setUserData(direction);
-
-        shape3DToLabel.put(ticCylinder, label);
-        
-        return ticCylinder;
-    }
-    
-    private Cylinder getAxisLine(
-            final double transX, final double transY, final double transZ, 
-            final Direction direction, 
-            final double thickness, final double length) {
-        final Cylinder lineCylinder = new Cylinder(thickness, length);
-        lineCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-        if (direction.rotationPoint != null) {
-            lineCylinder.getTransforms().setAll(new Rotate(90, direction.rotationPoint));
-        }
-        lineCylinder.setTranslateX(transX);
-        lineCylinder.setTranslateY(transY);
-        lineCylinder.setTranslateZ(transZ);
-        lineCylinder.setUserData(direction);
-        
-        return lineCylinder;
     }
     
     public void updateLabels(final Scene scene, final Map<Shape3D, Label> shape3DToLabel) {
@@ -285,29 +238,50 @@ public class Fxyz3dHelper {
         });
     }
     
-    public static void scaleAndShift(final Group group, final Direction direction, final double scaleAmount, final double shiftAmount) {
+    public static void scaleAndShiftAxes(final Group group, final Axis.Direction direction, final double scaleAmount, final double shiftAmount) {
         // find all items in group that point into the given direction
         for (Node node : group.getChildren()) {
-            if (node.getUserData() != null && (node.getUserData() instanceof Direction) && direction.equals(node.getUserData())) {
-                switch (direction) {
-                    case X:
-                        scaleAndShift(node::getScaleX, node::setScaleX, scaleAmount, node::getTranslateX, node::setTranslateX, shiftAmount);
-                        break;
-                    case Y:
-                        scaleAndShift(node::getScaleY, node::setScaleY, scaleAmount, node::getTranslateY, node::setTranslateY, shiftAmount);
-                        break;
-                    case Z:
-                        scaleAndShift(node::getScaleZ, node::setScaleZ, scaleAmount, node::getTranslateZ, node::setTranslateZ, shiftAmount);
-                        break;
+            if (node instanceof IDirection &&
+                    direction.equals(((IDirection) node).getDirection())) {
+                if (node instanceof Axis) {
+                    final Axis axis = (Axis) node;
+//                    System.out.println("height before scale: " + axis.getHeight());
+                    switch (direction) {
+                        case X:
+                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateX, axis::setTranslateX, shiftAmount);
+                            break;
+                        case Y:
+                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateY, axis::setTranslateY, shiftAmount);
+                            break;
+                        case Z:
+                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateZ, axis::setTranslateZ, shiftAmount);
+                            break;
+                    }
+//                    System.out.println("height after scale: " + axis.getHeight());
+                } else if (node instanceof AxisTic) {
+                    final AxisTic axisTic = (AxisTic) node;
+                    // tics need to be shifted, not scaled - BUT for how much?
+                    // actually, the shift depends on the scaleAmount...
+                    switch (direction) {
+                        case X:
+                            scaleAndShiftElements(node::getScaleX, node::setScaleX, 0d, node::getTranslateX, node::setTranslateX, scaleAmount);
+                            break;
+                        case Y:
+                            scaleAndShiftElements(node::getScaleY, node::setScaleY, 0d, node::getTranslateY, node::setTranslateY, scaleAmount);
+                            break;
+                        case Z:
+                            scaleAndShiftElements(node::getScaleZ, node::setScaleZ, 0d, node::getTranslateZ, node::setTranslateZ, scaleAmount);
+                            break;
+                    }
                 }
             }
         }
     }
     
-    public static void scaleAndShift(
-            final DoubleSupplier getScaleFct, final DoubleConsumer setScaleFct, final double scaleValue, 
-            final DoubleSupplier getShiftFct, final DoubleConsumer setShiftFct, final double shiftValue) {
-        setScaleFct.accept(getScaleFct.getAsDouble() + scaleValue);
-        setShiftFct.accept(getShiftFct.getAsDouble() + shiftValue);
+    public static void scaleAndShiftElements(
+            final DoubleSupplier getScaleFct, final DoubleConsumer setScaleFct, final double scaleAmount, 
+            final DoubleSupplier getShiftFct, final DoubleConsumer setShiftFct, final double shiftAmount) {
+        setScaleFct.accept(getScaleFct.getAsDouble() + scaleAmount);
+        setShiftFct.accept(getShiftFct.getAsDouble() + shiftAmount);
     }
 }

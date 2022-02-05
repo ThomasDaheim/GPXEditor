@@ -65,6 +65,7 @@ import org.fxyz3d.scene.paint.Palette;
 import org.fxyz3d.shapes.composites.PolyLine3D;
 import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
+import tf.gpx.edit.fxyz3d.Axis;
 import tf.gpx.edit.fxyz3d.Fxyz3dHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
@@ -100,7 +101,7 @@ public class SRTMDataViewer_fxyz3d {
     private final static float LINE_WIDTH = 0.02f;
     private final static float LINE_RAISE = 0.5f*LINE_WIDTH;
     
-    private final Map<Shape3D, Label> shape3DToLabel = new HashMap<>();
+    private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private TexturedMesh surface;
     private Group axes;
     private List<PolyLine3D> lines;
@@ -416,11 +417,11 @@ public class SRTMDataViewer_fxyz3d {
 
         // runLater since we need to have min/maxElevation calculated from rendering
         Platform.runLater(()-> {
-            axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, minElevation, maxElevation, ELEVATION_SCALING, shape3DToLabel);
+            axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, minElevation, maxElevation, ELEVATION_SCALING, ticToLabel);
             nodeGroup.getChildren().add(axes);
-            labelGroup.getChildren().addAll(shape3DToLabel.values());
+            labelGroup.getChildren().addAll(ticToLabel.values());
             // runLater since we need to have width/height of labels from rendering
-            Platform.runLater(()->Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel));
+            Platform.runLater(()->Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel));
         });
     }
     
@@ -497,7 +498,7 @@ public class SRTMDataViewer_fxyz3d {
             }
 
 //            isCameraInBounds();
-            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
         });
 
         node.setOnScroll((t) -> {
@@ -520,17 +521,17 @@ public class SRTMDataViewer_fxyz3d {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() + value);
                 } else {
-                    scaleAndShift(Fxyz3dHelper.Direction.Y, value, 0d);
+                    scaleAndShift(Axis.Direction.Y, value);
                 }
             } else {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() - value);
                 } else {
-                    scaleAndShift(Fxyz3dHelper.Direction.Y, -value, 0d);
+                    scaleAndShift(Axis.Direction.Y, -value);
                 }
             }
             
-            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
         });
         
         node.setOnMousePressed((MouseEvent me) -> {
@@ -572,41 +573,44 @@ public class SRTMDataViewer_fxyz3d {
                 double newZ = z + mouseDeltaX * modifierFactor * modifier;
                 camera.setTranslateZ(newZ);
             }
-            Fxyz3dHelper.getInstance().updateLabels(scene, shape3DToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
         });
     }
     
-    private void scaleAndShift(final Fxyz3dHelper.Direction direction, final double scaleValue, final double shiftValue) {
+    private void scaleAndShift(final Axis.Direction direction, final double scaleValue) {
         switch (direction) {
             case X:
                 if (surface.getScaleX() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShift(surface::getScaleX, surface::setScaleX, scaleValue, surface::getTranslateX, surface::setTranslateX, shiftValue);
+                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleX, surface::setScaleX, scaleValue, surface::getTranslateX, surface::setTranslateX, scaleValue/2d);
                 for (PolyLine3D line : lines) {
-                    Fxyz3dHelper.scaleAndShift(line::getScaleX, line::setScaleX, scaleValue, line::getTranslateX, line::setTranslateX, shiftValue);
+                    // lines only need to be scaled, not shifted
+                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleX, line::setScaleX, scaleValue, line::getTranslateX, line::setTranslateX, scaleValue/8d);
                 }
                 break;
             case Y:
                 if (surface.getScaleY() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShift(surface::getScaleY, surface::setScaleY, scaleValue, surface::getTranslateY, surface::setTranslateY, shiftValue);
+                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleY, surface::setScaleY, scaleValue, surface::getTranslateY, surface::setTranslateY, scaleValue/2d);
                 for (PolyLine3D line : lines) {
-                    Fxyz3dHelper.scaleAndShift(line::getScaleY, line::setScaleY, scaleValue, line::getTranslateY, line::setTranslateY, shiftValue);
+                    // lines only need to be scaled, not shifted
+                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleY, line::setScaleY, scaleValue, line::getTranslateY, line::setTranslateY, scaleValue/8d);
                 }
                 break;
             case Z:
                 if (surface.getScaleZ() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShift(surface::getScaleZ, surface::setScaleZ, scaleValue, surface::getTranslateZ, surface::setTranslateZ, shiftValue);
+                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleZ, surface::setScaleZ, scaleValue, surface::getTranslateZ, surface::setTranslateZ, scaleValue/2d);
                 for (PolyLine3D line : lines) {
-                    Fxyz3dHelper.scaleAndShift(line::getScaleZ, line::setScaleZ, scaleValue, line::getTranslateZ, line::setTranslateZ, shiftValue);
+                    // lines only need to be scaled, not shifted
+                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleZ, line::setScaleZ, scaleValue, line::getTranslateZ, line::setTranslateZ, scaleValue/8d);
                 }
                 break;
         }
-        Fxyz3dHelper.scaleAndShift(axes, direction, scaleValue, shiftValue);
+        Fxyz3dHelper.scaleAndShiftAxes(axes, direction, scaleValue, scaleValue/2d);
     }
     
     // scale the height values to match lat / lon scaling
