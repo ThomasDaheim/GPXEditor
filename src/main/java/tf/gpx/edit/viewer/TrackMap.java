@@ -739,6 +739,19 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
         });
         
+        final MenuItem showHorizon = new MenuItem("Show Horizon");
+        showHorizon.setOnAction((event) -> {
+            assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
+            LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getUserData());
+
+            if ((showHorizon.getUserData() != null) && (showHorizon.getUserData() instanceof GPXWaypoint)) {
+                GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(showHorizon.getUserData());
+                curLocation = new LatLonElev(curWaypoint.getLatitude(), curWaypoint.getLongitude(), curWaypoint.getElevation());
+            }
+
+            myGPXEditor.showHorizon(curLocation);
+        });
+
         final MenuItem editWaypoint = new MenuItem("Edit Waypoint");
         editWaypoint.setOnAction((event) -> {
             if ((editWaypoint.getUserData() != null) && (editWaypoint.getUserData() instanceof GPXWaypoint)) {
@@ -909,14 +922,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             }
         }
 
-        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints);
+        contextMenu.getItems().addAll(showCord, showHorizon, editWaypoint, addWaypoint, addRoute, separator, searchPoints);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, editWaypoint, addWaypoint, addRoute);
+            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, showHorizon, editWaypoint, addWaypoint, addRoute);
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, editWaypoint, addWaypoint, addRoute);
+            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, showHorizon, editWaypoint, addWaypoint, addRoute);
         });
 
         getWebView().setOnMousePressed(e -> {
@@ -996,7 +1009,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private void updateContextMenu(
             final String coord,
             final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue,
-            final ContextMenu contextMenu, final MenuItem showCord, final MenuItem editWaypoint, final MenuItem addWaypoint, final MenuItem addRoute) {
+            final ContextMenu contextMenu, final MenuItem showCord, final MenuItem showHorizon, final MenuItem editWaypoint, final MenuItem addWaypoint, final MenuItem addRoute) {
         // TFE, 20200316: first time not all values are set...
         if (newValue != null && !Double. isNaN(contextMenu.getAnchorX()) && !Double. isNaN(contextMenu.getAnchorY())) {
             LatLonElev latLong;
@@ -1015,6 +1028,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 showCord.setText(LatLonHelper.LatLongToString(latLong));
             }
             showCord.setUserData(currentGPXWaypoint);
+
+            showHorizon.setUserData(currentGPXWaypoint);
 
             // TFE, 20210116: separate add & edit waypoint
             editWaypoint.setUserData(currentGPXWaypoint);

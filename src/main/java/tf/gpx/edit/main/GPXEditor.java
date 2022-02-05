@@ -121,6 +121,7 @@ import tf.gpx.edit.algorithms.WaypointClustering;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
+import tf.gpx.edit.elevation.HorizonViewer;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.extension.LineStyle;
@@ -143,6 +144,7 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.values.DistributionViewer;
@@ -2101,6 +2103,10 @@ public class GPXEditor implements Initializable {
 
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
+    }
+    
+    public void showHorizon(final IGeoCoordinate location) {
+        HorizonViewer.getInstance().showHorizon(location);
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {
