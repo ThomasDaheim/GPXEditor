@@ -356,7 +356,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             showData(seriesList, dataInt);
         });
         
-        setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
+        setAxes(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide chart if no waypoints have been set
         // TFE, 20210108: don't switch on here in case there are data points
@@ -591,7 +591,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
 
     double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
 
-    default void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
+    default void setAxes(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;
         // calculate scaling for ticks so their number is smaller than 25
         double tickUnit = 1.0;
@@ -685,7 +685,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             // if no waypoint in bounding box show nothing
         }
 
-        setAxis(minDist, maxDist, minHght, maxHght);
+        setAxes(minDist, maxDist, minHght, maxHght);
     }
     
     default void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {

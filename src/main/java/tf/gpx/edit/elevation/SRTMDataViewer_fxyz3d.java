@@ -55,7 +55,6 @@ import javafx.scene.shape.Shape3D;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.fxyz3d.geometry.MathUtils;
@@ -403,7 +402,7 @@ public class SRTMDataViewer_fxyz3d {
         sceneRoot.getChildren().addAll(labelGroup);
         
         scene = new Scene(sceneRoot, MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
-        scene.getStylesheets().add(SRTMDataViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
         initUserControls(scene);
         
         stage.setScene(scene);
