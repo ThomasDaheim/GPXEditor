@@ -32,13 +32,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleConsumer;
-import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.PointLight;
 import javafx.scene.Scene;
@@ -68,11 +67,14 @@ import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.fxyz3d.Axis;
 import tf.gpx.edit.fxyz3d.Fxyz3dHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.items.Bounds3D;
 import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.worker.GPXAssignElevationWorker;
+import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.ShowAlerts;
 
 /**
@@ -92,8 +94,6 @@ public class SRTMDataViewer_fxyz3d {
     
     private final int MAP_WIDTH = 1440;
     private final int MAP_HEIGHT = 1080;
-    
-    private final static double ITEM_BORDER = 0.2;
     
     private final int DATA_FRACTION = 4;
     
@@ -171,6 +171,7 @@ public class SRTMDataViewer_fxyz3d {
 
     private SRTMDataViewer_fxyz3d() {
         // Exists only to defeat instantiation.
+        stage.initModality(Modality.APPLICATION_MODAL); 
         initLightAndCamera();
     }
 
@@ -217,21 +218,21 @@ public class SRTMDataViewer_fxyz3d {
         showStage(gpxLineItem.getName(), normalizeBounds(latMin, lonMin, latMax, lonMax, gpxLineItem), gpxLineItem);
     }
     
-    private Bounds normalizeBounds(final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
-        Bounds result;
+    private Bounds3D normalizeBounds(final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
+        Bounds3D result;
         
         if (gpxLineItem != null) {
-            final Bounds itemBounds = gpxLineItem.getBounds();
+            final Bounds3D itemBounds = new Bounds3D(gpxLineItem.getBounds3D());
 
             // TFE, 20220601: lets take into account the bounding box of the element to avoid too much stuff around
             // leave some space at the edges...
-            result = new Bounds(
-                    Math.max(latMin, itemBounds.getMinLat() - ITEM_BORDER), 
-                    Math.min(latMax, itemBounds.getMaxLat() + ITEM_BORDER), 
-                    Math.max(lonMin, itemBounds.getMinLon() - ITEM_BORDER), 
-                    Math.min(lonMax, itemBounds.getMaxLon() + ITEM_BORDER));
+            result = new Bounds3D(
+                    Math.max(latMin, itemBounds.getMinLat()), 
+                    Math.min(latMax, itemBounds.getMaxLat()), 
+                    Math.max(lonMin, itemBounds.getMinLon()), 
+                    Math.min(lonMax, itemBounds.getMaxLon()));
         } else {
-            result = new Bounds(latMin, latMax, lonMin, lonMax);
+            result = new Bounds3D(latMin, latMax, lonMin, lonMax);
         }
         
         return result;
@@ -333,7 +334,7 @@ public class SRTMDataViewer_fxyz3d {
         ShowAlerts.getInstance().showAlert(Alert.AlertType.ERROR, "Error opening file", "No SRTM data file", filename, buttonOK);
     }
     
-    private void showStage(final String title, final Bounds dataBounds, final GPXLineItem gpxLineItem) {
+    private void showStage(final String title, final Bounds3D dataBounds, final GPXLineItem gpxLineItem) {
 //        File names refer to the latitude and longitude of the lower left corner of the tile -
 //        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
 
@@ -349,17 +350,17 @@ public class SRTMDataViewer_fxyz3d {
             // TFE, 20220106: special case: show only one single waypoint in its surrounding...
             switch (gpxLineItem.getType()) {
                 case GPXWaypoint, GPXTrackSegment:
-                    lines.add(getPolyLine3D(gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
+                    lines.add(getPolyLine3D(((GPXMeasurable) gpxLineItem).getBounds3D(), gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
                     break;
                 default: // covers tracks, routes and gpxfile...
                     // add tracks individually with their color
                     for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
-                        lines.add(getPolyLine3D(gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
+                        lines.add(getPolyLine3D(gpxTrack.getBounds3D(), gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
                     }
 
                     // add routes individually with their color
                     for (GPXRoute gpxRoute : gpxLineItem.getGPXRoutes()) {
-                        lines.add(getPolyLine3D(gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute)));
+                        lines.add(getPolyLine3D(gpxRoute.getBounds3D(), gpxRoute.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXRoute)));
                     }
             }
         }
@@ -406,7 +407,6 @@ public class SRTMDataViewer_fxyz3d {
         initUserControls(scene);
         
         stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL); 
 
         stage.setOnCloseRequest((t) -> {
             // cleanup for next call
@@ -417,7 +417,11 @@ public class SRTMDataViewer_fxyz3d {
 
         // runLater since we need to have min/maxElevation calculated from rendering
         Platform.runLater(()-> {
-            axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, minElevation, maxElevation, ELEVATION_SCALING, ticToLabel);
+            // now we know the elvation range...
+            dataBounds.setMinElev(minElevation);
+            dataBounds.setMaxElev(maxElevation);
+
+            axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, ELEVATION_SCALING, ticToLabel);
             nodeGroup.getChildren().add(axes);
             labelGroup.getChildren().addAll(ticToLabel.values());
             // runLater since we need to have width/height of labels from rendering
@@ -521,13 +525,13 @@ public class SRTMDataViewer_fxyz3d {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() + value);
                 } else {
-                    scaleAndShift(Axis.Direction.Y, value);
+                    scaleEverything(Axis.Direction.Y, value);
                 }
             } else {
                 if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() - value);
                 } else {
-                    scaleAndShift(Axis.Direction.Y, -value);
+                    scaleEverything(Axis.Direction.Y, -value);
                 }
             }
             
@@ -577,47 +581,86 @@ public class SRTMDataViewer_fxyz3d {
         });
     }
     
-    private void scaleAndShift(final Axis.Direction direction, final double scaleValue) {
+    private void scaleEverything(final Axis.Direction direction, final double scaleValue) {
         switch (direction) {
             case X:
                 if (surface.getScaleX() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleX, surface::setScaleX, scaleValue, surface::getTranslateX, surface::setTranslateX, scaleValue/2d);
+                Fxyz3dHelper.scaleAndShiftElementsAdd(
+                        surface::getScaleX, surface::setScaleX, scaleValue, 
+                        surface::getTranslateX, surface::setTranslateX, getShiftForScaleAdd(direction, surface, scaleValue));
                 for (PolyLine3D line : lines) {
                     // lines only need to be scaled, not shifted
-                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleX, line::setScaleX, scaleValue, line::getTranslateX, line::setTranslateX, scaleValue/8d);
+                    Fxyz3dHelper.scaleAndShiftElementsAdd(
+                            line::getScaleX, line::setScaleX, scaleValue, 
+                            line::getTranslateX, line::setTranslateX, getShiftForScaleAdd(direction, line, scaleValue));
                 }
                 break;
             case Y:
                 if (surface.getScaleY() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleY, surface::setScaleY, scaleValue, surface::getTranslateY, surface::setTranslateY, scaleValue/2d);
+                Fxyz3dHelper.scaleAndShiftElementsAdd(
+                        surface::getScaleY, surface::setScaleY, scaleValue, 
+                        surface::getTranslateY, surface::setTranslateY, getShiftForScaleAdd(direction, surface, scaleValue));
                 for (PolyLine3D line : lines) {
                     // lines only need to be scaled, not shifted
-                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleY, line::setScaleY, scaleValue, line::getTranslateY, line::setTranslateY, scaleValue/8d);
+                    Fxyz3dHelper.scaleAndShiftElementsAdd(
+                            line::getScaleY, line::setScaleY, scaleValue, 
+                            line::getTranslateY, line::setTranslateY, getShiftForScaleAdd(direction, line, scaleValue));
                 }
                 break;
             case Z:
                 if (surface.getScaleZ() + scaleValue < 0) {
                     return;
                 }
-                Fxyz3dHelper.scaleAndShiftElements(surface::getScaleZ, surface::setScaleZ, scaleValue, surface::getTranslateZ, surface::setTranslateZ, scaleValue/2d);
+                Fxyz3dHelper.scaleAndShiftElementsAdd(
+                        surface::getScaleZ, surface::setScaleZ, scaleValue, 
+                        surface::getTranslateZ, surface::setTranslateZ, getShiftForScaleAdd(direction, surface, scaleValue));
                 for (PolyLine3D line : lines) {
                     // lines only need to be scaled, not shifted
-                    Fxyz3dHelper.scaleAndShiftElements(line::getScaleZ, line::setScaleZ, scaleValue, line::getTranslateZ, line::setTranslateZ, scaleValue/8d);
+                    Fxyz3dHelper.scaleAndShiftElementsAdd(
+                            line::getScaleZ, line::setScaleZ, scaleValue, 
+                            line::getTranslateZ, line::setTranslateZ, getShiftForScaleAdd(direction, line, scaleValue));
                 }
                 break;
         }
-        Fxyz3dHelper.scaleAndShiftAxes(axes, direction, scaleValue, scaleValue/2d);
+        Fxyz3dHelper.scaleAxes(axes, direction, scaleValue);
+    }
+    
+    private double getShiftForScaleAdd(final Axis.Direction direction, final Node node, final double scaleAmount) {
+        // this is a bitch...
+        // if you scale that the "center" remains in place and the ends are moved further in/out (depending on the sign of the scaleValue
+        // so you need to shift by the right amount in parallel - in our case the amount that lets the minElevation part unchanged
+        // so you need to calulate the change due to scaling to the minElevation - but that is proportional and not absolute
+        // and than convert back into an additive shift...
+        if (node == null || node.getUserData() == null || !(node.getUserData() instanceof Bounds3D)) {
+            return 0d;
+        }
+        
+        double result = scaleAmount/2d;
+
+        final Bounds3D bounds = ObjectsHelper.uncheckedCast(node.getUserData());
+//        System.out.println(bounds);
+        
+        switch (direction) {
+            case X:
+                break;
+            case Y:
+                break;
+            case Z:
+                break;
+        }
+        
+        return result;
     }
     
     // scale the height values to match lat / lon scaling
 //    private Function<Double, Double> elevationScaler = (value) -> Math.sqrt(value) / 40d;
     private Function<Double, Double> elevationScaler = (value) -> value * ELEVATION_SCALING;
     
-    private void setSurface(final Bounds dataBounds) {
+    private void setSurface(final Bounds3D dataBounds) {
         latDist = (dataBounds.getMaxLat() - dataBounds.getMinLat());
         lonDist = (dataBounds.getMaxLon() - dataBounds.getMinLon());
         latCenter = (dataBounds.getMaxLat() + dataBounds.getMinLat()) / 2d;
@@ -668,6 +711,7 @@ public class SRTMDataViewer_fxyz3d {
                     }
                         });
         surface.setDrawMode(DrawMode.FILL);
+        surface.setUserData(dataBounds);
     }
     
     private Color adaptColor(final Color color) {
@@ -675,7 +719,7 @@ public class SRTMDataViewer_fxyz3d {
         return new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 0.5);
     }
 
-    private PolyLine3D getPolyLine3D(final List<GPXWaypoint> gpxWaypoints) {
+    private PolyLine3D getPolyLine3D(final Bounds3D dataBounds, final List<GPXWaypoint> gpxWaypoints) {
         if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
             return null;
         }
@@ -702,10 +746,13 @@ public class SRTMDataViewer_fxyz3d {
             i = (i+1) % DATA_FRACTION;
         }
         
-        return new PolyLine3D(
+        final PolyLine3D result = new PolyLine3D(
                 points, 
                 LINE_WIDTH, 
                 gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
                 PolyLine3D.LineType.TRIANGLE);
+        result.setUserData(dataBounds);
+        
+        return result;
     }
 }

@@ -1201,6 +1201,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         // keep track of bounding box
         // http://gamedev.stackexchange.com/questions/70077/how-to-calculate-a-bounding-rectangle-of-a-polygon
+        // TODO: switch to standard Bounds3D
         double[] bounds = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, 0d};
         
         int count = 0, i = 0;

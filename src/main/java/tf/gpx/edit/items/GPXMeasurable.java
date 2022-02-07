@@ -258,12 +258,12 @@ public abstract class GPXMeasurable extends GPXLineItem {
      * @return the bounds to include all waypoints
      */
     @Override
-    public Bounds getBounds() {
+    public Bounds3D getBounds3D() {
         // TFE, 2020117: that hurts...
-        final Bounds result = new Bounds(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE);
+        final Bounds3D result = new Bounds3D(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE);
         
         for (GPXLineItem child : getChildren()) {
-            result.extendBounds(child.getBounds());
+            result.extendBounds3D(child.getBounds3D());
         }
         
         return result;

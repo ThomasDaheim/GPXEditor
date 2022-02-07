@@ -286,7 +286,7 @@ public class GPXFile extends GPXMeasurable {
             if (metadata.getTime() == null) {
                 metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
             }
-            metadata.setBounds(getBounds());
+            metadata.setBounds(getBounds3D());
 
             // add link to me if not already present
             HashSet<Link> links = metadata.getLinks();

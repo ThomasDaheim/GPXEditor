@@ -663,8 +663,11 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     }
 
     @Override
-    public Bounds getBounds() {
-        return new Bounds(myWaypoint.getLatitude(), myWaypoint.getLatitude(), myWaypoint.getLongitude(), myWaypoint.getLongitude());
+    public Bounds3D getBounds3D() {
+        return new Bounds3D(
+                myWaypoint.getLatitude(), myWaypoint.getLatitude(), 
+                myWaypoint.getLongitude(), myWaypoint.getLongitude(), 
+                myWaypoint.getElevation(), myWaypoint.getElevation());
     }
     
     @Override

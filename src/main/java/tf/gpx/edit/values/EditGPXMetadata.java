@@ -303,7 +303,7 @@ public class EditGPXMetadata extends AbstractStage {
             metadata = new Metadata();
             
             metadata.setTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-            metadata.setBounds(myGPXFile.getBounds());
+            metadata.setBounds(myGPXFile.getBounds3D());
 
             // add link to me if not already present
             HashSet<Link> links = metadata.getLinks();

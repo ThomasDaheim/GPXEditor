@@ -36,9 +36,8 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Shape3D;
 import javafx.scene.transform.Translate;
-import me.himanshusoni.gpxparser.modal.Bounds;
-import org.apache.commons.lang3.EnumUtils;
 import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.items.Bounds3D;
 
 /**
  * Helper to create axes using cylinders and labels.
@@ -66,9 +65,7 @@ public class Fxyz3dHelper {
     }
     
     public Group getAxes(
-            final Bounds dataBounds, 
-            final double minElevation, 
-            final double maxElevation, 
+            final Bounds3D dataBounds, 
             final double elevationScaling,
             final Map<Shape3D, Label> shape3DToLabel) {
         // org.fxyz3d.scene.Axes
@@ -89,8 +86,8 @@ public class Fxyz3dHelper {
         final double latShift = (latCenter-dataBounds.getMinLat()) * AXES_DIST;
         
         // don't start with a tic at zero
-        final int startElev = Math.max((int) Math.round(minElevation/elevationScaling/100d) * 100, 200);
-        final int endElev = (int) Math.round(maxElevation/elevationScaling/100d) * 100;
+        final int startElev = Math.max((int) Math.round(dataBounds.getMinElev()/elevationScaling/100d) * 100, 200);
+        final int endElev = (int) Math.round(dataBounds.getMaxElev()/elevationScaling/100d) * 100;
 
         // add lat axis for min/max values
         Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
@@ -159,7 +156,7 @@ public class Fxyz3dHelper {
         }
 
         // elevation lines & tics
-        final Axis elevaxis = Axis.getAxisLine(lonShift, maxElevation/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, maxElevation);
+        final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, dataBounds.getMaxElev());
         result.getChildren().add(elevaxis);
         for (int i = startElev; i<= endElev; i = i+200) {
             // add tic here as well
@@ -238,7 +235,7 @@ public class Fxyz3dHelper {
         });
     }
     
-    public static void scaleAndShiftAxes(final Group group, final Axis.Direction direction, final double scaleAmount, final double shiftAmount) {
+    public static void scaleAxes(final Group group, final Axis.Direction direction, final double scaleAmount) {
         // find all items in group that point into the given direction
         for (Node node : group.getChildren()) {
             if (node instanceof IDirection &&
@@ -248,40 +245,32 @@ public class Fxyz3dHelper {
 //                    System.out.println("height before scale: " + axis.getHeight());
                     switch (direction) {
                         case X:
-                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateX, axis::setTranslateX, shiftAmount);
+                            scaleAndShiftElementsAdd(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateX, axis::setTranslateX, scaleAmount/2d);
                             break;
                         case Y:
-                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateY, axis::setTranslateY, shiftAmount);
+                            scaleAndShiftElementsAdd(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateY, axis::setTranslateY, scaleAmount/2d);
                             break;
                         case Z:
-                            scaleAndShiftElements(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateZ, axis::setTranslateZ, shiftAmount);
+                            scaleAndShiftElementsAdd(axis::getHeight, axis::setHeight, scaleAmount, axis::getTranslateZ, axis::setTranslateZ, scaleAmount/2d);
                             break;
                     }
 //                    System.out.println("height after scale: " + axis.getHeight());
-                } else if (node instanceof AxisTic) {
-                    final AxisTic axisTic = (AxisTic) node;
-                    // tics need to be shifted, not scaled - BUT for how much?
-                    // actually, the shift depends on the scaleAmount...
-                    switch (direction) {
-                        case X:
-                            scaleAndShiftElements(node::getScaleX, node::setScaleX, 0d, node::getTranslateX, node::setTranslateX, scaleAmount);
-                            break;
-                        case Y:
-                            scaleAndShiftElements(node::getScaleY, node::setScaleY, 0d, node::getTranslateY, node::setTranslateY, scaleAmount);
-                            break;
-                        case Z:
-                            scaleAndShiftElements(node::getScaleZ, node::setScaleZ, 0d, node::getTranslateZ, node::setTranslateZ, scaleAmount);
-                            break;
-                    }
                 }
             }
         }
     }
     
-    public static void scaleAndShiftElements(
+    public static void scaleAndShiftElementsAdd(
             final DoubleSupplier getScaleFct, final DoubleConsumer setScaleFct, final double scaleAmount, 
             final DoubleSupplier getShiftFct, final DoubleConsumer setShiftFct, final double shiftAmount) {
         setScaleFct.accept(getScaleFct.getAsDouble() + scaleAmount);
         setShiftFct.accept(getShiftFct.getAsDouble() + shiftAmount);
+    }
+    
+    public static void scaleAndShiftElementsMult(
+            final DoubleSupplier getScaleFct, final DoubleConsumer setScaleFct, final double scaleFactor, 
+            final DoubleSupplier getShiftFct, final DoubleConsumer setShiftFct, final double shiftFactor) {
+        setScaleFct.accept(getScaleFct.getAsDouble() * scaleFactor);
+        setShiftFct.accept(getShiftFct.getAsDouble() * shiftFactor);
     }
 }

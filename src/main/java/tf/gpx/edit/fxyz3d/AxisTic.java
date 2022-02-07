@@ -84,6 +84,7 @@ public class AxisTic extends Cylinder implements IDirection {
         ticCylinder.setTranslateY(transY);
         ticCylinder.setTranslateZ(transZ);
         ticCylinder.axis = axis;
+        ticCylinder.addAxisListener();
 
         String labelText = String.valueOf(value) + unit;
         final Label label = new Label(labelText);
@@ -97,4 +98,29 @@ public class AxisTic extends Cylinder implements IDirection {
         
         return ticCylinder;
     }
+    
+    private void addAxisListener() {
+        // try to move the tic along with the axis - e.g. during rescaling & shifting
+        axis.heightProperty().addListener((ov, t, t1) -> {
+            // lets keep the previous value - for any tricky calculations of scale & shift...
+            if (t1 != null && !t1.equals(t) && t != null) {
+                // height change => scale into axis direction proportionally
+                final double scaleFactor = t1.doubleValue() / t.doubleValue();
+                final double scaleAmount = t1.doubleValue() - t.doubleValue();
+
+                switch (axis.getDirection()) {
+                    case X:
+                        Fxyz3dHelper.scaleAndShiftElementsMult(this::getScaleX, this::setScaleX, 1d, this::getTranslateX, this::setTranslateX, scaleFactor);
+                        break;
+                    case Y:
+                        Fxyz3dHelper.scaleAndShiftElementsMult(this::getScaleY, this::setScaleY, 1d, this::getTranslateY, this::setTranslateY, scaleFactor);
+                        break;
+                    case Z:
+                        Fxyz3dHelper.scaleAndShiftElementsMult(this::getScaleZ, this::setScaleZ, 1d, this::getTranslateZ, this::setTranslateZ, scaleFactor);
+                        break;
+                }
+            }
+        });
+    }
+
 }
