@@ -80,47 +80,49 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         SPEEDCHART;
     }
     
-    public static enum ColorPseudoClass {
-        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
-        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
-        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
-        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
-        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
-        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
-        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
-        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
-        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
-        RED(PseudoClass.getPseudoClass("line-color-Red")),
-        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
-        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
-        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
-        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
-        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
-        WHITE(PseudoClass.getPseudoClass("line-color-White")),
-        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
-
-        private final PseudoClass myPseudoClass;
-        
-        ColorPseudoClass(final PseudoClass pseudoClass) {
-            myPseudoClass = pseudoClass;
-        }
-        
-        public PseudoClass getPseudoClass() {
-            return myPseudoClass;
-        }
-        
-        public static PseudoClass getPseudoClassForColorName(final String colorName) {
-            PseudoClass result = BLACK.getPseudoClass();
-            
-            for (ColorPseudoClass color : ColorPseudoClass.values()) {
-                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
-                    result = color.getPseudoClass();
-                }
-            }
-        
-            return result;
-        }
-    }
+    final static String COLOR_STYLE_CLASS_PREFIX = "line-color-";
+    
+//    public static enum ColorPseudoClass {
+//        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
+//        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
+//        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
+//        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
+//        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
+//        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
+//        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
+//        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
+//        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
+//        RED(PseudoClass.getPseudoClass("line-color-Red")),
+//        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
+//        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
+//        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
+//        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
+//        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
+//        WHITE(PseudoClass.getPseudoClass("line-color-White")),
+//        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
+//
+//        private final PseudoClass myPseudoClass;
+//        
+//        ColorPseudoClass(final PseudoClass pseudoClass) {
+//            myPseudoClass = pseudoClass;
+//        }
+//        
+//        public PseudoClass getPseudoClass() {
+//            return myPseudoClass;
+//        }
+//        
+//        public static PseudoClass getPseudoClassForColorName(final String colorName) {
+//            PseudoClass result = BLACK.getPseudoClass();
+//            
+//            for (ColorPseudoClass color : ColorPseudoClass.values()) {
+//                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
+//                    result = color.getPseudoClass();
+//                }
+//            }
+//        
+//            return result;
+//        }
+//    }
     
     default void initialize() {
         getChart().setVisible(false);
@@ -452,9 +454,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
                 if (!firstWaypoint.isGPXFile() && series.getName() != null) {
                     // and now color the series nodes according to lineitem color
+                    // https://stackoverflow.com/a/12286465
+                    series.getNode().getStyleClass().add(COLOR_STYLE_CLASS_PREFIX + getSeriesColor(series));
+                    // not working anymore with javafx 15
                     // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
-                    series.getNode().pseudoClassStateChanged(color, true);
+//                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
+//                    series.getNode().pseudoClassStateChanged(color, true);
                     // TFE, 20210104: doesn't seem to be required to color all nodes - and speeds things up a bit :-)
 //                    final Set<Node> nodes = getChart().lookupAll(".series" + j);
 //                    for (Node n : nodes) {

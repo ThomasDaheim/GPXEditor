@@ -28,6 +28,14 @@
     Author     : thomas
 */
 
+/* TFE, 20220208: change cursors from default */
+.leaflet-grab {
+   cursor: auto;
+}
+.leaflet-dragging .leaflet-grab{
+   cursor: move;
+}
+
 #toggleChartsPaneButton {
     width: 36px;
     height: 36px;

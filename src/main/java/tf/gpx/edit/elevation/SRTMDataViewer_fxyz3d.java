@@ -114,8 +114,6 @@ public class SRTMDataViewer_fxyz3d {
     private double mousePosY;
     private double mouseOldX;
     private double mouseOldY;
-    private double mouseDeltaX;
-    private double mouseDeltaY;
     
     private final SRTMElevationService elevationService = 
             new SRTMElevationService(
@@ -521,17 +519,18 @@ public class SRTMDataViewer_fxyz3d {
             
             final double value = 0.05*scaleFact;
             if (scrollDelta > 0) {
-                if (!t.isControlDown()) {
+                // TODO: not working in the moment
+//                if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() + value);
-                } else {
-                    scaleEverything(Axis.Direction.Y, value);
-                }
+//                } else {
+//                    scaleEverything(Axis.Direction.Y, value);
+//                }
             } else {
-                if (!t.isControlDown()) {
+//                if (!t.isControlDown()) {
                     camera.setScaleZ(camera.getScaleZ() - value);
-                } else {
-                    scaleEverything(Axis.Direction.Y, -value);
-                }
+//                } else {
+//                    scaleEverything(Axis.Direction.Y, -value);
+//                }
             }
             
             Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
@@ -549,8 +548,8 @@ public class SRTMDataViewer_fxyz3d {
             mouseOldY = mousePosY;
             mousePosX = me.getSceneX();
             mousePosY = me.getSceneY();
-            mouseDeltaX = (mousePosX - mouseOldX);
-            mouseDeltaY = (mousePosY - mouseOldY);
+            final double mouseDeltaX = (mousePosX - mouseOldX);
+            final double mouseDeltaY = (mousePosY - mouseOldY);
             
             double modifier = 10.0;
             double modifierFactor = 0.1;
