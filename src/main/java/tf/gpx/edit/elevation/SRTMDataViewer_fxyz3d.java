@@ -493,7 +493,7 @@ public class SRTMDataViewer_fxyz3d {
                     cameraTransform.ry.setAngle(cameraTransform.ry.getAngle() + 1.0*scaleFact);
 //                    System.out.println("ry.setAngle: " + cameraTransform.ry.getAngle());
                     break;
-                case R:
+                case C, R:
                     resetLightAndCamera();
                     break;
             }

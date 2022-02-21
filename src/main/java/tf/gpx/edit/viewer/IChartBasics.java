@@ -156,7 +156,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     T getChart();
     Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
     
-        // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
+    // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
     boolean getInShowData();
     void setInShowData(final boolean value);
     void doShowData();
@@ -448,7 +448,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         getChartsPane().requestLayout();
 
         // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
-        int j = 0;
+//        int j = 0;
         for (XYChart.Series<Number, Number> series : getChart().getData()) {
             if (!series.getData().isEmpty()) {
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
@@ -467,7 +467,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
 //                    }
                 }
                 
-                j++;
+//                j++;
             }
         }
 

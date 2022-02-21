@@ -27,9 +27,11 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.6
 
 * Images on Maps! Images can be shown on maps as camera iconcs. JSON files with image info are used similar to hgt files for heigt info. MakeImageJSON.java gives an implementation that can create such JSON files using exiftool.
+* Horizon Viewer: have a look at the horizon for any point on the map
 * Export KMZ as well, extended KML/KMZ export to contain "hidden" gpx data (metadata, tracksegment, waypoint), import KML & KMZ including optional "hidden" data
 * Smoothing of tracks using either Hampel or Savitzky-Golay or Double Exponential smoothing
 * Matching of tracks to streets/paths using Mapbox matching service
+* replaced SRTM height viewer with fxyz3d implementation (previously jzy3d)
 * Bugfixes! Various bugs that have crept in over time are now fixed
 
 ### Update v5.5
