@@ -28,21 +28,29 @@ package tf.gpx.edit.elevation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.LatLonHelper;
@@ -64,29 +72,33 @@ public class HorizonViewer {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static HorizonViewer INSTANCE = new HorizonViewer();
 
-    private final int VIEWER_WIDTH = 1200;
-    private final int VIEWER_HEIGHT = 600;
+    private final static int VIEWER_WIDTH = 1400;
+    private final static int VIEWER_HEIGHT = 600;
     
     private final SRTMElevationService elevationService = 
             new SRTMElevationService(
                     new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY), 
                     new SRTMDataOptions(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY));
     
-    private final static int DISTANCE_FROM = 100;
-    private final static int DISTANCE_TO = 30000 + DISTANCE_FROM;
-    private final static int DISTANCE_STEP = 500; // yields 60 steps
-    private final static int ANGEL_STEP = 2; // yields 180 steps per 360DEG
+    private final static int DISTANCE_STEP = 1000;
+    private final static int DISTANCE_FROM = DISTANCE_STEP / 2;
+    private final static int DISTANCE_TO = 50000 + DISTANCE_FROM;
+    private final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
+    
+    private final static double SCALE_FACT = 1.1;
 
-    private final static int COLOR_STEPS = 5; // we have 5 color steps defined in CSS
-    final static String COLOR_STYLE_CLASS_PREFIX = "color-step-";
+    private final static int COLOR_STEPS = 8; // we have 8 color steps defined in CSS
+    private final static String COLOR_STYLE_CLASS_PREFIX = "color-step-";
+    private final static String TOOLTIP_STYLE_CLASS = "horizon-tooltip";
 
-    // TODO. switch to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
+    // switch to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
     private final AreaChart<Number, Number> chart = new SmoothFilledAreaChart<>(new NumberAxis(), new NumberAxis());
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
-    private Scene scene = new Scene(chart, VIEWER_WIDTH, VIEWER_HEIGHT);
+    private final StackPane pane = new StackPane(chart);
+    private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
     private final Stage stage = new Stage();
-
+    
     private double minAngle;
     private double maxAngle;
     
@@ -102,9 +114,11 @@ public class HorizonViewer {
     boolean dragActive = false;
     
     private SortedMap<Double, List<Pair<Double, IGeoCoordinate>>> elevationMap;
+    private SortedMap<Double, Pair<Double, IGeoCoordinate>> horizonMap;
     
     private HorizonViewer() {
         // Exists only to defeat instantiation.
+        (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(HorizonViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
@@ -113,8 +127,6 @@ public class HorizonViewer {
         xAxis = (NumberAxis) chart.getXAxis();
         yAxis = (NumberAxis) chart.getYAxis();
         
-        xAxis.setLowerBound(-180.0);
-        xAxis.setUpperBound(180.0);
         xAxis.setMinorTickVisible(false);
         xAxis.setTickUnit(1);
         xAxis.setTickLabelFont(Font.font(12));
@@ -150,7 +162,7 @@ public class HorizonViewer {
         yAxis.setLabel("Angle [" + LatLonHelper.DEG + "]");
         chart.getYAxis().setAutoRanging(false);
         
-        chart.setCreateSymbols(false);
+        chart.setCreateSymbols(true);
         chart.setVerticalZeroLineVisible(false);
         chart.setVerticalGridLinesVisible(true);
         chart.setHorizontalZeroLineVisible(true);
@@ -194,6 +206,58 @@ public class HorizonViewer {
             mousePosX = e.getSceneX();
             mousePosY = e.getSceneY();
         });
+        
+        // add vertical zoom on mouse wheel
+        chart.setOnScroll((t) -> {
+            double scaleFact = SCALE_FACT;
+            if (t.isShiftDown()) {
+                scaleFact = Math.pow(SCALE_FACT, 5);
+            }
+            // https://stackoverflow.com/a/52707611
+            // if shift is pressed with mouse wheel x is changed instead of y...
+            double scrollDelta = 0d;
+            if (!t.isShiftDown()) {
+                scrollDelta = t.getDeltaY();
+            } else {
+                scrollDelta = t.getDeltaX();
+            }
+            
+            final double lower = yAxis.getLowerBound();
+            final double upper = yAxis.getUpperBound();
+            if (scrollDelta > 0) {
+                // zoom in - easy, since no bounds to take into account...
+                yAxis.setLowerBound(lower / scaleFact);
+                yAxis.setUpperBound(upper / scaleFact);
+            } else {
+                // scroll out - but not more than 90 degress
+                final int newLower = (int) Math.floor(lower * scaleFact);
+                final int newUpper = (int) Math.floor(upper * scaleFact);
+                if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
+                    yAxis.setLowerBound(newLower);
+                    yAxis.setUpperBound(newUpper);
+                }
+            }
+        });
+        
+        scene.setOnKeyPressed((t) -> {
+            switch (t.getCode()) {
+                case ESCAPE:
+                    stage.close();
+                    break;
+                case C, R:
+                    setAxes();
+                    break;
+            }
+        });
+
+        final Label label = 
+                new Label("Drag: Shift X" + System.lineSeparator() + 
+                        "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
+                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + "C/R: reset view");
+        label.getStyleClass().add("horizon-viewer-label");
+        StackPane.setAlignment(label, Pos.TOP_LEFT);
+        label.toFront();
+        pane.getChildren().add(label);
     }
 
     public static HorizonViewer getInstance() {
@@ -206,25 +270,41 @@ public class HorizonViewer {
         
         // get the whole set of LatLonElev around our location
         getPanoramaView(location);
+
+        showData(location);
         
+        stage.show();
+    }
+    
+    private void showData(final IGeoCoordinate location) {
         // and now draw from outer to inner and from darker to brighter color
         // see Horizon_PodTriglavom.jpg for expected result
         drawViewingAngles(location);
-        
         setAxes();
 
-        stage.show();
-        
-        // do the coloring of the series after initial layout...
-        // TODO: not working
-        Platform.runLater(() -> {
-            for (XYChart.Series<Number, Number> series : chart.getData()) {
+        for (XYChart.Series<Number, Number> series : chart.getData()) {
 //                System.out.println("Adding StyleClass " + ObjectsHelper.uncheckedCast(series.getNode().getUserData()));
-                series.getNode().getStyleClass().add(ObjectsHelper.uncheckedCast(series.getNode().getUserData()));
+            series.getNode().getStyleClass().add(ObjectsHelper.uncheckedCast(series.getNode().getUserData()));
+        }
+
+        chart.applyCss();
+        chart.requestLayout();
+        
+        // add tooltip to datapoint after chart has been shown - since otherwise data.getNode() is null...
+        for (XYChart.Series<Number, Number> series : chart.getData()) {
+            for (XYChart.Data<Number, Number> data : series.getData()) {
+                // install tooltip with helpful info - can only be done after showing...
+                final Tooltip tooltip = 
+                        new Tooltip(String.format("Dist: %.1fkm", (Double) data.getExtraValue() / 1000) + "\n" + 
+                                String.format("Angle %.1f" + LatLonHelper.DEG, data.getYValue()));
+                tooltip.setShowDelay(Duration.ZERO);
+
+                final Node node = data.getNode();
+                node.getStyleClass().add(TOOLTIP_STYLE_CLASS);
+
+                Tooltip.install(node, tooltip);
             }
-            chart.applyCss();
-            chart.requestLayout();
-        });
+        }
     }
 
     private void getPanoramaView(final IGeoCoordinate center) {
@@ -252,19 +332,30 @@ public class HorizonViewer {
     }
     
     private void drawViewingAngles(final IGeoCoordinate location) {
+        horizonMap = new TreeMap<>();
+
         minAngle = Double.MAX_VALUE;
         maxAngle = -Double.MAX_VALUE;
         
         chart.getData().clear();
         
         int seriesColor = 0;
-        // every n-th color we increment the pseudo class
+        // every n-th step we change the color
         int colorChange = elevationMap.keySet().size() / COLOR_STEPS;
+        // not really every n-th step... initially less often, finally more often
+        // such that on COLOR_STEPS / 2 we use the average value and anything between 1.8 - 0.4 otherwise
+        final Map<Integer, Integer> colorChangeMap = new HashMap<>();
+        for (int i = 0; i < COLOR_STEPS; i++) {
+            // we scale with anything between 2 and 1/2
+            final double scaleFact = 1.8 - 1.4 / (COLOR_STEPS-1) * i;
+            colorChangeMap.put(i, (int) (scaleFact * colorChange));
+        }
 
         int count = 0;
         double lastValue = Double.MAX_VALUE;
         for (Map.Entry<Double, List<Pair<Double, IGeoCoordinate>>> elevationList : elevationMap.entrySet()) {
             assert elevationList.getKey() < lastValue;
+            final Double distance = elevationList.getKey();
             
             // every slice is a new series
             final XYChart.Series<Number, Number> series = new XYChart.Series<>();
@@ -275,7 +366,16 @@ public class HorizonViewer {
                 maxAngle = Math.max(maxAngle, elevationAngle);
                 
                 double horAngle = coord.getLeft();
-                series.getData().add(new XYChart.Data<>(horAngle, elevationAngle));
+                XYChart.Data<Number, Number> data = new XYChart.Data<>(horAngle, elevationAngle);
+                data.setExtraValue(distance);
+                series.getData().add(data);
+
+                // check if we have a new "best" = highest angle for this viewing angle
+                boolean newBest = false;
+                if (!horizonMap.containsKey(horAngle) || horizonMap.get(horAngle).getLeft() < elevationAngle) {
+                    horizonMap.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
+                    newBest = true;
+                }
                 
                 // add data < -180 and > 180 as well to have it available for dragging
                 // we need to "wrap around" such that
@@ -288,7 +388,12 @@ public class HorizonViewer {
                 } else {
                     horAngle = horAngle + 360;
                 }
-                series.getData().add(new XYChart.Data<>(horAngle, elevationAngle));
+                data = new XYChart.Data<>(horAngle, elevationAngle);
+                data.setExtraValue(distance);
+                series.getData().add(data);
+                if (newBest) {
+                    horizonMap.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
+                }
             }
             // sort data since we added stuff before & after
             series.getData().sort(Comparator.comparingDouble(d -> d.getXValue().doubleValue()));
@@ -303,7 +408,7 @@ public class HorizonViewer {
             
             // there is surely some clever way to do this... autoincrement?
             count++;
-            if (count > colorChange) {
+            if (count > colorChangeMap.get(seriesColor)) {
                 count = 0;
                 seriesColor++;
             }
@@ -311,12 +416,17 @@ public class HorizonViewer {
     }
 
     private void setAxes() {
+        xAxis.setLowerBound(-180.0);
+        xAxis.setUpperBound(180.0);
+
         // y-axis needs to be set - x is fixed
+        // match min to next 5-value
         if (minAngle > 0) {
-            yAxis.setLowerBound(Math.floor(minAngle*0.9));
+            yAxis.setLowerBound(5.0*Math.round(Math.floor(minAngle*0.9)/5.0));
         } else {
-            yAxis.setLowerBound(Math.floor(minAngle*1.1));
+            yAxis.setLowerBound(5.0*Math.round(Math.floor(minAngle*1.1)/5.0));
         }
+        // max shouldn't be smaller than MIN_VERT_ANGLE
         if (maxAngle > 0) {
             yAxis.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(maxAngle*1.1) + 1));
         } else {
