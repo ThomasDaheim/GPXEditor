@@ -33,7 +33,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 * Matching of tracks to streets/paths using Mapbox matching service
 * replaced SRTM height viewer with fxyz3d implementation (previously jzy3d)
 * Bugfixes! Various bugs that have crept in over time are now fixed
-* Performance: Whereever something was slow, I tried to speed up things
+* Performance: Wherever something was slow, I tried to speed up things
 
 ### Update v5.5
 
