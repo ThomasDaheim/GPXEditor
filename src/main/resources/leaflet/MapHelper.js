@@ -119,7 +119,7 @@ function updateMarkerStyle(layer, color, weight, opacity, linecap) {
         lineCap: linecap
     });
 
-    // TODO: repaint doesn't get trigerred!!!
+    // TODO: repaint doesn't get trigered!!!
     window[layer].remove(myMap);
     window[layer].addTo(myMap);
 }

@@ -51,7 +51,7 @@ public class TestRegex {
         
         // building up correct string chart by char
         // matches should be TRUE since only [NS] is mandatory
-        final String testString = "N 11" + LatLongHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 0, false, false);
@@ -66,11 +66,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEG() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLongHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLongHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 0, false, false);
@@ -88,11 +88,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEGAndMinLength1() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLongHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLongHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 4, true, true);
@@ -111,11 +111,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEGAndMinLength2() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLongHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLongHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 5, true, true);
@@ -132,36 +132,36 @@ public class TestRegex {
     
     private void testAllLATLON1Combinations(final Pattern pattern, final String dir, final String deg, final String min, final String sec, final boolean doShortCombinations, final boolean result) {
         if (doShortCombinations) {
-            logAssert(pattern, dir + deg + LatLongHelper.DEG, result);
-            logAssert(pattern, dir + " " + deg + LatLongHelper.DEG, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + dir, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + " " + dir, result);
 
-            logAssert(pattern, dir + deg + LatLongHelper.DEG + min + LatLongHelper.MIN, result);
-            logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + min + LatLongHelper.MIN, result);
-            logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN, result);
-            logAssert(pattern, dir + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + min + LatLongHelper.MIN + dir, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + dir, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + min + LatLonHelper.MIN, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + min + LatLonHelper.MIN + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + dir, result);
 
-            logAssert(pattern, dir + deg + LatLongHelper.DEG + LatLongHelper.MIN + LatLongHelper.SEC, result);
-            logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + LatLongHelper.MIN + LatLongHelper.SEC, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + LatLongHelper.MIN + LatLongHelper.SEC + dir, result);
-            logAssert(pattern, deg + LatLongHelper.DEG + LatLongHelper.MIN + LatLongHelper.SEC + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC + " " + dir, result);
         }
         
-        logAssert(pattern, dir + deg + LatLongHelper.DEG + min + LatLongHelper.MIN + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + min + LatLongHelper.MIN + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + " " + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + " " + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLongHelper.DEG + min + LatLongHelper.MIN + " " + sec + LatLongHelper.SEC, result);
-        logAssert(pattern, deg + LatLongHelper.DEG + min + LatLongHelper.MIN + sec + LatLongHelper.SEC + dir, result);
-        logAssert(pattern, deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + sec + LatLongHelper.SEC + dir, result);
-        logAssert(pattern, deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + sec + LatLongHelper.SEC + " " + dir, result);
-        logAssert(pattern, deg + LatLongHelper.DEG + " " + min + LatLongHelper.MIN + " " + sec + LatLongHelper.SEC + " " + dir, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
+        logAssert(pattern, deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + " " + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC + " " + dir, result);
     }
     
     private void logAssert(final Pattern pattern, final String testString, final boolean result) {
@@ -214,122 +214,122 @@ public class TestRegex {
     
     @Test
     public void testLAT1Combinations1() {
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "90", "00", "00", "0", true, true);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "90", "00", "00", "0", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "90", "00", "00", "0", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "90", "00", "00", "0", true, true);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "E", "90", "00", "00", "0", true, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "W", "90", "00", "00", "0", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "E", "90", "00", "00", "0", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "W", "90", "00", "00", "0", true, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "90", "1", "00", "0", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "90", "1", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "90", "1", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "90", "1", "00", "0", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "90", "0", "1", "0", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "90", "0", "1", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "90", "0", "1", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "90", "0", "1", "0", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "90", "0", "00", "1", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "90", "0", "00", "1", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "90", "0", "00", "1", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "90", "0", "00", "1", false, false);
     }
     
     @Test
     public void testLAT1Combinations2() {
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "89", "59", "59", "9", true, true);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "89", "59", "59", "9", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "89", "59", "59", "9", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "89", "59", "59", "9", true, true);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "E", "89", "59", "59", "9", true, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "W", "89", "59", "59", "9", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "E", "89", "59", "59", "9", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "W", "89", "59", "59", "9", true, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "89", "61", "59", "9", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "89", "61", "59", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "89", "61", "59", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "89", "61", "59", "9", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "N", "89", "59", "61", "9", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LAT_PATTERN_1, "S", "89", "59", "61", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "N", "89", "59", "61", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LAT_PATTERN_1, "S", "89", "59", "61", "9", false, false);
     }
     
     @Test
     public void testLON1Combinations1() {
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "180", "00", "00", "0", true, true);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "180", "00", "00", "0", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "180", "00", "00", "0", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "180", "00", "00", "0", true, true);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "N", "180", "00", "00", "0", true, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "S", "180", "00", "00", "0", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "N", "180", "00", "00", "0", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "S", "180", "00", "00", "0", true, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "181", "00", "00", "0", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "181", "00", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "181", "00", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "181", "00", "00", "0", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "180", "1", "00", "0", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "180", "1", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "180", "1", "00", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "180", "1", "00", "0", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "180", "0", "1", "0", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "180", "0", "1", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "180", "0", "1", "0", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "180", "0", "1", "0", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "180", "0", "00", "1", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "180", "0", "00", "1", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "180", "0", "00", "1", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "180", "0", "00", "1", false, false);
     }
     
     @Test
     public void testLON1Combinations2() {
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "E", "179", "59", "59", "9", true, true);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "W", "179", "59", "59", "9", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "E", "179", "59", "59", "9", true, true);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "W", "179", "59", "59", "9", true, true);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "N", "179", "59", "59", "9", true, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "S", "179", "59", "59", "9", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "N", "179", "59", "59", "9", true, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "S", "179", "59", "59", "9", true, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "N", "179", "61", "59", "9", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "S", "179", "61", "59", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "N", "179", "61", "59", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "S", "179", "61", "59", "9", false, false);
 
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "N", "179", "59", "61", "9", false, false);
-        createAllLATLON1Combinations(LatLongHelper.LON_PATTERN_1, "S", "179", "59", "61", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "N", "179", "59", "61", "9", false, false);
+        createAllLATLON1Combinations(LatLonHelper.LON_PATTERN_1, "S", "179", "59", "61", "9", false, false);
     }
     
     @Test
     public void testLAT2Combinations1() {
-        logAssert(LatLongHelper.LAT_PATTERN_2, "90", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "90.0", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "89.9999", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "0", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90.0", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "89.9999", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "0", true);
 
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-90", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-90.0", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-89.9999", true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-0", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90.0", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-89.9999", true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-0", true);
 
-        logAssert(LatLongHelper.LAT_PATTERN_2, "90" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "90.0" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "89.9999" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "0" + LatLongHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90.0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "89.9999" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "0" + LatLonHelper.DEG, true);
 
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-90" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-90.0" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-89.9999" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-0" + LatLongHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90.0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-89.9999" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-0" + LatLonHelper.DEG, true);
 
-        logAssert(LatLongHelper.LAT_PATTERN_2, "90.1", false);
-        logAssert(LatLongHelper.LAT_PATTERN_2, "-90.1", false);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90.1", false);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90.1", false);
     }
     
     @Test
     public void testLON2Combinations1() {
-        logAssert(LatLongHelper.LON_PATTERN_2, "180", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "180.0", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "179.9999", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "0", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180.0", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "179.9999", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "0", true);
 
-        logAssert(LatLongHelper.LON_PATTERN_2, "-180", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-180.0", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-179.9999", true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-0", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180.0", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-179.9999", true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-0", true);
 
-        logAssert(LatLongHelper.LON_PATTERN_2, "180" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "180.0" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "179.9999" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "0" + LatLongHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180.0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "179.9999" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "0" + LatLonHelper.DEG, true);
 
-        logAssert(LatLongHelper.LON_PATTERN_2, "-180" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-180.0" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-179.9999" + LatLongHelper.DEG, true);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-0" + LatLongHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180.0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-179.9999" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-0" + LatLonHelper.DEG, true);
 
-        logAssert(LatLongHelper.LON_PATTERN_2, "180.1", false);
-        logAssert(LatLongHelper.LON_PATTERN_2, "-180.1", false);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180.1", false);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180.1", false);
     }
 }

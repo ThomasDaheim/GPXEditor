@@ -74,6 +74,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
+import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -383,6 +384,12 @@ public class GPXTableView implements IPreferencesHolder {
             });
             editWaypoints.disableProperty().bind(row.emptyProperty());
             waypointMenu.getItems().add(editWaypoints);
+
+            final MenuItem showItem = new MenuItem("Show with SRTM");
+            showItem.setOnAction((ActionEvent event) -> {
+                SRTMDataViewer.getInstance().showGPXLineItemWithSRTMData(row.getItem());
+            });
+            waypointMenu.getItems().add(showItem);
 
             row.setContextMenu(waypointMenu);
             

@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -51,8 +52,8 @@ import javafx.scene.text.TextAlignment;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.algorithms.INearestNeighborSearcher;
-import tf.gpx.edit.algorithms.NearestNeighbor;
+import tf.gpx.edit.algorithms.INearestNeighbourSearcher;
+import tf.gpx.edit.algorithms.NearestNeighbour;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -79,47 +80,49 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         SPEEDCHART;
     }
     
-    public static enum ColorPseudoClass {
-        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
-        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
-        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
-        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
-        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
-        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
-        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
-        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
-        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
-        RED(PseudoClass.getPseudoClass("line-color-Red")),
-        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
-        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
-        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
-        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
-        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
-        WHITE(PseudoClass.getPseudoClass("line-color-White")),
-        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
-
-        private final PseudoClass myPseudoClass;
-        
-        ColorPseudoClass(final PseudoClass pseudoClass) {
-            myPseudoClass = pseudoClass;
-        }
-        
-        public PseudoClass getPseudoClass() {
-            return myPseudoClass;
-        }
-        
-        public static PseudoClass getPseudoClassForColorName(final String colorName) {
-            PseudoClass result = BLACK.getPseudoClass();
-            
-            for (ColorPseudoClass color : ColorPseudoClass.values()) {
-                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
-                    result = color.getPseudoClass();
-                }
-            }
-        
-            return result;
-        }
-    }
+    final static String COLOR_STYLE_CLASS_PREFIX = "line-color-";
+    
+//    public static enum ColorPseudoClass {
+//        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
+//        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
+//        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
+//        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
+//        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
+//        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
+//        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
+//        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
+//        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
+//        RED(PseudoClass.getPseudoClass("line-color-Red")),
+//        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
+//        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
+//        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
+//        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
+//        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
+//        WHITE(PseudoClass.getPseudoClass("line-color-White")),
+//        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
+//
+//        private final PseudoClass myPseudoClass;
+//        
+//        ColorPseudoClass(final PseudoClass pseudoClass) {
+//            myPseudoClass = pseudoClass;
+//        }
+//        
+//        public PseudoClass getPseudoClass() {
+//            return myPseudoClass;
+//        }
+//        
+//        public static PseudoClass getPseudoClassForColorName(final String colorName) {
+//            PseudoClass result = BLACK.getPseudoClass();
+//            
+//            for (ColorPseudoClass color : ColorPseudoClass.values()) {
+//                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
+//                    result = color.getPseudoClass();
+//                }
+//            }
+//        
+//            return result;
+//        }
+//    }
     
     default void initialize() {
         getChart().setVisible(false);
@@ -153,7 +156,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     T getChart();
     Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
     
-        // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
+    // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
     boolean getInShowData();
     void setInShowData(final boolean value);
     void doShowData();
@@ -279,7 +282,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             
             // TFE, 20210124: could be empty waypoint list!
             if (!flatWaypoints.isEmpty()) {
-                final INearestNeighborSearcher searcher = NearestNeighbor.getInstance().getOptimalSearcher(
+                final INearestNeighbourSearcher searcher = NearestNeighbour.getInstance().getOptimalSearcher(
                         EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
 
                 for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
@@ -301,7 +304,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     //                    }
     //                }
 
-                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbor(fileWaypoint);
+                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbour(fileWaypoint);
 
                     if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
     //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
@@ -348,10 +351,14 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         for (XYChart.Series<Number, Number> series : seriesList) {
             dataCount += series.getData().size();
         }
+        final Integer dataInt = dataCount;
         
-        showData(seriesList, dataCount);
+        // TFE, 20220201: showData takes a long time... lets do it a bit later
+        Platform.runLater(() -> {
+            showData(seriesList, dataInt);
+        });
         
-        setAxis(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
+        setAxes(getMinimumDistance(), getMaximumDistance(), getMinimumYValue(), getMaximumYValue());
         
         // hide chart if no waypoints have been set
         // TFE, 20210108: don't switch on here in case there are data points
@@ -441,15 +448,18 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         getChartsPane().requestLayout();
 
         // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
-        int j = 0;
+//        int j = 0;
         for (XYChart.Series<Number, Number> series : getChart().getData()) {
             if (!series.getData().isEmpty()) {
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
                 if (!firstWaypoint.isGPXFile() && series.getName() != null) {
                     // and now color the series nodes according to lineitem color
+                    // https://stackoverflow.com/a/12286465
+                    series.getNode().getStyleClass().add(COLOR_STYLE_CLASS_PREFIX + getSeriesColor(series));
+                    // not working anymore with javafx 15
                     // https://gist.github.com/jewelsea/2129306
-                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
-                    series.getNode().pseudoClassStateChanged(color, true);
+//                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
+//                    series.getNode().pseudoClassStateChanged(color, true);
                     // TFE, 20210104: doesn't seem to be required to color all nodes - and speeds things up a bit :-)
 //                    final Set<Node> nodes = getChart().lookupAll(".series" + j);
 //                    for (Node n : nodes) {
@@ -457,7 +467,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
 //                    }
                 }
                 
-                j++;
+//                j++;
             }
         }
 
@@ -586,7 +596,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
 
     double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
 
-    default void setAxis(final double minDist, final double maxDist, final double minHght, final double maxHght) {
+    default void setAxes(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;
         // calculate scaling for ticks so their number is smaller than 25
         double tickUnit = 1.0;
@@ -680,7 +690,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             // if no waypoint in bounding box show nothing
         }
 
-        setAxis(minDist, maxDist, minHght, maxHght);
+        setAxes(minDist, maxDist, minHght, maxHght);
     }
     
     default void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {

@@ -42,8 +42,9 @@ import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.helper.GPXCloner;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.helper.ExtensionCloner;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.helper.general.ObjectsHelper;
 
@@ -110,7 +111,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
         myClone.myGPXParent = myGPXParent;
         
         // set waypoint via cloner
-        myClone.myWaypoint = GPXCloner.getInstance().deepClone(myWaypoint);
+        myClone.myWaypoint = ExtensionCloner.getInstance().deepClone(myWaypoint);
         
         // nothing else to clone, needs to be set by caller
         return ObjectsHelper.uncheckedCast(myClone);
@@ -118,6 +119,12 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
 
     public Waypoint getWaypoint() {
         return myWaypoint;
+    }
+
+    // TFE, 20220106: ask your parent for the correct line style...
+    @Override
+    public LineStyle getLineStyle() {
+        return getParent().getLineStyle();
     }
 
     public boolean isHighlight() {
@@ -360,7 +367,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
             case Name:
                 return getName();
             case Position:
-                return LatLongHelper.GPXWaypointToString(this);
+                return LatLonHelper.GPXWaypointToString(this);
             // TFE, 20190722: Start for a Waypoint is same as Date...
             case Start:
             case Date:
@@ -385,7 +392,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return gpxLineItemData.getFormat().format(EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint));
+                    return gpxLineItemData.getFormat().format(EarthGeometry.distance(this, myPrevGPXWaypoint));
                 } else {
                     return NO_DATA;
                 }
@@ -550,7 +557,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
                 }
             case DistanceToPrevious:
                 if (myPrevGPXWaypoint != null) {
-                    return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+                    return EarthGeometry.distance(this, myPrevGPXWaypoint);
                 } else {
                     return NO_VALUE;
                 }
@@ -656,8 +663,11 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     }
 
     @Override
-    public Bounds getBounds() {
-        return new Bounds(myWaypoint.getLatitude(), myWaypoint.getLatitude(), myWaypoint.getLongitude(), myWaypoint.getLongitude());
+    public Bounds3D getBounds3D() {
+        return new Bounds3D(
+                myWaypoint.getLatitude(), myWaypoint.getLatitude(), 
+                myWaypoint.getLongitude(), myWaypoint.getLongitude(), 
+                myWaypoint.getElevation(), myWaypoint.getElevation());
     }
     
     @Override
@@ -689,7 +699,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     }
     
     public double getDistance() {
-        return EarthGeometry.distanceGPXWaypoints(this, myPrevGPXWaypoint);
+        return EarthGeometry.distance(this, myPrevGPXWaypoint);
     }
     
     public double getElevationDiff() {
@@ -716,6 +726,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
         return myWaypoint.getElevation();
     }
     
+    @Override
     public void setElevation(final double elevation) {
         myWaypoint.setElevation(elevation);
         setHasUnsavedChanges();
@@ -734,13 +745,20 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     /*
     * TFE, 20180322: support for move markers in mapview
     */
+    @Override
     public void setLatitude(final double latitude) {
         myWaypoint.setLatitude(latitude);
         setHasUnsavedChanges();
     }
     
+    @Override
     public void setLongitude(final double longitude) {
         myWaypoint.setLongitude(longitude);
         setHasUnsavedChanges();
+    }
+
+    @Override
+    public IGeoCoordinate cloneMe() {
+        return cloneMe(false);
     }
 }

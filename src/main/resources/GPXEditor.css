@@ -180,9 +180,11 @@
 }
 .chart-vertical-grid-lines {
     -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
 }
 .chart-horizontal-grid-lines {
     -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
 }
 .chart-vert-rect { 
     -fx-border-style: none dotted none none;
@@ -205,108 +207,146 @@
     -fx-effect: null;
 }
 
-/* TFE, 20191113: pseudoclasses to color line and area in heigghtchart */
-.chart-series-area-fill:line-color-Black {
-    -fx-fill: Black;
+/* TFE, 20191113: pseudoclasses to color line and area in heightchart */
+.line-color-Black *.chart-series-area-fill,
+.line-color-Black *.chart-series-area-line {
+    -fx-fill: black;
 }
-.chart-series-area-line:line-color-Black {
-    -fx-stroke: Black;
+.line-color-DarkRed *.chart-series-area-fill,
+.line-color-DarkRed *.chart-series-area-line {
+    -fx-fill: darkred;
 }
-.chart-series-area-fill:line-color-DarkRed {
-    -fx-fill: DarkRed;
+.line-color-DarkGreen *.chart-series-area-fill,
+.line-color-DarkGreen *.chart-series-area-line {
+    -fx-fill: darkgreen;
 }
-.chart-series-area-line:line-color-DarkRed {
-    -fx-stroke: DarkRed;
+.line-color-GoldenRod *.chart-series-area-fill,
+.line-color-GoldenRod *.chart-series-area-line {
+    -fx-fill: goldenrod;
 }
-.chart-series-area-fill:line-color-DarkGreen {
-    -fx-fill: DarkGreen;
+.line-color-DarkBlue *.chart-series-area-fill,
+.line-color-DarkBlue *.chart-series-area-line {
+    -fx-fill: darkblue;
 }
-.chart-series-area-line:line-color-DarkGreen {
-    -fx-stroke: DarkGreen;
+.line-color-DarkMagenta *.chart-series-area-fill,
+.line-color-DarkMagenta *.chart-series-area-line {
+    -fx-fill: darkmagenta;
 }
-.chart-series-area-fill:line-color-GoldenRod {
-    -fx-fill: GoldenRod;
+.line-color-DarkCyan *.chart-series-area-fill,
+.line-color-DarkCyan *.chart-series-area-line {
+    -fx-fill: darkcyan;
 }
-.chart-series-area-line:line-color-GoldenRod {
-    -fx-stroke: GoldenRod;
+.line-color-DarkGray *.chart-series-area-fill,
+.line-color-DarkGray *.chart-series-area-line {
+    -fx-fill: darkgray;
 }
-.chart-series-area-fill:line-color-DarkBlue {
-    -fx-fill: DarkBlue;
+.line-color-LightGray *.chart-series-area-fill,
+.line-color-LightGray *.chart-series-area-line {
+    -fx-fill: lightgray;
 }
-.chart-series-area-line:line-color-DarkBlue {
-    -fx-stroke: DarkBlue;
+.line-color-Red *.chart-series-area-fill,
+.line-color-Red *.chart-series-area-line {
+    -fx-fill: red;
 }
-.chart-series-area-fill:line-color-DarkMagenta {
-    -fx-fill: DarkMagenta;
+.line-color-Green *.chart-series-area-fill,
+.line-color-Green *.chart-series-area-line {
+    -fx-fill: green;
 }
-.chart-series-area-line:line-color-DarkMagenta {
-    -fx-stroke: DarkMagenta;
+.line-color-Yellow *.chart-series-area-fill,
+.line-color-Yellow *.chart-series-area-line {
+    -fx-fill: yellow;
 }
-.chart-series-area-fill:line-color-DarkCyan {
-    -fx-fill: DarkCyan;
+.line-color-Blue *.chart-series-area-fill,
+.line-color-Blue *.chart-series-area-line {
+    -fx-fill: blue;
 }
-.chart-series-area-line:line-color-DarkCyan {
-    -fx-stroke: DarkCyan;
+.line-color-Magenta *.chart-series-area-fill,
+.line-color-Magenta *.chart-series-area-line {
+    -fx-fill: magenta;
 }
-.chart-series-area-fill:line-color-DarkGray {
-    -fx-fill: DarkGray;
+.line-color-Cyan *.chart-series-area-fill,
+.line-color-Cyan *.chart-series-area-line {
+    -fx-fill: cyan;
 }
-.chart-series-area-line:line-color-DarkGray {
-    -fx-stroke: DarkGray;
+.line-color-White *.chart-series-area-fill,
+.line-color-White *.chart-series-area-line {
+    -fx-fill: white;
 }
-.chart-series-area-fill:line-color-LightGray {
-    -fx-fill: LightGray;
+.line-color-Silver *.chart-series-area-fill,
+.line-color-Silver *.chart-series-area-line {
+    -fx-fill: silver;
 }
-.chart-series-area-line:line-color-LightGray {
-    -fx-stroke: LightGray;
+
+
+/* TFE, 20191113: pseudoclasses to color line and area in horizonviewer */
+/* https://kevingimbel.de/blog/2021/06/darken-and-lighten-colors-with-css/ */
+.color-step-0 *.chart-series-area-fill,
+.color-step-1 *.chart-series-area-fill,
+.color-step-2 *.chart-series-area-fill,
+.color-step-3 *.chart-series-area-fill,
+.color-step-4 *.chart-series-area-fill,
+.color-step-5 *.chart-series-area-fill,
+.color-step-6 *.chart-series-area-fill,
+.color-step-7 *.chart-series-area-fill {
+    -fx-opacity: 1.0;
 }
-.chart-series-area-fill:line-color-Red {
-    -fx-fill: Red;
+.color-step-0 *.chart-series-area-fill {
+    -fx-fill: #0C11E6;
 }
-.chart-series-area-line:line-color-Red {
-    -fx-stroke: Red;
+.color-step-1 *.chart-series-area-fill {
+    -fx-fill: #3A40DE;
 }
-.chart-series-area-fill:line-color-Green {
-    -fx-fill: Green;
+.color-step-2 *.chart-series-area-fill {
+    -fx-fill: #3B40DA;
 }
-.chart-series-area-line:line-color-Green {
-    -fx-stroke: Green;
+.color-step-3 *.chart-series-area-fill {
+    -fx-fill: #4D51D9;
 }
-.chart-series-area-fill:line-color-Yellow {
-    -fx-fill: Yellow;
+.color-step-4 *.chart-series-area-fill {
+    -fx-fill: #8285D2;
 }
-.chart-series-area-line:line-color-Yellow {
-    -fx-stroke: Yellow;
+.color-step-5 *.chart-series-area-fill {
+    -fx-fill: #A7A6CE;
 }
-.chart-series-area-fill:line-color-Blue {
-    -fx-fill: Blue;
+.color-step-6 *.chart-series-area-fill {
+    -fx-fill: #BCBECD;
 }
-.chart-series-area-line:line-color-Blue {
-    -fx-stroke: Blue;
+.color-step-7 *.chart-series-area-fill {
+    -fx-fill: #C6C7C9;
 }
-.chart-series-area-fill:line-color-Magenta {
-    -fx-fill: Magenta;
+.color-step-0 *.chart-series-area-line,
+.color-step-1 *.chart-series-area-line,
+.color-step-2 *.chart-series-area-line,
+.color-step-3 *.chart-series-area-line,
+.color-step-4 *.chart-series-area-line,
+.color-step-5 *.chart-series-area-line,
+.color-step-6 *.chart-series-area-line,
+.color-step-7 *.chart-series-area-line {
+    -fx-stroke: #696969;
+    -fx-stroke-width: 1px;
+    -fx-stroke-dash-array: 2 6 6 2;
 }
-.chart-series-area-line:line-color-Magenta {
-    -fx-stroke: Magenta;
+.horizon-tooltip *.chart-area-symbol {
+    -fx-background-color: #696969, #696969 !important;
+    -fx-background-radius: 0px !important;
+    -fx-scale-x: 0.6 !important;
+    -fx-scale-y: 0.6 !important;
 }
-.chart-series-area-fill:line-color-Cyan {
-    -fx-fill: Cyan;
+
+.chart-vertical-zero-line {
+    -fx-stroke: black;
+    -fx-stroke-width: 0.5px;
 }
-.chart-series-area-line:line-color-Cyan {
-    -fx-stroke: Cyan;
+.chart-horizontal-zero-line {
+    -fx-stroke: black;
+    -fx-stroke-width: 0.5px;
 }
-.chart-series-area-fill:line-color-White {
-    -fx-fill: White;
-}
-.chart-series-area-line:line-color-White {
-    -fx-stroke: White;
-}
-.chart-series-area-fill:line-color-Silver {
-    -fx-fill: Silver;
-}
-.chart-series-area-line:line-color-Silver {
-    -fx-stroke: Silver;
+
+.horizon-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4 4 4 50;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
 }
 
 /*.default-color0.chart-area-symbol {
@@ -452,4 +492,8 @@
 /* TFE, 20200807: slider tick labels */
 .slider .axis {
     -fx-tick-label-fill: -fx-text-inner-color;
+}
+
+/* TFE, 20210828: node showing the mapimage and title */
+.mapImageViewer > * {
 }

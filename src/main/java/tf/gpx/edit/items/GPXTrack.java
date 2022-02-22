@@ -36,9 +36,10 @@ import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
-import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.extension.TrackActivity;
+import tf.gpx.edit.helper.ExtensionCloner;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
 
@@ -50,6 +51,7 @@ public class GPXTrack extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Track myTrack;
     private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
+    private TrackActivity myActivity;
     private final ObservableList<GPXTrackSegment> myGPXTrackSegments = FXCollections.observableArrayList();
     
     private GPXTrack() {
@@ -71,7 +73,8 @@ public class GPXTrack extends GPXMeasurable {
             ((GPX) content).addTrack(myTrack);
         }
         
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);
+        myActivity = new TrackActivity(this);
 
         myGPXTrackSegments.addListener(changeListener);
     }
@@ -84,7 +87,8 @@ public class GPXTrack extends GPXMeasurable {
         myTrack = track;
         
         // set color from gpxx extension
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, GarminColor.Red);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);
+        myActivity = new TrackActivity(this);
         
         // TFE, 20180203: track without tracksegments is valid!
         if (myTrack.getTrackSegments() != null) {
@@ -104,10 +108,13 @@ public class GPXTrack extends GPXMeasurable {
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
         
-        myClone.myLineStyle = myLineStyle;
+        // set track via cloner
+        myClone.myTrack = ExtensionCloner.getInstance().deepClone(myTrack);
         
-        // set route via cloner
-        myClone.myTrack = GPXCloner.getInstance().deepClone(myTrack);
+        // TFE, 20220102: LineStyle needs to be cloned as well
+        myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);
+        
+        myClone.myActivity = new TrackActivity(myClone);
         
         // clone all my children
         for (GPXTrackSegment gpxTrackSegment : myGPXTrackSegments) {
@@ -123,6 +130,10 @@ public class GPXTrack extends GPXMeasurable {
 
     protected Track getTrack() {
         return myTrack;
+    }
+    
+    public TrackActivity.Activity getActivity() {
+        return myActivity.getActivity();
     }
     
     @Override
@@ -180,7 +191,7 @@ public class GPXTrack extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList() {
         return myGPXTrackSegments;
     }
     
@@ -263,7 +274,7 @@ public class GPXTrack extends GPXMeasurable {
                 waypoints.add(trackSegment.getCombinedGPXWaypoints(itemType));
             }
         }
-        return GPXListHelper.concat(FXCollections.observableArrayList(), waypoints);
+        return GPXListHelper.concatObservableList(FXCollections.observableArrayList(), waypoints);
     }
 
     @Override

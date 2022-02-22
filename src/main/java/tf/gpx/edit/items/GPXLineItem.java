@@ -35,8 +35,9 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import me.himanshusoni.gpxparser.modal.Bounds;
 import org.apache.commons.lang3.math.NumberUtils;
+import tf.gpx.edit.extension.IStylableItem;
+import tf.gpx.edit.extension.LineStyle;
 
 /**
  *
@@ -331,7 +332,8 @@ public abstract class GPXLineItem implements IStylableItem {
     protected abstract long getCumulativeDuration();
     // duration as difference last - first waypoint
     protected abstract long getOverallDuration();
-    protected abstract Bounds getBounds();
+    // TFE, 20200601: make public so that in can be used in SRTMDataViewer as well
+    public abstract Bounds3D getBounds3D();
     
     // TFE, 20180517: you know how your tooltip should look like
     public String getTooltip() {

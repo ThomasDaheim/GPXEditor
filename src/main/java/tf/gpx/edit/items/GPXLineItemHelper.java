@@ -37,6 +37,8 @@ import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXFile;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -320,5 +322,11 @@ public class GPXLineItemHelper {
         }
         
         return result;
+    }
+    
+    public static List<LatLonElev> getLatLonElevs(final List<? extends IGeoCoordinate> coords) {
+        return coords.stream().map((t) -> {
+                    return new LatLonElev(t.getLatitude(), t.getLongitude(), t.getElevation());
+                }).collect(Collectors.toList());
     }
 }

@@ -29,23 +29,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.elevation.SRTMData.SRTMDataKey;
 
 /**
  *
  * @author Thomas
  */
-public class SRTMDataStore {
+class SRTMDataStore {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static SRTMDataStore INSTANCE = new SRTMDataStore();
     
-    private final Pattern namePattern = Pattern.compile("(N|S){1}(\\d+)(E|W){1}(\\d+).*");
-
     public final static String HGT_EXT = "hgt";
 
     private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
@@ -73,9 +68,7 @@ public class SRTMDataStore {
             // if not found: try to read file and add to store
             result = srtmOptions.getSRTMDataReader().readSRTMData(name, srtmOptions.getSRTMDataPath());
             
-            if (result != null) {
-                srtmStore.put(result.getKey(), result);
-            }
+            srtmStore.put(result.getKey(), result);
         } else {
             result = srtmStore.get(dataKey);
         }
@@ -87,7 +80,7 @@ public class SRTMDataStore {
         assert newData != null;
         
         // check validity of data
-        if (SRTMData.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
+        if (SRTMDataHelper.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
             return;
         }
         
@@ -103,6 +96,7 @@ public class SRTMDataStore {
     private SRTMDataKey dataKeyForName(final String dataName) {
         SRTMDataKey result = null;
         
+        // TODO: speed this up! called umpteen times for data viewer...
         final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
                 filter((SRTMDataKey key) -> {
                     return key.getKey().equals(dataName);
@@ -128,78 +122,6 @@ public class SRTMDataStore {
             }
         }
         
-        return result;
-    }
-
-    public String getNameForCoordinate(double latitude, double longitude) {
-//        File names refer to the latitude and longitude of the lower left corner of the tile -
-//        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
-//        To be more exact, these coordinates refer to the geometric center of the lower left pixel,
-//        which in the case of SRTM3 data will be about 90 meters in extent.        
-        String result;
-        
-        // TFE, 2018015
-        // N:  54.1 -> N54
-        // S: -54.1 -> S55 -> 1 to abs(latitude)!
-        // TFE, 20181023 - BUT
-        // S: -54 -> S54 -> 1 only if not int value!
-        if (latitude > 0) {
-            result = "N";
-        } else {
-            result = "S";
-            latitude = Math.abs(latitude);
-            if (latitude % 1 != 0) {
-               latitude++; 
-            }
-        }
-        result += String.format("%02d", (int) latitude);
-        
-        // TFE, 2018015
-        // N:  65.9 -> N65
-        // W: -65.9 -> W66 -> 1 to abs(longitude)!
-        // TFE, 20181023 - BUT
-        // W: -54 -> W54 -> 1 only if not int value!
-        if (longitude > 0) {
-            result += "E";
-        } else {
-            result += "W";
-            longitude = Math.abs(longitude);
-            if (longitude % 1 != 0) {
-               longitude++; 
-            }
-        }
-        result += String.format("%03d", (int) longitude);
-        
-        return result;
-    }
-    
-    protected int getLatitudeForName(final String name) {
-        int result = Integer.MIN_VALUE;
-        
-        final Matcher matcher = namePattern.matcher(name);
-        
-        if (matcher.matches()) {
-            result = Integer.parseInt(matcher.group(2));
-            if ("S".equals(matcher.group(1))) {
-                result = -result;
-            }
-        }
-
-        return result;
-    }
-    
-    protected int getLongitudeForName(final String name) {
-        int result = Integer.MIN_VALUE;
-        
-        final Matcher matcher = namePattern.matcher(name);
-        
-        if (matcher.matches()) {
-            result = Integer.parseInt(matcher.group(4));
-            if ("W".equals(matcher.group(3))) {
-                result = -result;
-            }
-        }
-
         return result;
     }
 }

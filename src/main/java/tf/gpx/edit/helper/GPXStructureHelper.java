@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import org.apache.commons.collections4.CollectionUtils;
+import tf.gpx.edit.algorithms.WaypointMatching;
+import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
@@ -49,7 +52,9 @@ import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.gpx.edit.worker.GPXDeleteEmptyLineItemsWorker;
 import tf.gpx.edit.worker.GPXFixGarminCrapWorker;
-import tf.gpx.edit.worker.GPXReduceWorker;
+import tf.gpx.edit.worker.GPXMatchingWorker;
+import tf.gpx.edit.worker.GPXReductionWorker;
+import tf.gpx.edit.worker.GPXSmoothingWorker;
 
 /**
  *
@@ -65,8 +70,6 @@ public class GPXStructureHelper {
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMDD-HHmmss"); 
 
     private static final String MERGED_FILE_NAME = "Merged.gpx";
-    private static final String MERGED_ROUTE_NAME = "Merged Route";
-    private static final String MERGED_TRACK_NAME = "Merged Track";
     
     private GPXEditor myEditor;
     
@@ -86,8 +89,16 @@ public class GPXStructureHelper {
         runVisitor(gpxLineItems, new GPXFixGarminCrapWorker(distance));
     }
 
-    public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final GPXAlgorithms.ReductionAlgorithm algorithm, final double epsilon) {
-        runVisitor(gpxLineItems, new GPXReduceWorker(algorithm, epsilon));
+    public void smoothGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointSmoothing.SmoothingAlgorithm algorithm) {
+        runVisitor(gpxLineItems, new GPXSmoothingWorker(algorithm));
+    }
+
+    public void reduceGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
+        runVisitor(gpxLineItems, new GPXReductionWorker(algorithm, epsilon));
+    }
+
+    public void matchGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final WaypointMatching.MatchingAlgorithm algorithm) {
+        runVisitor(gpxLineItems, new GPXMatchingWorker(algorithm));
     }
 
     public void deleteEmptyGPXTrackSegments(final List<GPXFile> gpxFiles, int deleteCount) {

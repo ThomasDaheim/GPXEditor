@@ -64,7 +64,7 @@ import jfxtras.styles.jmetro.Style;
 import me.himanshusoni.gpxparser.type.Fix;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
@@ -371,7 +371,7 @@ public class EditGPXWaypoint extends AbstractStage {
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
         // minimum is N/S°'"
-        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLongHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
+        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLonHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
         final Tooltip latTooltip = new Tooltip("Formats: N/S DD°MM'SS.SS\" or DD°MM'SS.SS\" N/S or +/-dd.dddddd");
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
@@ -386,7 +386,7 @@ public class EditGPXWaypoint extends AbstractStage {
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
         // minimum is E/W°'"
-        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLongHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
+        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLonHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
         final Tooltip lonTooltip = new Tooltip("Formats: E/W DDD°MM'SS.SS\" or DDD°MM'SS.SS\" E/W or +/-ddd.dddddd");
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
@@ -636,9 +636,9 @@ public class EditGPXWaypoint extends AbstractStage {
         }
         
         waypointLatitudeTxt.setDisable(false);
-        waypointLatitudeTxt.setText(setNullStringToEmpty(LatLongHelper.latToString(waypoint.getLatitude())));
+        waypointLatitudeTxt.setText(setNullStringToEmpty(LatLonHelper.latToString(waypoint.getLatitude())));
         waypointLongitudeTxt.setDisable(false);
-        waypointLongitudeTxt.setText(setNullStringToEmpty(LatLongHelper.lonToString(waypoint.getLongitude())));
+        waypointLongitudeTxt.setText(setNullStringToEmpty(LatLonHelper.lonToString(waypoint.getLongitude())));
 
         waypointElevationTxt.setDisable(false);
         waypointElevationTxt.setText(setZeroToEmpty(waypoint.getElevation()));
@@ -725,8 +725,8 @@ public class EditGPXWaypoint extends AbstractStage {
         
         if (myGPXWaypoints.size() == 1) {
             // more values can be changed for single waypoint
-            waypoint.setLatitude(LatLongHelper.latFromString(waypointLatitudeTxt.getText()));
-            waypoint.setLongitude(LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
+            waypoint.setLatitude(LatLonHelper.latFromString(waypointLatitudeTxt.getText()));
+            waypoint.setLongitude(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
 
             waypoint.setElevation(setEmptyToZeroDouble(waypointElevationTxt.getText()));
             waypoint.setGeoIdHeight(setEmptyToZeroDouble(waypointGeoIdHeightTxt.getText()));

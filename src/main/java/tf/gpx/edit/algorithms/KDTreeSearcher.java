@@ -37,7 +37,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  * KDTree implementation based on http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree
  * @author thomas
  */
-public class KDTreeSearcher implements INearestNeighborSearcher {
+public class KDTreeSearcher implements INearestNeighbourSearcher {
     private final List<GPXWaypoint> myGPXWaypoint = new ArrayList<>();
     private EarthGeometry.DistanceAlgorithm myAlgo;
 
@@ -45,8 +45,8 @@ public class KDTreeSearcher implements INearestNeighborSearcher {
     private Node tree;
 
     @Override
-    public NearestNeighbor.SearchAlgorithm getSearchAlgorithm() {
-        return NearestNeighbor.SearchAlgorithm.KDTree;
+    public NearestNeighbour.SearchAlgorithm getSearchAlgorithm() {
+        return NearestNeighbour.SearchAlgorithm.KDTree;
     }
 
     @Override
@@ -63,10 +63,10 @@ public class KDTreeSearcher implements INearestNeighborSearcher {
     }
 
     @Override
-    public Pair<GPXWaypoint, Double> getNearestNeighbor(final GPXWaypoint point) {
+    public Pair<GPXWaypoint, Double> getNearestNeighbour(final GPXWaypoint point) {
         final Node target = new Node(point);
         final MutablePair<Node, Double> node = findNearest(MutablePair.of(tree, -1.0), target, 0);
-        return node == null ? null : Pair.of(node.getLeft().location, EarthGeometry.distanceWaypointsForAlgorithm(
+        return node == null ? null : Pair.of(node.getLeft().location, EarthGeometry.distanceForAlgorithm(
                     node.getLeft().location.getWaypoint(), 
                     point.getWaypoint(),
                     myAlgo));

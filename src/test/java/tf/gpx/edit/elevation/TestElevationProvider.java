@@ -43,7 +43,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -72,7 +72,7 @@ public class TestElevationProvider {
     
     @BeforeClass
     public static void setUpClass() throws IOException {
-        tileDist = 1.0 / (SRTMData.SRTMDataType.SRTM3.getDataCount() - 1);
+        tileDist = 1.0 / (SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1);
         // offset from corners in tiles is 0,1% of tile size
         delta = tileDist / 1000.0;
         
@@ -189,9 +189,9 @@ public class TestElevationProvider {
     public void testMixedList() {
         initElevationProviders();
         
-        final List<LatLongElev> coords = new ArrayList<>();
-        coords.add(new LatLongElev(27.9881, 86.9250));
-        coords.add(new LatLongElev(48.135125, 11.581981));
+        final List<LatLonElev> coords = new ArrayList<>();
+        coords.add(new LatLonElev(27.9881, 86.9250));
+        coords.add(new LatLonElev(48.135125, 11.581981));
         
         List<Double> heightValues;
         heightValues = srtmOnly.getElevationsForCoordinates(coords);
@@ -217,8 +217,8 @@ public class TestElevationProvider {
 
         final int count = 5000;
         
-        final LatLongElev coord = new LatLongElev(27.9881, 86.9250);
-        final List<LatLongElev> coords = new ArrayList<>();
+        final LatLonElev coord = new LatLonElev(27.9881, 86.9250);
+        final List<LatLonElev> coords = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             coords.add(coord);
         }
@@ -252,9 +252,9 @@ public class TestElevationProvider {
         final double lat = 27.9881;
         final double lng = 86.9250;
         final double increment = 1.0 / count;
-        final List<LatLongElev> coords = new ArrayList<>();
+        final List<LatLonElev> coords = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            coords.add(new LatLongElev(lat + i*increment, lng + i*increment));
+            coords.add(new LatLonElev(lat + i*increment, lng + i*increment));
         }
         // distinct coords - code should get elevation n times
         

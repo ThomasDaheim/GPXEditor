@@ -27,13 +27,17 @@ package tf.gpx.edit.helper;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -77,6 +81,7 @@ import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
+import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemType;
@@ -87,7 +92,6 @@ import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.items.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.helper.general.IPreferencesHolder;
@@ -224,6 +228,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
                         // TFE, 20190812: reset highlight for this rrow - might have been used before ith other gpx...
                         getStyleClass().remove("gpxFileRow");
                         
+                        final MenuItem showItem = new MenuItem("Show with SRTM");
                         switch (item.getType()) {
                             case GPXFile:
                                 getStyleClass().add("gpxFileRow");
@@ -264,6 +269,22 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                 });
                                 fileMenu.getItems().add(closeFile);
 
+                                // TFE, 20211211: quick way to navigate to file location
+                                if (Desktop.isDesktopSupported()) {
+                                    final MenuItem openDirectory = new MenuItem("Open file location");
+                                    openDirectory.setOnAction((ActionEvent event) -> {
+                                        try {
+                                            if (item.getGPXFile().getPath() != null) {
+                                                Desktop.getDesktop().open(new File(item.getGPXFile().getPath()));
+                                            } else {
+                                                Desktop.getDesktop().open(new File(System.getProperty("user.home")));                                            }
+                                        } catch (IOException ex) {
+                                            Logger.getLogger(GPXTreeTableView.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    });
+                                    fileMenu.getItems().add(openDirectory);
+                                }
+
                                 final MenuItem mergeFiles = new MenuItem("Merge Files");
                                 mergeFiles.setOnAction((ActionEvent event) -> {
                                     myEditor.mergeFiles(event);
@@ -274,12 +295,11 @@ public class GPXTreeTableView implements IPreferencesHolder {
 
                                 fileMenu.getItems().add(new SeparatorMenuItem());
 
-                                final MenuItem showFile = new MenuItem("Show with SRTM");
-                                showFile.setOnAction((ActionEvent event) -> {
+                                showItem.setOnAction((ActionEvent event) -> {
                                     // show gpxfile with srtm data
-                                    SRTMDataViewer.getInstance().showGPXFileWithSRTMData(item.getGPXFile());
+                                    SRTMDataViewer.getInstance().showGPXLineItemWithSRTMData(item);
                                 });
-                                fileMenu.getItems().add(showFile);
+                                fileMenu.getItems().add(showItem);
 
                                 break;
 
@@ -378,6 +398,13 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                         Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                     fileMenu.getItems().add(playbackItem);
                                 }
+
+                                // TFE, 20220601: we can now show everything with SRTM data...
+                                showItem.setOnAction((ActionEvent event) -> {
+                                    // show gpxfile with srtm data
+                                    SRTMDataViewer.getInstance().showGPXLineItemWithSRTMData(item);
+                                });
+                                fileMenu.getItems().add(showItem);
                                 
                                 break;
                             case GPXMetadata:
@@ -393,23 +420,11 @@ public class GPXTreeTableView implements IPreferencesHolder {
                                 break;
                         }
 
-                        fileMenu.getItems().add(new SeparatorMenuItem());
-                        // Export is a sub menu
-                        final Menu exportMenu = new Menu("Export");
-
-                        final MenuItem exportAsKML = new MenuItem("As KML");
-                        exportAsKML.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.KML);
+                        final MenuItem exportFile = new MenuItem("Export");
+                        exportFile.setOnAction((ActionEvent event) -> {
+                            myEditor.exportFile(item.getGPXFile());
                         });
-                        exportMenu.getItems().add(exportAsKML);
-
-                        final MenuItem exportAsCSV = new MenuItem("As CSV");
-                        exportAsCSV.setOnAction((ActionEvent event) -> {
-                            myEditor.exportFile(item.getGPXFile(), GPXEditor.ExportFileType.CSV);
-                        });
-                        exportMenu.getItems().add(exportAsCSV);
-
-                        fileMenu.getItems().add(exportMenu);
+                        fileMenu.getItems().add(exportFile);
                         
                         if (!item.isGPXMetadata()) {
                             fileMenu.getItems().add(new SeparatorMenuItem());
@@ -985,7 +1000,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
             final List<File> files = new ArrayList<>();
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                     files.add(file);
                 }
             }
@@ -1043,7 +1058,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
         } else if (AppClipboard.getInstance().hasFiles()) {
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.GPX_EXT.equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
                     result = TargetForDragDrop.DROP_ON_ME;
                     break;
                 }
@@ -1164,7 +1179,7 @@ public class GPXTreeTableView implements IPreferencesHolder {
     }
     
     private TreeItem<GPXMeasurable> createTreeItemForGPXFile(final GPXFile gpxFile) {
-        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getMeasurableChildren, false, new Callback<GPXMeasurable, Boolean>() {
+        return new RecursiveTreeItem<>(gpxFile, (item) -> null, GPXMeasurable::getGPXMeasurablesAsObservableList, false, new Callback<GPXMeasurable, Boolean>() {
             @Override
             public Boolean call(GPXMeasurable item) {
                 return true;

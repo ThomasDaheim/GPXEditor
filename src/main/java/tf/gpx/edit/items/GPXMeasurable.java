@@ -36,7 +36,7 @@ import me.himanshusoni.gpxparser.modal.Bounds;
  */
 public abstract class GPXMeasurable extends GPXLineItem {
     public abstract List<? extends GPXMeasurable> getGPXMeasurables();
-    public abstract ObservableList<? extends GPXMeasurable> getMeasurableChildren();
+    public abstract ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList();
     
     private GPXMeasurable() {
         super(null);
@@ -258,11 +258,12 @@ public abstract class GPXMeasurable extends GPXLineItem {
      * @return the bounds to include all waypoints
      */
     @Override
-    public Bounds getBounds() {
-        final Bounds result = new Bounds(Double.MAX_VALUE, Double.MIN_VALUE, Double.MAX_VALUE, Double.MIN_VALUE);
+    public Bounds3D getBounds3D() {
+        // TFE, 2020117: that hurts...
+        final Bounds3D result = new Bounds3D(Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE);
         
         for (GPXLineItem child : getChildren()) {
-            result.extendBounds(child.getBounds());
+            result.extendBounds3D(child.getBounds3D());
         }
         
         return result;

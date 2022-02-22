@@ -27,7 +27,6 @@ package tf.gpx.edit.items;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -37,7 +36,9 @@ import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.Track;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.helper.ExtensionCloner;
+import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -47,7 +48,7 @@ import tf.helper.general.ObjectsHelper;
 public class GPXTrackSegment extends GPXMeasurable {
     private GPXTrack myGPXTrack;
     private TrackSegment myTrackSegment;
-    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private ObservableList<GPXWaypoint> myGPXWaypoints = GPXListHelper.initEmptyList();
     
     private Double myLength = null;
     private Double myCumulativeAscent = null;
@@ -92,6 +93,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myTrackSegment.getWaypoints() != null) {
+            myGPXWaypoints = GPXListHelper.initForCapacity(myGPXWaypoints, myTrackSegment.getWaypoints());
             for (Waypoint waypoint : myTrackSegment.getWaypoints()) {
                 myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
             }
@@ -110,7 +112,7 @@ public class GPXTrackSegment extends GPXMeasurable {
         myClone.myGPXTrack = myGPXTrack;
 
         // set tracksegment via cloner
-        myClone.myTrackSegment = GPXCloner.getInstance().deepClone(myTrackSegment);
+        myClone.myTrackSegment = ExtensionCloner.getInstance().deepClone(myTrackSegment);
         
         myClone.myLength = myLength;
         myClone.myCumulativeAscent = myCumulativeAscent;
@@ -143,7 +145,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     
     @Override
     public LineStyle getLineStyle() {
-        return myGPXTrack.getLineStyle();
+        return getParent().getLineStyle();
     }
     
     @Override
@@ -180,7 +182,7 @@ public class GPXTrackSegment extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList() {
         return FXCollections.observableArrayList();
     }
     

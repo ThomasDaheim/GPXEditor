@@ -25,38 +25,11 @@
  */
 package tf.gpx.edit.elevation;
 
-import javafx.util.Pair;
-
 /**
  *
  * @author Thomas
  */
 class SRTMData {
-    public enum SRTMDataType {
-        SRTM1(3601, 1),
-        SRTM3(1201, 3),
-        INVALID(1, 1);
-        
-        private final int dataCount;
-        private final int gridSize;
-        SRTMDataType(int count, int size) {
-            dataCount = count;
-            gridSize = size;
-        }
-        public int getDataCount() {
-            return dataCount;
-        } 
-        public int getGridSize() {
-            return gridSize;
-        } 
-    }
-    
-    public class SRTMDataKey extends Pair<String, SRTMDataType> {
-        public SRTMDataKey(String key, SRTMDataType value) {
-            super(key, value);
-        }
-    }
-    
     private final static double EPSILON = 0.1d;
     private final static double NO_DATA = Double.MIN_VALUE;
 
@@ -66,7 +39,7 @@ class SRTMData {
     private final int numberRows;
     private final int numberCols;
 
-    public SRTMData(final String dataFile, final String name, final SRTMDataType type) {
+    public SRTMData(final String dataFile, final String name, final SRTMDataHelper.SRTMDataType type) {
         myDataFile = dataFile;
         myDataKey = new SRTMDataKey(name, type);
         myDataValues = new short[type.getDataCount()][];
@@ -76,6 +49,10 @@ class SRTMData {
     
     public SRTMDataKey getKey() {
         return myDataKey;
+    }
+    
+    public boolean isEmpty() {
+        return myDataKey.getValue().isEmpty();
     }
 
     public short[][] getValues() {
@@ -134,6 +111,10 @@ class SRTMData {
     }
 
     protected double getValueForCoordinate(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode) {
+        if (isEmpty()) {
+            return NO_DATA;
+        }
+        
         // actual calculation is the same for all SRTMData instances - so either use helper or static method
         return getValueForCoordinateStatic(latitude, longitude, avarageMode, this);
     }
@@ -163,7 +144,7 @@ class SRTMData {
         double result = NO_DATA;
         
         // convert lon & lat to name & check against self
-        if (SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
+        if (SRTMDataHelper.getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
             //System.out.println("SRTM data found: " + data.getKey().getKey());
             // convert lon & lat to col & row
             

@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
-import org.junit.Assert;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
@@ -140,10 +139,12 @@ public class OpenElevationService implements IElevationProvider {
             
             if (response.statusCode() == 200 || response.statusCode() == 201) {
                 result = response.body();
+            } else {
+                Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, 
+                        "OpenElevationService returned: {0}, {1}", new Object[]{response.statusCode(), response.body()});
             }
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.assertTrue(false);
         }
         
         return result;

@@ -1,6 +1,31 @@
-
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package tf.gpx.edit.leafletmap;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.HashSet;
@@ -24,6 +49,9 @@ import tf.gpx.edit.viewer.TrackMap;
  * browser component.
  * This component can be embedded most easily by placing it inside a StackPane, the component uses then the size of the
  * parent automatically.
+ * 
+ * This is based on a backport from the https://github.com/ssaring/sportstracker/tree/master/leafletmap kotlin application.
+ * Thanks a lot to Stefan Saring for his code!
  * 
  * @author thomas
  */
@@ -117,6 +145,11 @@ public class LeafletMapView extends StackPane {
     }
     
     private void executeMapSetupScripts() {
+        // TFE, 20211105: move from leafletmap.html to code
+        addStyleFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".css");
+        addScriptFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".js");
+        addScriptFromPath(LEAFLET_PATH + "/leaflet-color-markers/leaflet-color-markers" + MIN_EXT + ".js");
+
         // collect all required resources for the layers
         final Set<String> jsResources = new HashSet<>();
         
@@ -222,7 +255,7 @@ public class LeafletMapView extends StackPane {
      * @param position map center position
      * @param zoomLevel zoom level (0 - 19 for OpenStreetMap)
      */
-    public void setView(final LatLongElev position, final int zoomLevel) {
+    public void setView(final LatLonElev position, final int zoomLevel) {
         setView(position.getLatitude(), position.getLongitude(), zoomLevel);
     }
 
@@ -243,7 +276,7 @@ public class LeafletMapView extends StackPane {
      *
      * @param position map center position
      */
-    public void panTo(final LatLongElev position) {
+    public void panTo(final LatLonElev position) {
         panTo(position.getLatitude(), position.getLongitude());
     }
 
@@ -277,7 +310,7 @@ public class LeafletMapView extends StackPane {
      * @param zIndexOffset zIndexOffset (higher number means on top)
      * @return variable name of the created marker
      */
-    public String addMarker(final LatLongElev position, final String title, final IMarker marker, final int zIndexOffset) {
+    public String addMarker(final LatLonElev position, final String title, final IMarker marker, final int zIndexOffset) {
         final String varName = String.format(Locale.US, "marker%d", varNameSuffix++);
 
         final String cmdString = 
@@ -295,7 +328,7 @@ public class LeafletMapView extends StackPane {
      * @param markerName variable name of the marker
      * @param position new marker position
      */
-    public void moveMarker(final String markerName, final LatLongElev position) {
+    public void moveMarker(final String markerName, final LatLonElev position) {
         final String cmdString = String.format(Locale.US, "%s.setLatLng([%f, %f]);", markerName, position.getLatitude(), position.getLongitude());
 //        System.out.println("moveMarker: " + cmdString);
         execScript(cmdString);
@@ -309,7 +342,7 @@ public class LeafletMapView extends StackPane {
      * @param position new marker position
      * @param marker new marker icon
      */
-    public void updateMarker(final String markerName, final LatLongElev position, final String title, final IMarker marker) {
+    public void updateMarker(final String markerName, final LatLonElev position, final String title, final IMarker marker) {
         // TODO: optimize execScript() calls...
         moveMarker(markerName, position);
         
@@ -350,7 +383,7 @@ public class LeafletMapView extends StackPane {
      * @return variable name of the created track
      */
     public String addTrack(
-            final List<LatLongElev> positions, 
+            final List<LatLonElev> positions, 
             final String color, 
             final String weight, 
             final String opacity, 
@@ -377,7 +410,7 @@ public class LeafletMapView extends StackPane {
         return varName;
     }
     // convenience method using defaults for weight, ...
-    public String addTrack(final List<LatLongElev> positions, final String color, final boolean fitBounds) {
+    public String addTrack(final List<LatLonElev> positions, final String color, final boolean fitBounds) {
         return addTrack(positions, color, DEFAULT_TRACK_WEIGHT, DEFAULT_TRACK_OPACITY, DEFAULT_TRACK_LINECAP, fitBounds);
     }
 
@@ -433,7 +466,7 @@ public class LeafletMapView extends StackPane {
             final String script = StringEscapeUtils.escapeEcmaScript(IOUtils.toString(js, Charset.defaultCharset()));
 
             addScript(script);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -450,7 +483,7 @@ public class LeafletMapView extends StackPane {
             final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
 
             addStyle(style);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -462,7 +495,12 @@ public class LeafletMapView extends StackPane {
      * @return Object returned from web engine
      */
     protected Object execScript(final String script) {
-        return myWebEngine.executeScript(script);
+        try {
+            return myWebEngine.executeScript(script);
+        } catch(Exception ex) {
+            Logger.getLogger(LeafletMapView.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
     
     protected List<MapLayer> getBaselayer() {

@@ -43,9 +43,9 @@ import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.helper.LatLongHelper;
+import tf.gpx.edit.helper.LatLonHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 import tf.helper.javafx.RestrictiveTextField;
@@ -104,7 +104,7 @@ public class FindElevation extends AbstractStage {
 
         // latitude can be N/S 0°0'0.0" - N/S 89°59'59.99" OR N/S 90°0'0.0"
         // minimum is N/S°'"
-        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLongHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
+        waypointLatitudeTxt.setMaxLength(14).setRestrict(LatLonHelper.LAT_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
         final Tooltip latTooltip = new Tooltip("Formats: N/S DD°MM'SS.SS\" or DD°MM'SS.SS\" N/S or +/-dd.dddddd");
         TooltipHelper.updateTooltipBehavior(latTooltip, 0, 10000, 0, true);
@@ -120,7 +120,7 @@ public class FindElevation extends AbstractStage {
 
         // longitude can be E/W 0°0'0.0" - E/W 179°59'59.99" OR E/W 180°0'0.0"
         // minimum is E/W°'"
-        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLongHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
+        waypointLongitudeTxt.setMaxLength(15).setRestrict(LatLonHelper.LON_REGEXP).setErrorTextMode(RestrictiveTextField.ErrorTextMode.HIGHLIGHT);
 
         final Tooltip lonTooltip = new Tooltip("Formats: E/W DDD°MM'SS.SS\" or DDD°MM'SS.SS\" E/W or +/-ddd.dddddd");
         TooltipHelper.updateTooltipBehavior(lonTooltip, 0, 10000, 0, true);
@@ -200,12 +200,12 @@ public class FindElevation extends AbstractStage {
         // 7th row: assign height values
         final Button findButton = new Button("Get elevation");
         findButton.setOnAction((ActionEvent event) -> {
-            if (Double.NaN == LatLongHelper.latFromString(waypointLatitudeTxt.getText())) {
-                elevationVal.setText(LatLongHelper.INVALID_LATITUDE);
-            } else if (Double.NaN == LatLongHelper.lonFromString(waypointLongitudeTxt.getText())) {
-                elevationVal.setText(LatLongHelper.INVALID_LONGITUDE);
+            if (Double.NaN == LatLonHelper.latFromString(waypointLatitudeTxt.getText())) {
+                elevationVal.setText(LatLonHelper.INVALID_LATITUDE);
+            } else if (Double.NaN == LatLonHelper.lonFromString(waypointLongitudeTxt.getText())) {
+                elevationVal.setText(LatLonHelper.INVALID_LONGITUDE);
             } else {
-                final LatLongElev latLong = new LatLongElev(LatLongHelper.latFromString(waypointLatitudeTxt.getText()), LatLongHelper.lonFromString(waypointLongitudeTxt.getText()));
+                final LatLonElev latLong = new LatLonElev(LatLonHelper.latFromString(waypointLatitudeTxt.getText()), LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
                 mySRTMDataPath = srtmPathLbl.getText();
                 myAverageMode = EnumHelper.getInstance().selectedEnumToggleGroup(SRTMDataOptions.SRTMDataAverage.class, avgModeChoiceBox);
 

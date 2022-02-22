@@ -25,10 +25,13 @@
  */
 package tf.gpx.edit.helper;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -39,6 +42,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.magicwerk.brownies.collections.GapList;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -50,12 +54,12 @@ import tf.gpx.edit.items.GPXMeasurable;
  * @author thomas
  */
 public class GPXListHelper {
-    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, ObservableList<T> list) {
-        return concat(into, Arrays.asList(list));
+    public static <T extends GPXLineItem> ObservableList<T> concatObservableList(ObservableList<T> into, ObservableList<T> list) {
+        return concatObservableList(into, Arrays.asList(list));
     }
 
     // https://stackoverflow.com/a/27646247
-    public static <T extends GPXLineItem> ObservableList<T> concat(ObservableList<T> into, List<ObservableList<T>> lists) {
+    public static <T extends GPXLineItem> ObservableList<T> concatObservableList(ObservableList<T> into, List<ObservableList<T>> lists) {
         final ObservableList<T> list = into;
         for (ObservableList<T> l : lists) {
             list.addAll(l);
@@ -63,13 +67,29 @@ public class GPXListHelper {
                 while (c.next()) {
                     if (c.wasAdded()) {
                         // find index where to add - last index of that type
-                        // TDODO: use info from c.getFrom()
+                        T lastItem = null;
                         for (T item : c.getAddedSubList()) {
                             final GPXLineItem parent = item.getParent();
-                            final T lastT = 
-                                    list.stream().filter((t) -> {
+                            // TFE, 20220103: speed up finding the last element of a list
+//                            T lastT = list.stream().filter((t) -> {
+//                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
+//                                    }).reduce((a, b) -> b).orElse(null);
+                            T lastT;
+                            // only find last item again if type changes
+                            if (lastItem == null || !GPXLineItemHelper.isSameTypeAs(parent, lastItem.getParent())) {
+                                // https://stackoverflow.com/a/61085463
+                                final Deque<T> deque = new ArrayDeque<>();
+                                list.stream().forEach(deque::push);
+                                lastT = deque.stream().filter((t) -> {
                                         return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
-                                    }).reduce((a, b) -> b).orElse(null);
+                                    }).findFirst().orElse(null);
+                            } else {
+                                // if parent type doesn't change lastItem is the lastT
+                                lastT = lastItem;
+                            }
+
+                            // TFE, 20220103: further speedup would be possible if we collect all items with same parent type
+                            // in temporary list (LinkedHashSet?) and only do addAll here once it changes
                             int addIndex;
                             if (lastT != null) {
                                 addIndex = list.indexOf(lastT) + 1;
@@ -78,6 +98,9 @@ public class GPXListHelper {
                                 addIndex = 0;
                             }
                             list.add(addIndex, item);
+
+                            // keep track of last item we handled
+                            lastItem = item;
                         }
                     }
                     if (c.wasRemoved()) {
@@ -92,7 +115,7 @@ public class GPXListHelper {
     }
     
     // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
-    public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemList(ObservableList<T> input) {
+    public static <T extends GPXLineItem> ObservableList<GPXLineItem> asGPXLineItemObservableList(ObservableList<T> input) {
         final ObservableList<GPXLineItem> result = input.stream().
                 map(t -> { return (GPXLineItem) t; }).
                 collect(Collectors.toCollection(FXCollections::observableArrayList));
@@ -113,7 +136,7 @@ public class GPXListHelper {
     }
 
     // since there is no down-cast for lists we need to create a new list that listens to changes of the original list...
-    public static <T extends GPXMeasurable> ObservableList<GPXMeasurable> asGPXMeasurableList(ObservableList<T> input) {
+    public static <T extends GPXMeasurable> ObservableList<GPXMeasurable> asGPXMeasurableObservableList(ObservableList<T> input) {
         final ObservableList<GPXMeasurable> result = input.stream().
                 map(t -> { return (GPXMeasurable) t; }).
                 collect(Collectors.toCollection(FXCollections::observableArrayList));
@@ -228,5 +251,25 @@ public class GPXListHelper {
         s.forEachRemaining(holder::accept);
         // we control this, so that Holder::t is only T
         return (T) holder.t;
+    }
+    
+    public static <T> ObservableList<T> initForCapacity(final ObservableList<T> list, final Set<?> set) {
+        if (set != null && set.size() > list.size()) {
+            return FXCollections.observableArrayList(new GapList<>((int) (set.size() * 1.1)));
+        } else {
+            return list;
+        }
+    }
+    
+    public static <T> ObservableList<T> initForCapacity(final ObservableList<T> list, final List<?> set) {
+        if (set != null && set.size() > list.size()) {
+            return FXCollections.observableArrayList(new GapList<>((int) (set.size() * 1.1)));
+        } else {
+            return list;
+        }
+    }
+    
+    public static <T> ObservableList<T> initEmptyList() {
+        return FXCollections.observableArrayList(new GapList<>());
     }
 }

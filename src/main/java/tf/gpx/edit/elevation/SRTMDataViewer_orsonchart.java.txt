@@ -1,0 +1,470 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package tf.gpx.edit.elevation;
+
+import java.awt.Font;
+import java.awt.RenderingHints;
+import java.io.File;
+import java.text.DecimalFormat;
+import java.text.Format;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
+import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import me.himanshusoni.gpxparser.modal.Bounds;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.jfree.chart3d.Chart3D;
+import org.jfree.chart3d.Chart3DFactory;
+import org.jfree.chart3d.Orientation;
+import org.jfree.chart3d.axis.NumberAxis3D;
+import org.jfree.chart3d.axis.ValueAxis3D;
+import org.jfree.chart3d.data.function.Function3D;
+import org.jfree.chart3d.fx.Chart3DCanvas;
+import org.jfree.chart3d.fx.Chart3DViewer;
+import org.jfree.chart3d.graphics3d.Dimension3D;
+import org.jfree.chart3d.graphics3d.ViewPoint3D;
+import org.jfree.chart3d.legend.LegendAnchor;
+import org.jfree.chart3d.plot.XYZPlot;
+import org.jfree.chart3d.renderer.RainbowScale;
+import org.jfree.chart3d.renderer.xyz.SurfaceRenderer;
+import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.worker.GPXAssignElevationWorker;
+import tf.helper.javafx.ShowAlerts;
+
+/**
+ * Show a set of SRTM data in a separate stage.
+ * 
+ * Two options:
+ * 
+ * - select a SRTM file and show it
+ * - show SRTM data for the area covered by a gpxLineItem together with tracks / routes / waypoints from it
+ * 
+ * @author Thomas Feuster
+ */
+public class SRTMDataViewer_orsonchart {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private final static SRTMDataViewer_orsonchart INSTANCE = new SRTMDataViewer_orsonchart();
+    
+    private final static float ZOOM_STEP = 0.9f;
+    private final static float MOVE_STEP = 250f;
+    
+    private final static double ITEM_BORDER = 0.2;
+    
+    private static final Format AXIS_FORMATTER = new DecimalFormat("#0.0'" + LatLonHelper.DEG + "'; #0.0'" + LatLonHelper.DEG + "'");
+
+    private SRTMDataViewer_orsonchart() {
+        // Exists only to defeat instantiation.
+    }
+
+    public static SRTMDataViewer_orsonchart getInstance() {
+        return INSTANCE;
+    }
+    
+    public void showGPXLineItemWithSRTMData(final GPXLineItem gpxLineItem) {
+        if (gpxLineItem.isGPXMetadata()) {
+            // nothing here for you...
+            return;
+        }
+
+        final GPXAssignElevationWorker visitor = new GPXAssignElevationWorker(GPXAssignElevationWorker.WorkMode.CHECK_DATA_FILES);
+        gpxLineItem.acceptVisitor(visitor);
+
+        final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
+        
+        // calculate min / max lat & lon
+        double latMin = Float.MAX_VALUE, latMax = -Float.MAX_VALUE;
+        double lonMin = Float.MAX_VALUE, lonMax = -Float.MAX_VALUE;
+        boolean dataFound = false;
+        for (String dataFile : dataFiles) {
+            // read that data into store
+            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(dataFile, new SRTMDataOptions());
+            if (srtmData != null) {
+                dataFound = true;
+                
+                // expand outer bounds of lat & lon
+                // TODO: not working on west & sothern hemisphere?
+                final int latitude = SRTMDataHelper.getLatitudeForName(dataFile);
+                final int longitude = SRTMDataHelper.getLongitudeForName(dataFile);
+                latMax = Math.max(latMax, latitude);
+                lonMax = Math.max(lonMax, longitude);
+                latMin = Math.min(latMin, latitude);
+                lonMin = Math.min(lonMin, longitude);
+            }
+        }
+        // max lat & lon are one bigger since it marks the end of the srtm data set
+        latMax++;
+        lonMax++;
+
+        // TFE, 20220601: lets take into account the bounding box of the element to avoid too much stuff around
+        final Bounds itemBounds = gpxLineItem.getBounds();
+        // leave some space at the edges...
+        latMax = Math.min(latMax, itemBounds.getMaxLat() + ITEM_BORDER);
+        lonMax = Math.min(lonMax, itemBounds.getMaxLon() + ITEM_BORDER);
+        latMin = Math.max(latMin, itemBounds.getMinLat() - ITEM_BORDER);
+        lonMin = Math.max(lonMin, itemBounds.getMinLon() - ITEM_BORDER);
+
+        // show all of it
+        showStage(gpxLineItem.getName(), latMin, lonMin, latMax, lonMax, gpxLineItem);
+    }
+    
+    public void showSRTMData() {
+        // show file selection dialogue to getAsString SRTM data file
+        final List<File> hgtFiles = getFiles();
+        if (hgtFiles.isEmpty()) {
+            return;
+        }
+        
+        String hgtFileName;
+        // check if really hgt content
+        for (File hgtFile : hgtFiles) {
+            hgtFileName = hgtFile.getAbsolutePath();
+            if (!SRTMDataReader.getInstance().checkSRTMDataFile(FilenameUtils.getBaseName(hgtFileName), FilenameUtils.getFullPath(hgtFileName))) {
+                showAlert(FilenameUtils.getName(hgtFileName));
+                return;
+            }
+        }
+        
+        final SRTMDataOptions srtmOptions = new SRTMDataOptions();
+        
+        // support multiple data files, not only first one
+        double latMin = Float.MAX_VALUE, latMax = -Float.MAX_VALUE;
+        double lonMin = Float.MAX_VALUE, lonMax = -Float.MAX_VALUE;
+        boolean dataFound = false;
+        for (File hgtFile : hgtFiles) {
+            hgtFileName = hgtFile.getAbsolutePath();
+            // read that data into store
+            SRTMData srtmData = SRTMDataStore.getInstance().getDataForName(FilenameUtils.getBaseName(hgtFileName), srtmOptions);
+            // if not working, try to read data locally
+            if (srtmData == null) {
+                srtmData = SRTMDataReader.getInstance().readSRTMData(FilenameUtils.getBaseName(hgtFileName), FilenameUtils.getFullPath(hgtFileName));
+                if (srtmData != null) {
+                    // add new data to data store
+                    SRTMDataStore.getInstance().addMissingDataToStore(srtmData);
+                }
+            }
+            if (srtmData != null) {
+                dataFound = true;
+                
+                // expand outer bounds of lat & lon
+                final int latitude = SRTMDataHelper.getLatitudeForName(FilenameUtils.getBaseName(hgtFileName));
+                final int longitude = SRTMDataHelper.getLongitudeForName(FilenameUtils.getBaseName(hgtFileName));
+                latMax = Math.max(latMax, latitude);
+                lonMax = Math.max(lonMax, longitude);
+                latMin = Math.min(latMin, latitude);
+                lonMin = Math.min(lonMin, longitude);
+            }
+        }
+        // max lat & lon are one bigger since it marks the end of the srtm data set
+        latMax++;
+        lonMax++;
+        
+        if (!dataFound) {
+            showAlert(FilenameUtils.getName(hgtFiles.get(0).getAbsolutePath()));
+            return;
+        }
+        
+        showStage(hgtFiles.get(0).getName(), latMin, lonMin, latMax, lonMax, null);
+    }
+        
+    private void showStage(final String title, final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
+//        File names refer to the latitude and longitude of the lower left corner of the tile -
+//        e.g. N37W105 has its lower left corner at 37 degrees north latitude and 105 degrees west longitude.
+
+        // finally, we have something to show!
+        final Stage stage = new Stage();
+        // TFE, 20200120: add file name (srtm or gpx) to title
+        stage.setTitle(SRTMDataViewer_orsonchart.class.getSimpleName() + " - " + title);
+
+        // JavaFX
+        final StackPane imagePane = new StackPane();
+        // orson-chart
+        imagePane.getChildren().add(getChartFromSRTMData(latMin, lonMin, latMax, lonMax, gpxLineItem));
+        
+        // some explanation for rote & zoom
+        final Label label = new Label("LftBtn: Rotate X+Y+Z" + System.lineSeparator() + "RgtBtn: Shift X+Y" + System.lineSeparator() + "Wheel: Zoom X+Y+Z" + System.lineSeparator() + "ShiftWheel: Zoom Z");
+        label.getStyleClass().add("srtm-viewer-label");
+        StackPane.setAlignment(label, Pos.TOP_LEFT);
+        imagePane.getChildren().add(label);
+        label.toFront();
+
+        final Button closeButton = new Button("Close");
+        closeButton.setOnAction((ActionEvent event) -> {
+            stage.close();
+        });
+        
+        final VBox vbox = new VBox();
+        vbox.setPadding(new Insets(10, 10, 10, 10));
+        vbox.setAlignment(Pos.CENTER);
+        vbox.getStyleClass().add("srtm-viewer-button");
+        
+        vbox.getChildren().addAll(imagePane, closeButton);
+        imagePane.prefHeightProperty().bind(Bindings.subtract(vbox.heightProperty(), closeButton.heightProperty()));
+        imagePane.prefWidthProperty().bind(vbox.widthProperty());
+        
+        final Scene scene = new Scene(vbox);
+        scene.getStylesheets().add(SRTMDataViewer_orsonchart.class.getResource("/GPXEditor.min.css").toExternalForm());
+        vbox.prefHeightProperty().bind(scene.heightProperty());
+        vbox.prefWidthProperty().bind(scene.widthProperty());
+        scene.setOnKeyPressed((KeyEvent t) -> {
+            // TFE, 20220109: add support for wsad keys to change viewpoint & tpf to change viewmode
+            switch (t.getCode()) {
+                case ESCAPE:
+                    stage.close();
+                    break;
+            }
+        });
+
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.show();
+
+        // needs to be done after show()... to not mess up jzy3d
+        stage.setWidth(800);
+        stage.setHeight(800);
+
+        // needs to be set to allow shrinking scene and shrinking content as well
+        // BUT needs to be set after show to not mess up jzy3d
+        imagePane.setMinHeight(0);
+        imagePane.setMinWidth(0);
+        vbox.setMinHeight(0);
+        vbox.setMinWidth(0);
+    }
+    
+    private List<File> getFiles() {
+        final List<File> result = new ArrayList<>();
+
+        final List<String> extFilter = Arrays.asList("*." + SRTMDataStore.HGT_EXT);
+        final List<String> extValues = Arrays.asList(SRTMDataStore.HGT_EXT);
+
+        final File curPath = new File(GPXEditorPreferences.SRTM_DATA_PATH.getAsString());
+        final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open HGT-File");
+        fileChooser.setInitialDirectory(curPath);
+        // das sollte auch in den Worker gehen...
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("HGT-Files", extFilter));
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
+
+        if(!CollectionUtils.isEmpty(selectedFiles)){
+            for (File selectedFile : selectedFiles) {
+                if (!extValues.contains(FilenameUtils.getExtension(selectedFile.getName()).toLowerCase())) {
+                    showAlert(selectedFile.getName());
+                } else {
+                    result.add(selectedFile);
+                }
+            }
+        } else {
+            System.out.println("No Files selected");
+        }
+        
+        return result;
+    }
+    
+    private void showAlert(final String filename) {
+        final ButtonType buttonOK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        ShowAlerts.getInstance().showAlert(Alert.AlertType.ERROR, "Error opening file", "No SRTM data file", filename, buttonOK);
+    }
+    
+    // TFE, 20220109: second attempt at orson charts
+    //https://github.com/jfree/orson-charts-fx
+    private MyChart3DViewer getChartFromSRTMData(
+            final double latMin, 
+            final double lonMin, 
+            final double latMax, 
+            final double lonMax, 
+            final GPXLineItem gpxLineItem) {
+        final IElevationProvider elevation = new ElevationProviderBuilder(
+                new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY),
+                new SRTMDataOptions()).build();
+        
+        // actual function to plot
+        final Function3D function = (double x, double z) -> {
+            final float height;
+            height = Math.max(0f, elevation.getElevationForCoordinate(z, x).floatValue());
+            return height;
+        };
+        
+        // tricky from - to naming for graph
+        double titlelatMin, titlelatMax;
+        if (latMin > 0) {
+            titlelatMin = latMin;
+            titlelatMax = latMax;
+        } else {
+            titlelatMax = latMin;
+            titlelatMin = latMax;
+        }
+        double titlelonMin, titlelonMax;
+        if (lonMin > 0) {
+            titlelonMin = lonMin;
+            titlelonMax = lonMax;
+        } else {
+            titlelonMax = lonMin;
+            titlelonMin = lonMax;
+        }
+        String title = 
+                SRTMDataHelper.getNameForCoordinate(titlelatMin, titlelonMin) + 
+                " - " + 
+                SRTMDataHelper.getNameForCoordinate(titlelatMax, titlelonMax);
+                
+        String lonLabel = "Lon - ";
+        if (lonMin > 0) {
+            lonLabel += "E";
+        } else {
+            lonLabel += "W";
+        }
+        String latLabel = "Lat - ";
+        if (latMin > 0) {
+            latLabel += "N";
+        } else {
+            latLabel += "S";
+        }
+        
+        final Chart3D chart = Chart3DFactory.createSurfaceChart(
+                title, 
+                "", 
+                function, lonLabel, "Height [m]", latLabel);
+        
+        // now set value for axis, ...
+        final XYZPlot plot = (XYZPlot) chart.getPlot();
+        plot.setDimensions(new Dimension3D(18, 11, 18));
+        
+        ValueAxis3D axis = plot.getXAxis();
+        axis.setRange(lonMin, lonMax + 0.99f);
+        Font axisFont = axis.getLabelFont();
+        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+        if(axis instanceof NumberAxis3D) {
+            ((NumberAxis3D) axis).setTickLabelFormatter(AXIS_FORMATTER);
+        }
+
+        axis = plot.getZAxis();
+        axis.setRange(latMin, latMax + 0.99f);
+        axisFont = axis.getLabelFont();
+        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+        if(axis instanceof NumberAxis3D) {
+            ((NumberAxis3D) axis).setTickLabelFormatter(AXIS_FORMATTER);
+        }
+
+        axis = plot.getYAxis();
+        axisFont = axis.getLabelFont();
+        axis.setLabelFont(new Font(axisFont.getName(), axisFont.getStyle(), ((int) (axisFont.getSize()*1.5))));
+        
+        // beautify plot
+        SurfaceRenderer renderer = (SurfaceRenderer) plot.getRenderer();
+
+        // we don't want to plot the full set, only part of it
+        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
+        final int steps = dataCount / 10;
+        renderer.setXSamples(steps);
+        renderer.setZSamples(steps);
+        
+        // some color, please
+        renderer.setColorScale(new RainbowScale(renderer.findYRange(plot.getDataset())));
+
+        // improve speed by switching of outlines & antialiasing
+        renderer.setDrawFaceOutlines(false);
+        final RenderingHints renderingHints = chart.getRenderingHints();
+        renderingHints.remove(RenderingHints.KEY_ANTIALIASING);
+        renderingHints.put(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_OFF);
+        renderingHints.remove(RenderingHints.KEY_TEXT_ANTIALIASING);
+        renderingHints.put(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        chart.setRenderingHints(renderingHints);
+        
+        chart.setLegendPosition(LegendAnchor.BOTTOM_RIGHT, 
+                Orientation.VERTICAL);
+
+        // from right upfront please
+        chart.setViewPoint(ViewPoint3D.createAboveViewPoint(50d));
+        
+        final MyChart3DViewer chart3DViewer = new MyChart3DViewer(chart, true);
+
+        // add waypoints from gpxFile (if any)
+//        if (gpxFile != null) {
+//            XYZSeriesCollection<String> dataset = new XYZSeriesCollection<>();
+//            XYZSeries<String> gpxTrackData = new XYZSeries<>("Track");
+//            for (GPXWaypoint waypoint : gpxFile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)) {
+//                // x,y,z -> lon, height, lat
+//                gpxTrackData.add(waypoint.getLongitude(), waypoint.getElevation(), waypoint.getLatitude());
+//            }
+//            dataset.add(gpxTrackData);
+//            
+//            final Chart3D gpxTrack = Chart3DFactory.createXYZLineChart("", 
+//                    "", dataset, "", "", "");
+//            
+//            chart3DViewer.addChart(gpxTrack);
+//        }
+
+        return chart3DViewer;
+    }
+        
+    class MyChart3DViewer extends Chart3DViewer {
+        /**
+         * Creates a new viewer to display the supplied chart in JavaFX.
+         * 
+         * @param chart  the chart ({@code null} not permitted). 
+         */
+        public MyChart3DViewer(Chart3D chart) {
+            super(chart, true);
+        }
+
+        /**
+         * Creates a new viewer instance.
+         * 
+         * @param chart  the chart ({@code null} not permitted).
+         * @param contextMenuEnabled  enable the context menu?
+         */
+        public MyChart3DViewer(Chart3D chart, boolean contextMenuEnabled) {
+            super(chart, contextMenuEnabled);
+        }
+        
+        public void addChart(final Chart3D chart) {
+            getChildren().add(new Chart3DCanvas(chart));
+        }
+    }
+}

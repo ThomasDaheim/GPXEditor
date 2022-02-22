@@ -11,6 +11,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import tf.gpx.edit.algorithms.WaypointReduction;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use
@@ -35,7 +36,7 @@ public class GPXEditorParameters {
     private boolean mergeFiles = false;
     private boolean mergeTracks = false;
     private boolean reduceTracks = false;
-    private GPXAlgorithms.ReductionAlgorithm reduceAlgorithm;
+    private WaypointReduction.ReductionAlgorithm reduceAlgorithm;
     private double reduceEpsilon = Double.MIN_VALUE;
     private boolean fixTracks = false;
     private double fixDistance = Double.MIN_VALUE;
@@ -148,11 +149,11 @@ public class GPXEditorParameters {
                 switch (value) {
                     case "DouglasPeucker":
                         // System.out.println("Option reduceAlgorithm found: " + value);
-                        reduceAlgorithm = GPXAlgorithms.ReductionAlgorithm.DouglasPeucker;
+                        reduceAlgorithm = WaypointReduction.ReductionAlgorithm.DouglasPeucker;
                         break;
                     case "ReumannWitkam":
                         // System.out.println("Option reduceAlgorithm found: " + value);
-                        reduceAlgorithm = GPXAlgorithms.ReductionAlgorithm.ReumannWitkam;
+                        reduceAlgorithm = WaypointReduction.ReductionAlgorithm.ReumannWitkam;
                         break;
                     default:
                         System.out.println("Value \"" + value + "\" for option reduceAlgorithm not recognized.");
@@ -260,7 +261,7 @@ public class GPXEditorParameters {
         return reduceTracks;
     }
 
-    public GPXAlgorithms.ReductionAlgorithm getReduceAlgorithm() {
+    public WaypointReduction.ReductionAlgorithm getReduceAlgorithm() {
         return reduceAlgorithm;
     }
 

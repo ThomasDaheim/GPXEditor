@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -30,20 +30,25 @@
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="A" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
-                  <Menu fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
-                    <items>
-                      <MenuItem fx:id="exportKMLMenu" mnemonicParsing="false" text="As KML" />
-                        <MenuItem fx:id="exportCSVMenu" mnemonicParsing="false" text="As CSV" />
-                    </items>
-                  </Menu>
-                  <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="saveAllFilesMenu" mnemonicParsing="false" text="Save All">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator></MenuItem>
+                <MenuItem fx:id="exportFileMenu" mnemonicParsing="false" text="Export">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="E" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="importFileMenu" mnemonicParsing="false" text="Import">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="I" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                  <MenuItem fx:id="closeFileMenu" mnemonicParsing="false" text="Close" />
                   <MenuItem fx:id="clearFileMenu" mnemonicParsing="false" text="Clear List" />
                   <SeparatorMenuItem mnemonicParsing="false" />
-                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences" />
+                  <MenuItem fx:id="preferencesMenu" mnemonicParsing="false" text="Preferences">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="P" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <Menu fx:id="recentFilesMenu" mnemonicParsing="false" text="Recent Files" />
                   <SeparatorMenuItem mnemonicParsing="false" />
@@ -79,33 +84,27 @@
             </Menu>
             <Menu mnemonicParsing="false" text="Algorithms">
               <items>
-                  <MenuItem fx:id="checkTrackMenu" mnemonicParsing="false" text="Check Track" />
-                  <Menu fx:id="fixMenu" mnemonicParsing="false" text="Fix">
-                    <items>
-                        <MenuItem fx:id="fixTracksMenu" mnemonicParsing="false" text="Items">
-                           <accelerator>
-                              <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator>
-                        </MenuItem>
-                      <MenuItem fx:id="fixFilesMenu" mnemonicParsing="false" text="Files of Items" />
-                    </items>
-                  </Menu>
-                  <Menu mnemonicParsing="false" text="Stationaries">
-                    <items>
-                        <MenuItem fx:id="findStationariesMenu" mnemonicParsing="false" text="Find" />
-                        <MenuItem fx:id="replaceStationariesMenu" mnemonicParsing="false" text="Replace by Center" />
-                    </items>
-                  </Menu>
-                  <Menu fx:id="reduceMenu" mnemonicParsing="false" text="Reduce">
-                    <items>
-                        <MenuItem fx:id="reduceTracksMenu" mnemonicParsing="false" text="Items">
-                           <accelerator>
-                              <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                           </accelerator>
-                        </MenuItem>
-                      <MenuItem fx:id="reduceFilesMenu" mnemonicParsing="false" text="Files of Items" />
-                    </items>
-                  </Menu>
+                  <MenuItem fx:id="fixMenu" mnemonicParsing="false" text="Fix Garmin Crap">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="F" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="reduceMenu" mnemonicParsing="false" text="Reduce">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="smoothenMenu" mnemonicParsing="false" text="Smooth">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
+                  <MenuItem fx:id="stationariesMenu" mnemonicParsing="false" text="Find Stationaries" />
+                  <MenuItem fx:id="matchMenu" mnemonicParsing="false" text="Match to path">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="M" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                  </MenuItem>
               </items>
             </Menu>
             <Menu mnemonicParsing="false" text="Elevation">

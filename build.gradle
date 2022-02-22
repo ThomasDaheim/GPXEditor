@@ -4,14 +4,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
-apply plugin: 'maven'
+//apply plugin: 'maven' // - to be removed for Gradle 7.*
 apply plugin: 'maven-publish'
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/179
@@ -40,7 +40,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.5'
+version='5.6'
 
 repositories {
     mavenLocal() {
@@ -52,16 +52,11 @@ repositories {
         }
     }
     mavenCentral()
-    jcenter()
-    // bintray
-    maven {
-        url "https://dl.bintray.com"
-    }
     // You may define additional repositories, or even remove "mavenCentral()".
     // Read more about repositories here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:repositories
     maven {
-        url "http://maven.jzy3d.org/releases"
+        url "https://maven.jzy3d.org/releases"
     }
 }
 
@@ -70,32 +65,29 @@ dependencies {
 //    def javafx_version='11.0.2'
 //    def javafx_version='14'
     def javafx_version='15.0.1'
-    compile "org.openjfx:javafx-base:$javafx_version:$platform"
-    compile "org.openjfx:javafx-graphics:$javafx_version:$platform"
-    compile "org.openjfx:javafx-controls:$javafx_version:$platform"
-    compile "org.openjfx:javafx-fxml:$javafx_version:$platform"
-    compile "org.openjfx:javafx-swing:$javafx_version:$platform"
-    compile "org.openjfx:javafx-web:$javafx_version:$platform"
-    compile "org.openjfx:javafx-media:$javafx_version:$platform"
+//    def javafx_version='17.0.1'
+    implementation "org.openjfx:javafx-base:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-graphics:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-controls:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-fxml:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-swing:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-web:$javafx_version:$platform"
+    implementation "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    compile 'tf.JavaHelper:JavaHelper:1.13'
+    implementation 'tf.JavaHelper:JavaHelper:1.14'
 
-    // The production code uses the SLF4J logging API at compile time
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile 'commons-cli:commons-cli:1.4'
-    compile 'commons-io:commons-io:2.6'
-    compile 'org.apache.commons:commons-lang3:3.9'
-    compile 'org.apache.commons:commons-collections4:4.4'
-    compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
-    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    compile group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
-    compile 'me.himanshusoni.gpxparser:gpx-parser:1.13'
-    compile 'org.jzy3d:jzy3d-api:1.0.2'
-    compile 'org.jzy3d:jzy3d-javafx:1.0.2'
-    compile group: 'org.controlsfx', name: 'controlsfx', version: '11.0.1'
+    implementation 'commons-cli:commons-cli:1.5.0'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.9'
+    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
+    implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.1'
     
-    compile 'de.jensd:fontawesomefx:8.9'
+    implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
     // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
 //    compile 'de.jensd:fontawesomefx-commons:9.1.2'
@@ -108,19 +100,39 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.12.1'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.1'
-    compile group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
-    compile group: 'org.jfxtras', name: 'jfxtras-controls', version: '14-r1'
-    compile group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
-    compile 'uk.com.robust-it:cloning:1.9.12'
-    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
-    compile group: 'org.eclipse.persistence', name: 'eclipselink', version: '2.7.4'
-    compile group: 'org.jfxtras', name: 'jmetro', version: '11.6.14'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.0'
+    implementation group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
+    implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '15-r2'
+    implementation group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
+    implementation group: 'org.jfxtras', name: 'jmetro', version: '11.6.15'
+
+    implementation 'uk.com.robust-it:cloning:1.9.12'
     
-    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    implementation group: 'org.im4java', name: 'im4java', version: '1.4.0'
+    
+    // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
+    implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
+    
+//    implementation 'org.jzy3d:jzy3d-api:1.0.3'
+//    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
+    
+////    // TFE, 20220109: orson charts once again
+//    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
+//    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
+
+    // TFE, 20220115: 3rd alternative: fxyz3d
+    implementation 'org.fxyz3d:fxyz3d:0.5.4'
+    
+    // TFE, 20220201: faster list
+    implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.16'
+    
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    // TFE, 20220205: not working, "No test cases executed" after all the code changes...
+    // new versions of the code are in "junit5.zip" for some later time when I have stamina to check this fuck-up
+//    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     // TFE, 20210216: capture System.err() easily
-    testCompile group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
+    testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
 }
 
 task unzip(type: Copy) {
@@ -185,7 +197,13 @@ run {
 //    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
 }
 
+// TFE, 20211102: not working like below
+//task(runSingle) {
+//    args = ["C:\\WUTemp\\feuster.com\\Pictures*C:\\WUTemp\\Temp"]
+//}
+
 test {
+//    exclude '**/*'
     doFirst {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
         jvmArgs = jvmArgs.plus(newArgs)
@@ -223,7 +241,7 @@ jar {
             'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
             'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}",
             'App-Name'       : appName,
-            'App-Version'    : version,
+            'App-Version'    : archiveVersion,
             'App-URL'        : "https://github.com/ThomasDaheim/GPXEditor"
         )
     }
@@ -241,4 +259,4 @@ sourceSets {
     }  
 }
 
-build.finalizedBy(install)
+build.finalizedBy(installDist)

@@ -52,7 +52,9 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
         MERGE_DELETE_ROUTES,
         MERGE_DELETE_METADATA,
         UPDATE_METADATA,
-        UPDATE_WAYPOINTS;
+        UPDATE_WAYPOINTS,
+        // new action for smoothing tracks / routes
+        SMOOTH_WAYPOINTS;
         
         @Override
         public String toString() {
@@ -64,6 +66,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case UPDATE_LINEITEM_INFORMATION:
                 case UPDATE_METADATA:
                 case UPDATE_WAYPOINTS:
+                case SMOOTH_WAYPOINTS:
                     return "Update";
                 case CONVERT_MEASURABLES:
                     return "Convert";
@@ -89,6 +92,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
                 case DELETE_WAYPOINTS:
                 case INVERT_SELECTED_WAYPOINTS:
                 case UPDATE_WAYPOINTS:
+                case SMOOTH_WAYPOINTS:
                     return "waypoints";
                 case UPDATE_LINEITEM_INFORMATION:
                     return "items";
@@ -157,5 +161,9 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     @Override
     public State getStateForFailedUndo() {
         return State.STUCK_IN_UNDO;
+    }
+    
+    protected LineItemAction getAction() {
+        return myAction;
     }
 }

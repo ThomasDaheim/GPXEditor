@@ -5,10 +5,11 @@ import java.util.logging.Logger;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
  * Basic functions to calculate distances, angles, bearings, areas on a globe
- Distances can be calculated using Haversine or Vincenty algorithms
+ * Distances can be calculated using Haversine or Vincenty algorithms
  */
 public class EarthGeometry {
     private final static EarthGeometry INSTANCE = new EarthGeometry();
@@ -68,24 +69,24 @@ public class EarthGeometry {
      * 
      * Using
      * @see <a href="http://en.wikipedia.org/wiki/Spherical_law_of_cosines">Wikipedia on the Spherical Law Of Cosines</a>
- approx. EarthLongRadius spherical earth. Next best thing would be Vincenty's Formulae...
+     * approx. EarthLongRadius spherical earth. Next best thing would be Vincenty's Formulae...
      * 
      * @param p1 first point
      * @param p2 second point
-     * @return the distanceGPXWaypoints, in meters
+     * @return the distance, in meters
      */
-    public static double distanceGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
+    public static double distance(final GPXWaypoint p1, final GPXWaypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
         // delegate to waypoint function
-        return distanceWaypoints(p1.getWaypoint(), p2.getWaypoint());
+        return distance(p1.getWaypoint(), p2.getWaypoint());
     }
-    public static double distanceWaypoints(final Waypoint p1, final Waypoint p2) {
+    public static double distance(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
-        return distanceWaypointsForAlgorithm(p1, p2, getInstance().myAlgorithm);
+        return distanceForAlgorithm(p1, p2, getInstance().myAlgorithm);
     }
-    public static double distanceWaypointsForAlgorithm(final Waypoint p1, final Waypoint p2, final DistanceAlgorithm algorithm) {
+    public static double distanceForAlgorithm(final Waypoint p1, final Waypoint p2, final DistanceAlgorithm algorithm) {
         if ((p1 == null) || (p2 == null)) return 0;
         
         double result;
@@ -105,7 +106,7 @@ public class EarthGeometry {
         
         return result;
     }
-    public double smallDistanceApproximationDistance (final Waypoint p1, final Waypoint p2) {
+    private double smallDistanceApproximationDistance (final Waypoint p1, final Waypoint p2) {
         // https://jonisalonen.com/2014/computing-distance-between-coordinates-can-be-simple-and-fast/
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
@@ -131,7 +132,7 @@ public class EarthGeometry {
                 
         return FastMath.sqrt(xDiff*xDiff + yDiff*yDiff + zDiff*zDiff);
     }
-    public double haversineDistance(final Waypoint p1, final Waypoint p2) {
+    private double haversineDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
         final double lon1 = FastMath.toRadians(p1.getLongitude());
@@ -146,7 +147,7 @@ public class EarthGeometry {
         //return 2.0 * Math.atan2(Math.sqrt(EarthLongRadius), Math.sqrt(1.0-EarthLongRadius)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
         return 2.0 * FastMath.atan2(FastMath.sqrt(a), FastMath.sqrt(1.0-a)) * (EarthAverageRadius + (p1.getElevation() + p2.getElevation())/2.0);
     }
-    public double vincentyDistance(final Waypoint p1, final Waypoint p2) {
+    private double vincentyDistance(final Waypoint p1, final Waypoint p2) {
         final double lat1 = FastMath.toRadians(p1.getLatitude());
         final double lat2 = FastMath.toRadians(p2.getLatitude());
         final double lon1 = FastMath.toRadians(p1.getLongitude());
@@ -182,7 +183,7 @@ public class EarthGeometry {
         } while (FastMath.abs(lbd - lbdp) > VincentyAccuracy && --iterationLimit > 0);
 
         if (iterationLimit == 0) {
-            Logger.getLogger(EarthGeometry.class.getName()).log(Level.SEVERE, null, "Vincenty algorithm didn't convert. Using result nevertheless.");
+            Logger.getLogger(EarthGeometry.class.getName()).log(Level.SEVERE, null, "Vincenty algorithm didn't converge. Using result nevertheless.");
         }
 
         final double uSq = cosSqAlpha * (EarthLongRadius2 - EarthShortRadius2) / EarthShortRadius2;
@@ -195,6 +196,38 @@ public class EarthGeometry {
 
         // add height difference via pythagoras
         return FastMath.sqrt(EarthShortRadius2 * A*A * (sgm - dsgm)*(sgm - dsgm) + elevDiff*elevDiff);
+    }
+    // TFE, 20210809: calculate distance also for IGeoCoordinate values
+    public static double distance(final IGeoCoordinate c1, final IGeoCoordinate c2) {
+        if ((c1 == null) || (c2 == null)) return 0;
+        
+        final Waypoint p1 = new Waypoint(c1.getLatitude(), c1.getLongitude());
+        p1.setElevation(c1.getElevation());
+        final Waypoint p2 = new Waypoint(c2.getLatitude(), c2.getLongitude());
+        p2.setElevation(c2.getElevation());
+        
+        return distance(p1, p2);
+    }
+    
+    // "flat" distance without taking elevation diff into account (only realy meaningful for small distances...)
+    public static double distance2D(final IGeoCoordinate c1, final IGeoCoordinate c2) {
+        final IGeoCoordinate c1_flat = c1.cloneMe();
+        c1_flat.setElevation(0.0);
+
+        final IGeoCoordinate c2_flat = c2.cloneMe();
+        c2_flat.setElevation(0.0);
+        
+        return distance(c1, c2);
+    }
+    
+    public static double elevationAngle(final IGeoCoordinate c1, final IGeoCoordinate c2) {
+        final double elevation_diff = c2.getElevation() - c1.getElevation();
+        if (elevation_diff == 0.0) {
+            return 0.0;
+        }
+        final double distance2D = distance2D(c1, c2);
+
+        return FastMath.toDegrees(FastMath.atan(elevation_diff / distance2D));
     }
     
     /**
@@ -211,19 +244,27 @@ public class EarthGeometry {
      *     p2 = (48.857, 2.351);
      *     bearing(p1, p2) = 156.2°
      */
-    public static double bearingGPXWaypoints(final GPXWaypoint p1, final GPXWaypoint p2) {
+    public static double bearing(final GPXWaypoint p1, final GPXWaypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
         // delegate to waypoint function
-        return bearingWaypoints(p1.getWaypoint(), p2.getWaypoint());
+        return bearing(p1.getWaypoint(), p2.getWaypoint());
     }
-    public static double bearingWaypoints(final Waypoint p1, final Waypoint p2) {
+    public static double bearing(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
         // map angle on 0 ... 360
-        return (angleBetweenWaypoints(p1, p2) + 360.0) % 360.0;
+        return (angleBetween(p1, p2) + 360.0) % 360.0;
     }
-    private static double angleBetweenWaypoints(final Waypoint p1, final Waypoint p2) {
+    public static double bearing(final IGeoCoordinate c1, final IGeoCoordinate c2) {
+        if ((c1 == null) || (c2 == null)) return 0;
+        
+        final Waypoint p1 = new Waypoint(c1.getLatitude(), c1.getLongitude());
+        final Waypoint p2 = new Waypoint(c2.getLatitude(), c2.getLongitude());
+        
+        return bearing(p1, p2);
+    }
+    private static double angleBetween(final Waypoint p1, final Waypoint p2) {
         if ((p1 == null) || (p2 == null)) return 0;
         
         final double lat1 = FastMath.toRadians(p1.getLatitude());
@@ -245,34 +286,34 @@ public class EarthGeometry {
      * @param a first point
      * @param b second point
      * @param accuracy the necessary accuracy
-     * @return the distanceGPXWaypoints, in meters
+     * @return the distance, in meters
      */
-    public static double distanceToGreatCircleGPXWaypoints(
+    public static double distanceToGreatCircle(
             final GPXWaypoint p,
             final GPXWaypoint a,
             final GPXWaypoint b,
             final double accuracy) {
         // delegate to waypoint function
-        return distanceToGreatCircleWaypoints(p.getWaypoint(), a.getWaypoint(), b.getWaypoint(), accuracy);
+        return distanceToGreatCircle(p.getWaypoint(), a.getWaypoint(), b.getWaypoint(), accuracy);
     }
-    public static double distanceToGreatCircleWaypoints(
+    public static double distanceToGreatCircle(
             final Waypoint p,
             final Waypoint a,
             final Waypoint b,
             final double accuracy) {
         
         // check if distances are really big enough to use spherical geometry
-        final double distAB = EarthGeometry.distanceWaypoints(a, b);
-        final double distPA = EarthGeometry.distanceWaypoints(p, a);
-        final double distPB = EarthGeometry.distanceWaypoints(p, b);
+        final double distAB = EarthGeometry.distance(a, b);
+        final double distPA = EarthGeometry.distance(p, a);
+        final double distPB = EarthGeometry.distance(p, b);
         if ((distAB == 0.0) || (distPA == 0.0) || (distPB == 0.0)) return 0.0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;
 
         // https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
         final double d13 = distPA / effectiveRadius;
-        final double t13 = FastMath.toRadians(bearingWaypoints(a, p));
-        final double t12 = FastMath.toRadians(bearingWaypoints(a, b));
+        final double t13 = FastMath.toRadians(bearing(a, p));
+        final double t12 = FastMath.toRadians(bearing(a, b));
         
         /*
         System.out.println("------------------------------------");
@@ -296,23 +337,23 @@ public class EarthGeometry {
      * @param accuracy the necessary accuracy
      * @return the area, in square meters
      */
-    public static double triangleAreaGPXWaypoints(
+    public static double triangleArea(
             final GPXWaypoint a,
             final GPXWaypoint b,
             final GPXWaypoint c,
             final double accuracy) {
         // delegate to waypoint function
-        return triangleAreaWaypoints(a.getWaypoint(), b.getWaypoint(), c.getWaypoint(), accuracy);
+        return triangleArea(a.getWaypoint(), b.getWaypoint(), c.getWaypoint(), accuracy);
     }
-    public static double triangleAreaWaypoints(
+    public static double triangleArea(
             final Waypoint a,
             final Waypoint b,
             final Waypoint c,
             final double accuracy) {
         // check if distances are really big enough to use spherical geometry
-        final double distAB = EarthGeometry.distanceWaypoints(a, b);
-        final double distAC = EarthGeometry.distanceWaypoints(a, c);
-        final double distBC = EarthGeometry.distanceWaypoints(b, c);
+        final double distAB = EarthGeometry.distance(a, b);
+        final double distAC = EarthGeometry.distance(a, c);
+        final double distBC = EarthGeometry.distance(b, c);
         if ((distAB == 0.0) || (distAC == 0.0) || (distBC == 0.0)) return 0.0;
 
         final double s = (distAB + distAC + distBC) / 2.0;
@@ -322,20 +363,20 @@ public class EarthGeometry {
             return FastMath.sqrt(s*(s-distAB)*(s-distAC)*(s-distBC));
         }
 
-        final double bearingAB = bearingWaypoints(a, b);
-        final double bearingAC = bearingWaypoints(a, c);
+        final double bearingAB = bearing(a, b);
+        final double bearingAC = bearing(a, c);
         double angleCAB = FastMath.abs(bearingAB - bearingAC);
         // if > 180 use complement
         if (angleCAB > 180.0) angleCAB = 360.0 - angleCAB;
         
-        final double bearingBC = bearingWaypoints(b, c);
-        final double bearingBA = bearingWaypoints(b, a);
+        final double bearingBC = bearing(b, c);
+        final double bearingBA = bearing(b, a);
         double angleABC = FastMath.abs(bearingBC - bearingBA);
         // if > 180 use complement
         if (angleABC > 180.0) angleABC = 360.0 - angleABC;
         
-        final double bearingCA = bearingWaypoints(c, a);
-        final double bearingCB = bearingWaypoints(c, b);
+        final double bearingCA = bearing(c, a);
+        final double bearingCB = bearing(c, b);
         double angleBCA = FastMath.abs(bearingCA - bearingCB);
         // if > 180 use complement
         if (angleBCA > 180.0) angleBCA = 360.0 - angleBCA;
@@ -371,8 +412,8 @@ public class EarthGeometry {
         // distances under 1 km don't show differences to planar calculation
         // https://www.mkompf.com/gps/distcalc.html
         // http://www.cs.nyu.edu/visual/home/proj/tiger/gisfaq.html:
-        // "flat-Earth formulas for calculating the distanceGPXWaypoints between two points start showing noticeable errors
-        // when the distanceGPXWaypoints is more than about 12 miles (20 kilometers)"
+        // "phi1-Earth formulas for calculating the distance between two points start showing noticeable errors
+        // when the distance is more than about 12 miles (20 kilometers)"
         // "Pythagorean Theorem will be in error by
         // less than 30 meters for latitudes less than 70 degrees
         // less than 20 meters for latitudes less than 50 degrees
@@ -399,7 +440,7 @@ public class EarthGeometry {
             // TFE, 2020403: avoid infinity...
             return 0.0;
         }
-        final double diffMeters = distanceGPXWaypoints(p1, p2);
+        final double diffMeters = distance(p1, p2);
         // TFE, 20200402: speed is alsways positive - even if timestamps in waypoints might be crazy
         return Math.abs(diffMeters / diffSeconds * 3.6);
     }
@@ -414,7 +455,7 @@ public class EarthGeometry {
         if ((p1 == null) || (p2 == null)) return 0;
         
         return (p1.getWaypoint().getElevation() - p2.getWaypoint().getElevation()) /
-                distanceGPXWaypoints(p1, p2) * 100.0;
+                distance(p1, p2) * 100.0;
     }
     
     public static double[] toCartesionCoordinates(final GPXWaypoint p1) {
@@ -443,6 +484,31 @@ public class EarthGeometry {
         final double z = ((1.0-EarthEccentricity2)*rn + altkm) * slat;
         
         final double[] result = {x, y, z};
+        return result;
+    }
+    
+    // TFE, 20220110: some functions to calculate "destination" from a given point
+    // https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
+    // https://github.com/tkrajina/gpxpy/blob/dev/gpxpy/geo.py
+    public static IGeoCoordinate destinationPoint(final IGeoCoordinate point, final double distance, final double bearing) {
+        final IGeoCoordinate result = point.cloneMe();
+        
+        final double delta = distance / EarthAverageRadius;
+        final double theta = FastMath.toRadians(bearing);
+
+        final double phi1 = FastMath.toRadians(point.getLatitude());
+        final double lambda1 = FastMath.toRadians(point.getLongitude());
+        
+        final double sinphi2 = FastMath.sin(phi1) * FastMath.cos(delta) + FastMath.cos(phi1) * FastMath.sin(delta) * FastMath.cos(theta);
+        final double phi2 = FastMath.asin(sinphi2);
+        
+        final double y = Math.sin(theta) * Math.sin(delta) * Math.cos(phi1);
+        final double x = Math.cos(delta) - Math.sin(phi1) * sinphi2;
+        final double lambda2 = lambda1 + FastMath.atan2(y, x);        
+        
+        result.setLatitude(FastMath.toDegrees(phi2));
+        result.setLongitude(FastMath.toDegrees(lambda2));
+
         return result;
     }
 }

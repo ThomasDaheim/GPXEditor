@@ -168,7 +168,7 @@ public class SRTMDownloader {
             dataName = dataName.replaceAll("." + SRTMDataStore.HGT_EXT, "");
 
             final String zipName = 
-                    getSRTM3NameForCoordinates(SRTMDataStore.getInstance().getLatitudeForName(dataName), SRTMDataStore.getInstance().getLongitudeForName(dataName));
+                    getSRTM3NameForCoordinates(SRTMDataHelper.getLatitudeForName(dataName), SRTMDataHelper.getLongitudeForName(dataName));
             
             List<String> fileNames;
             if (zipFiles.containsKey(zipName)) {
@@ -377,7 +377,7 @@ public class SRTMDownloader {
 
             // only download if not already there
             if (!tempFile.exists() || !tempFile.isFile() || overwrite) {
-                FileUtils.copyURLToFile(new URL(stringURL), tempFile, 1000, 1000);
+                FileUtils.copyURLToFile(new URL(stringURL), tempFile, 1000, 3000);
             } else {
                 System.out.println("  Already downloaded: \"" + stringURL + "\"");
             }

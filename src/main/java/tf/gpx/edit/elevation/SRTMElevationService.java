@@ -56,15 +56,12 @@ public class SRTMElevationService implements IElevationProvider {
     public Double getElevationForCoordinate(final double latitude, final double longitude) {
         double result = NO_ELEVATION;
         
-        // construct name from coordinates
-        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(latitude, longitude);
-        
         // check store for matching data
-        SRTMData data = SRTMDataStore.getInstance().getDataForName(dataName, srtmOptions);
+        final SRTMData srtmData = getSRTMData(latitude, longitude);
         
         // ask data for value
-        if (data != null) {
-            result = data.getValueForCoordinate(latitude, longitude, srtmOptions.getSRTMDataAverage());
+        if (srtmData != null && !srtmData.isEmpty()) {
+            result = srtmData.getValueForCoordinate(latitude, longitude, srtmOptions.getSRTMDataAverage());
         }
         
         return result;
@@ -75,5 +72,13 @@ public class SRTMElevationService implements IElevationProvider {
         return coords.stream().map((t) -> {
             return getElevationForCoordinate(t.getLatitude(), t.getLongitude());
         }).collect(Collectors.toList());
+    }
+    
+    SRTMData getSRTMData(final double latitude, final double longitude) {
+        // construct name from coordinates
+        final String dataName = SRTMDataHelper.getNameForCoordinate(latitude, longitude);
+        
+        // check store for matching data
+        return SRTMDataStore.getInstance().getDataForName(dataName, srtmOptions);
     }
 }

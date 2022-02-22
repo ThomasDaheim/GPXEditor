@@ -28,7 +28,7 @@ package tf.gpx.edit.elevation;
 import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLongElev;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  * Interface for all services thart provide elevations.
@@ -47,7 +47,7 @@ public interface IElevationProvider {
     // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
     // even so this code makes more calls for individual waypoints...
     default Double getElevationForCoordinate(final double latitude, final double longitude) {
-        final List<Double> results = getElevationsForCoordinates(Arrays.asList(new LatLongElev(latitude, longitude)));
+        final List<Double> results = getElevationsForCoordinates(Arrays.asList(new LatLonElev(latitude, longitude)));
         
         if (!results.isEmpty()) {
             return results.get(0);

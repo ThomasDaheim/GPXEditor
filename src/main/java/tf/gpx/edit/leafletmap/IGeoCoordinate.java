@@ -33,4 +33,10 @@ public interface IGeoCoordinate {
     public abstract Double getLatitude();
     public abstract Double getLongitude();
     public abstract Double getElevation();
+    
+    public abstract void setLatitude(final double lat);
+    public abstract void setLongitude(final double lon);
+    public abstract void setElevation(final double elev);
+
+    public IGeoCoordinate cloneMe();
 }

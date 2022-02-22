@@ -35,8 +35,8 @@ import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
+import tf.gpx.edit.elevation.SRTMDataHelper;
 import tf.gpx.edit.elevation.SRTMDataOptions;
-import tf.gpx.edit.elevation.SRTMDataStore;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
@@ -148,7 +148,7 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
         if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
             // file a set with the required data field names
             for (GPXWaypoint gpxWayPoint : gpxWayPoints) {
-                requiredDataFiles.add(SRTMDataStore.getInstance().getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
+                requiredDataFiles.add(SRTMDataHelper.getNameForCoordinate(gpxWayPoint.getLatitude(), gpxWayPoint.getLongitude()));
             }
         } else {
             final List<GPXWaypoint> assignPoints = new ArrayList<>();
@@ -169,12 +169,12 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
                 // if using OpenElevationService its only one POST call instead of multiple
                 final List<Double> assignHeigths = elevationProvider.getElevationsForCoordinates(assignPoints); 
                 
+                // TODO: replace by new Update-Action used in smoothing to speed things up into one action
                 int i = 0;
                 for (GPXWaypoint gpxWayPoint : assignPoints) {
                     final double elevation = assignHeigths.get(i);
 
                     if (elevation != IElevationProvider.NO_ELEVATION) {
-                        gpxWayPoint.setElevation(elevation);
                         myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
                         assignedHeightCount++;
                     } else {

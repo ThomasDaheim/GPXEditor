@@ -36,6 +36,9 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.WaypointMatching;
+import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
@@ -56,10 +59,12 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     RECENTWINDOWTOP("recentWindowTop", Double.toString(-1), Double.class),
     RECENTLEFTDIVIDERPOS("recentLeftDividerPos", Double.toString(0.5), Double.class),
     RECENTCENTRALDIVIDERPOS("recentCentralDividerPos", Double.toString(0.58), Double.class),
-    REDUCTION_ALGORITHM("algorithm", GPXAlgorithms.ReductionAlgorithm.ReumannWitkam.name(), GPXAlgorithms.ReductionAlgorithm.class),
+    
+    FIX_DISTANCE("fixDistance", Double.toString(1000), Double.class),
+    REDUCTION_ALGORITHM("algorithm", WaypointReduction.ReductionAlgorithm.ReumannWitkam.name(), WaypointReduction.ReductionAlgorithm.class),
     DISTANCE_ALGORITHM("distanceAlgorithm", EarthGeometry.DistanceAlgorithm.Haversine.name(), EarthGeometry.DistanceAlgorithm.class),
     REDUCE_EPSILON("epsilon", Double.toString(50), Double.class),
-    FIX_EPSILON("fixDistance", Double.toString(1000), Double.class),
+
     // TFE, 20200508: empty string is not a good default...
     SRTM_DATA_PATH("SRTMDataPath", System.getProperty("user.home"), String.class),
     SRTM_DATA_AVERAGE("SRTMDataAverage", SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY.name(), SRTMDataOptions.SRTMDataAverage.class),
@@ -71,8 +76,13 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // OPENCYCLEMAP_API_KEY("openCycleMapApiKey", "", String::valueOf),
     ROUTING_API_KEY("routingApiKey", "", String.class),
     ROUTING_PROFILE("routingProfile", TrackMap.RoutingProfile.CyclingTour.name(), TrackMap.RoutingProfile.class),
+    // TFE, 20220105: matching of track / route to streets
+    MATCHING_API_KEY("matchingApiKey", "", String.class),
+    MATCHING_ALGORITHM("matchingAlgorithm", WaypointMatching.MatchingAlgorithm.Mapbox.name(), WaypointMatching.MatchingAlgorithm.class),
+
     BREAK_DURATION("breakDuration", Integer.toString(StatisticsViewer.BREAK_DURATION), Integer.class),
     SEARCH_RADIUS("searchRadius", Integer.toString(5000), Integer.class),
+
     ALWAYS_SHOW_FILE_WAYPOINTS("alwaysShowFileWaypoints", Boolean.toString(false), Boolean.class),
     MAX_WAYPOINTS_TO_SHOW("maxWaypointsToShow", Integer.toString(GPXTrackviewer.MAX_WAYPOINTS), Integer.class),
     INITIAL_BASELAYER("initialBaselayer", "", String.class),
@@ -80,24 +90,48 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
     CHARTSPANE_HEIGHT("chartsPaneHeight", Double.toString(0.25), Double.class),
+
     WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18), Integer.class),
     WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10), Integer.class),
     WAYPOINT_LABEL_ANGLE("waypointLabelAngle", Integer.toString(90), Integer.class),
     WAYPOINT_THRESHOLD("waypointThreshold", Integer.toString(0), Integer.class),
+
     // TFE, 20200324: options for algorithm to find "stops" in tracks with no movement
     CLUSTER_RADIUS("clusterRadius", Double.toString(50.0), Double.class),
     CLUSTER_COUNT("clusterCount", Integer.toString(30), Integer.class),
     CLUSTER_DURATION("clusterDuration", Integer.toString(15), Integer.class),
+
     // TFE, 20200401: preferences for heatmap
     HEATMAP_COLORMAPPING("heatMapColorMapping", ColorMapping.BLUE_CYAN_GREEN_YELLOW_RED.name(), ColorMapping.class),
     HEATMAP_OPACITYDISTRIBUTION("heatMapOpacityDistribution", OpacityDistribution.CUSTOM.name(), OpacityDistribution.class),
     HEATMAP_EVENTRADIUS("heatMapEventRadius", Double.toString(20.0), Double.class),
+
     // TFE, 20201231: show/hide the star/end track symbols
     SHOW_TRACK_SYMBOLS("showTrackSymbols", Boolean.toString(true), Boolean.class),
     // TFE, 20210117: search string for coordinates / names
     SEARCH_URL("searchUrl", "https://www.google.com/search?q=%s", String.class),
     // TFE, 20210117: show/hide waypoint names
-    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class);
+    SHOW_WAYPOINT_NAMES("showWaypointNames", Boolean.toString(true), Boolean.class),
+
+    // TFE, 20210808: show images on map
+    SHOW_IMAGES_ON_MAP("showImagesOnMap", Boolean.toString(true), Boolean.class),
+    IMAGE_INFO_PATH("imageInfoPath", System.getProperty("user.home"), String.class),
+    DEFAULT_IMAGE_PATH("defaultImagePath", System.getProperty("user.home"), String.class),
+    IMAGE_SIZE("imageSize", Integer.toString(512), Integer.class),
+
+    // TFE, 2021222: parameters for filter algorithms
+    SMOOTHING_ALGORITHM("smoothingAlgorithm", WaypointSmoothing.SmoothingAlgorithm.Hampel.name(), WaypointSmoothing.SmoothingAlgorithm.class),
+    // according to https://arxiv.org/ftp/arxiv/papers/1808/1808.10489.pdf order > 2 doesn't improve the quality much
+    // our test cases seems to level of for order = 4
+    SAVITZKYGOLAY_ORDER("savitzkyGolayOrder", Integer.toString(8), Integer.class),
+    // "In practice, alpha is usually set to a value between 0.1 and 0.3"
+    // in our test samples alpha always ends up with a value of 1.0, meaining that previous points don't enter into the smoothing (except for the trend)
+    DOUBLEEXP_ALPHA("doubleExpAlpha", Double.toString(0.2), Double.class),
+    // For alpha = 0.2 lowest MSE is usually for gamma = 1.0 => no trend
+    DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class),
+    HAMPEL_WINDOW("hampelWindow", Integer.toString(3), Integer.class),
+    HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
+    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
@@ -181,7 +215,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
         putImpl(key, value);
     }
 
-    public static void clearImpl() {
+    private static void clearImpl() {
         try {
             MYPREFERENCES.clear();
         } catch (BackingStoreException ex) {
@@ -193,7 +227,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
         clearImpl();
     }
     
-    public static void removeImpl(String key) {
+    private static void removeImpl(String key) {
         MYPREFERENCES.remove(key);
     }
     @Override
@@ -201,7 +235,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
         removeImpl(key);
     }
 
-    public static void exportPreferencesImpl(final OutputStream os) {
+    private static void exportPreferencesImpl(final OutputStream os) {
         try {
             MYPREFERENCES.exportSubtree(os);
         } catch (BackingStoreException | IOException ex) {
@@ -213,7 +247,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
         exportPreferencesImpl(os);
     }
 
-    public void importPreferencesImpl(final InputStream is) {
+    private void importPreferencesImpl(final InputStream is) {
         try {
             Preferences.importPreferences(is);
         } catch (InvalidPreferencesFormatException | IOException ex) {

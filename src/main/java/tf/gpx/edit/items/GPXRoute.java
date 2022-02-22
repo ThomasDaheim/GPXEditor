@@ -28,7 +28,6 @@ package tf.gpx.edit.items;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import javafx.collections.FXCollections;
@@ -39,9 +38,10 @@ import me.himanshusoni.gpxparser.modal.Route;
 import me.himanshusoni.gpxparser.modal.TrackSegment;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
-import tf.gpx.edit.helper.GPXCloner;
+import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.helper.ExtensionCloner;
+import tf.gpx.edit.helper.GPXListHelper;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -52,7 +52,7 @@ public class GPXRoute extends GPXMeasurable {
     private GPXFile myGPXFile;
     private Route myRoute;
     private LineStyle myLineStyle = LineStyle.DEFAULT_LINESTYLE;
-    private final ObservableList<GPXWaypoint> myGPXWaypoints = FXCollections.observableList(new LinkedList<>());
+    private ObservableList<GPXWaypoint> myGPXWaypoints = GPXListHelper.initEmptyList();
 
     private Double myLength = null;
     private Double myCumulativeAscent = null;
@@ -79,7 +79,7 @@ public class GPXRoute extends GPXMeasurable {
             ((GPX) content).addRoute(myRoute);
         }
 
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         myGPXWaypoints.addListener(changeListener);
     }
@@ -92,10 +92,11 @@ public class GPXRoute extends GPXMeasurable {
         myRoute = route;
         
         // set color from gpxx extension (if any)
-        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, GarminColor.Blue);
+        myLineStyle = new LineStyle(this, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         // TFE, 20180203: tracksegment without wayoints is valid!
         if (myRoute.getRoutePoints() != null) {
+            myGPXWaypoints = GPXListHelper.initForCapacity(myGPXWaypoints, myRoute.getRoutePoints());
             for (Waypoint waypoint : myRoute.getRoutePoints()) {
                 myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
             }
@@ -114,10 +115,11 @@ public class GPXRoute extends GPXMeasurable {
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
 
-        myClone.myLineStyle = myLineStyle;
+        // TFE, 20220102: LineStyle needs to be cloned as well
+        myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
         
         // set route via cloner
-        myClone.myRoute = GPXCloner.getInstance().deepClone(myRoute);
+        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
         
         if (withChildren) {
             // clone all my children
@@ -179,7 +181,7 @@ public class GPXRoute extends GPXMeasurable {
     }
 
     @Override
-    public ObservableList<? extends GPXMeasurable> getMeasurableChildren() {
+    public ObservableList<? extends GPXMeasurable> getGPXMeasurablesAsObservableList() {
         return FXCollections.observableArrayList();
     }
     
@@ -315,13 +317,13 @@ public class GPXRoute extends GPXMeasurable {
         GPXWaypoint currentWaypoint;
         GPXWaypoint previousWaypoint;
 
-        /* Only attempt to calculate the distanceGPXWaypoints if we are not
+        /* Only attempt to calculate the distance if we are not
          * on the first way point of the segment. */
         for (int z = 1; z < myGPXWaypoints.size(); z++) {
             currentWaypoint = myGPXWaypoints.get(z);
             previousWaypoint = myGPXWaypoints.get(z - 1);
 
-            length += EarthGeometry.distanceGPXWaypoints(currentWaypoint, previousWaypoint);
+            length += EarthGeometry.distance(currentWaypoint, previousWaypoint);
         }
 
         myLength = length;

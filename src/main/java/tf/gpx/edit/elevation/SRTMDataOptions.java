@@ -34,7 +34,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 public class SRTMDataOptions {
     public enum SRTMDataAverage {
         NEAREST_ONLY("Use only nearest data point"),
-        AVERAGE_NEIGHBOURS("Average over neighbouring data points");
+        AVERAGE_NEIGHBOURS("Average neighbouring data points");
 
         private final String description;
 

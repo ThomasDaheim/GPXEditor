@@ -56,6 +56,9 @@ public class KnownExtensionAttributes {
 
         TrackStatsExtension("TrackStatsExtension", DefaultExtensionHolder.ExtensionClass.GarminTrksts),
         
+        // "locus" as an extension using attributes only BUT they can be extensions to other extensions
+        Locus("locus", DefaultExtensionHolder.ExtensionClass.Locus),
+
         Line("line", DefaultExtensionHolder.ExtensionClass.Line);
         
         private final String myName;
@@ -84,6 +87,11 @@ public class KnownExtensionAttributes {
         @Override
         public String getSchemaLocation() {
             return myExtensionParent.getSchemaLocation();
+        }
+        
+        @Override
+        public boolean useSeparateNode() {
+            return myExtensionParent.useSeparateNode();
         }
         
         @Override
@@ -164,18 +172,44 @@ public class KnownExtensionAttributes {
         pattern("pattern", KnownExtension.Line),
         linecap("linecap", KnownExtension.Line),
         dasharray("dasharray", KnownExtension.Line),
-        extensions("extensions", KnownExtension.Line);
+        extensions("extensions", KnownExtension.Line),
+
+        //
+        // attributes LOCUS
+        //
+        
+        activity("activity", KnownExtension.Locus),
+        // those are actually extensions UNDER the line extension
+        // extension groups can have their own extensions...
+        lsColorBase("lsColorBase", KnownExtension.Locus, KnownExtension.Line),
+        lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line),
+        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line);
+        
         
         private final String myName;
         private final KnownExtension myExtension;
+        // TFE, 20211118: in case of "locus" it can be a child extension of another one...
+        private final KnownExtension myParentExtension;
         
         private KnownAttribute(final String name, final KnownExtension ext) {
+            this(name, ext, null);
+        }
+        
+        private KnownAttribute(final String name, final KnownExtension ext, final KnownExtension parent) {
             myName = name;
             myExtension = ext;
+            myParentExtension = parent;
+            
+            // a parent can only have separate nodes below otherwise it can't have an own extension
+            assert (parent == null || parent.useSeparateNode());
         }
         
         public KnownExtension getExtension() {
             return myExtension;
+        }
+        
+        public KnownExtension getParentExtension() {
+            return myParentExtension;
         }
         
         @Override
@@ -194,45 +228,82 @@ public class KnownExtensionAttributes {
     public static String getValueForAttribute(final Extension extension, final KnownAttribute attr) {
         String result = null;
         
-        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        // TFE, 20211119: extensions can have their own extensions...
+        if (attr.getParentExtension() != null) {
+            // TODO: check if extension is of same type as parentExtension
+            if (extensionHolder.getExtension() != null) {
+                extensionHolder = (DefaultExtensionHolder) extensionHolder.getExtension().getExtensionData(DefaultExtensionParser.getInstance().getId());
+            } else {
+                // we don't have an extension in the extension
+                extensionHolder = null;
+            }
+        }
+        
         if (extensionHolder == null) {
             return result;
         }
         
-        final Node extNode = extensionHolder.getExtensionForClass(attr.getExtension());
-        
-        if (extNode == null) {
-            return result;
-        }
-        
-        // 1) find extension node
-        NodeList nodeList = null;
-        // check node itself
-        if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
-            nodeList = extNode.getChildNodes();
-        } else {
-            NodeList childNodes = extNode.getChildNodes();
-            
-            // check childnodes
-            for (int i = 0; i < childNodes.getLength(); i++) {
-                final Node myNode = childNodes.item(i);
-                
-                if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
-                    nodeList = myNode.getChildNodes();
-                    break;
+        // TFE, 20211118: for locus we have extension data that is not enclosed in a specific node but directly under <extensions>...
+        if (attr.getExtension().useSeparateNode()) {
+            final Node extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+
+            if (extNode == null) {
+                return result;
+            }
+
+            NodeList nodeList = null;
+            // 1) find extension node
+            // check node itself
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
+                nodeList = extNode.getChildNodes();
+            } else {
+                NodeList childNodes = extNode.getChildNodes();
+
+                // check childnodes
+                for (int i = 0; i < childNodes.getLength(); i++) {
+                    final Node myNode = childNodes.item(i);
+
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
+                        nodeList = myNode.getChildNodes();
+                        break;
+                    }
                 }
             }
-        }
-        
-        // 2) find attribute in nodelist
-        if (nodeList != null) {
-            // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                final Node myNode = nodeList.item(i);
-                
-                if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.toString())) {
-                    result = myNode.getTextContent();
-                    break;
+
+            // 2) find attribute in nodelist
+            if (nodeList != null) {
+                // https://stackoverflow.com/questions/5786936/create-xml-document-using-nodelist
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    final Node myNode = nodeList.item(i);
+
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.toString())) {
+                        result = myNode.getTextContent();
+                        break;
+                    }
+                }
+            }
+        } else {
+            final Node extNode = extensionHolder.getExtensionForName(attr.toString());
+
+            if (extNode == null) {
+                return result;
+            }
+
+            // check node itself
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.toString())) {
+                result = extNode.getTextContent();
+            } else {
+                NodeList childNodes = extNode.getChildNodes();
+
+                // check childnodes
+                for (int i = 0; i < childNodes.getLength(); i++) {
+                    final Node myNode = childNodes.item(i);
+
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.toString())) {
+                        result = myNode.getTextContent();
+                        break;
+                    }
                 }
             }
         }
@@ -241,7 +312,7 @@ public class KnownExtensionAttributes {
     }
     
     public static void setValueForAttribute(final Extension extension, final KnownAttribute attr, final String text) {
-        DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
+        final DefaultExtensionHolder extensionHolder = (DefaultExtensionHolder) extension.getExtensionData(DefaultExtensionParser.getInstance().getId());
 
         try {
             Document doc;

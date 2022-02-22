@@ -67,7 +67,7 @@ public class TestSRTM {
     
     @BeforeClass
     public static void setUpClass() throws IOException {
-        tileDist = 1.0 / (SRTMData.SRTMDataType.SRTM3.getDataCount() - 1);
+        tileDist = 1.0 / (SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1);
         // offset from corners in tiles is 0,1% of tile size
         delta = tileDist / 1000.0;
         
@@ -129,9 +129,9 @@ public class TestSRTM {
         Assert.assertNotNull(testData.getValues());
         Assert.assertNotNull(testData.getNumberRows());
         Assert.assertNotNull(testData.getNumberColumns());
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.equals(testData.getKey().getValue()));
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() == testData.getNumberRows());
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() == testData.getNumberColumns());
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.equals(testData.getKey().getValue()));
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() == testData.getNumberRows());
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() == testData.getNumberColumns());
     }
     
     @Test
@@ -148,13 +148,13 @@ public class TestSRTM {
         // lower left corner - value should be 1200
         heightValue = elevation.getElevationForCoordinate(45, 10);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // lower right corner - value should be a bit less than 1200 + 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(45, 11 - delta);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
         
         // upper left corner - value should be 0
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -165,12 +165,12 @@ public class TestSRTM {
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // grid center - value should be 1200
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
     }
     
     @Test
@@ -187,13 +187,13 @@ public class TestSRTM {
         // lower left corner - value should be 1200, since exactly on tile center
         heightValue = elevation.getElevationForCoordinate(45, 10);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // lower right corner - value should be 1200 + 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(45, 11 - delta);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
         
         // upper left corner - value should be 0, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -204,38 +204,38 @@ public class TestSRTM {
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // grid center - value should be 600 + 600
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(SRTMData.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assert.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // now choose points directly on line between 2 tile centers
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
         heightValue = elevation.getElevationForCoordinate(45, 10 + tileDist/2.0);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
+        Assert.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5 + tileDist/2.0);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
+        Assert.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
 
         // and now for a point between to rows...
         
         // average should be done using those two tiles only (1199 + 1200) / 2 = 1199,5
         heightValue = elevation.getElevationForCoordinate(45 + tileDist/2.0, 10);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 - 0.5, heightValue));
+        Assert.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 - 0.5, heightValue));
         
         // and now for point directly on the corner of 4 tiles...
 
         // average should be done using for tiles with same wweight (1199 + 1200 + 1200 + 1201) / 4 = 1200
         heightValue = elevation.getElevationForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0);
         Assert.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assert.assertTrue(isCloseEnough((SRTMData.SRTMDataType.SRTM3.getDataCount() + SRTMData.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
+        Assert.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
     }
     
     @Test
@@ -272,7 +272,7 @@ public class TestSRTM {
     
     @Test
     public void testDownloadSRTM1() {
-        final String dataName = SRTMDataStore.getInstance().getNameForCoordinate(27.9881, 86.9250);
+        final String dataName = SRTMDataHelper.getNameForCoordinate(27.9881, 86.9250);
         
         // file is there as SRTM3 as part of the test-data
         File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
@@ -354,7 +354,7 @@ public class TestSRTM {
     @Test
     public void testDownloadSRTM3() throws Exception {
         // single hgt from standard zip - store zip
-        String dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -4);
+        String dataName = SRTMDataHelper.getNameForCoordinate(30, -4);
         dataNames.clear();
         dataNames.add(dataName);
         String resultOut = tapSystemOut(() -> {
@@ -375,7 +375,7 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from stored zip - no download
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(30, -3);
+        dataName = SRTMDataHelper.getNameForCoordinate(30, -3);
         dataNames.clear();
         dataNames.add(dataName);
         resultOut = tapSystemOut(() -> {
@@ -390,12 +390,12 @@ public class TestSRTM {
         Assert.assertEquals(SRTMDataReader.DATA_SIZE_SRTM3, srtmFile.length());
 
         // multiple hgts from standard zip - store zip
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-5, -63);
+        dataName = SRTMDataHelper.getNameForCoordinate(-5, -63);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(
                 dataName, 
-                SRTMDataStore.getInstance().getNameForCoordinate(-5, -64), 
-                SRTMDataStore.getInstance().getNameForCoordinate(-5, -65)));
+                SRTMDataHelper.getNameForCoordinate(-5, -64), 
+                SRTMDataHelper.getNameForCoordinate(-5, -65)));
         resultOut = tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
@@ -414,7 +414,7 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // single hgt from anarctica - store zip
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-78, -154);
+        dataName = SRTMDataHelper.getNameForCoordinate(-78, -154);
         dataNames.clear();
         dataNames.add(dataName);
         resultOut = tapSystemOut(() -> {
@@ -435,12 +435,12 @@ public class TestSRTM {
         Assert.assertTrue(srtmFile.canRead());
 
         // multiple hgt from anarctica - no download
-        dataName = SRTMDataStore.getInstance().getNameForCoordinate(-89, -107);
+        dataName = SRTMDataHelper.getNameForCoordinate(-89, -107);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(
                 dataName, 
-                SRTMDataStore.getInstance().getNameForCoordinate(-89, -108), 
-                SRTMDataStore.getInstance().getNameForCoordinate(-89, -109)));
+                SRTMDataHelper.getNameForCoordinate(-89, -108), 
+                SRTMDataHelper.getNameForCoordinate(-89, -109)));
         resultOut = tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
