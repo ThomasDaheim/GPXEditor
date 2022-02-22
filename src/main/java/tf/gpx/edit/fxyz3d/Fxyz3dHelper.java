@@ -169,7 +169,7 @@ public class Fxyz3dHelper {
         return result;
     }
     
-    public void updateLabels(final Scene scene, final Map<Shape3D, Label> shape3DToLabel) {
+    public void updateLabels(final Scene scene, final Map<Shape3D, Label> shape3DToLabel, final boolean hideOutside) {
         if (shape3DToLabel == null) {
             return;
         }
@@ -183,21 +183,33 @@ public class Fxyz3dHelper {
             //stretch the screen so don't transform them 
             double x = coordinates.getX();
             double y = coordinates.getY();
+            
+            boolean outside = false;
             //is it left of the view?
             if(x < 0) {
+                outside = true;
                 x = 0;
             }
             //is it right of the view?
             if((x+label.getWidth()+5) > scene.getWidth()) {
+                outside = true;
                 x = scene.getWidth() - (label.getWidth()+5);
             }
             //is it above the view?
             if(y < 0) {
+                outside = true;
                 y = 0;
             }
             //is it below the view
-            if((y+label.getHeight()) > scene.getHeight())
+            if((y+label.getHeight()) > scene.getHeight()) {
+                outside = true;
                 y = scene.getHeight() - (label.getHeight()+5);
+            }
+            
+            if (hideOutside) {
+                label.setVisible(!outside);
+                label.setDisable(outside);
+            }
             
             // now move to match anchor point (coded in contentDisplay)
             switch (label.getContentDisplay()) {

@@ -247,13 +247,30 @@ public class HorizonViewer {
                 case C, R:
                     setAxes();
                     break;
+                case N:
+                    xAxis.setLowerBound(0.0-180.0);
+                    xAxis.setUpperBound(0.0+180.0);
+                    break;
+                case S:
+                    xAxis.setLowerBound(-179.0-180.0);
+                    xAxis.setUpperBound(-179.0+180.0);
+                    break;
+                case E:
+                    xAxis.setLowerBound(90.0-180.0);
+                    xAxis.setUpperBound(90.0+180.0);
+                case W:
+                    xAxis.setLowerBound(-90.0-180.0);
+                    xAxis.setUpperBound(-90.0+180.0);
+                    break;
             }
         });
 
         final Label label = 
                 new Label("Drag: Shift X" + System.lineSeparator() + 
                         "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
-                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + "C/R: reset view");
+                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + 
+                        "N/S/E/W: center direction" + System.lineSeparator() + 
+                        "C/R: reset view");
         label.getStyleClass().add("horizon-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
         label.toFront();

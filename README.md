@@ -33,6 +33,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 * Matching of tracks to streets/paths using Mapbox matching service
 * replaced SRTM height viewer with fxyz3d implementation (previously jzy3d)
 * Bugfixes! Various bugs that have crept in over time are now fixed
+* Performance: Whereever something was slow, I tried to speed up things
 
 ### Update v5.5
 
@@ -372,7 +373,7 @@ Of course, such a project depends on the results of many others! I've tried to a
 Explicit dependencies:
 
 * 'tf.JavaHelper:JavaHelper:1.14': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
-* 'org.slf4j:slf4j-api:1.7.12'
+
 * 'commons-cli:commons-cli:1.5.0'
 * 'commons-io:commons-io:2.11.0'
 * 'org.apache.commons:commons-lang3:3.12.0'
@@ -381,9 +382,7 @@ Explicit dependencies:
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
 * 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-* 'org.jzy3d:jzy3d-api:1.0.3'
-* 'org.jzy3d:jzy3d-javafx:1.0.3'
-* 'org.controlsfx:controlsfx:11.1.0'
+* 'org.controlsfx:controlsfx:11.1.1'
 * 'de.jensd:fontawesomefx:8.9'
 * NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
 * 'com.fasterxml.jackson.core:jackson-core:2.13.0'
@@ -391,12 +390,14 @@ Explicit dependencies:
 * 'de.grundid.opendatalab:geojson-jackson:1.14'
 * 'org.jfxtras:jfxtras-controls:15-r2'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
-* 'uk.com.robust-it:cloning:1.9.12'
-* 'javax.xml.bind:jaxb-api:2.3.1'
-* 'org.eclipse.persistence:eclipselink:3.0.2'
 * 'org.jfxtras:jmetro:11.6.15'
+* 'uk.com.robust-it:cloning:1.9.12'
 * 'org.im4java:im4java:1.4.0'
-* 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+* 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
+* 'rg.fxyz3d:fxyz3d:0.5.4'
+* 'org.magicwerk.brownies:brownies-collections:0.9.16'
+
+* 'org.junit.jupiter:junit-jupiter-api:4.13.2'
 * 'com.github.stefanbirkner:system-lambda:1.2.0'
 
 

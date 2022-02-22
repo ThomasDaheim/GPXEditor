@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
@@ -48,9 +49,12 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape3D;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -399,7 +403,18 @@ public class SRTMDataViewer_fxyz3d {
         final Group sceneRoot = new Group(subScene);
         sceneRoot.getChildren().addAll(labelGroup);
         
-        scene = new Scene(sceneRoot, MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
+        // some explanation for rote & zoom
+        final Label label = 
+                new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() + 
+                        "RgtBtn: Shift X+Y" + System.lineSeparator() + 
+                        "Wheel: Zoom" + System.lineSeparator() + 
+                        "Up/Down/Left/Right: Shift X+Y" + System.lineSeparator() + 
+                        "W/S/A/D: Rotate X+Y");
+        label.getStyleClass().add("srtm-viewer-label");
+        StackPane.setAlignment(label, Pos.TOP_LEFT);
+        label.toFront();
+        
+        scene = new Scene(new StackPane(sceneRoot, label), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
         scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
         initUserControls(scene);
         
@@ -422,7 +437,7 @@ public class SRTMDataViewer_fxyz3d {
             nodeGroup.getChildren().add(axes);
             labelGroup.getChildren().addAll(ticToLabel.values());
             // runLater since we need to have width/height of labels from rendering
-            Platform.runLater(()->Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel));
+            Platform.runLater(()->Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true));
         });
     }
     
@@ -446,6 +461,9 @@ public class SRTMDataViewer_fxyz3d {
     private void resetLightAndCamera() {
         cameraTransform.rx.setAngle(120.0);
         cameraTransform.ry.setAngle(0.0);
+        cameraTransform.t.setX(0.0);
+        cameraTransform.t.setY(0.0);
+        cameraTransform.t.setZ(0.0);
         camera.setTranslateX(0.0);
         camera.setTranslateY(0.0);
         camera.setTranslateZ(-Math.max(latDist, lonDist));
@@ -477,11 +495,11 @@ public class SRTMDataViewer_fxyz3d {
                     camera.setTranslateX(camera.getTranslateX() + 0.1*scaleFact);
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
-                case W:
+                case S:
                     cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() - 1.0*scaleFact);
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
-                case S:
+                case W:
                     cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() + 1.0*scaleFact);
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
@@ -499,7 +517,7 @@ public class SRTMDataViewer_fxyz3d {
             }
 
 //            isCameraInBounds();
-            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
         });
 
         node.setOnScroll((t) -> {
@@ -533,7 +551,7 @@ public class SRTMDataViewer_fxyz3d {
 //                }
             }
             
-            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
         });
         
         node.setOnMousePressed((MouseEvent me) -> {
@@ -568,14 +586,14 @@ public class SRTMDataViewer_fxyz3d {
                         60)); // - 
                 
             } else if (me.isSecondaryButtonDown()) {
-                cameraTransform.t.setX(cameraTransform.t.getX() + mouseDeltaX * modifierFactor * modifier * 0.3); // -
-                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.3); // -
+                cameraTransform.t.setX(cameraTransform.t.getX() - mouseDeltaX * modifierFactor * modifier * 0.1); // -
+                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.1); // -
             } else if (me.isMiddleButtonDown()) {
                 double z = camera.getTranslateZ();
                 double newZ = z + mouseDeltaX * modifierFactor * modifier;
                 camera.setTranslateZ(newZ);
             }
-            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel);
+            Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
         });
     }
     
