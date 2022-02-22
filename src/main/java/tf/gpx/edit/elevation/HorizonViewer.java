@@ -82,7 +82,7 @@ public class HorizonViewer {
     
     private final static int DISTANCE_STEP = 1000;
     private final static int DISTANCE_FROM = DISTANCE_STEP / 2;
-    private final static int DISTANCE_TO = 50000 + DISTANCE_FROM;
+    private final static int DISTANCE_TO = 100000 + DISTANCE_FROM;
     private final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
     
     private final static double SCALE_FACT = 1.1;
@@ -95,7 +95,7 @@ public class HorizonViewer {
     private final AreaChart<Number, Number> chart = new SmoothFilledAreaChart<>(new NumberAxis(), new NumberAxis());
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
-    private final StackPane pane = new StackPane(chart);
+    private final StackPane pane = new StackPane();
     private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
     private final Stage stage = new Stage();
     
@@ -277,34 +277,32 @@ public class HorizonViewer {
     }
     
     private void showData(final IGeoCoordinate location) {
+        // performance... every chqange to chart triggers reapplyCSS()
+        pane.getChildren().remove(chart);
+
         // and now draw from outer to inner and from darker to brighter color
         // see Horizon_PodTriglavom.jpg for expected result
         drawViewingAngles(location);
         setAxes();
 
         for (XYChart.Series<Number, Number> series : chart.getData()) {
-//                System.out.println("Adding StyleClass " + ObjectsHelper.uncheckedCast(series.getNode().getUserData()));
-            series.getNode().getStyleClass().add(ObjectsHelper.uncheckedCast(series.getNode().getUserData()));
-        }
+//            System.out.println("Adding StyleClass " + series.getName());
+            series.getNode().getStyleClass().add(series.getName());
+            // data nodes are not part of any group und series...
+            series.getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
 
-        chart.applyCss();
-        chart.requestLayout();
-        
-        // add tooltip to datapoint after chart has been shown - since otherwise data.getNode() is null...
-        for (XYChart.Series<Number, Number> series : chart.getData()) {
             for (XYChart.Data<Number, Number> data : series.getData()) {
-                // install tooltip with helpful info - can only be done after showing...
+                // install tooltip with helpful info
                 final Tooltip tooltip = 
-                        new Tooltip(String.format("Dist: %.1fkm", (Double) data.getExtraValue() / 1000) + "\n" + 
-                                String.format("Angle %.1f" + LatLonHelper.DEG, data.getYValue()));
+                        new Tooltip(String.format("Dist: %.1fkm", getDataDistance(data) / 1000) + "\n" + 
+                                String.format("Elev. %.1fm", getDataElevation(data)));
                 tooltip.setShowDelay(Duration.ZERO);
 
-                final Node node = data.getNode();
-                node.getStyleClass().add(TOOLTIP_STYLE_CLASS);
-
-                Tooltip.install(node, tooltip);
+                Tooltip.install(data.getNode(), tooltip);
             }
         }
+        
+        pane.getChildren().add(chart);
     }
 
     private void getPanoramaView(final IGeoCoordinate center) {
@@ -351,14 +349,17 @@ public class HorizonViewer {
             colorChangeMap.put(i, (int) (scaleFact * colorChange));
         }
 
+        // performance: add everything to the chart in one go...
+        final List<XYChart.Series<Number, Number>> seriesSet = new ArrayList<>();
+
         int count = 0;
         double lastValue = Double.MAX_VALUE;
         for (Map.Entry<Double, List<Pair<Double, IGeoCoordinate>>> elevationList : elevationMap.entrySet()) {
             assert elevationList.getKey() < lastValue;
             final Double distance = elevationList.getKey();
             
+            final List<XYChart.Data<Number, Number>> dataSet = new ArrayList<>();
             // every slice is a new series
-            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
             for (Pair<Double, IGeoCoordinate> coord : elevationList.getValue()) {
                 // the angle we're looking up / down
                 final double elevationAngle = EarthGeometry.elevationAngle(location, coord.getRight());
@@ -367,8 +368,8 @@ public class HorizonViewer {
                 
                 double horAngle = coord.getLeft();
                 XYChart.Data<Number, Number> data = new XYChart.Data<>(horAngle, elevationAngle);
-                data.setExtraValue(distance);
-                series.getData().add(data);
+                data.setExtraValue(setExtraValue(distance, coord.getRight()));
+                dataSet.add(data);
 
                 // check if we have a new "best" = highest angle for this viewing angle
                 boolean newBest = false;
@@ -389,20 +390,24 @@ public class HorizonViewer {
                     horAngle = horAngle + 360;
                 }
                 data = new XYChart.Data<>(horAngle, elevationAngle);
-                data.setExtraValue(distance);
-                series.getData().add(data);
+                data.setExtraValue(setExtraValue(distance, coord.getRight()));
+                dataSet.add(data);
                 if (newBest) {
                     horizonMap.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
                 }
             }
             // sort data since we added stuff before & after
-            series.getData().sort(Comparator.comparingDouble(d -> d.getXValue().doubleValue()));
-            chart.getData().add(series);
+            Collections.sort(dataSet, Comparator.comparingDouble(d -> d.getXValue().doubleValue()));
+
+            // now do the costly operation and create a series
+            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.getData().addAll(dataSet);
+            seriesSet.add(series);
 
             // and now color the series nodes according to lineitem color
             // https://stackoverflow.com/a/12286465
 //            System.out.println("Using series color " + COLOR_STYLE_CLASS_PREFIX + seriesColor);
-            series.getNode().setUserData(COLOR_STYLE_CLASS_PREFIX + seriesColor);
+            series.setName(COLOR_STYLE_CLASS_PREFIX + seriesColor);
  
             lastValue = elevationList.getKey();
             
@@ -413,6 +418,21 @@ public class HorizonViewer {
                 seriesColor++;
             }
         }
+        
+        chart.getData().addAll(seriesSet);
+    }
+    
+    private Pair<Double, IGeoCoordinate> setExtraValue(final Double distance, final IGeoCoordinate coord) {
+        return Pair.of(distance, coord);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private double getDataDistance(final XYChart.Data<Number, Number> data) {
+        return ((Pair<Double, IGeoCoordinate>) data.getExtraValue()).getLeft();
+    }
+    @SuppressWarnings("unchecked")
+    private double getDataElevation(final XYChart.Data<Number, Number> data) {
+        return ((Pair<Double, IGeoCoordinate>) data.getExtraValue()).getRight().getElevation();
     }
 
     private void setAxes() {
