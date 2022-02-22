@@ -127,6 +127,9 @@ dependencies {
     // TFE, 20220201: faster list
     implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.16'
     
+    // sun data
+    implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
+    
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     // TFE, 20220205: not working, "No test cases executed" after all the code changes...
     // new versions of the code are in "junit5.zip" for some later time when I have stamina to check this fuck-up
