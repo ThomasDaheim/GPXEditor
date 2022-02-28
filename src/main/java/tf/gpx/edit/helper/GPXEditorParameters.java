@@ -12,6 +12,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use
@@ -30,7 +32,8 @@ public class GPXEditorParameters {
         deleteEmpty,
         deleteCount,
         gpxFiles,
-        ignoreParams
+        ignoreParams,
+        mapCenter
     };
 
     private boolean mergeFiles = false;
@@ -44,6 +47,7 @@ public class GPXEditorParameters {
     private int deleteCount = Integer.MIN_VALUE;
     private List<String> gpxFiles = new ArrayList<>();
     private boolean ignoreParams = false;
+    private IGeoCoordinate mapCenter = new LatLonElev(48.137154, 11.576124);
     
     private List<String> argsList;
 
@@ -107,6 +111,10 @@ public class GPXEditorParameters {
                 GPXEditorParameters.CmdOps.ignoreParams.toString(), 
                 false, 
                 "Ignore all parameters (for debugging purposes)");
+        options.addOption(GPXEditorParameters.CmdOps.mapCenter.toString(), 
+                GPXEditorParameters.CmdOps.mapCenter.toString(), 
+                true, 
+                "Set initial center of the map");
 
         // lets parse them by code from other people
         CommandLineParser parser = new DefaultParser();
@@ -243,6 +251,14 @@ public class GPXEditorParameters {
                 deleteCount = Integer.MIN_VALUE;
                 help(options);
             }
+
+            if (command.hasOption(GPXEditorParameters.CmdOps.mapCenter.toString())) {
+                value = command.getOptionValue(GPXEditorParameters.CmdOps.mapCenter.toString());
+                String[] latlon = value.split(" ");
+                
+                mapCenter.setLatitude(Double.parseDouble(latlon[0]));
+                mapCenter.setLongitude(Double.parseDouble(latlon[1]));
+            }
         } catch (ParseException|NumberFormatException|NullPointerException ex) {
             Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
             help(options);
@@ -295,6 +311,10 @@ public class GPXEditorParameters {
     
     public boolean doBatch() {
         return doMergeFiles() || doMergeTracks() || doReduceTracks() || doFixTracks() || doDeleteEmpty();
+    }
+    
+    public IGeoCoordinate getMapCenter() {
+        return mapCenter;
     }
 
     private void help(final Options options) {

@@ -197,7 +197,7 @@ run {
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
         enableAssertions = true
     }
-//    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
+    args = ["-mapCenter", "46.66068859124702 11.159234046936037"]
 }
 
 // TFE, 20211102: not working like below

@@ -45,7 +45,7 @@ public class MapConfig {
     private final List<MapLayer> myOverlays;
     private final ZoomControlConfig myZoomControlConfig;
     private final ScaleControlConfig myScaleControlConfig;
-    private final LatLonElev myInitialCenter;
+    private final IGeoCoordinate myInitialCenter;
 
     public MapConfig() {
         myBaselayer = new ArrayList<>(Arrays.asList(MapLayer.OPENSTREETMAP));
@@ -60,7 +60,7 @@ public class MapConfig {
             final List<MapLayer> overlays, 
             final ZoomControlConfig zoomControlConfig, 
             final ScaleControlConfig scaleControlConfig, 
-            final LatLonElev latLong) {
+            final IGeoCoordinate latLong) {
         myBaselayer = new ArrayList<>(baselayers);
         myOverlays = new ArrayList<>(overlays);
         myZoomControlConfig = zoomControlConfig;
@@ -84,7 +84,7 @@ public class MapConfig {
         return myScaleControlConfig;
     }
 
-    public LatLonElev getInitialCenter() {
+    public IGeoCoordinate getInitialCenter() {
         return myInitialCenter;
     }
 }

@@ -31,7 +31,7 @@ import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
  *
  * @author thomas
  */
-public class AzimuthElevationAngle {
+public class AzimuthElevationAngle implements Comparable<AzimuthElevationAngle> {
     private double azimuth;
     private double elevation;
     
@@ -91,14 +91,27 @@ public class AzimuthElevationAngle {
     }
     
     public boolean equalsAzimuthZenithAngle(final AzimuthZenithAngle angle) {
-        return this.equals(fromAzimuthZenithAngle(angle));
+        return this.equals(of(angle));
     }
     
-    public static AzimuthElevationAngle fromAzimuthZenithAngle(final AzimuthZenithAngle angle) {
+    public static AzimuthElevationAngle of(final AzimuthZenithAngle angle) {
         if (angle == null) {
             return null;
         }
 
         return new AzimuthElevationAngle(angle.getAzimuth(), 90 - angle.getZenithAngle());
+    }
+    
+    public static AzimuthElevationAngle of(final double azi, final double elev) {
+        return new AzimuthElevationAngle(azi, elev);
+    }
+
+    @Override
+    public int compareTo(AzimuthElevationAngle o) {
+        int result = Double.compare(azimuth, o.azimuth);
+        if (result == 0) {
+            result = Double.compare(elevation, o.elevation);
+        }
+        return result;
     }
 }

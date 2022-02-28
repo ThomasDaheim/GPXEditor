@@ -23,52 +23,43 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.fxyz3d;
+package tf.gpx.edit.charts;
 
-import javafx.scene.paint.Color;
-import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Cylinder;
+import javafx.geometry.Point3D;
 import javafx.scene.transform.Rotate;
 
 /**
- * An axis is based on the cylinder shape with additional attributes.
+ * Any cylinder that has a direction.
  * 
  * @author thomas
  */
-public class Axis extends Cylinder implements IDirection {
-    private Direction direction;
-    
-    private Axis() {
-        super();
-    }
-
-    private Axis(double d, double d1) {
-        super(d, d1);
-    }
-
-    private Axis(double d, double d1, int i) {
-        super(d, d1, i);
-    }
-    
-    @Override
-    public Direction getDirection() {
-        return direction;
-    }
-    
-    public static Axis getAxisLine(
-            final double transX, final double transY, final double transZ, 
-            final Axis.Direction axisDirection, 
-            final double thickness, final double length) {
-        final Axis lineCylinder = new Axis(thickness, length);
-        lineCylinder.setMaterial(new PhongMaterial(Color.BLACK));
-        if (axisDirection.getRotationPoint() != null) {
-            lineCylinder.getTransforms().setAll(new Rotate(90, axisDirection.getRotationPoint()));
-        }
-        lineCylinder.setTranslateX(transX);
-        lineCylinder.setTranslateY(transY);
-        lineCylinder.setTranslateZ(transZ);
-        lineCylinder.direction = axisDirection;
+public interface IDirection {
+    public static enum Direction {
+        // x-Direction is left-right
+        X(Rotate.Z_AXIS),
+        // y-Direction is up-down
+        Y(null),
+        // z-Direction is front-back
+        Z(Rotate.X_AXIS);
         
-        return lineCylinder;
+        private final Point3D rotationPoint;
+        
+        private Direction(final Point3D rotate) {
+            rotationPoint = rotate;
+        }
+        
+        public Point3D getRotationPoint() {
+            return rotationPoint;
+        }
+        
+        public static Direction ticDirection(final Direction axisDirection) {
+            if (Direction.Y.equals(axisDirection)) {
+                return Direction.X;
+            } else {
+                return Direction.Y;
+            }
+        }
     }
+    
+    public Direction getDirection();
 }

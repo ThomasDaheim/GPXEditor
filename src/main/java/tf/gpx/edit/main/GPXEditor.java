@@ -385,6 +385,8 @@ public class GPXEditor implements Initializable {
     private MenuItem onlineHelpMenu;
     @FXML
     private MenuItem elevationForCoordinateMenu;
+    @FXML
+    private MenuItem showHorizonMenu;
     
     public GPXEditor() {
         super();
@@ -681,6 +683,9 @@ public class GPXEditor implements Initializable {
                 myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM1);
                 myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM3);
             }
+        });
+        showHorizonMenu.setOnAction((ActionEvent event) -> {
+            showHorizon(TrackMap.getInstance().getMapCenter());
         });
 
         //

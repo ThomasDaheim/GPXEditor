@@ -81,6 +81,7 @@ import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.image.ImageProvider;
@@ -353,7 +354,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 MapLayerUsage.getInstance().getEnabledSortedOverlays(), 
                 new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
                 new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
-                new LatLonElev(48.137154, 11.576124));
+                GPXEditorParameters.getInstance().getMapCenter());
 
         final CompletableFuture<Worker.State> cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
@@ -1825,6 +1826,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         
         updateMarker(layer, point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker);
+    }
+    
+    public IGeoCoordinate getMapCenter() {
+        return new LatLonElev(mapBounds.getCenterX(), mapBounds.getCenterY());
     }
     
     public void mapViewChanged(final BoundingBox newBoundingBox) {

@@ -28,15 +28,21 @@ package tf.gpx.edit.sun;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalField;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import net.e175.klaus.solarpositioning.DeltaT;
 import net.e175.klaus.solarpositioning.SPA;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.DateTimeCalendarHelper;
+import tf.helper.general.ObjectsHelper;
 
 /**
  * Calculate & hold the suns path for a given date & location.
@@ -61,12 +67,27 @@ public class SunPathForDay {
     private GregorianCalendar sunset = null;
     private final Map<GregorianCalendar, AzimuthElevationAngle> sunPath = new TreeMap<>();
     
+    // generalization of sunrise / sunset against a horizon
+    // sun might get hidden during the day due to high mountain, ...
+    // sunrise: first element of sunAboveHorizon (if any)
+    // sunset: last element of sunBelowHorizon (if any)
+    private final List<GregorianCalendar> sunAboveHorizon = new ArrayList<>();
+    private final List<GregorianCalendar> sunBelowHorizon = new ArrayList<>();
+    
     private SunPathForDay() {
         this(GregorianCalendar.from(ZonedDateTime.now()), new LatLonElev(0.0, 0.0), null);
     }
     
+    public SunPathForDay(final ZonedDateTime date, final IGeoCoordinate loc) {
+        this(GregorianCalendar.from(date), loc, null);
+    }
+
     public SunPathForDay(final ZonedDateTime date, final IGeoCoordinate loc, final Double delT) {
         this(GregorianCalendar.from(date), loc, delT);
+    }
+
+    public SunPathForDay(final GregorianCalendar date, final IGeoCoordinate loc) {
+        this(date, loc, null, DEFAULT_INTERVAL_TYPE, DEFAULT_INTERVAL);
     }
 
     public SunPathForDay(final GregorianCalendar date, final IGeoCoordinate loc, final Double delT) {
@@ -103,13 +124,21 @@ public class SunPathForDay {
         transit = result [1];
         sunset = result [2];
         
+        // init for "Horizon" here as well - until someone gives us a real horizon to check against
+        if (sunrise != null) {
+            sunAboveHorizon.add(ObjectsHelper.uncheckedCast(sunrise.clone()));
+        }
+        if (sunset != null) {
+            sunBelowHorizon.add(ObjectsHelper.uncheckedCast(sunset.clone()));
+        }
+        
         // we only need the path if the sun really rises...
         if (sunrise == null || sunset == null) {
             return;
         }
         
         AzimuthElevationAngle pathAngle = 
-                AzimuthElevationAngle.fromAzimuthZenithAngle(PSAPlus.calculateSolarPosition(sunrise, location.getLatitude(), location.getLongitude(), deltaT));
+                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(sunrise, location.getLatitude(), location.getLongitude(), deltaT));
         sunPath.put(sunrise, pathAngle);
 //        System.out.println("sunTime:  " + sunrise.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
         
@@ -120,7 +149,7 @@ public class SunPathForDay {
         }
 
         while (pathTime.before(sunset)) {
-            pathAngle = AzimuthElevationAngle.fromAzimuthZenithAngle(
+            pathAngle = AzimuthElevationAngle.of(
                     PSAPlus.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), deltaT));
             sunPath.put(pathTime, pathAngle);
 //            System.out.println("sunTime:  " + pathTime.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
@@ -133,17 +162,129 @@ public class SunPathForDay {
             pathTime = ((GregorianCalendar) pathTime.clone());
             pathTime.add(Calendar.MINUTE, interval);
             if (prevPathTime.before(transit) && pathTime.after(transit)) {
-                pathAngle = AzimuthElevationAngle.fromAzimuthZenithAngle(
+                pathAngle = AzimuthElevationAngle.of(
                         PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
                 sunPath.put(transit, pathAngle);
 //                System.out.println("sunTime:  " + transit.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
             }
         }
 
-        pathAngle = AzimuthElevationAngle.fromAzimuthZenithAngle(
+        pathAngle = AzimuthElevationAngle.of(
                 PSAPlus.calculateSolarPosition(sunset, location.getLatitude(), location.getLongitude(), deltaT));
         sunPath.put(sunset, pathAngle);
 //        System.out.println("sunTime:  " + sunset.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
+    }
+    
+    public void calcSunriseSunsetForHorizon(final Collection<AzimuthElevationAngle> horizon, final int halfInterval) {
+        // check horizon against sunpath to find first and last change of suns visibility
+        // the general case would be a Bentley-Otmann or similar algorithm
+        // but since we have a lot simpler case (all segments belong to one of two lines and are connected to the next at the end points)
+        // we can hopefully use the idea in a much simpler fashion:
+        // 1. from the beginning: for each sunpath element check against the horizon (Catmull Rom spline) if above or below)
+        // 2. stop on first change in sign
+        // 3. do the same backwards from the end of the sunpath til change found or result from #2 reached
+        
+        // we only need to do something if the sun really rises...
+        if (sunrise == null || sunset == null) {
+            return;
+        }
+        
+        sunAboveHorizon.clear();
+        sunBelowHorizon.clear();
+
+        int pathElem = 0;
+        Boolean lastAbove = null;
+        
+        // control points for linear interpolation
+        final AzimuthElevationAngle[] horizonArray = horizon.toArray(new AzimuthElevationAngle[horizon.size()]);
+        AzimuthElevationAngle p0 = horizonArray[0];
+        AzimuthElevationAngle p1 = horizonArray[0];
+        final List<Map.Entry<GregorianCalendar, AzimuthElevationAngle>> mapEntries = new ArrayList<>(sunPath.entrySet());
+        Map.Entry<GregorianCalendar, AzimuthElevationAngle> m0 = mapEntries.get(0);
+        Map.Entry<GregorianCalendar, AzimuthElevationAngle> m1 = mapEntries.get(0);
+        
+        // map to collect all new sunpath points we find
+        final Map<GregorianCalendar, AzimuthElevationAngle> addSunPath = new TreeMap<>();
+
+        for (int i = 0; i < horizonArray.length; i++) {
+            // use last values if available, essentially shift things downwards
+            p0 = p1;
+            p1 = horizonArray[i];
+            
+            // iterate two independent lists with different step size... a bit tricky
+            while (p1.getAzimuth() > mapEntries.get(pathElem).getValue().getAzimuth()) {
+                m0 = m1;
+                m1 = mapEntries.get(pathElem);
+
+//                System.out.println("i: " + i + ", p1.getAzimuth(): " + p1.getAzimuth());
+//                System.out.println("pathElem: " + pathElem + ", m1.getValue().getAzimuth(): " + m1.getValue().getAzimuth());
+                // get interpolated horizon for this azimuth
+                final AzimuthElevationAngle angle =  m1.getValue();
+//                System.out.println("angle: " + angle + " for " + sunPathTimes.get(pathElem).toZonedDateTime() + ", pathElem: " + pathElem);
+                final AzimuthElevationAngle interHorizon = linearInterpolAzimuthElevation(p0, p1, angle);
+//                System.out.println("interHorizon: " + interHorizon);
+                
+                assert angle.getAzimuth() == interHorizon.getAzimuth();
+                
+                Boolean above = angle.getElevation() > interHorizon.getElevation();
+                if (above && (lastAbove == null || !lastAbove)) {
+                    // add this value also to sunpath for the interpolated time
+                    final Pair<GregorianCalendar, AzimuthElevationAngle> interPath = linearInterpolSunPath(m0, m1, interHorizon);
+                    addSunPath.put(interPath.getKey(), interPath.getValue());
+
+                    sunAboveHorizon.add(interPath.getKey());
+                }
+                
+                if (!above && lastAbove != null && lastAbove) {
+                    //  add this value also to sunpath for the interpolated time
+                    final Pair<GregorianCalendar, AzimuthElevationAngle> interPath = linearInterpolSunPath(m0, m1, interHorizon);
+                    addSunPath.put(interPath.getKey(), interPath.getValue());
+
+                    // sun has set - but might not be the last occasion
+                    sunBelowHorizon.add(interPath.getKey());
+                }
+                
+                // try the next sunpath element
+                pathElem++;
+                lastAbove = above;
+                
+                if (pathElem == mapEntries.size()) {
+                    // we have reached the "normal" sunset
+                    break;
+                }
+            }
+
+            if (pathElem == mapEntries.size()) {
+                // we have reached the "normal" sunset
+                break;
+            }
+        }
+        
+        // add new intersections with the horizon
+        sunPath.putAll(addSunPath);
+    }
+    
+    private AzimuthElevationAngle linearInterpolAzimuthElevation(
+            final AzimuthElevationAngle p0, 
+            final AzimuthElevationAngle p1,
+            final AzimuthElevationAngle angle) { 
+        final double t = (angle.getAzimuth() - p0.getAzimuth()) / (p1.getAzimuth() - p0.getAzimuth());
+        
+        return AzimuthElevationAngle.of(angle.getAzimuth(), p0.getElevation() + t * (p1.getElevation() - p0.getElevation()));
+    }
+    private Pair<GregorianCalendar, AzimuthElevationAngle> linearInterpolSunPath(
+            final Map.Entry<GregorianCalendar, AzimuthElevationAngle> m0, 
+            final Map.Entry<GregorianCalendar, AzimuthElevationAngle> m1,
+            final AzimuthElevationAngle angle) {
+        // interpolate time and angle
+        final double t = (angle.getElevation() - m0.getValue().getElevation()) / (m1.getValue().getElevation() - m0.getValue().getElevation());
+
+        // no builder pattern in setTimeInMillis :-(
+        final GregorianCalendar interpolCal = new GregorianCalendar();
+        interpolCal.setTimeInMillis((long) (m0.getKey().getTimeInMillis() + t * (m1.getKey().getTimeInMillis() - m0.getKey().getTimeInMillis())));
+        return Pair.of(
+                interpolCal, 
+                AzimuthElevationAngle.of(m0.getValue().getAzimuth() + t * (m1.getValue().getAzimuth() -  m0.getValue().getAzimuth()), angle.getElevation()));
     }
 
     public GregorianCalendar getPathDate() {
@@ -180,5 +321,31 @@ public class SunPathForDay {
 
     public Map<GregorianCalendar, AzimuthElevationAngle> getSunPath() {
         return sunPath;
+    }
+
+    public List<GregorianCalendar> getSunriseAboveHorizon() {
+        return sunAboveHorizon;
+    }
+
+    public List<GregorianCalendar> getSunsetBelowHorizon() {
+        return sunBelowHorizon;
+    }
+
+    public GregorianCalendar getSunriseForHorizon() {
+        if (sunAboveHorizon.isEmpty()) {
+            return null;
+        } else {
+            // first element is the real sunrise
+            return sunAboveHorizon.get(0);
+        }
+    }
+
+    public GregorianCalendar getSunsetForHorizon() {
+        if (sunBelowHorizon.isEmpty()) {
+            return null;
+        } else {
+            // last element is the real sunset
+            return sunBelowHorizon.get(sunBelowHorizon.size()-1);
+        }
     }
 }
