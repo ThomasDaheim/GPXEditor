@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
@@ -33,8 +34,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import javafx.geometry.Point2D;
@@ -57,6 +60,7 @@ import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.charts.SmoothFilledAreaChart;
@@ -78,7 +82,10 @@ public class HorizonViewer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static HorizonViewer INSTANCE = new HorizonViewer();
-    
+
+    private static final String TOOLTIP = "tooltip";
+    private static final String STYLECLASS = "styleclass";
+
     private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
     
@@ -106,9 +113,9 @@ public class HorizonViewer {
         public String toString() {
             return dateText + ": " + DATE_FORMATTER.format(myDate.toZonedDateTime()) + "\n" + 
                     // TODO: handle null & empty lists
-                    "Sunrise: " + TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()) + ", " + 
+                    "Sunrise: " + TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()) + ", over hor.: " + 
                     TIME_FORMATTER.format(myPath.getSunriseAboveHorizon().get(0).toZonedDateTime()) + "\n" + 
-                    "Sunset: " + TIME_FORMATTER.format(myPath.getSunset().toZonedDateTime()) + ", " + 
+                    "Sunset: " + TIME_FORMATTER.format(myPath.getSunset().toZonedDateTime()) + ", under hor.: " + 
                     TIME_FORMATTER.format(myPath.getSunsetBelowHorizon().get(0).toZonedDateTime());
         }
 
@@ -137,9 +144,10 @@ public class HorizonViewer {
                     new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY), 
                     new SRTMDataOptions(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY));
     
+    // TODO: closer slices nearby, larger steps in the distance
     private final static int DISTANCE_STEP = 1000;
-    private final static int DISTANCE_FROM = DISTANCE_STEP / 2;
-    private final static int DISTANCE_TO = 50000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
+    private final static int DISTANCE_FROM = DISTANCE_STEP * 3 / 2;
+    private final static int DISTANCE_TO = 100000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
     private final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
     
     // we want to have a similar angular resolution for the sun path as for the elevations
@@ -409,6 +417,7 @@ public class HorizonViewer {
     }
     
     public void showHorizon(final IGeoCoordinate loc) {
+//        System.out.println("showHorizon: start " + Instant.now());
         location = loc;
         
         // TODO: init timezone for location
@@ -419,10 +428,13 @@ public class HorizonViewer {
         
         // get the whole set of LatLonElev around our location
         getPanoramaView();
+//        System.out.println("showHorizon: after getPanoramaView() " + Instant.now());
 
         showData();
+//        System.out.println("showHorizon: after showData() " + Instant.now());
         
         stage.show();
+//        System.out.println("showHorizon: end  " + Instant.now());
     }
     
     private void showData() {
@@ -441,19 +453,30 @@ public class HorizonViewer {
         for (XYChart.Series<Number, Number> series : elevationChart.getData()) {
 //            System.out.println("Adding StyleClass " + series.getName());
             series.getNode().getStyleClass().add(series.getName());
-            // data nodes are not part of any group und series...
-            series.getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
 
             for (XYChart.Data<Number, Number> data : series.getData()) {
-                // install tooltip with helpful info
-                final Tooltip tooltip = 
-                        new Tooltip(String.format("Dist: %.1fkm", getDataDistance(data) / 1000) + "\n" + 
-                                String.format("Elev. %.1fm", getDataElevation(data)));
-                tooltip.setShowDelay(Duration.ZERO);
-
-                Tooltip.install(data.getNode(), tooltip);
+                if (getDataVisible(data)) {
+                    // lazy loading for tootips...
+                    data.getNode().setOnMouseEntered((t) -> {
+                        if (!data.getNode().getProperties().containsKey(TOOLTIP)) {
+                            // no tootip there yet, lets add one!
+                            final Tooltip tooltip = 
+                                    new Tooltip(String.format("Dist: %.1fkm", getDataDistance(data) / 1000) + "\n" + 
+                                            String.format("Elev. %.1fm", getDataElevation(data)));
+                            tooltip.setShowDelay(Duration.ZERO);
+                            Tooltip.install(data.getNode(), tooltip);
+                            data.getNode().getProperties().put(TOOLTIP, true);
+                        }
+                    });
+                } else {
+                    data.getNode().setVisible(false);
+                    data.getNode().setDisable(true);
+                }
             }
         }
+        // data nodes are not part of any group und series...
+        // but we only need to add the TOOLTIP_STYLE_CLASS once since all series have the same parent node...
+        elevationChart.getData().get(0).getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
         
         pane.getChildren().add(chartGroup);
     }
@@ -462,7 +485,7 @@ public class HorizonViewer {
         // we want farest away horizon first
         elevationMap = new TreeMap<>(Collections.reverseOrder());
         
-        // lets go backwards to avopid invert when painting
+        // lets go backwards to avoid invert when painting
         for (int distance = DISTANCE_TO; distance >= DISTANCE_FROM; distance = distance - DISTANCE_STEP) {
 //            System.out.println("distance: " + distance);
             final List<Pair<Double, IGeoCoordinate>> angleLatLonElevs = new ArrayList<>();
@@ -494,22 +517,9 @@ public class HorizonViewer {
         // we also clear sun path data here so we know if we should get it on first showing
         sunPathChart.getData().clear();
         
-        int seriesColor = 0;
-        // every n-th step we change the color
-        int colorChange = elevationMap.keySet().size() / COLOR_STEPS;
-        // not really every n-th step... initially less often, finally more often
-        // such that on COLOR_STEPS / 2 we use the average value and anything between 1.8 - 0.4 otherwise
-        final Map<Integer, Integer> colorChangeMap = new HashMap<>();
-        for (int i = 0; i < COLOR_STEPS; i++) {
-            // we scale with anything between 2 and 1/2
-            final double scaleFact = 1.8 - 1.4 / (COLOR_STEPS-1) * i;
-            colorChangeMap.put(i, (int) (scaleFact * colorChange));
-        }
+        // fill basic list and create series only after we have checked for invisible data...
+        final List<List<XYChart.Data<Number, Number>>> dataSetList = new ArrayList<>();
 
-        // performance: add everything to the chart in one go...
-        final List<XYChart.Series<Number, Number>> seriesSet = new ArrayList<>();
-
-        int count = 0;
         double lastValue = Double.MAX_VALUE;
         for (Map.Entry<Double, List<Pair<Double, IGeoCoordinate>>> elevationList : elevationMap.entrySet()) {
             assert elevationList.getKey() < lastValue;
@@ -525,7 +535,7 @@ public class HorizonViewer {
                 
                 double horAngle = coord.getLeft();
                 XYChart.Data<Number, Number> data = new XYChart.Data<>(horAngle, elevationAngle);
-                data.setExtraValue(setExtraValue(distance, coord.getRight()));
+                data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
 
                 // check if we have a new "best" = highest angle for this viewing angle
@@ -547,7 +557,7 @@ public class HorizonViewer {
                     horAngle = horAngle + 360;
                 }
                 data = new XYChart.Data<>(horAngle, elevationAngle);
-                data.setExtraValue(setExtraValue(distance, coord.getRight()));
+                data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
                 if (newBest) {
                     helper.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
@@ -555,7 +565,70 @@ public class HorizonViewer {
             }
             // sort data since we added stuff before & after
             Collections.sort(dataSet, Comparator.comparingDouble(d -> d.getXValue().doubleValue()));
+            
+            dataSetList.add(dataSet);
 
+            lastValue = elevationList.getKey();
+        }
+
+        // and now convert helper to final map
+        for (Map.Entry<Double, Pair<Double, IGeoCoordinate>> entry : helper.entrySet()) {
+            horizonMap.put(AzimuthElevationAngle.of(entry.getKey(), entry.getValue().getLeft()), entry.getValue().getRight());
+        }
+        
+        // check which points are actually visible
+        // go from front to back and check if above horizon (that we also build up this way...)
+        final Set<List<XYChart.Data<Number, Number>>> invisibleSeries = new HashSet<>();
+        final Map<Number, Number> visibleMap = new TreeMap<>();
+        for(int i = dataSetList.size() - 1; i >= 0; i--) {
+            final List<XYChart.Data<Number, Number>> dataSet = dataSetList.get(i);
+            
+            final Set<XYChart.Data<Number, Number>> invisibleData = new HashSet<>();
+            for (XYChart.Data<Number, Number> data : dataSet) {
+                if (!visibleMap.containsKey(data.getXValue()) || data.getYValue().doubleValue() > visibleMap.get(data.getXValue()).doubleValue()) {
+                    // new highest elevation for this azimuth
+                    visibleMap.put(data.getXValue(), data.getYValue());
+                } else {
+//                    // point not visible!
+////                    System.out.println("Datapoint not visible: " + data);
+                    final Triple<Double, IGeoCoordinate, Boolean> curTriple = ObjectsHelper.uncheckedCast(data.getExtraValue());
+                    data.setExtraValue(Triple.of(curTriple.getLeft(), curTriple.getMiddle(), false));
+                    invisibleData.add(data);
+                }
+            }
+            
+            // TODO: removing all invisible data points leads to funny lines - probably one would need to keep the ones next to a visible one...
+            // so you would need to reduce the set to the items that have an invisible neighbour only - surely somie clever stream() could do that
+            // we don't need that data...
+//            dataSet.removeAll(invisibleData);
+//            if (dataSet.isEmpty()) {
+            if (dataSet.size() == invisibleData.size()) {
+                // we don't need the whole set...
+                invisibleSeries.add(dataSetList.get(i));
+            }
+        }
+        dataSetList.removeAll(invisibleSeries);
+        
+        // now we are left with only the datasets that are actually visible
+        // time to build XYChart.Series
+        int seriesColor = 0;
+        // every n-th step we change the color
+        double colorChange = dataSetList.size() / COLOR_STEPS;
+        // not really every n-th step... initially less often, finally more often
+        // such that on COLOR_STEPS / 2 we use the average value and anything between 1.8 - 0.4 otherwise
+        final Map<Integer, Integer> colorChangeMap = new HashMap<>();
+        for (int i = 0; i < COLOR_STEPS; i++) {
+            // we scale with anything between 2 and 1/2
+            final double scaleFact = 1.6 - 1.0 / (COLOR_STEPS-1) * i;
+//            final double scaleFact = 1;
+            colorChangeMap.put(i, (int) (scaleFact * colorChange));
+        }
+
+        // performance: add everything to the chart in one go...
+        final List<XYChart.Series<Number, Number>> seriesSet = new ArrayList<>();
+
+        int count = 0;
+        for (List<XYChart.Data<Number, Number>> dataSet : dataSetList) {
             // now do the costly operation and create a series
             final XYChart.Series<Number, Number> series = new XYChart.Series<>();
             series.getData().addAll(dataSet);
@@ -566,35 +639,29 @@ public class HorizonViewer {
 //            System.out.println("Using series color " + COLOR_STYLE_CLASS_PREFIX + seriesColor);
             series.setName(COLOR_STYLE_CLASS_PREFIX + seriesColor);
  
-            lastValue = elevationList.getKey();
-            
             // there is surely some clever way to do this... autoincrement?
             count++;
-            if (count > colorChangeMap.get(seriesColor)) {
+            if (count >= colorChangeMap.get(seriesColor)) {
                 count = 0;
-                seriesColor++;
+                // due to rounding to int we can run over the number of colors...
+                seriesColor = Math.min(seriesColor+1, COLOR_STEPS-1);
             }
-        }
-        
-        // and now convert helper to final map
-        for (Map.Entry<Double, Pair<Double, IGeoCoordinate>> entry : helper.entrySet()) {
-            horizonMap.put(AzimuthElevationAngle.of(entry.getKey(), entry.getValue().getLeft()), entry.getValue().getRight());
         }
         
         elevationChart.getData().addAll(seriesSet);
     }
     
-    private Pair<Double, IGeoCoordinate> setExtraValue(final Double distance, final IGeoCoordinate coord) {
-        return Pair.of(distance, coord);
+    @SuppressWarnings("unchecked")
+    private boolean getDataVisible(final XYChart.Data<Number, Number> data) {
+        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getRight();
     }
-    
     @SuppressWarnings("unchecked")
     private double getDataDistance(final XYChart.Data<Number, Number> data) {
-        return ((Pair<Double, IGeoCoordinate>) data.getExtraValue()).getLeft();
+        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getLeft();
     }
     @SuppressWarnings("unchecked")
     private double getDataElevation(final XYChart.Data<Number, Number> data) {
-        return ((Pair<Double, IGeoCoordinate>) data.getExtraValue()).getRight().getElevation();
+        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getMiddle().getElevation();
     }
 
     private void setAxes() {
