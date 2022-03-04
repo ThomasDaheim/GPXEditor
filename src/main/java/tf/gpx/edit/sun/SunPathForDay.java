@@ -38,7 +38,6 @@ import java.util.TreeMap;
 import net.e175.klaus.solarpositioning.DeltaT;
 import net.e175.klaus.solarpositioning.SPA;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.util.FastMath;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.DateTimeCalendarHelper;
@@ -66,6 +65,8 @@ public class SunPathForDay {
     private GregorianCalendar transit = null;
     private GregorianCalendar sunset = null;
     private final Map<GregorianCalendar, AzimuthElevationAngle> sunPath = new TreeMap<>();
+    private boolean sunNeverRises = false;
+    private boolean sunNeverSets = false;
     
     // generalization of sunrise / sunset against a horizon
     // sun might get hidden during the day due to high mountain, ...
@@ -134,21 +135,48 @@ public class SunPathForDay {
         
         // we only need the path if the sun really rises...
         if (sunrise == null || sunset == null) {
-            return;
+            // could be always above or always below horizon...
+            AzimuthElevationAngle angle = 
+                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
+            
+            if (angle.getElevation() < 0) {
+                // sun doesn't rise... nothing to do
+                sunNeverRises = true;
+                return;
+            } else {
+                sunNeverSets = true;
+            }
+        }
+        
+        GregorianCalendar startTime;
+        GregorianCalendar endTime;
+        if (sunrise != null) {
+            startTime = sunrise;
+        } else {
+            // we start @ midnight
+            startTime = new GregorianCalendar(
+                    transit.get(Calendar.YEAR), transit.get(Calendar.MONTH), transit.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        }
+        if (sunset != null) {
+            endTime = sunset;
+        } else {
+            // we end @ midnight
+            endTime = new GregorianCalendar(
+                    transit.get(Calendar.YEAR), transit.get(Calendar.MONTH), transit.get(Calendar.DAY_OF_MONTH), 23, 59, 59);
         }
         
         AzimuthElevationAngle pathAngle = 
-                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(sunrise, location.getLatitude(), location.getLongitude(), deltaT));
-        sunPath.put(sunrise, pathAngle);
+                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(startTime, location.getLatitude(), location.getLongitude(), deltaT));
+        sunPath.put(startTime, pathAngle);
 //        System.out.println("sunTime:  " + sunrise.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
         
         // round to sunrise to the next 20 minute
-        GregorianCalendar pathTime = DateTimeCalendarHelper.roundCalendarToInterval(sunrise, intervalType, interval);
-        if (pathTime.before(sunrise)) {
+        GregorianCalendar pathTime = DateTimeCalendarHelper.roundCalendarToInterval(startTime, intervalType, interval);
+        if (pathTime.before(startTime)) {
             pathTime.add(Calendar.MINUTE, interval);
         }
 
-        while (pathTime.before(sunset)) {
+        while (pathTime.before(endTime)) {
             pathAngle = AzimuthElevationAngle.of(
                     PSAPlus.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), deltaT));
             sunPath.put(pathTime, pathAngle);
@@ -170,8 +198,8 @@ public class SunPathForDay {
         }
 
         pathAngle = AzimuthElevationAngle.of(
-                PSAPlus.calculateSolarPosition(sunset, location.getLatitude(), location.getLongitude(), deltaT));
-        sunPath.put(sunset, pathAngle);
+                PSAPlus.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), deltaT));
+        sunPath.put(endTime, pathAngle);
 //        System.out.println("sunTime:  " + sunset.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
     }
     
@@ -184,8 +212,7 @@ public class SunPathForDay {
         // 2. stop on first change in sign
         // 3. do the same backwards from the end of the sunpath til change found or result from #2 reached
         
-        // we only need to do something if the sun really rises...
-        if (sunrise == null || sunset == null) {
+        if (sunNeverRises) {
             return;
         }
         
@@ -285,6 +312,14 @@ public class SunPathForDay {
         return Pair.of(
                 interpolCal, 
                 AzimuthElevationAngle.of(m0.getValue().getAzimuth() + t * (m1.getValue().getAzimuth() -  m0.getValue().getAzimuth()), angle.getElevation()));
+    }
+    
+    public boolean sunNeverRises() {
+        return sunNeverRises;
+    }
+
+    public boolean sunNeverSets() {
+        return sunNeverSets;
     }
 
     public GregorianCalendar getPathDate() {

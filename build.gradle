@@ -84,6 +84,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-text', version: '1.9'
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.21'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
     implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.1'
     
@@ -114,13 +115,6 @@ dependencies {
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
     
-//    implementation 'org.jzy3d:jzy3d-api:1.0.3'
-//    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
-    
-////    // TFE, 20220109: orson charts once again
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
-
     // TFE, 20220115: 3rd alternative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.5.4'
     
@@ -129,6 +123,10 @@ dependencies {
     
     // sun data
     implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
+    
+    // timezone provider
+    implementation group: 'us.dustinj.timezonemap', name: 'timezonemap', version: '4.5'
+    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.2-2'
     
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     // TFE, 20220205: not working, "No test cases executed" after all the code changes...

@@ -373,6 +373,13 @@
     -fx-text-alignment: left;
     -fx-text-origin: top;
 }
+.sunpath-noelevationdata-label {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 0;
+    -fx-text-alignment: center;
+    -fx-font-size: 200%;
+    -fx-font-weight: bold;
+}
 
 .track-popup {
     -fx-fill: black;

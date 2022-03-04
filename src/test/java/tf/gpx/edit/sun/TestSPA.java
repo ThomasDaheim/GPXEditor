@@ -25,6 +25,9 @@
  */
 package tf.gpx.edit.sun;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
@@ -32,6 +35,8 @@ import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.SPA;
 import org.junit.Assert;
 import org.junit.Test;
+import tf.gpx.edit.elevation.HorizonViewer;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  * Test of the SPA implementation.
@@ -88,5 +93,47 @@ public class TestSPA {
         angle = SPA.calculateSolarPosition(result[2], 48.1372222, 11.57611111111111, 520, 69.29);
         Assert.assertEquals(255.833650, angle.getAzimuth(), TOLERANCE); // 256 from website
         Assert.assertEquals(90.837069, angle.getZenithAngle(), TOLERANCE); // 90 is horizon
+    }
+    
+    @Test
+    public void testDunedin() {
+        final LatLonElev location = new LatLonElev(-45.874473216900626, 170.50746917724612);
+        final ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("Pacific/Auckland"));
+
+        // not south enough to not have sunrise / sunset
+        GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
+        SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        Assert.assertNotNull(path.getSunrise());
+        Assert.assertNotNull(path.getSunset());
+
+        // and now for summer
+        date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
+        path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        Assert.assertNotNull(path.getSunrise());
+        Assert.assertNotNull(path.getSunset());
+
+        // and now for winter
+        date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
+        path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        Assert.assertNotNull(path.getSunrise());
+        Assert.assertNotNull(path.getSunset());
+    }
+    
+    @Test
+    public void testAntarctica() {
+        final LatLonElev location = new LatLonElev(-82.63133285369295, 156.79687500000003);
+        final ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("Australia/Perth"));
+
+        // and now for summer: sun never rises
+        GregorianCalendar date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
+        SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        Assert.assertNull(path.getSunrise());
+        Assert.assertNull(path.getSunset());
+
+        // and now for winter: sun nevwer sets
+        date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
+        path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        Assert.assertNull(path.getSunrise());
+        Assert.assertNull(path.getSunset());
     }
 }

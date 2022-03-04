@@ -24,6 +24,12 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ## Following features are available via UI:
 
+### Update v5.7
+
+* SunPath: show the suns  path for today / summer / winter on the HorizonViewer; show the "actual" sunrise & sunset times, taking horizon into account
+* TimeZone: added timezone support where necessary (SunPath calculations, TimeZone overlay)
+* Performance: drastically improve speed of reading SRTM data and showing it
+
 ### Update v5.6
 
 * Images on Maps! Images can be shown on maps as camera iconcs. JSON files with image info are used similar to hgt files for heigt info. MakeImageJSON.java gives an implementation that can create such JSON files using exiftool.
@@ -394,7 +400,7 @@ Explicit dependencies:
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'org.im4java:im4java:1.4.0'
 * 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-* 'rg.fxyz3d:fxyz3d:0.5.4'
+* 'org.fxyz3d:fxyz3d:0.5.4'
 * 'org.magicwerk.brownies:brownies-collections:0.9.16'
 
 * 'org.junit.jupiter:junit-jupiter-api:4.13.2'

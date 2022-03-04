@@ -134,6 +134,7 @@ import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.TaskExecutor;
+import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -500,6 +501,11 @@ public class GPXEditor implements Initializable {
         // TFE, 20201030: select first item if passed as arg
         Platform.runLater(() -> {
             gpxFileList.getSelectionModel().select(0);
+        });
+
+        // TFE, 20220304: set up the timezone provider - that takes a while...
+        Platform.runLater(() -> {
+            TimeZoneProvider.init();
         });
     }
 

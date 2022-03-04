@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -64,6 +65,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.charts.SmoothFilledAreaChart;
+import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
@@ -111,12 +113,38 @@ public class HorizonViewer {
         
         @Override
         public String toString() {
-            return dateText + ": " + DATE_FORMATTER.format(myDate.toZonedDateTime()) + "\n" + 
-                    // TODO: handle null & empty lists
-                    "Sunrise: " + TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()) + ", over hor.: " + 
-                    TIME_FORMATTER.format(myPath.getSunriseAboveHorizon().get(0).toZonedDateTime()) + "\n" + 
-                    "Sunset: " + TIME_FORMATTER.format(myPath.getSunset().toZonedDateTime()) + ", under hor.: " + 
-                    TIME_FORMATTER.format(myPath.getSunsetBelowHorizon().get(0).toZonedDateTime());
+            final StringBuilder builder = new StringBuilder();
+                    
+            builder.append(dateText).append(": ").append(DATE_FORMATTER.format(myDate.toZonedDateTime())).append(" (").append(myDate.getTimeZone().getID()).append(")\n");
+            
+            builder.append("Sunrise: ");
+            if (myPath.getSunrise() != null) {
+                builder.append(TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()));
+            } else {
+                builder.append("---");
+            }
+            builder.append(", over hor.: ");
+            if (!myPath.getSunriseAboveHorizon().isEmpty()) {
+                builder.append(TIME_FORMATTER.format(myPath.getSunriseAboveHorizon().get(0).toZonedDateTime()));
+            } else {
+                builder.append("---");
+            }
+            builder.append("\n");
+            
+            builder.append("Sunset: ");
+            if (myPath.getSunrise() != null) {
+                builder.append(TIME_FORMATTER.format(myPath.getSunset().toZonedDateTime()));
+            } else {
+                builder.append("---");
+            }
+            builder.append(", over hor.: ");
+            if (!myPath.getSunsetBelowHorizon().isEmpty()) {
+                builder.append(TIME_FORMATTER.format(myPath.getSunsetBelowHorizon().get(0).toZonedDateTime()));
+            } else {
+                builder.append("---");
+            }
+            
+            return builder.toString();
         }
 
         public GregorianCalendar getDate() {
@@ -171,6 +199,7 @@ public class HorizonViewer {
     private final LineChart<Number, Number> sunPathChart = new LineChart<>(new NumberAxis(), new NumberAxis());
     private final NumberAxis xAxisSun;
     private final NumberAxis yAxisSun;
+    private final Label sunPathLabel = new Label();
     // toFront() and toBack() only work within the same group...
     private final Group chartGroup = new Group(elevationChart, sunPathChart);
     private final StackPane pane = new StackPane();
@@ -195,6 +224,10 @@ public class HorizonViewer {
     private SortedMap<AzimuthElevationAngle, IGeoCoordinate> horizonMap;
     
     private IGeoCoordinate location;
+    private TimeZone timeZone;
+    
+    private final Label noElevationDataLabel = new Label("No elevation data available");
+    private boolean noElevationData = false;
     
     private HorizonViewer() {
         // Exists only to defeat instantiation.
@@ -331,8 +364,18 @@ public class HorizonViewer {
         label.getStyleClass().add("horizon-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
         label.toFront();
-        pane.getChildren().add(label);
         
+        sunPathLabel.getStyleClass().add("sunpath-viewer-label");
+        StackPane.setAlignment(sunPathLabel, Pos.TOP_RIGHT);
+        sunPathLabel.toFront();
+        sunPathLabel.setVisible(false);
+
+        noElevationDataLabel.getStyleClass().add("sunpath-noelevationdata-label");
+        StackPane.setAlignment(noElevationDataLabel, Pos.CENTER);
+        noElevationDataLabel.toFront();
+        noElevationDataLabel.setVisible(false);
+
+        pane.getChildren().addAll(label, sunPathLabel, noElevationDataLabel);
         pane.getStyleClass().add("horizon-pane");
         
         scene.setOnKeyPressed((t) -> {
@@ -419,6 +462,9 @@ public class HorizonViewer {
     public void showHorizon(final IGeoCoordinate loc) {
 //        System.out.println("showHorizon: start " + Instant.now());
         location = loc;
+        // TFE, 20220303: timezone is location dependent...
+        timeZone = TimeZoneProvider.getInstance().getTimeZone(loc);
+//        System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
         
         // TODO: init timezone for location
         // see https://github.com/RomanIakovlev/timeshape
@@ -478,12 +524,16 @@ public class HorizonViewer {
         // but we only need to add the TOOLTIP_STYLE_CLASS once since all series have the same parent node...
         elevationChart.getData().get(0).getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
         
+        // we didn't have any data - lets alert the user
+        noElevationDataLabel.setVisible(noElevationData);
+        
         pane.getChildren().add(chartGroup);
     }
 
     private void getPanoramaView() {
         // we want farest away horizon first
         elevationMap = new TreeMap<>(Collections.reverseOrder());
+        noElevationData = true;
         
         // lets go backwards to avoid invert when painting
         for (int distance = DISTANCE_TO; distance >= DISTANCE_FROM; distance = distance - DISTANCE_STEP) {
@@ -497,6 +547,10 @@ public class HorizonViewer {
                 // the point where looking at
                 final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
                 target.setElevation(elevationService.getElevationForCoordinate(target));
+                
+                if (noElevationData && IElevationProvider.NO_ELEVATION != target.getElevation()) {
+                    noElevationData = false;
+                }
                 
                 angleLatLonElevs.add(Pair.of(angle, target));
             }
@@ -516,6 +570,7 @@ public class HorizonViewer {
         elevationChart.getData().clear();
         // we also clear sun path data here so we know if we should get it on first showing
         sunPathChart.getData().clear();
+        sunPathLabel.setVisible(false);
         
         // fill basic list and create series only after we have checked for invisible data...
         final List<List<XYChart.Data<Number, Number>>> dataSetList = new ArrayList<>();
@@ -691,21 +746,27 @@ public class HorizonViewer {
             boolean firstTime = false;
             if (sunPathChart.getData().isEmpty()) {
                 firstTime = true;
+
+                final ZonedDateTime zonedDateTime = ZonedDateTime.now(timeZone.toZoneId());
+
                 // we need to create the sun path line chart
-                SunPathForDay path = new SunPathForDay(GregorianCalendar.from(ZonedDateTime.now()), location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
+                GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
+                SunPathForDay path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
-                SunPathForDate.TODAY.setDate(GregorianCalendar.from(ZonedDateTime.now()));
+                SunPathForDate.TODAY.setDate(date);
                 SunPathForDate.TODAY.setPath(path);
                 
                 // and now for summer
-                GregorianCalendar date = new GregorianCalendar(ZonedDateTime.now().getYear(), 5, 21);
+                date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
+                date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
                 SunPathForDate.SUMMER.setDate(date);
                 SunPathForDate.SUMMER.setPath(path);
                 
                 // and now for winter
-                date = new GregorianCalendar(ZonedDateTime.now().getYear(), 11, 21);
+                date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
+                date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
                 SunPathForDate.WINTER.setDate(date);
@@ -726,12 +787,8 @@ public class HorizonViewer {
                 }
                 
                 // and also a label with all the vailable data...
-                final Label label = 
-                        new Label(SunPathForDate.TODAY + "\n\n" + SunPathForDate.SUMMER + "\n\n" + SunPathForDate.WINTER);
-                label.getStyleClass().add("sunpath-viewer-label");
-                StackPane.setAlignment(label, Pos.TOP_RIGHT);
-                label.toFront();
-                pane.getChildren().add(label);
+                sunPathLabel.setText(SunPathForDate.TODAY + "\n\n" + SunPathForDate.SUMMER + "\n\n" + SunPathForDate.WINTER);
+                sunPathLabel.setVisible(true);
 
                 sunPathChart.applyCss();
                 sunPathChart.layout();

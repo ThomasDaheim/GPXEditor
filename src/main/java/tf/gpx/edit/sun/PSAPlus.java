@@ -30,6 +30,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.JulianDate;
+import net.e175.klaus.solarpositioning.SPA;
 import org.apache.commons.math3.util.FastMath;
 
 /**
