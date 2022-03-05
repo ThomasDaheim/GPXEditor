@@ -49,6 +49,9 @@ import tf.helper.general.ObjectsHelper;
  * Call the SPA/PSA algorithms internally and provide a full path of the sun
  * during sunrise & sunset as time / azimuth / elevation angle.
  * 
+ * Using https://github.com/KlausBrunner/solarpositioningv for SPA implementation
+ * and as basis for our own PSAPlus version.
+ * 
  * @author thomas
  */
 public class SunPathForDay {
@@ -138,6 +141,8 @@ public class SunPathForDay {
             // could be always above or always below horizon...
             AzimuthElevationAngle angle = 
                 AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
+//            AzimuthElevationAngle angle = 
+//                AzimuthElevationAngle.of(SPA.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
             
             if (angle.getElevation() < 0) {
                 // sun doesn't rise... nothing to do
@@ -167,6 +172,8 @@ public class SunPathForDay {
         
         AzimuthElevationAngle pathAngle = 
                 AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(startTime, location.getLatitude(), location.getLongitude(), deltaT));
+//        AzimuthElevationAngle pathAngle = 
+//            AzimuthElevationAngle.of(SPA.calculateSolarPosition(startTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
         sunPath.put(startTime, pathAngle);
 //        System.out.println("sunTime:  " + sunrise.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
         
@@ -179,6 +186,8 @@ public class SunPathForDay {
         while (pathTime.before(endTime)) {
             pathAngle = AzimuthElevationAngle.of(
                     PSAPlus.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), deltaT));
+//            pathAngle = 
+//                AzimuthElevationAngle.of(SPA.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
             sunPath.put(pathTime, pathAngle);
 //            System.out.println("sunTime:  " + pathTime.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
 
@@ -192,6 +201,8 @@ public class SunPathForDay {
             if (prevPathTime.before(transit) && pathTime.after(transit)) {
                 pathAngle = AzimuthElevationAngle.of(
                         PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
+//                pathAngle = 
+//                    AzimuthElevationAngle.of(SPA.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
                 sunPath.put(transit, pathAngle);
 //                System.out.println("sunTime:  " + transit.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
             }
@@ -199,6 +210,8 @@ public class SunPathForDay {
 
         pathAngle = AzimuthElevationAngle.of(
                 PSAPlus.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), deltaT));
+//        pathAngle = 
+//            AzimuthElevationAngle.of(SPA.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
         sunPath.put(endTime, pathAngle);
 //        System.out.println("sunTime:  " + sunset.toZonedDateTime().toString() + ", sunAngle:  " + pathAngle);
     }
@@ -208,9 +221,8 @@ public class SunPathForDay {
         // the general case would be a Bentley-Otmann or similar algorithm
         // but since we have a lot simpler case (all segments belong to one of two lines and are connected to the next at the end points)
         // we can hopefully use the idea in a much simpler fashion:
-        // 1. from the beginning: for each sunpath element check against the horizon (Catmull Rom spline) if above or below)
-        // 2. stop on first change in sign
-        // 3. do the same backwards from the end of the sunpath til change found or result from #2 reached
+        // 1. for each sunpath element check against the horizon (linear interpolation) if above or below)
+        // 2. store every sign change as sunrise or sunset
         
         if (sunNeverRises) {
             return;
@@ -218,42 +230,74 @@ public class SunPathForDay {
         
         sunAboveHorizon.clear();
         sunBelowHorizon.clear();
+        
+        if (horizon == null || horizon.isEmpty()) {
+            return;
+        }
 
         int pathElem = 0;
         Boolean lastAbove = null;
         
-        // control points for linear interpolation
-        final AzimuthElevationAngle[] horizonArray = horizon.toArray(new AzimuthElevationAngle[horizon.size()]);
-        AzimuthElevationAngle p0 = horizonArray[0];
-        AzimuthElevationAngle p1 = horizonArray[0];
+        final List<AzimuthElevationAngle> extendedHorizon = new ArrayList<>(horizon);
+        // horizon is usually from -180 - 180 with North in the middle
+        // sunpath is with south in the middle, 180-X - 180+X with max 0 - 360 (for no sunset)
+        // so we need to make sure we get the horizon extended to the proper range - 
+        // meaning that we need to duplicate values in horizon beyond 180 to 270
+        // concrete the values from -180 - -90 to 180 - 270 by simple adding 360 to the azimuth
+        final AzimuthElevationAngle finalAngle = extendedHorizon.get(extendedHorizon.size()-1);
+        if (finalAngle.getAzimuth() < 270) {
+            final List<AzimuthElevationAngle> addValues = new ArrayList<>();
+                    
+            for (AzimuthElevationAngle angle : extendedHorizon) {
+                final double azimuth = angle.getAzimuth();
+                if (azimuth > 0) {
+                    // we don't need to go beyond 360
+                    break;
+                }
+
+                if (azimuth + 360 > finalAngle.getAzimuth()) {
+                    // we don't have that value yet
+                    addValues.add(AzimuthElevationAngle.of(azimuth + 360, angle.getElevation()));
+                }
+            }
+            
+            extendedHorizon.addAll(addValues);
+        }
+
         final List<Map.Entry<GregorianCalendar, AzimuthElevationAngle>> mapEntries = new ArrayList<>(sunPath.entrySet());
+
+        // control points for linear interpolation
+        AzimuthElevationAngle p0 = extendedHorizon.get(0);
+        AzimuthElevationAngle p1 = extendedHorizon.get(0);
         Map.Entry<GregorianCalendar, AzimuthElevationAngle> m0 = mapEntries.get(0);
         Map.Entry<GregorianCalendar, AzimuthElevationAngle> m1 = mapEntries.get(0);
         
         // map to collect all new sunpath points we find
         final Map<GregorianCalendar, AzimuthElevationAngle> addSunPath = new TreeMap<>();
-
-        for (int i = 0; i < horizonArray.length; i++) {
+        
+        for (int i = 0; i < extendedHorizon.size(); i++) {
+//            System.out.println("i: " + i + ", p1.getAzimuth(): " + p1.getAzimuth());
             // use last values if available, essentially shift things downwards
             p0 = p1;
-            p1 = horizonArray[i];
-            
+            p1 = extendedHorizon.get(i);
+
             // iterate two independent lists with different step size... a bit tricky
             while (p1.getAzimuth() > mapEntries.get(pathElem).getValue().getAzimuth()) {
+//                System.out.println("pathElem: " + pathElem + ", m1.getValue().getAzimuth(): " + m1.getValue().getAzimuth());
+
                 m0 = m1;
                 m1 = mapEntries.get(pathElem);
 
-//                System.out.println("i: " + i + ", p1.getAzimuth(): " + p1.getAzimuth());
-//                System.out.println("pathElem: " + pathElem + ", m1.getValue().getAzimuth(): " + m1.getValue().getAzimuth());
                 // get interpolated horizon for this azimuth
                 final AzimuthElevationAngle angle =  m1.getValue();
-//                System.out.println("angle: " + angle + " for " + sunPathTimes.get(pathElem).toZonedDateTime() + ", pathElem: " + pathElem);
                 final AzimuthElevationAngle interHorizon = linearInterpolAzimuthElevation(p0, p1, angle);
-//                System.out.println("interHorizon: " + interHorizon);
                 
                 assert angle.getAzimuth() == interHorizon.getAzimuth();
                 
+//                System.out.println("sunpath angle: " + angle.getElevation() + ", horizon angle: " + interHorizon.getElevation());
+
                 Boolean above = angle.getElevation() > interHorizon.getElevation();
+//                System.out.println("above: " + above + ", lastAbove: " + lastAbove);
                 if (above && (lastAbove == null || !lastAbove)) {
                     // add this value also to sunpath for the interpolated time
                     final Pair<GregorianCalendar, AzimuthElevationAngle> interPath = linearInterpolSunPath(m0, m1, interHorizon);

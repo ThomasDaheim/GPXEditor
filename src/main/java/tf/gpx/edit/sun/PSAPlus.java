@@ -30,7 +30,6 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.JulianDate;
-import net.e175.klaus.solarpositioning.SPA;
 import org.apache.commons.math3.util.FastMath;
 
 /**
@@ -40,13 +39,13 @@ import org.apache.commons.math3.util.FastMath;
  * https://github.com/KlausBrunner/solarpositioning/blob/master/src/main/java/net/e175/klaus/solarpositioning/PSA.java
  * but using the PSA+ parameters as given in 
  * https://www.sciencedirect.com/science/article/pii/S0038092X20311488
- * to extend the validity odf the algorithm til 2050.
+ * to extend the validity of the algorithm til 2050.
  * 
  * @author thomas
  */
 public class PSAPlus {
     private static final double D_EARTH_MEAN_RADIUS = 6371.01; // in km
-    private static final double D_ASTRONOMICAL_UNIT = 149597890; // in km
+    private static final double D_ASTRONOMICAL_UNIT = 149597870.7; // in km
 
     private static final double PI = Math.PI;
     private static final double TWOPI = (2 * PI);
@@ -58,7 +57,7 @@ public class PSAPlus {
     /**
      * Calculate sun position for a given time and location.
      *
-     * @param date      Note that it's unclear how well the algorithm performs before the year 1990 or after the year 2015.
+     * @param date      Algorithm is known to be "good" (<30 arcsec accuracy) for 2020 - 2050.
      * @param latitude  in degrees (positive east of Greenwich)
      * @param longitude in degrees (positive north of equator)
      * @param deltaT      Difference between earth rotation time and terrestrial time (or Universal Time and Terrestrial Time),

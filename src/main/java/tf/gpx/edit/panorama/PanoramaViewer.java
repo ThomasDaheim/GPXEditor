@@ -23,9 +23,8 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.elevation;
+package tf.gpx.edit.panorama;
 
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
@@ -38,7 +37,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javafx.geometry.Point2D;
@@ -62,12 +60,10 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.charts.SmoothFilledAreaChart;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.helper.general.ObjectsHelper;
@@ -80,10 +76,10 @@ import tf.helper.general.ObjectsHelper;
  * 
  * @author thomas
  */
-public class HorizonViewer {
+public class PanoramaViewer {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static HorizonViewer INSTANCE = new HorizonViewer();
+    private final static PanoramaViewer INSTANCE = new PanoramaViewer();
 
     private static final String TOOLTIP = "tooltip";
     private static final String STYLECLASS = "styleclass";
@@ -117,6 +113,16 @@ public class HorizonViewer {
                     
             builder.append(dateText).append(": ").append(DATE_FORMATTER.format(myDate.toZonedDateTime())).append(" (").append(myDate.getTimeZone().getID()).append(")\n");
             
+            if (myPath.sunNeverRises()) {
+                builder.append("The sun doesn't rise");
+                return builder.toString();
+            }
+
+            if (myPath.sunNeverSets()) {
+                builder.append("The sun doesn't set");
+                return builder.toString();
+            }
+
             builder.append("Sunrise: ");
             if (myPath.getSunrise() != null) {
                 builder.append(TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()));
@@ -137,7 +143,7 @@ public class HorizonViewer {
             } else {
                 builder.append("---");
             }
-            builder.append(", over hor.: ");
+            builder.append(", under hor.: ");
             if (!myPath.getSunsetBelowHorizon().isEmpty()) {
                 builder.append(TIME_FORMATTER.format(myPath.getSunsetBelowHorizon().get(0).toZonedDateTime()));
             } else {
@@ -167,17 +173,6 @@ public class HorizonViewer {
     private final static int VIEWER_WIDTH = 1400;
     private final static int VIEWER_HEIGHT = 600;
     
-    private final SRTMElevationService elevationService = 
-            new SRTMElevationService(
-                    new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY), 
-                    new SRTMDataOptions(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY));
-    
-    // TODO: closer slices nearby, larger steps in the distance
-    private final static int DISTANCE_STEP = 1000;
-    private final static int DISTANCE_FROM = DISTANCE_STEP * 3 / 2;
-    private final static int DISTANCE_TO = 100000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
-    private final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
-    
     // we want to have a similar angular resolution for the sun path as for the elevations
     // the "average" sun path is 12 hours covering 180 degrees (equinox @ equator)
     // in order to have 60 intervals here as well we need a granularity of
@@ -192,7 +187,7 @@ public class HorizonViewer {
     private final static String COLOR_STYLE_CLASS_PREFIX = "color-step-";
     private final static String TOOLTIP_STYLE_CLASS = "horizon-tooltip";
 
-    // switch to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
+    // switched to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
     private final AreaChart<Number, Number> elevationChart = new SmoothFilledAreaChart<>(new NumberAxis(), new NumberAxis());
     private final NumberAxis xAxisElev;
     private final NumberAxis yAxisElev;
@@ -206,9 +201,6 @@ public class HorizonViewer {
     private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
     private final Stage stage = new Stage();
     
-    private double minAngle;
-    private double maxAngle;
-    
     private final static double MIN_HOR_ANGLE = -360.0;
     private final static double MAX_HOR_ANGLE = 360.0;
 
@@ -220,19 +212,17 @@ public class HorizonViewer {
     private double mouseOldY;
     boolean dragActive = false;
     
-    private SortedMap<Double, List<Pair<Double, IGeoCoordinate>>> elevationMap;
-    private SortedMap<AzimuthElevationAngle, IGeoCoordinate> horizonMap;
+    private Panorama panorama;
     
     private IGeoCoordinate location;
     private TimeZone timeZone;
     
     private final Label noElevationDataLabel = new Label("No elevation data available");
-    private boolean noElevationData = false;
     
-    private HorizonViewer() {
+    private PanoramaViewer() {
         // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
-        scene.getStylesheets().add(HorizonViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        scene.getStylesheets().add(PanoramaViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setScene(scene);
@@ -455,25 +445,19 @@ public class HorizonViewer {
         chart.setLegendVisible(false);
     }
 
-    public static HorizonViewer getInstance() {
+    public static PanoramaViewer getInstance() {
         return INSTANCE;
     }
     
-    public void showHorizon(final IGeoCoordinate loc) {
+    public void showPanorama(final IGeoCoordinate loc) {
 //        System.out.println("showHorizon: start " + Instant.now());
         location = loc;
         // TFE, 20220303: timezone is location dependent...
         timeZone = TimeZoneProvider.getInstance().getTimeZone(loc);
 //        System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
-        
-        // TODO: init timezone for location
-        // see https://github.com/RomanIakovlev/timeshape
 
-        // set the current elevation
-        location.setElevation(elevationService.getElevationForCoordinate(location));
-        
         // get the whole set of LatLonElev around our location
-        getPanoramaView();
+        panorama = new Panorama(loc);
 //        System.out.println("showHorizon: after getPanoramaView() " + Instant.now());
 
         showData();
@@ -525,48 +509,12 @@ public class HorizonViewer {
         elevationChart.getData().get(0).getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
         
         // we didn't have any data - lets alert the user
-        noElevationDataLabel.setVisible(noElevationData);
+        noElevationDataLabel.setVisible(panorama.noElevationData());
         
         pane.getChildren().add(chartGroup);
     }
 
-    private void getPanoramaView() {
-        // we want farest away horizon first
-        elevationMap = new TreeMap<>(Collections.reverseOrder());
-        noElevationData = true;
-        
-        // lets go backwards to avoid invert when painting
-        for (int distance = DISTANCE_TO; distance >= DISTANCE_FROM; distance = distance - DISTANCE_STEP) {
-//            System.out.println("distance: " + distance);
-            final List<Pair<Double, IGeoCoordinate>> angleLatLonElevs = new ArrayList<>();
-
-            // lets have north in the middle of the chart
-            for (int j = -180; j <= 180; j = j + ANGEL_STEP) {
-                final double angle = j*1.0;
-                
-                // the point where looking at
-                final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
-                target.setElevation(elevationService.getElevationForCoordinate(target));
-                
-                if (noElevationData && IElevationProvider.NO_ELEVATION != target.getElevation()) {
-                    noElevationData = false;
-                }
-                
-                angleLatLonElevs.add(Pair.of(angle, target));
-            }
-            
-            elevationMap.put(distance * 1.0, angleLatLonElevs);
-        }
-    }
-    
     private void drawViewingAngles() {
-        horizonMap = new TreeMap<>();
-        // easier to work with this structure...
-        final SortedMap<Double, Pair<Double, IGeoCoordinate>> helper = new TreeMap<>();
-
-        minAngle = Double.MAX_VALUE;
-        maxAngle = -Double.MAX_VALUE;
-        
         elevationChart.getData().clear();
         // we also clear sun path data here so we know if we should get it on first showing
         sunPathChart.getData().clear();
@@ -576,29 +524,20 @@ public class HorizonViewer {
         final List<List<XYChart.Data<Number, Number>>> dataSetList = new ArrayList<>();
 
         double lastValue = Double.MAX_VALUE;
-        for (Map.Entry<Double, List<Pair<Double, IGeoCoordinate>>> elevationList : elevationMap.entrySet()) {
+        for (Map.Entry<Double, List<Pair<AzimuthElevationAngle, IGeoCoordinate>>> elevationList : panorama.getPanoramaViewingAngles().entrySet()) {
             assert elevationList.getKey() < lastValue;
             final Double distance = elevationList.getKey();
             
             final List<XYChart.Data<Number, Number>> dataSet = new ArrayList<>();
             // every slice is a new series
-            for (Pair<Double, IGeoCoordinate> coord : elevationList.getValue()) {
+            for (Pair<AzimuthElevationAngle, IGeoCoordinate> coord : elevationList.getValue()) {
                 // the angle we're looking up / down
-                final double elevationAngle = EarthGeometry.elevationAngle(location, coord.getRight());
-                minAngle = Math.min(minAngle, elevationAngle);
-                maxAngle = Math.max(maxAngle, elevationAngle);
+                double azimuthAngle = coord.getLeft().getAzimuth();
+                final double elevationAngle = coord.getLeft().getElevation();
                 
-                double horAngle = coord.getLeft();
-                XYChart.Data<Number, Number> data = new XYChart.Data<>(horAngle, elevationAngle);
+                XYChart.Data<Number, Number> data = new XYChart.Data<>(azimuthAngle, elevationAngle);
                 data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
-
-                // check if we have a new "best" = highest angle for this viewing angle
-                boolean newBest = false;
-                if (!helper.containsKey(horAngle) || helper.get(horAngle).getLeft() < elevationAngle) {
-                    helper.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
-                    newBest = true;
-                }
                 
                 // add data < -180 and > 180 as well to have it available for dragging
                 // we need to "wrap around" such that
@@ -606,17 +545,14 @@ public class HorizonViewer {
                 // -90 ->  270
                 // 180 -> -180 (already in the data)
                 //   0 -> 0 (nothing to do here)
-                if (horAngle > 0) {
-                    horAngle = horAngle - 360;
+                if (azimuthAngle > 0) {
+                    azimuthAngle = azimuthAngle - 360;
                 } else {
-                    horAngle = horAngle + 360;
+                    azimuthAngle = azimuthAngle + 360;
                 }
-                data = new XYChart.Data<>(horAngle, elevationAngle);
+                data = new XYChart.Data<>(azimuthAngle, elevationAngle);
                 data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
-                if (newBest) {
-                    helper.put(horAngle, Pair.of(elevationAngle, coord.getRight()));
-                }
             }
             // sort data since we added stuff before & after
             Collections.sort(dataSet, Comparator.comparingDouble(d -> d.getXValue().doubleValue()));
@@ -624,11 +560,6 @@ public class HorizonViewer {
             dataSetList.add(dataSet);
 
             lastValue = elevationList.getKey();
-        }
-
-        // and now convert helper to final map
-        for (Map.Entry<Double, Pair<Double, IGeoCoordinate>> entry : helper.entrySet()) {
-            horizonMap.put(AzimuthElevationAngle.of(entry.getKey(), entry.getValue().getLeft()), entry.getValue().getRight());
         }
         
         // check which points are actually visible
@@ -725,16 +656,16 @@ public class HorizonViewer {
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
-        if (minAngle > 0) {
-            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(minAngle*0.9)/5.0));
+        if (panorama.getMinElevationAngle() > 0) {
+            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*0.9)/5.0));
         } else {
-            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(minAngle*1.1)/5.0));
+            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*1.1)/5.0));
         }
         // max shouldn't be smaller than MIN_VERT_ANGLE
-        if (maxAngle > 0) {
-            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(maxAngle*1.1) + 1));
+        if (panorama.getMaxElevationAngle() > 0) {
+            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*1.1) + 1));
         } else {
-            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(maxAngle*0.9) + 1));
+            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*0.9) + 1));
         }
     }
     
@@ -752,7 +683,7 @@ public class HorizonViewer {
                 // we need to create the sun path line chart
                 GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
                 SunPathForDay path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
                 SunPathForDate.TODAY.setDate(date);
                 SunPathForDate.TODAY.setPath(path);
                 
@@ -760,7 +691,7 @@ public class HorizonViewer {
                 date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
                 SunPathForDate.SUMMER.setDate(date);
                 SunPathForDate.SUMMER.setPath(path);
                 
@@ -768,7 +699,7 @@ public class HorizonViewer {
                 date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(horizonMap.keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
                 SunPathForDate.WINTER.setDate(date);
                 SunPathForDate.WINTER.setPath(path);
 
@@ -806,7 +737,7 @@ public class HorizonViewer {
 //            System.out.println(pathForDate);
             final SunPathForDay path = pathForDate.getPath();
 
-            if (path.getSunriseAboveHorizon().isEmpty()) {
+            if (path == null || path.getSunriseAboveHorizon().isEmpty()) {
                 //nothing to see here...
                 continue;
             }

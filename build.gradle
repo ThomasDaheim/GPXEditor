@@ -193,6 +193,7 @@ run {
         jvmArgs = jvmArgs.plus('-Xmx4096M')
         // profiler not working with netbeans...
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
+//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/visualvm_212/visualvm/lib/deployed/jdk16/windows-amd64/profilerinterface.dll"="C:/PROGRA~1/visualvm_212/visualvm/lib",5140')
         enableAssertions = true
     }
     args = ["-mapCenter", "46.66068859124702 11.159234046936037"]

@@ -121,7 +121,7 @@ import tf.gpx.edit.algorithms.WaypointClustering;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
-import tf.gpx.edit.elevation.HorizonViewer;
+import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.extension.LineStyle;
@@ -2117,7 +2117,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void showHorizon(final IGeoCoordinate location) {
-        HorizonViewer.getInstance().showHorizon(location);
+        PanoramaViewer.getInstance().showPanorama(location);
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {
