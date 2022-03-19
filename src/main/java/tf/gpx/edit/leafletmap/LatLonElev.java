@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import tf.gpx.edit.helper.LatLonHelper;
+
 /**
  * Immutable value class for defining a geo position - including elevation.
  * 
@@ -81,5 +83,10 @@ public class LatLonElev implements IGeoCoordinate {
     @Override
     public void setElevation(final double elev) {
         myElevation = elev;
+    }
+
+    @Override
+    public String toString() {
+        return LatLonHelper.LatLongToString(this);
     }
 }

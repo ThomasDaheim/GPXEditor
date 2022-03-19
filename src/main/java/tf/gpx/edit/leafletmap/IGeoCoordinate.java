@@ -30,6 +30,24 @@ package tf.gpx.edit.leafletmap;
  * @author thomas
  */
 public interface IGeoCoordinate {
+    public enum Special_Latitude {
+        NORTH_POLAR_CIRCLE(66.563583),
+        TROPIC_CANCER(23.43641),
+        EQUATOR(0),
+        TROPIC_CAPRICORN(-23.43641),
+        SOUTH_POLAR_CIRCLE(-66.563583);
+        
+        private final double latitude;
+        
+        private Special_Latitude(final double lat) {
+            latitude = lat;
+        }
+        
+        public double getLatitude() {
+            return latitude;
+        }
+    }
+    
     public abstract Double getLatitude();
     public abstract Double getLongitude();
     public abstract Double getElevation();
@@ -39,4 +57,18 @@ public interface IGeoCoordinate {
     public abstract void setElevation(final double elev);
 
     public IGeoCoordinate cloneMe();
+
+    // some helpers to find our way around more easily
+    default public boolean onNorthernHemisphere() {
+        return (getLatitude() > 0);
+    }
+    default public boolean onSouthernHemisphere() {
+        return !onNorthernHemisphere();
+    }
+    default public boolean onEasternHemisphere() {
+        return (getLongitude() > 0);
+    }
+    default public boolean onWesternHemisphere() {
+        return !onEasternHemisphere();
+    }
 }

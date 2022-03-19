@@ -26,7 +26,6 @@
 package tf.gpx.edit.panorama;
 
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,6 +64,7 @@ import tf.gpx.edit.charts.SmoothFilledAreaChart;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
+import tf.gpx.edit.sun.SunPathForDate;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.helper.general.ObjectsHelper;
 
@@ -83,92 +83,6 @@ public class PanoramaViewer {
 
     private static final String TOOLTIP = "tooltip";
     private static final String STYLECLASS = "styleclass";
-
-    private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
-    
-    private enum SunPathForDate {
-        TODAY("sunpath-today", "Today"),
-        SUMMER("sunpath-summer", "Summer sol."),
-        WINTER("sunpath-winter", "Winter sol.");
-        
-        private final String styleClass;
-        private final String dateText;
-        
-        private GregorianCalendar myDate;
-        private SunPathForDay myPath;
-        
-        private SunPathForDate (final String style, final String text) {
-            styleClass = style;
-            dateText = text;
-        }
-        
-        public String getStyleClass() {
-            return styleClass;
-        }
-        
-        @Override
-        public String toString() {
-            final StringBuilder builder = new StringBuilder();
-                    
-            builder.append(dateText).append(": ").append(DATE_FORMATTER.format(myDate.toZonedDateTime())).append(" (").append(myDate.getTimeZone().getID()).append(")\n");
-            
-            if (myPath.sunNeverRises()) {
-                builder.append("The sun doesn't rise");
-                return builder.toString();
-            }
-
-            if (myPath.sunNeverSets()) {
-                builder.append("The sun doesn't set");
-                return builder.toString();
-            }
-
-            builder.append("Sunrise: ");
-            if (myPath.getSunrise() != null) {
-                builder.append(TIME_FORMATTER.format(myPath.getSunrise().toZonedDateTime()));
-            } else {
-                builder.append("---");
-            }
-            builder.append(", over hor.: ");
-            if (!myPath.getSunriseAboveHorizon().isEmpty()) {
-                builder.append(TIME_FORMATTER.format(myPath.getSunriseAboveHorizon().get(0).toZonedDateTime()));
-            } else {
-                builder.append("---");
-            }
-            builder.append("\n");
-            
-            builder.append("Sunset: ");
-            if (myPath.getSunrise() != null) {
-                builder.append(TIME_FORMATTER.format(myPath.getSunset().toZonedDateTime()));
-            } else {
-                builder.append("---");
-            }
-            builder.append(", under hor.: ");
-            if (!myPath.getSunsetBelowHorizon().isEmpty()) {
-                builder.append(TIME_FORMATTER.format(myPath.getSunsetBelowHorizon().get(0).toZonedDateTime()));
-            } else {
-                builder.append("---");
-            }
-            
-            return builder.toString();
-        }
-
-        public GregorianCalendar getDate() {
-            return myDate;
-        }
-
-        public void setDate(final GregorianCalendar date) {
-            myDate = date;
-        }
-
-        public SunPathForDay getPath() {
-            return myPath;
-        }
-
-        public void setPath(final SunPathForDay path) {
-            myPath = path;
-        }
-    }
 
     private final static int VIEWER_WIDTH = 1400;
     private final static int VIEWER_HEIGHT = 600;
@@ -201,8 +115,9 @@ public class PanoramaViewer {
     private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
     private final Stage stage = new Stage();
     
-    private final static double MIN_HOR_ANGLE = -360.0;
-    private final static double MAX_HOR_ANGLE = 360.0;
+    // TFE, 20220316: use ony positive values - to be in sync with sunpath algos...
+    private final static double MIN_HOR_ANGLE = 0.0;
+    private final static double MAX_HOR_ANGLE = 720.0;
 
     private final static double MIN_VERT_ANGLE = 25.0;
 
@@ -369,6 +284,8 @@ public class PanoramaViewer {
         pane.getStyleClass().add("horizon-pane");
         
         scene.setOnKeyPressed((t) -> {
+            // lowerBound is always: what you want to center - 180
+            int lowerBound = 0;
             switch (t.getCode()) {
                 case ESCAPE:
                     stage.close();
@@ -377,26 +294,24 @@ public class PanoramaViewer {
                     setAxes();
                     break;
                 case N:
-                    xAxisElev.setLowerBound(0.0-180.0);
-                    xAxisElev.setUpperBound(0.0+180.0);
+                    lowerBound = 360 - 180;
                     break;
                 case S:
-                    xAxisElev.setLowerBound(179.0-180.0);
-                    xAxisElev.setUpperBound(179.0+180.0);
+                    lowerBound = 180 - 180;
                     break;
                 case E:
-                    xAxisElev.setLowerBound(90.0-180.0);
-                    xAxisElev.setUpperBound(90.0+180.0);
+                    lowerBound = 90+360 - 180;
+                    break;
                 case W:
-                    xAxisElev.setLowerBound(-90.0-180.0);
-                    xAxisElev.setUpperBound(-90.0+180.0);
+                    lowerBound = 270 - 180;
                     break;
                 case P:
                     showHideSunPath();
-                    xAxisElev.setLowerBound(179.0-180.0);
-                    xAxisElev.setUpperBound(179.0+180.0);
+                    lowerBound = 180 - 180;
                     break;
             }
+            xAxisElev.setLowerBound(lowerBound);
+            xAxisElev.setUpperBound(lowerBound + 360);
         });
     }
     
@@ -410,13 +325,13 @@ public class PanoramaViewer {
                 @Override
                 public String toString(Number object) {
                     switch (object.intValue()) {
-                        case -180, 180:
+                        case 180, 180+360:
                             return "S";
-                        case -90, 270:
+                        case 270, 270+360:
                             return "W";
-                        case 0, 360:
+                        case 0, 0+360, 0+360+360:
                             return "N";
-                        case 90, -270:
+                        case 90, 90+360:
                             return "E";
                         default:
                             return "";
@@ -539,17 +454,8 @@ public class PanoramaViewer {
                 data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
                 
-                // add data < -180 and > 180 as well to have it available for dragging
-                // we need to "wrap around" such that
-                //  90 -> -270
-                // -90 ->  270
-                // 180 -> -180 (already in the data)
-                //   0 -> 0 (nothing to do here)
-                if (azimuthAngle > 0) {
-                    azimuthAngle = azimuthAngle - 360;
-                } else {
-                    azimuthAngle = azimuthAngle + 360;
-                }
+                // add data > 360 as well to have it available for dragging
+                azimuthAngle += 360;
                 data = new XYChart.Data<>(azimuthAngle, elevationAngle);
                 data.setExtraValue(Triple.of(distance, coord.getRight(), true));
                 dataSet.add(data);
@@ -651,21 +557,22 @@ public class PanoramaViewer {
     }
 
     private void setAxes() {
-        xAxisElev.setLowerBound(-180.0);
-        xAxisElev.setUpperBound(180.0);
+        // initially we want North centered
+        xAxisElev.setLowerBound(180);
+        xAxisElev.setUpperBound(180 + 360);
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
-        if (panorama.getMinElevationAngle() > 0) {
-            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*0.9)/5.0));
+        if (panorama.getMinElevationAngle().getElevation() > 0) {
+            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0));
         } else {
-            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*1.1)/5.0));
+            yAxisElev.setLowerBound(5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0));
         }
         // max shouldn't be smaller than MIN_VERT_ANGLE
-        if (panorama.getMaxElevationAngle() > 0) {
-            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*1.1) + 1));
+        if (panorama.getMaxElevationAngle().getElevation() > 0) {
+            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1));
         } else {
-            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*0.9) + 1));
+            yAxisElev.setUpperBound(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1));
         }
     }
     
@@ -683,7 +590,7 @@ public class PanoramaViewer {
                 // we need to create the sun path line chart
                 GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
                 SunPathForDay path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon());
                 SunPathForDate.TODAY.setDate(date);
                 SunPathForDate.TODAY.setPath(path);
                 
@@ -691,7 +598,7 @@ public class PanoramaViewer {
                 date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon());
                 SunPathForDate.SUMMER.setDate(date);
                 SunPathForDate.SUMMER.setPath(path);
                 
@@ -699,7 +606,7 @@ public class PanoramaViewer {
                 date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
-                path.calcSunriseSunsetForHorizon(panorama.getHorizon().keySet(), 0);
+                path.calcSunriseSunsetForHorizon(panorama.getHorizon());
                 SunPathForDate.WINTER.setDate(date);
                 SunPathForDate.WINTER.setPath(path);
 
@@ -737,7 +644,7 @@ public class PanoramaViewer {
 //            System.out.println(pathForDate);
             final SunPathForDay path = pathForDate.getPath();
 
-            if (path == null || path.getSunriseAboveHorizon().isEmpty()) {
+            if (path == null || path.sunNeverRises()) {
                 //nothing to see here...
                 continue;
             }
@@ -751,8 +658,8 @@ public class PanoramaViewer {
             XYChart.Data<Number, Number> data2;
 
             // that is the range we're interested in... save some data points :-)
-            final GregorianCalendar realSunrise = path.getSunriseForHorizon();
-            final GregorianCalendar realSunset = path.getSunsetForHorizon();
+            final GregorianCalendar realSunrise = path.getFirstSunriseAboveHorizon();
+            final GregorianCalendar realSunset = path.getLastSunsetBelowHorizon();
 
             Map.Entry<GregorianCalendar, AzimuthElevationAngle> lastPathValue = null;
             for (Map.Entry<GregorianCalendar, AzimuthElevationAngle> pathValue : path.getSunPath().entrySet()) {

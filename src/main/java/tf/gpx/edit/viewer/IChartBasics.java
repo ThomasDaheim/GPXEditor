@@ -212,7 +212,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         setMinimumDistance(0d);
         setMaximumDistance(0d);
         setMinimumYValue(Double.MAX_VALUE);
-        setMaximumYValue(Double.MIN_VALUE);
+        setMaximumYValue(-Double.MAX_VALUE);
 
         final boolean alwaysShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
         
@@ -564,6 +564,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                 setNonZeroData(true);
             }
             
+//            System.out.println("adding chart point: " + getMaximumDistance() / 1000.0 + ", " + yValue);
             XYChart.Data<Number, Number> data = new XYChart.Data<>(getMaximumDistance() / 1000.0, yValue);
             data.setExtraValue(gpxWaypoint);
             

@@ -27,10 +27,8 @@ package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
@@ -112,7 +110,7 @@ class SRTMDataReader implements ISRTMDataReader {
                 try (
 //                        RandomAccessFile rIn = new RandomAccessFile(srtmFile, "r"); 
 //                        FileChannel inChannel = rIn.getChannel();
-                        FileChannel inChannel = (FileChannel) Files.newByteChannel(srtmFile.toPath(), StandardOpenOption.READ);
+                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
                         ) {
                     ByteBuffer buf = ByteBuffer.allocate((int) fileLength); 
                     buf.order(java.nio.ByteOrder.BIG_ENDIAN); 

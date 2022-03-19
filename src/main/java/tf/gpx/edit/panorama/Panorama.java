@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.ElevationProvider;
@@ -61,15 +62,19 @@ import tf.helper.general.ObjectsHelper;
  */
 public class Panorama {
     // TODO: closer slices nearby, larger steps in the distance
-    private final static int DISTANCE_STEP = 1000;
-    private final static int DISTANCE_FROM = DISTANCE_STEP * 3 / 2;
-    private final static int DISTANCE_TO = 100000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
-    private final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
+    public final static int DISTANCE_STEP = 1000;
+    public final static int DISTANCE_FROM = DISTANCE_STEP * 3 / 2;
+    public final static int DISTANCE_TO = 100000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
+    public final static int ANGEL_FROM = 0;
+    public final static int ANGEL_TO = 360; // 
+    public final static int ANGEL_STEP = 3; // yields 120 steps per 360DEG
     
     private int distanceFrom;
     private int distanceTo;
-    private int distanceStep;
-    private int angleStep;
+    private int distanceStepping;
+    private int angleFrom;
+    private int angleTo;
+    private int angleStepping;
     
     private final ElevationProvider elevationService = 
             new ElevationProviderBuilder(
@@ -78,10 +83,10 @@ public class Panorama {
 
     private SortedMap<Double, List<Pair<Double, IGeoCoordinate>>> panoramaLocations = null;
     private SortedMap<Double, List<Pair<AzimuthElevationAngle, IGeoCoordinate>>> panoramaViewingAngles = null;
-    private SortedMap<AzimuthElevationAngle, IGeoCoordinate> horizon;
+    private Horizon horizon;
 
-    private double minElevationAngle;
-    private double maxElevationAngle;
+    private AzimuthElevationAngle minElevationAngle;
+    private AzimuthElevationAngle maxElevationAngle;
     
     private IGeoCoordinate location;
     
@@ -91,16 +96,33 @@ public class Panorama {
     }
 
     public Panorama(final IGeoCoordinate loc) {
-        this(loc, DISTANCE_FROM, DISTANCE_TO, DISTANCE_STEP, ANGEL_STEP);
+        // in case you're happy with the defaults
+        this(loc, DISTANCE_FROM, DISTANCE_TO, DISTANCE_STEP, ANGEL_FROM, ANGEL_TO, ANGEL_STEP);
     }
 
-    public Panorama(final IGeoCoordinate loc, final int dFrom, final int dTo, final int dStep, final int aStep) {
+    public Panorama(final IGeoCoordinate loc, final int dFrom, final int dTo, final int dStep, final int aFrom, final int aTo, final int aStep) {
+        // your wish is my command
         location = loc;
         distanceFrom = dFrom;
         distanceTo = dTo;
-        distanceStep = dStep;
-        angleStep = aStep;
+        distanceStepping = dStep;
+        angleFrom = aFrom;
+        angleTo = aTo;
+        angleStepping = aStep;
         
+        // make sure we're ending on a step
+        int remainder = (distanceTo - distanceFrom) % distanceStepping;
+        if (remainder != 0) {
+            // extend end angle accordingly
+            distanceTo += (distanceStepping - remainder);
+        }
+
+        remainder = (angleTo - angleFrom) % angleStepping;
+        if (remainder != 0) {
+            // extend end angle accordingly
+            angleTo += (angleStepping - remainder);
+        }
+
         // set the current elevation
         location.setElevation(elevationService.getElevationForCoordinate(location));
     }
@@ -111,14 +133,30 @@ public class Panorama {
         noElevationData = true;
         
         // lets go backwards to avoid resorting on put
-        for (int distance = distanceTo; distance >= distanceFrom; distance = distance - distanceStep) {
+        for (int distance = distanceTo; distance >= distanceFrom; distance = distance - distanceStepping) {
 //            System.out.println("distance: " + distance);
             final List<Pair<Double, IGeoCoordinate>> angleLatLonElevs = new ArrayList<>();
 
-            // lets have north in the middle of the panorama
-            for (int j = -180; j <= 180; j = j + angleStep) {
-                final double angle = j*1.0;
-                
+            // tricky with this modulo 360 DEG... especially when going down
+            // so lets do it this way:
+            // start with "from"
+            // if positive steps: add as long as we're below "to" (increment "to" by 360 if smaler "from")
+            // if negative steps: subtract as long as we're above "to" (decrement "to" by 360 if greater "from")
+            // so we can simply go the correct number of steps in the given direction without any further logic
+            int angleToMOD360 = angleTo;
+            if (angleStepping > 0) {
+                if (angleToMOD360 < angleFrom) {
+                    angleToMOD360 += 360;
+                }
+            } else {
+                if (angleToMOD360 > angleFrom) {
+                    angleToMOD360 -= 360;
+                }
+            }
+            final int steps = Math.abs(Math.abs(angleToMOD360 - angleFrom) / angleStepping);
+            int angle = angleFrom;
+            for (int j = 0; j <= steps; j++) {
+//                System.out.println("angle: " + angle);
                 // the point where looking at
                 final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
                 target.setElevation(elevationService.getElevationForCoordinate(target));
@@ -127,7 +165,14 @@ public class Panorama {
                     noElevationData = false;
                 }
                 
-                angleLatLonElevs.add(Pair.of(angle, target));
+                // and now match back to the angle we want to save things under...
+                int saveAngle = angle % 360;
+                if (saveAngle < 0) {
+                    saveAngle += 360;
+                }
+                angleLatLonElevs.add(Pair.of(saveAngle*1.0, target));
+
+                angle = angle + angleStepping;
             }
             
             panoramaLocations.put(distance * 1.0, angleLatLonElevs);
@@ -136,12 +181,12 @@ public class Panorama {
     
     private void calcViewingAngles() {
         panoramaViewingAngles = new TreeMap<>(Collections.reverseOrder());
-        horizon = new TreeMap<>();
+        horizon = new Horizon();
         // easier to work with this structure...
-        final SortedMap<Double, Pair<Double, IGeoCoordinate>> helper = new TreeMap<>();
+        final Map<Double, Pair<Double, IGeoCoordinate>> helper = new LinkedMap<>();
 
-        minElevationAngle = Double.MAX_VALUE;
-        maxElevationAngle = -Double.MAX_VALUE;
+        double minElev = Double.MAX_VALUE;
+        double maxElev = -Double.MAX_VALUE;
         
         double lastValue = Double.MAX_VALUE;
         // lazy loading - so lets call getter
@@ -154,8 +199,15 @@ public class Panorama {
                 double azimuthAngle = coord.getLeft();
                 // the angle we're looking up / down
                 final double elevationAngle = EarthGeometry.elevationAngle(location, coord.getRight());
-                minElevationAngle = Math.min(minElevationAngle, elevationAngle);
-                maxElevationAngle = Math.max(maxElevationAngle, elevationAngle);
+                
+                if (elevationAngle < minElev) {
+                    minElev = elevationAngle;
+                    minElevationAngle = AzimuthElevationAngle.of(azimuthAngle, elevationAngle);
+                }
+                if (elevationAngle > maxElev) {
+                    maxElev = elevationAngle;
+                    maxElevationAngle = AzimuthElevationAngle.of(azimuthAngle, elevationAngle);
+                }
                 
                 data.add(Pair.of(AzimuthElevationAngle.of(azimuthAngle, elevationAngle), coord.getRight()));
                 
@@ -187,8 +239,20 @@ public class Panorama {
         return distanceTo;
     }
 
-    public int getDistanceStep() {
-        return distanceStep;
+    public int getDistanceStepping() {
+        return distanceStepping;
+    }
+
+    public int getAngleFrom() {
+        return angleFrom;
+    }
+
+    public int getAngleTo() {
+        return angleTo;
+    }
+
+    public int getAngleStepping() {
+        return angleStepping;
     }
 
     public SortedMap<Double, List<Pair<Double, IGeoCoordinate>>> getPanoramaLocations() {
@@ -207,7 +271,7 @@ public class Panorama {
         return panoramaViewingAngles;
     }
     
-    public SortedMap<AzimuthElevationAngle, IGeoCoordinate> getHorizon() {
+    public Horizon getHorizon() {
         if (horizon == null) {
             // calculate the individual viewing angles
             calcViewingAngles();
@@ -218,15 +282,12 @@ public class Panorama {
     public boolean noElevationData() {
         return noElevationData;
     }
-    public int getAngleStep() {
-        return angleStep;
-    }
 
-    public double getMinElevationAngle() {
+    public AzimuthElevationAngle getMinElevationAngle() {
         return minElevationAngle;
     }
 
-    public double getMaxElevationAngle() {
+    public AzimuthElevationAngle getMaxElevationAngle() {
         return maxElevationAngle;
     }
 }

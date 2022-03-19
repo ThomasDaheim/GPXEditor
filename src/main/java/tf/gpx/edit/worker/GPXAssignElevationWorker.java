@@ -152,13 +152,13 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
             }
         } else {
             final List<GPXWaypoint> assignPoints = new ArrayList<>();
+            final boolean alwaysAssign = ElevationProviderOptions.AssignMode.ALWAYS.equals(elevationProvider.getElevationProviderOptions().getAssignMode());
 
             // find the waypoints that need attention
             for (GPXWaypoint gpxWayPoint : gpxWayPoints) {
                 final double currentElevation = gpxWayPoint.getElevation();
 
-                if (currentElevation != IElevationProvider.NO_ELEVATION || 
-                        ElevationProviderOptions.AssignMode.ALWAYS.equals(elevationProvider.getElevationProviderOptions().getAssignMode())) {
+                if (alwaysAssign || currentElevation != IElevationProvider.NO_ELEVATION) {
                     assignPoints.add(gpxWayPoint);
                 } else {
                     alreadyHeightCount++;
@@ -175,6 +175,7 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
                     final double elevation = assignHeigths.get(i);
 
                     if (elevation != IElevationProvider.NO_ELEVATION) {
+//                        System.out.println("gpxWayPoint: " + gpxWayPoint + ", elevation: " + elevation);
                         myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
                         assignedHeightCount++;
                     } else {

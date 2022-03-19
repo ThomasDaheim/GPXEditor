@@ -27,6 +27,8 @@ package tf.gpx.edit.helper;
 
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
+import tf.gpx.edit.elevation.IElevationProvider;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
@@ -214,15 +216,19 @@ public class LatLonHelper {
     }
 
     public static String GPXWaypointToString(final GPXWaypoint waypoint) {
-        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
+        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude(), waypoint.getWaypoint().getElevation());
     }
             
     public static String LatLongToString(final LatLonElev waypoint) {
-        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
+        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation());
     }
             
-    public static String LatLongToString(final double lat, final double lon) {
-        return latToString(lat) + " " + lonToString(lon);
+    public static String LatLongToString(final double lat, final double lon, final double elev) {
+        if (elev != IElevationProvider.NO_ELEVATION) {
+            return latToString(lat) + " " + lonToString(lon) + " " + GPXLineItem.DOUBLE_FORMAT_2.format(elev) + " m";
+        } else {
+            return latToString(lat) + " " + lonToString(lon);
+        }
     }
             
     public static String latToString(final double lat) {
