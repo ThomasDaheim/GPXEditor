@@ -65,7 +65,7 @@ public class OpenElevationService implements IElevationProvider {
     
     private final static int STATUS_OK = 200;
     private final static int STATUS_OK2 = 201;
-    private final static int STATUS_NO_DATA = 4002;
+    private final static int STATUS_NO_DATA = 404;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 

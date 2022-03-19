@@ -59,4 +59,11 @@ public class TestTimeZoneProvider {
         zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(-37.8136, 144.9631));
         Assert.assertTrue(TimeZone.getTimeZone("Australia/Melbourne").equals(zone));
     }
+    
+    @Test
+    public void testInvalidLocations() {
+        // nowhere
+        TimeZone zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(95.0, 0.0));
+        Assert.assertTrue(TimeZone.getTimeZone("GMT").equals(zone));
+    }
 }

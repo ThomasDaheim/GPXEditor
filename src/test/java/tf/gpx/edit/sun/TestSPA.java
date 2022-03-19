@@ -31,6 +31,7 @@ import java.time.temporal.ChronoField;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.SPA;
 import org.junit.Assert;
@@ -103,17 +104,20 @@ public class TestSPA {
         // not south enough to not have sunrise / sunset
         GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
         SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
+        date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         Assert.assertNotNull(path.getSunrise());
         Assert.assertNotNull(path.getSunset());
 
         // and now for summer
         date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
+        date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
         Assert.assertNotNull(path.getSunrise());
         Assert.assertNotNull(path.getSunset());
 
         // and now for winter
         date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
+        date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
         Assert.assertNotNull(path.getSunrise());
         Assert.assertNotNull(path.getSunset());
@@ -125,13 +129,15 @@ public class TestSPA {
         final ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("Australia/Perth"));
 
         // and now for summer: sun never rises
-        GregorianCalendar date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
+        GregorianCalendar date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21, 12, 0);
+        date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
         Assert.assertNull(path.getSunrise());
         Assert.assertNull(path.getSunset());
 
         // and now for winter: sun nevwer sets
-        date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
+        date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21, 12, 0);
+        date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
         Assert.assertNull(path.getSunrise());
         Assert.assertNull(path.getSunset());

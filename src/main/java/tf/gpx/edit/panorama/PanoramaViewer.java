@@ -680,7 +680,7 @@ public class PanoramaViewer {
                     data1.setExtraValue(lastPathValue);
                     dataSet1.add(data1);
                     
-                    data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() - 360, lastPathValue.getValue().getElevation());
+                    data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
                     data2.setExtraValue(lastPathValue);
                     dataSet2.add(data2);
                 }
@@ -689,7 +689,7 @@ public class PanoramaViewer {
                 data1.setExtraValue(pathValue);
                 dataSet1.add(data1);
 
-                data2 = new XYChart.Data<>(pathValue.getValue().getAzimuth() - 360, pathValue.getValue().getElevation());
+                data2 = new XYChart.Data<>(pathValue.getValue().getAzimuth() + 360, pathValue.getValue().getElevation());
                 data2.setExtraValue(pathValue);
                 dataSet2.add(data2);
 
@@ -698,13 +698,13 @@ public class PanoramaViewer {
             
             // add point below horizon as well
             if (lastPathValue != null) {
-                // lets add the last value to the path to makje sure it starts at the horizon
+                // lets add the last value to the path to make sure it starts at the horizon
                 data1 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth(), lastPathValue.getValue().getElevation());
                 data1.setExtraValue(lastPathValue);
                 dataSet1.add(data1);
 
-                // lets add the last value to the path to makje sure it starts at the horizon
-                data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() - 360, lastPathValue.getValue().getElevation());
+                // lets add the last value to the path to make sure it starts at the horizon
+                data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
                 data2.setExtraValue(lastPathValue);
                 dataSet2.add(data2);
             }

@@ -58,7 +58,13 @@ public class TimeZoneProvider {
     public TimeZone getTimeZone(IGeoCoordinate loc) {
         // this always returns the most local zone
         // e.g. Australia/Melbourne instead of Australia/West
-        final us.dustinj.timezonemap.TimeZone zone = TIMEZONEMAP.getOverlappingTimeZone(loc.getLatitude(), loc.getLongitude());
+        us.dustinj.timezonemap.TimeZone zone = null;
+
+        try {
+            zone = TIMEZONEMAP.getOverlappingTimeZone(loc.getLatitude(), loc.getLongitude());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("Location outside of initialized area for timezones: " + loc);
+        }
         
         if (zone != null) {
             return TimeZone.getTimeZone(zone.getZoneId());
