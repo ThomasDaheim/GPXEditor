@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.elevation;
 
-import tf.gpx.edit.charts.SurfacePlotMesh_Fast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,12 +48,10 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape3D;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -69,6 +66,7 @@ import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.charts.Axis;
 import tf.gpx.edit.charts.Fxyz3dHelper;
+import tf.gpx.edit.charts.SurfacePlotMesh_Fast;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.Bounds3D;
 import tf.gpx.edit.items.GPXLineItem;

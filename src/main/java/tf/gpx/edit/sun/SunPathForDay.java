@@ -25,13 +25,10 @@
  */
 package tf.gpx.edit.sun;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalField;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
@@ -39,15 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.e175.klaus.solarpositioning.DeltaT;
 import net.e175.klaus.solarpositioning.SPA;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.apache.commons.math3.exception.OutOfRangeException;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.panorama.Horizon;

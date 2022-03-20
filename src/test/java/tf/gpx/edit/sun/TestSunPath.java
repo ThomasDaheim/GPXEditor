@@ -28,21 +28,10 @@ package tf.gpx.edit.sun;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Map;
-import java.util.SimpleTimeZone;
-import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
-import net.e175.klaus.solarpositioning.SPA;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.junit.Assert;
 import org.junit.Test;
-import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.LatLonElev;
-import tf.helper.general.DateTimeCalendarHelper;
 
 /**
  * Test of the SPA implementation.

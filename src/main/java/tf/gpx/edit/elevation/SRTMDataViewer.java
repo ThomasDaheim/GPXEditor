@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.elevation;
 
-import java.time.Duration;
-import java.time.Instant;
 import tf.gpx.edit.items.GPXLineItem;
 
 /**

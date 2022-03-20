@@ -27,6 +27,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.7
 
 * SunPath: show the suns  path for today / summer / winter on the HorizonViewer; show the "actual" sunrise & sunset times, taking horizon into account
+* SunPath: show direction and point of sunrise & sunset on the map
 * TimeZone: added timezone support where necessary (SunPath calculations, TimeZone overlay)
 * Performance: drastically improve speed of reading SRTM data and showing it
 

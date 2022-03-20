@@ -36,7 +36,6 @@ import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.SPA;
 import org.junit.Assert;
 import org.junit.Test;
-import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
