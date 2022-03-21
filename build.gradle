@@ -41,6 +41,7 @@ mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
 version='5.7'
+description = 'GPXEditor - JavaFX GPX file editor that support UI and batch mass modifications '
 
 repositories {
     mavenLocal() {
@@ -127,6 +128,10 @@ dependencies {
     // timezone provider
     implementation group: 'us.dustinj.timezonemap', name: 'timezonemap', version: '4.5'
     implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.2-2'
+    
+    // TFE, 20220320: change to charts based on canvas for performance
+    // latest version compatible with javafx 15 is for 11
+    implementation 'eu.hansolo.fx:charts:11.10'
     
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     // TFE, 20220205: not working, "No test cases executed" after all the code changes...
