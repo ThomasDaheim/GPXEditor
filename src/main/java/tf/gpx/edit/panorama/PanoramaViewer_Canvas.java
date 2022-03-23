@@ -31,6 +31,7 @@ import eu.hansolo.fx.charts.AxisType;
 import eu.hansolo.fx.charts.ChartType;
 import eu.hansolo.fx.charts.Position;
 import eu.hansolo.fx.charts.XYChart;
+import eu.hansolo.fx.charts.XYPane;
 import eu.hansolo.fx.charts.data.XYChartItem;
 import eu.hansolo.fx.charts.series.XYSeries;
 import eu.hansolo.fx.charts.series.XYSeriesBuilder;
@@ -48,34 +49,23 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.geometry.Side;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import static javafx.scene.input.KeyCode.R;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-import tf.gpx.edit.charts.SmoothFilledAreaChart;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDate;
 import tf.gpx.edit.sun.SunPathForDay;
-import tf.helper.general.ObjectsHelper;
 
 /**
  * Viewer for the "horizon" for a given LatLon position.
@@ -89,9 +79,6 @@ public class PanoramaViewer_Canvas {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static PanoramaViewer_Canvas INSTANCE = new PanoramaViewer_Canvas();
-
-    private static final String TOOLTIP = "tooltip";
-    private static final String STYLECLASS = "styleclass";
 
     private final static int VIEWER_WIDTH = 1400;
     private final static int VIEWER_HEIGHT = 600;
@@ -107,8 +94,6 @@ public class PanoramaViewer_Canvas {
     private final static double SCALE_FACT = 1.1;
 
     private final static int COLOR_STEPS = 8; // we have 8 color steps defined in CSS
-    private final static String COLOR_STYLE_CLASS_PREFIX = "color-step-";
-    private final static String TOOLTIP_STYLE_CLASS = "horizon-tooltip";
 
     // switched to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
 //    private final AreaChart<Number, Number> elevationChart = new SmoothFilledAreaChart<>(new NumberAxis(), new NumberAxis());
@@ -117,6 +102,7 @@ public class PanoramaViewer_Canvas {
     private Axis yAxisElev;
     private final List<XYSeries> elevationChartData = new ArrayList<>();
 //    private final LineChart<Number, Number> sunPathChart = new LineChart<>(new NumberAxis(), new NumberAxis());
+    private final Label elevationChartLabel = new Label();
     private XYChart<XYChartItem> sunPathChart;
     private Axis xAxisSun;
     private Axis yAxisSun;
@@ -231,15 +217,42 @@ public class PanoramaViewer_Canvas {
             xAxisElev.setMaxValue(lowerBound + 360);
         });
 
+        elevationChartLabel.setText("Drag: Shift X" + System.lineSeparator() + 
+                        "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
+                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + 
+                        "N/S/E/W: center direction" + System.lineSeparator() + 
+                        "P: show/hide sun paths" + System.lineSeparator() + 
+                        "C/R: reset view");
+        elevationChartLabel.getStyleClass().add("horizon-viewer-label");
+        StackPane.setAlignment(elevationChartLabel, Pos.TOP_LEFT);
+        elevationChartLabel.toFront();
+        
+        sunPathLabel.getStyleClass().add("sunpath-viewer-label");
+        StackPane.setAlignment(sunPathLabel, Pos.TOP_RIGHT);
+        sunPathLabel.toFront();
+        sunPathLabel.setVisible(false);
+
+        noElevationDataLabel.getStyleClass().add("sunpath-noelevationdata-label");
+        StackPane.setAlignment(noElevationDataLabel, Pos.CENTER);
+        noElevationDataLabel.toFront();
+        noElevationDataLabel.setVisible(false);
+
+        pane.getChildren().addAll(elevationChartLabel, sunPathLabel, noElevationDataLabel);
+
         // everything else needs to be done once data series are available
         // eu.hansolo.fx.charts.XYChart doesn't have constructors with series data
     }
-     
+
+    @SuppressWarnings("unchecked")
     private void initializeWithData() {
-        initializeChart(elevationChart);
+        chartGroup.getChildren().clear();
+
+        // create charts from data
+        elevationChart = new XYChart<>(new XYPane(elevationChartData), xAxisElev, yAxisElev);
+        
+        initializeChart(elevationChart, xAxisElev, yAxisElev);
         // there is no common ancestor of area and line chart that implements createSymbols...
         elevationChart.toFront();
-        elevationChart.setCreateSymbols(true);
         
         elevationChart.minHeightProperty().bind(pane.heightProperty());
         elevationChart.prefHeightProperty().bind(pane.heightProperty());
@@ -248,22 +261,6 @@ public class PanoramaViewer_Canvas {
         elevationChart.prefWidthProperty().bind(pane.widthProperty());
         elevationChart.maxWidthProperty().bind(pane.widthProperty());
         
-        initializeChart(sunPathChart);
-        sunPathChart.setCreateSymbols(false);
-        sunPathChart.setMouseTransparent(true);
-        // lets have the chart in the back to avoid length calculation of visible stretches of the suns path...
-        sunPathChart.toBack();
-        sunPathChart.setVisible(false);
-        sunPathChart.setDisable(true);
-        
-        // one chart to rule them all...
-        sunPathChart.minHeightProperty().bind(elevationChart.heightProperty());
-        sunPathChart.prefHeightProperty().bind(elevationChart.heightProperty());
-        sunPathChart.maxHeightProperty().bind(elevationChart.heightProperty());
-        sunPathChart.minWidthProperty().bind(elevationChart.widthProperty());
-        sunPathChart.prefWidthProperty().bind(elevationChart.widthProperty());
-        sunPathChart.maxWidthProperty().bind(elevationChart.widthProperty());
-
 //        elevationChart.setOnMouseDragged((e) -> {
 //            mouseOldX = mousePosX;
 //            mouseOldY = mousePosY;
@@ -334,30 +331,7 @@ public class PanoramaViewer_Canvas {
             }
         });
 
-        final Label label = 
-                new Label("Drag: Shift X" + System.lineSeparator() + 
-                        "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
-                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + 
-                        "N/S/E/W: center direction" + System.lineSeparator() + 
-                        "P: show/hide sun paths" + System.lineSeparator() + 
-                        "C/R: reset view");
-        label.getStyleClass().add("horizon-viewer-label");
-        StackPane.setAlignment(label, Pos.TOP_LEFT);
-        label.toFront();
-        
-        sunPathLabel.getStyleClass().add("sunpath-viewer-label");
-        StackPane.setAlignment(sunPathLabel, Pos.TOP_RIGHT);
-        sunPathLabel.toFront();
-        sunPathLabel.setVisible(false);
-
-        noElevationDataLabel.getStyleClass().add("sunpath-noelevationdata-label");
-        StackPane.setAlignment(noElevationDataLabel, Pos.CENTER);
-        noElevationDataLabel.toFront();
-        noElevationDataLabel.setVisible(false);
-        
-        chartGroup.getChildren().addAll(elevationChart, sunPathChart);
-
-        pane.getChildren().addAll(label, sunPathLabel, noElevationDataLabel);
+        chartGroup.getChildren().add(elevationChart);
     }
     
 //    private void initializeAxes(final Axis xAxis, final Axis yAxis) {
@@ -392,12 +366,9 @@ public class PanoramaViewer_Canvas {
 //        yAxis.setAutoRanging(false);
 //    }
     
-    private void initializeChart(final XYChart chart) {
-//        chart.setVerticalZeroLineVisible(false);
-//        chart.setVerticalGridLinesVisible(true);
-//        chart.setHorizontalZeroLineVisible(true);
-//        chart.setHorizontalGridLinesVisible(true);
-//        chart.setLegendVisible(false);
+    private void initializeChart(final XYChart chart, final Axis xAxis, final Axis yAxis) {
+        xAxis.setMinValue(0.0);
+        xAxis.setMaxValue(720.0);
     }
 
     public static PanoramaViewer_Canvas getInstance() {
@@ -429,11 +400,8 @@ public class PanoramaViewer_Canvas {
         // and now draw from outer to inner and from darker to brighter color
         // see Horizon_PodTriglavom.jpg for expected result
         drawViewingAngles();
+        initializeWithData();
         setAxes();
-
-        // hide sun path intially
-        sunPathChart.setVisible(false);
-        sunPathChart.setDisable(true);
 
 //        for (XYChart.Series<Number, Number> series : elevationChart.getData()) {
 ////            System.out.println("Adding StyleClass " + series.getName());
@@ -469,6 +437,7 @@ public class PanoramaViewer_Canvas {
         pane.getChildren().add(chartGroup);
     }
 
+    @SuppressWarnings("unchecked")
     private void drawViewingAngles() {
         elevationChartData.clear();
         // we also clear sun path data here so we know if we should get it on first showing
@@ -492,13 +461,13 @@ public class PanoramaViewer_Canvas {
                 
                 // need to set tooltip here right away
                 XYChartItem data = new XYChartItem(azimuthAngle, elevationAngle, 
-                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight()));
+                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
                 dataSet.add(data);
                 
                 // add data > 360 as well to have it available for dragging
                 azimuthAngle += 360;
                 data = new XYChartItem(azimuthAngle, elevationAngle, 
-                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight()));
+                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
                 dataSet.add(data);
             }
             // sort data since we added stuff before & after
@@ -571,7 +540,6 @@ public class PanoramaViewer_Canvas {
             final XYSeries series = XYSeriesBuilder.create()
                     .items(dataSet)
                     .chartType(ChartType.SMOOTH_AREA)
-                    .fill(Color.web("#00AEF520"))
                     .symbolsVisible(true)
                     .build();
             
@@ -609,19 +577,6 @@ public class PanoramaViewer_Canvas {
         elevationChartData.addAll(seriesSet);
     }
     
-    @SuppressWarnings("unchecked")
-    private boolean getDataVisible(final XYChart.Data<Number, Number> data) {
-        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getRight();
-    }
-    @SuppressWarnings("unchecked")
-    private double getDataDistance(final XYChart.Data<Number, Number> data) {
-        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getLeft();
-    }
-    @SuppressWarnings("unchecked")
-    private double getDataElevation(final XYChart.Data<Number, Number> data) {
-        return ((Triple<Double, IGeoCoordinate, Boolean>) data.getExtraValue()).getMiddle().getElevation();
-    }
-
     private void setAxes() {
         // initially we want North centered
         xAxisElev.setMinValue(180);
@@ -683,12 +638,12 @@ public class PanoramaViewer_Canvas {
             sunPathChart.setDisable(false);
 
             if (firstTime) {
-                // and now everything has been rendered & layouted
-                for (final XYChart.Series<Number, Number> series : sunPathChart.getData()) {
-                    series.getNode().getStyleClass().add(series.getName());
-                    // data nodes are not part of any group und series...
-                    series.getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
-                }
+//                // and now everything has been rendered & layouted
+//                for (final XYChart.Series<Number, Number> series : sunPathChart.getData()) {
+//                    series.getNode().getStyleClass().add(series.getName());
+//                    // data nodes are not part of any group und series...
+//                    series.getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
+//                }
                 
                 // and also a label with all the vailable data...
                 sunPathLabel.setText(SunPathForDate.TODAY + "\n\n" + SunPathForDate.SUMMER + "\n\n" + SunPathForDate.WINTER);
@@ -702,9 +657,10 @@ public class PanoramaViewer_Canvas {
         pane.layout();
     }
     
+    @SuppressWarnings("unchecked")
     private void drawSunPath() {
         // performance: add everything to the chart in one go...
-        final List<XYChart.Series<Number, Number>> seriesSet = new ArrayList<>();
+        final List<XYSeries> seriesSet = new ArrayList<>();
 
         for (final SunPathForDate pathForDate : SunPathForDate.values()) {
 //            System.out.println(pathForDate);
@@ -716,12 +672,12 @@ public class PanoramaViewer_Canvas {
             }
             
             // dataset for sunpath values
-            final List<XYChart.Data<Number, Number>> dataSet1 = new ArrayList<>();
-            XYChart.Data<Number, Number> data1;
+            final List<XYChartItem> dataSet1 = new ArrayList<>();
+            XYChartItem data1;
 
             // dataset for shifted values
-            final List<XYChart.Data<Number, Number>> dataSet2 = new ArrayList<>();
-            XYChart.Data<Number, Number> data2;
+            final List<XYChartItem> dataSet2 = new ArrayList<>();
+            XYChartItem data2;
 
             // that is the range we're interested in... save some data points :-)
             final GregorianCalendar realSunrise = path.getFirstSunriseAboveHorizon();
@@ -742,21 +698,17 @@ public class PanoramaViewer_Canvas {
                 
                 if (dataSet1.isEmpty() && lastPathValue != null) {
                     // lets add the last value to the path to make sure it starts at the horizon
-                    data1 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth(), lastPathValue.getValue().getElevation());
-                    data1.setExtraValue(lastPathValue);
+                    data1 = new XYChartItem(lastPathValue.getValue().getAzimuth(), lastPathValue.getValue().getElevation());
                     dataSet1.add(data1);
                     
-                    data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
-                    data2.setExtraValue(lastPathValue);
+                    data2 = new XYChartItem(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
                     dataSet2.add(data2);
                 }
 
-                data1 = new XYChart.Data<>(pathValue.getValue().getAzimuth(), pathValue.getValue().getElevation());
-                data1.setExtraValue(pathValue);
+                data1 = new XYChartItem(pathValue.getValue().getAzimuth(), pathValue.getValue().getElevation());
                 dataSet1.add(data1);
 
-                data2 = new XYChart.Data<>(pathValue.getValue().getAzimuth() + 360, pathValue.getValue().getElevation());
-                data2.setExtraValue(pathValue);
+                data2 = new XYChartItem(pathValue.getValue().getAzimuth() + 360, pathValue.getValue().getElevation());
                 dataSet2.add(data2);
 
                 lastPathValue = pathValue;
@@ -765,29 +717,51 @@ public class PanoramaViewer_Canvas {
             // add point below horizon as well
             if (lastPathValue != null) {
                 // lets add the last value to the path to make sure it starts at the horizon
-                data1 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth(), lastPathValue.getValue().getElevation());
-                data1.setExtraValue(lastPathValue);
+                data1 = new XYChartItem(lastPathValue.getValue().getAzimuth(), lastPathValue.getValue().getElevation());
                 dataSet1.add(data1);
 
                 // lets add the last value to the path to make sure it starts at the horizon
-                data2 = new XYChart.Data<>(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
-                data2.setExtraValue(lastPathValue);
+                data2 = new XYChartItem(lastPathValue.getValue().getAzimuth() + 360, lastPathValue.getValue().getElevation());
                 dataSet2.add(data2);
             }
             
             // now do the costly operation and create a series
-            final XYChart.Series<Number, Number> series1 = new XYChart.Series<>();
-            series1.getData().addAll(dataSet1);
-            series1.setName(pathForDate.getStyleClass());
+            final XYSeries series1 = XYSeriesBuilder.create()
+                    .items(dataSet1)
+                    .chartType(ChartType.SMOOTH_AREA)
+                    .symbolsVisible(true)
+                    .build();
             
-            final XYChart.Series<Number, Number> series2 = new XYChart.Series<>();
-            series2.getData().addAll(dataSet2);
-            series2.setName(pathForDate.getStyleClass());
+            final XYSeries series2 = XYSeriesBuilder.create()
+                    .items(dataSet2)
+                    .chartType(ChartType.SMOOTH_AREA)
+                    .symbolsVisible(true)
+                    .build();
 
             seriesSet.add(series1);
             seriesSet.add(series2);
         }
         
-        sunPathChart.getData().addAll(seriesSet);
+        sunPathChartData.addAll(seriesSet);
+
+        // create charts from data
+        sunPathChart = new XYChart<>(new XYPane(sunPathChartData), xAxisSun, yAxisSun);
+        
+        initializeChart(sunPathChart, xAxisSun, yAxisSun);
+        sunPathChart.setMouseTransparent(true);
+        // lets have the chart in the back to avoid length calculation of visible stretches of the suns path...
+        sunPathChart.toBack();
+        sunPathChart.setVisible(false);
+        sunPathChart.setDisable(true);
+        
+        // one chart to rule them all...
+        sunPathChart.minHeightProperty().bind(elevationChart.heightProperty());
+        sunPathChart.prefHeightProperty().bind(elevationChart.heightProperty());
+        sunPathChart.maxHeightProperty().bind(elevationChart.heightProperty());
+        sunPathChart.minWidthProperty().bind(elevationChart.widthProperty());
+        sunPathChart.prefWidthProperty().bind(elevationChart.widthProperty());
+        sunPathChart.maxWidthProperty().bind(elevationChart.widthProperty());
+
+        chartGroup.getChildren().add(elevationChart);
     }
 }
