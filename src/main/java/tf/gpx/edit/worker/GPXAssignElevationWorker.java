@@ -38,6 +38,8 @@ import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.elevation.SRTMDataHelper;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.items.GPXFile;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -61,7 +63,7 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
     private int noHeightCount = 0;
     private int alreadyHeightCount = 0;
     
-    private GPXFile workingFile = null;
+    private GPXLineItem workingRoot = null;
 
     private final IElevationProvider elevationProvider;
 
@@ -107,38 +109,47 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
 
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
-        workingFile = gpxFile;
+        workingRoot = gpxFile;
         assignElevation(gpxFile.getCombinedGPXWaypoints(null));
     }
 
     @Override
     public void visitGPXTrack(final GPXTrack gpxTrack) {
+        if (workingRoot == null) {
+            workingRoot = gpxTrack;
+        }
         // TFE, 20210207: have we already visited the gpxfile?
-        if (gpxTrack.getGPXFile() != null && !gpxTrack.getGPXFile().equals(workingFile)) {
+        if (!GPXLineItemHelper.isChildOf(gpxTrack, workingRoot)) {
             assignElevation(gpxTrack.getCombinedGPXWaypoints(null));
         }
     }
 
     @Override
     public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
-        // TFE, 20210207: have we already visited the gpxfile?
-        if (gpxTrackSegment.getGPXFile() != null && !gpxTrackSegment.getGPXFile().equals(workingFile)) {
+        if (workingRoot == null) {
+            workingRoot = gpxTrackSegment;
+        }
+        // TFE, 20210207: have we already visited the gpxfile OR the gpxTrack?
+        if (!GPXLineItemHelper.isChildOf(gpxTrackSegment, workingRoot)) {
             assignElevation(gpxTrackSegment.getCombinedGPXWaypoints(null));
         }
     }
 
     @Override
     public void visitGPXRoute(final GPXRoute gpxRoute) {
+        if (workingRoot == null) {
+            workingRoot = gpxRoute;
+        }
         // TFE, 20210207: have we already visited the gpxfile?
-        if (gpxRoute.getGPXFile() != null && !gpxRoute.getGPXFile().equals(workingFile)) {
+        if (!GPXLineItemHelper.isChildOf(gpxRoute, workingRoot)) {
             assignElevation(gpxRoute.getCombinedGPXWaypoints(null));
         }
     }
 
     @Override
     public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // TFE, 20210207: have we already visited the gpxfile?
-        if (gpxWayPoint.getGPXFile() != null && !gpxWayPoint.getGPXFile().equals(workingFile)) {
+        // TFE, 20210207: have we already visited the parent? or the parents parent or the parents parents parent...
+        if (!GPXLineItemHelper.isChildOf(gpxWayPoint, workingRoot)) {
             assignElevation(Arrays.asList(gpxWayPoint));
         }
     }

@@ -277,8 +277,6 @@
     -fx-fill: silver;
 }
 
-
-
 /* sunpath coloring */
 .sunpath-today.chart-series-line {
     -fx-stroke: yellow !important;
