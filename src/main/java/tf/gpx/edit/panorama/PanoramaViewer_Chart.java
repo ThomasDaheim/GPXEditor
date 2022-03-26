@@ -139,7 +139,7 @@ public class PanoramaViewer_Chart {
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Chart.class.getResource("/GPXEditor.min.css").toExternalForm());
 
-        stage.initModality(Modality.APPLICATION_MODAL); 
+//        stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setScene(scene);
 
         xAxisElev = (NumberAxis) elevationChart.getXAxis();

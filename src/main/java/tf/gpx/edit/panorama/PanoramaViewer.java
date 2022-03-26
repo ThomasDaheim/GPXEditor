@@ -49,5 +49,7 @@ public class PanoramaViewer {
     
     public void showPanorama(final IGeoCoordinate loc) {
         PanoramaViewer_Canvas.getInstance().showPanorama(loc);
+
+//        PanoramaViewer_Chart.getInstance().showPanorama(loc);
     }
 }

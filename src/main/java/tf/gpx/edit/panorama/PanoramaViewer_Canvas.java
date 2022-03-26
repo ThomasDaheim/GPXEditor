@@ -54,13 +54,16 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import static javafx.scene.input.KeyCode.R;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
@@ -120,6 +123,8 @@ public class PanoramaViewer_Canvas {
 
     private final static double MIN_VERT_ANGLE = 25.0;
 
+    private static final Double AXIS_WIDTH = 40d;
+
     private double mousePosX;
     private double mousePosY;
     private double mouseOldX;
@@ -138,7 +143,7 @@ public class PanoramaViewer_Canvas {
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
 
-        stage.initModality(Modality.APPLICATION_MODAL); 
+//        stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setScene(scene);
         
         initialize();
@@ -155,13 +160,20 @@ public class PanoramaViewer_Canvas {
                 .tickLabelFontSize(12)
                 .unit("")
                 .build();
+        AnchorPane.setBottomAnchor(xAxisElev, 0d);
+        AnchorPane.setLeftAnchor(xAxisElev, AXIS_WIDTH);
+        AnchorPane.setRightAnchor(xAxisElev, AXIS_WIDTH);
+        
         yAxisElev = AxisBuilder.create(Orientation.VERTICAL, Position.LEFT)
                 .type(AxisType.LINEAR)
                 .autoScale(false)
-                .minorTickMarksVisible(false)
+                .minorTickMarksVisible(true)
                 .tickLabelFontSize(12)
-                .unit("")
+                .unit("Angle [" + LatLonHelper.DEG + "]")
                 .build();
+        AnchorPane.setTopAnchor(yAxisElev, 0d);
+        AnchorPane.setBottomAnchor(yAxisElev, AXIS_WIDTH);
+        AnchorPane.setLeftAnchor(yAxisElev, 0d);
 
         xAxisSun = AxisBuilder.create(Orientation.HORIZONTAL, Position.BOTTOM)
                 .type(AxisType.LINEAR)
@@ -170,13 +182,20 @@ public class PanoramaViewer_Canvas {
                 .tickLabelFontSize(12)
                 .unit("")
                 .build();
+        AnchorPane.setBottomAnchor(xAxisSun, 0d);
+        AnchorPane.setLeftAnchor(xAxisSun, AXIS_WIDTH);
+        AnchorPane.setRightAnchor(xAxisSun, AXIS_WIDTH);
+        
         yAxisSun = AxisBuilder.create(Orientation.VERTICAL, Position.LEFT)
                 .type(AxisType.LINEAR)
                 .autoScale(false)
-                .minorTickMarksVisible(false)
+                .minorTickMarksVisible(true)
                 .tickLabelFontSize(12)
-                .unit("")
+                .unit("Angle [" + LatLonHelper.DEG + "]")
                 .build();
+        AnchorPane.setTopAnchor(yAxisSun, 0d);
+        AnchorPane.setBottomAnchor(yAxisSun, AXIS_WIDTH);
+        AnchorPane.setLeftAnchor(yAxisSun, 0d);
 
         // one set to rule them all...
         xAxisSun.minValueProperty().bind(xAxisElev.minValueProperty());
@@ -248,9 +267,8 @@ public class PanoramaViewer_Canvas {
         chartGroup.getChildren().clear();
 
         // create charts from data
-        elevationChart = new XYChart<>(new XYPane(elevationChartData), xAxisElev, yAxisElev);
+        elevationChart = initializeChart(elevationChartData, xAxisElev, yAxisElev);
         
-        initializeChart(elevationChart, xAxisElev, yAxisElev);
         // there is no common ancestor of area and line chart that implements createSymbols...
         elevationChart.toFront();
         
@@ -366,9 +384,47 @@ public class PanoramaViewer_Canvas {
 //        yAxis.setAutoRanging(false);
 //    }
     
-    private void initializeChart(final XYChart chart, final Axis xAxis, final Axis yAxis) {
-        xAxis.setMinValue(0.0);
-        xAxis.setMaxValue(720.0);
+    @SuppressWarnings("unchecked")
+    private XYChart initializeChart(final List<XYSeries> chartData, final Axis xAxis, final Axis yAxis) {
+//        xAxis.setMinValue(0.0);
+//        xAxis.setMaxValue(720.0);
+//        
+        final XYPane pane = new XYPane(chartData);
+        final XYChart chart = new XYChart<>(pane, xAxis, yAxis); 
+        
+        // try binding pane size to axis min/max values
+//        private void adjustChartRange() {
+//            xyPanes.forEach(xyPane -> {
+//                if (hasBottomXAxis) {
+//                    xyPane.setLowerBoundX(xAxisB.getMinValue());
+//                    xyPane.setUpperBoundX(xAxisB.getMaxValue());
+//                } else if (hasTopXAxis) {
+//                    xyPane.setLowerBoundX(xAxisT.getMinValue());
+//                    xyPane.setUpperBoundX(xAxisT.getMaxValue());
+//                } else if (hasCenterXAxis) {
+//                    xyPane.setLowerBoundX(xAxisC.getMinValue());
+//                    xyPane.setUpperBoundX(xAxisC.getMaxValue());
+//                }
+//
+//                if (hasLeftYAxis) {
+//                    xyPane.setLowerBoundY(yAxisL.getMinValue());
+//                    xyPane.setUpperBoundY(yAxisL.getMaxValue());
+//                } else if (hasRightYAxis) {
+//                    xyPane.setLowerBoundY(yAxisR.getMinValue());
+//                    xyPane.setUpperBoundY(yAxisR.getMaxValue());
+//                } else if (hasCenterYAxis) {
+//                    xyPane.setLowerBoundY(yAxisC.getMinValue());
+//                    xyPane.setUpperBoundY(yAxisC.getMaxValue());
+//                }
+//            });
+//        }
+
+        pane.lowerBoundXProperty().bind(xAxis.minValueProperty());
+        pane.upperBoundXProperty().bind(xAxis.maxValueProperty());
+        pane.lowerBoundYProperty().bind(yAxis.minValueProperty());
+        pane.upperBoundYProperty().bind(yAxis.maxValueProperty());
+        
+        return chart;
     }
 
     public static PanoramaViewer_Canvas getInstance() {
@@ -460,13 +516,13 @@ public class PanoramaViewer_Canvas {
                 final double elevationAngle = coord.getLeft().getElevation();
                 
                 // need to set tooltip here right away
-                XYChartItem data = new XYChartItem(azimuthAngle, elevationAngle, 
+                XYChartItem data = new XYChartItem(azimuthAngle, elevationAngle, "",
                         String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
                 dataSet.add(data);
                 
                 // add data > 360 as well to have it available for dragging
                 azimuthAngle += 360;
-                data = new XYChartItem(azimuthAngle, elevationAngle, 
+                data = new XYChartItem(azimuthAngle, elevationAngle, "",
                         String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
                 dataSet.add(data);
             }
@@ -541,6 +597,10 @@ public class PanoramaViewer_Canvas {
                     .items(dataSet)
                     .chartType(ChartType.SMOOTH_AREA)
                     .symbolsVisible(true)
+                    .symbolSize(4)
+                    .symbolStroke(Color.valueOf("696969"))
+                    .stroke(Paint.valueOf("696969"))
+                    .strokeWidth(1)
                     .build();
             
             // surely, some clever way with enum would help here...
@@ -579,26 +639,28 @@ public class PanoramaViewer_Canvas {
     
     private void setAxes() {
         // initially we want North centered
-        xAxisElev.setMinValue(180);
-        xAxisElev.setMaxValue(180 + 360);
+        xAxisElev.setMinMax(180d, 180d + 360d);
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
+        double minValue;
         if (panorama.getMinElevationAngle().getElevation() > 0) {
-            yAxisElev.setMinValue(5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0));
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0);
         } else {
-            yAxisElev.setMinValue(5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0));
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0);
         }
         // max shouldn't be smaller than MIN_VERT_ANGLE
+        double maxValue;
         if (panorama.getMaxElevationAngle().getElevation() > 0) {
-            yAxisElev.setMaxValue(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1));
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1);
         } else {
-            yAxisElev.setMaxValue(Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1));
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1);
         }
+        yAxisElev.setMinMax(minValue, maxValue);
     }
     
     private void showHideSunPath() {
-        if (sunPathChart.isVisible()) {
+        if (sunPathChart != null && sunPathChart.isVisible()) {
             sunPathChart.setVisible(false);
             sunPathChart.setDisable(true);
         } else {
@@ -729,14 +791,31 @@ public class PanoramaViewer_Canvas {
             final XYSeries series1 = XYSeriesBuilder.create()
                     .items(dataSet1)
                     .chartType(ChartType.SMOOTH_AREA)
-                    .symbolsVisible(true)
+                    .symbolsVisible(false)
+                    .strokeWidth(2)
                     .build();
             
             final XYSeries series2 = XYSeriesBuilder.create()
                     .items(dataSet2)
                     .chartType(ChartType.SMOOTH_AREA)
-                    .symbolsVisible(true)
+                    .symbolsVisible(false)
+                    .strokeWidth(2)
                     .build();
+
+            switch (pathForDate) {
+                case TODAY:
+                    series1.setStroke(Paint.valueOf("yellow"));
+                    series2.setStroke(Paint.valueOf("yellow"));
+                    break;
+                case SUMMER:
+                    series1.setStroke(Paint.valueOf("green"));
+                    series2.setStroke(Paint.valueOf("green"));
+                    break;
+                case WINTER:
+                    series1.setStroke(Paint.valueOf("blue"));
+                    series2.setStroke(Paint.valueOf("blue"));
+                    break;
+            }
 
             seriesSet.add(series1);
             seriesSet.add(series2);
@@ -745,12 +824,8 @@ public class PanoramaViewer_Canvas {
         sunPathChartData.addAll(seriesSet);
 
         // create charts from data
-        sunPathChart = new XYChart<>(new XYPane(sunPathChartData), xAxisSun, yAxisSun);
-        
-        initializeChart(sunPathChart, xAxisSun, yAxisSun);
+        sunPathChart = initializeChart(sunPathChartData, xAxisSun, yAxisSun);
         sunPathChart.setMouseTransparent(true);
-        // lets have the chart in the back to avoid length calculation of visible stretches of the suns path...
-        sunPathChart.toBack();
         sunPathChart.setVisible(false);
         sunPathChart.setDisable(true);
         
@@ -762,6 +837,8 @@ public class PanoramaViewer_Canvas {
         sunPathChart.prefWidthProperty().bind(elevationChart.widthProperty());
         sunPathChart.maxWidthProperty().bind(elevationChart.widthProperty());
 
-        chartGroup.getChildren().add(elevationChart);
+        chartGroup.getChildren().add(sunPathChart);
+        // lets have the chart in the back to avoid length calculation of visible stretches of the suns path...
+        sunPathChart.toBack();
     }
 }
