@@ -66,7 +66,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         super();
 
         baseChart = HeightChart.getInstance();
-        additionalCharts.add(SpeedChart.getInstance());
+//        additionalCharts.add(SpeedChart.getInstance());
         
         initialize();
     }
@@ -83,7 +83,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         totalYAxisWidth -= YAXIS_SEP;
         
         charts.add(baseChart);
-        charts.addAll(additionalCharts);
+//        charts.addAll(additionalCharts);
         
         setAlignment(Pos.CENTER_LEFT);
         

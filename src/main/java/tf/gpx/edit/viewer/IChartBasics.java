@@ -194,7 +194,9 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         if (getChart().isDisabled()) {
             return;
         }
-        
+
+        // TFE, 20220325: store previous visibility
+        final boolean wasVisible = getChart().isVisible();
         // invisible update - much faster
         getChart().setVisible(false);
         getPoints().clear();
@@ -363,6 +365,9 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         // TFE, 20210108: don't switch on here in case there are data points
         if (dataCount == 0) {
             getChart().setVisible(false);
+        } else {
+            // TFE, 20220325: restore previous visibility
+            getChart().setVisible(wasVisible);
         }
     }
     
@@ -451,10 +456,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         for (XYChart.Series<Number, Number> series : getChart().getData()) {
             if (!series.getData().isEmpty()) {
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
-                if (!firstWaypoint.isGPXFile() && series.getName() != null) {
+                if (!firstWaypoint.getParent().isGPXFile() && series.getName() != null) {
                     // and now color the series nodes according to lineitem color
+                    
+                    // TODO: leads to drawing artifacts - fill not done properly downwards from each point!!!
                     // https://stackoverflow.com/a/12286465
-                    series.getNode().getStyleClass().add(COLOR_STYLE_CLASS_PREFIX + getSeriesColor(series));
+//                    series.getNode().getStyleClass().add(COLOR_STYLE_CLASS_PREFIX + getSeriesColor(series));
                     // not working anymore with javafx 15
                     // https://gist.github.com/jewelsea/2129306
 //                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
