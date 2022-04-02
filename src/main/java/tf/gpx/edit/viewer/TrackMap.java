@@ -399,6 +399,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
     private void initialize() {
         if (!isInitialized) {
+//            System.out.println("Start map initialize: " + Instant.now());
 //            // get console.log output in java as well
 //            // https://stackoverflow.com/a/49077436
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
@@ -415,6 +416,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // TFE, 20210116: support any console.log() calls from any loaded js
             window.setMember("console", jscallback); // "console" object is now known to JavaScript
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
+
+//            System.out.println(" Callback set: " + Instant.now());
 
             addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
@@ -530,111 +533,129 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
             addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
 
+//            System.out.println("  JS+CSS loaded: " + Instant.now());
+
             myMapPane = (Pane) getParent();
             
-            // TFE, 20200317: add heat map
-            final HeatMapPane heatMapPane = HeatMapPane.getInstance();
-            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                if (newValue != null && newValue != oldValue) {
-                    heatMapPane.setSize(myMapPane.getWidth(), newValue.doubleValue());
-                    if (heatMapPane.isVisible()) {
-                        updateHeatMapPane();
+            Platform.runLater(() -> {
+                // TFE, 20200317: add heat map
+                final HeatMapPane heatMapPane = HeatMapPane.getInstance();
+                myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    if (newValue != null && newValue != oldValue) {
+                        heatMapPane.setSize(myMapPane.getWidth(), newValue.doubleValue());
+                        if (heatMapPane.isVisible()) {
+                            updateHeatMapPane();
+                        }
                     }
-                }
-            });
-            myMapPane.prefWidthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                if (newValue != null && newValue != oldValue) {
-                    heatMapPane.setSize(newValue.doubleValue(), myMapPane.getHeight());
-                    if (heatMapPane.isVisible()) {
-                        updateHeatMapPane();
+                });
+                myMapPane.prefWidthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    if (newValue != null && newValue != oldValue) {
+                        heatMapPane.setSize(newValue.doubleValue(), myMapPane.getHeight());
+                        if (heatMapPane.isVisible()) {
+                            updateHeatMapPane();
+                        }
                     }
-                }
-            });
-            heatMapPane.setSize(myMapPane.getWidth(), myMapPane.getHeight());
-            myMapPane.getChildren().add(heatMapPane); 
-            heatMapPane.toFront();
-            heatMapPane.setVisible(false);
-            
-            // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
-            // TFE, 20191119: show chartsPane pane instead to support multiple charts (height, speed, ...)
-            final ChartsPane chartsPane = ChartsPane.getInstance();
-            // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
-//            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
-            final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
-            chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
-            chartsPane.setMinHeight(60.0);
-            chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                // store height in percentage as preference
-                if (newValue != null && newValue != oldValue) {
-                    GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
-                }
-            });
-            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                // resize chartsPane with pane - not done via bind() anymore
-                if (newValue != null && newValue != oldValue) {
-                    // reload preference - might have changed in the meantime
-                    final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
-                    final double newHeight = newValue.doubleValue() * perc;
-                    chartsPane.setPrefHeight(newHeight);
-//                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
-                }
-            });
-            chartsPane.prefWidthProperty().bind(myMapPane.prefWidthProperty());
-            // TODO: scale chartsPane in x direction - not happening automatically ???
-            AnchorPane.setBottomAnchor(chartsPane, 20.0);
-            myMapPane.getChildren().add(chartsPane); 
-            chartsPane.toFront();
-            chartsPane.setVisible(false);
+                });
+                heatMapPane.setSize(myMapPane.getWidth(), myMapPane.getHeight());
+                myMapPane.getChildren().add(heatMapPane); 
+                heatMapPane.toFront();
+                heatMapPane.setVisible(false);
 
-            // support drawing rectangle with mouse + cntrl
-            // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
-            getWebView().setOnMousePressed((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlPressed(event);
-                    event.consume();
-                }
-            });
-            getWebView().setOnMouseDragged((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlDragged(event);
-                    event.consume();
-                }
-            });
-            getWebView().setOnMouseReleased((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlReleased(event);
-                    event.consume();
-                }
-            });
-            
-//            // TODO: disable heatmap while dragging
-            
-            // we want our own context menu!
-            getWebView().setContextMenuEnabled(false);
-            createContextMenu();
+//                System.out.println("  Heatmap loaded: " + Instant.now());
 
-            // now we have loaded TrackMarker.js...
-            MarkerManager.getInstance().loadSpecialIcons();
+                // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
+                // TFE, 20191119: show chartsPane pane instead to support multiple charts (height, speed, ...)
+                final ChartsPane chartsPane = ChartsPane.getInstance();
+                // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
+    //            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+                final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
+                chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
+                chartsPane.setMinHeight(60.0);
+                chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    // store height in percentage as preference
+                    if (newValue != null && newValue != oldValue) {
+                        GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
+                    }
+                });
+                myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    // resize chartsPane with pane - not done via bind() anymore
+                    if (newValue != null && newValue != oldValue) {
+                        // reload preference - might have changed in the meantime
+                        final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
+                        final double newHeight = newValue.doubleValue() * perc;
+                        chartsPane.setPrefHeight(newHeight);
+    //                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
+                    }
+                });
+                chartsPane.prefWidthProperty().bind(myMapPane.prefWidthProperty());
+                // TODO: scale chartsPane in x direction - not happening automatically ???
+                AnchorPane.setBottomAnchor(chartsPane, 20.0);
+                myMapPane.getChildren().add(chartsPane); 
+                chartsPane.toFront();
+                chartsPane.setVisible(false);
+                
+//                System.out.println("  Chartspane loaded: " + Instant.now());
 
-            // now we can set the search icon to use
-            execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
-            
-            // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
-            isInitialized = true;
+                // support drawing rectangle with mouse + cntrl
+                // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
+                getWebView().setOnMousePressed((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlPressed(event);
+                        event.consume();
+                    }
+                });
+                getWebView().setOnMouseDragged((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlDragged(event);
+                        event.consume();
+                    }
+                });
+                getWebView().setOnMouseReleased((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlReleased(event);
+                        event.consume();
+                    }
+                });
 
-            // TFE, 20200713: now we can enable the overlays per baselayer
-            setOverlaysForBaselayer();
-            // set current layer
-            setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-            
-            // TFE, 20190901: load preferences - now things are up & running
-            myGPXEditor.initializeAfterMapLoaded();
-            
+    //            // TODO: disable heatmap while dragging
+
+                // we want our own context menu!
+                getWebView().setContextMenuEnabled(false);
+                createContextMenu();
+
+//                System.out.println("  Contextmenu loaded: " + Instant.now());
+
+                // now we have loaded TrackMarker.js...
+                MarkerManager.getInstance().loadSpecialIcons();
+
+                // now we can set the search icon to use
+                execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
+
+//                System.out.println("  Icons loaded: " + Instant.now());
+
+                // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
+                isInitialized = true;
+
+                // TFE, 20200713: now we can enable the overlays per baselayer
+                setOverlaysForBaselayer();
+                // set current layer
+                setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+
+//                System.out.println("  Overlays loaded: " + Instant.now());
+
+                // TFE, 20190901: load preferences - now things are up & running
+                myGPXEditor.initializeAfterMapLoaded();
+
+//                System.out.println("  Initalize after map loaded completed: " + Instant.now());
+            });
+
             // TFE, 20200713: show empty map in any case - no need to have a gpx loaded
             // center to current location - NOT WORKING, see LeafletMapView
 //            execScript("centerToLocation();");
             setVisible(true);
             
+//            System.out.println("  Set visible: " + Instant.now());
+
             // TFE, 20211105: initialize bounding box here
             final Double[] bounds = new Double[4];
             final JSObject jsValue = (JSObject) execScript("getMapBounds();");
@@ -647,6 +668,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 bounds[i] = Double.valueOf(slotVal.toString());
             }
             mapBounds = new BoundingBox(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1]);
+
+//            System.out.println("Done map initialize: " + Instant.now());
         }
     }
     
@@ -847,16 +870,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     // we might be routing...
                     execScript("stopRouting(false);");
 
-                    assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
-                    LatLonElev latlong = (LatLonElev) contextMenu.getUserData();
+                    assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+                    LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
 
                     // check if a marker is under the cursor in leaflet - if yes, use its values
                     final CurrentMarker curMarker = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.MARKER));
                     if (curMarker != null) {
-                        latlong = curMarker.latlong;
+                        curLocation = curMarker.latlong;
                     }
 
-                    final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+                    final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), curLocation.getLatitude(), curLocation.getLongitude());
 
                     if (curMarker != null) {
                         // set name / description / comment from search cmdString marker options (if any)

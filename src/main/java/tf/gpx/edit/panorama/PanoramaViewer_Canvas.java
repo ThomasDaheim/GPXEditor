@@ -49,17 +49,18 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
-import static javafx.scene.input.KeyCode.R;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.lang3.tuple.Pair;
@@ -123,8 +124,6 @@ public class PanoramaViewer_Canvas {
 
     private final static double MIN_VERT_ANGLE = 25.0;
 
-    private static final Double AXIS_WIDTH = 40d;
-
     private double mousePosX;
     private double mousePosY;
     private double mouseOldX;
@@ -143,55 +142,101 @@ public class PanoramaViewer_Canvas {
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
 
-//        stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setScene(scene);
         
         initialize();
     }
     
+    public static PanoramaViewer_Canvas getInstance() {
+        return INSTANCE;
+    }
+    
+    @SuppressWarnings("unchecked")
     private void initialize() {
         // linechart can only be created with a pane and a series...
         // so we create the constant axis here and use them later on in showData()
-        
+        final Double AXIS_WIDTH = 30d;
+        final Double AXIS_FONTSIZE = 12d;
+
         xAxisElev = AxisBuilder.create(Orientation.HORIZONTAL, Position.BOTTOM)
-                .type(AxisType.LINEAR)
                 .autoScale(false)
+                .type(AxisType.LINEAR)
                 .minorTickMarksVisible(false)
-                .tickLabelFontSize(12)
-                .unit("")
+                .mediumTickMarksVisible(false)
+                .minorTickSpace(90)
+                .majorTickSpace(90)
+                .tickLabelFontSize(AXIS_FONTSIZE)
+                .autoFontSize(false)
+                .titleFontSize(AXIS_FONTSIZE)
+                .minHeight(AXIS_WIDTH)
+                .numberFormatter(new StringConverter<Number>() {
+                                    @Override
+                                    public String toString(Number object) {
+                                        return switch (object.intValue()) {
+                                            case 180, 180+360 -> "S";
+                                            case 270, 270+360 -> "W";
+                                            case 0, 0+360, 0+360+360 -> "N";
+                                            case 90, 90+360 -> "E";
+                                            default -> "";
+                                        };
+                                    }
+
+                                    @Override
+                                    public Number fromString(String string) {
+                                        return 0;
+                                    }
+                                })
+                .title("")
                 .build();
         AnchorPane.setBottomAnchor(xAxisElev, 0d);
         AnchorPane.setLeftAnchor(xAxisElev, AXIS_WIDTH);
         AnchorPane.setRightAnchor(xAxisElev, AXIS_WIDTH);
         
         yAxisElev = AxisBuilder.create(Orientation.VERTICAL, Position.LEFT)
-                .type(AxisType.LINEAR)
                 .autoScale(false)
-                .minorTickMarksVisible(true)
-                .tickLabelFontSize(12)
-                .unit("Angle [" + LatLonHelper.DEG + "]")
+                .type(AxisType.LINEAR)
+                .minorTickMarksVisible(false)
+                .mediumTickMarksVisible(false)
+                .minorTickSpace(5)
+                .majorTickSpace(5)
+                .tickLabelFontSize(AXIS_FONTSIZE)
+                .autoFontSize(false)
+                .minWidth(1.5*AXIS_WIDTH)
+                .titleFontSize(AXIS_FONTSIZE)
+                .title("Angle [" + LatLonHelper.DEG + "]")
                 .build();
         AnchorPane.setTopAnchor(yAxisElev, 0d);
         AnchorPane.setBottomAnchor(yAxisElev, AXIS_WIDTH);
         AnchorPane.setLeftAnchor(yAxisElev, 0d);
 
         xAxisSun = AxisBuilder.create(Orientation.HORIZONTAL, Position.BOTTOM)
-                .type(AxisType.LINEAR)
                 .autoScale(false)
+                .type(AxisType.LINEAR)
                 .minorTickMarksVisible(false)
-                .tickLabelFontSize(12)
-                .unit("")
+                .mediumTickMarksVisible(false)
+                .majorTickMarksVisible(false)
+                .tickLabelFontSize(AXIS_FONTSIZE)
+                .autoFontSize(false)
+                .tickLabelsVisible(false)
+                .minHeight(AXIS_WIDTH)
+                .title("")
                 .build();
         AnchorPane.setBottomAnchor(xAxisSun, 0d);
         AnchorPane.setLeftAnchor(xAxisSun, AXIS_WIDTH);
         AnchorPane.setRightAnchor(xAxisSun, AXIS_WIDTH);
         
         yAxisSun = AxisBuilder.create(Orientation.VERTICAL, Position.LEFT)
-                .type(AxisType.LINEAR)
                 .autoScale(false)
-                .minorTickMarksVisible(true)
-                .tickLabelFontSize(12)
-                .unit("Angle [" + LatLonHelper.DEG + "]")
+                .type(AxisType.LINEAR)
+                .minorTickMarksVisible(false)
+                .mediumTickMarksVisible(false)
+                .majorTickMarksVisible(false)
+                .tickLabelFontSize(AXIS_FONTSIZE)
+                .autoFontSize(false)
+                .tickLabelsVisible(false)
+                .minWidth(1.5*AXIS_WIDTH)
+                .title("")
                 .build();
         AnchorPane.setTopAnchor(yAxisSun, 0d);
         AnchorPane.setBottomAnchor(yAxisSun, AXIS_WIDTH);
@@ -209,31 +254,18 @@ public class PanoramaViewer_Canvas {
             // lowerBound is always: what you want to center - 180
             int lowerBound = 0;
             switch (t.getCode()) {
-                case ESCAPE:
-                    stage.close();
-                    break;
-                case C, R:
-                    setAxes();
-                    break;
-                case N:
-                    lowerBound = 360 - 180;
-                    break;
-                case S:
-                    lowerBound = 180 - 180;
-                    break;
-                case E:
-                    lowerBound = 90+360 - 180;
-                    break;
-                case W:
-                    lowerBound = 270 - 180;
-                    break;
-                case P:
+                case ESCAPE -> stage.close();
+                case C, R -> setAxes();
+                case N -> lowerBound = 360 - 180;
+                case S -> lowerBound = 180 - 180;
+                case E -> lowerBound = 90+360 - 180;
+                case W -> lowerBound = 270 - 180;
+                case P -> {
                     showHideSunPath();
                     lowerBound = 180 - 180;
-                    break;
+                }
             }
-            xAxisElev.setMinValue(lowerBound);
-            xAxisElev.setMaxValue(lowerBound + 360);
+            xAxisElev.setMinMax(lowerBound, lowerBound + 360);
         });
 
         elevationChartLabel.setText("Drag: Shift X" + System.lineSeparator() + 
@@ -261,192 +293,49 @@ public class PanoramaViewer_Canvas {
         // everything else needs to be done once data series are available
         // eu.hansolo.fx.charts.XYChart doesn't have constructors with series data
     }
-
-    @SuppressWarnings("unchecked")
-    private void initializeWithData() {
-        chartGroup.getChildren().clear();
-
-        // create charts from data
-        elevationChart = initializeChart(elevationChartData, xAxisElev, yAxisElev);
-        
-        // there is no common ancestor of area and line chart that implements createSymbols...
-        elevationChart.toFront();
-        
-        elevationChart.minHeightProperty().bind(pane.heightProperty());
-        elevationChart.prefHeightProperty().bind(pane.heightProperty());
-        elevationChart.maxHeightProperty().bind(pane.heightProperty());
-        elevationChart.minWidthProperty().bind(pane.widthProperty());
-        elevationChart.prefWidthProperty().bind(pane.widthProperty());
-        elevationChart.maxWidthProperty().bind(pane.widthProperty());
-        
-//        elevationChart.setOnMouseDragged((e) -> {
-//            mouseOldX = mousePosX;
-//            mouseOldY = mousePosY;
-//            mousePosX = e.getSceneX();
-//            mousePosY = e.getSceneY();
-//
-//            // calculate cursor position in scene, relative to axis, x+y values in axis values
-//            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
-//            double xPosInAxis = xAxisElev.sceneToLocal(new Point2D(mouseOldX, 0)).getX();
-//            double yPosInAxis = yAxisElev.sceneToLocal(new Point2D(0, mouseOldY)).getY();
-//            double mouseScaleOldX = xAxisElev.getValueForDisplay(xPosInAxis).doubleValue();
-//            double mouseScaleOldY = yAxisElev.getValueForDisplay(yPosInAxis).doubleValue();
-//
-//            xPosInAxis = xAxisElev.sceneToLocal(new Point2D(mousePosX, 0)).getX();
-//            yPosInAxis = yAxisElev.sceneToLocal(new Point2D(0, mousePosY)).getY();
-//            double mouseScaleX = xAxisElev.getValueForDisplay(xPosInAxis).doubleValue();
-//            double mouseScaleY = yAxisElev.getValueForDisplay(yPosInAxis).doubleValue();
-//
-//            // only drag full degree values
-//            final int mouseDeltaX = (int) Math.floor(mouseScaleX - mouseScaleOldX);
-//            final int mouseDeltaY = (int) Math.floor(mouseScaleY - mouseScaleOldY);
-//
-//            // move xAxisElev bounds for simple dragging - but only in certain range
-//            if ((xAxisElev.getMinValue() - mouseDeltaX) > MIN_HOR_ANGLE && 
-//                    (xAxisElev.getMaxValue() - mouseDeltaX) < MAX_HOR_ANGLE) {
-//                xAxisElev.setMinValue(Math.max(MIN_HOR_ANGLE, xAxisElev.getMinValue() - mouseDeltaX));
-//                xAxisElev.setMaxValue(Math.min(MAX_HOR_ANGLE, xAxisElev.getMaxValue() - mouseDeltaX));
-//            }
-//
-//            e.consume();
-//        });
-        
-        elevationChart.setOnMouseMoved((e) -> {
-            // only called when not in dragged since we also have setOnMouseDragged
-            mousePosX = e.getSceneX();
-            mousePosY = e.getSceneY();
-        });
-        
-        // add vertical zoom on mouse wheel
-        elevationChart.setOnScroll((t) -> {
-            double scaleFact = SCALE_FACT;
-            if (t.isShiftDown()) {
-                scaleFact = Math.pow(SCALE_FACT, 5);
-            }
-            // https://stackoverflow.com/a/52707611
-            // if shift is pressed with mouse wheel x is changed instead of y...
-            double scrollDelta = 0d;
-            if (!t.isShiftDown()) {
-                scrollDelta = t.getDeltaY();
-            } else {
-                scrollDelta = t.getDeltaX();
-            }
-            
-            final double lower = yAxisElev.getMinValue();
-            final double upper = yAxisElev.getMaxValue();
-            if (scrollDelta > 0) {
-                // zoom in - easy, since no bounds to take into account...
-                yAxisElev.setMinValue(lower / scaleFact);
-                yAxisElev.setMaxValue(upper / scaleFact);
-            } else {
-                // scroll out - but not more than 90 degress
-                final int newLower = (int) Math.floor(lower * scaleFact);
-                final int newUpper = (int) Math.floor(upper * scaleFact);
-                if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
-                    yAxisElev.setMinValue(newLower);
-                    yAxisElev.setMaxValue(newUpper);
-                }
-            }
-        });
-
-        chartGroup.getChildren().add(elevationChart);
-    }
-    
-//    private void initializeAxes(final Axis xAxis, final Axis yAxis) {
-//        // show only N, W, S, E - but for all dragging values
-//        xAxis.setTickLabelFormatter(new StringConverter<Number>() {
-//                @Override
-//                public String toString(Number object) {
-//                    switch (object.intValue()) {
-//                        case 180, 180+360:
-//                            return "S";
-//                        case 270, 270+360:
-//                            return "W";
-//                        case 0, 0+360, 0+360+360:
-//                            return "N";
-//                        case 90, 90+360:
-//                            return "E";
-//                        default:
-//                            return "";
-//                    }
-//                }
-//
-//                @Override
-//                public Number fromString(String string) {
-//                    return 0;
-//                }
-//            });
-        
-//        yAxis.setSide(Side.LEFT);
-//        yAxis.setTickLabelFont(Font.font(12));
-//        yAxis.setTickUnit(5);
-//        yAxis.setLabel("Angle [" + LatLonHelper.DEG + "]");
-//        yAxis.setAutoRanging(false);
-//    }
     
     @SuppressWarnings("unchecked")
     private XYChart initializeChart(final List<XYSeries> chartData, final Axis xAxis, final Axis yAxis) {
-//        xAxis.setMinValue(0.0);
-//        xAxis.setMaxValue(720.0);
-//        
-        final XYPane pane = new XYPane(chartData);
-        final XYChart chart = new XYChart<>(pane, xAxis, yAxis); 
-        
-        // try binding pane size to axis min/max values
-//        private void adjustChartRange() {
-//            xyPanes.forEach(xyPane -> {
-//                if (hasBottomXAxis) {
-//                    xyPane.setLowerBoundX(xAxisB.getMinValue());
-//                    xyPane.setUpperBoundX(xAxisB.getMaxValue());
-//                } else if (hasTopXAxis) {
-//                    xyPane.setLowerBoundX(xAxisT.getMinValue());
-//                    xyPane.setUpperBoundX(xAxisT.getMaxValue());
-//                } else if (hasCenterXAxis) {
-//                    xyPane.setLowerBoundX(xAxisC.getMinValue());
-//                    xyPane.setUpperBoundX(xAxisC.getMaxValue());
-//                }
-//
-//                if (hasLeftYAxis) {
-//                    xyPane.setLowerBoundY(yAxisL.getMinValue());
-//                    xyPane.setUpperBoundY(yAxisL.getMaxValue());
-//                } else if (hasRightYAxis) {
-//                    xyPane.setLowerBoundY(yAxisR.getMinValue());
-//                    xyPane.setUpperBoundY(yAxisR.getMaxValue());
-//                } else if (hasCenterYAxis) {
-//                    xyPane.setLowerBoundY(yAxisC.getMinValue());
-//                    xyPane.setUpperBoundY(yAxisC.getMaxValue());
-//                }
-//            });
-//        }
-
-        pane.lowerBoundXProperty().bind(xAxis.minValueProperty());
-        pane.upperBoundXProperty().bind(xAxis.maxValueProperty());
-        pane.lowerBoundYProperty().bind(yAxis.minValueProperty());
-        pane.upperBoundYProperty().bind(yAxis.maxValueProperty());
-        
-        return chart;
-    }
-
-    public static PanoramaViewer_Canvas getInstance() {
-        return INSTANCE;
+        return new XYChart<>(new XYPane(chartData), xAxis, yAxis);
     }
     
+    private void setAxes() {
+        // initially we want North centered
+        xAxisElev.setMinMax(180d, 180d + 360d);
+
+        // y-axis needs to be set - x is fixed
+        // match min to next 5-value
+        double minValue;
+        if (panorama.getMinElevationAngle().getElevation() > 0) {
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0);
+        } else {
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0);
+        }
+        // max shouldn't be smaller than MIN_VERT_ANGLE
+        double maxValue;
+        if (panorama.getMaxElevationAngle().getElevation() > 0) {
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1);
+        } else {
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1);
+        }
+        yAxisElev.setMinMax(minValue, maxValue);
+    }
+
     public void showPanorama(final IGeoCoordinate loc) {
-//        System.out.println("showHorizon: start " + Instant.now());
         location = loc;
         // TFE, 20220303: timezone is location dependent...
         timeZone = TimeZoneProvider.getInstance().getTimeZone(loc);
 //        System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
 
         // get the whole set of LatLonElev around our location
-        panorama = new Panorama(loc);
-//        System.out.println("showHorizon: after getPanoramaView() " + Instant.now());
+        panorama = new Panorama(
+                loc, 
+                Panorama.DISTANCE_FROM, Panorama.DISTANCE_TO, Panorama.DISTANCE_STEP, 
+                Panorama.ANGEL_FROM, Panorama.ANGEL_TO, Panorama.ANGEL_STEP);
 
         showData();
-//        System.out.println("showHorizon: after showData() " + Instant.now());
         
         stage.show();
-//        System.out.println("showHorizon: end  " + Instant.now());
     }
     
     private void showData() {
@@ -455,38 +344,10 @@ public class PanoramaViewer_Canvas {
 
         // and now draw from outer to inner and from darker to brighter color
         // see Horizon_PodTriglavom.jpg for expected result
-        drawViewingAngles();
-        initializeWithData();
+        calcViewingAngles();
+        drawPanorama();
         setAxes();
 
-//        for (XYChart.Series<Number, Number> series : elevationChart.getData()) {
-////            System.out.println("Adding StyleClass " + series.getName());
-//            series.getNode().getStyleClass().add(series.getName());
-//
-//            for (XYChart.Data<Number, Number> data : series.getData()) {
-//                if (getDataVisible(data)) {
-//                    // lazy loading for tootips...
-//                    data.getNode().setOnMouseEntered((t) -> {
-//                        if (!data.getNode().getProperties().containsKey(TOOLTIP)) {
-//                            // no tootip there yet, lets add one!
-//                            final Tooltip tooltip = 
-//                                    new Tooltip(String.format("Dist: %.1fkm", getDataDistance(data) / 1000) + "\n" + 
-//                                            String.format("Elev. %.1fm", getDataElevation(data)));
-//                            tooltip.setShowDelay(Duration.ZERO);
-//                            Tooltip.install(data.getNode(), tooltip);
-//                            data.getNode().getProperties().put(TOOLTIP, true);
-//                        }
-//                    });
-//                } else {
-//                    data.getNode().setVisible(false);
-//                    data.getNode().setDisable(true);
-//                }
-//            }
-//        }
-//        // data nodes are not part of any group und series...
-//        // but we only need to add the TOOLTIP_STYLE_CLASS once since all series have the same parent node...
-//        elevationChart.getData().get(0).getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
-        
         // we didn't have any data - lets alert the user
         noElevationDataLabel.setVisible(panorama.noElevationData());
         
@@ -494,7 +355,7 @@ public class PanoramaViewer_Canvas {
     }
 
     @SuppressWarnings("unchecked")
-    private void drawViewingAngles() {
+    private void calcViewingAngles() {
         elevationChartData.clear();
         // we also clear sun path data here so we know if we should get it on first showing
         sunPathChartData.clear();
@@ -553,11 +414,6 @@ public class PanoramaViewer_Canvas {
                 }
             }
             
-            // TODO: removing all invisible data points leads to funny lines - probably one would need to keep the ones next to a visible one...
-            // so you would need to reduce the set to the items that have an invisible neighbour only - surely somie clever stream() could do that
-            // we don't need that data...
-//            dataSet.removeAll(invisibleData);
-//            if (dataSet.isEmpty()) {
             if (dataSet.size() == invisibleData.size()) {
                 // we don't need the whole set...
                 invisibleSeries.add(dataSetList.get(i));
@@ -605,30 +461,14 @@ public class PanoramaViewer_Canvas {
             
             // surely, some clever way with enum would help here...
             switch (seriesColor) {
-                case 0:
-                    series.setFill(Color.web("#0C11E6"));
-                    break;
-                case 1:
-                    series.setFill(Color.web("#3A40DE"));
-                    break;
-                case 2:
-                    series.setFill(Color.web("#3B40DA"));
-                    break;
-                case 3:
-                    series.setFill(Color.web("#4D51D9"));
-                    break;
-                case 4:
-                    series.setFill(Color.web("#8285D2"));
-                    break;
-                case 5:
-                    series.setFill(Color.web("#A7A6CE"));
-                    break;
-                case 6:
-                    series.setFill(Color.web("#BCBECD"));
-                    break;
-                case 7:
-                    series.setFill(Color.web("#C6C7C9"));
-                    break;
+                case 0 -> series.setFill(Color.web("#0C11E6"));
+                case 1 -> series.setFill(Color.web("#3A40DE"));
+                case 2 -> series.setFill(Color.web("#3B40DA"));
+                case 3 -> series.setFill(Color.web("#4D51D9"));
+                case 4 -> series.setFill(Color.web("#8285D2"));
+                case 5 -> series.setFill(Color.web("#A7A6CE"));
+                case 6 -> series.setFill(Color.web("#BCBECD"));
+                case 7 -> series.setFill(Color.web("#C6C7C9"));
             }
 
             seriesSet.add(series);
@@ -636,27 +476,93 @@ public class PanoramaViewer_Canvas {
         
         elevationChartData.addAll(seriesSet);
     }
-    
-    private void setAxes() {
-        // initially we want North centered
-        xAxisElev.setMinMax(180d, 180d + 360d);
 
-        // y-axis needs to be set - x is fixed
-        // match min to next 5-value
-        double minValue;
-        if (panorama.getMinElevationAngle().getElevation() > 0) {
-            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0);
-        } else {
-            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0);
-        }
-        // max shouldn't be smaller than MIN_VERT_ANGLE
-        double maxValue;
-        if (panorama.getMaxElevationAngle().getElevation() > 0) {
-            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1);
-        } else {
-            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1);
-        }
-        yAxisElev.setMinMax(minValue, maxValue);
+    @SuppressWarnings("unchecked")
+    private void drawPanorama() {
+        chartGroup.getChildren().clear();
+
+        // create charts from data
+        elevationChart = initializeChart(elevationChartData, xAxisElev, yAxisElev);
+        
+        // there is no common ancestor of area and line chart that implements createSymbols...
+        elevationChart.toFront();
+        
+        elevationChart.minHeightProperty().bind(pane.heightProperty());
+        elevationChart.prefHeightProperty().bind(pane.heightProperty());
+        elevationChart.maxHeightProperty().bind(pane.heightProperty());
+        elevationChart.minWidthProperty().bind(pane.widthProperty());
+        elevationChart.prefWidthProperty().bind(pane.widthProperty());
+        elevationChart.maxWidthProperty().bind(pane.widthProperty());
+        
+        elevationChart.setOnMouseDragged((e) -> {
+            mouseOldX = mousePosX;
+            mouseOldY = mousePosY;
+            mousePosX = e.getSceneX();
+            mousePosY = e.getSceneY();
+
+            // calculate cursor position in scene, relative to axis, x+y values in axis values
+            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
+            double xPosInAxis = xAxisElev.sceneToLocal(new Point2D(mouseOldX, 0)).getX();
+            double yPosInAxis = yAxisElev.sceneToLocal(new Point2D(0, mouseOldY)).getY();
+            double mouseScaleOldX = xAxisElev.getValueForDisplay(xPosInAxis);
+            double mouseScaleOldY = yAxisElev.getValueForDisplay(yPosInAxis);
+
+            xPosInAxis = xAxisElev.sceneToLocal(new Point2D(mousePosX, 0)).getX();
+            yPosInAxis = yAxisElev.sceneToLocal(new Point2D(0, mousePosY)).getY();
+            double mouseScaleX = xAxisElev.getValueForDisplay(xPosInAxis);
+            double mouseScaleY = yAxisElev.getValueForDisplay(yPosInAxis);
+
+            // only drag full degree values
+            final int mouseDeltaX = (int) Math.floor(mouseScaleX - mouseScaleOldX);
+            final int mouseDeltaY = (int) Math.floor(mouseScaleY - mouseScaleOldY);
+
+            // move xAxisElev bounds for simple dragging - but only in certain range
+            if ((xAxisElev.getMinValue() - mouseDeltaX) > MIN_HOR_ANGLE && 
+                    (xAxisElev.getMaxValue() - mouseDeltaX) < MAX_HOR_ANGLE) {
+                xAxisElev.setMinValue(Math.max(MIN_HOR_ANGLE, xAxisElev.getMinValue() - mouseDeltaX));
+                xAxisElev.setMaxValue(Math.min(MAX_HOR_ANGLE, xAxisElev.getMaxValue() - mouseDeltaX));
+            }
+
+            e.consume();
+        });
+        
+        elevationChart.setOnMouseMoved((e) -> {
+            // only called when not in dragged since we also have setOnMouseDragged
+            mousePosX = e.getSceneX();
+            mousePosY = e.getSceneY();
+        });
+        
+        // add vertical zoom on mouse wheel
+        elevationChart.setOnScroll((t) -> {
+            double scaleFact = SCALE_FACT;
+            if (t.isShiftDown()) {
+                scaleFact = Math.pow(SCALE_FACT, 5);
+            }
+            // https://stackoverflow.com/a/52707611
+            // if shift is pressed with mouse wheel x is changed instead of y...
+            double scrollDelta = 0d;
+            if (!t.isShiftDown()) {
+                scrollDelta = t.getDeltaY();
+            } else {
+                scrollDelta = t.getDeltaX();
+            }
+            
+            final double lower = yAxisElev.getMinValue();
+            final double upper = yAxisElev.getMaxValue();
+            if (scrollDelta > 0) {
+                // zoom in - easy, since no bounds to take into account...
+                yAxisElev.setMinMax(lower / scaleFact, upper / scaleFact);
+            } else {
+                // scroll out - but not more than 90 degress
+                final int newLower = (int) Math.floor(lower * scaleFact);
+                final int newUpper = (int) Math.floor(upper * scaleFact);
+                if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
+                    yAxisElev.setMinMax(newLower, newUpper);
+                }
+            }
+        });
+
+        chartGroup.getChildren().add(elevationChart);
     }
     
     private void showHideSunPath() {
@@ -700,23 +606,11 @@ public class PanoramaViewer_Canvas {
             sunPathChart.setDisable(false);
 
             if (firstTime) {
-//                // and now everything has been rendered & layouted
-//                for (final XYChart.Series<Number, Number> series : sunPathChart.getData()) {
-//                    series.getNode().getStyleClass().add(series.getName());
-//                    // data nodes are not part of any group und series...
-//                    series.getNode().getParent().getStyleClass().add(TOOLTIP_STYLE_CLASS);
-//                }
-                
                 // and also a label with all the vailable data...
                 sunPathLabel.setText(SunPathForDate.TODAY + "\n\n" + SunPathForDate.SUMMER + "\n\n" + SunPathForDate.WINTER);
                 sunPathLabel.setVisible(true);
-
-                sunPathChart.applyCss();
-                sunPathChart.layout();
             }
         }
-        
-        pane.layout();
     }
     
     @SuppressWarnings("unchecked")

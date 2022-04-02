@@ -480,8 +480,6 @@ public class LeafletMapView extends StackPane {
             // this needs to be fixed manually since javafx doesn't resolve it properly
             // SOLUTION: use https://websemantics.uk/tools/image-to-data-uri-converter/ to convert images and
             // replace url(IMAGE.TYPE) with url(data:image/TYPE;base64,...) in css
-            final String curJarPath = TrackMap.class.getResource(stylepath).toExternalForm();
-
             addStyle(style);
         } catch (IOException ex) {
             Logger.getLogger(TrackMap.class.getName()).log(Level.SEVERE, null, ex);

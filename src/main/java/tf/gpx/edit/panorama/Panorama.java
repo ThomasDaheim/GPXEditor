@@ -56,7 +56,7 @@ import tf.helper.general.ObjectsHelper;
  * From this the viewing angle of each point of the panorama can be determined. The maximum
  * viewing angle for each azimuth angle makes up the horizon for the location.
  * 
- * NOTE: locations and viewing angles are stored most distant first to support z-order drwaing.
+ * NOTE: locations and viewing angles are stored most distant first to support z-order drawing.
  * 
  * @author thomas
  */

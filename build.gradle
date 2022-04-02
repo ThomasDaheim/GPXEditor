@@ -1,6 +1,7 @@
 // support for javafx11 - see https://openjfx.io/openjfx-docs/#gradle
 buildscript {
     repositories {
+        mavenLocal()
         mavenCentral()
     }
     dependencies {

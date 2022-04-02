@@ -401,6 +401,11 @@ public class GPXEditor implements Initializable {
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // TFE, 20200713: needs to happen before map gets loaded
+        // TFE, 20220402: do as first thing since leaflet rendering takes some time and every millisecond helps
+        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
+        TrackMap.getInstance().initMap();
+
         // TF, 20170720: store and read divider positions of panes
         final Double recentLeftDividerPos = GPXEditorPreferences.RECENTLEFTDIVIDERPOS.getAsType();
         final Double recentCentralDividerPos = GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.getAsType();
@@ -433,10 +438,6 @@ public class GPXEditor implements Initializable {
 
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
-
-        // TFE, 20200713: needs to happen before map gets loaded
-        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
-        TrackMap.getInstance().initMap();
     }
     
     public void lateInitialize() {
