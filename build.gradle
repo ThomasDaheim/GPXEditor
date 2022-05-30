@@ -42,7 +42,7 @@ mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
 version='5.7'
-description = 'GPXEditor - JavaFX GPX file editor that support UI and batch mass modifications '
+description = 'GPXEditor - JavaFX GPX file editor'
 
 repositories {
     mavenLocal() {
@@ -203,6 +203,7 @@ run {
         enableAssertions = true
     }
     args = ["-mapCenter", "46.66068859124702 11.159234046936037"]
+//    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 
 // TFE, 20211102: not working like below

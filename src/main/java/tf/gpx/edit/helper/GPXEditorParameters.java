@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -50,6 +51,7 @@ public class GPXEditorParameters {
     private IGeoCoordinate mapCenter = new LatLonElev(48.137154, 11.576124);
     
     private List<String> argsList;
+    private List<String> optsList;
 
     private GPXEditorParameters() {
         // Exists only to defeat instantiation.
@@ -132,20 +134,23 @@ public class GPXEditorParameters {
                 }
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.mergeFiles.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.mergeFiles.toString())) {
+            // TFE, 20220530: save options for later use as well - to make sure we execute commands in the right order
+            // mergeFiles after mergeTracks != mergeTracks after mergeFiles
+            optsList = Arrays.asList(command.getOptions()).stream().map((t) -> {
+                return t.getOpt();
+            }).collect(Collectors.toList());
+            
+            if (command.hasOption(GPXEditorParameters.CmdOps.mergeFiles.toString())) {
                 mergeFiles = true;
                 // System.out.println("Option mergeFiles found");
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.mergeTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.mergeTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.mergeTracks.toString())) {
                 mergeTracks = true;
                 // System.out.println("Option mergeTracks found");
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.reduceTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.reduceTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.reduceTracks.toString())) {
                 reduceTracks = true;
                 // System.out.println("Option reduceTracks found");
             }
@@ -173,8 +178,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option reduceEpsilon found: " + reduceEpsilon);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.fixTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.fixTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.fixTracks.toString())) {
                 fixTracks = true;
                 // System.out.println("Option fixTracks found");
             }
@@ -184,8 +188,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option fixDistance found: " + fixDistance);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.deleteEmpty.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.deleteEmpty.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.deleteEmpty.toString())) {
                 deleteEmpty = true;
                 // System.out.println("Option deleteEmpty found");
             }
@@ -201,8 +204,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option gpxFiles found: " + value);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.ignoreParams.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.ignoreParams.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.ignoreParams.toString())) {
                 ignoreParams = true;
                 System.out.println("Ignoring all parameters.");
                 
@@ -303,6 +305,10 @@ public class GPXEditorParameters {
 
     public List<String> getArgsList() {
         return argsList;
+    }
+
+    public List<String> getOptsList() {
+        return optsList;
     }
 
     public List<String> getGPXFiles() {
