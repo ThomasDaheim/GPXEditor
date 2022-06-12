@@ -76,35 +76,37 @@ class ImageDataReader {
         
         if (imageFile.exists() && imageFile.isFile() && imageFile.canRead()) {
             try {
-                result = new ImageData(imageFile.getAbsolutePath(), name);
-                
                 objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
                 // read & parse json
                 // https://github.com/opendatalab-de/geojson-jackson
                 final JsonNode jsonNode = objectMapper.readTree(imageFile);
                 final JsonNode images = jsonNode.get("images");
-                
-                final Iterator<JsonNode> itr = images.elements();
-                while(itr.hasNext()) {
-                    final JsonNode image = itr.next();
-                    
-                    if (image.has(JSON_FILENAME) && image.has(JSON_LATITUDE) && image.has(JSON_LONGITUDE)) {
-                        // extract values and create MapImage from it & add to ImageData
-                        final String filename = image.get(JSON_FILENAME).asText();
-                        final String lat = image.get(JSON_LATITUDE).asText();
-                        final String lon = image.get(JSON_LONGITUDE).asText();
-                        final LatLonElev latlon = new LatLonElev(LatLonHelper.latFromString(lat), LatLonHelper.lonFromString(lon));
-                        
-                        String description = "";
-                        if (image.has(JSON_DESCRIPTION) && !image.get(JSON_DESCRIPTION).asText().isBlank()) {
-                            description = image.get(JSON_DESCRIPTION).asText();
+
+                if (images != null) {
+                    result = new ImageData(imageFile.getAbsolutePath(), name);
+
+                    final Iterator<JsonNode> itr = images.elements();
+                    while(itr.hasNext()) {
+                        final JsonNode image = itr.next();
+
+                        if (image.has(JSON_FILENAME) && image.has(JSON_LATITUDE) && image.has(JSON_LONGITUDE)) {
+                            // extract values and create MapImage from it & add to ImageData
+                            final String filename = image.get(JSON_FILENAME).asText();
+                            final String lat = image.get(JSON_LATITUDE).asText();
+                            final String lon = image.get(JSON_LONGITUDE).asText();
+                            final LatLonElev latlon = new LatLonElev(LatLonHelper.latFromString(lat), LatLonHelper.lonFromString(lon));
+
+                            String description = "";
+                            if (image.has(JSON_DESCRIPTION) && !image.get(JSON_DESCRIPTION).asText().isBlank()) {
+                                description = image.get(JSON_DESCRIPTION).asText();
+                            }
+    //                        System.out.println("filename: " + filename + ", lat: " + lat + ", lon: " + lon + ", description: " + description);
+
+                            result.add(new MapImage(filename, latlon, description));
                         }
-//                        System.out.println("filename: " + filename + ", lat: " + lat + ", lon: " + lon + ", description: " + description);
-                        
-                        result.add(new MapImage(filename, latlon, description));
                     }
-                }                
+                }
             } catch (IOException ex) {
                 Logger.getLogger(ImageDataReader.class.getName()).log(Level.SEVERE, null, ex);
             }
