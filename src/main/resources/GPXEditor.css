@@ -462,7 +462,7 @@
 }
 
 .srtm-viewer-label {
-    -fx-background-color: transparent;
+    -fx-background-color: white;
     -fx-padding: 4;
     -fx-text-alignment: left;
     -fx-text-origin: top;

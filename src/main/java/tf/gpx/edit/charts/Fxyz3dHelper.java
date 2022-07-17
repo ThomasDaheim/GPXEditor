@@ -158,7 +158,9 @@ public class Fxyz3dHelper {
         // elevation lines & tics
         final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, dataBounds.getMaxElev());
         result.getChildren().add(elevaxis);
-        for (int i = startElev; i<= endElev; i = i+200) {
+        // TFE, 20220717: limit number of lines & tics for large elevation differences
+        final int elevIncr = (endElev - startElev) / 5;
+        for (int i = startElev; i<= endElev; i = i+elevIncr) {
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 

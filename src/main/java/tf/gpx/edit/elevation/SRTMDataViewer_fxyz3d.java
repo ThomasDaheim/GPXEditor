@@ -62,7 +62,6 @@ import org.fxyz3d.geometry.MathUtils;
 import org.fxyz3d.geometry.Point3D;
 import org.fxyz3d.scene.paint.Palette;
 import org.fxyz3d.shapes.composites.PolyLine3D;
-import org.fxyz3d.shapes.primitives.TexturedMesh;
 import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.charts.Axis;
@@ -446,9 +445,9 @@ public class SRTMDataViewer_fxyz3d {
                         "W/S/A/D: Rotate X+Y");
         label.getStyleClass().add("srtm-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
-        label.toFront();
         
         scene = new Scene(new StackPane(sceneRoot, label), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
+        label.toFront();
         scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
         initUserControls(scene);
         
