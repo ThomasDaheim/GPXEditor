@@ -110,7 +110,7 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.leafletmap.ScaleControlConfig;
 import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.sun.SunPathForDate;
+import tf.gpx.edit.sun.SunPathForSpecialsDates;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.helper.general.IPreferencesHolder;
@@ -847,9 +847,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //                    "\');");
 
             // let our central class handle the output cases...
-            SunPathForDate.TODAY.setDate(time);
-            SunPathForDate.TODAY.setPath(sunPathForDay); 
-            final String tooltip = SunPathForDate.TODAY.toString().replace("\n", "<br />").replace("\t", " ");
+            SunPathForSpecialsDates.TODAY.setDate(time);
+            SunPathForSpecialsDates.TODAY.setPath(sunPathForDay); 
+            final String tooltip = SunPathForSpecialsDates.TODAY.toString().replace("\n", "<br />").replace("\t", " ");
             execScript("setSunriseSunsetPopup(\'" + StringEscapeUtils.escapeEcmaScript(tooltip) + "\');");
         });
 

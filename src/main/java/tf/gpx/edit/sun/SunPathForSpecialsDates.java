@@ -44,7 +44,7 @@ import tf.helper.general.ObjectsHelper;
  * 
  * @author thomas
  */
-public enum SunPathForDate {
+public enum SunPathForSpecialsDates {
     TODAY("sunpath-today", "Today"),
     SUMMER("sunpath-summer", "Summer"),
     WINTER("sunpath-winter", "Winter");
@@ -60,7 +60,7 @@ public enum SunPathForDate {
     private GregorianCalendar myDate;
     private SunPathForDay myPath;
 
-    private SunPathForDate (final String style, final String text) {
+    private SunPathForSpecialsDates (final String style, final String text) {
         styleClass = style;
         dateText = text;
     }

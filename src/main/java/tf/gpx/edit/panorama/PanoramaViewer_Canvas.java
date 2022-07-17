@@ -68,7 +68,7 @@ import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
-import tf.gpx.edit.sun.SunPathForDate;
+import tf.gpx.edit.sun.SunPathForSpecialsDates;
 import tf.gpx.edit.sun.SunPathForDay;
 
 /**
@@ -580,24 +580,24 @@ public class PanoramaViewer_Canvas {
                 GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
                 SunPathForDay path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(panorama.getHorizon());
-                SunPathForDate.TODAY.setDate(date);
-                SunPathForDate.TODAY.setPath(path);
+                SunPathForSpecialsDates.TODAY.setDate(date);
+                SunPathForSpecialsDates.TODAY.setPath(path);
                 
                 // and now for summer
                 date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(panorama.getHorizon());
-                SunPathForDate.SUMMER.setDate(date);
-                SunPathForDate.SUMMER.setPath(path);
+                SunPathForSpecialsDates.SUMMER.setDate(date);
+                SunPathForSpecialsDates.SUMMER.setPath(path);
                 
                 // and now for winter
                 date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
                 date.setTimeZone(timeZone);
                 path = new SunPathForDay(date, location, SUNPATH_DELTAT, ChronoField.MINUTE_OF_DAY, SUNPATH_INTERVAL);
                 path.calcSunriseSunsetForHorizon(panorama.getHorizon());
-                SunPathForDate.WINTER.setDate(date);
-                SunPathForDate.WINTER.setPath(path);
+                SunPathForSpecialsDates.WINTER.setDate(date);
+                SunPathForSpecialsDates.WINTER.setPath(path);
 
                 drawSunPath();
             }
@@ -607,7 +607,7 @@ public class PanoramaViewer_Canvas {
 
             if (firstTime) {
                 // and also a label with all the vailable data...
-                sunPathLabel.setText(SunPathForDate.TODAY + "\n\n" + SunPathForDate.SUMMER + "\n\n" + SunPathForDate.WINTER);
+                sunPathLabel.setText(SunPathForSpecialsDates.TODAY + "\n\n" + SunPathForSpecialsDates.SUMMER + "\n\n" + SunPathForSpecialsDates.WINTER);
                 sunPathLabel.setVisible(true);
             }
         }
@@ -618,7 +618,7 @@ public class PanoramaViewer_Canvas {
         // performance: add everything to the chart in one go...
         final List<XYSeries> seriesSet = new ArrayList<>();
 
-        for (final SunPathForDate pathForDate : SunPathForDate.values()) {
+        for (final SunPathForSpecialsDates pathForDate : SunPathForSpecialsDates.values()) {
 //            System.out.println(pathForDate);
             final SunPathForDay path = pathForDate.getPath();
 
