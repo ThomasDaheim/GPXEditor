@@ -505,9 +505,11 @@ public class GPXEditor implements Initializable {
         });
 
         // TFE, 20220304: set up the timezone provider - that takes a while...
-        Platform.runLater(() -> {
+        final Thread thread = new Thread(() -> {
             TimeZoneProvider.init();
         });
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void stop() {
