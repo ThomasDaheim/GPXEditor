@@ -701,7 +701,7 @@ public class SRTMDataViewer_fxyz3d {
         final int steps = dataCount / DATA_FRACTION;
         
         // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
-        surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
+        surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1d);
         surface.setCullFace(CullFace.NONE);
         surface.setTextureModeVertices3D(
                 new ElevationColors(
