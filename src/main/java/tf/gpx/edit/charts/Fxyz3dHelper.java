@@ -78,11 +78,11 @@ public class Fxyz3dHelper {
         final double lonCenter = (dataBounds.getMaxLon() + dataBounds.getMinLon()) / 2d;
 
         final int startLat = (int) Math.ceil(dataBounds.getMinLat());
-        final int endLat = (int) Math.ceil(dataBounds.getMaxLat());
+        final int endLat = (int) Math.ceil(dataBounds.getMaxLat())-1;
         final double lonShift = (dataBounds.getMaxLon()-lonCenter) * AXES_DIST;
         
         final int startLon = (int) Math.ceil(dataBounds.getMinLon());
-        final int endLon = (int) Math.ceil(dataBounds.getMaxLon());
+        final int endLon = (int) Math.ceil(dataBounds.getMaxLon())-1;
         final double latShift = (latCenter-dataBounds.getMinLat()) * AXES_DIST;
         
         // don't start with a tic at zero

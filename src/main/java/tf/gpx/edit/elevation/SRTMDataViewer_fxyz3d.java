@@ -131,6 +131,7 @@ public class SRTMDataViewer_fxyz3d {
     private double minElevation = Double.MAX_VALUE;
     private double maxElevation = -Double.MAX_VALUE;
     private double elevationScaling = 1d/10000d;
+    private boolean hasNoElevation = false;
 
     private static class ElevationColors implements Palette.ColorPalette {
 
@@ -178,6 +179,33 @@ public class SRTMDataViewer_fxyz3d {
     public static SRTMDataViewer_fxyz3d getInstance() {
         return INSTANCE;
     }
+
+    private Bounds3D normalizeBounds(final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
+        Bounds3D result;
+        
+        if (gpxLineItem != null) {
+            final Bounds3D itemBounds = new Bounds3D(gpxLineItem.getBounds3D());
+            // leave some space at the edges...
+            final double latPadding = (itemBounds.getMaxLat() - itemBounds.getMinLat()) / 20d;
+            itemBounds.setMaxLat(itemBounds.getMaxLat() + latPadding);
+            itemBounds.setMinLat(itemBounds.getMinLat() - latPadding);
+
+            final double lonPadding = (itemBounds.getMaxLon() - itemBounds.getMinLon()) / 20d;
+            itemBounds.setMaxLon(itemBounds.getMaxLon() + lonPadding);
+            itemBounds.setMinLon(itemBounds.getMinLon() - lonPadding);
+
+            // TFE, 20220601: lets take into account the bounding box of the element to avoid too much stuff around
+            result = new Bounds3D(
+                    Math.max(latMin, itemBounds.getMinLat()), 
+                    Math.min(latMax, itemBounds.getMaxLat()), 
+                    Math.max(lonMin, itemBounds.getMinLon()), 
+                    Math.min(lonMax, itemBounds.getMaxLon()));
+        } else {
+            result = new Bounds3D(latMin, latMax, lonMin, lonMax);
+        }
+        
+        return result;
+    }
     
     public void showGPXLineItemWithSRTMData(final GPXLineItem gpxLineItem) {
         if (gpxLineItem.isGPXMetadata()) {
@@ -201,7 +229,7 @@ public class SRTMDataViewer_fxyz3d {
                 dataFound = true;
                 
                 // expand outer bounds of lat & lon
-                // TODO: not working on west & sothern hemisphere?
+                // TODO: not working on west & southern hemisphere?
                 final int latitude = SRTMDataHelper.getLatitudeForName(dataFile);
                 final int longitude = SRTMDataHelper.getLongitudeForName(dataFile);
                 latMax = Math.max(latMax, latitude);
@@ -218,29 +246,10 @@ public class SRTMDataViewer_fxyz3d {
         minElevation = Double.MAX_VALUE;
         maxElevation = -Double.MAX_VALUE;
         elevationScaling = 1d/10000d;
+        hasNoElevation = false;
 
         // show all of it
         showStage(gpxLineItem.getName(), normalizeBounds(latMin, lonMin, latMax, lonMax, gpxLineItem), gpxLineItem);
-    }
-    
-    private Bounds3D normalizeBounds(final double latMin, final double lonMin, final double latMax, final double lonMax, final GPXLineItem gpxLineItem) {
-        Bounds3D result;
-        
-        if (gpxLineItem != null) {
-            final Bounds3D itemBounds = new Bounds3D(gpxLineItem.getBounds3D());
-
-            // TFE, 20220601: lets take into account the bounding box of the element to avoid too much stuff around
-            // leave some space at the edges...
-            result = new Bounds3D(
-                    Math.max(latMin, itemBounds.getMinLat()), 
-                    Math.min(latMax, itemBounds.getMaxLat()), 
-                    Math.max(lonMin, itemBounds.getMinLon()), 
-                    Math.min(lonMax, itemBounds.getMaxLon()));
-        } else {
-            result = new Bounds3D(latMin, latMax, lonMin, lonMax);
-        }
-        
-        return result;
     }
     
     public void showSRTMData() {
@@ -294,6 +303,12 @@ public class SRTMDataViewer_fxyz3d {
         latMax++;
         lonMax++;
         
+        // reset elevation values
+        minElevation = Double.MAX_VALUE;
+        maxElevation = -Double.MAX_VALUE;
+        elevationScaling = 1d/10000d;
+        hasNoElevation = false;
+
         if (!dataFound) {
             showAlert(FilenameUtils.getName(hgtFiles.get(0).getAbsolutePath()));
             return;
@@ -710,13 +725,19 @@ public class SRTMDataViewer_fxyz3d {
         
         minElevation = Double.MAX_VALUE;
         maxElevation = -Double.MAX_VALUE;
+
+        hasNoElevation = false;
         
         final Function<Point2D,Number> elevationFunction = (t) -> {
             // convert point into lat & lon = scale & shift properly <- lat = y lon = x AND we need to go lat "backwards"
             final double elevation = Math.max(0d, elevationScaler.apply(elevationService.getElevationForCoordinate(-t.getY()+latCenter, t.getX()+lonCenter)));
             
-            minElevation = Math.min(minElevation, elevation);
-            maxElevation = Math.max(maxElevation, elevation);
+            if (elevation > IElevationProvider.NO_ELEVATION) {
+                minElevation = Math.min(minElevation, elevation);
+                maxElevation = Math.max(maxElevation, elevation);
+            } else {
+                hasNoElevation = true;
+            }
             
             return elevation;
         };
@@ -731,25 +752,43 @@ public class SRTMDataViewer_fxyz3d {
         // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
         surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
         surface.setCullFace(CullFace.NONE);
-        surface.setTextureModeVertices3D(new ElevationColors(
+        
+        ElevationColors colors;
+        // we have 8 colors + "transparent" that should be used for zero values
+        // we want to use the "transparent" ONLY for zero values
+        if (hasNoElevation) {
+            colors = new ElevationColors(
                         Color.TRANSPARENT,
-                        adaptColor(Color.INDIGO), 
                         adaptColor(Color.BLUE), 
+                        adaptColor(Color.LIGHTBLUE), 
+                        adaptColor(Color.CYAN), 
                         adaptColor(Color.GREEN), 
                         adaptColor(Color.YELLOW), 
                         adaptColor(Color.ORANGE), 
-                        adaptColor(Color.RED)), 
+                        adaptColor(Color.RED), 
+                        adaptColor(Color.DARKRED));
+        } else {
+            colors = new ElevationColors(
+                        adaptColor(Color.BLUE), 
+                        adaptColor(Color.LIGHTBLUE), 
+                        adaptColor(Color.CYAN), 
+                        adaptColor(Color.GREEN), 
+                        adaptColor(Color.YELLOW), 
+                        adaptColor(Color.ORANGE), 
+                        adaptColor(Color.RED), 
+                        adaptColor(Color.DARKRED));
+        }
+        
+        surface.setTextureModeVertices3D(colors, 
                 p -> {
-                    // we have 6 colors + "transparent" that should be used for zero values
-                    // we want to use the "transparent" ONLY for zero values
                     // so elevation for zero should be something so much lower than minElevation that it will
                     // certainly be shown as transparent without impacting the other color range
-//                    if (p.y > elevationScaling) {
+                    if (p.y >= minElevation) {
                         return p.y;
-//                    } else {
-////                        System.out.println("Returning artifical height");
-//                        return - 200d * elevationScaler.apply(maxElevation);
-//                    }
+                    } else {
+//                        System.out.println("Returning artifical height");
+                        return - 200d*minElevation;
+                    }
                         });
         surface.setDrawMode(DrawMode.FILL);
         surface.setUserData(dataBounds);
