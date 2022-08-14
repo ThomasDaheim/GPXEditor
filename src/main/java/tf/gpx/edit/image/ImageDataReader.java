@@ -83,7 +83,7 @@ class ImageDataReader {
                 final JsonNode jsonNode = objectMapper.readTree(imageFile);
                 final JsonNode images = jsonNode.get("images");
 
-                if (images != null) {
+                if (images != null)  {
                     result = new ImageData(imageFile.getAbsolutePath(), name);
 
                     final Iterator<JsonNode> itr = images.elements();
@@ -120,11 +120,13 @@ class ImageDataReader {
 
         // find all matching JSON files in the given directory
         final File dir = new File(path);
-        final String[] extensions = new String[] { ImageStore.JSON_EXT };
-        final List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, false);
+        if (dir.exists() && dir.isDirectory()&& dir.canRead()) {
+            final String[] extensions = new String[] { ImageStore.JSON_EXT };
+            final List<File> files = (List<File>) FileUtils.listFiles(dir, extensions, false);
 
-        for (File file : files) {
-            result.add(FilenameUtils.getBaseName(file.getName()));
+            for (File file : files) {
+                result.add(FilenameUtils.getBaseName(file.getName()));
+            }
         }
         
         return result;
