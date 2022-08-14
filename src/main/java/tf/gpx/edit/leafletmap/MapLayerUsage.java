@@ -45,7 +45,7 @@ import tf.helper.general.IPreferencesStore;
  * Holds information on
  * 
  * - what layers are enabled & visible
- * - what is the order in the controllayer
+ * - what is the order in the control layer
  * - what overlays are enabled for which baselayer
  * 
  * It also supports read from / write to preferences.
@@ -208,25 +208,31 @@ public class MapLayerUsage implements IPreferencesHolder {
         }).sorted(Comparator.comparingInt(o -> myLayerConfig.get(o).index)).collect(Collectors.toList());
     }
     
-    public void addMapLayer(final MapLayer mapLayer) {
+    protected void addMapLayer(final MapLayer mapLayer) {
         final List<MapLayer> baselayer = getKnownBaselayer();
         if (MapLayer.LayerType.OVERLAY.equals(mapLayer.getLayerType())) {
             // add to the end of the list - MapLayerTable does re-index if required
-            myLayerConfig.put(mapLayer, new LayerConfig(mapLayer, getKnownOverlays().size(), true));
+            myLayerConfig.putIfAbsent(mapLayer, new LayerConfig(mapLayer, getKnownOverlays().size(), true));
             
             // in case of overlay also extend the list of active overlays
             defaultOverlayConfig.put(mapLayer, false);
             for (MapLayer layer : baselayer) {
-                ((BaselayerConfig) myLayerConfig.get(layer)).overlayConfig.put(mapLayer, Boolean.FALSE);
+                final BaselayerConfig base = (BaselayerConfig) myLayerConfig.get(layer);
+                base.overlayConfig.putIfAbsent(mapLayer, Boolean.FALSE);
             }
         } else {
-            myLayerConfig.put(mapLayer, new BaselayerConfig(mapLayer, baselayer.size(), true, defaultOverlayConfig));
+            myLayerConfig.putIfAbsent(mapLayer, new BaselayerConfig(mapLayer, baselayer.size(), true, defaultOverlayConfig));
         }
     }
 
-    public void addAllMapLayer(final List<MapLayer> mapLayer) {
+    private void addAllMapLayer(final List<MapLayer> mapLayer) {
         mapLayer.forEach((layer) -> {
-            addMapLayer(layer);
+            // TFE, 20220814: only put if not already there to avoid duplicates after export & import
+            if (myLayerConfig.keySet().stream().filter((t) -> {
+                return t.getKey().equals(layer.getKey());
+            }).findFirst().isEmpty()) {
+                addMapLayer(layer);
+            }
         });
     }
     

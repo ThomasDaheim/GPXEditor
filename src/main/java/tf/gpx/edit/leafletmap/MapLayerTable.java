@@ -25,10 +25,20 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -40,6 +50,7 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -50,7 +61,9 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.stage.FileChooser;
 import javafx.util.converter.IntegerStringConverter;
+import tf.gpx.edit.helper.PreferencesJsonConverter;
 
 /**
  * TableView for MapLayers, to be used in e.g. preferences dialogue.
@@ -328,8 +341,73 @@ public class MapLayerTable extends TableView<MapLayer> {
                             updatedItemIndices();
                         });
                         deleteMenuItem.visibleProperty().bind(new SimpleBooleanProperty(item.isDeletable()));
+                        
+                        // TFE, 20220814: add import / export csv functionality
+                        final MenuItem exportMenuItem = new MenuItem("Export to json");
+                        exportMenuItem.setOnAction((ActionEvent event) -> {
+                            // https://stackoverflow.com/a/38028893
+                            final FileChooser fileChooser = new FileChooser();
+                            //Set extension filter
+                            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("json files (*.json)", "*.json"));
+                            fileChooser.setInitialFileName("maplayers.json");
+                            //Prompt user to select a file
+                            final File file = fileChooser.showSaveDialog(null);
 
-                        contextMenu.getItems().addAll(upMenuItem, downMenuItem, newMenuItem, deleteMenuItem);
+                            if (file != null) {
+                                try (
+                                    BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+                                ) {
+                                    // convert list to json
+                                    PreferencesJsonConverter.getInstance().clear();
+                                    MapLayerUsage.getInstance().savePreferences(PreferencesJsonConverter.getInstance());
+                                    PreferencesJsonConverter.getInstance().exportPreferences(out);
+                                } catch (FileNotFoundException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (UnsupportedEncodingException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        });
+                        final MenuItem importMenuItem = new MenuItem("Import from json");
+                        importMenuItem.setOnAction((ActionEvent event) -> {
+                            // https://stackoverflow.com/a/38028893
+                            final FileChooser fileChooser = new FileChooser();
+                            //Set extension filter
+                            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("json files (*.json)", "*.json"));
+                            fileChooser.setInitialFileName("maplayers.json");
+                            //Prompt user to select a file
+                            final File file = fileChooser.showOpenDialog(null);
+
+                            if (file != null) {
+                                try (
+                                    BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+                                ) {
+                                    // convert json to list
+                                    PreferencesJsonConverter.getInstance().importPreferences(in);
+                                    MapLayerUsage.getInstance().loadPreferences(PreferencesJsonConverter.getInstance());
+                                    
+                                    // refresh me
+                                    setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
+                                } catch (FileNotFoundException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (UnsupportedEncodingException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (IOException ex) {
+                                    Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                        });
+
+                        contextMenu.getItems().addAll(
+                                upMenuItem, 
+                                downMenuItem, 
+                                newMenuItem, 
+                                deleteMenuItem, 
+                                new SeparatorMenuItem(), 
+                                exportMenuItem, 
+                                importMenuItem);
 
                         setContextMenu(contextMenu);
                     } else {
