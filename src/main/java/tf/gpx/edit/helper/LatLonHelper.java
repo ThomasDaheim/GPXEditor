@@ -37,9 +37,17 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * @author thomas
  */
 public class LatLonHelper {
+    // https://www.regexpal.com/ is your friend here!
+    // TFE, 20200814: sync with other results
+    // https://www.regexlib.com/Search.aspx?k=latitude
+    
     public final static String DEG = "\u00B0";
-    public final static String MIN = "'"; // how about "\u2032";
-    public final static String SEC = "\""; // how about "\u2033";
+    // TFE, 20220814: allow ? (prime) as well since its e.g. used by wikipedia
+//    public final static String MIN = "['\u2032]";
+    public final static String MIN = "'";
+    // TFE, 20220814: allow ? (double prime) as well since its e.g. used by wikipedia
+//    public final static String SEC = "[\"\u2033]";
+    public final static String SEC = "\"";
     
     // TFE, 20210212: lets collect the valid building blocks first...
     private final static String SPACE = "[ ]*";
@@ -64,8 +72,9 @@ public class LatLonHelper {
     private final static String SEC_2 = "(0{0,2}" + DECIMALS_2 + ")" + SEC;
     
     // patterns for pre/suffixes
-    private final static String LAT = "[NS]";
-    private final static String LON = "[EW]";
+    // TFE, 20220814: OK, lower case is also correct...
+    private final static String LAT = "[NnSs]{1}";
+    private final static String LON = "[EeWw]{1}";
 
     // patterns for everything except pre/suffixes
     private final static String LAT_VAL_DEG_MIN_SEC_1 = LAT_DEG_1 + SPACE + MIN_1 + SPACE + SEC_1;

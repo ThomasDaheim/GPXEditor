@@ -1012,8 +1012,29 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 searchPoints.getItems().add(search);
             }
         }
+        
+        // TFE, 20220814: add goto menu item
+        final MenuItem gotoCoordinate = new MenuItem("Goto Coordinate");
+        gotoCoordinate.setOnAction((event) -> {
+            EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
+            if (EnterLatLon.getInstance().wasActionButtonPressed()) {
+                final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
+                if (latLon != null) {
+                    // mark this on the map
+                    // show as search result with same icon
+                    execScript("clearSearchResults();");
+                    final String result = 
+                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
+                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
+                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
 
-        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, showHorizon, showSunriseSunset);
+                    // pan to it
+                    panTo(latLon.getLatitude(), latLon.getLongitude());
+                }
+            }
+        });
+        
+        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, showHorizon, showSunriseSunset);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -1121,7 +1142,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             final MenuItem addWaypoint, 
             final MenuItem addRoute) {
         // TFE, 20200316: first time not all values are set...
-        if (newValue != null && !Double. isNaN(contextMenu.getAnchorX()) && !Double. isNaN(contextMenu.getAnchorY())) {
+        if (newValue != null && !Double.isNaN(contextMenu.getAnchorX()) && !Double.isNaN(contextMenu.getAnchorY())) {
             LatLonElev latLon;
             if ("X".equals(coord)) {
                 latLon = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
