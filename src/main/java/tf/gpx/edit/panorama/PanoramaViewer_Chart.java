@@ -63,8 +63,8 @@ import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
-import tf.gpx.edit.sun.SunPathForSpecialsDates;
 import tf.gpx.edit.sun.SunPathForDay;
+import tf.gpx.edit.sun.SunPathForSpecialsDates;
 import tf.helper.general.ObjectsHelper;
 
 /**
