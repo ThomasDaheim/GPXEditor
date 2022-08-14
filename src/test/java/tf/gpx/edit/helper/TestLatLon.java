@@ -104,6 +104,9 @@ public class TestLatLon {
         Assert.assertEquals(5.08486, LatLonHelper.latFromString("N 5" + LatLonHelper.DEG + "5" + LatLonHelper.MIN + "5" + dS + "5" + LatLonHelper.SEC), 0.0001);
         // 5.08486 lat <- N  5" + LatLonHelper.DEG + " 5" + LatLonHelper.MIN + " 5.5"
         Assert.assertEquals(5.08486, LatLonHelper.latFromString("N  5" + LatLonHelper.DEG + " 5" + LatLonHelper.MIN + " 5" + dS + "5" + LatLonHelper.SEC), 0.0001);
+        
+        // TFE, 20220814: test not fully specified
+        Assert.assertEquals(-89, LatLonHelper.latFromString("S 89" + LatLonHelper.DEG), 0.0001);
 
         // 179.99999999999 lon <- E 179" + LatLonHelper.DEG + "59" + LatLonHelper.MIN + "59.99"
         Assert.assertEquals(179.999999999, LatLonHelper.lonFromString("E 179" + LatLonHelper.DEG + "59" + LatLonHelper.MIN + "59" + dS + "999999999" + LatLonHelper.SEC), 0.0001);
@@ -113,9 +116,6 @@ public class TestLatLon {
         Assert.assertEquals(-179.999999999, LatLonHelper.lonFromString("W 179" + LatLonHelper.DEG + "59" + LatLonHelper.MIN + "59" + dS + "999999999" + LatLonHelper.SEC), 0.0001);
         // -180.0 lon <- W 180" + LatLonHelper.DEG + "0" + LatLonHelper.MIN + "0.00"
         //Assert.assertEquals(-180.0, LatLonHelper.lonFromString("W 180" + LatLonHelper.DEG + "0" + LatLonHelper.MIN + "0.00" + LatLonHelper.SEC), 0.0);
-        
-        // TFE, 20220814: test not fully specified
-//        Assert.assertEquals(-179, LatLonHelper.lonFromString("E 179" + LatLonHelper.DEG), 0.0001);
 
         Assert.assertEquals(27.988056, LatLonHelper.latFromString("27.988056"), 0.0001);
         Assert.assertEquals(86.925278, LatLonHelper.lonFromString("86.925278"), 0.0001);

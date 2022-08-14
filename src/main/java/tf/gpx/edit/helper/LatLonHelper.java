@@ -321,7 +321,7 @@ public class LatLonHelper {
         try {
             // 2) determine sign from N/S
             // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
-            String dir = lat.substring(0, 1);
+            String dir = lat.substring(0, 1).toUpperCase();
             if ("N".equals(dir) || "S".equals(dir)) {
                 final int sign = "N".equals(dir) ? 1 : -1;
 
@@ -353,7 +353,7 @@ public class LatLonHelper {
         try {
             // 2) determine sign from E/W
             // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
-            String dir = lon.substring(0, 1);
+            String dir = lon.substring(0, 1).toUpperCase();
             if ("E".equals(dir) || "W".equals(dir)) {
                 final int sign = "E".equals(dir) ? 1 : -1;
 
@@ -388,15 +388,23 @@ public class LatLonHelper {
         // 1) split @ ° and convert to int
         String[] tempArray = temp.split(DEG);
         result = NumberUtils.toInt(tempArray[0], 0);
-        temp = tempArray[1];
-        
-        // 2) split rest @ ' and convert to double / 60
-        tempArray = temp.split(MIN);
-        result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
-        temp = tempArray[1];
-        
-        // 3) split rest @ \" and convert to double / 3600
-        result += NumberUtils.toDouble(temp.split(SEC)[0].replace(",", "."), 0) / 3600.0;
+
+        // TFE, 20220814: we might not have more then DEG
+        if (tempArray.length > 1) {
+            temp = tempArray[1];
+
+            // 2) split rest @ ' and convert to double / 60
+            tempArray = temp.split(MIN);
+            result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
+
+            // TFE, 20220814: we might not have more then MIN
+            if (tempArray.length > 1) {
+                temp = tempArray[1];
+
+                // 3) split rest @ \" and convert to double / 3600
+                result += NumberUtils.toDouble(temp.split(SEC)[0].replace(",", "."), 0) / 3600.0;
+            }
+        }
         
         return result;
     }
