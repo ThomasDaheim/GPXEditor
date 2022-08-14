@@ -395,6 +395,12 @@
     -fx-margin: 0px;
 }
 
+/*.tooltip {
+    -fx-background: white;
+    -fx-background-color: white;
+    -fx-text-fill: white;
+}*/
+
 /*
     bin distribution chart
 */
@@ -513,4 +519,14 @@
 
 /* TFE, 20210828: node showing the mapimage and title */
 .mapImageViewer > * {
+}
+
+/* TFE, 20220731: coloring of tooltip in horizon chart */
+.charts-tooltip {
+    -fx-background-color: white;
+}
+.charts-tooltip .label {
+    -fx-text-fill: black;
+    -fx-font-weight: normal;
+    -fx-font-family: 'Helvetica', Arial, sans-serif;
 }
