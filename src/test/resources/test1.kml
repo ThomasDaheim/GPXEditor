@@ -21,7 +21,7 @@
     </Style>
     <ExtendedData type="Metadata">
       <Data name="gpx:Name">test1</Data>
-      <Data name="gpx:Date">2021-09-25 21:28:54 CEST</Data>
+      <Data name="gpx:Date">2021-09-25 21:28:54 MESZ</Data>
       <Data name="gpx:Description">test kml file</Data>
       <Data name="gpx:Copyright">Anyone,NO LICENSE,2021</Data>
       <Data name="gpx:Author">Anyone,me@myself.i
@@ -36,7 +36,7 @@ http://www.garmin.com,Garmin International,---</Data>
         <Placemark>
           <name>A simple placemark on the ground</name>
           <styleUrl>#Winery</styleUrl>
-          <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 0021-09-06 08:55:49 CET</description>
+          <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 0021-09-06 08:55:49 MEZ</description>
           <Point>
               <coordinates>8.542952335953721,47.36685263064198,99.0</coordinates>
           </Point>
