@@ -34,6 +34,7 @@ import tf.gpx.edit.items.GPXLineItem;
  */
 public interface KMLConstants {
     // constants used in parsing & writing KML
+    // test1.kml: 2021-09-25 21:28:54 MESZ, 0021-09-06 08:55:49 MEZ
     final SimpleDateFormat KML_DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 
     public enum PathType {

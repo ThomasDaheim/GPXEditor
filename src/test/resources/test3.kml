@@ -39,10 +39,10 @@
 -1.597096296,47.158955466,26.0</coordinates>
         </LineString>
         <ExtendedData type="Tracks">
-            <Data name="gpx:WaypointTimestamps">2021-09-06 09:55:49 MESZ
-2021-09-06 09:56:04 MESZ
-2021-09-06 09:56:06 MESZ
-2021-09-06 09:56:11 MESZ</Data>
+            <Data name="gpx:WaypointTimestamps">2021-09-06 09:55:49 CEST
+2021-09-06 09:56:04 CEST
+2021-09-06 09:56:06 CEST
+2021-09-06 09:56:11 CEST</Data>
             <Data name="gpx:TrackSegmentSizes">2
 2</Data>
           </ExtendedData>
