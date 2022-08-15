@@ -347,7 +347,7 @@ public class PanoramaViewer_Chart {
         yAxis.setSide(Side.LEFT);
         yAxis.setTickLabelFont(Font.font(12));
         yAxis.setTickUnit(5);
-        yAxis.setLabel("Angle [" + LatLonHelper.DEG + "]");
+        yAxis.setLabel("Angle [" + LatLonHelper.DEG_CHAR_1 + "]");
         yAxis.setAutoRanging(false);
     }
     

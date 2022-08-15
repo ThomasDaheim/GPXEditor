@@ -204,7 +204,7 @@ public class PanoramaViewer_Canvas {
                 .autoFontSize(false)
                 .minWidth(1.5*AXIS_WIDTH)
                 .titleFontSize(AXIS_FONTSIZE)
-                .title("Angle [" + LatLonHelper.DEG + "]")
+                .title("Angle [" + LatLonHelper.DEG_CHAR_1 + "]")
                 .build();
         AnchorPane.setTopAnchor(yAxisElev, 0d);
         AnchorPane.setBottomAnchor(yAxisElev, AXIS_WIDTH);

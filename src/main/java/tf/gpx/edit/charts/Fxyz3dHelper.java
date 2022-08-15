@@ -119,13 +119,13 @@ public class Fxyz3dHelper {
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
 
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
         
         // lon lines & tics
@@ -146,13 +146,13 @@ public class Fxyz3dHelper {
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
             
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
 
         // elevation lines & tics
