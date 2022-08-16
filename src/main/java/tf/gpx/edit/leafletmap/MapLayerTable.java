@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -48,6 +49,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -64,6 +68,7 @@ import javafx.scene.input.TransferMode;
 import javafx.stage.FileChooser;
 import javafx.util.converter.IntegerStringConverter;
 import tf.gpx.edit.helper.PreferencesJsonConverter;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  * TableView for MapLayers, to be used in e.g. preferences dialogue.
@@ -349,11 +354,12 @@ public class MapLayerTable extends TableView<MapLayer> {
                             final FileChooser fileChooser = new FileChooser();
                             //Set extension filter
                             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("json files (*.json)", "*.json"));
-                            fileChooser.setInitialFileName("maplayers.json");
+                            fileChooser.setInitialFileName("maplayers.xml");
                             //Prompt user to select a file
                             final File file = fileChooser.showSaveDialog(null);
 
                             if (file != null) {
+                                String result = "";
                                 try (
                                     BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
                                 ) {
@@ -361,12 +367,26 @@ public class MapLayerTable extends TableView<MapLayer> {
                                     PreferencesJsonConverter.getInstance().clear();
                                     MapLayerUsage.getInstance().savePreferences(PreferencesJsonConverter.getInstance());
                                     PreferencesJsonConverter.getInstance().exportPreferences(out);
+                                    result = PreferencesJsonConverter.getInstance().getLastExceptionMessage();
                                 } catch (FileNotFoundException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                    result = ex.getLocalizedMessage();
                                 } catch (UnsupportedEncodingException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                    result = ex.getLocalizedMessage();
                                 } catch (IOException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                    result = ex.getLocalizedMessage();
+                                }
+                                
+                                if (!"".equals(result)) {
+                                    final ButtonType buttonOK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                                    ShowAlerts.getInstance().showAlert(
+                                            Alert.AlertType.ERROR,
+                                            "Error",
+                                            "Exporting of map layer preferences failed.",
+                                            result,
+                                            buttonOK);
                                 }
                             }
                         });
@@ -376,26 +396,41 @@ public class MapLayerTable extends TableView<MapLayer> {
                             final FileChooser fileChooser = new FileChooser();
                             //Set extension filter
                             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("json files (*.json)", "*.json"));
-                            fileChooser.setInitialFileName("maplayers.json");
+                            fileChooser.setInitialFileName("maplayers.xml");
                             //Prompt user to select a file
                             final File file = fileChooser.showOpenDialog(null);
 
                             if (file != null) {
+                                String result = "";
                                 try (
                                     BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
                                 ) {
                                     // convert json to list
                                     PreferencesJsonConverter.getInstance().importPreferences(in);
                                     MapLayerUsage.getInstance().loadPreferences(PreferencesJsonConverter.getInstance());
+                                    result = PreferencesJsonConverter.getInstance().getLastExceptionMessage();
                                     
                                     // refresh me
                                     setMapLayers(MapLayerUsage.getInstance().getKnownMapLayers());
                                 } catch (FileNotFoundException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
-                                } catch (UnsupportedEncodingException ex) {
+                                    result = ex.getLocalizedMessage();
+                                } catch (UnsupportedEncodingException | JsonParseException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                    result = ex.getLocalizedMessage();
                                 } catch (IOException ex) {
                                     Logger.getLogger(MapLayerTable.class.getName()).log(Level.SEVERE, null, ex);
+                                    result = ex.getLocalizedMessage();
+                                }
+                                
+                                if (!"".equals(result)) {
+                                    final ButtonType buttonOK = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                                    ShowAlerts.getInstance().showAlert(
+                                            Alert.AlertType.ERROR,
+                                            "Error",
+                                            "Importing of map layer preferences failed.",
+                                            result,
+                                            buttonOK);
                                 }
                             }
                         });

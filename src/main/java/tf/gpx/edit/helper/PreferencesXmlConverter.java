@@ -51,6 +51,7 @@ public class PreferencesXmlConverter extends PreferencesConverter {
         final XmlMapper mapper = new XmlMapper();
         // set to write key, value instead of names
         mapper.configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true);
+        mapper.configure(ToXmlGenerator.Feature.WRITE_XML_1_1, true);
         return mapper;
     }
 }

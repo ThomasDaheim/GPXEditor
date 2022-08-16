@@ -48,6 +48,9 @@ import tf.helper.general.IPreferencesStore;
  * @author thomas
  */
 public abstract class PreferencesConverter implements IPreferencesStore {
+    // ugly hack since IPreferencesStore doesn't allow to throw exceptions in export/import methods
+    private String lastExceptionMessage;
+
     abstract ObjectMapper getMapper();
     
     // holder of preference values to act as 
@@ -79,6 +82,8 @@ public abstract class PreferencesConverter implements IPreferencesStore {
 
     @Override
     public void exportPreferences(final OutputStream out) {
+        lastExceptionMessage = "";
+        
         // jackson to json output from map
         try {
             final ObjectMapper mapper = getMapper();
@@ -86,13 +91,17 @@ public abstract class PreferencesConverter implements IPreferencesStore {
             out.write(jsonResult.getBytes(Charset.forName("UTF-8")));
         } catch (JsonProcessingException ex) {
             Logger.getLogger(PreferencesConverter.class.getName()).log(Level.SEVERE, null, ex);
+            lastExceptionMessage = ex.getLocalizedMessage();
         } catch (IOException ex) {
             Logger.getLogger(PreferencesConverter.class.getName()).log(Level.SEVERE, null, ex);
+            lastExceptionMessage = ex.getLocalizedMessage();
         }
     }
 
     @Override
     public void importPreferences(final InputStream in) {
+        lastExceptionMessage = "";
+        
         clear();
         
         // jackson to map from json input
@@ -103,8 +112,14 @@ public abstract class PreferencesConverter implements IPreferencesStore {
             prefStore.putAll(mapper.readValue(jsonInput, typeRef));
         } catch (JsonProcessingException ex) {
             Logger.getLogger(PreferencesConverter.class.getName()).log(Level.SEVERE, null, ex);
+            lastExceptionMessage = ex.getLocalizedMessage();
         } catch (IOException ex) {
             Logger.getLogger(PreferencesConverter.class.getName()).log(Level.SEVERE, null, ex);
+            lastExceptionMessage = ex.getLocalizedMessage();
         }
+    }
+
+    public String getLastExceptionMessage() {
+        return lastExceptionMessage;
     }
 }
