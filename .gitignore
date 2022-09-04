@@ -20,7 +20,7 @@ hs_err_pid*
 .gradle/
 
 #NetBeans ignores
-nbproject/private/
+nbproject/
 build/
 nbbuild/
 dist/
