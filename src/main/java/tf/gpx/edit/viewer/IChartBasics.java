@@ -602,6 +602,10 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     }
 
     double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
+    default boolean doSetMinMax(final GPXWaypoint gpxWaypoint) {
+        // TFE, 20220904: gpx file waypoints are not relevant for the determination of min & max height!
+        return !gpxWaypoint.isGPXFileWaypoint();
+    }
 
     default void setAxes(final double minDist, final double maxDist, final double minHght, final double maxHght) {
         double distance = maxDist - minDist;

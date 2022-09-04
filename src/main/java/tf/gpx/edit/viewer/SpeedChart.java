@@ -157,8 +157,10 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
     public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
         final double result = gpxWaypoint.getSpeed();
         
-        minSpeed = Math.min(minSpeed, result);
-        maxSpeed = Math.max(maxSpeed, result);
+        if (doSetMinMax(gpxWaypoint)) {
+            minSpeed = Math.min(minSpeed, result);
+            maxSpeed = Math.max(maxSpeed, result);
+        }
         
         return result;
     }
