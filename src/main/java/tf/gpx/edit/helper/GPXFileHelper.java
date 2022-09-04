@@ -393,8 +393,8 @@ public class GPXFileHelper {
         // export using appache csv
         try (
             FileWriter out = new FileWriter(selectedFile);
-            CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
-              .withHeader(worker.getCSVHeader().toArray(new String[0])));
+            CSVPrinter printer = new CSVPrinter(out,
+                    CSVFormat.DEFAULT.builder().setHeader(worker.getCSVHeader().toArray(new String[0])).build());
             ) {
             worker.getCSVLines().forEach((t) -> {
                 // no idea, why a nested try & catch is required here...

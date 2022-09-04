@@ -25,29 +25,10 @@
  */
 package tf.gpx.edit.panorama;
 
-import eu.hansolo.fx.charts.Axis;
-import eu.hansolo.fx.charts.AxisBuilder;
-import eu.hansolo.fx.charts.AxisType;
-import eu.hansolo.fx.charts.ChartType;
-import eu.hansolo.fx.charts.Position;
-import eu.hansolo.fx.charts.XYChart;
-import eu.hansolo.fx.charts.XYPane;
+import eu.hansolo.fx.charts.*;
 import eu.hansolo.fx.charts.data.XYChartItem;
 import eu.hansolo.fx.charts.series.XYSeries;
 import eu.hansolo.fx.charts.series.XYSeriesBuilder;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.TreeMap;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -70,6 +51,10 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
+
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.util.*;
 
 /**
  * Viewer for the "horizon" for a given LatLon position.
@@ -164,7 +149,8 @@ public class PanoramaViewer_Canvas {
                 .type(AxisType.LINEAR)
                 .minorTickMarksVisible(false)
                 .mediumTickMarksVisible(false)
-                .minorTickSpace(90)
+                .majorTickMarksVisible(false)
+                .minorTickSpace(1)
                 .majorTickSpace(90)
                 .tickLabelFontSize(AXIS_FONTSIZE)
                 .autoFontSize(false)
@@ -178,7 +164,7 @@ public class PanoramaViewer_Canvas {
                                             case 270, 270+360 -> "W";
                                             case 0, 0+360, 0+360+360 -> "N";
                                             case 90, 90+360 -> "E";
-                                            default -> "";
+                                            default -> ""; //String.valueOf(object.intValue());
                                         };
                                     }
 
@@ -519,8 +505,9 @@ public class PanoramaViewer_Canvas {
             // move xAxisElev bounds for simple dragging - but only in certain range
             if ((xAxisElev.getMinValue() - mouseDeltaX) > MIN_HOR_ANGLE && 
                     (xAxisElev.getMaxValue() - mouseDeltaX) < MAX_HOR_ANGLE) {
-                xAxisElev.setMinValue(Math.max(MIN_HOR_ANGLE, xAxisElev.getMinValue() - mouseDeltaX));
-                xAxisElev.setMaxValue(Math.min(MAX_HOR_ANGLE, xAxisElev.getMaxValue() - mouseDeltaX));
+                xAxisElev.setMinMax(
+                        Math.max(MIN_HOR_ANGLE, xAxisElev.getMinValue() - mouseDeltaX),
+                        Math.min(MAX_HOR_ANGLE, xAxisElev.getMaxValue() - mouseDeltaX));
             }
 
             e.consume();
