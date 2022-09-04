@@ -9,8 +9,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
-        // https://github.com/ben-manes/gradle-versions-plugin
-        // task: dependencyUpdates
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.42.0'
     }
 }
@@ -142,9 +140,7 @@ dependencies {
     
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
-    implementation 'eu.hansolo.fx:charts:17.1.21'
-    // TODO: error: error reading C:\Users\thomas\.gradle\caches\modules-2\files-2.1\eu.hansolo.fx\heatmap\17.0.11\69d60f2307f1ddb380ec3f847c255cac2c77dbba\heatmap-17.0.11.jar; java.net.URISyntaxException: Illegal character in path at index 129: file:/C:/Users/thomas/.gradle/caches/modules-2/files-2.1/eu.hansolo.fx/heatmap/17.0.11/69d60f2307f1ddb380ec3f847c255cac2c77dbba/${project.name}-${project.version}.jar
-    // implementation 'eu.hansolo.fx:heatmap:17.0.5'
+    implementation 'eu.hansolo.fx:charts:11.10'
     
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     // TFE, 20220205: not working, "No test cases executed" after all the code changes...
@@ -200,7 +196,6 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
                 // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
                 '--add-opens', 'java.base/java.util=ALL-UNNAMED',
-                '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED',
     ]
     
 // extend Netbeans Gradle "Run" task
