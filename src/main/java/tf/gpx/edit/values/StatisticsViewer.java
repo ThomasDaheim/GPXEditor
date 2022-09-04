@@ -572,8 +572,8 @@ public class StatisticsViewer extends AbstractStage {
             // export using appache csv
             try (
                     FileWriter out = new FileWriter(selectedFile);
-                    CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
-                  .withHeader("Observable", "Value", "Unit", "Where", "When"))
+                    CSVPrinter printer = new CSVPrinter(out,
+                            CSVFormat.DEFAULT.builder().setHeader("Observable", "Value", "Unit", "Where", "When").build())
                 ) {
                 statisticsList.forEach((t) -> {
                     // no idea, why a nested try & catch is required here...

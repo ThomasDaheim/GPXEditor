@@ -1267,7 +1267,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             if (lineItem.isGPXFile()) {
                 masterList.add(lineItem.getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
-            } else if (alwayShowFileWaypoints) {
+            } else if (alwayShowFileWaypoints && fileWaypointCount == 0) {
+                // TFE, 20220904: only add file waypoints once even if multiple line items are shown
                 // TFE, 20190818: add file waypointsToShow as well, even though file isn't selected
                 masterList.add(lineItem.getGPXFile().getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
