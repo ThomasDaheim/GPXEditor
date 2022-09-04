@@ -397,6 +397,8 @@ public class PanoramaViewer_Canvas {
 //                    // point not visible!
 ////                    System.out.println("Datapoint not visible: " + data);
                     invisibleData.add(data);
+                    // TFE, 20220904: remove tooltip since not visible - saves time & resources
+                    data.setTooltipText("");
                 }
             }
             
