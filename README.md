@@ -11,7 +11,7 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements
+Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
@@ -30,6 +30,9 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 * SunPath: show direction and point of sunrise & sunset on the map
 * TimeZone: added timezone support where necessary (SunPath calculations, TimeZone overlay)
 * Performance: drastically improve speed of reading SRTM data and showing it
+* Performance: change horizon viewer to use canvas from hansolo charts
+* Updated dependencies
+* Bugfixes! Various bugs that have crept in over time are now fixed
 
 ### Update v5.6
 
@@ -403,6 +406,10 @@ Explicit dependencies:
 * 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
 * 'org.fxyz3d:fxyz3d:0.5.4'
 * 'org.magicwerk.brownies:brownies-collections:0.9.16'
+* 'net.e175.klaus:solarpositioning:0.0.9'
+* 'us.dustinj.timezonemap:timezonemap:4.5'
+* 'com.github.luben:zstd-jni:1.5.2-3'
+* 'eu.hansolo.fx:charts:17.1.21'
 
 * 'org.junit.jupiter:junit-jupiter-api:4.13.2'
 * 'com.github.stefanbirkner:system-lambda:1.2.0'

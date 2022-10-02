@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import me.himanshusoni.gpxparser.modal.Extension;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Precision;
 import tf.gpx.edit.items.GPXLineItem;
@@ -93,6 +94,12 @@ public class LineStyle {
         }
     }
     
+    // TFE, 20221002: support for lucos map lsUnits extension attribute
+    private static enum WidthUnit {
+        PIXELS,
+        MILLIMETERS
+    }
+    
     private final IStylableItem myItem;
     private final Extension myExtension;
     // any attribute that might hold a color value - besides the one from gpx_style:line
@@ -104,6 +111,8 @@ public class LineStyle {
     private GarminColor myDefaultColor = DEFAULT_COLOR;
     private Optional<Double> myOpacity;
     private Optional<Integer> myWidth;
+    // TFE, 20221002: set unit from extension or to "PIXEL" if non found
+    private WidthUnit myWidthUnit;
     private Optional<String> myPattern;
     private Optional<Linecap> myLinecap;
     private Optional<List<Dash>> myDashes = Optional.of(new ArrayList<>());
@@ -226,7 +235,19 @@ public class LineStyle {
                 myWidth = Optional.of(DEFAULT_WIDTH);
             } else {
                 // we work in pixel, gpx_style in millimeter
-                myWidth = Optional.of((int) Math.round(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue))));
+                // TFE, 20221002: for locus the unit might be PIXEL already
+                if (myWidthUnit == null) {
+                    myWidthUnit = EnumUtils.getEnum(
+                            WidthUnit.class, 
+                            KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits), 
+                            WidthUnit.MILLIMETERS);
+                }
+                // convert only if something to do
+                if (!WidthUnit.PIXELS.equals(myWidthUnit)) {
+                    myWidth = Optional.of((int) Math.round(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue))));
+                } else {
+                    myWidth = Optional.of((int) Math.round(Double.valueOf(nodeValue)));
+                }
             }
 
         }
