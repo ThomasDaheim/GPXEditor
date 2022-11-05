@@ -1260,6 +1260,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
+        // TFE, 20221105: see if we also show a complete file - in that case we include the file waypoints in the bounds
+        boolean fileIsShown = false;
         for (GPXLineItem lineItem : myGPXLineItems) {
 //            System.out.println("Processing item: " + lineItem);
             
@@ -1267,6 +1269,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             if (lineItem.isGPXFile()) {
                 masterList.add(lineItem.getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
+                fileIsShown = true;
             } else if (alwayShowFileWaypoints && fileWaypointCount == 0) {
                 // TFE, 20220904: only add file waypoints once even if multiple line items are shown
                 // TFE, 20190818: add file waypointsToShow as well, even though file isn't selected
@@ -1303,7 +1306,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         
         // TFE, 20200206: in case we have only file waypointsToShow we need to include them in calculation of bounds - e.g. for new, empty tracksegment
-        double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount));
+        // TFE, 20221105: if we click on a file we want to see the whole thing and not only the waypoints from trackes & routes
+        final double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount) && !fileIsShown);
 
         // TFE, 20190822: setMapBounds fails for no waypointsToShow...
         if (bounds[4] > 0d && waypointCount > 0) {
