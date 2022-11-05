@@ -84,7 +84,7 @@ dependencies {
     implementation "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    implementation 'tf.JavaHelper:JavaHelper:1.14'
+    implementation 'tf.JavaHelper:JavaHelper:1.15'
 
     implementation 'commons-cli:commons-cli:1.5.0'
     implementation 'commons-io:commons-io:2.11.0'
