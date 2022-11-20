@@ -558,11 +558,10 @@ public class PanoramaViewer_Canvas {
         if (sunPathChart != null && sunPathChart.isVisible()) {
             sunPathChart.setVisible(false);
             sunPathChart.setDisable(true);
-        } else {
-            boolean firstTime = false;
-            if (sunPathChartData.isEmpty()) {
-                firstTime = true;
 
+            sunPathLabel.setVisible(false);
+        } else {
+            if (sunPathChartData.isEmpty()) {
                 final ZonedDateTime zonedDateTime = ZonedDateTime.now(timeZone.toZoneId());
 
                 // we need to create the sun path line chart
@@ -594,11 +593,10 @@ public class PanoramaViewer_Canvas {
             sunPathChart.setVisible(true);
             sunPathChart.setDisable(false);
 
-            if (firstTime) {
-                // and also a label with all the vailable data...
-                sunPathLabel.setText(SunPathForSpecialsDates.TODAY + "\n\n" + SunPathForSpecialsDates.SUMMER + "\n\n" + SunPathForSpecialsDates.WINTER);
-                sunPathLabel.setVisible(true);
-            }
+            // and also a label with all the vailable data...
+            sunPathLabel.setText(SunPathForSpecialsDates.TODAY + "\n\n" + SunPathForSpecialsDates.SUMMER + "\n\n" + SunPathForSpecialsDates.WINTER);
+            sunPathLabel.toFront();
+            sunPathLabel.setVisible(true);
         }
     }
     
