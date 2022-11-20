@@ -446,7 +446,7 @@ public class GPXEditor implements Initializable {
                 borderPane.getScene().getWindow(), 
                 helpMenu, 
                 "GPXEditor", 
-                "v5.7", 
+                "v5.8", 
                 "https://github.com/ThomasDaheim/GPXEditor");
         
         // check for control key to distinguish between move & copy when dragging
