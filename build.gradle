@@ -8,7 +8,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.1'
         // https://github.com/ben-manes/gradle-versions-plugin
         // task: dependencyUpdates
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.44.0'
