@@ -62,6 +62,10 @@ public class OpenElevationService implements IElevationProvider {
     private static final HttpClient client = HttpClient.newHttpClient();
     private String API_KEY = GPXEditorPreferences.ROUTING_API_KEY.getAsType();
     private static final int CHUNK_SIZE = 1000;
+    
+    private final static int STATUS_OK = 200;
+    private final static int STATUS_OK2 = 201;
+    private final static int STATUS_NO_DATA = 404;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -137,11 +141,14 @@ public class OpenElevationService implements IElevationProvider {
         try {
             final HttpResponse<String> response = client.send(requestPOST, HttpResponse.BodyHandlers.ofString());
             
-            if (response.statusCode() == 200 || response.statusCode() == 201) {
+            if (response.statusCode() == STATUS_OK || response.statusCode() == STATUS_OK2) {
                 result = response.body();
             } else {
-                Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, 
-                        "OpenElevationService returned: {0}, {1}", new Object[]{response.statusCode(), response.body()});
+                // TFE, 20220311: no error message for "outside SRTM data range"
+                if (response.statusCode() != STATUS_NO_DATA) {
+                    Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, 
+                            "OpenElevationService returned: {0}, {1}", new Object[]{response.statusCode(), response.body()});
+                }
             }
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);

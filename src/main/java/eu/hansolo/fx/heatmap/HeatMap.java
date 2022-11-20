@@ -293,7 +293,7 @@ public class HeatMap extends ImageView {
      * @param FILE_NAME
      */
     public void saveAsPng(final Node NODE, final String FILE_NAME) {
-        new Thread(() ->
+        final Thread thread = new Thread(() ->
             Platform.runLater(() -> {
                 final String TARGET = System.getProperty("user.home") + "/Desktop/" + FILE_NAME + ".png";
                 try {
@@ -302,7 +302,9 @@ public class HeatMap extends ImageView {
                     // handle exception here
                 }
                        })
-        ).start();    
+        );
+        thread.setDaemon(true);
+        thread.start();
     }
     
     /**

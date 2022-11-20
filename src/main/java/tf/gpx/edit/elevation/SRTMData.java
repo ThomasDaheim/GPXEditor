@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Thomas
@@ -95,9 +97,7 @@ class SRTMData {
     private short[] initDataRow() {
         short[] result = new short[numberCols];
         
-        for (int i = 0; i < numberCols; i++) {
-            result[i] = (short) IElevationProvider.NO_ELEVATION;
-        }
+        Arrays.fill(result, (short) IElevationProvider.NO_ELEVATION);
         
         return result;
     }

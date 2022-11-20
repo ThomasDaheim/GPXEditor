@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.fxyz3d;
+package tf.gpx.edit.charts;
 
 import java.util.Map;
 import java.util.function.DoubleConsumer;
@@ -78,11 +78,11 @@ public class Fxyz3dHelper {
         final double lonCenter = (dataBounds.getMaxLon() + dataBounds.getMinLon()) / 2d;
 
         final int startLat = (int) Math.ceil(dataBounds.getMinLat());
-        final int endLat = (int) Math.ceil(dataBounds.getMaxLat());
+        final int endLat = (int) Math.ceil(dataBounds.getMaxLat())-1;
         final double lonShift = (dataBounds.getMaxLon()-lonCenter) * AXES_DIST;
         
         final int startLon = (int) Math.ceil(dataBounds.getMinLon());
-        final int endLon = (int) Math.ceil(dataBounds.getMaxLon());
+        final int endLon = (int) Math.ceil(dataBounds.getMaxLon())-1;
         final double latShift = (latCenter-dataBounds.getMinLat()) * AXES_DIST;
         
         // don't start with a tic at zero
@@ -119,13 +119,13 @@ public class Fxyz3dHelper {
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
 
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
         
         // lon lines & tics
@@ -146,19 +146,21 @@ public class Fxyz3dHelper {
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
             
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
                             i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
 
         // elevation lines & tics
         final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, dataBounds.getMaxElev());
         result.getChildren().add(elevaxis);
-        for (int i = startElev; i<= endElev; i = i+200) {
+        // TFE, 20220717: limit number of lines & tics for large elevation differences
+        final int elevIncr = (endElev - startElev) / 5;
+        for (int i = startElev; i<= endElev; i = i+elevIncr) {
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 

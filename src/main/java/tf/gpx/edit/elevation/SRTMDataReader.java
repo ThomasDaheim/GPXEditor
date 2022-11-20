@@ -27,10 +27,10 @@ package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,7 +86,7 @@ class SRTMDataReader implements ISRTMDataReader {
             // determine data type & init srmtdata
             long fileLength = srtmFile.length(); 
 
-            // see http://www.programcreek.com/java-api-examples/index.php?source_dir=whitebox-geospatial-analysis-tools-master/WhiteboxGIS/resources/plugins/source_files/ImportSRTM.java
+            // see https://www.javatips.net/api/whitebox-geospatial-analysis-tools-master/WhiteboxGIS/resources/plugins/source_files/ImportSRTM.java
             /* First you need to figure out if this is an SRTM-1 or SRTM-3 image.
              SRTM-1 has 3601 x 3601 or 12967201 cells and SRTM-3 has 1201 x 1201 
              or 1442401 cells. Each cell is 2 bytes.  
@@ -106,17 +106,20 @@ class SRTMDataReader implements ISRTMDataReader {
             if (!SRTMDataHelper.SRTMDataType.INVALID.equals(srtmType)) {
                 result = new SRTMData(srtmFile.getAbsolutePath(), name, srtmType);
                 
-                RandomAccessFile rIn = null; 
-                FileChannel inChannel = null; 
-                try {
+                // TFE, 20220302: updated file reading from https://pulasthisupun.blogspot.com/2016/06/reading-and-writing-binary-files-in.html
+                try (
+//                        RandomAccessFile rIn = new RandomAccessFile(srtmFile, "r"); 
+//                        FileChannel inChannel = rIn.getChannel();
+                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
+                        ) {
                     ByteBuffer buf = ByteBuffer.allocate((int) fileLength); 
-                    rIn = new RandomAccessFile(srtmFile, "r"); 
-
-                    inChannel = rIn.getChannel(); 
-
+                    buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
+                    
                     inChannel.position(0); 
                     inChannel.read(buf); 
                     
+                    buf.flip();
+
 //                    Height files have the extension .HGT and are signed two byte integers.
 //                    The bytes are in Motorola "big-endian" order with the most significant byte first,
 //                    directly readable by systems such as Sun SPARC, Silicon Graphics and Macintosh computers
@@ -125,12 +128,14 @@ class SRTMDataReader implements ISRTMDataReader {
 //                    Heights are in meters referenced to the WGS84/EGM96 geoid.
 //                    Data voids are assigned the value -32768.
 
-                    java.nio.ByteOrder byteorder = java.nio.ByteOrder.BIG_ENDIAN; 
-                    // Check the byte order. 
-                    buf.order(byteorder); 
-                    buf.rewind(); 
-                    byte[] ba = new byte[(int) fileLength]; 
-                    buf.get(ba); 
+//                    inChannel.position(0); 
+//                    inChannel.read(buf); 
+//                    
+//                    // Check the byte order. 
+//                    buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
+//                    buf.rewind(); 
+//                    byte[] ba = new byte[(int) fileLength]; 
+//                    buf.get(ba); 
                     short z; 
                     int pos = 0; 
                     for (int row = 0; row < rows; row++) { 
@@ -143,17 +148,6 @@ class SRTMDataReader implements ISRTMDataReader {
                     } 
                 } catch (OutOfMemoryError | IOException ex) { 
                     Logger.getLogger(SRTMDataReader.class.getName()).log(Level.SEVERE, null, ex);
-                } finally { 
-                    try {
-                        if (rIn != null) {
-                            rIn.close();
-                        }
-                        if (inChannel != null) {
-                            inChannel.close(); 
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(SRTMDataReader.class.getName()).log(Level.SEVERE, null, ex);
-                    }
                 }                  
             }
         }

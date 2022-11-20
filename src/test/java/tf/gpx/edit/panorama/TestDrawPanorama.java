@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.elevation;
+package tf.gpx.edit.panorama;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +33,10 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.elevation.ElevationProviderBuilder;
+import tf.gpx.edit.elevation.ElevationProviderOptions;
+import tf.gpx.edit.elevation.IElevationProvider;
+import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
@@ -43,7 +47,7 @@ import tf.helper.general.ObjectsHelper;
  * 
  * @author thomas
  */
-public class TestDrawHorizon {
+public class TestDrawPanorama {
     private final IElevationProvider defaultProvider = 
             new ElevationProviderBuilder(
                     new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_FIRST), 

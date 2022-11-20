@@ -25,12 +25,10 @@
  */
 package tf.gpx.edit.elevation;
 
-import java.time.Duration;
-import java.time.Instant;
 import tf.gpx.edit.items.GPXLineItem;
 
 /**
- * Caller for the different implenmentations (as long as there is no clear "winner"...)
+ * Caller for the different implementations (as long as there is no clear "winner"...)
  * 
  * Jyz3d
  * Fxyz3d

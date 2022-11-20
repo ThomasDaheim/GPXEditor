@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -12,6 +13,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
+import tf.gpx.edit.leafletmap.LatLonElev;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use
@@ -30,7 +33,8 @@ public class GPXEditorParameters {
         deleteEmpty,
         deleteCount,
         gpxFiles,
-        ignoreParams
+        ignoreParams,
+        mapCenter
     };
 
     private boolean mergeFiles = false;
@@ -44,8 +48,10 @@ public class GPXEditorParameters {
     private int deleteCount = Integer.MIN_VALUE;
     private List<String> gpxFiles = new ArrayList<>();
     private boolean ignoreParams = false;
+    private IGeoCoordinate mapCenter = new LatLonElev(48.137154, 11.576124);
     
     private List<String> argsList;
+    private List<String> optsList;
 
     private GPXEditorParameters() {
         // Exists only to defeat instantiation.
@@ -107,6 +113,10 @@ public class GPXEditorParameters {
                 GPXEditorParameters.CmdOps.ignoreParams.toString(), 
                 false, 
                 "Ignore all parameters (for debugging purposes)");
+        options.addOption(GPXEditorParameters.CmdOps.mapCenter.toString(), 
+                GPXEditorParameters.CmdOps.mapCenter.toString(), 
+                true, 
+                "Set initial center of the map");
 
         // lets parse them by code from other people
         CommandLineParser parser = new DefaultParser();
@@ -124,20 +134,23 @@ public class GPXEditorParameters {
                 }
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.mergeFiles.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.mergeFiles.toString())) {
+            // TFE, 20220530: save options for later use as well - to make sure we execute commands in the right order
+            // mergeFiles after mergeTracks != mergeTracks after mergeFiles
+            optsList = Arrays.asList(command.getOptions()).stream().map((t) -> {
+                return t.getOpt();
+            }).collect(Collectors.toList());
+            
+            if (command.hasOption(GPXEditorParameters.CmdOps.mergeFiles.toString())) {
                 mergeFiles = true;
                 // System.out.println("Option mergeFiles found");
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.mergeTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.mergeTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.mergeTracks.toString())) {
                 mergeTracks = true;
                 // System.out.println("Option mergeTracks found");
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.reduceTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.reduceTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.reduceTracks.toString())) {
                 reduceTracks = true;
                 // System.out.println("Option reduceTracks found");
             }
@@ -165,8 +178,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option reduceEpsilon found: " + reduceEpsilon);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.fixTracks.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.fixTracks.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.fixTracks.toString())) {
                 fixTracks = true;
                 // System.out.println("Option fixTracks found");
             }
@@ -176,8 +188,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option fixDistance found: " + fixDistance);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.deleteEmpty.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.deleteEmpty.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.deleteEmpty.toString())) {
                 deleteEmpty = true;
                 // System.out.println("Option deleteEmpty found");
             }
@@ -193,8 +204,7 @@ public class GPXEditorParameters {
                 // System.out.println("Option gpxFiles found: " + value);
             }
             
-            if (command.getArgList().contains(GPXEditorParameters.CmdOps.ignoreParams.toString()) ||
-                    command.hasOption(GPXEditorParameters.CmdOps.ignoreParams.toString())) {
+            if (command.hasOption(GPXEditorParameters.CmdOps.ignoreParams.toString())) {
                 ignoreParams = true;
                 System.out.println("Ignoring all parameters.");
                 
@@ -243,6 +253,14 @@ public class GPXEditorParameters {
                 deleteCount = Integer.MIN_VALUE;
                 help(options);
             }
+
+            if (command.hasOption(GPXEditorParameters.CmdOps.mapCenter.toString())) {
+                value = command.getOptionValue(GPXEditorParameters.CmdOps.mapCenter.toString());
+                String[] latlon = value.split(" ");
+                
+                mapCenter.setLatitude(Double.parseDouble(latlon[0]));
+                mapCenter.setLongitude(Double.parseDouble(latlon[1]));
+            }
         } catch (ParseException|NumberFormatException|NullPointerException ex) {
             Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
             help(options);
@@ -289,12 +307,20 @@ public class GPXEditorParameters {
         return argsList;
     }
 
+    public List<String> getOptsList() {
+        return optsList;
+    }
+
     public List<String> getGPXFiles() {
         return gpxFiles;
     }
     
     public boolean doBatch() {
         return doMergeFiles() || doMergeTracks() || doReduceTracks() || doFixTracks() || doDeleteEmpty();
+    }
+    
+    public IGeoCoordinate getMapCenter() {
+        return mapCenter;
     }
 
     private void help(final Options options) {

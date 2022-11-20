@@ -27,6 +27,8 @@ package tf.gpx.edit.helper;
 
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
+import tf.gpx.edit.elevation.IElevationProvider;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
@@ -35,35 +37,49 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * @author thomas
  */
 public class LatLonHelper {
-    public final static String DEG = "\u00B0";
-    public final static String MIN = "'"; // how about "\u2032";
-    public final static String SEC = "\""; // how about "\u2033";
+    // https://www.regexpal.com/ is your friend here!
+    // TFE, 20200814: sync with other results
+    // https://www.regexlib.com/Search.aspx?k=latitude
+    
+    // TFE, 20220815: allow both DEG and numero sign
+    public final static String DEG_CHAR_1 = "\u00B0";
+    public final static String DEG_CHAR_2 = "\u2116";
+    private final static String DEG_CHARS = "[" + DEG_CHAR_1 + DEG_CHAR_2 + "]";
+    // TFE, 20220814: allow ? (prime) as well since its e.g. used by wikipedia
+    public final static String MIN_CHAR_1 = "'";
+    public final static String MIN_CHAR_2 = "\u2032";
+    private final static String MIN_CHARS = "[" + MIN_CHAR_1 + MIN_CHAR_2 + "]";
+//    // TFE, 20220814: allow ? (double prime) as well since its e.g. used by wikipedia
+    public final static String SEC_CHAR_1 = "\"";
+    public final static String SEC_CHAR_2 = "\u2033";
+    private final static String SEC_CHARS = "[" + SEC_CHAR_1 + SEC_CHAR_2 + "]";
     
     // TFE, 20210212: lets collect the valid building blocks first...
     private final static String SPACE = "[ ]*";
 
     // patterns for DEG, MIN, SEC values <> 90 / 180
     private final static String LAT_DEG_01 = "([0-8 ]?[0-9]?)";
-    private final static String LAT_DEG_1 = LAT_DEG_01 + DEG;
+    private final static String LAT_DEG_1 = LAT_DEG_01 + DEG_CHARS;
     // with three digits on 100-179 are valid, otherwise 0-99
     private final static String LON_DEG_01 = "((1[0-7]|[0-9 ]?)[0-9]?)";
-    private final static String LON_DEG_1 = LON_DEG_01 + DEG;
-    private final static String MIN_1 = "([0-5 ]?[0-9]?)" + MIN;
+    private final static String LON_DEG_1 = LON_DEG_01 + DEG_CHARS;
+    private final static String MIN_1 = "([0-5 ]?[0-9]?)" + MIN_CHARS;
     private final static String DECIMALS_1 = "([.,][0-9]{0,16})?";
-    private final static String SEC_1 = "([0-5 ]?[0-9]?" + DECIMALS_1 + ")" + SEC;
+    private final static String SEC_1 = "([0-5 ]?[0-9]?" + DECIMALS_1 + ")" + SEC_CHARS;
     
     // patterns for DEG, MIN, SEC values == 90 / 180
     private final static String LAT_DEG_02 = "(90)";
-    private final static String LAT_DEG_2 = LAT_DEG_02 + DEG;
+    private final static String LAT_DEG_2 = LAT_DEG_02 + DEG_CHARS;
     private final static String LON_DEG_02 = "(180)";
-    private final static String LON_DEG_2 = LON_DEG_02 + DEG;
-    private final static String MIN_2 = "(0{0,2})" + MIN;
+    private final static String LON_DEG_2 = LON_DEG_02 + DEG_CHARS;
+    private final static String MIN_2 = "(0{0,2})" + MIN_CHARS;
     private final static String DECIMALS_2 = "([.,]0{0,16})?";
-    private final static String SEC_2 = "(0{0,2}" + DECIMALS_2 + ")" + SEC;
+    private final static String SEC_2 = "(0{0,2}" + DECIMALS_2 + ")" + SEC_CHARS;
     
     // patterns for pre/suffixes
-    private final static String LAT = "[NS]";
-    private final static String LON = "[EW]";
+    // TFE, 20220814: OK, lower case is also correct...
+    private final static String LAT = "[NnSs]{1}";
+    private final static String LON = "[EeWw]{1}";
 
     // patterns for everything except pre/suffixes
     private final static String LAT_VAL_DEG_MIN_SEC_1 = LAT_DEG_1 + SPACE + MIN_1 + SPACE + SEC_1;
@@ -173,24 +189,24 @@ public class LatLonHelper {
             SIGN_REGEXP + 
             LAT_DEG_01 +
             DECIMALS_1 + 
-            "[" + DEG + "]?" + 
+            "[" + DEG_CHARS + "]?" + 
             ")|(" + 
             SIGN_REGEXP + 
             LAT_DEG_02 +
             DECIMALS_2 + 
-            "[" + DEG + "]?" + 
+            "[" + DEG_CHARS + "]?" + 
             ")";
     protected final static String LON_REGEXP_2 = 
             "(" + 
             SIGN_REGEXP + 
             LON_DEG_01 +
             DECIMALS_1 + 
-            "[" + DEG + "]?" + 
+            "[" + DEG_CHARS + "]?" + 
             ")|(" + 
             SIGN_REGEXP + 
             LON_DEG_02 +
             DECIMALS_2 + 
-            "[" + DEG + "]?" + 
+            "[" + DEG_CHARS + "]?" + 
             ")";
     
     protected final static Pattern LAT_PATTERN_2 = Pattern.compile(LAT_REGEXP_2);
@@ -214,15 +230,19 @@ public class LatLonHelper {
     }
 
     public static String GPXWaypointToString(final GPXWaypoint waypoint) {
-        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude());
+        return LatLongToString(waypoint.getWaypoint().getLatitude(), waypoint.getWaypoint().getLongitude(), waypoint.getWaypoint().getElevation());
     }
             
     public static String LatLongToString(final LatLonElev waypoint) {
-        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude());
+        return LatLongToString(waypoint.getLatitude(), waypoint.getLongitude(), waypoint.getElevation());
     }
             
-    public static String LatLongToString(final double lat, final double lon) {
-        return latToString(lat) + " " + lonToString(lon);
+    public static String LatLongToString(final double lat, final double lon, final double elev) {
+        if (elev != IElevationProvider.NO_ELEVATION) {
+            return latToString(lat) + " " + lonToString(lon) + " " + GPXLineItem.DOUBLE_FORMAT_2.format(elev) + " m";
+        } else {
+            return latToString(lat) + " " + lonToString(lon);
+        }
     }
             
     public static String latToString(final double lat) {
@@ -262,7 +282,7 @@ public class LatLonHelper {
 //        result = result.replaceAll(" ", "");
 
         final StringBuilder sb = new StringBuilder();
-        sb.append(degrees).append(DEG).append((int) Math.floor(minutes)).append(MIN).append(String.format("%4.2f", seconds)).append(SEC);
+        sb.append(degrees).append(DEG_CHAR_1).append((int) Math.floor(minutes)).append(MIN_CHAR_1).append(String.format("%4.2f", seconds)).append(SEC_CHAR_1);
         return direction + " " + sb.toString();
     }
     
@@ -272,7 +292,7 @@ public class LatLonHelper {
         try {
             if (LAT_PATTERN_2.matcher(lat).matches()) {
                 // only a number :-)
-                result = NumberUtils.toDouble(lat.replace(",", ".").replace(DEG, ""));
+                result = NumberUtils.toDouble(lat.replace(",", ".").replace(DEG_CHAR_1, "").replace(DEG_CHAR_2, ""));
             } else if(LAT_PATTERN_1.matcher(lat).matches()) {
                 result = latFromString1(lat);
             }
@@ -289,7 +309,7 @@ public class LatLonHelper {
         try {
             if (LON_PATTERN_2.matcher(lon).matches()) {
                 // only a number :-)
-                result = NumberUtils.toDouble(lon.replace(",", ".").replace(DEG, ""));
+                result = NumberUtils.toDouble(lon.replace(",", ".").replace(DEG_CHAR_1, "").replace(DEG_CHAR_2, ""));
             } else if(LON_PATTERN_1.matcher(lon).matches()) {
                 result = lonFromString1(lon);
             }
@@ -306,7 +326,7 @@ public class LatLonHelper {
         try {
             // 2) determine sign from N/S
             // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
-            String dir = lat.substring(0, 1);
+            String dir = lat.substring(0, 1).toUpperCase();
             if ("N".equals(dir) || "S".equals(dir)) {
                 final int sign = "N".equals(dir) ? 1 : -1;
 
@@ -338,7 +358,7 @@ public class LatLonHelper {
         try {
             // 2) determine sign from E/W
             // TFE, 20200120: allow N/S or E/W at the end as well (as e.g. shown by Google)
-            String dir = lon.substring(0, 1);
+            String dir = lon.substring(0, 1).toUpperCase();
             if ("E".equals(dir) || "W".equals(dir)) {
                 final int sign = "E".equals(dir) ? 1 : -1;
 
@@ -371,17 +391,25 @@ public class LatLonHelper {
         // latlon looks like %2d°%2d'%4.2f\"
         
         // 1) split @ ° and convert to int
-        String[] tempArray = temp.split(DEG);
+        String[] tempArray = temp.split(DEG_CHARS);
         result = NumberUtils.toInt(tempArray[0], 0);
-        temp = tempArray[1];
-        
-        // 2) split rest @ ' and convert to double / 60
-        tempArray = temp.split(MIN);
-        result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
-        temp = tempArray[1];
-        
-        // 3) split rest @ \" and convert to double / 3600
-        result += NumberUtils.toDouble(temp.split(SEC)[0].replace(",", "."), 0) / 3600.0;
+
+        // TFE, 20220814: we might not have more then DEG
+        if (tempArray.length > 1) {
+            temp = tempArray[1];
+
+            // 2) split rest @ ' and convert to double / 60
+            tempArray = temp.split(MIN_CHARS);
+            result += NumberUtils.toDouble(tempArray[0], 0) / 60.0;
+
+            // TFE, 20220814: we might not have more then MIN
+            if (tempArray.length > 1) {
+                temp = tempArray[1];
+
+                // 3) split rest @ \" and convert to double / 3600
+                result += NumberUtils.toDouble(temp.split(SEC_CHARS)[0].replace(",", "."), 0) / 3600.0;
+            }
+        }
         
         return result;
     }

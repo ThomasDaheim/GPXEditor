@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.helper;
+package tf.gpx.edit.charts;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +33,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.NamedArg;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -114,6 +113,8 @@ public class SmoothFilledAreaChart<X, Y> extends AreaChart<X, Y> {
                     Collections.sort(constructedPath, (e1, e2) -> Double.compare(e1.getX(), e2.getX()));
 
                     // and now smoothing as in http://fxexperience.com/2012/01/curve-fitting-and-styling-areachart/
+                    // TODO: change to https://github.com/HanSolo/tilesfx/blob/3973b97f4b93ef3712df17f5ca5c2dfab3dc57b3/src/main/java/eu/hansolo/tilesfx/chart/SmoothedChart.java
+                    // using Catmull-Rom spline from https://github.com/HanSolo/tilesfx/blob/3973b97f4b93ef3712df17f5ca5c2dfab3dc57b3/src/main/java/eu/hansolo/tilesfx/tools/Helper.java
                     final Pair<Point2D[], Point2D[]> result = calcCurveControlPoints(constructedPath.toArray(new Point2D[0]));
                     final Point2D[] firstControlPoints = result.getKey();
                     final Point2D[] secondControlPoints = result.getValue();

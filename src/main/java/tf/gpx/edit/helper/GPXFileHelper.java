@@ -83,6 +83,8 @@ public class GPXFileHelper {
     private static final String MERGED_TRACK_NAME = "Merged Track";
     private static final String MERGED_TRACKSEGMENT_NAME = "Merged Segment";
     
+    private static final String USER_HOME = System.getProperty("user.home");
+    
     public static enum FileType {
         GPX("gpx", "application/gpx+xml", false),
         KML("kml", "application/vnd.google-earth.kml+xml", false),
@@ -158,7 +160,7 @@ public class GPXFileHelper {
         final List<String> extFilter = Arrays.asList("*." + FileType.GPX.getExtension());
         final List<String> extValues = Arrays.asList(FileType.GPX.getExtension());
 
-        final File curPath = new File("user.home");
+        final File curPath = new File(USER_HOME);
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Insert GPX-Files");
@@ -197,7 +199,7 @@ public class GPXFileHelper {
         }
         final String extConcat = extValues.stream().collect( Collectors.joining( "/" ) );
 
-        final File curPath = new File(System.getProperty("user.home"));
+        final File curPath = new File(USER_HOME);
         final String curPathValue = FilenameUtils.normalize(curPath.getAbsolutePath());
 
         FileChooser fileChooser = new FileChooser();
@@ -233,7 +235,7 @@ public class GPXFileHelper {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save GPX-File");
             if (gpxFile.getPath() == null) {
-                fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+                fileChooser.setInitialDirectory(new File(USER_HOME));
             } else {
                 fileChooser.setInitialDirectory(new File(gpxFile.getPath()));
             }
@@ -391,8 +393,8 @@ public class GPXFileHelper {
         // export using appache csv
         try (
             FileWriter out = new FileWriter(selectedFile);
-            CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
-              .withHeader(worker.getCSVHeader().toArray(new String[0])));
+            CSVPrinter printer = new CSVPrinter(out,
+                    CSVFormat.DEFAULT.builder().setHeader(worker.getCSVHeader().toArray(new String[0])).build());
             ) {
             worker.getCSVLines().forEach((t) -> {
                 // no idea, why a nested try & catch is required here...

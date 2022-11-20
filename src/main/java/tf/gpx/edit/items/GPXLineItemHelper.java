@@ -226,26 +226,31 @@ public class GPXLineItemHelper {
         return gpxChildren;
     }
     
-    public static boolean isChildOf(final GPXLineItem lineItem, final GPXLineItem potentialChild) {
+    public static boolean isChildOf(final GPXLineItem lineItem, final GPXLineItem potentialParent) {
         boolean result = false;
         
+        // TFE, 20220306: make things a bit safer here...
+        if (lineItem == null || potentialParent == null) {
+            return result;
+        }
+        
         // can't be child of a waypoint
-        if (GPXLineItem.GPXLineItemType.GPXWaypoint.equals(potentialChild.getType())) {
+        if (GPXLineItem.GPXLineItemType.GPXWaypoint.equals(potentialParent.getType())) {
             return result;
         }
         
         // can't be child if same or upper type...
-        if (isSameTypeAs(lineItem.getType(), potentialChild.getType()) || 
-                isUpperTypeThan(lineItem.getType(), potentialChild.getType())) {
+        if (isSameTypeAs(lineItem.getType(), potentialParent.getType()) || 
+                isUpperTypeThan(lineItem.getType(), potentialParent.getType())) {
             return result;
         }
         
         // first check if it a direct child
-        if (isDirectChildOf(lineItem, potentialChild)) {
+        if (isDirectChildOf(lineItem, potentialParent)) {
             result = true;
         } else {
             // if not, check the children
-            for (GPXLineItem child : potentialChild.getChildren()) {
+            for (GPXLineItem child : potentialParent.getChildren()) {
                 if (isChildOf(lineItem, child)) {
                     result = true;
                     break;
@@ -256,11 +261,11 @@ public class GPXLineItemHelper {
         return result;
     }
     
-    public static boolean isDirectChildOf(final GPXLineItem lineItem, final GPXLineItem potentialChild) {
+    public static boolean isDirectChildOf(final GPXLineItem lineItem, final GPXLineItem potentialParent) {
         boolean result = false;
         
-        if (isChildTypeOf(lineItem.getType(), potentialChild.getType())) {
-            result = potentialChild.getChildren().contains(lineItem);
+        if (isChildTypeOf(lineItem.getType(), potentialParent.getType())) {
+            result = potentialParent.getChildren().contains(lineItem);
         }
         
         return result;

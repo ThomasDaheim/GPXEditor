@@ -168,7 +168,7 @@ public class KnownExtensionAttributes {
         
         color("color", KnownExtension.Line),
         opacity("opacity", KnownExtension.Line),
-        width("width", KnownExtension.Line),
+        width("width", KnownExtension.Line), // Width, in millimeters, of the line
         pattern("pattern", KnownExtension.Line),
         linecap("linecap", KnownExtension.Line),
         dasharray("dasharray", KnownExtension.Line),
@@ -182,7 +182,7 @@ public class KnownExtensionAttributes {
         // those are actually extensions UNDER the line extension
         // extension groups can have their own extensions...
         lsColorBase("lsColorBase", KnownExtension.Locus, KnownExtension.Line),
-        lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line),
+        lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line), // same value is set for "width" independent whether lsUnits might be "PIXEL"
         lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line);
         
         

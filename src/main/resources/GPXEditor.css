@@ -130,7 +130,6 @@
     -fx-background-color: firebrick;
 }
 
-
 /*
     map chart
 */
@@ -277,9 +276,26 @@
     -fx-fill: silver;
 }
 
+/* sunpath coloring */
+.sunpath-today.chart-series-line {
+    -fx-stroke: yellow !important;
+    -fx-stroke-width: 2px !important;
+}
+.sunpath-summer.chart-series-line {
+    -fx-stroke: green !important;
+    -fx-stroke-width: 2px !important;
+}
+.sunpath-winter.chart-series-line {
+    -fx-stroke: blue !important;
+    -fx-stroke-width: 2px !important;
+}
 
 /* TFE, 20191113: pseudoclasses to color line and area in horizonviewer */
 /* https://kevingimbel.de/blog/2021/06/darken-and-lighten-colors-with-css/ */
+.horizon-pane {
+    -fx-fill: white;
+    -fx-background-color: white;
+}
 .color-step-0 *.chart-series-area-fill,
 .color-step-1 *.chart-series-area-fill,
 .color-step-2 *.chart-series-area-fill,
@@ -344,22 +360,23 @@
 
 .horizon-viewer-label {
     -fx-background-color: transparent;
-    -fx-padding: 4 4 4 50;
+    -fx-padding: 4 4 4 60;
     -fx-text-alignment: left;
     -fx-text-origin: top;
 }
-
-/*.default-color0.chart-area-symbol {
-    -fx-background-color: red, red;
-    -fx-background-radius: 1px;
+.sunpath-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4 20 4 4;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
 }
-.default-color0.chart-series-area-line {
-    -fx-stroke: #000000; 
+.sunpath-noelevationdata-label {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 0;
+    -fx-text-alignment: center;
+    -fx-font-size: 200%;
+    -fx-font-weight: bold;
 }
-.default-color0.chart-series-area-fill {
-     http://blog.e-zest.com/gradients-in-javafx-2/ 
-    -fx-fill: linear-gradient(to top, #058243 0%, #B9DCCA 50%, #FFFFFF 80%);
-}*/
 
 .track-popup {
     -fx-fill: black;
@@ -377,6 +394,12 @@
     -fx-padding: 0px;
     -fx-margin: 0px;
 }
+
+/*.tooltip {
+    -fx-background: white;
+    -fx-background-color: white;
+    -fx-text-fill: white;
+}*/
 
 /*
     bin distribution chart
@@ -445,7 +468,7 @@
 }
 
 .srtm-viewer-label {
-    -fx-background-color: transparent;
+    -fx-background-color: white;
     -fx-padding: 4;
     -fx-text-alignment: left;
     -fx-text-origin: top;
@@ -496,4 +519,14 @@
 
 /* TFE, 20210828: node showing the mapimage and title */
 .mapImageViewer > * {
+}
+
+/* TFE, 20220731: coloring of tooltip in horizon chart */
+.charts-tooltip {
+    -fx-background-color: white;
+}
+.charts-tooltip .label {
+    -fx-text-fill: black;
+    -fx-font-weight: normal;
+    -fx-font-family: 'Helvetica', Arial, sans-serif;
 }

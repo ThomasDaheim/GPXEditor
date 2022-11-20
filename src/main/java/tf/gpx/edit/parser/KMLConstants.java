@@ -26,6 +26,7 @@
 package tf.gpx.edit.parser;
 
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 import tf.gpx.edit.items.GPXLineItem;
 
 /**
@@ -34,7 +35,8 @@ import tf.gpx.edit.items.GPXLineItem;
  */
 public interface KMLConstants {
     // constants used in parsing & writing KML
-    final SimpleDateFormat KML_DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+    // test1.kml: 2021-09-25 21:28:54 MESZ, 0021-09-06 08:55:49 MEZ
+    final SimpleDateFormat KML_DATEFORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.US);
 
     public enum PathType {
         Track(GPXLineItem.GPXLineItemType.GPXTrack),

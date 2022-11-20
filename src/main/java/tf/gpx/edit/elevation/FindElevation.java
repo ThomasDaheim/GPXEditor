@@ -28,7 +28,6 @@ package tf.gpx.edit.elevation;
 import java.io.File;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
-import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -200,9 +199,8 @@ public class FindElevation extends AbstractStage {
         // 7th row: assign height values
         final Button findButton = new Button("Get elevation");
         findButton.setOnAction((ActionEvent event) -> {
-            if (Double.NaN == LatLonHelper.latFromString(waypointLatitudeTxt.getText())) {
-                elevationVal.setText(LatLonHelper.INVALID_LATITUDE);
-            } else if (Double.NaN == LatLonHelper.lonFromString(waypointLongitudeTxt.getText())) {
+            if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 
+                    Double.isNaN(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()))) {
                 elevationVal.setText(LatLonHelper.INVALID_LONGITUDE);
             } else {
                 final LatLonElev latLong = new LatLonElev(LatLonHelper.latFromString(waypointLatitudeTxt.getText()), LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
@@ -218,9 +216,18 @@ public class FindElevation extends AbstractStage {
                 elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
             }
         });
-        getGridPane().add(findButton, 0, rowNum, 2, 1);
-        GridPane.setHalignment(findButton, HPos.CENTER);
+        setActionAccelerator(findButton);
+        getGridPane().add(findButton, 0, rowNum, 1, 1);
         GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
+
+        final Button cancelBtn = new Button("Cancel");
+        cancelBtn.setOnAction((ActionEvent arg0) -> {
+            close();
+        });
+        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
+        setCancelAccelerator(cancelBtn);
+        HBox.setMargin(cancelBtn, INSET_SMALL);
+        
    }
     
     public void findElevation(final HostServices hostServices) {

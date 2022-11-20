@@ -437,6 +437,54 @@ public class MapLayer {
                     0,
                     TileLayerClass.STANDARD);
     
+    public static MapLayer GOOGLE_TERRAIN = 
+            new MapLayer(
+                    LayerType.BASELAYER, 
+                    "Google Terrain", 
+                    "http://mt0.google.com/vt/lyrs=p&x={x}&y={y}&z={z}", 
+                    "", 
+                    0, 
+                    21, 
+                    "Map tiles from Google", 
+                    0,
+                    TileLayerClass.STANDARD);
+    
+    public static MapLayer GOOGLE_HYBRID = 
+            new MapLayer(
+                    LayerType.BASELAYER, 
+                    "Google Hybrid", 
+                    "http://mt0.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", 
+                    "", 
+                    0, 
+                    21, 
+                    "Map tiles from Google", 
+                    0,
+                    TileLayerClass.STANDARD);
+    
+    public static MapLayer GOOGLE_AERIAL = 
+            new MapLayer(
+                    LayerType.BASELAYER, 
+                    "Google Aerial", 
+                    "http://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", 
+                    "", 
+                    0, 
+                    21, 
+                    "Map tiles from Google", 
+                    0,
+                    TileLayerClass.STANDARD);
+    
+    public static MapLayer GOOGLE_ROADMAP = 
+            new MapLayer(
+                    LayerType.BASELAYER, 
+                    "Google Roadmap", 
+                    "http://mt0.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", 
+                    "", 
+                    0, 
+                    21, 
+                    "Map tiles from Google", 
+                    0,
+                    TileLayerClass.STANDARD);
+    
     public static MapLayer BING = 
             new MapLayer(
                     LayerType.BASELAYER, 
@@ -529,6 +577,10 @@ public class MapLayer {
                     MapLayer.MAPBOX_SATELLITE, 
                     MapLayer.OPENSTREETMAP, 
                     MapLayer.SATELITTE, 
+                    MapLayer.GOOGLE_TERRAIN, 
+                    MapLayer.GOOGLE_HYBRID, 
+                    MapLayer.GOOGLE_AERIAL, 
+                    MapLayer.GOOGLE_ROADMAP, 
                     MapLayer.BING, 
                     MapLayer.BING_AERIAL, 
                     MapLayer.OPENTOPOMAP, 
@@ -615,17 +667,18 @@ public class MapLayer {
                     103,
                     TileLayerClass.STANDARD);
 
-    public static MapLayer ROADS_AND_LABELS = 
-            new MapLayer(
-                    LayerType.OVERLAY, 
-                    "Roads and Labels", 
-                    "https://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png", 
-                    "", 
-                    0, 
-                    18, 
-                    "Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors", 
-                    98,
-                    TileLayerClass.STANDARD);
+    // TFE, 20220814: doesn't exist anymore...
+//    public static MapLayer ROADS_AND_LABELS = 
+//            new MapLayer(
+//                    LayerType.OVERLAY, 
+//                    "Roads and Labels", 
+//                    "https://{s}.tile.openstreetmap.se/hydda/roads_and_labels/{z}/{x}/{y}.png", 
+//                    "", 
+//                    0, 
+//                    18, 
+//                    "Tiles courtesy of OpenStreetMap Sweden &mdash; Map data &copy; OpenStreetMap contributors", 
+//                    98,
+//                    TileLayerClass.STANDARD);
 
     public static MapLayer RAILWAY_LINES = 
             new MapLayer(
@@ -648,7 +701,8 @@ public class MapLayer {
                     MapLayer.CYCLING_TRAILS, 
                     MapLayer.MTB_TRAILS, 
                     MapLayer.SLOPE_TRAILS, 
-                    MapLayer.ROADS_AND_LABELS, 
+                    // TFE, 20220814: doesn't exist anymore...
+//                    MapLayer.ROADS_AND_LABELS, 
                     MapLayer.RAILWAY_LINES));
     
     public static List<MapLayer> getDefaultOverlays () {

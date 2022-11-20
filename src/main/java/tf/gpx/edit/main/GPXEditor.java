@@ -121,7 +121,6 @@ import tf.gpx.edit.algorithms.WaypointClustering;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
-import tf.gpx.edit.elevation.HorizonViewer;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.elevation.SRTMDownloader;
 import tf.gpx.edit.extension.LineStyle;
@@ -134,6 +133,7 @@ import tf.gpx.edit.helper.GPXTableView;
 import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.TaskExecutor;
+import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -147,6 +147,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
+import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditGPXWaypoint;
@@ -385,6 +386,8 @@ public class GPXEditor implements Initializable {
     private MenuItem onlineHelpMenu;
     @FXML
     private MenuItem elevationForCoordinateMenu;
+    @FXML
+    private MenuItem showHorizonMenu;
     
     public GPXEditor() {
         super();
@@ -398,6 +401,11 @@ public class GPXEditor implements Initializable {
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // TFE, 20200713: needs to happen before map gets loaded
+        // TFE, 20220402: do as first thing since leaflet rendering takes some time and every millisecond helps
+        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
+        TrackMap.getInstance().initMap();
+
         // TF, 20170720: store and read divider positions of panes
         final Double recentLeftDividerPos = GPXEditorPreferences.RECENTLEFTDIVIDERPOS.getAsType();
         final Double recentCentralDividerPos = GPXEditorPreferences.RECENTCENTRALDIVIDERPOS.getAsType();
@@ -430,10 +438,6 @@ public class GPXEditor implements Initializable {
 
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
-
-        // TFE, 20200713: needs to happen before map gets loaded
-        MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
-        TrackMap.getInstance().initMap();
     }
     
     public void lateInitialize() {
@@ -442,7 +446,7 @@ public class GPXEditor implements Initializable {
                 borderPane.getScene().getWindow(), 
                 helpMenu, 
                 "GPXEditor", 
-                "v5.6", 
+                "v5.7", 
                 "https://github.com/ThomasDaheim/GPXEditor");
         
         // check for control key to distinguish between move & copy when dragging
@@ -499,6 +503,13 @@ public class GPXEditor implements Initializable {
         Platform.runLater(() -> {
             gpxFileList.getSelectionModel().select(0);
         });
+
+        // TFE, 20220304: set up the timezone provider - that takes a while...
+        final Thread thread = new Thread(() -> {
+            TimeZoneProvider.init();
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void stop() {
@@ -681,6 +692,9 @@ public class GPXEditor implements Initializable {
                 myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM1);
                 myHostServices.showDocument(SRTMDownloader.DOWNLOAD_LOCATION_SRTM3);
             }
+        });
+        showHorizonMenu.setOnAction((ActionEvent event) -> {
+            showHorizon(TrackMap.getInstance().getMapCenter());
         });
 
         //
@@ -879,41 +893,43 @@ public class GPXEditor implements Initializable {
                         }
                     }
                 }
+                
+                // TFE, 20221105: no clue what this piece of code ist still needed for - besides triggering exceptions...
                 // check added against current gpxfile (if any)
-                if (c.wasAdded() && 
-                        // something most currrently be shown
-                        gpxWaypoints.getUserData() != null && 
-                        // which is not emtpy
-                        !getShownGPXMeasurables().isEmpty() &&
-                        // and we select more than one item
-                        (selectedItems.size() > 1)) {
-                    final GPXFile selectedGPXFile = getShownGPXMeasurables().get(0).getGPXFile();
-                    final List<TreeItem<GPXMeasurable>> toUnselect = new ArrayList<>();
-                    
-                    // to prevent selection of items across gpx files
-                    // as first step to enable multi-selection of items from same gpx file
-                    for (TreeItem<GPXMeasurable> item : c.getAddedSubList()) {
-//                        System.out.println("Item was added: " + item.getValue());
-                        if (!selectedGPXFile.equals(item.getValue().getGPXFile())) {
-//                            System.out.println("toUnselect: " + item.getValue());
-                            toUnselect.add(item);
-                        }
-                    }
-                    
-                    if (!toUnselect.isEmpty()) {
-//                        System.out.println("Selection size before unselect: " + selectedItems.size());
-                        removeGPXFileListListener();
-                        for (TreeItem<GPXMeasurable> item : toUnselect) {
-                            gpxFileList.getSelectionModel().clearSelection(gpxFileList.getSelectionModel().getSelectedItems().indexOf(item));
-                        }
-                        addGPXFileListListener();
-                        
-                        gpxFileList.refresh();
-                        
-                        selectedItems.removeAll(toUnselect);
-//                        System.out.println("Selection size after unselect:  " + selectedItems.size());
-                    }
-                }
+//                if (c.wasAdded() && 
+//                        // something most currrently be shown
+//                        gpxWaypoints.getUserData() != null && 
+//                        // which is not emtpy
+//                        !getShownGPXMeasurables().isEmpty() &&
+//                        // and we select more than one item
+//                        (selectedItems.size() > 1)) {
+//                    final GPXFile selectedGPXFile = getShownGPXMeasurables().get(0).getGPXFile();
+//                    final List<TreeItem<GPXMeasurable>> toUnselect = new ArrayList<>();
+//                    
+//                    // to prevent selection of items across gpx files
+//                    // as first step to enable multi-selection of items from same gpx file
+//                    for (TreeItem<GPXMeasurable> item : c.getAddedSubList()) {
+////                        System.out.println("Item was added: " + item.getValue());
+//                        if (!selectedGPXFile.equals(item.getValue().getGPXFile())) {
+////                            System.out.println("toUnselect: " + item.getValue());
+//                            toUnselect.add(item);
+//                        }
+//                    }
+//                    
+//                    if (!toUnselect.isEmpty()) {
+////                        System.out.println("Selection size before unselect: " + selectedItems.size());
+//                        removeGPXFileListListener();
+//                        for (TreeItem<GPXMeasurable> item : toUnselect) {
+//                            gpxFileList.getSelectionModel().clearSelection(gpxFileList.getSelectionModel().getSelectedItems().indexOf(item));
+//                        }
+//                        addGPXFileListListener();
+//                        
+//                        gpxFileList.refresh();
+//                        
+//                        selectedItems.removeAll(toUnselect);
+////                        System.out.println("Selection size after unselect:  " + selectedItems.size());
+//                    }
+//                }
             }
             
 //            System.out.println("Showing waypoints for " + selectedItems.size() + " items");
@@ -1133,7 +1149,7 @@ public class GPXEditor implements Initializable {
 
             // TFE, 20190822: items a clone since we might loose items after we have removed it
             final GPXMeasurable insertReal = item.cloneMe(true);
-            if (doRemove) {
+            if (doRemove && item.getParent() != null) {
                 // remove dragged item from treeitem and gpxlineitem
                 // TFE, 20180810: in case of parent = GPXFile we can't use getChildren since its a combination of different lists...
                 // so we need to get the concret list of children of type :-(
@@ -1606,6 +1622,10 @@ public class GPXEditor implements Initializable {
         if (gpxFiles.size() > 1) {
             final GPXFile mergedGPXFile = GPXStructureHelper.getInstance().mergeGPXFiles(gpxFiles);
 
+            removeGPXFileListListener();
+
+            gpxFileList.getSelectionModel().clearSelection();
+
             // remove all the others from the list
             for (GPXFile gpxFile : gpxFiles.subList(1, gpxFiles.size())) {
                 gpxFileList.removeGPXFile(gpxFile);
@@ -1614,8 +1634,9 @@ public class GPXEditor implements Initializable {
             // refresh remaining item
             gpxFileList.replaceGPXFile(mergedGPXFile);
 
-            gpxFileList.getSelectionModel().clearSelection();
             refreshGPXFileList();
+
+            addGPXFileListListener();
         }
     }
 
@@ -2106,7 +2127,7 @@ public class GPXEditor implements Initializable {
     }
     
     public void showHorizon(final IGeoCoordinate location) {
-        HorizonViewer.getInstance().showHorizon(location);
+        PanoramaViewer.getInstance().showPanorama(location);
     }
 
     private void assignSRTMHeight(final Event event, final boolean fileLevel) {

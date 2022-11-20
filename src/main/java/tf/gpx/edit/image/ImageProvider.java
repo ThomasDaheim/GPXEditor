@@ -177,18 +177,17 @@ public class ImageProvider {
     }
     
     public void init() {
-        new Thread() {
-            @Override
-            public void run() {
+        final Thread thread = new Thread(() -> {
 //                System.out.println("ImageProvider.init() START " + Instant.now());
-                ImageStore.getInstance().init();
+            ImageStore.getInstance().init();
 //                System.out.println("ImageProvider.init() DONE " + Instant.now());
 
-                Platform.runLater(() -> {
-                    // TODO: use some kind of listener here insead of direct call
-                    TrackMap.getInstance().initPictureIcons();
-                });
-            }
-        }.start();
+            Platform.runLater(() -> {
+                // TODO: use some kind of listener here insead of direct call
+                TrackMap.getInstance().initPictureIcons();
+            });
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 }

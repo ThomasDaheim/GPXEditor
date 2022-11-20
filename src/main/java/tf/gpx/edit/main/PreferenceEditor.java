@@ -395,16 +395,16 @@ public class PreferenceEditor extends AbstractStage {
 
         // TFE, 20220102: save some rows...
 //        rowNum++;
-        // always show waypoints from file level in maps
+        // always show track symbols in maps
         addPrefInput(
                 "Show track symbols:", trackSymbolChkBox, 
                 "Show start/end symbols for tracks", 
                 2, rowNum);
 
         rowNum++;
-        // alway show waypoints from file level in maps
+        // always show waypoints from file level in maps
         addPrefInput(
-                "Show track symbols:", waypointNameChkBox, 
+                "Show waypoint names:", waypointNameChkBox, 
                 "Show waypoint names", 
                 0, rowNum);
 

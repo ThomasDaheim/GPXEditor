@@ -23,43 +23,33 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.fxyz3d;
+package tf.gpx.edit.panorama;
 
-import javafx.geometry.Point3D;
-import javafx.scene.transform.Rotate;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
- * Any cylinder that has a direction.
+ * Viewer for the "horizon" for a given LatLon position.
+ * 
+ * It calculates for a given distance range the angle to look up / down for each direction to the horizon.
+ * The 
  * 
  * @author thomas
  */
-public interface IDirection {
-    public static enum Direction {
-        // x-Direction is left-right
-        X(Rotate.Z_AXIS),
-        // y-Direction is up-down
-        Y(null),
-        // z-Direction is front-back
-        Z(Rotate.X_AXIS);
-        
-        private final Point3D rotationPoint;
-        
-        private Direction(final Point3D rotate) {
-            rotationPoint = rotate;
-        }
-        
-        public Point3D getRotationPoint() {
-            return rotationPoint;
-        }
-        
-        public static Direction ticDirection(final Direction axisDirection) {
-            if (Direction.Y.equals(axisDirection)) {
-                return Direction.X;
-            } else {
-                return Direction.Y;
-            }
-        }
+public class PanoramaViewer {
+    // this is a singleton for everyones use
+    // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
+    private final static PanoramaViewer INSTANCE = new PanoramaViewer();
+
+    private PanoramaViewer() {
     }
     
-    public Direction getDirection();
+    public static PanoramaViewer getInstance() {
+        return INSTANCE;
+    }
+    
+    public void showPanorama(final IGeoCoordinate loc) {
+        PanoramaViewer_Canvas.getInstance().showPanorama(loc);
+
+//        PanoramaViewer_Chart.getInstance().showPanorama(loc);
+    }
 }

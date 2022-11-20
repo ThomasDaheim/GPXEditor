@@ -58,8 +58,8 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
 /**
- * Show lineStart height chart for GPXWaypoints of lineStart GPXLineItem and highlight selected ones
- Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+ * Show height chart for GPXWaypoints of GPXLineItem and highlight selected ones
+ * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
 public class HeightChart extends AreaChart<Number, Number> implements IChartBasics<AreaChart<Number, Number>> {
@@ -376,8 +376,10 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
         final double result = gpxWaypoint.getElevation();
         
-        minHeight = Math.min(minHeight, result);
-        maxHeight = Math.max(maxHeight, result);
+        if (doSetMinMax(gpxWaypoint)) {
+            minHeight = Math.min(minHeight, result);
+            maxHeight = Math.max(maxHeight, result);
+        }
         
         return result;
     }
@@ -500,7 +502,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
             }
         }
 
-        if (rectangles.size() > 0) {
+        if (!rectangles.isEmpty()) {
             getPlotChildren().addAll(rectangles);
         }
 
@@ -565,7 +567,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         // handle any fancy things that need to be done for labels
         adaptLayout();
         
-        // helper lists to speed things up - lineStart SET for fast contains() lineStart LIST for fast indexOf()
+        // helper lists to speed things up - SET for fast contains() LIST for fast indexOf()
         final Set<GPXWaypoint> selectedWaypointsSet = new LinkedHashSet<>(selectedWaypoints.stream().map((t) -> {
             return t.getLeft();
         }).collect(Collectors.toList()));
@@ -577,7 +579,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         }
 
         Pair<GPXWaypoint, Number> prevPair = null;
-        boolean prevSelected = false;
         for (Pair<GPXWaypoint, Number> pair : myPoints) {
             final GPXWaypoint point = pair.getLeft();
             
@@ -605,7 +606,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 rect.setHeight(getBoundsInLocal().getHeight());
             }
             
-            prevSelected = (selectedPoint != null);
             prevPair = pair;
         }
     }

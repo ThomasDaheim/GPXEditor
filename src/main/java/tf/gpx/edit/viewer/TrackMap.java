@@ -37,8 +37,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.LinkedHashSet;
@@ -81,8 +84,10 @@ import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.extension.LineStyle;
+import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
 import tf.gpx.edit.image.MapImage;
 import tf.gpx.edit.image.MapImageViewer;
@@ -105,6 +110,8 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.leafletmap.ScaleControlConfig;
 import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.sun.SunPathForDay;
+import tf.gpx.edit.sun.SunPathForSpecialsDates;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.ObjectsHelper;
@@ -264,6 +271,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         CIRCLEMARKER
     }
     
+    // TFE; 20220309: store stuff in properties instead of userdata for context menu
+    private enum KnowProperties {
+        LATLON,
+        WAYPOINT,
+        MARKER,
+        ROUTE
+    }
+    
     private int varNameSuffix = 1;
             
     // TFE, 20181009: store gpxRoute under cursor
@@ -275,6 +290,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static String NOT_SHOWN = "Not shown";
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
+    
+    private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
     
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
@@ -306,7 +323,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private JSObject window;
     // need to have instance variable for the jscallback to avoid garbage collection...
     // https://stackoverflow.com/a/41908133
-    private JSCallback jscallback;
+    private TrackMapCallback jscallback;
     
     private boolean isLoaded = false;
     private boolean isInitialized = false;
@@ -353,7 +370,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 MapLayerUsage.getInstance().getEnabledSortedOverlays(), 
                 new ZoomControlConfig(true, ControlPosition.TOP_RIGHT), 
                 new ScaleControlConfig(true, ControlPosition.BOTTOM_LEFT, true),
-                new LatLonElev(48.137154, 11.576124));
+                GPXEditorParameters.getInstance().getMapCenter());
 
         final CompletableFuture<Worker.State> cfMapLoadState = displayMap(myMapConfig);
         cfMapLoadState.whenComplete((Worker.State workerState, Throwable u) -> {
@@ -382,6 +399,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
     private void initialize() {
         if (!isInitialized) {
+//            System.out.println("Start map initialize: " + Instant.now());
 //            // get console.log output in java as well
 //            // https://stackoverflow.com/a/49077436
 //            com.sun.javafx.webkit.WebConsoleListener.setDefaultListener(
@@ -393,11 +411,13 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             });
         
             window = (JSObject) execScript("window"); 
-            jscallback = new JSCallback(this);
+            jscallback = new TrackMapCallback(this);
             window.setMember("jscallback", jscallback);
             // TFE, 20210116: support any console.log() calls from any loaded js
             window.setMember("console", jscallback); // "console" object is now known to JavaScript
             //execScript("jscallback.selectGPXWaypoints(\"Test\");");
+
+//            System.out.println(" Callback set: " + Instant.now());
 
             addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
@@ -508,112 +528,134 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
             addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
             setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
+            
+            // TFE, 20220309: support for sunrise / sunset lines on map
+            addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
+            addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
+
+//            System.out.println("  JS+CSS loaded: " + Instant.now());
 
             myMapPane = (Pane) getParent();
             
-            // TFE, 20200317: add heat map
-            final HeatMapPane heatMapPane = HeatMapPane.getInstance();
-            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                if (newValue != null && newValue != oldValue) {
-                    heatMapPane.setSize(myMapPane.getWidth(), newValue.doubleValue());
-                    if (heatMapPane.isVisible()) {
-                        updateHeatMapPane();
+            Platform.runLater(() -> {
+                // TFE, 20200317: add heat map
+                final HeatMapPane heatMapPane = HeatMapPane.getInstance();
+                myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    if (newValue != null && newValue != oldValue) {
+                        heatMapPane.setSize(myMapPane.getWidth(), newValue.doubleValue());
+                        if (heatMapPane.isVisible()) {
+                            updateHeatMapPane();
+                        }
                     }
-                }
-            });
-            myMapPane.prefWidthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                if (newValue != null && newValue != oldValue) {
-                    heatMapPane.setSize(newValue.doubleValue(), myMapPane.getHeight());
-                    if (heatMapPane.isVisible()) {
-                        updateHeatMapPane();
+                });
+                myMapPane.prefWidthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    if (newValue != null && newValue != oldValue) {
+                        heatMapPane.setSize(newValue.doubleValue(), myMapPane.getHeight());
+                        if (heatMapPane.isVisible()) {
+                            updateHeatMapPane();
+                        }
                     }
-                }
-            });
-            heatMapPane.setSize(myMapPane.getWidth(), myMapPane.getHeight());
-            myMapPane.getChildren().add(heatMapPane); 
-            heatMapPane.toFront();
-            heatMapPane.setVisible(false);
-            
-            // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
-            // TFE, 20191119: show chartsPane pane instead to support multiple charts (height, speed, ...)
-            final ChartsPane chartsPane = ChartsPane.getInstance();
-            // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
-//            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
-            final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
-            chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
-            chartsPane.setMinHeight(60.0);
-            chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                // store height in percentage as preference
-                if (newValue != null && newValue != oldValue) {
-                    GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
-                }
-            });
-            myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-                // resize chartsPane with pane - not done via bind() anymore
-                if (newValue != null && newValue != oldValue) {
-                    // reload preference - might have changed in the meantime
-                    final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
-                    final double newHeight = newValue.doubleValue() * perc;
-                    chartsPane.setPrefHeight(newHeight);
-//                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
-                }
-            });
-            chartsPane.prefWidthProperty().bind(myMapPane.prefWidthProperty());
-            // TODO: scale chartsPane in x direction - not happening automatically ???
-            AnchorPane.setBottomAnchor(chartsPane, 20.0);
-            myMapPane.getChildren().add(chartsPane); 
-            chartsPane.toFront();
-            chartsPane.setVisible(false);
+                });
+                heatMapPane.setSize(myMapPane.getWidth(), myMapPane.getHeight());
+                myMapPane.getChildren().add(heatMapPane); 
+                heatMapPane.toFront();
+                heatMapPane.setVisible(false);
 
-            // support drawing rectangle with mouse + cntrl
-            // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
-            getWebView().setOnMousePressed((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlPressed(event);
-                    event.consume();
-                }
-            });
-            getWebView().setOnMouseDragged((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlDragged(event);
-                    event.consume();
-                }
-            });
-            getWebView().setOnMouseReleased((MouseEvent event) -> {
-                if(event.isControlDown()) {
-                    handleMouseCntrlReleased(event);
-                    event.consume();
-                }
-            });
-            
-//            // TODO: disable heatmap while dragging
-            
-            // we want our own context menu!
-            getWebView().setContextMenuEnabled(false);
-            createContextMenu();
+//                System.out.println("  Heatmap loaded: " + Instant.now());
 
-            // now we have loaded TrackMarker.js...
-            MarkerManager.getInstance().loadSpecialIcons();
+                // TFE, 20190712: show heightchart above trackSegments - like done in leaflet-elevation
+                // TFE, 20191119: show chartsPane pane instead to support multiple charts (height, speed, ...)
+                final ChartsPane chartsPane = ChartsPane.getInstance();
+                // TFE, 20200214: allow resizing of pane and store height as percentage in preferences
+    //            chartsPane.prefHeightProperty().bind(Bindings.multiply(parentPane.heightProperty(), 0.25));
+                final double percentage = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
+                chartsPane.setPrefHeight(myMapPane.getHeight() * percentage);
+                chartsPane.setMinHeight(60.0);
+                chartsPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    // store height in percentage as preference
+                    if (newValue != null && newValue != oldValue) {
+                        GPXEditorPreferences.CHARTSPANE_HEIGHT.put(newValue.doubleValue() / myMapPane.getHeight());
+                    }
+                });
+                myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                    // resize chartsPane with pane - not done via bind() anymore
+                    if (newValue != null && newValue != oldValue) {
+                        // reload preference - might have changed in the meantime
+                        final double perc = GPXEditorPreferences.CHARTSPANE_HEIGHT.getAsType();
+                        final double newHeight = newValue.doubleValue() * perc;
+                        chartsPane.setPrefHeight(newHeight);
+    //                    System.out.println("newValue: " + newValue.doubleValue() + ", chartHeight: " + chartsPane.getHeight());
+                    }
+                });
+                chartsPane.prefWidthProperty().bind(myMapPane.prefWidthProperty());
+                // TODO: scale chartsPane in x direction - not happening automatically ???
+                AnchorPane.setBottomAnchor(chartsPane, 20.0);
+                myMapPane.getChildren().add(chartsPane); 
+                chartsPane.toFront();
+                chartsPane.setVisible(false);
+                
+//                System.out.println("  Chartspane loaded: " + Instant.now());
 
-            // now we can set the search icon to use
-            execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
-            
-            // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
-            isInitialized = true;
+                // support drawing rectangle with mouse + cntrl
+                // http://www.naturalprogramming.com/javagui/javafx/DrawingRectanglesFX.java
+                getWebView().setOnMousePressed((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlPressed(event);
+                        event.consume();
+                    }
+                });
+                getWebView().setOnMouseDragged((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlDragged(event);
+                        event.consume();
+                    }
+                });
+                getWebView().setOnMouseReleased((MouseEvent event) -> {
+                    if(event.isControlDown()) {
+                        handleMouseCntrlReleased(event);
+                        event.consume();
+                    }
+                });
 
-            // TFE, 20200713: now we can enable the overlays per baselayer
-            setOverlaysForBaselayer();
-            // set current layer
-            setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-            
-            // TFE, 20190901: load preferences - now things are up & running
-            myGPXEditor.initializeAfterMapLoaded();
-            
+    //            // TODO: disable heatmap while dragging
+
+                // we want our own context menu!
+                getWebView().setContextMenuEnabled(false);
+                createContextMenu();
+
+//                System.out.println("  Contextmenu loaded: " + Instant.now());
+
+                // now we have loaded TrackMarker.js...
+                MarkerManager.getInstance().loadSpecialIcons();
+
+                // now we can set the search icon to use
+                execScript("setSearchResultIcon(\"" + MarkerManager.SpecialMarker.SearchResultIcon.getMarkerIcon().getIconJSName() + "\");");
+
+//                System.out.println("  Icons loaded: " + Instant.now());
+
+                // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
+                isInitialized = true;
+
+                // TFE, 20200713: now we can enable the overlays per baselayer
+                setOverlaysForBaselayer();
+                // set current layer
+                setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+
+//                System.out.println("  Overlays loaded: " + Instant.now());
+
+                // TFE, 20190901: load preferences - now things are up & running
+                myGPXEditor.initializeAfterMapLoaded();
+
+//                System.out.println("  Initalize after map loaded completed: " + Instant.now());
+            });
+
             // TFE, 20200713: show empty map in any case - no need to have a gpx loaded
             // center to current location - NOT WORKING, see LeafletMapView
 //            execScript("centerToLocation();");
             setVisible(true);
             
+//            System.out.println("  Set visible: " + Instant.now());
+
             // TFE, 20211105: initialize bounding box here
             final Double[] bounds = new Double[4];
             final JSObject jsValue = (JSObject) execScript("getMapBounds();");
@@ -626,6 +668,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 bounds[i] = Double.valueOf(slotVal.toString());
             }
             mapBounds = new BoundingBox(bounds[0], bounds[1], bounds[2]-bounds[0], bounds[3]-bounds[1]);
+
+//            System.out.println("Done map initialize: " + Instant.now());
         }
     }
     
@@ -713,19 +757,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // TFE; 20210115: open coordinate in browser (hopefully google...)
         showCord.setOnAction((t) -> {
             if (myGPXEditor.getHostServices() != null) {
-                assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
-                final LatLonElev latlong = ObjectsHelper.uncheckedCast(contextMenu.getUserData());
+                assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+                final LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
 
-                GPXWaypoint curWaypoint = null;
-                if ((showCord.getUserData() != null) && (showCord.getUserData() instanceof GPXWaypoint)) {
-                    curWaypoint = ObjectsHelper.uncheckedCast(showCord.getUserData());
-                }
+                final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.WAYPOINT));
                 
                 String searchString;
                 if (curWaypoint != null && curWaypoint.getName() != null && !curWaypoint.getName().isEmpty()) {
                     searchString = curWaypoint.getName();
                 } else {
-                    searchString = latlong.getLatitude().toString() + " " + latlong.getLongitude().toString();
+                    searchString = curLocation.getLatitude().toString() + " " + curLocation.getLongitude().toString();
                 }
 
                 try {
@@ -741,50 +782,104 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         final MenuItem showHorizon = new MenuItem("Show Horizon");
         showHorizon.setOnAction((event) -> {
-            assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
-            LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getUserData());
+            assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+            LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
 
-            if ((showHorizon.getUserData() != null) && (showHorizon.getUserData() instanceof GPXWaypoint)) {
-                GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(showHorizon.getUserData());
+            final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.WAYPOINT));
+            if (curWaypoint != null) {
                 curLocation = new LatLonElev(curWaypoint.getLatitude(), curWaypoint.getLongitude(), curWaypoint.getElevation());
             }
 
             myGPXEditor.showHorizon(curLocation);
         });
+        
+        // TFE; 20220309: support to show sunrise / sunset directions
+        final MenuItem showSunriseSunset = new MenuItem("Show Sunrise/Sunset");
+        showSunriseSunset.setOnAction((event) -> {
+            assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+            LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
+
+            final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.WAYPOINT));
+            if (curWaypoint != null) {
+                curLocation = new LatLonElev(curWaypoint.getLatitude(), curWaypoint.getLongitude(), curWaypoint.getElevation());
+            }
+
+            // get data and add as lines AND make sure those get ereased on changing of location
+            final GregorianCalendar time = GregorianCalendar.from(ZonedDateTime.now());
+            time.setTimeZone(TimeZoneProvider.getInstance().getTimeZone(curLocation));
+            final SunPathForDay sunPathForDay = new SunPathForDay(time, curLocation, 69.29);
+            sunPathForDay.calcSunriseSunsetForHorizon();
+            
+//            final StringBuilder builder = new StringBuilder();
+//            if (sunPathForDay.sunNeverRises()) {
+//                builder.append("The sun doesn't rise today");
+//            } else if (sunPathForDay.getFirstSunriseAboveHorizon() == null) {
+//                builder.append("The sun doesn't rise above the horizon today");
+//            }
+//            if (sunPathForDay.sunNeverSets() && sunPathForDay.getLastSunsetBelowHorizon() == null) {
+//                builder.append("The sun doesn't set today");
+//                return;
+//            }
+            // show lines to rise & set locations
+            if (sunPathForDay.getFirstSunriseAboveHorizon() != null) {
+                final IGeoCoordinate sunRiseLoc = sunPathForDay.getSunriseAboveHorizon().get(sunPathForDay.getSunriseAboveHorizon().firstKey()).getValue();
+                execScript("setSunrise(" + transformToJavascriptArray(Arrays.asList(curLocation, sunRiseLoc)) + ");");
+
+//                final ZonedDateTime sunRise = sunPathForDay.getFirstSunriseAboveHorizon().toZonedDateTime();
+//                System.out.println("Sun rises " + TIME_FORMATTER.format(sunRise) + " over " + sunRiseLoc);
+//                builder.append("The sun rises ").append(TIME_FORMATTER.format(sunRise)).append("<br />&nbsp;&nbsp;&nbsp;over ").append(sunRiseLoc);
+            }
+            if (sunPathForDay.getLastSunsetBelowHorizon() != null) {
+                final IGeoCoordinate sunSetLoc = sunPathForDay.getSunsetBelowHorizon().get(sunPathForDay.getSunsetBelowHorizon().lastKey()).getValue();
+                execScript("setSunset(" + transformToJavascriptArray(Arrays.asList(curLocation, sunSetLoc)) + ");");
+
+//                final ZonedDateTime sunSet = sunPathForDay.getLastSunsetBelowHorizon().toZonedDateTime();
+//                System.out.println("Sun sets " + TIME_FORMATTER.format(sunSet) + " below " + sunSetLoc);
+//                if (!builder.equals(time)) {
+//                    builder.append("<br />");
+//                }
+//                builder.append("The sun sets ").append(TIME_FORMATTER.format(sunSet)).append("<br />&nbsp;&nbsp;&nbsp;below ").append(sunSetLoc);
+            }
+//            execScript("setSunriseSunsetPopup(\'" + 
+//                    StringEscapeUtils.escapeEcmaScript(builder.toString()).
+//                            replace("'", "u0027").
+//                            replace("\"", "u0022") + 
+//                    "\');");
+
+            // let our central class handle the output cases...
+            SunPathForSpecialsDates.TODAY.setDate(time);
+            SunPathForSpecialsDates.TODAY.setPath(sunPathForDay); 
+            final String tooltip = SunPathForSpecialsDates.TODAY.toString().replace("\n", "<br />").replace("\t", " ");
+            execScript("setSunriseSunsetPopup(\'" + StringEscapeUtils.escapeEcmaScript(tooltip) + "\');");
+        });
 
         final MenuItem editWaypoint = new MenuItem("Edit Waypoint");
         editWaypoint.setOnAction((event) -> {
-            if ((editWaypoint.getUserData() != null) && (editWaypoint.getUserData() instanceof GPXWaypoint)) {
-                final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(showCord.getUserData());
+            final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.WAYPOINT));
+            if (curWaypoint != null) {
                 myGPXEditor.editGPXWaypoints(Arrays.asList(curWaypoint));
             }
         });
 
         final MenuItem addWaypoint = new MenuItem("Add Waypoint");
         addWaypoint.setOnAction((event) -> {
-            final Object userData = addWaypoint.getUserData();
+            final GPXWaypoint curWaypoint = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.WAYPOINT));
             // check if a waypoint is under the cursor in leaflet - if yes, use its values
-            GPXWaypoint curWaypoint = null;
-            if (userData != null && (userData instanceof GPXWaypoint)) {
-                curWaypoint = (GPXWaypoint) userData;
-            }
-
             if (curWaypoint == null) {
                 if (!CollectionUtils.isEmpty(myGPXLineItems)) {
                     // we might be routing...
                     execScript("stopRouting(false);");
 
-                    assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
-                    LatLonElev latlong = (LatLonElev) contextMenu.getUserData();
+                    assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+                    LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
 
                     // check if a marker is under the cursor in leaflet - if yes, use its values
-                    CurrentMarker curMarker = null;
-                    if (userData != null && (userData instanceof CurrentMarker)) {
-                        curMarker = (CurrentMarker) userData;
-                        latlong = curMarker.latlong;
+                    final CurrentMarker curMarker = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.MARKER));
+                    if (curMarker != null) {
+                        curLocation = curMarker.latlong;
                     }
 
-                    final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), latlong.getLatitude(), latlong.getLongitude());
+                    final GPXWaypoint newGPXWaypoint = new GPXWaypoint(myGPXLineItems.get(0).getGPXFile(), curLocation.getLatitude(), curLocation.getLongitude());
 
                     if (curMarker != null) {
                         // set name / description / comment from search cmdString marker options (if any)
@@ -849,10 +944,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                             final List<GPXWaypoint> waypoints = myGPXLineItems.get(0).getGPXFile().getGPXWaypoints();
                             AssignElevation.getInstance().assignElevationNoUI(Arrays.asList(waypoints.get(waypoints.size()-1)));
                         }
-                    });
 
-                    // redraw height chartsPane
-                    ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
+                        // redraw height chartsPane
+                        ChartsPane.getInstance().setGPXWaypoints(myGPXLineItems, true);
+                    });
                 }
             } else {
                 myGPXEditor.deleteWaypoints(Arrays.asList(curWaypoint));
@@ -861,12 +956,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         final MenuItem addRoute = new MenuItem("Add Route");
         addRoute.setOnAction((event) -> {
+            final GPXRoute curRoute = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.ROUTE));
             // check if a gpxRoute is under the cursor in leaflet - if yes, use its values
-            GPXRoute curRoute = null;
-            if (addRoute.getUserData() != null) {
-                curRoute = (GPXRoute) addRoute.getUserData();
-            }
-            
             if (curRoute == null) {
                 // we might be routing...
                 execScript("stopRouting(false);");
@@ -912,28 +1003,62 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     // we might be routing...
                     execScript("stopRouting(false);");
             
-                    assert (contextMenu.getUserData() != null) && (contextMenu.getUserData() instanceof LatLonElev);
-                    final LatLonElev latlong = (LatLonElev) contextMenu.getUserData();
+                    assert (contextMenu.getProperties().get(KnowProperties.LATLON) != null);
+                    final LatLonElev curLocation = ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON));
 
-                    searchItems(item, latlong);
+                    searchItems(item, curLocation);
                 });
 
                 searchPoints.getItems().add(search);
             }
         }
+        
+        // TFE, 20220814: add goto menu item
+        final MenuItem gotoCoordinate = new MenuItem("Goto Coordinate");
+        gotoCoordinate.setOnAction((event) -> {
+            EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
+            if (EnterLatLon.getInstance().wasActionButtonPressed()) {
+                final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
+                if (latLon != null) {
+                    // mark this on the map
+                    // show as search result with same icon
+                    execScript("clearSearchResults();");
+                    final String result = 
+                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
+                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
+                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
 
-        contextMenu.getItems().addAll(showCord, showHorizon, editWaypoint, addWaypoint, addRoute, separator, searchPoints);
+                    // pan to it
+                    panTo(latLon.getLatitude(), latLon.getLongitude());
+                }
+            }
+        });
+        
+        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, showHorizon, showSunriseSunset);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("X", observable, oldValue, newValue, contextMenu, showCord, showHorizon, editWaypoint, addWaypoint, addRoute);
+            updateContextMenu("X", observable, oldValue, newValue, contextMenu, 
+                    showCord, 
+                    showHorizon, 
+                    showSunriseSunset, 
+                    editWaypoint, 
+                    addWaypoint, 
+                    addRoute);
         });
         contextMenu.anchorYProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, showCord, showHorizon, editWaypoint, addWaypoint, addRoute);
+            updateContextMenu("Y", observable, oldValue, newValue, contextMenu, 
+                    showCord, 
+                    showHorizon, 
+                    showSunriseSunset, 
+                    editWaypoint, 
+                    addWaypoint, 
+                    addRoute);
         });
 
         getWebView().setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
+                execScript("hideSunriseSunset()");
                 contextMenu.show(getWebView(), e.getScreenX(), e.getScreenY());
             } else {
                 contextMenu.hide();
@@ -1009,43 +1134,45 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private void updateContextMenu(
             final String coord,
             final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue,
-            final ContextMenu contextMenu, final MenuItem showCord, final MenuItem showHorizon, final MenuItem editWaypoint, final MenuItem addWaypoint, final MenuItem addRoute) {
+            final ContextMenu contextMenu, 
+            final MenuItem showCord, 
+            final MenuItem showHorizon, 
+            final MenuItem showSunriseSunset, 
+            final MenuItem editWaypoint, 
+            final MenuItem addWaypoint, 
+            final MenuItem addRoute) {
         // TFE, 20200316: first time not all values are set...
-        if (newValue != null && !Double. isNaN(contextMenu.getAnchorX()) && !Double. isNaN(contextMenu.getAnchorY())) {
-            LatLonElev latLong;
+        if (newValue != null && !Double.isNaN(contextMenu.getAnchorX()) && !Double.isNaN(contextMenu.getAnchorY())) {
+            LatLonElev latLon;
             if ("X".equals(coord)) {
-                latLong = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
+                latLon = pointToLatLong(newValue.doubleValue(), contextMenu.getAnchorY());
             } else {
-                latLong = pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue());
+                latLon = pointToLatLong(contextMenu.getAnchorX(), newValue.doubleValue());
             }
-            contextMenu.setUserData(latLong);
+            contextMenu.getProperties().put(KnowProperties.LATLON, latLon);
 
             // TFE, 20200121: show height with coordinate in context menu
-            final double elevation = elevationProvider.getElevationForCoordinate(latLong);
-            if (elevation != IElevationProvider.NO_ELEVATION) {
-                showCord.setText(LatLonHelper.LatLongToString(latLong) + ", " + GPXLineItem.DOUBLE_FORMAT_2.format(elevation) + " m");
-            } else {
-                showCord.setText(LatLonHelper.LatLongToString(latLong));
-            }
-            showCord.setUserData(currentGPXWaypoint);
+            latLon.setElevation(elevationProvider.getElevationForCoordinate(latLon));
+            showCord.setText(latLon.toString());
 
-            showHorizon.setUserData(currentGPXWaypoint);
+            contextMenu.getProperties().put(KnowProperties.WAYPOINT, currentGPXWaypoint);
+
+            contextMenu.getProperties().put(KnowProperties.MARKER, currentMarker);
+
+            contextMenu.getProperties().put(KnowProperties.ROUTE, currentGPXRoute);
 
             // TFE, 20210116: separate add & edit waypoint
-            editWaypoint.setUserData(currentGPXWaypoint);
             editWaypoint.setDisable((currentGPXWaypoint == null));
             editWaypoint.setVisible(!editWaypoint.isDisable());
             
             if (currentGPXWaypoint != null) {
                 addWaypoint.setText("Delete Waypoint");
-                addWaypoint.setUserData(currentGPXWaypoint);
             } else {
                 if (currentMarker != null) {
                     addWaypoint.setText("Add Waypoint from " + currentMarker.searchItem.name());
                 } else {
                     addWaypoint.setText("Add Waypoint");
                 }
-                addWaypoint.setUserData(currentMarker);
             }
             // TFE, 20210116: don't show for nor items
             addWaypoint.setDisable(CollectionUtils.isEmpty(myGPXLineItems));
@@ -1056,7 +1183,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             } else {
                 addRoute.setText("Add Route");
             }
-            addRoute.setUserData(currentGPXRoute);
             // TFE, 20210116: don't show for nor items
             addRoute.setDisable(CollectionUtils.isEmpty(myGPXLineItems));
             addRoute.setVisible(!addRoute.isDisable());
@@ -1134,6 +1260,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
         // TFE, 20200206: store number of filewaypoints for later use...
         int fileWaypointCount = 0;
+        // TFE, 20221105: see if we also show a complete file - in that case we include the file waypoints in the bounds
+        boolean fileIsShown = false;
         for (GPXLineItem lineItem : myGPXLineItems) {
 //            System.out.println("Processing item: " + lineItem);
             
@@ -1141,7 +1269,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             if (lineItem.isGPXFile()) {
                 masterList.add(lineItem.getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
-            } else if (alwayShowFileWaypoints) {
+                fileIsShown = true;
+            } else if (alwayShowFileWaypoints && fileWaypointCount == 0) {
+                // TFE, 20220904: only add file waypoints once even if multiple line items are shown
                 // TFE, 20190818: add file waypointsToShow as well, even though file isn't selected
                 masterList.add(lineItem.getGPXFile().getGPXWaypoints());
                 fileWaypointCount = masterList.get(0).size();
@@ -1176,7 +1306,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         
         // TFE, 20200206: in case we have only file waypointsToShow we need to include them in calculation of bounds - e.g. for new, empty tracksegment
-        double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount));
+        // TFE, 20221105: if we click on a file we want to see the whole thing and not only the waypoints from trackes & routes
+        final double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount) && !fileIsShown);
 
         // TFE, 20190822: setMapBounds fails for no waypointsToShow...
         if (bounds[4] > 0d && waypointCount > 0) {
@@ -1827,6 +1958,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         updateMarker(layer, point, StringEscapeUtils.escapeEcmaScript(markerTitle), marker);
     }
     
+    public IGeoCoordinate getMapCenter() {
+        return new LatLonElev(mapBounds.getCenterX(), mapBounds.getCenterY());
+    }
+    
     public void mapViewChanged(final BoundingBox newBoundingBox) {
         mapBounds = newBoundingBox;
         HeatMapPane.getInstance().restore();
@@ -1906,10 +2041,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    private void setPictureIconsButtonState(final boolean state) {
+    protected void setPictureIconsButtonState(final boolean state) {
         execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
     }
-    private void togglePictureIcons(final Boolean visible) {
+    protected void togglePictureIcons(final Boolean visible) {
         // save into preferences
         GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
         
@@ -1917,7 +2052,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             hidePicturePopup(currentMapImageId);
         }
     }
-    private void showPicturePopup(final Integer id) {
+    protected void showPicturePopup(final Integer id) {
         currentMapImageId = id;
         
         mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
@@ -1928,7 +2063,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         mapImagePopOver.setY(mouseLocation.getY());
         mapImagePopOver.show(myMapPane.getScene().getWindow());
     }
-    private void hidePicturePopup(final Integer id) {
+    protected void hidePicturePopup(final Integer id) {
         currentMapImageId = null;
         mapImagePopOver.hide();
     }
@@ -2103,117 +2238,4 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         sb.append("]");
         return sb.toString();
     }   
-    
-    public class JSCallback {
-        // call back for jscallback :-)
-        private final TrackMap myTrackMap;
-        
-        private JSCallback() {
-            myTrackMap = null;
-        }
-        
-        public JSCallback(final TrackMap trackMap) {
-            myTrackMap = trackMap;
-        }
-        
-        public void selectMarker(final String marker, final Double lat, final Double lon, final Boolean shiftPressed) {
-            //System.out.println("Marker selected: " + marker + ", " + lat + ", " + lon);
-            myTrackMap.selectGPXWaypointFromMarker(marker, new LatLonElev(lat, lon), shiftPressed);
-        }
-        
-        public void moveMarker(final String marker, final Double startlat, final Double startlon, final Double endlat, final Double endlon) {
-//            System.out.println("Marker moved: " + marker + ", " + startlat + ", " + startlon + ", " + endlat + ", " + endlon);
-            myTrackMap.moveGPXWaypoint(marker, new LatLonElev(endlat, endlon));
-        }
-        
-        public void updateRoute(final String event, final String route, final String coords) {
-//            System.out.println(event + ", " + route + ", " + coords);
-            
-            final List<LatLonElev> latlongs = new ArrayList<>();
-            // parse coords string back into LatLongs
-            for (String latlongstring : coords.split(" - ")) {
-                final String[] temp = latlongstring.split(", ");
-                assert temp.length == 2;
-                
-                final Double lat = Double.parseDouble(temp[0].substring(4));
-                final Double lon = Double.parseDouble(temp[1].substring(4));
-                latlongs.add(new LatLonElev(lat, lon));
-            }
-            
-            myTrackMap.updateGPXRoute(route, latlongs);
-        }
-        
-        public void log(final String output) {
-            System.out.println(output);
-        }
-        
-        public void error(String text) {
-            System.err.println(text);
-        }
-
-        public void registerMarker(final String marker, final Double lat, final Double lon) {
-            myTrackMap.setCurrentMarker(marker, lat, lon);
-            //System.out.println("Marker registered: " + marker + ", " + lat + ", " + lon);
-        }
-
-        public void deregisterMarker(final String marker, final Double lat, final Double lon) {
-            myTrackMap.removeCurrentMarker();
-            //System.out.println("Marker deregistered: " + marker + ", " + lat + ", " + lon);
-        }
-        
-        public void registerWaypoint(final String waypoint, final Double lat, final Double lon) {
-            myTrackMap.setCurrentWaypoint(waypoint, lat, lon);
-//            System.out.println("Waypoint registered: " + waypoint + ", " + lat + ", " + lon);
-        }
-
-        public void deregisterWaypoint(final String waypoint, final Double lat, final Double lon) {
-            myTrackMap.removeCurrentWaypoint();
-//            System.out.println("Waypoint deregistered: " + waypoint + ", " + lat + ", " + lon);
-        }
-        
-        public void registerRoute(final String route, final Double lat, final Double lon) {
-            myTrackMap.setCurrentGPXRoute(route, lat, lon);
-//            System.out.println("Route registered: " + route + ", " + lat + ", " + lon);
-        }
-
-        public void deregisterRoute(final String route, final Double lat, final Double lon) {
-            myTrackMap.removeCurrentGPXRoute();
-//            System.out.println("Route deregistered: " + route + ", " + lat + ", " + lon);
-        }
-
-        public void mapViewChanged(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
-            myTrackMap.mapViewChanged(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
-//            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
-        }
-
-        public void mapViewChanging(final String event, final Double minLat, final Double minLon, final Double maxLat, final Double maxLon) {
-            myTrackMap.mapViewChanging(new BoundingBox(minLat, minLon, maxLat-minLat, maxLon-minLon));
-//            System.out.println("mapViewChanged: " + event + ", " + ((new Date()).getTime()) + ", " + minLat + ", " + minLon + ", " + maxLat + ", " + maxLon);
-        }
-        
-        public void toggleChartsPane(final Boolean visible) {
-//            System.out.println("toggleChartsPane: " + visible);
-            myTrackMap.toggleChartsPane(visible);
-        }
-        
-        public void toggleHeatMap(final Boolean visible) {
-//            System.out.println("toggleHeatMap: " + visible);
-            myTrackMap.toggleHeatMapPane(visible);
-        }
-        
-        public void togglePictureIcons(final Boolean visible) {
-//            System.out.println("togglePictureIcons: " + visible);
-            myTrackMap.togglePictureIcons(visible);
-        }
-        
-        public void showPicturePopup(final Integer id) {
-//            System.out.println("showPicturePopup: " + id);
-            myTrackMap.showPicturePopup(id);
-        }
-        
-        public void hidePicturePopup(final Integer id) {
-//            System.out.println("hidePicturePopup: " + id);
-            myTrackMap.hidePicturePopup(id);
-        }
-    }
 }

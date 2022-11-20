@@ -1,10 +1,17 @@
 // support for javafx11 - see https://openjfx.io/openjfx-docs/#gradle
 buildscript {
     repositories {
+        mavenLocal()
         mavenCentral()
+        maven {
+          url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.0'
+        // https://github.com/ben-manes/gradle-versions-plugin
+        // task: dependencyUpdates
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.44.0'
     }
 }
 
@@ -22,6 +29,7 @@ idea {
         downloadSources = true
     }
 }
+apply plugin: 'com.github.ben-manes.versions' // provides dependencyUpdates command
 
 ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
@@ -40,7 +48,8 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.6'
+version='5.7'
+description = 'GPXEditor - JavaFX GPX file editor'
 
 repositories {
     mavenLocal() {
@@ -65,7 +74,7 @@ dependencies {
 //    def javafx_version='11.0.2'
 //    def javafx_version='14'
     def javafx_version='15.0.1'
-//    def javafx_version='17.0.1'
+//    def javafx_version='17.0.2'
     implementation "org.openjfx:javafx-base:$javafx_version:$platform"
     implementation "org.openjfx:javafx-graphics:$javafx_version:$platform"
     implementation "org.openjfx:javafx-controls:$javafx_version:$platform"
@@ -75,17 +84,18 @@ dependencies {
     implementation "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    implementation 'tf.JavaHelper:JavaHelper:1.14'
+    implementation 'tf.JavaHelper:JavaHelper:1.15'
 
     implementation 'commons-cli:commons-cli:1.5.0'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.9'
+    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.7'
+    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.9.0'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.22'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.1'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
     
     implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
@@ -100,12 +110,15 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.0'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.14.0'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.14.0'
+
     implementation group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
     implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '15-r2'
     implementation group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
-    implementation group: 'org.jfxtras', name: 'jmetro', version: '11.6.15'
+    implementation group: 'org.jfxtras', name: 'jmetro', version: '11.6.16'
 
     implementation 'uk.com.robust-it:cloning:1.9.12'
     
@@ -114,25 +127,31 @@ dependencies {
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
     
-//    implementation 'org.jzy3d:jzy3d-api:1.0.3'
-//    implementation 'org.jzy3d:jzy3d-javafx:1.0.3'
-    
-////    // TFE, 20220109: orson charts once again
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d', version: '2.0'
-//    implementation group: 'org.jfree', name: 'org.jfree.chart3d.fx', version: '2.1'
-
     // TFE, 20220115: 3rd alternative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.5.4'
     
     // TFE, 20220201: faster list
-    implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.16'
+    implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.19'
+    
+    // sun data
+    implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
+    
+    // timezone provider
+    implementation group: 'us.dustinj.timezonemap', name: 'timezonemap', version: '4.5'
+    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.2-5'
+    
+    // TFE, 20220320: change to charts based on canvas for performance
+    // latest version compatible with javafx 15 is for 11
+    implementation 'eu.hansolo.fx:charts:17.1.25'
+    // TODO: error: error reading C:\Users\thomas\.gradle\caches\modules-2\files-2.1\eu.hansolo.fx\heatmap\17.0.11\69d60f2307f1ddb380ec3f847c255cac2c77dbba\heatmap-17.0.11.jar; java.net.URISyntaxException: Illegal character in path at index 129: file:/C:/Users/thomas/.gradle/caches/modules-2/files-2.1/eu.hansolo.fx/heatmap/17.0.11/69d60f2307f1ddb380ec3f847c255cac2c77dbba/${project.name}-${project.version}.jar
+    // implementation 'eu.hansolo.fx:heatmap:17.0.5'
     
     testImplementation group: 'junit', name: 'junit', version: '4.13.2'
     // TFE, 20220205: not working, "No test cases executed" after all the code changes...
     // new versions of the code are in "junit5.zip" for some later time when I have stamina to check this fuck-up
 //    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
     // TFE, 20210216: capture System.err() easily
-    testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.0'
+    testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.1'
 }
 
 task unzip(type: Copy) {
@@ -181,6 +200,7 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
                 // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
                 '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+                '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED',
     ]
     
 // extend Netbeans Gradle "Run" task
@@ -192,9 +212,11 @@ run {
         jvmArgs = jvmArgs.plus('-Xmx4096M')
         // profiler not working with netbeans...
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
+//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/visualvm_212/visualvm/lib/deployed/jdk16/windows-amd64/profilerinterface.dll"="C:/PROGRA~1/visualvm_212/visualvm/lib",5140')
         enableAssertions = true
     }
-//    args = ["C:\\WUTemp\\Feldmoching_20201025_Plan.gpx"]
+    args = ["-mapCenter", "46.66068859124702 11.159234046936037"]
+//    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 
 // TFE, 20211102: not working like below

@@ -11,7 +11,7 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
-Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements
+Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
@@ -23,6 +23,16 @@ Note on height data files: There are a number of data files with height data ava
 Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
+
+### Update v5.7
+
+* SunPath: show the suns  path for today / summer / winter on the HorizonViewer; show the "actual" sunrise & sunset times, taking horizon into account
+* SunPath: show direction and point of sunrise & sunset on the map
+* TimeZone: added timezone support where necessary (SunPath calculations, TimeZone overlay)
+* Performance: drastically improve speed of reading SRTM data and showing it
+* Performance: change horizon viewer to use canvas from hansolo charts
+* Updated dependencies
+* Bugfixes! Various bugs that have crept in over time are now fixed
 
 ### Update v5.6
 
@@ -372,33 +382,40 @@ Of course, such a project depends on the results of many others! I've tried to a
 
 Explicit dependencies:
 
-* 'tf.JavaHelper:JavaHelper:1.14': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
+* 'tf.JavaHelper:JavaHelper:1.15': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 
 * 'commons-cli:commons-cli:1.5.0'
 * 'commons-io:commons-io:2.11.0'
 * 'org.apache.commons:commons-lang3:3.12.0'
 * 'org.apache.commons:commons-collections4:4.4'
-* 'org.apache.commons:commons-text:1.9'
+* 'org.apache.commons:commons-text:1.10.0'
 * 'org.apache.commons:commons-math3:3.6.1'
 * 'org.apache.commons:commons-csv:1.7'
+* 'org.apache.commons:commons-compress:1.22'
 * 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-* 'org.controlsfx:controlsfx:11.1.1'
+* 'org.controlsfx:controlsfx:11.1.2'
 * 'de.jensd:fontawesomefx:8.9'
 * NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.13.0'
-* 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+* 'com.fasterxml.jackson.core:jackson-core:2.14.0'
+* 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-xml:2.14.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-csv:2.14.0'
 * 'de.grundid.opendatalab:geojson-jackson:1.14'
 * 'org.jfxtras:jfxtras-controls:15-r2'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
-* 'org.jfxtras:jmetro:11.6.15'
+* 'org.jfxtras:jmetro:11.6.16'
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'org.im4java:im4java:1.4.0'
 * 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-* 'rg.fxyz3d:fxyz3d:0.5.4'
-* 'org.magicwerk.brownies:brownies-collections:0.9.16'
+* 'org.fxyz3d:fxyz3d:0.5.4'
+* 'org.magicwerk.brownies:brownies-collections:0.9.19'
+* 'net.e175.klaus:solarpositioning:0.0.9'
+* 'us.dustinj.timezonemap:timezonemap:4.5'
+* 'com.github.luben:zstd-jni:1.5.2-5'
+* 'eu.hansolo.fx:charts:17.1.25'
 
 * 'org.junit.jupiter:junit-jupiter-api:4.13.2'
-* 'com.github.stefanbirkner:system-lambda:1.2.0'
+* 'com.github.stefanbirkner:system-lambda:1.2.1'
 
 
 Other things used internally:

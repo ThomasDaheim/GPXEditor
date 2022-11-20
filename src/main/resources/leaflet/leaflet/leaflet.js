@@ -1,15 +1,15 @@
 /* @preserve
- * Leaflet 1.7.1+master.e9bc859, a JS library for interactive maps. https://leafletjs.com
+ * Leaflet 1.8.0, a JS library for interactive maps. https://leafletjs.com
  * (c) 2010-2022 Vladimir Agafonkin, (c) 2010-2011 CloudMade
  */
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.L = {}));
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.leaflet = {}));
 })(this, (function (exports) { 'use strict';
 
-  var version = "1.7.1+master.e9bc8595";
+  var version = "1.8.0";
 
   /*
    * @namespace Util
@@ -1983,6 +1983,12 @@
   // `true` when the browser supports [SVG](https://developer.mozilla.org/docs/Web/SVG).
   var svg$1 = !!(document.createElementNS && svgCreate('svg').createSVGRect);
 
+  var inlineSvg = !!svg$1 && (function () {
+  	var div = document.createElement('div');
+  	div.innerHTML = '<svg/>';
+  	return (div.firstChild && div.firstChild.namespaceURI) === 'http://www.w3.org/2000/svg';
+  })();
+
   // @property vml: Boolean
   // `true` if the browser supports [VML](https://en.wikipedia.org/wiki/Vector_Markup_Language).
   var vml = !svg$1 && (function () {
@@ -1999,7 +2005,6 @@
   		return false;
   	}
   }());
-
 
   function userAgentContains(str) {
   	return navigator.userAgent.toLowerCase().indexOf(str) >= 0;
@@ -2039,6 +2044,7 @@
   	canvas: canvas$1,
   	svg: svg$1,
   	vml: vml,
+  	inlineSvg: inlineSvg
   };
 
   /*
@@ -4174,7 +4180,7 @@
   		return this;
   	},
 
-  	_move: function (center, zoom, data) {
+  	_move: function (center, zoom, data, supressEvent) {
   		if (zoom === undefined) {
   			zoom = this._zoom;
   		}
@@ -4184,17 +4190,22 @@
   		this._lastCenter = center;
   		this._pixelOrigin = this._getNewPixelOrigin(center);
 
-  		// @event zoom: Event
-  		// Fired repeatedly during any change in zoom level,
-  		// including zoom and fly animations.
-  		if (zoomChanged || (data && data.pinch)) {	// Always fire 'zoom' if pinching because #3530
+  		if (!supressEvent) {
+  			// @event zoom: Event
+  			// Fired repeatedly during any change in zoom level,
+  			// including zoom and fly animations.
+  			if (zoomChanged || (data && data.pinch)) {	// Always fire 'zoom' if pinching because #3530
+  				this.fire('zoom', data);
+  			}
+
+  			// @event move: Event
+  			// Fired repeatedly during any movement of the map,
+  			// including pan and fly animations.
+  			this.fire('move', data);
+  		} else if (data && data.pinch) {	// Always fire 'zoom' if pinching because #3530
   			this.fire('zoom', data);
   		}
-
-  		// @event move: Event
-  		// Fired repeatedly during any movement of the map,
-  		// including pan and fly animations.
-  		return this.fire('move', data);
+  		return this;
   	},
 
   	_moveEnd: function (zoomChanged) {
@@ -4660,6 +4671,12 @@
   			noUpdate: noUpdate
   		});
 
+  		if (!this._tempFireZoomEvent) {
+  			this._tempFireZoomEvent = this._zoom !== this._animateToZoom;
+  		}
+
+  		this._move(this._animateToCenter, this._animateToZoom, undefined, true);
+
   		// Work around webkit not firing 'transitionend', see https://github.com/Leaflet/Leaflet/issues/3689, 2693
   		setTimeout(bind(this._onZoomTransitionEnd, this), 250);
   	},
@@ -4673,12 +4690,16 @@
 
   		this._animatingZoom = false;
 
-  		this._move(this._animateToCenter, this._animateToZoom);
+  		this._move(this._animateToCenter, this._animateToZoom, undefined, true);
 
-  		// This anim frame should prevent an obscure iOS webkit tile loading race condition.
-  		requestAnimFrame(function () {
-  			this._moveEnd(true);
-  		}, this);
+  		if (this._tempFireZoomEvent) {
+  			this.fire('zoom');
+  		}
+  		delete this._tempFireZoomEvent;
+
+  		this.fire('move');
+
+  		this._moveEnd(true);
   	}
   });
 
@@ -4909,7 +4930,7 @@
   	// @aka Control.Layers options
   	options: {
   		// @option collapsed: Boolean = true
-  		// If `true`, the control will be collapsed into an icon and expanded on mouse hover or touch.
+  		// If `true`, the control will be collapsed into an icon and expanded on mouse hover, touch, or keyboard activation.
   		collapsed: true,
   		position: 'topright',
 
@@ -5201,7 +5222,7 @@
 
   		// Helps from preventing layer control flicker when checkboxes are disabled
   		// https://github.com/Leaflet/Leaflet/issues/2771
-  		var holder = document.createElement('div');
+  		var holder = document.createElement('span');
 
   		label.appendChild(holder);
   		holder.appendChild(input);
@@ -5551,6 +5572,9 @@
   	return new Scale(options);
   };
 
+  var ukrainianFlag = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="8"><path fill="#4C7BE1" d="M0 0h12v4H0z"/><path fill="#FFD500" d="M0 4h12v3H0z"/><path fill="#E0BC00" d="M0 7h12v1H0z"/></svg>';
+
+
   /*
    * @class Control.Attribution
    * @aka L.Control.Attribution
@@ -5565,10 +5589,9 @@
   	options: {
   		position: 'bottomright',
 
-  		// @option prefix: String = 'Leaflet'
+  		// @option prefix: String|false = 'Leaflet'
   		// The HTML text shown before the attributions. Pass `false` to disable.
-  		prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>'
-
+  		prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">' + (Browser.inlineSvg ? ukrainianFlag + ' ' : '') + 'Leaflet</a>'
   	},
 
   	initialize: function (options) {
@@ -5609,8 +5632,8 @@
   		}
   	},
 
-  	// @method setPrefix(prefix: String): this
-  	// Sets the text before the attributions.
+  	// @method setPrefix(prefix: String|false): this
+  	// The HTML text shown before the attributions. Pass `false` to disable.
   	setPrefix: function (prefix) {
   		this.options.prefix = prefix;
   		this._update();
@@ -5665,7 +5688,7 @@
   			prefixAndAttribs.push(attribs.join(', '));
   		}
 
-  		this._container.innerHTML = prefixAndAttribs.join(' | ');
+  		this._container.innerHTML = prefixAndAttribs.join(' <span aria-hidden="true">|</span> ');
   	}
   });
 
@@ -5815,7 +5838,7 @@
   		// If we're currently dragging this draggable,
   		// disabling it counts as first ending the drag.
   		if (Draggable._dragging === this) {
-  			this.finishDrag();
+  			this.finishDrag(true);
   		}
 
   		off(this._dragStartTarget, START, this._onDown, this);
@@ -5832,6 +5855,14 @@
   		this._moved = false;
 
   		if (hasClass(this._element, 'leaflet-zoom-anim')) { return; }
+
+  		if (e.touches && e.touches.length !== 1) {
+  			// Finish dragging to avoid conflict with touchZoom
+  			if (Draggable._dragging === this) {
+  				this.finishDrag();
+  			}
+  			return;
+  		}
 
   		if (Draggable._dragging || e.shiftKey || ((e.which !== 1) && (e.button !== 1) && !e.touches)) { return; }
   		Draggable._dragging = this;  // Prevent dragging multiple objects at once.
@@ -5853,6 +5884,7 @@
   		    sizedParent = getSizedParentNode(this._element);
 
   		this._startPoint = new Point(first.clientX, first.clientY);
+  		this._startPos = getPosition(this._element);
 
   		// Cache the scale, so that we can continuously compensate for it during drag (_onMove).
   		this._parentScale = getScale(sizedParent);
@@ -5892,7 +5924,6 @@
   			this.fire('dragstart');
 
   			this._moved = true;
-  			this._startPos = getPosition(this._element).subtract(offset);
 
   			addClass(document.body, 'leaflet-dragging');
 
@@ -5908,9 +5939,8 @@
   		this._newPos = this._startPos.add(offset);
   		this._moving = true;
 
-  		cancelAnimFrame(this._animRequest);
   		this._lastEvent = e;
-  		this._animRequest = requestAnimFrame(this._updatePosition, this, true);
+  		this._updatePosition();
   	},
 
   	_updatePosition: function () {
@@ -5934,7 +5964,7 @@
   		this.finishDrag();
   	},
 
-  	finishDrag: function () {
+  	finishDrag: function (noInertia) {
   		removeClass(document.body, 'leaflet-dragging');
 
   		if (this._lastTarget) {
@@ -5949,12 +5979,11 @@
   		enableTextSelection();
 
   		if (this._moved && this._moving) {
-  			// ensure drag is not fired after dragend
-  			cancelAnimFrame(this._animRequest);
 
   			// @event dragend: DragEndEvent
   			// Fired when the drag ends.
   			this.fire('dragend', {
+  				noInertia: noInertia,
   				distance: this._newPos.distanceTo(this._startPos)
   			});
   		}
@@ -6726,7 +6755,7 @@
   /*
    * @class LayerGroup
    * @aka L.LayerGroup
-   * @inherits Layer
+   * @inherits Interactive layer
    *
    * Used to group several layers and handle them as one. If you add it to the map,
    * any layers added or removed from the group will be added/removed on the map as
@@ -7384,11 +7413,13 @@
 
   		// @option title: String = ''
   		// Text for the browser tooltip that appear on marker hover (no tooltip by default).
+  		// [Useful for accessibility](https://leafletjs.com/examples/accessibility/#markers-must-be-labelled).
   		title: '',
 
-  		// @option alt: String = ''
-  		// Text for the `alt` attribute of the icon image (useful for accessibility).
-  		alt: '',
+  		// @option alt: String = 'Marker'
+  		// Text for the `alt` attribute of the icon image.
+  		// [Useful for accessibility](https://leafletjs.com/examples/accessibility/#markers-must-be-labelled).
+  		alt: 'Marker',
 
   		// @option zIndexOffset: Number = 0
   		// By default, marker images zIndex is set automatically based on its latitude. Use this option if you want to put the marker on top of all others (or below), specifying a high value like `1000` (or high negative value, respectively).
@@ -7418,6 +7449,12 @@
   		// When `true`, a mouse event on this marker will trigger the same event on the map
   		// (unless [`L.DomEvent.stopPropagation`](#domevent-stoppropagation) is used).
   		bubblingMouseEvents: false,
+
+  		// @option autoPanOnFocus: Boolean = true
+  		// When `true`, the map will pan whenever the marker is focused (via
+  		// e.g. pressing `tab` on the keyboard) to ensure the marker is
+  		// visible within the map's bounds
+  		autoPanOnFocus: true,
 
   		// @section Draggable marker options
   		// @option draggable: Boolean = false
@@ -7571,6 +7608,7 @@
 
   		if (options.keyboard) {
   			icon.tabIndex = '0';
+  			icon.setAttribute('role', 'button');
   		}
 
   		this._icon = icon;
@@ -7580,6 +7618,10 @@
   				mouseover: this._bringToFront,
   				mouseout: this._resetZIndex
   			});
+  		}
+
+  		if (this.options.autoPanOnFocus) {
+  			on(icon, 'focus', this._panOnFocus, this);
   		}
 
   		var newShadow = options.icon.createShadow(this._shadow),
@@ -7617,6 +7659,10 @@
   				mouseover: this._bringToFront,
   				mouseout: this._resetZIndex
   			});
+  		}
+
+  		if (this.options.autoPanOnFocus) {
+  			off(this._icon, 'focus', this._panOnFocus, this);
   		}
 
   		remove(this._icon);
@@ -7711,6 +7757,20 @@
 
   	_resetZIndex: function () {
   		this._updateZIndex(0);
+  	},
+
+  	_panOnFocus: function () {
+  		var map = this._map;
+  		if (!map) { return; }
+
+  		var iconOpts = this.options.icon.options;
+  		var size = iconOpts.iconSize ? toPoint(iconOpts.iconSize) : toPoint(0, 0);
+  		var anchor = iconOpts.iconAnchor ? toPoint(iconOpts.iconAnchor) : toPoint(0, 0);
+
+  		map.panInside(this._latlng, {
+  			paddingTopLeft: anchor,
+  			paddingBottomRight: size.subtract(anchor)
+  		});
   	},
 
   	_getPopupAnchor: function () {
@@ -8843,6 +8903,7 @@
   // Reverse of [`coordsToLatLng`](#geojson-coordstolatlng)
   // Coordinates values are rounded with [`formatNum`](#util-formatnum) function.
   function latLngToCoords(latlng, precision) {
+  	latlng = toLatLng(latlng);
   	return latlng.alt !== undefined ?
   		[formatNum(latlng.lng, precision), formatNum(latlng.lat, precision), formatNum(latlng.alt, precision)] :
   		[formatNum(latlng.lng, precision), formatNum(latlng.lat, precision)];
@@ -9315,6 +9376,7 @@
   	options: {
   		// @option autoplay: Boolean = true
   		// Whether the video starts playing automatically when loaded.
+  		// On some browsers autoplay will only work with `muted: true`
   		autoplay: true,
 
   		// @option loop: Boolean = true
@@ -9328,7 +9390,11 @@
 
   		// @option muted: Boolean = false
   		// Whether the video starts on mute when loaded.
-  		muted: false
+  		muted: false,
+
+  		// @option playsInline: Boolean = true
+  		// Mobile browsers will play the video right where it is instead of open it up in fullscreen mode.
+  		playsInline: true
   	},
 
   	_initImage: function () {
@@ -9365,6 +9431,7 @@
   		vid.autoplay = !!this.options.autoplay;
   		vid.loop = !!this.options.loop;
   		vid.muted = !!this.options.muted;
+  		vid.playsInline = !!this.options.playsInline;
   		for (var i = 0; i < this._url.length; i++) {
   			var source = create$1('source');
   			source.src = this._url[i];
@@ -9435,7 +9502,7 @@
 
   /*
    * @class DivOverlay
-   * @inherits Layer
+   * @inherits Interactive layer
    * @aka L.DivOverlay
    * Base model for L.Popup and L.Tooltip. Inherit from it for custom overlays like plugins.
    */
@@ -9446,6 +9513,10 @@
   	// @section
   	// @aka DivOverlay options
   	options: {
+  		// @option interactive: Boolean = false
+  		// If true, the popup/tooltip will listen to the mouse events.
+  		interactive: false,
+
   		// @option offset: Point = Point(0, 0)
   		// The offset of the overlay position.
   		offset: [0, 0],
@@ -9463,6 +9534,49 @@
   		setOptions(this, options);
 
   		this._source = source;
+  	},
+
+  	// @method openOn(map: Map): this
+  	// Adds the overlay to the map.
+  	// Alternative to `map.openPopup(popup)`/`.openTooltip(tooltip)`.
+  	openOn: function (map) {
+  		map = arguments.length ? map : this._source._map; // experimental, not the part of public api
+  		if (!map.hasLayer(this)) {
+  			map.addLayer(this);
+  		}
+  		return this;
+  	},
+
+  	// @method close(): this
+  	// Closes the overlay.
+  	// Alternative to `map.closePopup(popup)`/`.closeTooltip(tooltip)`
+  	// and `layer.closePopup()`/`.closeTooltip()`.
+  	close: function () {
+  		if (this._map) {
+  			this._map.removeLayer(this);
+  		}
+  		return this;
+  	},
+
+  	// @method toggle(layer?: Layer): this
+  	// Opens or closes the overlay bound to layer depending on its current state.
+  	// Argument may be omitted only for overlay bound to layer.
+  	// Alternative to `layer.togglePopup()`/`.toggleTooltip()`.
+  	toggle: function (layer) {
+  		if (this._map) {
+  			this.close();
+  		} else {
+  			if (arguments.length) {
+  				this._source = layer;
+  			} else {
+  				layer = this._source;
+  			}
+  			this._prepareOpen();
+
+  			// open the overlay on the map
+  			this.openOn(layer._map);
+  		}
+  		return this;
   	},
 
   	onAdd: function (map) {
@@ -9485,6 +9599,11 @@
   		}
 
   		this.bringToFront();
+
+  		if (this.options.interactive) {
+  			addClass(this._container, 'leaflet-interactive');
+  			this.addInteractiveTarget(this._container);
+  		}
   	},
 
   	onRemove: function (map) {
@@ -9493,6 +9612,11 @@
   			this._removeTimeout = setTimeout(bind(remove, undefined, this._container), 200);
   		} else {
   			remove(this._container);
+  		}
+
+  		if (this.options.interactive) {
+  			removeClass(this._container, 'leaflet-interactive');
+  			this.removeInteractiveTarget(this._container);
   		}
   	},
 
@@ -9677,6 +9801,34 @@
 
   });
 
+  Map.include({
+  	_initOverlay: function (OverlayClass, content, latlng, options) {
+  		var overlay = content;
+  		if (!(overlay instanceof OverlayClass)) {
+  			overlay = new OverlayClass(options).setContent(content);
+  		}
+  		if (latlng) {
+  			overlay.setLatLng(latlng);
+  		}
+  		return overlay;
+  	}
+  });
+
+
+  Layer.include({
+  	_initOverlay: function (OverlayClass, old, content, options) {
+  		var overlay = content;
+  		if (overlay instanceof OverlayClass) {
+  			setOptions(overlay, options);
+  			overlay._source = this;
+  		} else {
+  			overlay = (old && !options) ? old : new OverlayClass(options, this);
+  			overlay.setContent(content);
+  		}
+  		return overlay;
+  	}
+  });
+
   /*
    * @class Popup
    * @inherits DivOverlay
@@ -9780,10 +9932,17 @@
 
   	// @namespace Popup
   	// @method openOn(map: Map): this
-  	// Adds the popup to the map and closes the previous one. The same as `map.openPopup(popup)`.
+  	// Alternative to `map.openPopup(popup)`.
+  	// Adds the popup to the map and closes the previous one.
   	openOn: function (map) {
-  		map.openPopup(this);
-  		return this;
+  		map = arguments.length ? map : this._source._map; // experimental, not the part of public api
+
+  		if (!map.hasLayer(this) && map._popup && map._popup.options.autoClose) {
+  			map.removeLayer(map._popup);
+  		}
+  		map._popup = this;
+
+  		return DivOverlay.prototype.openOn.call(this, map);
   	},
 
   	onAdd: function (map) {
@@ -9834,7 +9993,7 @@
   		var events = DivOverlay.prototype.getEvents.call(this);
 
   		if (this.options.closeOnClick !== undefined ? this.options.closeOnClick : this._map.options.closePopupOnClick) {
-  			events.preclick = this._close;
+  			events.preclick = this.close;
   		}
 
   		if (this.options.keepInView) {
@@ -9842,12 +10001,6 @@
   		}
 
   		return events;
-  	},
-
-  	_close: function () {
-  		if (this._map) {
-  			this._map.closePopup(this);
-  		}
   	},
 
   	_initLayout: function () {
@@ -9873,7 +10026,7 @@
   			closeButton.href = '#close';
   			closeButton.innerHTML = '<span aria-hidden="true">&#215;</span>';
 
-  			on(closeButton, 'click', this._close, this);
+  			on(closeButton, 'click', this.close, this);
   		}
   	},
 
@@ -9991,35 +10144,18 @@
   	// @method openPopup(content: String|HTMLElement, latlng: LatLng, options?: Popup options): this
   	// Creates a popup with the specified content and options and opens it in the given point on a map.
   	openPopup: function (popup, latlng, options) {
-  		if (!(popup instanceof Popup)) {
-  			popup = new Popup(options).setContent(popup);
-  		}
+  		this._initOverlay(Popup, popup, latlng, options)
+  		  .openOn(this);
 
-  		if (latlng) {
-  			popup.setLatLng(latlng);
-  		}
-
-  		if (this.hasLayer(popup)) {
-  			return this;
-  		}
-
-  		if (this._popup && this._popup.options.autoClose) {
-  			this.closePopup();
-  		}
-
-  		this._popup = popup;
-  		return this.addLayer(popup);
+  		return this;
   	},
 
   	// @method closePopup(popup?: Popup): this
   	// Closes the popup previously opened with [openPopup](#map-openpopup) (or the given one).
   	closePopup: function (popup) {
-  		if (!popup || popup === this._popup) {
-  			popup = this._popup;
-  			this._popup = null;
-  		}
+  		popup = arguments.length ? popup : this._popup;
   		if (popup) {
-  			this.removeLayer(popup);
+  			popup.close();
   		}
   		return this;
   	}
@@ -10048,18 +10184,7 @@
   	// necessary event listeners. If a `Function` is passed it will receive
   	// the layer as the first argument and should return a `String` or `HTMLElement`.
   	bindPopup: function (content, options) {
-
-  		if (content instanceof Popup) {
-  			setOptions(content, options);
-  			this._popup = content;
-  			content._source = this;
-  		} else {
-  			if (!this._popup || options) {
-  				this._popup = new Popup(options, this);
-  			}
-  			this._popup.setContent(content);
-  		}
-
+  		this._popup = this._initOverlay(Popup, this._popup, content, options);
   		if (!this._popupHandlersAdded) {
   			this.on({
   				click: this._openPopup,
@@ -10094,9 +10219,8 @@
   	openPopup: function (latlng) {
   		if (this._popup && this._popup._prepareOpen(latlng)) {
   			// open the popup on the map
-  			this._map.openPopup(this._popup, latlng);
+  			this._popup.openOn(this._map);
   		}
-
   		return this;
   	},
 
@@ -10104,7 +10228,7 @@
   	// Closes the popup bound to this layer if it is open.
   	closePopup: function () {
   		if (this._popup) {
-  			this._popup._close();
+  			this._popup.close();
   		}
   		return this;
   	},
@@ -10113,11 +10237,7 @@
   	// Opens or closes the popup bound to this layer depending on its current state.
   	togglePopup: function () {
   		if (this._popup) {
-  			if (this._popup._map) {
-  				this.closePopup();
-  			} else {
-  				this.openPopup();
-  			}
+  			this._popup.toggle(this);
   		}
   		return this;
   	},
@@ -10226,10 +10346,6 @@
   		// If true, the tooltip will follow the mouse instead of being fixed at the feature center.
   		sticky: false,
 
-  		// @option interactive: Boolean = false
-  		// If true, the tooltip will listen to the feature events.
-  		interactive: false,
-
   		// @option opacity: Number = 0.9
   		// Tooltip container opacity.
   		opacity: 0.9
@@ -10239,13 +10355,6 @@
   		DivOverlay.prototype.onAdd.call(this, map);
   		this.setOpacity(this.options.opacity);
 
-  		if (this.options.interactive) {
-  			addClass(this._container, 'leaflet-interactive');
-  			if (this._source) {
-  				this._source.addInteractiveTarget(this._container);
-  			}
-  		}
-
   		// @namespace Map
   		// @section Tooltip events
   		// @event tooltipopen: TooltipEvent
@@ -10253,6 +10362,8 @@
   		map.fire('tooltipopen', {tooltip: this});
 
   		if (this._source) {
+  			this.addEventParent(this._source);
+
   			// @namespace Layer
   			// @section Tooltip events
   			// @event tooltipopen: TooltipEvent
@@ -10264,13 +10375,6 @@
   	onRemove: function (map) {
   		DivOverlay.prototype.onRemove.call(this, map);
 
-  		if (this.options.interactive) {
-  			removeClass(this._container, 'leaflet-interactive');
-  			if (this._source) {
-  				this._source.removeInteractiveTarget(this._container);
-  			}
-  		}
-
   		// @namespace Map
   		// @section Tooltip events
   		// @event tooltipclose: TooltipEvent
@@ -10278,6 +10382,8 @@
   		map.fire('tooltipclose', {tooltip: this});
 
   		if (this._source) {
+  			this.removeEventParent(this._source);
+
   			// @namespace Layer
   			// @section Tooltip events
   			// @event tooltipclose: TooltipEvent
@@ -10290,16 +10396,10 @@
   		var events = DivOverlay.prototype.getEvents.call(this);
 
   		if (!this.options.permanent) {
-  			events.preclick = this._close;
+  			events.preclick = this.close;
   		}
 
   		return events;
-  	},
-
-  	_close: function () {
-  		if (this._map) {
-  			this._map.closeTooltip(this);
-  		}
   	},
 
   	_initLayout: function () {
@@ -10402,25 +10502,17 @@
   	// @method openTooltip(content: String|HTMLElement, latlng: LatLng, options?: Tooltip options): this
   	// Creates a tooltip with the specified content and options and open it.
   	openTooltip: function (tooltip, latlng, options) {
-  		if (!(tooltip instanceof Tooltip)) {
-  			tooltip = new Tooltip(options).setContent(tooltip);
-  		}
+  		this._initOverlay(Tooltip, tooltip, latlng, options)
+  		  .openOn(this);
 
-  		if (latlng) {
-  			tooltip.setLatLng(latlng);
-  		}
-
-  		if (this.hasLayer(tooltip)) {
-  			return this;
-  		}
-
-  		return this.addLayer(tooltip);
+  		return this;
   	},
 
   	// @method closeTooltip(tooltip: Tooltip): this
   	// Closes the tooltip given as parameter.
   	closeTooltip: function (tooltip) {
-  		return this.removeLayer(tooltip);
+  		tooltip.close();
+  		return this;
   	}
 
   });
@@ -10451,18 +10543,7 @@
   			this.unbindTooltip();
   		}
 
-  		if (content instanceof Tooltip) {
-  			setOptions(content, options);
-  			this._tooltip = content;
-  			content._source = this;
-  		} else {
-  			if (!this._tooltip || options) {
-  				this._tooltip = new Tooltip(options, this);
-  			}
-  			this._tooltip.setContent(content);
-
-  		}
-
+  		this._tooltip = this._initOverlay(Tooltip, this._tooltip, content, options);
   		this._initTooltipInteractions();
 
   		if (this._tooltip.options.permanent && this._map && this._map.hasLayer(this)) {
@@ -10509,9 +10590,8 @@
   	openTooltip: function (latlng) {
   		if (this._tooltip && this._tooltip._prepareOpen(latlng)) {
   			// open the tooltip on the map
-  			this._map.openTooltip(this._tooltip, latlng);
+  			this._tooltip.openOn(this._map);
   		}
-
   		return this;
   	},
 
@@ -10519,20 +10599,15 @@
   	// Closes the tooltip bound to this layer if it is open.
   	closeTooltip: function () {
   		if (this._tooltip) {
-  			this._tooltip._close();
+  			return this._tooltip.close();
   		}
-  		return this;
   	},
 
   	// @method toggleTooltip(): this
   	// Opens or closes the tooltip bound to this layer depending on its current state.
   	toggleTooltip: function () {
   		if (this._tooltip) {
-  			if (this._tooltip._map) {
-  				this.closeTooltip();
-  			} else {
-  				this.openTooltip();
-  			}
+  			this._tooltip.toggle(this);
   		}
   		return this;
   	},
@@ -11639,7 +11714,15 @@
   		// Whether the crossOrigin attribute will be added to the tiles.
   		// If a String is provided, all tiles will have their crossOrigin attribute set to the String provided. This is needed if you want to access tile pixel data.
   		// Refer to [CORS Settings](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes) for valid String values.
-  		crossOrigin: false
+  		crossOrigin: false,
+
+  		// @option referrerPolicy: Boolean|String = false
+  		// Whether the referrerPolicy attribute will be added to the tiles.
+  		// If a String is provided, all tiles will have their referrerPolicy attribute set to the String provided.
+  		// This may be needed if your map's rendering context has a strict default but your tile provider expects a valid referrer
+  		// (e.g. to validate an API token).
+  		// Refer to [HTMLImageElement.referrerPolicy](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/referrerPolicy) for valid String values.
+  		referrerPolicy: false
   	},
 
   	initialize: function (url, options) {
@@ -11700,6 +11783,12 @@
 
   		if (this.options.crossOrigin || this.options.crossOrigin === '') {
   			tile.crossOrigin = this.options.crossOrigin === true ? '' : this.options.crossOrigin;
+  		}
+
+  		// for this new option we follow the documented behavior
+  		// more closely by only setting the property when string
+  		if (typeof this.options.referrerPolicy === 'string') {
+  			tile.referrerPolicy = this.options.referrerPolicy;
   		}
 
   		/*
@@ -12050,13 +12139,11 @@
 
   	_updateTransform: function (center, zoom) {
   		var scale = this._map.getZoomScale(zoom, this._zoom),
-  		    position = getPosition(this._container),
   		    viewHalf = this._map.getSize().multiplyBy(0.5 + this.options.padding),
   		    currentCenterPoint = this._map.project(this._center, zoom),
-  		    destCenterPoint = this._map.project(center, zoom),
-  		    centerOffset = destCenterPoint.subtract(currentCenterPoint),
 
-  		    topLeftOffset = viewHalf.multiplyBy(-scale).add(position).add(viewHalf).subtract(centerOffset);
+  		    topLeftOffset = viewHalf.multiplyBy(-scale).add(currentCenterPoint)
+  				  .subtract(this._map._getNewPixelOrigin(center, zoom));
 
   		if (Browser.any3d) {
   			setTransform(this._container, topLeftOffset, scale);
@@ -12767,12 +12854,6 @@
 
   var SVG = Renderer.extend({
 
-  	getEvents: function () {
-  		var events = Renderer.prototype.getEvents.call(this);
-  		events.zoomstart = this._onZoomStart;
-  		return events;
-  	},
-
   	_initContainer: function () {
   		this._container = create('svg');
 
@@ -12789,13 +12870,6 @@
   		delete this._container;
   		delete this._rootGroup;
   		delete this._svgSize;
-  	},
-
-  	_onZoomStart: function () {
-  		// Drag-then-pinch interactions might mess up the center and zoom.
-  		// In this case, the easiest way to prevent this is re-do the renderer
-  		//   bounds and padding when the zooming starts.
-  		this._update();
   	},
 
   	_update: function () {
@@ -13253,7 +13327,7 @@
   // @section Interaction Options
   Map.mergeOptions({
   	// @option dragging: Boolean = true
-  	// Whether the map be draggable with mouse/touch or not.
+  	// Whether the map is draggable with mouse/touch or not.
   	dragging: true,
 
   	// @section Panning Inertia Options
@@ -13426,7 +13500,7 @@
   		var map = this._map,
   		    options = map.options,
 
-  		    noInertia = !options.inertia || this._times.length < 2;
+  		    noInertia = !options.inertia || e.noInertia || this._times.length < 2;
 
   		map.fire('dragend', e);
 
@@ -14045,7 +14119,6 @@
   	window.L = oldL;
   	return this;
   }
-
   // Always export us to window global (see #2364)
   window.L = exports;
 

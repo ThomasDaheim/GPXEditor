@@ -268,6 +268,20 @@ public class KMLParser extends GPXParser {
         return styleItem;
     }
     
+    // TFE, 20220815: parsing of MESZ vs. CEST depends on the local you have set in java...
+    private String fixDateTimezone(final String date) {
+        String result = date;
+        
+        if (result.endsWith("MESZ")) {
+            result = result.replace("MESZ", "CEST");
+        }
+        if (result.endsWith("MEZ")) {
+            result = result.replace("MEZ", "CET");
+        }
+        
+        return result;
+    }
+    
     private void findMetadata(final Document doc, final GPX gpx) {
         Metadata metadata = null;
         
@@ -313,7 +327,7 @@ public class KMLParser extends GPXParser {
                         if (!KMLConstants.VALUE_NO_VALUE.equals(dataValue)) {
                             // try to parse string with date formatter
                             try {
-                                final Date date = KMLConstants.KML_DATEFORMAT.parse(dataValue);
+                                final Date date = KMLConstants.KML_DATEFORMAT.parse(fixDateTimezone(dataValue));
 
                                 metadata.setTime(date);
                             } catch (ParseException ex) {
@@ -523,7 +537,7 @@ public class KMLParser extends GPXParser {
                     if (!KMLConstants.VALUE_NO_VALUE.equals(time)) {
                         // try to parse string with date formatter
                         try {
-                            final Date date = KMLConstants.KML_DATEFORMAT.parse(time);
+                            final Date date = KMLConstants.KML_DATEFORMAT.parse(fixDateTimezone(time));
 
                             wpt.setTime(date);
                         } catch (ParseException ex) {
@@ -712,7 +726,7 @@ public class KMLParser extends GPXParser {
                                 if (!KMLConstants.VALUE_NO_VALUE.equals(timestamps[j])) {
                                     // try to parse string with date formatter
                                     try {
-                                        final Date date = KMLConstants.KML_DATEFORMAT.parse(timestamps[j]);
+                                        final Date date = KMLConstants.KML_DATEFORMAT.parse(fixDateTimezone(timestamps[j]));
 
                                         waypoints.get(j).setTime(date);
                                     } catch (ParseException ex) {

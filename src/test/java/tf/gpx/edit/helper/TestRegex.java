@@ -51,7 +51,7 @@ public class TestRegex {
         
         // building up correct string chart by char
         // matches should be TRUE since only [NS] is mandatory
-        final String testString = "N 11" + LatLonHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG_CHAR_1;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 0, false, false);
@@ -66,11 +66,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEG() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG_CHAR_1);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLonHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG_CHAR_1;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 0, false, false);
@@ -88,11 +88,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEGAndMinLength1() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG_CHAR_1);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLonHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG_CHAR_1;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 4, true, true);
@@ -111,11 +111,11 @@ public class TestRegex {
     @Test
     public void testMatcherDEGAndMinLength2() {
         // simpler version of regex WITH DEG char
-        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG);
+        final Pattern test1 = Pattern.compile("[NS][ ]?([0-8 ]?[0-9]?)" + LatLonHelper.DEG_CHAR_1);
         
         // building up correct string chart by char
         // matches should be FALSE since [NS] and DEG is mandatory
-        final String testString = "N 11" + LatLonHelper.DEG;
+        final String testString = "N 11" + LatLonHelper.DEG_CHAR_1;
 
         int end = 0;
         testMatchLookingAt(test1, testString.substring(0, end++), 5, true, true);
@@ -132,36 +132,36 @@ public class TestRegex {
     
     private void testAllLATLON1Combinations(final Pattern pattern, final String dir, final String deg, final String min, final String sec, final boolean doShortCombinations, final boolean result) {
         if (doShortCombinations) {
-            logAssert(pattern, dir + deg + LatLonHelper.DEG, result);
-            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + dir, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + dir, result);
 
-            logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN, result);
-            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + min + LatLonHelper.MIN, result);
-            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN, result);
-            logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + min + LatLonHelper.MIN + dir, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + dir, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1 + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + " " + dir, result);
 
-            logAssert(pattern, dir + deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC, result);
-            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC + dir, result);
-            logAssert(pattern, deg + LatLonHelper.DEG + LatLonHelper.MIN + LatLonHelper.SEC + " " + dir, result);
+            logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + LatLonHelper.MIN_CHAR_1 + LatLonHelper.SEC_CHAR_1, result);
+            logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + LatLonHelper.MIN_CHAR_1 + LatLonHelper.SEC_CHAR_1, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + LatLonHelper.MIN_CHAR_1 + LatLonHelper.SEC_CHAR_1 + dir, result);
+            logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + LatLonHelper.MIN_CHAR_1 + LatLonHelper.SEC_CHAR_1 + " " + dir, result);
         }
         
-        logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, dir + deg + LatLonHelper.DEG + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC, result);
-        logAssert(pattern, deg + LatLonHelper.DEG + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + dir, result);
-        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + dir, result);
-        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + sec + LatLonHelper.SEC + " " + dir, result);
-        logAssert(pattern, deg + LatLonHelper.DEG + " " + min + LatLonHelper.MIN + " " + sec + LatLonHelper.SEC + " " + dir, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + " " + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + " " + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + " " + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, dir + deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1 + " " + sec + LatLonHelper.SEC_CHAR_1, result);
+        logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1 + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1 + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + sec + LatLonHelper.SEC_CHAR_1 + " " + dir, result);
+        logAssert(pattern, deg + LatLonHelper.DEG_CHAR_1 + " " + min + LatLonHelper.MIN_CHAR_1 + " " + sec + LatLonHelper.SEC_CHAR_1 + " " + dir, result);
     }
     
     private void logAssert(final Pattern pattern, final String testString, final boolean result) {
@@ -293,15 +293,15 @@ public class TestRegex {
         logAssert(LatLonHelper.LAT_PATTERN_2, "-89.9999", true);
         logAssert(LatLonHelper.LAT_PATTERN_2, "-0", true);
 
-        logAssert(LatLonHelper.LAT_PATTERN_2, "90" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "90.0" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "89.9999" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "90.0" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "89.9999" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "0" + LatLonHelper.DEG_CHAR_1, true);
 
-        logAssert(LatLonHelper.LAT_PATTERN_2, "-90" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "-90.0" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "-89.9999" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LAT_PATTERN_2, "-0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-90.0" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-89.9999" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LAT_PATTERN_2, "-0" + LatLonHelper.DEG_CHAR_1, true);
 
         logAssert(LatLonHelper.LAT_PATTERN_2, "90.1", false);
         logAssert(LatLonHelper.LAT_PATTERN_2, "-90.1", false);
@@ -319,15 +319,15 @@ public class TestRegex {
         logAssert(LatLonHelper.LON_PATTERN_2, "-179.9999", true);
         logAssert(LatLonHelper.LON_PATTERN_2, "-0", true);
 
-        logAssert(LatLonHelper.LON_PATTERN_2, "180" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "180.0" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "179.9999" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "180.0" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "179.9999" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "0" + LatLonHelper.DEG_CHAR_1, true);
 
-        logAssert(LatLonHelper.LON_PATTERN_2, "-180" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "-180.0" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "-179.9999" + LatLonHelper.DEG, true);
-        logAssert(LatLonHelper.LON_PATTERN_2, "-0" + LatLonHelper.DEG, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-180.0" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-179.9999" + LatLonHelper.DEG_CHAR_1, true);
+        logAssert(LatLonHelper.LON_PATTERN_2, "-0" + LatLonHelper.DEG_CHAR_1, true);
 
         logAssert(LatLonHelper.LON_PATTERN_2, "180.1", false);
         logAssert(LatLonHelper.LON_PATTERN_2, "-180.1", false);

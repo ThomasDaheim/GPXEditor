@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import me.himanshusoni.gpxparser.modal.Bounds;
 import me.himanshusoni.gpxparser.modal.Extension;
 import me.himanshusoni.gpxparser.modal.GPX;
 import me.himanshusoni.gpxparser.modal.Link;
