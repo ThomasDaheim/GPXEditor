@@ -55,7 +55,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
  * Attention: New JSONs are created in the given location and any previously existing ones will be copied to ".bak" first.
  * 
  * Parameters (separated with "*" character):
- * image path: where to search fpr jpgs with gps coordinates
+ * image path: where to search for jpgs with gps coordinates
  * JSON path: where to create the image JSON files - optional, preference will be used if not given
  * 
  * @author thomas
@@ -165,7 +165,6 @@ public class MakeImageJSON {
         }
 
         final ArrayList<String> cmdOutput = new ArrayList<>();
-        final ArrayList<String> denoiseFiles = new ArrayList<>();
         if (result) {
             cmdOutput.addAll(output.getOutput());
             
