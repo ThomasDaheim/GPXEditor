@@ -55,7 +55,7 @@ import tf.gpx.edit.helper.TaskExecutor;
  * @author Thomas
  */
 public class GPXEditorManager extends Application {
-    private GPXEditor controller;
+    private GPXEditor myGPXEditor;
     private Stage myStage;
     
     /**
@@ -143,7 +143,7 @@ public class GPXEditorManager extends Application {
                     pane =(BorderPane) fxmlLoader.load();
 
                     // set passed parameters for later use
-                    controller = fxmlLoader.getController();
+                    myGPXEditor = fxmlLoader.getController();
                 } catch (IOException ex) {
                     Logger.getLogger(GPXEditorManager.class.getName()).log(Level.SEVERE, null, ex);
                     System.exit(-1); 
@@ -189,7 +189,7 @@ public class GPXEditorManager extends Application {
                 myStage.show();
                 splashStage.hide();
 
-                controller.lateInitialize();
+                myGPXEditor.lateInitialize();
 //                System.out.println("End of start: " + Instant.now());
             });
        }
@@ -205,9 +205,9 @@ public class GPXEditorManager extends Application {
             GPXEditorPreferences.RECENTWINDOWTOP.put(myStage.getY());
         }
         
-        if (controller != null) {
-            // TF, 20161103: call controller to store window values
-            controller.stop();
+        if (myGPXEditor != null) {
+            // TF, 20161103: call myGPXEditor to store window values
+            myGPXEditor.stop();
         }
         
         // TFE, 20200321: stop executor - just in case

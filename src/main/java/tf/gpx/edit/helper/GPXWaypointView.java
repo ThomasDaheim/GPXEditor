@@ -98,29 +98,29 @@ import tf.helper.javafx.UsefulKeyCodes;
  *
  * @author thomas
  */
-public class GPXTableView implements IPreferencesHolder {
+public class GPXWaypointView implements IPreferencesHolder {
     public static final DataFormat DRAG_AND_DROP = new DataFormat("application/gpxeditor-tableview-dnd");
     public static final DataFormat COPY_AND_PASTE = new DataFormat("application/gpxeditor-tableview-cnp");
 
     private TableView<GPXWaypoint> myTableView;
     // need to store last non-empty row for drag & drop support
     private TableRow<GPXWaypoint> lastRow;
-    private GPXEditor myEditor;
+    private GPXEditor myGPXEditor;
 
     // TFE, 20180606: support for cut / copy / paste via keys in the waypoint list
 //    private final ObservableList<GPXWaypoint> clipboardWayPoints = FXCollections.observableArrayList();
     // TFE, 20180606: track , whether only SHIFT modifier is pressed - the ListChangeListener gets called twice in this case :-(
     private boolean onlyShiftPressed = false;
     
-    private GPXTableView() {
+    private GPXWaypointView() {
         super();
     }
     
-    public GPXTableView(final TableView<GPXWaypoint> tableView, final GPXEditor editor) {
+    public GPXWaypointView(final TableView<GPXWaypoint> tableView, final GPXEditor editor) {
         super();
         
         myTableView = tableView;
-        myEditor = editor;
+        myGPXEditor = editor;
         
         initTableView();
     }
@@ -184,19 +184,19 @@ public class GPXTableView implements IPreferencesHolder {
 
             final MenuItem invertSelection = new MenuItem("Invert");
             invertSelection.setOnAction((ActionEvent event) -> {
-                myEditor.invertSelectedWaypoints();
+                myGPXEditor.invertSelectedWaypoints();
             });
             selected.getItems().add(invertSelection);
             
             final MenuItem deleteWaypoints = new MenuItem("Delete");
             deleteWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.deleteSelectedWaypoints();
+                myGPXEditor.deleteSelectedWaypoints();
             });
             selected.getItems().add(deleteWaypoints);
             
             final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
             replaceWaypoints.setOnAction((ActionEvent event) -> {
-                myEditor.replaceByCenter();
+                myGPXEditor.replaceByCenter();
             });
             replaceWaypoints.disableProperty().bind(
                     Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
@@ -206,25 +206,25 @@ public class GPXTableView implements IPreferencesHolder {
             // TFE, 20190715: support for deletion of date & name...
             final MenuItem deleteDates = new MenuItem("Date");
             deleteDates.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null, true);
+                myGPXEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.DATE, null, true);
             });
             deleteAttr.getItems().add(deleteDates);
             
             final MenuItem deleteNames = new MenuItem("Name");
             deleteNames.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null, true);
+                myGPXEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.NAME, null, true);
             });
             deleteAttr.getItems().add(deleteNames);
             
             final MenuItem deleteHeights = new MenuItem("Height");
             deleteHeights.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0), true);
+                myGPXEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.HEIGHT, Double.valueOf(0), true);
             });
             deleteAttr.getItems().add(deleteHeights);
 
             final MenuItem deleteExtensions = new MenuItem("Extension");
             deleteExtensions.setOnAction((ActionEvent event) -> {
-                myEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
+                myGPXEditor.updateSelectedWaypointsInformation(UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
             });
             deleteAttr.getItems().add(deleteExtensions);
             
@@ -238,7 +238,7 @@ public class GPXTableView implements IPreferencesHolder {
 
             final MenuItem selectHighlighted = new MenuItem("Select");
             selectHighlighted.setOnAction((ActionEvent event) -> {
-                myEditor.selectHighlightedWaypoints();
+                myGPXEditor.selectHighlightedWaypoints();
             });
             highlighted.getItems().add(selectHighlighted);
 
@@ -306,7 +306,7 @@ public class GPXTableView implements IPreferencesHolder {
             final Menu insertItems = new Menu("Insert");
             final MenuItem insertAbove = new MenuItem("above");
             insertAbove.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(
+                myGPXEditor.insertWaypointsAtPosition(
                         row.getItem(), 
                         ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(COPY_AND_PASTE)), 
                         GPXEditor.RelativePosition.ABOVE);
@@ -315,7 +315,7 @@ public class GPXTableView implements IPreferencesHolder {
             
             final MenuItem insertBelow = new MenuItem("below");
             insertBelow.setOnAction((ActionEvent event) -> {
-                myEditor.insertWaypointsAtPosition(
+                myGPXEditor.insertWaypointsAtPosition(
                         row.getItem(), 
                         ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(COPY_AND_PASTE)), 
                         GPXEditor.RelativePosition.BELOW);
@@ -366,7 +366,7 @@ public class GPXTableView implements IPreferencesHolder {
                     }
                 }
                 
-                myEditor.refresh();
+                myGPXEditor.refresh();
             });
             splitWaypoints.disableProperty().bind(row.emptyProperty());
             waypointMenu.getItems().add(splitWaypoints);
@@ -377,9 +377,9 @@ public class GPXTableView implements IPreferencesHolder {
             editWaypoints.setOnAction((ActionEvent event) -> {
                 // TFE, 20210108: context menu is also shown without a selection!
                 if (myTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                    myEditor.editGPXWaypoints(new ArrayList<>(Arrays.asList(row.getItem())));
+                    myGPXEditor.editGPXWaypoints(new ArrayList<>(Arrays.asList(row.getItem())));
                 } else {
-                    myEditor.editGPXWaypoints(myTableView.getSelectionModel().getSelectedItems());
+                    myGPXEditor.editGPXWaypoints(myTableView.getSelectionModel().getSelectedItems());
                 }
             });
             editWaypoints.disableProperty().bind(row.emptyProperty());
@@ -495,7 +495,7 @@ public class GPXTableView implements IPreferencesHolder {
                     if (UsefulKeyCodes.CNTRL_X.match(event) ||
                             UsefulKeyCodes.SHIFT_DEL.match(event) ||
                             UsefulKeyCodes.DEL.match(event)) {
-                        myEditor.deleteSelectedWaypoints();
+                        myGPXEditor.deleteSelectedWaypoints();
                     }
                 }
             // any combination that adds entries
@@ -624,7 +624,7 @@ public class GPXTableView implements IPreferencesHolder {
                             final GPXWaypoint item = t.getRowValue();
                             item.setName(t.getNewValue());
                             // force refresh to show unsaved changes
-                            myEditor.refreshGPXFileList();
+                            myGPXEditor.refreshGPXFileList();
                         }
                     });
                     nameTrackCol.setEditable(true);
@@ -777,13 +777,13 @@ public class GPXTableView implements IPreferencesHolder {
         if (AppClipboard.getInstance().hasContent(dataFormat)) {
             final List<GPXWaypoint> waypoints = ObjectsHelper.uncheckedCast(AppClipboard.getInstance().getContent(dataFormat));
 
-            myEditor.insertWaypointsAtPosition(
+            myGPXEditor.insertWaypointsAtPosition(
                     target,
                     waypoints, 
                     relativePosition);
             
-            if (DRAG_AND_DROP.equals(dataFormat) && !myEditor.isCntrlPressed()) {
-                myEditor.deleteSelectedWaypoints();
+            if (DRAG_AND_DROP.equals(dataFormat) && !myGPXEditor.isCntrlPressed()) {
+                myGPXEditor.deleteSelectedWaypoints();
             }
         }
     }

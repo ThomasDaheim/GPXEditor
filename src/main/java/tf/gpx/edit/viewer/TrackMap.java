@@ -65,6 +65,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -617,7 +618,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     }
                 });
 
-    //            // TODO: disable heatmap while dragging
+                // TODO: disable heatmap while dragging
+    
+                // enable drag & drop of gpx by routing events to GPXTreeTableView?
+                getWebView().setOnDragOver((DragEvent event) -> {
+                    myGPXEditor.onDragOver(event);
+                });
+
+                getWebView().setOnDragDropped((DragEvent event) -> {
+                    myGPXEditor.onDragDropped(event);
+                });
 
                 // we want our own context menu!
                 getWebView().setContextMenuEnabled(false);

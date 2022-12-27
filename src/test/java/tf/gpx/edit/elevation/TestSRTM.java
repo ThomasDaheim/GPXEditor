@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.elevation;
 
-import static com.github.stefanbirkner.systemlambda.SystemLambda.*;
+import com.github.stefanbirkner.systemlambda.SystemLambda;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -357,7 +357,7 @@ public class TestSRTM {
         String dataName = SRTMDataHelper.getNameForCoordinate(30, -4);
         dataNames.clear();
         dataNames.add(dataName);
-        String resultOut = tapSystemOut(() -> {
+        String resultOut = SystemLambda.tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
@@ -378,7 +378,7 @@ public class TestSRTM {
         dataName = SRTMDataHelper.getNameForCoordinate(30, -3);
         dataNames.clear();
         dataNames.add(dataName);
-        resultOut = tapSystemOut(() -> {
+        resultOut = SystemLambda.tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
@@ -396,7 +396,7 @@ public class TestSRTM {
                 dataName, 
                 SRTMDataHelper.getNameForCoordinate(-5, -64), 
                 SRTMDataHelper.getNameForCoordinate(-5, -65)));
-        resultOut = tapSystemOut(() -> {
+        resultOut = SystemLambda.tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
@@ -417,7 +417,7 @@ public class TestSRTM {
         dataName = SRTMDataHelper.getNameForCoordinate(-78, -154);
         dataNames.clear();
         dataNames.add(dataName);
-        resultOut = tapSystemOut(() -> {
+        resultOut = SystemLambda.tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
@@ -441,7 +441,7 @@ public class TestSRTM {
                 dataName, 
                 SRTMDataHelper.getNameForCoordinate(-89, -108), 
                 SRTMDataHelper.getNameForCoordinate(-89, -109)));
-        resultOut = tapSystemOut(() -> {
+        resultOut = SystemLambda.tapSystemOut(() -> {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);

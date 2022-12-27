@@ -71,7 +71,7 @@ public class GPXStructureHelper {
 
     private static final String MERGED_FILE_NAME = "Merged.gpx";
     
-    private GPXEditor myEditor;
+    private GPXEditor myGPXEditor;
     
     private GPXStructureHelper() {
         super();
@@ -82,7 +82,7 @@ public class GPXStructureHelper {
     }
 
     public void setCallback(final GPXEditor editor) {
-        myEditor = editor;
+        myGPXEditor = editor;
     }
 
     public void fixGPXMeasurables(final List<? extends GPXMeasurable> gpxLineItems, final double distance) {
@@ -107,7 +107,7 @@ public class GPXStructureHelper {
     
     public void runVisitor(final List<? extends GPXLineItem> gpxLineItems, final IGPXLineItemVisitor visitor) {
         // TFE, 20200427: for do/undo all changes must run over central location
-        visitor.setCallback(myEditor);
+        visitor.setCallback(myGPXEditor);
         for (GPXLineItem gpxLineItem : gpxLineItems) {
             gpxLineItem.acceptVisitor(visitor);
         }

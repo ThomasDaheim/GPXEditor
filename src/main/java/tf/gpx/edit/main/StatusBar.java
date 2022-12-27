@@ -49,8 +49,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.util.Duration;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.helper.GPXTableView;
-import tf.gpx.edit.helper.GPXTreeTableView;
+import tf.gpx.edit.helper.GPXWaypointView;
+import tf.gpx.edit.helper.GPXMeasurableView;
 import tf.gpx.edit.helper.ITaskExecutionConsumer;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
@@ -76,7 +76,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static StatusBar INSTANCE = new StatusBar();
     
-    private GPXEditor myEditor;
+    private GPXEditor myGPXEditor;
     
     private static final String SEPERATOR = "|";
     
@@ -146,7 +146,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         myRedoButton.setDisable(true);
         myRedoButton.getStyleClass().add("redo-button");
         myRedoButton.setOnAction((ActionEvent arg0) -> {
-            myEditor.redoAction();
+            myGPXEditor.redoAction();
         });
         
         iconStream = StatusBar.class.getResourceAsStream("/undo.png");
@@ -155,19 +155,19 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
         myUndoButton.setDisable(true);
         myUndoButton.getStyleClass().add("undo-button");
         myUndoButton.setOnAction((ActionEvent arg0) -> {
-            myEditor.undoAction();
+            myGPXEditor.undoAction();
         });
         
         // update with any content from clipboard
         AppClipboard.getInstance().putCountProperty().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
                 if (newValue.intValue() > 0 &&
-                        (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE) || AppClipboard.getInstance().hasContent(GPXTreeTableView.COPY_AND_PASTE))) {
+                        (AppClipboard.getInstance().hasContent(GPXWaypointView.COPY_AND_PASTE) || AppClipboard.getInstance().hasContent(GPXMeasurableView.COPY_AND_PASTE))) {
                     String newText = CLIPBOARD_TEXT;
-                    if (AppClipboard.getInstance().hasContent(GPXTableView.COPY_AND_PASTE)) {
+                    if (AppClipboard.getInstance().hasContent(GPXWaypointView.COPY_AND_PASTE)) {
                         newText += WAYPOINT_TEXT;
                     }
-                    if (AppClipboard.getInstance().hasContent(GPXTreeTableView.COPY_AND_PASTE)) {
+                    if (AppClipboard.getInstance().hasContent(GPXMeasurableView.COPY_AND_PASTE)) {
                         if (!CLIPBOARD_TEXT.equals(newText)) {
                             newText += " & ";
                         }
@@ -193,7 +193,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     }
     
     public void setCallback(final GPXEditor gpxEditor) {
-        myEditor = gpxEditor;
+        myGPXEditor = gpxEditor;
     }
     
     public void setStatusText(final String text) {

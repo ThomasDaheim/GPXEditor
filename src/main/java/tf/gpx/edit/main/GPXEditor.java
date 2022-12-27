@@ -83,6 +83,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -129,8 +130,8 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
 import tf.gpx.edit.helper.GPXStructureHelper;
-import tf.gpx.edit.helper.GPXTableView;
-import tf.gpx.edit.helper.GPXTreeTableView;
+import tf.gpx.edit.helper.GPXWaypointView;
+import tf.gpx.edit.helper.GPXMeasurableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.helper.TimeZoneProvider;
@@ -304,7 +305,7 @@ public class GPXEditor implements Initializable {
     private MenuItem switchMapMenu;
     @FXML
     private TreeTableView<GPXMeasurable> gpxFileListXML;
-    private GPXTreeTableView gpxFileList = null;
+    private GPXMeasurableView gpxFileList = null;
     @FXML
     private TreeTableColumn<GPXMeasurable, String> idGPXCol;
     @FXML
@@ -329,7 +330,7 @@ public class GPXEditor implements Initializable {
     private TableColumn<GPXWaypoint, String> posTrackCol;
     @FXML
     private TableView<GPXWaypoint> gpxWaypointsXML;
-    private GPXTableView gpxWaypoints = null;
+    private GPXWaypointView gpxWaypoints = null;
     @FXML
     private SplitPane splitPane;
     @FXML
@@ -867,7 +868,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void initGPXFileList () {
-        gpxFileList = new GPXTreeTableView(gpxFileListXML, this);
+        gpxFileList = new GPXMeasurableView(gpxFileListXML, this);
         gpxFileList.prefHeightProperty().bind(topAnchorPane.heightProperty());
         gpxFileList.prefWidthProperty().bind(topAnchorPane.widthProperty());
         gpxFileList.setEditable(true);
@@ -960,7 +961,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void initGPXWaypointList() {
-        gpxWaypoints = new GPXTableView(gpxWaypointsXML, this);
+        gpxWaypoints = new GPXWaypointView(gpxWaypointsXML, this);
         gpxWaypoints.prefHeightProperty().bind(bottomAnchorPane.heightProperty());
         gpxWaypoints.prefWidthProperty().bind(bottomAnchorPane.widthProperty());
         
@@ -2307,5 +2308,14 @@ public class GPXEditor implements Initializable {
         } else {
             return null;
         }
+    }
+    
+    // TFE, 20221227: support for dragging gpx files over map, ...
+    public void onDragOver(final DragEvent event) {
+        gpxFileList.onDragOver(event);
+    }
+
+    public void onDragDropped(final DragEvent event) {
+        gpxFileList.onDragDropped(event);
     }
 }

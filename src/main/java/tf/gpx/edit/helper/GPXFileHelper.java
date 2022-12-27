@@ -140,7 +140,7 @@ public class GPXFileHelper {
         }
     }
     
-    private GPXEditor myEditor;
+    private GPXEditor myGPXEditor;
     
     private GPXFileHelper() {
         super();
@@ -151,7 +151,7 @@ public class GPXFileHelper {
     }
 
     public void setCallback(final GPXEditor editor) {
-        myEditor = editor;
+        myGPXEditor = editor;
     }
     
     public List<File> addFiles() {
@@ -168,7 +168,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myEditor.getWindow());
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myGPXEditor.getWindow());
 
         if(selectedFiles != null && !selectedFiles.isEmpty()){
             for (File selectedFile : selectedFiles) {
@@ -208,7 +208,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter(extConcat + "-Files", extFilter));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myEditor.getWindow());
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myGPXEditor.getWindow());
 
         if(selectedFiles != null && !selectedFiles.isEmpty()){
             for (File selectedFile : selectedFiles) {
@@ -243,7 +243,7 @@ public class GPXFileHelper {
             // das sollte auch in den Worker gehen...
             fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-            File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
+            File selectedFile = fileChooser.showSaveDialog(myGPXEditor.getWindow());
 
             if(selectedFile == null){
                 System.out.println("No File selected");
@@ -342,7 +342,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter(extConcat + "-Files", extFilter));
-        File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
+        File selectedFile = fileChooser.showSaveDialog(myGPXEditor.getWindow());
 
         if(selectedFile == null){
             System.out.println("No File selected");
@@ -434,7 +434,7 @@ public class GPXFileHelper {
             }
         } catch(IOException | ParserConfigurationException | SAXException ex) {
             // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
-            if (myEditor.getScene() != null) {
+            if (myGPXEditor.getScene() != null) {
 //                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
             
                 final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
