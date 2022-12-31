@@ -30,8 +30,8 @@ import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.PSA;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * Test of the SPA implementation.
@@ -51,8 +51,8 @@ public class TestPSAPlus {
         AzimuthZenithAngle resultPlus = PSAPlus.calculateSolarPosition(time, 39.742476, -105.1786, 69.29);
         AzimuthZenithAngle result = PSA.calculateSolarPosition(time, 39.742476, -105.1786);
         
-        Assert.assertEquals(resultPlus.getAzimuth(), result.getAzimuth(), TOLERANCE); // reference values from PSA
-        Assert.assertEquals(resultPlus.getZenithAngle(), result.getZenithAngle(), TOLERANCE);
+        Assertions.assertEquals(resultPlus.getAzimuth(), result.getAzimuth(), TOLERANCE); // reference values from PSA
+        Assertions.assertEquals(resultPlus.getZenithAngle(), result.getZenithAngle(), TOLERANCE);
     }
 
     @Test
@@ -62,7 +62,7 @@ public class TestPSAPlus {
 
         AzimuthZenithAngle result = PSAPlus.calculateSolarPosition(time, 48.1372222, 11.57611111111111, 69.29); // close by
 
-        Assert.assertEquals(215.2041, result.getAzimuth(), TOLERANCE); // reference values from SPA
-        Assert.assertEquals(64.71963, result.getZenithAngle(), TOLERANCE);
+        Assertions.assertEquals(215.2041, result.getAzimuth(), TOLERANCE); // reference values from SPA
+        Assertions.assertEquals(64.71963, result.getZenithAngle(), TOLERANCE);
     }
 }

@@ -146,10 +146,10 @@ dependencies {
     // TODO: error: error reading C:\Users\thomas\.gradle\caches\modules-2\files-2.1\eu.hansolo.fx\heatmap\17.0.11\69d60f2307f1ddb380ec3f847c255cac2c77dbba\heatmap-17.0.11.jar; java.net.URISyntaxException: Illegal character in path at index 129: file:/C:/Users/thomas/.gradle/caches/modules-2/files-2.1/eu.hansolo.fx/heatmap/17.0.11/69d60f2307f1ddb380ec3f847c255cac2c77dbba/${project.name}-${project.version}.jar
     // implementation 'eu.hansolo.fx:heatmap:17.0.5'
     
-    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-    // TFE, 20220205: not working, "No test cases executed" after all the code changes...
-    // new versions of the code are in "junit5.zip" for some later time when I have stamina to check this fuck-up
-//    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.6.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.1'
+    // TFE, 20221231: build a test suite for all non-UI tests
+    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.9.1'
     // TFE, 20210216: capture System.err() easily
     testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.1'
 }
@@ -236,6 +236,7 @@ test {
 
     // https://stackoverflow.com/a/35467005
     testLogging.showStandardStreams true;   
+    useJUnitPlatform()
 }
 
 // extend Netbeans Gradle "Debug" task

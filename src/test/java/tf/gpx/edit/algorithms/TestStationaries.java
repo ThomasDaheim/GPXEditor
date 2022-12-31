@@ -30,10 +30,10 @@ import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXFile;
@@ -51,12 +51,12 @@ public class TestStationaries {
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
         System.out.println("Starting TestCase: " + Instant.now());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         System.out.println("Ending TestCase: " + Instant.now());
     }
@@ -66,13 +66,13 @@ public class TestStationaries {
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
 
         final List<GPXWaypointNeighbours> clusters = WaypointClustering.getInstance().findStationaries(gpxfile.getCombinedGPXWaypoints(null), 50.0, 30, 10);
-        Assert.assertEquals(17, clusters.size());
-        Assert.assertEquals("N 41" + LatLonHelper.DEG_CHAR_1 + "22" + LatLonHelper.MIN_CHAR_1 + "15" + dS + "97" + LatLonHelper.SEC_CHAR_1 +" E 2" + LatLonHelper.DEG_CHAR_1 + "10" + LatLonHelper.MIN_CHAR_1 + "0" + dS + "76" + LatLonHelper.SEC_CHAR_1 + " 47" + dS + "54 m", clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
-        Assert.assertEquals(32, clusters.get(0).getBackwardCount());
-        Assert.assertEquals(17, clusters.get(0).getForwardCount());
-        Assert.assertEquals("N 43" + LatLonHelper.DEG_CHAR_1 + "43" + LatLonHelper.MIN_CHAR_1 + "51" + dS + "17" + LatLonHelper.SEC_CHAR_1 +" E 7" + LatLonHelper.DEG_CHAR_1 + "25" + LatLonHelper.MIN_CHAR_1 + "22" + dS + "99" + LatLonHelper.SEC_CHAR_1 + " 60" + dS + "04 m", clusters.get(16).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
-        Assert.assertEquals(4, clusters.get(16).getBackwardCount());
-        Assert.assertEquals(28, clusters.get(16).getForwardCount());
+        Assertions.assertEquals(17, clusters.size());
+        Assertions.assertEquals("N 41" + LatLonHelper.DEG_CHAR_1 + "22" + LatLonHelper.MIN_CHAR_1 + "15" + dS + "97" + LatLonHelper.SEC_CHAR_1 +" E 2" + LatLonHelper.DEG_CHAR_1 + "10" + LatLonHelper.MIN_CHAR_1 + "0" + dS + "76" + LatLonHelper.SEC_CHAR_1 + " 47" + dS + "54 m", clusters.get(0).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
+        Assertions.assertEquals(32, clusters.get(0).getBackwardCount());
+        Assertions.assertEquals(17, clusters.get(0).getForwardCount());
+        Assertions.assertEquals("N 43" + LatLonHelper.DEG_CHAR_1 + "43" + LatLonHelper.MIN_CHAR_1 + "51" + dS + "17" + LatLonHelper.SEC_CHAR_1 +" E 7" + LatLonHelper.DEG_CHAR_1 + "25" + LatLonHelper.MIN_CHAR_1 + "22" + dS + "99" + LatLonHelper.SEC_CHAR_1 + " 60" + dS + "04 m", clusters.get(16).getCenterPoint().getDataAsString(GPXLineItem.GPXLineItemData.Position));
+        Assertions.assertEquals(4, clusters.get(16).getBackwardCount());
+        Assertions.assertEquals(28, clusters.get(16).getForwardCount());
         
 //        GPXTrackSegment: T1.S1.1
 //        N 41?22'15,97" E 2?10'0,76";49;32;17

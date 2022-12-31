@@ -32,10 +32,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
@@ -56,12 +56,12 @@ public class TestSmoothing {
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
         System.out.println("Starting TestCase: " + Instant.now());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         System.out.println("Ending TestCase: " + Instant.now());
     }
@@ -70,20 +70,20 @@ public class TestSmoothing {
     public void testGPXFileProperties() {
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
         
-        Assert.assertNull(gpxfile.getGPXMetadata());
-        Assert.assertEquals(0, gpxfile.getGPXWaypoints().size());
-        Assert.assertEquals(0, gpxfile.getGPXRoutes().size());
-        Assert.assertEquals(6, gpxfile.getGPXTracks().size());
-        Assert.assertEquals(11, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
-        Assert.assertEquals(707, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
-        Assert.assertEquals(9868, gpxfile.getCombinedGPXWaypoints(null).size());
+        Assertions.assertNull(gpxfile.getGPXMetadata());
+        Assertions.assertEquals(0, gpxfile.getGPXWaypoints().size());
+        Assertions.assertEquals(0, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(6, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(11, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(707, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
+        Assertions.assertEquals(9868, gpxfile.getCombinedGPXWaypoints(null).size());
         
-        Assert.assertEquals("84" + dS + "424", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.Length));
-        Assert.assertEquals("2" + dS + "24", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.Speed));
-        Assert.assertEquals("1926" + dS + "88", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent));
-        Assert.assertEquals("1984" + dS + "41", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent));
-        Assert.assertEquals("37:39:29", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration));
-        Assert.assertEquals("171:23:07", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.OverallDuration));
+        Assertions.assertEquals("84" + dS + "424", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.Length));
+        Assertions.assertEquals("2" + dS + "24", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.Speed));
+        Assertions.assertEquals("1926" + dS + "88", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeAscent));
+        Assertions.assertEquals("1984" + dS + "41", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDescent));
+        Assertions.assertEquals("37:39:29", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.CumulativeDuration));
+        Assertions.assertEquals("171:23:07", gpxfile.getDataAsString(GPXLineItem.GPXLineItemData.OverallDuration));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class TestSmoothing {
 //                    } else {
 //                        System.out.println("});");
 //                    }
-                    Assert.assertEquals(rmse_results[i], rmse(trackwaypoints, smoothed), 0.001);
+                    Assertions.assertEquals(rmse_results[i], rmse(trackwaypoints, smoothed), 0.001);
                 }
             }
         }
@@ -434,7 +434,7 @@ public class TestSmoothing {
 //                    } else {
 //                        System.out.println("});");
 //                    }
-                Assert.assertEquals(rmse(trackwaypoints, smoothed), rmse_results[i], 0.001);
+                Assertions.assertEquals(rmse(trackwaypoints, smoothed), rmse_results[i], 0.001);
                     }
                 }
                 System.out.println("rmse: " + best_result[0] + ", alpha: " + best_result[1] + ", gamma: " + best_result[2]);

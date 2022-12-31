@@ -23,35 +23,20 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
+package tf.gpx.edit.testsuites;
 
-import java.io.File;
-import java.util.List;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
-import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXWaypoint;
+import org.junit.platform.suite.api.ExcludePackages;
+import org.junit.platform.suite.api.SelectPackages;
+import org.junit.platform.suite.api.Suite;
+import org.junit.platform.suite.api.SuiteDisplayName;
 
 /**
- * Test of the hampel filter implementation.
- * 
+ * Test suite for all non-UI tests (= everything not in package tf.ownnote.ui.main)
  * @author thomas
  */
-public class TestGarminCrapFilter {
-    @Test
-    public void testWithWaypoints() {
-        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testgarmincrapfilter.gpx"));
-        
-        final List<GPXWaypoint> waypoints = gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints();
-        Assertions.assertEquals(263, waypoints.size());
-        final boolean[] keep = GarminCrapFilter.applyFilter(waypoints, 1000.0);
-        Assertions.assertEquals(263, keep.length);
-        
-        // should remove forst & last waypoint ONLY
-        Assertions.assertFalse(keep[0]);
-        Assertions.assertFalse(keep[262]);
-        for (int i = 1; i <= 261; i++) {
-            Assertions.assertTrue(keep[i]);
-        }
-    }
+@Suite
+@SuiteDisplayName("All non-UI tests")
+@SelectPackages("tf.gpx.edit")
+@ExcludePackages({"tf.gpx.edit.testsuites"})
+public class NonUITests {
 }

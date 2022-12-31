@@ -34,8 +34,8 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.SPA;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
@@ -55,8 +55,8 @@ public class TestSPA {
 
         AzimuthZenithAngle result = SPA.calculateSolarPosition(time, 39.742476, -105.1786, 1830.14, 67, 820, 11);
 
-        Assert.assertEquals(194.340241, result.getAzimuth(), TOLERANCE / 10);
-        Assert.assertEquals(50.111622, result.getZenithAngle(), TOLERANCE / 10);
+        Assertions.assertEquals(194.340241, result.getAzimuth(), TOLERANCE / 10);
+        Assertions.assertEquals(50.111622, result.getZenithAngle(), TOLERANCE / 10);
     }
 
     @Test
@@ -66,8 +66,8 @@ public class TestSPA {
 
         AzimuthZenithAngle result = SPA.calculateSolarPosition(time, 48.1372222, 11.57611111111111, 520, 69.29); // close by
 
-        Assert.assertEquals(215.2041, result.getAzimuth(), TOLERANCE);
-        Assert.assertEquals(64.71963, result.getZenithAngle(), TOLERANCE);
+        Assertions.assertEquals(215.2041, result.getAzimuth(), TOLERANCE);
+        Assertions.assertEquals(64.71963, result.getZenithAngle(), TOLERANCE);
     }
 
     @Test
@@ -77,22 +77,22 @@ public class TestSPA {
 
         GregorianCalendar[] result = SPA.calculateSunriseTransitSet(time, 48.1372222, 11.57611111111111, 69.29); // close by
         
-        Assert.assertEquals("Tue Feb 22 07:08:16 CET 2022", result[0].getTime().toString()); // values from https://www.timeanddate.com/sun/germany/munich
-        Assert.assertEquals("Tue Feb 22 12:27:08 CET 2022", result[1].getTime().toString());
-        Assert.assertEquals("Tue Feb 22 17:46:45 CET 2022", result[2].getTime().toString());
+        Assertions.assertEquals("Tue Feb 22 07:08:16 CET 2022", result[0].getTime().toString()); // values from https://www.timeanddate.com/sun/germany/munich
+        Assertions.assertEquals("Tue Feb 22 12:27:08 CET 2022", result[1].getTime().toString());
+        Assertions.assertEquals("Tue Feb 22 17:46:45 CET 2022", result[2].getTime().toString());
         
         // check angle for dates
         AzimuthZenithAngle angle = SPA.calculateSolarPosition(result[0], 48.1372222, 11.57611111111111, 520, 69.29);
-        Assert.assertEquals(104.409047, angle.getAzimuth(), TOLERANCE); // 104 from website
-        Assert.assertEquals(90.840334, angle.getZenithAngle(), TOLERANCE); // 90 is horizon
+        Assertions.assertEquals(104.409047, angle.getAzimuth(), TOLERANCE); // 104 from website
+        Assertions.assertEquals(90.840334, angle.getZenithAngle(), TOLERANCE); // 90 is horizon
 
         angle = SPA.calculateSolarPosition(result[1], 48.1372222, 11.57611111111111, 520, 69.29);
-        Assert.assertEquals(179.997705, angle.getAzimuth(), TOLERANCE); // 180 is south
-        Assert.assertEquals(58.249980, angle.getZenithAngle(), TOLERANCE); // 58 from website
+        Assertions.assertEquals(179.997705, angle.getAzimuth(), TOLERANCE); // 180 is south
+        Assertions.assertEquals(58.249980, angle.getZenithAngle(), TOLERANCE); // 58 from website
 
         angle = SPA.calculateSolarPosition(result[2], 48.1372222, 11.57611111111111, 520, 69.29);
-        Assert.assertEquals(255.833650, angle.getAzimuth(), TOLERANCE); // 256 from website
-        Assert.assertEquals(90.837069, angle.getZenithAngle(), TOLERANCE); // 90 is horizon
+        Assertions.assertEquals(255.833650, angle.getAzimuth(), TOLERANCE); // 256 from website
+        Assertions.assertEquals(90.837069, angle.getZenithAngle(), TOLERANCE); // 90 is horizon
     }
     
     @Test
@@ -104,22 +104,22 @@ public class TestSPA {
         GregorianCalendar date = GregorianCalendar.from(zonedDateTime);
         SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
-        Assert.assertNotNull(path.getSunrise());
-        Assert.assertNotNull(path.getSunset());
+        Assertions.assertNotNull(path.getSunrise());
+        Assertions.assertNotNull(path.getSunset());
 
         // and now for summer
         date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
-        Assert.assertNotNull(path.getSunrise());
-        Assert.assertNotNull(path.getSunset());
+        Assertions.assertNotNull(path.getSunrise());
+        Assertions.assertNotNull(path.getSunset());
 
         // and now for winter
         date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
-        Assert.assertNotNull(path.getSunrise());
-        Assert.assertNotNull(path.getSunset());
+        Assertions.assertNotNull(path.getSunrise());
+        Assertions.assertNotNull(path.getSunset());
     }
     
     @Test
@@ -131,14 +131,14 @@ public class TestSPA {
         GregorianCalendar date = new GregorianCalendar(zonedDateTime.getYear(), 5, 21, 12, 0);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         SunPathForDay path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
-        Assert.assertNull(path.getSunrise());
-        Assert.assertNull(path.getSunset());
+        Assertions.assertNull(path.getSunrise());
+        Assertions.assertNull(path.getSunset());
 
         // and now for winter: sun nevwer sets
         date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21, 12, 0);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);
-        Assert.assertNull(path.getSunrise());
-        Assert.assertNull(path.getSunset());
+        Assertions.assertNull(path.getSunrise());
+        Assertions.assertNull(path.getSunset());
     }
 }

@@ -26,9 +26,9 @@
 package tf.gpx.edit.helper;
 
 import java.util.TimeZone;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
@@ -36,7 +36,7 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * @author thomas
  */
 public class TestTimeZoneProvider {
-    @BeforeClass
+    @BeforeAll
     public static void init() {
         TimeZoneProvider.init();
     }
@@ -45,25 +45,25 @@ public class TestTimeZoneProvider {
     public void testValidLocations() {
         // berlin
         TimeZone zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(52.518424, 13.404776));
-        Assert.assertTrue(TimeZone.getTimeZone("Europe/Berlin").equals(zone));
+        Assertions.assertTrue(TimeZone.getTimeZone("Europe/Berlin").equals(zone));
 
         // meran
         zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(46.66068859124702, 11.159234046936037));
-        Assert.assertTrue(TimeZone.getTimeZone("Europe/Rome").equals(zone));
+        Assertions.assertTrue(TimeZone.getTimeZone("Europe/Rome").equals(zone));
 
         // kansas city
         zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(39.099912, -94.581213));
-        Assert.assertTrue(TimeZone.getTimeZone("America/Chicago").equals(zone));
+        Assertions.assertTrue(TimeZone.getTimeZone("America/Chicago").equals(zone));
 
         // melbourne
         zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(-37.8136, 144.9631));
-        Assert.assertTrue(TimeZone.getTimeZone("Australia/Melbourne").equals(zone));
+        Assertions.assertTrue(TimeZone.getTimeZone("Australia/Melbourne").equals(zone));
     }
     
     @Test
     public void testInvalidLocations() {
         // nowhere
         TimeZone zone = TimeZoneProvider.getInstance().getTimeZone(new LatLonElev(95.0, 0.0));
-        Assert.assertTrue(TimeZone.getTimeZone("GMT").equals(zone));
+        Assertions.assertTrue(TimeZone.getTimeZone("GMT").equals(zone));
     }
 }

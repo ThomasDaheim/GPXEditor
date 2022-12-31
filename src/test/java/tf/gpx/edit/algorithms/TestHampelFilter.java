@@ -29,8 +29,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
@@ -66,15 +66,15 @@ public class TestHampelFilter {
         }
         
         outliers.stream().forEach((t) -> {
-            Assert.assertEquals(data.get(t), outlierVal, 0.1);
+            Assertions.assertEquals(data.get(t), outlierVal, 0.1);
         });
         
         final List<Double> hampelData = HampelSmoother.getInstance().apply(data, 3, 3.0);
         for (int i = 0; i<=30; i++) {
             if (outliers.contains(i)) {
-                Assert.assertNotEquals(hampelData.get(i), outlierVal, 0.1);
+                Assertions.assertNotEquals(hampelData.get(i), outlierVal, 0.1);
             } else {
-                Assert.assertEquals(data.get(i), hampelData.get(i), 0.1);
+                Assertions.assertEquals(data.get(i), hampelData.get(i), 0.1);
             }
         }
     }
@@ -90,7 +90,7 @@ public class TestHampelFilter {
         final List<LatLonElev> filteredWaypoints = HampelSmoother.getInstance().apply(waypoints);
         
         // no one gets left behind
-        Assert.assertEquals(waypoints.size(), filteredWaypoints.size());
+        Assertions.assertEquals(waypoints.size(), filteredWaypoints.size());
         for (int i = 0; i<waypoints.size(); i++) {
 //            System.out.println("i: " + i);
 //            System.out.println("Waypoint:   lat " + waypoints.get(i).getLatitude() + 
@@ -100,19 +100,19 @@ public class TestHampelFilter {
 //                    ", lon " + filteredWaypoints.get(i).getLongitude() + 
 //                    ", elev " + filteredWaypoints.get(i).getElevation());
             if (latOutliers.contains(i)) {
-                Assert.assertNotEquals(waypoints.get(i).getLatitude(), filteredWaypoints.get(i).getLatitude(), 0.1);
+                Assertions.assertNotEquals(waypoints.get(i).getLatitude(), filteredWaypoints.get(i).getLatitude(), 0.1);
             } else {
-                Assert.assertEquals(waypoints.get(i).getLatitude(), filteredWaypoints.get(i).getLatitude(), 0.1);
+                Assertions.assertEquals(waypoints.get(i).getLatitude(), filteredWaypoints.get(i).getLatitude(), 0.1);
             }
             if (lonOutliers.contains(i)) {
-                Assert.assertNotEquals(waypoints.get(i).getLongitude(), filteredWaypoints.get(i).getLongitude(), 0.1);
+                Assertions.assertNotEquals(waypoints.get(i).getLongitude(), filteredWaypoints.get(i).getLongitude(), 0.1);
             } else {
-                Assert.assertEquals(waypoints.get(i).getLongitude(), filteredWaypoints.get(i).getLongitude(), 0.1);
+                Assertions.assertEquals(waypoints.get(i).getLongitude(), filteredWaypoints.get(i).getLongitude(), 0.1);
             }
             if (elevOutliers.contains(i)) {
-                Assert.assertNotEquals(waypoints.get(i).getElevation(), filteredWaypoints.get(i).getElevation(), 0.1);
+                Assertions.assertNotEquals(waypoints.get(i).getElevation(), filteredWaypoints.get(i).getElevation(), 0.1);
             } else {
-                Assert.assertEquals(waypoints.get(i).getElevation(), filteredWaypoints.get(i).getElevation(), 0.1);
+                Assertions.assertEquals(waypoints.get(i).getElevation(), filteredWaypoints.get(i).getElevation(), 0.1);
             }
         }
     }
