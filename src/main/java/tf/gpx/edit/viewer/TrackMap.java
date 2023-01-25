@@ -1199,39 +1199,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    public void setCurrentMarker(final String options, final Double lat, final Double lng) {
-        try {
-            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<HashMap<String,String>>(){}), new LatLonElev(lat, lng));
-        } catch (IOException ex) {
-            currentMarker = null;
-        }
-    }
-    
-    public void removeCurrentMarker() {
-        currentMarker = null;
-    }
-
-    public void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
-        currentGPXWaypoint = fileWaypoints.get(waypoint);
-    }
-    
-    public void removeCurrentWaypoint() {
-        currentGPXWaypoint = null;
-    }
-
-    public void setCurrentGPXRoute(final String route, final Double lat, final Double lng) {
-        currentGPXRoute = routes.get(route);
-    }
-
-    public void removeCurrentGPXRoute() {
-        currentGPXRoute = null;
-    }
-
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
     
-   public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
 //        System.out.println("setGPXWaypoints Start: " + Instant.now());
         myGPXLineItems = lineItems;
 
@@ -1637,7 +1609,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         waypoints.clear();
     }
     
-    public void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
+    protected void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
         // TFE, 20200104: for list of lineitems we need to collect waypointsToShow from all of them
         final Set<GPXWaypoint> waypoints = new LinkedHashSet<>();
         for (GPXLineItem lineItem : myGPXLineItems) {
@@ -1646,7 +1618,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         addGPXWaypointsToSelection(waypoints, addToSelection);
     }
     
-    public void selectGPXWaypointFromMarker(final String marker, final LatLonElev newLatLong, final Boolean addToSelection) {
+    protected void selectGPXWaypointFromMarker(final String marker, final LatLonElev newLatLong, final Boolean addToSelection) {
         GPXWaypoint waypoint = null;
                 
         if (fileWaypoints.containsKey(marker)) {
@@ -1972,40 +1944,12 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         return new LatLonElev(mapBounds.getCenterX(), mapBounds.getCenterY());
     }
     
-    public void mapViewChanged(final BoundingBox newBoundingBox) {
-        mapBounds = newBoundingBox;
-        HeatMapPane.getInstance().restore();
-        if (HeatMapPane.getInstance().isVisible()) {
-            updateHeatMapPane();
-        }
-        ChartsPane.getInstance().setViewLimits(mapBounds);
-        
-        // TFE, 20210820: look for new pictures in bounding box - and remove current popover - if visible
-        hidePicturePopup(currentMapImageId);
-        getPicturesInBoundingBox();
-    }
-    
-    public void mapViewChanging(final BoundingBox newBoundingBox) {
-        HeatMapPane.getInstance().hide();
-    }
-    
     public void setChartsPaneButtonState(final MapButtonState state) {
         execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
-    }
-    public void toggleChartsPane(final Boolean visible) {
-        ChartsPane.getInstance().doSetVisible(visible);
     }
     
     public void setHeatMapButtonState(final MapButtonState state) {
         execScript("setHeatMapButtonState(\"" + state.toString() + "\");");
-    }
-    public void toggleHeatMapPane(final Boolean visible) {
-        if (visible) {
-            updateHeatMapPane();
-        } else {
-            HeatMapPane.getInstance().clearHeatMap();
-        }
-        HeatMapPane.getInstance().setVisible(visible);
     }
     private void updateHeatMapPane() {
 //        System.out.println("trackWaypoints: " + trackWaypoints.size());
@@ -2051,33 +1995,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    protected void setPictureIconsButtonState(final boolean state) {
-        execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
-    }
-    protected void togglePictureIcons(final Boolean visible) {
-        // save into preferences
-        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
-        
-        if (!visible) {
-            hidePicturePopup(currentMapImageId);
-        }
-    }
-    protected void showPicturePopup(final Integer id) {
-        currentMapImageId = id;
-        
-        mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
-        mapImagePopOver.setTitle(mapImages.get(id).getBasename());
-        
-        final Point2D mouseLocation = (new Robot()).getMousePosition();
-        mapImagePopOver.setX(mouseLocation.getX());
-        mapImagePopOver.setY(mouseLocation.getY());
-        mapImagePopOver.show(myMapPane.getScene().getWindow());
-    }
-    protected void hidePicturePopup(final Integer id) {
-        currentMapImageId = null;
-        mapImagePopOver.hide();
-    }
-    
     private void getPicturesInBoundingBox() {
         if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
 //            System.out.println("getPicturesInBoundingBox START: " + Instant.now());
@@ -2247,5 +2164,95 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         sb.append("]");
         return sb.toString();
-    }   
+    }
+    
+    // callback functions for leaflet javascript
+
+    protected void setCurrentMarker(final String options, final Double lat, final Double lng) {
+        try {
+            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<HashMap<String,String>>(){}), new LatLonElev(lat, lng));
+        } catch (IOException ex) {
+            currentMarker = null;
+        }
+    }
+    
+    protected void removeCurrentMarker() {
+        currentMarker = null;
+    }
+
+    protected void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
+        currentGPXWaypoint = fileWaypoints.get(waypoint);
+    }
+    
+    protected void removeCurrentWaypoint() {
+        currentGPXWaypoint = null;
+    }
+
+    protected void setCurrentGPXRoute(final String route, final Double lat, final Double lng) {
+        currentGPXRoute = routes.get(route);
+    }
+
+    protected void removeCurrentGPXRoute() {
+        currentGPXRoute = null;
+    }
+
+    protected void mapViewChanged(final BoundingBox newBoundingBox) {
+        mapBounds = newBoundingBox;
+        HeatMapPane.getInstance().restore();
+        if (HeatMapPane.getInstance().isVisible()) {
+            updateHeatMapPane();
+        }
+        ChartsPane.getInstance().setViewLimits(mapBounds);
+        
+        // TFE, 20210820: look for new pictures in bounding box - and remove current popover - if visible
+        hidePicturePopup(currentMapImageId);
+        getPicturesInBoundingBox();
+    }
+    
+    protected void mapViewChanging(final BoundingBox newBoundingBox) {
+        HeatMapPane.getInstance().hide();
+    }
+    
+    protected void toggleChartsPane(final Boolean visible) {
+        ChartsPane.getInstance().doSetVisible(visible);
+    }
+    
+    protected void toggleHeatMapPane(final Boolean visible) {
+        if (visible) {
+            updateHeatMapPane();
+        } else {
+            HeatMapPane.getInstance().clearHeatMap();
+        }
+        HeatMapPane.getInstance().setVisible(visible);
+    }
+
+    protected void setPictureIconsButtonState(final boolean state) {
+        execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
+    }
+
+    protected void togglePictureIcons(final Boolean visible) {
+        // save into preferences
+        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
+        
+        if (!visible) {
+            hidePicturePopup(currentMapImageId);
+        }
+    }
+
+    protected void showPicturePopup(final Integer id) {
+        currentMapImageId = id;
+        
+        mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
+        mapImagePopOver.setTitle(mapImages.get(id).getBasename());
+        
+        final Point2D mouseLocation = (new Robot()).getMousePosition();
+        mapImagePopOver.setX(mouseLocation.getX());
+        mapImagePopOver.setY(mouseLocation.getY());
+        mapImagePopOver.show(myMapPane.getScene().getWindow());
+    }
+
+    protected void hidePicturePopup(final Integer id) {
+        currentMapImageId = null;
+        mapImagePopOver.hide();
+    }
 }
