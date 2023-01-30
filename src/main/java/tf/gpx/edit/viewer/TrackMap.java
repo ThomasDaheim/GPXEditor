@@ -292,8 +292,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
-    private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
-    
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
     // rectangle to select fileWaypointsCount
@@ -329,7 +327,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private boolean isLoaded = false;
     private boolean isInitialized = false;
     
-    private IElevationProvider elevationProvider;
+    private final IElevationProvider elevationProvider;
 
     private TrackMap() {
         super();
@@ -410,6 +408,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
                 System.out.println("TrackMap: " + arg0.getData());
             });
+                
+            // TFE, 20230130: lets try firebug once again
+            // https://stackoverflow.com/a/73124798
+            //execScript("var firebug=document.createElement('script');firebug.setAttribute('src','https://lupatec.eu/getfirebug/firebug-lite-compressed.js');document.body.appendChild(firebug);(function(){if(window.firebug.version){firebug.init();}else{setTimeout(arguments.callee);}})();void(firebug);");
         
             window = (JSObject) execScript("window"); 
             jscallback = new TrackMapCallback(this);
