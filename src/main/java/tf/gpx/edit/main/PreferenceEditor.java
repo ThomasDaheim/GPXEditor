@@ -36,13 +36,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
@@ -79,6 +83,7 @@ import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  *
@@ -650,8 +655,6 @@ public class PreferenceEditor extends AbstractStage {
         final Button saveBtn = new Button("Save");
         saveBtn.setOnAction((ActionEvent arg0) -> {
             savePreferences();
-
-            close();
         });
         setActionAccelerator(saveBtn);
         buttonBox.getChildren().add(saveBtn);
@@ -686,7 +689,21 @@ public class PreferenceEditor extends AbstractStage {
         
         final Button clearBtn = new Button("Clear");
         clearBtn.setOnAction((ActionEvent arg0) -> {
-            GPXEditorPreferences.INSTANCE.clear();
+            // TFE, 20230130: additional query if you really want to do that
+            final ButtonType buttonClear = new ButtonType("Clear", ButtonBar.ButtonData.OK_DONE);
+            final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Optional<ButtonType> doAction = 
+                    ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION,
+                            "Confirmation",
+                            "Clear preferences?",
+                            "Do you want to clear all current preferences?",
+                            buttonClear,
+                            buttonCancel);
+
+            if (doAction.isPresent() && doAction.get().equals(buttonClear)) {
+                GPXEditorPreferences.INSTANCE.clear();
+            }
+            
         });
         buttonBox.getChildren().add(clearBtn);
         HBox.setMargin(clearBtn, INSET_SMALL);
