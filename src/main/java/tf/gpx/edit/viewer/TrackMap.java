@@ -424,16 +424,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
             addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
-            // support to show mouse coordinates
-            addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
-
-            // support to show center coordinates
-            addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
-
             // map helper functions for selecting, clicking, ...
             addScriptFromPath(LEAFLET_PATH + "/MapHelper" + MIN_EXT + ".js");
 
@@ -442,105 +432,119 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // set api key for open cycle map
 //            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
 
-            // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
-            // https://github.com/hiasinho/Leaflet.vector-markers
-            addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
-
-//            // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
-            // TFE, 20200510: draw instead of editable
-            // TFE, 20201025: rolled back since "New Route" not working properly
-            // since we have an optimization for many waypointsToShow here...
-//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
-            
-            // https://github.com/smeijer/leaflet-geosearch
-            // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
-            addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
-            // load search icon later after markers are initialized
-            
-            // support for autorouting
-            // https://github.com/perliedman/leaflet-routing-machine
-            addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/ors-js-client" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteServiceV2" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
-            // we need an api key
-            execScript("initRouting(\"" + GPXEditorPreferences.ROUTING_API_KEY.getAsString() + "\");");
-
-            // support for ruler
-            // https://github.com/gokertanrisever/leaflet-ruler
-            addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
-
-            // add support for lat / lon lines
-            // https://github.com/cloudybay/leaflet.latlng-graticule
-            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
-
-            // support for custom buttons
-            // https://github.com/CliffCloud/Leaflet.EasyButton
-            addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
-            // TFE, 20200313: support for heat map
-            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
-            
-            // support to re-center
-            addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
-            
-            // support for playback
-            // https://github.com/hallahan/LeafletPlayback
-            addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
-
-            // geolocation not working in webview
-//            // support for locate
-//            // url command in css not working
-//            // https://stackoverflow.com/a/50602814
-//            getWebView().getEngine().setUserStyleSheetLocation(
-//                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff2").toExternalForm()+"?v=4.7.0') format('woff2'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff").toExternalForm()+"?v=4.7.0') format('woff'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.ttf").toExternalForm()+"?v=4.7.0') format('truetype'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.svg").toExternalForm()+"?v=4.7.0#fontawesomeregular') format('svg');}");
-//            // https://github.com/domoritz/leaflet-locatecontrol
-//            addStyleFromPath("/font-awesome/font-awesome" + MIN_EXT + ".css");
-//            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
-//            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
-
-            // TFE, 2020820: support for images on maps
-            addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
-            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
-            setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
-            
-            // TFE, 20220309: support for sunrise / sunset lines on map
-            addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
-
-//            System.out.println("  JS+CSS loaded: " + Instant.now());
-
-            myMapPane = (Pane) getParent();
-            
             Platform.runLater(() -> {
+                // support to show mouse coordinates
+                addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
+
+                // support to show center coordinates
+                addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
+
+                // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
+                // https://github.com/hiasinho/Leaflet.vector-markers
+                addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
+
+    //            // https://github.com/Leaflet/Leaflet.Editable
+                addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+                // TFE, 20200510: draw instead of editable
+                // TFE, 20201025: rolled back since "New Route" not working properly
+                // since we have an optimization for many waypointsToShow here...
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
+
+                // https://github.com/smeijer/leaflet-geosearch
+                // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
+                addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
+                // load search icon later after markers are initialized
+
+                // support for autorouting
+                // https://github.com/perliedman/leaflet-routing-machine
+                addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/openrouteservice/ors-js-client" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteServiceV2" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
+                // we need an api key
+                execScript("initRouting(\"" + GPXEditorPreferences.ROUTING_API_KEY.getAsString() + "\");");
+
+                // support for ruler
+                // https://github.com/gokertanrisever/leaflet-ruler
+                addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
+
+                // add support for lat / lon lines
+                // https://github.com/cloudybay/leaflet.latlng-graticule
+                addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
+
+                // support for custom buttons
+                // https://github.com/CliffCloud/Leaflet.EasyButton
+                addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
+                // TFE, 20200313: support for heat map
+                addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
+
+                // support to re-center
+                addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
+
+                // support for playback
+                // https://github.com/hallahan/LeafletPlayback
+                addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
+
+                // geolocation not working in webview
+    //            // support for locate
+    //            // url command in css not working
+    //            // https://stackoverflow.com/a/50602814
+    //            getWebView().getEngine().setUserStyleSheetLocation(
+    //                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.woff2").toExternalForm()+"?v=4.7.0') format('woff2'), url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.woff").toExternalForm()+"?v=4.7.0') format('woff'), url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.ttf").toExternalForm()+"?v=4.7.0') format('truetype'), url('" + 
+    //                    getClass().getResource("/font-awesome/fontawesome-webfont.svg").toExternalForm()+"?v=4.7.0#fontawesomeregular') format('svg');}");
+    //            // https://github.com/domoritz/leaflet-locatecontrol
+    //            addStyleFromPath("/font-awesome/font-awesome" + MIN_EXT + ".css");
+    //            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
+    //            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
+
+                // TFE, 2020820: support for images on maps
+                addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
+                addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
+                setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
+
+                // TFE, 20220309: support for sunrise / sunset lines on map
+                addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
+
+                // TFE, 20230201: show / hide timezones overlay
+                addScriptFromPath(LEAFLET_PATH + "/timezones/L.timezones" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Timezones" + MIN_EXT + ".js");
+
+    //            System.out.println("  JS+CSS loaded: " + Instant.now());
+
+                myMapPane = (Pane) getParent();
+            
                 // TFE, 20200317: add heat map
                 final HeatMapPane heatMapPane = HeatMapPane.getInstance();
                 myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
