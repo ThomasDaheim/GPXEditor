@@ -540,6 +540,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 // TFE, 20230201: show / hide timezones overlay
                 addScriptFromPath(LEAFLET_PATH + "/timezones/L.timezones" + MIN_EXT + ".js");
                 addScriptFromPath(LEAFLET_PATH + "/Timezones" + MIN_EXT + ".js");
+//                addScriptFromPath(LEAFLET_PATH + "/Timezones.js");
 
     //            System.out.println("  JS+CSS loaded: " + Instant.now());
 
