@@ -27,6 +27,8 @@ package tf.gpx.edit.values;
  */
 
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -48,6 +50,8 @@ import me.himanshusoni.gpxparser.modal.Email;
 import me.himanshusoni.gpxparser.modal.Link;
 import me.himanshusoni.gpxparser.modal.Metadata;
 import me.himanshusoni.gpxparser.modal.Person;
+import me.himanshusoni.gpxparser.modal.Waypoint;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.main.GPXEditor;
@@ -61,6 +65,8 @@ public class EditGPXMetadata extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static EditGPXMetadata INSTANCE = new EditGPXMetadata();
+    
+    private static final DecimalFormat SIZE_FORMATTER = new DecimalFormat("#.##");
 
     private GPXEditor myGPXEditor;
     
@@ -81,6 +87,7 @@ public class EditGPXMetadata extends AbstractStage {
     private final Label metaTimeLbl = new Label();
     private final TextField metaKeywordsTxt = new TextField();
     private final Label metaBoundsLbl = new Label();
+    private final Label metaSizeLbl = new Label();
     private LinkTable metaLinkTable;
     
     private GPXFile myGPXFile;
@@ -255,7 +262,7 @@ public class EditGPXMetadata extends AbstractStage {
         rowNum++;
         metaLinkTable = new LinkTable();
         editMetadataPane.add(metaLinkTable, 0, rowNum, 2, 1);
-        GridPane.setMargin(metaLinkTable, INSET_SMALL);
+        GridPane.setMargin(metaLinkTable, INSET_SMALL); 
         
         rowNum++;
         // 15th row: bounds
@@ -265,6 +272,15 @@ public class EditGPXMetadata extends AbstractStage {
 
         editMetadataPane.add(metaBoundsLbl, 1, rowNum);
         GridPane.setMargin(metaBoundsLbl, INSET_TOP);
+        
+        rowNum++;
+        // 16th size: bounds
+        final Label sizeLbl = new Label("Size:");
+        editMetadataPane.add(sizeLbl, 0, rowNum);
+        GridPane.setMargin(sizeLbl, INSET_TOP);
+
+        editMetadataPane.add(metaSizeLbl, 1, rowNum);
+        GridPane.setMargin(metaSizeLbl, INSET_TOP);
         
         rowNum++;
         // 16th row: store metadata values
@@ -359,14 +375,24 @@ public class EditGPXMetadata extends AbstractStage {
         // bounds is set in setHeaderAndMeta()
         // maxlat="51.645707" maxlon="10.020920" minlat="49.570030" minlon="8.106567"
         String bounds = "";
+        String size = "";
         if (metadata.getBounds() != null) {
             bounds = 
                     "minLat=" + metadata.getBounds().getMinLat() +
                     " maxLat=" + metadata.getBounds().getMaxLat() +
                     " minLon=" + metadata.getBounds().getMinLon() +
                     " maxLon=" + metadata.getBounds().getMaxLon();
+            
+            // TFE, 20230305: show size (in kilometers) of the bounding box as well
+            // we need some waypoints
+            final Waypoint p0 = new Waypoint(metadata.getBounds().getMinLat(), metadata.getBounds().getMinLon());
+            final Waypoint pw = new Waypoint(metadata.getBounds().getMinLat(), metadata.getBounds().getMaxLon());
+            final Waypoint ph = new Waypoint(metadata.getBounds().getMaxLat(), metadata.getBounds().getMinLon());
+            size = "width=" + SIZE_FORMATTER.format(EarthGeometry.distance(p0, pw) / 1000.0) + "km" + 
+                   " height=" + SIZE_FORMATTER.format(EarthGeometry.distance(p0, ph) / 1000.0) + "km";
         }
         metaBoundsLbl.setText(bounds);
+        metaSizeLbl.setText(size);
         
         metaLinkTable.getItems().clear();
         if (metadata.getLinks() != null) {
