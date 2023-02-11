@@ -49,13 +49,13 @@ public class Fxyz3dHelper {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static Fxyz3dHelper INSTANCE = new Fxyz3dHelper();
     
-    private final static double SPHERE_SIZE = 0.05;
-    private final static boolean SPHERE_VISIBLE = false;
+//    private final static double SPHERE_SIZE = 0.05;
+//    private final static boolean SPHERE_VISIBLE = false;
     private final static double AXES_DIST = 1.025;
     private final static double AXES_THICKNESS = 0.005;
     private final static double TIC_LENGTH = 10*AXES_THICKNESS;
     private final static int AXIS_FONT_SIZE = 16;
-
+    
     private Fxyz3dHelper() {
         // Exists only to defeat instantiation.
     }
@@ -67,8 +67,12 @@ public class Fxyz3dHelper {
     public Group getAxes(
             final Bounds3D dataBounds, 
             final double elevationScaling,
+            // TFE, 20230205: scale axis thickness, ... with size of viewport
+            final double lineScaling,
             final Map<Shape3D, Label> shape3DToLabel) {
         // org.fxyz3d.scene.Axes
+        
+        final double axesThickness = AXES_THICKNESS * lineScaling;
         
         final Group result = new Group();
 
@@ -90,15 +94,15 @@ public class Fxyz3dHelper {
         final int endElev = (int) Math.round(dataBounds.getMaxElev()/elevationScaling/100d) * 100;
 
         // add lat axis for min/max values
-        Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, axesThickness, latDist*AXES_DIST);
         result.getChildren().add(lataxis1);
-        Axis lataxis2 = Axis.getAxisLine(-lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        Axis lataxis2 = Axis.getAxisLine(-lonShift, 0, 0, Axis.Direction.Z, axesThickness, latDist*AXES_DIST);
         result.getChildren().add(lataxis2);
 
         // add lon axis for min/max values
-        Axis lonaxis1 = Axis.getAxisLine(0, 0, latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        Axis lonaxis1 = Axis.getAxisLine(0, 0, latShift, Axis.Direction.X, axesThickness, lonDist*AXES_DIST);
         result.getChildren().add(lonaxis1);
-        Axis lonaxis2 = Axis.getAxisLine(0, 0, -latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        Axis lonaxis2 = Axis.getAxisLine(0, 0, -latShift, Axis.Direction.X, axesThickness, lonDist*AXES_DIST);
         result.getChildren().add(lonaxis2);
         
         // lat lines & tics
@@ -113,18 +117,18 @@ public class Fxyz3dHelper {
 
             // add axis line across whole lon range for this lat
             result.getChildren().add(
-                    Axis.getAxisLine(0, 0, latCenter-i, Axis.Direction.X, AXES_THICKNESS / 2d, lonDist*AXES_DIST));
+                    Axis.getAxisLine(0, 0, latCenter-i, Axis.Direction.X, axesThickness / 2d, lonDist*AXES_DIST));
 
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
-                            lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, AXES_THICKNESS, TIC_LENGTH, 
+                            lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, axesThickness, TIC_LENGTH, 
                             i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
 
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
-                            -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, AXES_THICKNESS, TIC_LENGTH, 
+                            -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, axesThickness, TIC_LENGTH, 
                             i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
         
@@ -140,23 +144,23 @@ public class Fxyz3dHelper {
             
             // add axis line across whole lat range for this lon
             result.getChildren().add(
-                    Axis.getAxisLine(i-lonCenter, 0, 0, Axis.Direction.Z, AXES_THICKNESS / 2d, latDist*AXES_DIST));
+                    Axis.getAxisLine(i-lonCenter, 0, 0, Axis.Direction.Z, axesThickness / 2d, latDist*AXES_DIST));
 
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
-                            i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, AXES_THICKNESS, TIC_LENGTH, 
+                            i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, axesThickness, TIC_LENGTH, 
                             i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
             
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
-                            i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, AXES_THICKNESS, TIC_LENGTH, 
+                            i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, axesThickness, TIC_LENGTH, 
                             i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
         }
 
         // elevation lines & tics
-        final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, dataBounds.getMaxElev());
+        final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, axesThickness, dataBounds.getMaxElev());
         result.getChildren().add(elevaxis);
         // TFE, 20220717: limit number of lines & tics for large elevation differences
         final int elevIncr = (endElev - startElev) / 5;
@@ -164,7 +168,7 @@ public class Fxyz3dHelper {
             // add tic here as well
             result.getChildren().add(
                     AxisTic.getTicAndLabel(shape3DToLabel, 
-                            lonShift + TIC_LENGTH*0.5, Double.valueOf(i)*elevationScaling, -latShift, elevaxis, AXES_THICKNESS, TIC_LENGTH, 
+                            lonShift + TIC_LENGTH*0.5, Double.valueOf(i)*elevationScaling, -latShift, elevaxis, axesThickness, TIC_LENGTH, 
                             i, " m", ContentDisplay.LEFT, AXIS_FONT_SIZE));
         }
 

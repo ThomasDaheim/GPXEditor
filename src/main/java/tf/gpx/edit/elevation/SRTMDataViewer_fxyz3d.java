@@ -56,8 +56,10 @@ import javafx.scene.shape.Shape3D;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.math3.util.FastMath;
 import org.fxyz3d.geometry.MathUtils;
 import org.fxyz3d.geometry.Point3D;
 import org.fxyz3d.scene.paint.Palette;
@@ -99,8 +101,22 @@ public class SRTMDataViewer_fxyz3d {
     
     private final int DATA_FRACTION = 4;
     
-    private final static float LINE_WIDTH = 0.02f;
-    private final static float LINE_RAISE = 0.5f*LINE_WIDTH;
+    // TFE, 20230205: we need some scaling here for different sizes of maps
+    // below values are good for Deutschland_2018_reduced.gpx
+    // but horrible for HangingValleys.gpx
+    private final static double LINE_WIDTH = 0.03;
+    private final static double LINE_RAISE = 0.75*LINE_WIDTH;
+    
+    // assumption: scaling is somehow related to the area of the map
+    // lets start with sqrt(lat size * lon size) in some measure
+    // 1 is good for Deutschland_2018_reduced.gpx: 330,76km x 671,87km => 471,41
+    // 0.015 is good for HangingValleys.gpx: 7,56km x 1,39km => 3,24 - scales 0,0069 to 471,41
+    // so lineScaling should by 2 * sqrt(gpx to show) / sqrt(Deutschland_2018_reduced.gpx)
+    private double lineScaling = 1;
+    private final static double LINE_BASE_AREA = 471.41;
+
+    // axes need to be scaled as well in such a scenario
+    private double axesScaling = 1;
     
     private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private SurfacePlotMesh_Fast surface;
@@ -391,6 +407,16 @@ public class SRTMDataViewer_fxyz3d {
         dataBounds.setMinElev(minElevation);
         dataBounds.setMaxElev(maxElevation);
         
+        // TFE, 20230205: set line scaling for those bounds as well
+        // we need some waypoints
+        final Waypoint p0 = new Waypoint(dataBounds.getMinLat(), dataBounds.getMinLon());
+        final Waypoint pw = new Waypoint(dataBounds.getMinLat(), dataBounds.getMaxLon());
+        final Waypoint ph = new Waypoint(dataBounds.getMaxLat(), dataBounds.getMinLon());
+        final double line_area = FastMath.sqrt((EarthGeometry.distance(p0, pw) / 1000.0) * (EarthGeometry.distance(p0, ph) / 1000.0));
+        lineScaling = 2f * line_area / LINE_BASE_AREA;
+        // axes would get too thin to fast
+        axesScaling = FastMath.sqrt(lineScaling);
+        
         final Group nodeGroup = new Group(cameraTransform, surface);
         
         lines = new ArrayList<>();
@@ -473,7 +499,8 @@ public class SRTMDataViewer_fxyz3d {
             subScene.setCamera(null);
         });
 
-        axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, elevationScaling, ticToLabel);
+        // TFE, 20230205: scale axis thickness, ... with size of viewport
+        axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, elevationScaling, axesScaling, ticToLabel);
         nodeGroup.getChildren().add(axes);
         labelGroup.getChildren().addAll(ticToLabel.values());
         // runLater since we need to have width/height of labels from rendering
@@ -819,7 +846,8 @@ public class SRTMDataViewer_fxyz3d {
                 // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
                 points.add(new Point3D(
                         waypoint.getLongitude()-lonCenter, 
-                        elevationScaler.apply(waypoint.getElevation()) + LINE_RAISE, 
+                        // TFE, 20230205: added scaling based on viewport dimensions
+                        elevationScaler.apply(waypoint.getElevation()) + LINE_RAISE * lineScaling, 
                         latCenter-waypoint.getLatitude()));
             }
             
@@ -828,7 +856,8 @@ public class SRTMDataViewer_fxyz3d {
         
         final PolyLine3D result = new PolyLine3D(
                 points, 
-                LINE_WIDTH, 
+                // TFE, 20230205: added scaling based on viewport dimensions
+                (float) (LINE_WIDTH * lineScaling), 
                 gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
                 PolyLine3D.LineType.TRIANGLE);
         result.setUserData(dataBounds);
