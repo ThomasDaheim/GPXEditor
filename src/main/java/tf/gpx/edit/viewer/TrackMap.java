@@ -509,22 +509,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
 
                 // geolocation not working in webview
-    //            // support for locate
-    //            // url command in css not working
-    //            // https://stackoverflow.com/a/50602814
-    //            getWebView().getEngine().setUserStyleSheetLocation(
-    //                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.woff2").toExternalForm()+"?v=4.7.0') format('woff2'), url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.woff").toExternalForm()+"?v=4.7.0') format('woff'), url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.ttf").toExternalForm()+"?v=4.7.0') format('truetype'), url('" + 
-    //                    getClass().getResource("/font-awesome/fontawesome-webfont.svg").toExternalForm()+"?v=4.7.0#fontawesomeregular') format('svg');}");
-    //            // https://github.com/domoritz/leaflet-locatecontrol
-    //            addStyleFromPath("/font-awesome/font-awesome" + MIN_EXT + ".css");
-    //            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
-    //            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
-    //            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
 
                 // TFE, 2020820: support for images on maps
                 addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
@@ -540,7 +524,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 // TFE, 20230201: show / hide timezones overlay
                 addScriptFromPath(LEAFLET_PATH + "/timezones/L.timezones" + MIN_EXT + ".js");
                 addScriptFromPath(LEAFLET_PATH + "/Timezones" + MIN_EXT + ".js");
-//                addScriptFromPath(LEAFLET_PATH + "/Timezones.js");
 
     //            System.out.println("  JS+CSS loaded: " + Instant.now());
 
