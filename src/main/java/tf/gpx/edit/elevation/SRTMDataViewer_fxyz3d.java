@@ -534,7 +534,7 @@ public class SRTMDataViewer_fxyz3d {
         cameraTransform.t.setZ(0.0);
         camera.setTranslateX(0.0);
         camera.setTranslateY(0.0);
-        camera.setTranslateZ(-Math.max(latDist, lonDist));
+        camera.setTranslateZ(-1.2*Math.max(latDist, lonDist));
     }
     
     private void initUserControls(final Scene node) {
