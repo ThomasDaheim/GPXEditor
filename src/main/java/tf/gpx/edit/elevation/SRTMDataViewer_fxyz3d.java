@@ -603,7 +603,8 @@ public class SRTMDataViewer_fxyz3d {
                 scrollDelta = t.getDeltaX();
             }
             
-            final double value = 0.05*scaleFact;
+            // TFE, 20230213: we also need scaling for the zoom-steps we do
+            final double value = 0.05*scaleFact * axesScaling;
             if (scrollDelta > 0) {
                 // TODO: not working in the moment
 //                if (!t.isControlDown()) {
