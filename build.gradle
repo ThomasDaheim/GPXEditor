@@ -8,10 +8,10 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.1'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
         // https://github.com/ben-manes/gradle-versions-plugin
         // task: dependencyUpdates
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.44.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.45.0'
     }
 }
 
@@ -93,7 +93,7 @@ dependencies {
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.9.0'
+    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.10.0'
     implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.22'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
     implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
@@ -111,10 +111,10 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.0'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.14.0'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.14.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.2'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.14.2'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.14.2'
 
     implementation group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
     implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '15-r2'
@@ -135,6 +135,7 @@ dependencies {
     implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.19'
     
     // sun data
+    // TODO: upgrade to 0.1.7 and fix breaking changes
     implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
     
     // timezone provider
@@ -143,14 +144,14 @@ dependencies {
     
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
-    implementation 'eu.hansolo.fx:charts:17.1.25'
+    implementation 'eu.hansolo.fx:charts:17.1.27'
     // TODO: error: error reading C:\Users\thomas\.gradle\caches\modules-2\files-2.1\eu.hansolo.fx\heatmap\17.0.11\69d60f2307f1ddb380ec3f847c255cac2c77dbba\heatmap-17.0.11.jar; java.net.URISyntaxException: Illegal character in path at index 129: file:/C:/Users/thomas/.gradle/caches/modules-2/files-2.1/eu.hansolo.fx/heatmap/17.0.11/69d60f2307f1ddb380ec3f847c255cac2c77dbba/${project.name}-${project.version}.jar
     // implementation 'eu.hansolo.fx:heatmap:17.0.5'
     
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.1'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.2'
     // TFE, 20221231: build a test suite for all non-UI tests
-    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.9.1'
+    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.9.2'
     // TFE, 20210216: capture System.err() easily
     testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.1'
 }
