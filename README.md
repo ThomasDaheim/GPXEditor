@@ -11,6 +11,9 @@ Unfortunately, my old working horse GPS-Track-Analyse.NET isn't maintained and u
 
 So it was time to start a new self-learning project. And here you see the result.
 
+## Notes
+
+Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
 Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
@@ -23,6 +26,14 @@ Note on height data files: There are a number of data files with height data ava
 Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
+
+### Update v5.8
+
+* Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Timezones: Show/hide timezones on map
+* Offline maps: Not really a code change... Use e.g. Mobile Atlas Creator to download tiles, setup a minimal webserver (e.g. with python), add a new baselayer and voila!
+* Drag&Drop: You can now drop a gpx-file on the map as well
+* Various improvements and bugfixes
 
 ### Update v5.7
 
@@ -438,6 +449,7 @@ Other things used internally:
 * leaflet.routing: http://www.liedman.net/leaflet-routing-machine/ + dependencies (openrouteservice + geocoder)
 * leaflet.ruler: https://github.com/gokertanrisever/leaflet-ruler
 * leaflet.search: https://github.com/stefanocudini/leaflet-search
+* leaflet.timezones: https://github.com/dj0001/Leaflet.timezones
 
 * search-plus icon: https://fontawesome.com/license
 * Garmin icons: taken from GPS Visualizer http://maps.gpsvisualizer.com/google_maps/icons/garmin/all.html
