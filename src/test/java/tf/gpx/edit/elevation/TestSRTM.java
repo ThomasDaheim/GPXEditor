@@ -148,7 +148,7 @@ public class TestSRTM {
         // lower left corner - value should be 1200
         heightValue = elevation.getElevationForCoordinate(45, 10);
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // lower right corner - value should be a bit less than 1200 + 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -187,13 +187,13 @@ public class TestSRTM {
         // lower left corner - value should be 1200, since exactly on tile center
         heightValue = elevation.getElevationForCoordinate(45, 10);
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // lower right corner - value should be 1200 + 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(45, 11 - delta);
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
+        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == (int) heightValue);
         
         // upper left corner - value should be 0, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -204,12 +204,12 @@ public class TestSRTM {
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta);
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // grid center - value should be 600 + 600
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5);
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // now choose points directly on line between 2 tile centers
 
