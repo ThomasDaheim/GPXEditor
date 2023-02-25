@@ -1008,7 +1008,9 @@ public class GPXMeasurableView implements IPreferencesHolder {
             final List<File> files = new ArrayList<>();
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                // TFE, 2023025: why not kml & kmz as well???
+                final String ext = FilenameUtils.getExtension(file.getName()).toLowerCase();
+                if (GPXFileHelper.FileType.isGPXExtension(ext) || GPXFileHelper.FileType.isImportExtension(ext)) {
                     files.add(file);
                 }
             }
@@ -1066,7 +1068,9 @@ public class GPXMeasurableView implements IPreferencesHolder {
         } else if (AppClipboard.getInstance().hasFiles()) {
             for (File file: AppClipboard.getInstance().getFiles()) {
                 // accept only gpx files
-                if (GPXFileHelper.FileType.GPX.getExtension().equals(FilenameUtils.getExtension(file.getName()).toLowerCase())) {
+                // TFE, 2023025: why not kml & kmz as well???
+                final String ext = FilenameUtils.getExtension(file.getName()).toLowerCase();
+                if (GPXFileHelper.FileType.isGPXExtension(ext) || GPXFileHelper.FileType.isImportExtension(ext)) {
                     result = TargetForDragDrop.DROP_ON_ME;
                     break;
                 }

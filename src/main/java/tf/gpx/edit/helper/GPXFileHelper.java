@@ -113,6 +113,10 @@ public class GPXFileHelper {
             return isZip;
         }
         
+        public boolean isGPXFormat() {
+            return GPX.equals(this);
+        }
+        
         public boolean isExportFormat() {
             return !GPX.equals(this);
         }
@@ -138,6 +142,19 @@ public class GPXFileHelper {
         public static FileType fromFile(final File file) {
             return fromFileName(file.getName());
         }
+
+        public static boolean isGPXExtension(final String ext) {
+            return GPX.getExtension().equals(ext);
+        }
+        
+        public static boolean isExportExtension(final String ext) {
+            return !GPX.getExtension().equals(ext);
+        }
+        
+        public static boolean isImportExtension(final String ext) {
+            return KML.getExtension().equals(ext) || KMZ.getExtension().equals(ext);
+        }
+        
     }
     
     private GPXEditor myGPXEditor;
