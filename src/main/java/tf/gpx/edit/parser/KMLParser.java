@@ -577,6 +577,8 @@ public class KMLParser extends GPXParser {
             final Node node = nodeList.item(i);
             
             final Node placemark = node.getParentNode();
+            // TFE, 20230225: name can be on Folder level...
+            final Node folder = placemark.getParentNode();
 
 //            <Placemark>
 //              <name>0) Nantes</name>
@@ -599,7 +601,11 @@ public class KMLParser extends GPXParser {
             int number = i+1;
 
             String name = "";
-            final Node nameNode = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_NAME);
+            Node nameNode = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_NAME);
+            if (nameNode == null) {
+                // lets try on folder level
+                nameNode = getFirstChildNodeByName(folder, KMLConstants.NODE_PLACEMARK_NAME);
+            }
             if (nameNode != null) {
                 name = nameNode.getTextContent();
             }
@@ -787,7 +793,7 @@ public class KMLParser extends GPXParser {
     }
     
     private static String[] splitList(final Node node) {
-        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(KMLConstants.LINE_SEPARATOR);
+        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(KMLConstants.COORD_SEPARATOR);
     }
     
     protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {
