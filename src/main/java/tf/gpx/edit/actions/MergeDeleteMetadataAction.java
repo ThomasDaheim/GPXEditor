@@ -74,7 +74,12 @@ public class MergeDeleteMetadataAction extends GPXLineItemAction<GPXMetadata> {
                     myFile.setGPXMetadata(null);
                 }
 
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 
@@ -93,7 +98,12 @@ public class MergeDeleteMetadataAction extends GPXLineItemAction<GPXMetadata> {
                     myFile.setGPXMetadata(myMetadata);
                 }
 
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 

@@ -68,7 +68,12 @@ public class InvertMeasurablesAction extends GPXLineItemAction<GPXMeasurable> {
                 
                 myEditor.refillGPXWaypointList(true);
 
-                myEditor.refresh();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refresh();
+                }
             },
             StatusBar.getInstance());
 

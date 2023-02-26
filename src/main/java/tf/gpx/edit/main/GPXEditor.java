@@ -1304,6 +1304,12 @@ public class GPXEditor implements Initializable {
     }
     
     public void showGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean updateViewer, final boolean doFitBounds) {
+        // TFE, 20230226: don't do that in case of multiple actions, e.g. for reduce a gpx file with a large number of tracks / routes
+        // otherwise, the update is called multiple times - but is only necessary at the end of the whole thing...
+        if (runningAction) {
+            return;
+        }
+
         TaskExecutor.executeTask(
             getScene(), () -> {
                 // TFE, 20200103: we don't show waypoints twice - so if a tracksegment and its track are selected only the track is relevant
@@ -2146,6 +2152,7 @@ public class GPXEditor implements Initializable {
                 getHostServices(),
                 gpxLineItems);
         endAction(result);
+        
         if (result) {
             refresh();
         }
@@ -2281,6 +2288,10 @@ public class GPXEditor implements Initializable {
         runningAction = false;
 
         return true;
+    }
+    
+    public boolean isRunningAction() {
+        return runningAction;
     }
     
     // add to multipart action or store

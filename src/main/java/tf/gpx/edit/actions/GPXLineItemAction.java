@@ -116,8 +116,8 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     }
     
     protected LineItemAction myAction = null;
-    
     protected GPXEditor myEditor = null;
+    protected boolean isRunningAction = false;
     // store for worked item info: for each parent: from which lineitem, @which position
     protected final Map<GPXLineItem, List<Pair<Integer, T>>> lineItemCluster = new HashMap<>();
 
@@ -128,6 +128,7 @@ public abstract class GPXLineItemAction<T extends GPXLineItem> extends AbstractD
     protected GPXLineItemAction(final LineItemAction action, final GPXEditor editor) {
         myAction = action;
         myEditor = editor;
+        isRunningAction = myEditor.isRunningAction();
     }
     
     protected abstract void initAction();
