@@ -84,11 +84,12 @@ public class ExecuteAlgorithm extends AbstractStage {
     
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(AssignElevation.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(ExecuteAlgorithm.class.getResource("/GPXEditor.min.css").toExternalForm());
         
         // create new scene
         setTitle("Setting for algorithm");
         initModality(Modality.WINDOW_MODAL);
+        setWidth(300.0);
        
         int rowNum = 0;
         // 1st row: sekect execution level
