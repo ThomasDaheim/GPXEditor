@@ -59,6 +59,7 @@ import javafx.stage.Stage;
 import me.himanshusoni.gpxparser.modal.Waypoint;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.FastMath;
 import org.fxyz3d.geometry.MathUtils;
 import org.fxyz3d.geometry.Point3D;
@@ -758,16 +759,17 @@ public class SRTMDataViewer_fxyz3d {
         
         final Function<Point2D,Number> elevationFunction = (t) -> {
             // convert point into lat & lon = scale & shift properly <- lat = y lon = x AND we need to go lat "backwards"
-            final double elevation = Math.max(0d, elevationScaler.apply(elevationService.getElevationForCoordinate(-t.getY()+latCenter, t.getX()+lonCenter)));
-            
-            if (elevation > IElevationProvider.NO_ELEVATION) {
-                minElevation = Math.min(minElevation, elevation);
-                maxElevation = Math.max(maxElevation, elevation);
+            final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(-t.getY()+latCenter, t.getX()+lonCenter);
+            final double elevationValue = Math.max(0d, elevationScaler.apply(elevation.getRight()));
+
+            if (elevation.getLeft()) {
+                minElevation = Math.min(minElevation, elevationValue);
+                maxElevation = Math.max(maxElevation, elevationValue);
             } else {
                 hasNoElevation = true;
             }
             
-            return elevation;
+            return elevationValue;
         };
         
 //        System.out.println("Bounds:  " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());

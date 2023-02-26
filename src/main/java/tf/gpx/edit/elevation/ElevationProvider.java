@@ -26,10 +26,12 @@
 package tf.gpx.edit.elevation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
@@ -63,18 +65,22 @@ public class ElevationProvider implements IElevationProvider {
     }
 
     @Override
-    public List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+    public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
         // use map for easier replacement of elevations
         // https://www.baeldung.com/java-collectors-tomap
-        final Map<IGeoCoordinate, Double> coordElevMap = 
-                coords.stream().collect(Collectors.toMap(Function.identity(), IGeoCoordinate::getElevation, (existing, replacement) -> existing));
+        final Map<IGeoCoordinate, Pair<Boolean, Double>> coordElevMap = new HashMap<>();
+                // can't do that anymore with stream - I'm sorry!
+                //coords.stream().collect(Collectors.toMap(Function.identity(), IGeoCoordinate::getElevation, (existing, replacement) -> existing));
+        coords.stream().forEach((t) -> {
+            coordElevMap.put(t, Pair.of(true, t.getElevation()));
+        });
         final List<IGeoCoordinate> distinctCoords = new ArrayList<>(coordElevMap.keySet());
         
         // SRTM_ONLY + SRTM_FIRST: check srtm data first for values
         if (ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(elevOptions.getLookUpMode()) ||
                 ElevationProviderOptions.LookUpMode.SRTM_FIRST.equals(elevOptions.getLookUpMode())) {
             // srtm: does checking against NO_ELEVATION via IElevationProvider default implementation
-            final List<Double> elevations = srtmService.getElevationsForCoordinates(distinctCoords);
+            final List<Pair<Boolean, Double>> elevations = srtmService.getElevationsForCoordinates(distinctCoords);
             int i = 0;
             for (IGeoCoordinate coord: distinctCoords) {
                 coordElevMap.put(coord, elevations.get(i));
@@ -90,7 +96,7 @@ public class ElevationProvider implements IElevationProvider {
         // SRTM_LAST + SRTM_NONE: check openelevationservice first for all values 
         if (ElevationProviderOptions.LookUpMode.SRTM_LAST.equals(elevOptions.getLookUpMode()) ||
                 ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(elevOptions.getLookUpMode())) {
-            final List<Double> elevations = olServices.getElevationsForCoordinates(distinctCoords);
+            final List<Pair<Boolean, Double>> elevations = olServices.getElevationsForCoordinates(distinctCoords);
             int i = 0;
             for (IGeoCoordinate coord: distinctCoords) {
                 coordElevMap.put(coord, elevations.get(i));
@@ -107,7 +113,7 @@ public class ElevationProvider implements IElevationProvider {
         if (ElevationProviderOptions.LookUpMode.SRTM_FIRST.equals(elevOptions.getLookUpMode())) {
             // possible optimization: collect all coords with missing elevation and use getElevationsForCoordinates
             for (IGeoCoordinate coord: distinctCoords) {
-                if (coordElevMap.get(coord) == NO_ELEVATION) {
+                if (!coordElevMap.get(coord).getLeft()) {
                     coordElevMap.put(coord, olServices.getElevationForCoordinate(coord));
                 }
             }
@@ -116,7 +122,7 @@ public class ElevationProvider implements IElevationProvider {
         // if nothing from elevation service maybe we have a fallback...
         if (ElevationProviderOptions.LookUpMode.SRTM_LAST.equals(elevOptions.getLookUpMode())) {
             for (IGeoCoordinate coord: distinctCoords) {
-                if (coordElevMap.get(coord) == NO_ELEVATION) {
+                if (!coordElevMap.get(coord).getLeft()) {
                     coordElevMap.put(coord, srtmService.getElevationForCoordinate(coord));
                 }
             }
@@ -125,8 +131,8 @@ public class ElevationProvider implements IElevationProvider {
         return flattenMap(coordElevMap, coords);
     }
     
-    private List<Double> flattenMap(final Map<IGeoCoordinate, Double> coordElevMap, final List<? extends IGeoCoordinate> coords) {
-        final List<Double> result = new ArrayList<>();
+    private List<Pair<Boolean, Double>> flattenMap(final Map<IGeoCoordinate, Pair<Boolean, Double>> coordElevMap, final List<? extends IGeoCoordinate> coords) {
+        final List<Pair<Boolean, Double>> result = new ArrayList<>();
         
         for (IGeoCoordinate coord: coords) {
             result.add(coordElevMap.get(coord));

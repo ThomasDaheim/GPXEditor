@@ -146,29 +146,29 @@ public class TestSRTM {
         
         double heightValue;
         // lower left corner - value should be 1200
-        heightValue = elevation.getElevationForCoordinate(45, 10);
+        heightValue = elevation.getElevationForCoordinate(45, 10).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // lower right corner - value should be a bit less than 1200 + 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(45, 11 - delta);
+        heightValue = elevation.getElevationForCoordinate(45, 11 - delta).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
         
         // upper left corner - value should be 0
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(46 - delta, 10);
+        heightValue = elevation.getElevationForCoordinate(46 - delta, 10).getRight();
         Assertions.assertTrue(0.0 == heightValue);
         
         // upper right corner - value should be 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta);
+        heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
         
         // grid center - value should be 1200
-        heightValue = elevation.getElevationForCoordinate(45.5, 10.5);
+        heightValue = elevation.getElevationForCoordinate(45.5, 10.5).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
     }
@@ -185,55 +185,55 @@ public class TestSRTM {
         
         double heightValue;
         // lower left corner - value should be 1200, since exactly on tile center
-        heightValue = elevation.getElevationForCoordinate(45, 10);
+        heightValue = elevation.getElevationForCoordinate(45, 10).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // lower right corner - value should be 1200 + 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(45, 11 - delta);
+        heightValue = elevation.getElevationForCoordinate(45, 11 - delta).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == (int) heightValue);
         
         // upper left corner - value should be 0, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(46 - delta, 10);
+        heightValue = elevation.getElevationForCoordinate(46 - delta, 10).getRight();
         Assertions.assertTrue(0.0 == heightValue);
         
         // upper right corner - value should be 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
-        heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta);
+        heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // grid center - value should be 600 + 600
-        heightValue = elevation.getElevationForCoordinate(45.5, 10.5);
+        heightValue = elevation.getElevationForCoordinate(45.5, 10.5).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
         
         // now choose points directly on line between 2 tile centers
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
-        heightValue = elevation.getElevationForCoordinate(45, 10 + tileDist/2.0);
+        heightValue = elevation.getElevationForCoordinate(45, 10 + tileDist/2.0).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
-        heightValue = elevation.getElevationForCoordinate(45.5, 10.5 + tileDist/2.0);
+        heightValue = elevation.getElevationForCoordinate(45.5, 10.5 + tileDist/2.0).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
 
         // and now for a point between to rows...
         
         // average should be done using those two tiles only (1199 + 1200) / 2 = 1199,5
-        heightValue = elevation.getElevationForCoordinate(45 + tileDist/2.0, 10);
+        heightValue = elevation.getElevationForCoordinate(45 + tileDist/2.0, 10).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 - 0.5, heightValue));
         
         // and now for point directly on the corner of 4 tiles...
 
         // average should be done using for tiles with same wweight (1199 + 1200 + 1200 + 1201) / 4 = 1200
-        heightValue = elevation.getElevationForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0);
+        heightValue = elevation.getElevationForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0).getRight();
         Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
         Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
     }
@@ -246,22 +246,22 @@ public class TestSRTM {
         
         double heightValue;
         // NE hemisphere: MT EVEREST, 27.9881° N, 86.9250° E - 27° 59' 9.8340" N, 86° 55' 21.4428" E - 8848m
-        heightValue = elevation.getElevationForCoordinate(27.9881, 86.9250);
+        heightValue = elevation.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
         Assertions.assertTrue(isCloseEnough(8840, heightValue));
 
         // NW hemisphere: MT RAINIER, 46.8523° N, 121.7603° W - 46° 52' 47.8812" N, 121° 43' 36.8616" W - 4392m
-        heightValue = elevation.getElevationForCoordinate(46.8523, -121.7603);
+        heightValue = elevation.getElevationForCoordinate(46.8523, -121.7603).getRight();
 //        System.out.println("MT RAINIER: " + heightValue);
         Assertions.assertTrue(isCloseEnough(4369, heightValue));
         
         // SE hemisphere: MT COOK, 43.5950° S, 170.1418° E - 43°35'26.81" S, 170°08'16.65" E - 3724m
-        heightValue = elevation.getElevationForCoordinate(-43.5950, 170.1418);
+        heightValue = elevation.getElevationForCoordinate(-43.5950, 170.1418).getRight();
 //        System.out.println("MT COOK: " + heightValue);
         Assertions.assertTrue(isCloseEnough(3712, heightValue));
 
         // SW hemisphere: ACONGAGUA, 32.6532° S, 70.0109° W - 32° 39' 11.4444" S, 70° 0' 39.1104" W - 6908m
-        heightValue = elevation.getElevationForCoordinate(-32.6532, -70.0109);
+        heightValue = elevation.getElevationForCoordinate(-32.6532, -70.0109).getRight();
 //        System.out.println("ACONGAGUA: " + heightValue);
         Assertions.assertTrue(isCloseEnough(6929, heightValue));
     }

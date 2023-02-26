@@ -27,6 +27,7 @@ package tf.gpx.edit.elevation;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
@@ -53,8 +54,8 @@ public class SRTMElevationService implements IElevationProvider {
     }
 
     @Override
-    public Double getElevationForCoordinate(final double latitude, final double longitude) {
-        double result = NO_ELEVATION;
+    public Pair<Boolean, Double> getElevationForCoordinate(final double latitude, final double longitude) {
+        Pair<Boolean, Double> result = Pair.of(false, NO_ELEVATION);
         
         // check store for matching data
         final SRTMData srtmData = getSRTMData(latitude, longitude);
@@ -68,7 +69,7 @@ public class SRTMElevationService implements IElevationProvider {
     }
     
     @Override
-    public List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+    public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
         return coords.stream().map((t) -> {
             return getElevationForCoordinate(t.getLatitude(), t.getLongitude());
         }).collect(Collectors.toList());

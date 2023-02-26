@@ -56,7 +56,7 @@ public class TestDrawPanorama {
     @Test
     public void testPodTriglavom() {
         final LatLonElev center = new LatLonElev(46.408999, 13.84340);
-        center.setElevation(defaultProvider.getElevationForCoordinate(center));
+        center.setElevation(defaultProvider.getElevationForCoordinate(center).getRight());
         
         // see Horizon_PodTriglavom.jpg for expected result
         final SortedMap<Double, List<Pair<Double, Double>>> panoramaView = getPanoramaView(center, 100, 20000, 300);
@@ -89,7 +89,7 @@ public class TestDrawPanorama {
                 
                 // the point where looking at
                 final LatLonElev location = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(center, distance, angle));
-                location.setElevation(defaultProvider.getElevationForCoordinate(location));
+                location.setElevation(defaultProvider.getElevationForCoordinate(location).getRight());
                 
                 // the angle we're looking up / down
                 final double elevationAngle = EarthGeometry.elevationAngle(center, location);

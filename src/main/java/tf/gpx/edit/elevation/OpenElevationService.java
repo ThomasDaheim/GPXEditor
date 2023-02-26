@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
@@ -88,12 +89,12 @@ public class OpenElevationService implements IElevationProvider {
     }
     
     @Override
-    public List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+    public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
         API_KEY = GPXEditorPreferences.ROUTING_API_KEY.getAsType();
         
         if (!coords.isEmpty()) {
             // split into blocks of 1000 points - that seems to be an API limit
-            final List<Double> result = new ArrayList<>();
+            final List<Pair<Boolean, Double>> result = new ArrayList<>();
 
             // all those +/-1 moves...
             final int chunkCount = ((coords.size()-1) / CHUNK_SIZE) + 1;
@@ -157,8 +158,8 @@ public class OpenElevationService implements IElevationProvider {
         return result;
     }
 
-    private List<Double> deserializePointResponse(final String response, final List<? extends IGeoCoordinate> coords) {
-        final List<Double> result = new ArrayList<>();
+    private List<Pair<Boolean, Double>> deserializePointResponse(final String response, final List<? extends IGeoCoordinate> coords) {
+        final List<Pair<Boolean, Double>> result = new ArrayList<>();
         
         if (!response.isEmpty()) {
             try {
@@ -168,7 +169,7 @@ public class OpenElevationService implements IElevationProvider {
 
                 if (geometry != null) {
                     final Point point = objectMapper.readValue(geometry.toString(), Point.class);
-                    result.add(point.getCoordinates().getAltitude());
+                    result.add(Pair.of(true, point.getCoordinates().getAltitude()));
                 }
             } catch (JsonProcessingException ex) {
                 Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
@@ -176,14 +177,14 @@ public class OpenElevationService implements IElevationProvider {
         }
         
         if (result.isEmpty()) {
-            result.add(IElevationProvider.NO_ELEVATION);
+            result.add(Pair.of(false, IElevationProvider.NO_ELEVATION));
         }
         
         return result;
     }
     
-    private List<Double> deserializeLineResponse(final String response, final List<? extends IGeoCoordinate> coords) {
-        final List<Double> result = new ArrayList<>();
+    private List<Pair<Boolean, Double>> deserializeLineResponse(final String response, final List<? extends IGeoCoordinate> coords) {
+        final List<Pair<Boolean, Double>> result = new ArrayList<>();
         
         if (!response.isEmpty()) {
             try {
@@ -194,7 +195,7 @@ public class OpenElevationService implements IElevationProvider {
                 if (geometry != null) {
                     final LineString line = objectMapper.readValue(geometry.toString(), LineString.class);
                     for (LngLatAlt point : line.getCoordinates()) {
-                        result.add(point.getAltitude());
+                        result.add(Pair.of(true, point.getAltitude()));
                     }
                 }
             } catch (JsonProcessingException ex) {
@@ -204,7 +205,7 @@ public class OpenElevationService implements IElevationProvider {
         
         // add enough values to fill the list
         for (int i = 0; i < coords.size() - result.size(); i++) {
-            result.add(IElevationProvider.NO_ELEVATION);
+            result.add(Pair.of(false, IElevationProvider.NO_ELEVATION));
         }
         
         return result;

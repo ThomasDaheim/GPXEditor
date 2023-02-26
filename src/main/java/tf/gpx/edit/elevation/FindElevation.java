@@ -41,6 +41,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
@@ -211,9 +212,13 @@ public class FindElevation extends AbstractStage {
                         new ElevationProviderBuilder(
                                 new ElevationProviderOptions(),
                                 new SRTMDataOptions(myAverageMode, mySRTMDataPath)).build();
-                final double elevation = worker.getElevationForCoordinate(latLong);
+                final Pair<Boolean, Double> elevation = worker.getElevationForCoordinate(latLong);
 
-                elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
+                if (elevation.getLeft()) {
+                    elevationVal.setText(DOUBLE_FORMAT_2.format(elevation) + " m");
+                } else {
+                    elevationVal.setText("No elevation found.");
+                }
             }
         });
         setActionAccelerator(findButton);

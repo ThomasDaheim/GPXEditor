@@ -78,6 +78,7 @@ import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.controlsfx.control.PopOver;
 import tf.gpx.edit.elevation.AssignElevation;
@@ -1152,8 +1153,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             contextMenu.getProperties().put(KnowProperties.LATLON, latLon);
 
             // TFE, 20200121: show height with coordinate in context menu
-            latLon.setElevation(elevationProvider.getElevationForCoordinate(latLon));
-            showCord.setText(latLon.toString());
+            final Pair<Boolean, Double> elevation = elevationProvider.getElevationForCoordinate(latLon);
+            if (elevation.getLeft()) {
+                latLon.setElevation(elevation.getRight());
+                showCord.setText(latLon.toString());
+            } else {
+                latLon.setElevation(IElevationProvider.NO_ELEVATION);
+                showCord.setText("No elevation found.");
+            }
 
             contextMenu.getProperties().put(KnowProperties.WAYPOINT, currentGPXWaypoint);
 

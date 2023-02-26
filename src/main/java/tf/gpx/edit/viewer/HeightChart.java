@@ -80,6 +80,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private boolean noLayout = false;
     private boolean inShowData = false;
     
+    // TFE, 20230226: put a lower limit on negative heights - on case something crazy is in elevation data
+    // can't go lower than the dead sea...
+    private final static double MIN_ELEVATION = -428.0;
     private double minDistance;
     private double maxDistance;
     private double minHeight;
@@ -377,7 +380,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         final double result = gpxWaypoint.getElevation();
         
         if (doSetMinMax(gpxWaypoint)) {
-            minHeight = Math.min(minHeight, result);
+            minHeight = Math.max(MIN_ELEVATION, Math.min(minHeight, result));
             maxHeight = Math.max(maxHeight, result);
         }
         

@@ -124,7 +124,7 @@ public class Panorama {
         }
 
         // set the current elevation
-        location.setElevation(elevationService.getElevationForCoordinate(location));
+        location.setElevation(elevationService.getElevationForCoordinate(location).getRight());
     }
     
     private void calcLocations() {
@@ -159,9 +159,10 @@ public class Panorama {
 //                System.out.println("angle: " + angle);
                 // the point where looking at
                 final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
-                target.setElevation(elevationService.getElevationForCoordinate(target));
+                final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(target);
+                target.setElevation(elevationService.getElevationForCoordinate(target).getRight());
                 
-                if (noElevationData && IElevationProvider.NO_ELEVATION != target.getElevation()) {
+                if (noElevationData && elevation.getLeft()) {
                     noElevationData = false;
                 }
                 
