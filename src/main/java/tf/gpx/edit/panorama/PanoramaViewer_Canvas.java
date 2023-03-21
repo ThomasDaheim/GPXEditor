@@ -118,7 +118,7 @@ public class PanoramaViewer_Canvas {
     private Panorama panorama;
     
     private IGeoCoordinate location;
-    private TimeZone timeZone;
+    private TimeZone timeZone = null;
     
     private final Label noElevationDataLabel = new Label("No elevation data available");
     
@@ -135,6 +135,10 @@ public class PanoramaViewer_Canvas {
     
     public static PanoramaViewer_Canvas getInstance() {
         return INSTANCE;
+    }
+    
+    private static boolean isNearBy(int value, int test, int range) {
+        return test-range <= value && value <= test+range;
     }
     
     @SuppressWarnings("unchecked")
@@ -159,13 +163,28 @@ public class PanoramaViewer_Canvas {
                 .numberFormatter(new StringConverter<Number>() {
                                     @Override
                                     public String toString(Number object) {
-                                        return switch (object.intValue()) {
-                                            case 180, 180+360 -> "S";
-                                            case 270, 270+360 -> "W";
-                                            case 0, 0+360, 0+360+360 -> "N";
-                                            case 90, 90+360 -> "E";
-                                            default -> ""; //String.valueOf(object.intValue());
-                                        };
+//                                        return switch (object.intValue()) {
+//                                            case 180, 180+360 -> "S";
+//                                            case 270, 270+360 -> "W";
+//                                            case 0, 0+360, 0+360+360 -> "N";
+//                                            case 90, 90+360 -> "E";
+//                                            default -> ""; //String.valueOf(object.intValue());
+//                                        };
+                                        
+                                        // TFE, 20230321 allow for some "width" left and right of the actual N, S, E, W positions
+                                        // otherwise when scrolling you won't see labels
+                                        final int value = object.intValue();
+                                        if (isNearBy(value, 180, 5) || isNearBy(value, 180+360, 5)) {
+                                            return "S";
+                                        } else if (isNearBy(value, 270, 5) || isNearBy(value, 270+360, 5)) {
+                                            return "W";
+                                        } else if (isNearBy(value, 0, 5) || isNearBy(value, 0+360, 5) || isNearBy(value, 0+360+360, 5)) {
+                                            return "N";
+                                        } else if (isNearBy(value, 90, 5) || isNearBy(value, 90+360, 5)) {
+                                            return "E";
+                                        } else {
+                                            return "";
+                                        }
                                     }
 
                                     @Override
@@ -189,7 +208,8 @@ public class PanoramaViewer_Canvas {
                 .tickLabelFontSize(AXIS_FONTSIZE)
                 .autoFontSize(false)
                 .minWidth(1.5*AXIS_WIDTH)
-                .titleFontSize(AXIS_FONTSIZE)
+                // TODO: not scaling properly
+                .titleFontSize(AXIS_FONTSIZE*2)
                 .title("Angle [" + LatLonHelper.DEG_CHAR_1 + "]")
                 .build();
         AnchorPane.setTopAnchor(yAxisElev, 0d);
@@ -310,12 +330,12 @@ public class PanoramaViewer_Canvas {
     public void showPanorama(final IGeoCoordinate loc) {
         location = loc;
         // TFE, 20220303: timezone is location dependent...
-        timeZone = TimeZoneProvider.getInstance().getTimeZone(loc);
-//        System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
+        // TFE, 20230321: only calculate if needed!
+        timeZone = null;
 
         // get the whole set of LatLonElev around our location
         panorama = new Panorama(
-                loc, 
+                location, 
                 Panorama.DISTANCE_FROM, Panorama.DISTANCE_TO, Panorama.DISTANCE_STEP, 
                 Panorama.ANGEL_FROM, Panorama.ANGEL_TO, Panorama.ANGEL_STEP);
 
@@ -419,8 +439,10 @@ public class PanoramaViewer_Canvas {
         final Map<Integer, Integer> colorChangeMap = new HashMap<>();
         for (int i = 0; i < COLOR_STEPS; i++) {
             // we scale with anything between 2 and 1/2
-            final double scaleFact = 1.6 - 1.0 / (COLOR_STEPS-1) * i;
+            // TFE, 20230321: closer slices nearby, larger steps in the distance - so we need to vary more strongly
+            final double scaleFact = 1.5 - 1.0 / (COLOR_STEPS-1) * i;
 //            final double scaleFact = 1;
+//            System.out.println("i: " + i + ", scaleFact: " + scaleFact);
             colorChangeMap.put(i, (int) (scaleFact * colorChange));
         }
 
@@ -562,6 +584,10 @@ public class PanoramaViewer_Canvas {
             sunPathLabel.setVisible(false);
         } else {
             if (sunPathChartData.isEmpty()) {
+                if (timeZone == null) {
+                    timeZone = TimeZoneProvider.getInstance().getTimeZone(location);
+//                    System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
+                }
                 final ZonedDateTime zonedDateTime = ZonedDateTime.now(timeZone.toZoneId());
 
                 // we need to create the sun path line chart

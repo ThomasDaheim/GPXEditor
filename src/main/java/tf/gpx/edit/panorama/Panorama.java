@@ -37,7 +37,6 @@ import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.elevation.ElevationProvider;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
-import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
@@ -61,9 +60,14 @@ import tf.helper.general.ObjectsHelper;
  * @author thomas
  */
 public class Panorama {
-    // TODO: closer slices nearby, larger steps in the distance
+    // TFE, 20230321: closer slices nearby, larger steps in the distance
     public final static int DISTANCE_STEP = 1000;
-    public final static int DISTANCE_FROM = DISTANCE_STEP * 3 / 2;
+    // how many shorter steps shpould we do?
+    public final static int SHORT_STEPS = 20;
+    // how much shorter should a short step be?
+    public final static int DISTANCE_SHORT_STEP_DIVISOR = 4;
+    public final static int DISTANCE_FROM = DISTANCE_STEP / 2;
+    // this would give 100 normal steps (+ 20 add. short steps)
     public final static int DISTANCE_TO = 100000 + DISTANCE_FROM; //100000 + DISTANCE_FROM;
     public final static int ANGEL_FROM = 0;
     public final static int ANGEL_TO = 360; // 
@@ -113,7 +117,7 @@ public class Panorama {
         // make sure we're ending on a step
         int remainder = (distanceTo - distanceFrom) % distanceStepping;
         if (remainder != 0) {
-            // extend end angle accordingly
+            // extend end distance accordingly
             distanceTo += (distanceStepping - remainder);
         }
 
@@ -132,8 +136,11 @@ public class Panorama {
         panoramaLocations = new TreeMap<>(Collections.reverseOrder());
         noElevationData = true;
         
-        // lets go backwards to avoid resorting on put
-        for (int distance = distanceTo; distance >= distanceFrom; distance = distance - distanceStepping) {
+//        System.out.println("distanceTo: " + distanceTo + ", distanceFrom: " + distanceFrom + ", distanceStepping: " + distanceStepping);
+        // lets go backwards to avoid re-sorting on put
+        // TFE, 20230321: support for shorter steps closer to location
+        int realStepping = distanceStepping;
+        for (int distance = distanceTo; distance >= distanceFrom; distance = distance - realStepping) {
 //            System.out.println("distance: " + distance);
             final List<Pair<Double, IGeoCoordinate>> angleLatLonElevs = new ArrayList<>();
 
@@ -177,6 +184,12 @@ public class Panorama {
             }
             
             panoramaLocations.put(distance * 1.0, angleLatLonElevs);
+            
+            // TFE, 20230321: support for shorter steps closer to location
+            if (distance <= distanceFrom + SHORT_STEPS * distanceStepping / DISTANCE_SHORT_STEP_DIVISOR) {
+                realStepping = distanceStepping / DISTANCE_SHORT_STEP_DIVISOR;
+            }
+//            System.out.println("distance: " + distance + ", realStepping: " + realStepping);
         }
     }
     
