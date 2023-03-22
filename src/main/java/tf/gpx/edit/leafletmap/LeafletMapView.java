@@ -212,7 +212,7 @@ public class LeafletMapView extends StackPane {
         final StringBuilder mapCmd = new StringBuilder();
         mapCmd.append("var myMap = L.map('map', {\n");
         mapCmd.append(String.format(Locale.US, "   center: new L.LatLng(%f, %f),\n", myMapConfig.getInitialCenter().getLatitude(), myMapConfig.getInitialCenter().getLongitude()));
-        mapCmd.append("    zoom: 8,\n");
+        mapCmd.append("    zoom: 10,\n");
         mapCmd.append("    zoomControl: false,\n");
         if (!myMapConfig.getBaselayer().isEmpty()) {
             mapCmd.append("    layers: [baselayer1],\n");
