@@ -364,7 +364,7 @@ public class MapLayer {
 
         result.append("    attribution: '");
         result.append(myAttribution);
-        result.append("',\n");
+        result.append("'\n");
 
         // no ";" - might be used in some complex js statement
         result.append("})");

@@ -41,6 +41,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import tf.gpx.edit.viewer.TrackMap;
 
@@ -173,7 +174,7 @@ public class LeafletMapView extends StackPane {
             final StringBuilder baselayer = new StringBuilder();
             for (MapLayer layer : myMapConfig.getBaselayer()) {
                 cmdString = String.format(Locale.US, "var baselayer%d = %s;", i, layer.getJSCode());
-//                System.out.println(layer.getName() + ": " + cmdString);
+//                System.out.println("baselayer: " + layer.getName() + ": " + cmdString);
                 execScript(cmdString);
 
                 baselayer.append(String.format(Locale.US, "'%s': baselayer%d, ", layer.getName(), i));
@@ -181,7 +182,8 @@ public class LeafletMapView extends StackPane {
                 i++;
             }
 
-            cmdString = String.format(Locale.US, "var baseMaps = { %s };", baselayer.toString());
+            cmdString = String.format(Locale.US, "var baseMaps = { %s };", StringUtils.chop(StringUtils.chop(baselayer.toString())));
+//            System.out.println("baseMaps: " + cmdString);
             execScript(cmdString);
         } else {
             execScript("var baseMaps = { };");
@@ -194,7 +196,7 @@ public class LeafletMapView extends StackPane {
             final StringBuilder overlays = new StringBuilder();
             for (MapLayer layer : myMapConfig.getOverlays()) {
                 cmdString = String.format(Locale.US, "var overlay%d = %s;", i, layer.getJSCode());
-    //            System.out.println(layer.getName() + ": " + cmdString);
+//                System.out.println("overlay: " + layer.getName() + ": " + cmdString);
                 execScript(cmdString);
 
                 overlays.append(String.format(Locale.US, "'%s': overlay%d, ", layer.getName(), i));
@@ -202,7 +204,8 @@ public class LeafletMapView extends StackPane {
                 i++;
             }
 
-            cmdString = String.format(Locale.US, "var overlayMaps = { %s };", overlays.toString());
+            cmdString = String.format(Locale.US, "var overlayMaps = { %s };", StringUtils.chop(StringUtils.chop(overlays.toString())));
+//            System.out.println("overlayMaps: " + cmdString);
             execScript(cmdString);
         } else {
             execScript("var overlayMaps = { };");
@@ -218,8 +221,7 @@ public class LeafletMapView extends StackPane {
             mapCmd.append("    layers: [baselayer1],\n");
         }
         mapCmd.append("});\n\n");
-        mapCmd.append("var attribution = myMap.attributionControl;\n");
-        mapCmd.append("attribution.setPrefix('Leaflet');");
+        mapCmd.append("myMap.attributionControl.setPrefix('Leaflet');\n");
 //        System.out.println("mapCmd: " + mapCmd.toString());
         execScript(mapCmd.toString());
 

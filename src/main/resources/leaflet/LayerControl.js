@@ -182,12 +182,13 @@ function baselayerchange(e) {
                 myMap.addLayer(overlaysList[index].layer);
             }
         }
-
-        // update Layer control
-        controlLayer.removeLayer(overlaysList[index].layer);
-        if (overlaysList[index].visible) {
-            controlLayer.addOverlay(overlaysList[index].layer, overlaysList[index].name);
-        }
+        
+        // TODO: messes up attribution for baselayer
+//        // update Layer control
+//        controlLayer.removeLayer(overlaysList[index].layer);
+//        if (overlaysList[index].visible) {
+//            controlLayer.addOverlay(overlaysList[index].layer, overlaysList[index].name);
+//        }
     });
 
 //    jscallback.log('baseLayerChange done: ' + e.name + ', ' + currentOverlays);
@@ -215,15 +216,15 @@ function overlayChanged(e, value) {
         }
     }
 
-    logOverlays();
+//    logOverlays();
 }
 myMap.on('overlayadd', overlayadd);
 myMap.on('overlayremove', overlayremove);
 
 function logOverlays() {
-//    jscallback.log('------------------------------------------------------------------------------------------');
-//    for (var i = 0; i < baselayerList.length; i++) {
-//        jscallback.log('baselayer: ' + baselayerList[i].name + ', overlays: ' + baselayerList[i].overlays);
-//    }
-//    jscallback.log('------------------------------------------------------------------------------------------');
+    jscallback.log('------------------------------------------------------------------------------------------');
+    for (var i = 0; i < baselayerList.length; i++) {
+        jscallback.log('baselayer: ' + baselayerList[i].name + ', overlays: ' + baselayerList[i].overlays);
+    }
+    jscallback.log('------------------------------------------------------------------------------------------');
 }
