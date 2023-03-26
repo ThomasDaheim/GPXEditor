@@ -183,7 +183,9 @@ function baselayerchange(e) {
             }
         }
         
-        // TODO: messes up attribution for baselayer
+        // TFE, 20230326: no need to mess around with the layer control after adding the enabled overlays!
+        // The Layers Control listens to what happens on the map.
+        // So if you programmatically add your overlays to the map (`map.addLayer(myOverlay)`), the Layers Control will tick its checkboxes to reflect their presence.prototype    
 //        // update Layer control
 //        controlLayer.removeLayer(overlaysList[index].layer);
 //        if (overlaysList[index].visible) {
