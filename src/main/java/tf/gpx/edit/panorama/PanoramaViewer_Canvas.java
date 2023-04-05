@@ -32,14 +32,17 @@ import eu.hansolo.fx.charts.series.XYSeriesBuilder;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
@@ -100,7 +103,7 @@ public class PanoramaViewer_Canvas {
     // toFront() and toBack() only work within the same group...
     private final Group chartGroup = new Group();
     private final StackPane pane = new StackPane();
-    private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
+    private final Scene scene;
     private final Stage stage = new Stage();
     
     // TFE, 20220316: use ony positive values - to be in sync with sunpath algos...
@@ -123,11 +126,16 @@ public class PanoramaViewer_Canvas {
     private final Label noElevationDataLabel = new Label("No elevation data available");
     
     private PanoramaViewer_Canvas() {
+        // TFE, 20230405: max out width based on screen width
+        scene  = new Scene(pane, Screen.getPrimary().getVisualBounds().getWidth() * 0.95, VIEWER_HEIGHT);
+        
         // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.setTitle("GPX Editor - Panorama");
+        stage.getIcons().add(new Image(PanoramaViewer_Canvas.class.getResourceAsStream("/GPXEditorManager.png")));
         stage.setScene(scene);
         
         initialize();

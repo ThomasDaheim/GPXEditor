@@ -55,6 +55,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -178,8 +179,9 @@ public class PreferenceEditor extends AbstractStage {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.min.css").toExternalForm());
 
-        setTitle("Preferences");
+        setTitle("GPX Editor - Preferences");
         initModality(Modality.APPLICATION_MODAL); 
+        getIcons().add(new Image(PreferenceEditor.class.getResourceAsStream("/GPXEditorManager.png")));
         setResizable(true);
         getGridPane().getChildren().clear();
         setHeight(800.0);
