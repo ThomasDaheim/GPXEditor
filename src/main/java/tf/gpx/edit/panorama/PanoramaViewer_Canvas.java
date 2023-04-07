@@ -116,7 +116,6 @@ public class PanoramaViewer_Canvas {
     private double mousePosY;
     private double mouseOldX;
     private double mouseOldY;
-    boolean dragActive = false;
     
     private Panorama panorama;
     
@@ -279,12 +278,15 @@ public class PanoramaViewer_Canvas {
                     lowerBound = 180 - 180;
                 }
             }
-            xAxisElev.setMinMax(lowerBound, lowerBound + 360);
+            // respect zoom mode - if not 360 degree, don't implicitly zoom
+            final int xWidth = (int) (xAxisElev.getMaxValue() - xAxisElev.getMinValue());
+            final int zoomBorder = Math.max(0, (360 - xWidth) / 2);
+            xAxisElev.setMinMax(lowerBound + zoomBorder / 2, lowerBound + 360 - zoomBorder);
         });
 
         elevationChartLabel.setText("Drag: Shift X" + System.lineSeparator() + 
-                        "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
-                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + 
+                        "Wheel: Zoom Y" + System.lineSeparator() + 
+                        "ShiftWheel: Zoom X" + System.lineSeparator() + 
                         "N/S/E/W: center direction" + System.lineSeparator() + 
                         "P: show/hide sun paths" + System.lineSeparator() + 
                         "C/R: reset view");
@@ -314,8 +316,8 @@ public class PanoramaViewer_Canvas {
     }
     
     private void setAxes() {
-        // initially we want North centered
-        xAxisElev.setMinMax(180d, 180d + 360d);
+        // initially we want SOUTH centered
+        xAxisElev.setMinMax(0d, 360d);
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
@@ -353,7 +355,7 @@ public class PanoramaViewer_Canvas {
     }
     
     private void showData() {
-        // performance... every chqange to chart triggers reapplyCSS()
+        // performance... every change to chart triggers reapplyCSS()
         pane.getChildren().remove(chartGroup);
 
         // and now draw from outer to inner and from darker to brighter color
@@ -554,31 +556,46 @@ public class PanoramaViewer_Canvas {
         // add vertical zoom on mouse wheel
         elevationChart.setOnScroll((t) -> {
             double scaleFact = SCALE_FACT;
-            if (t.isShiftDown()) {
-                scaleFact = Math.pow(SCALE_FACT, 5);
-            }
-            // https://stackoverflow.com/a/52707611
-            // if shift is pressed with mouse wheel x is changed instead of y...
             double scrollDelta = 0d;
+
             if (!t.isShiftDown()) {
+                // scroll y
                 scrollDelta = t.getDeltaY();
+
+                final double lower = yAxisElev.getMinValue();
+                final double upper = yAxisElev.getMaxValue();
+                if (scrollDelta > 0) {
+                    // zoom in - easy, since no bounds to take into account...
+                    yAxisElev.setMinMax(lower / scaleFact, upper / scaleFact);
+                } else {
+                    // scroll out - but not more than 90 degress
+                    final int newLower = (int) Math.floor(lower * scaleFact);
+                    final int newUpper = (int) Math.floor(upper * scaleFact);
+                    if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
+                        yAxisElev.setMinMax(newLower, newUpper);
+                    }
+                }
             } else {
+                // https://stackoverflow.com/a/52707611
+                // if shift is pressed with mouse wheel x is changed instead of y...
+                // scroll x
                 scrollDelta = t.getDeltaX();
+
+                // TFE, 20230407: scroll y axis too
+                final double lower = xAxisElev.getMinValue();
+                final double upper = xAxisElev.getMaxValue();
+                final double center = (upper + lower) / 2;
+                double halfwidth = (upper - lower) / 2;
+                if (scrollDelta > 0) {
+                    halfwidth = halfwidth / scaleFact;
+                } else {
+                    // scroll out - but not more than 180 degress
+                    halfwidth = Math.min(180, halfwidth * scaleFact);
+                }
+                // zoom - and keep center
+                xAxisElev.setMinMax(Math.max(MIN_HOR_ANGLE, center - halfwidth), Math.min(MAX_HOR_ANGLE, center + halfwidth));
             }
             
-            final double lower = yAxisElev.getMinValue();
-            final double upper = yAxisElev.getMaxValue();
-            if (scrollDelta > 0) {
-                // zoom in - easy, since no bounds to take into account...
-                yAxisElev.setMinMax(lower / scaleFact, upper / scaleFact);
-            } else {
-                // scroll out - but not more than 90 degress
-                final int newLower = (int) Math.floor(lower * scaleFact);
-                final int newUpper = (int) Math.floor(upper * scaleFact);
-                if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
-                    yAxisElev.setMinMax(newLower, newUpper);
-                }
-            }
         });
 
         chartGroup.getChildren().add(elevationChart);

@@ -145,8 +145,6 @@ dependencies {
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
     implementation 'eu.hansolo.fx:charts:17.1.27'
-    // TODO: error: error reading C:\Users\thomas\.gradle\caches\modules-2\files-2.1\eu.hansolo.fx\heatmap\17.0.11\69d60f2307f1ddb380ec3f847c255cac2c77dbba\heatmap-17.0.11.jar; java.net.URISyntaxException: Illegal character in path at index 129: file:/C:/Users/thomas/.gradle/caches/modules-2/files-2.1/eu.hansolo.fx/heatmap/17.0.11/69d60f2307f1ddb380ec3f847c255cac2c77dbba/${project.name}-${project.version}.jar
-    // implementation 'eu.hansolo.fx:heatmap:17.0.5'
     
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.2'
