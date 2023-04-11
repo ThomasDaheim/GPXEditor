@@ -436,6 +436,7 @@ public class GPXEditor implements Initializable {
         EditLineStyle.getInstance().setCallback(this);
         StatisticsViewer.getInstance().setCallback(this);
         StatusBar.getInstance().setCallback(this);
+        PreferenceEditor.getInstance().setCallback(this);
 
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());

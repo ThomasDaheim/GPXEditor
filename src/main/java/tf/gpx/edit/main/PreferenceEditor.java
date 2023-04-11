@@ -164,6 +164,8 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField defaultImagePathText = initWideTextField(new TextField(), 400);
     private final TextField imageSizeText = initNumberField(new TextField(), false);
 
+    private GPXEditor myGPXEditor;
+
     private PreferenceEditor() {
         super();
         // Exists only to defeat instantiation.
@@ -173,6 +175,10 @@ public class PreferenceEditor extends AbstractStage {
 
     public static PreferenceEditor getInstance() {
         return INSTANCE;
+    }
+
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
     }
     
     private void initViewer() {
@@ -1029,6 +1035,8 @@ public class PreferenceEditor extends AbstractStage {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        // TFE, 20230411: need to re-init the whole application since table leyouts, ... might have changed!
+        myGPXEditor.initialize(null, null);
         initPreferences();
 
         return true;

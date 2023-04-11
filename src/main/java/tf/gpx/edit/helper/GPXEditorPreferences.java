@@ -42,6 +42,7 @@ import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
+import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -250,6 +251,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     private void importPreferencesImpl(final InputStream is) {
         try {
             Preferences.importPreferences(is);
+            // TFE, 20230411: that dosn't set all the preference variables!
+            // callback to GPXEditor is required to re-init the whole application!
+            // that can't be done here but needs to be done by the caller
         } catch (InvalidPreferencesFormatException | IOException ex) {
             Logger.getLogger(GPXEditorPreferences.class.getName()).log(Level.SEVERE, null, ex);
         }
