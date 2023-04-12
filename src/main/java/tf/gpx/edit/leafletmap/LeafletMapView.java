@@ -213,6 +213,7 @@ public class LeafletMapView extends StackPane {
         
         // execute script for map view creation (Leaflet attribution must not be a clickable link)
         final StringBuilder mapCmd = new StringBuilder();
+        mapCmd.append("if (myMap != undefined) { myMap.off(); myMap.remove(); }\n");
         mapCmd.append("var myMap = L.map('map', {\n");
         mapCmd.append(String.format(Locale.US, "   center: new L.LatLng(%f, %f),\n", myMapConfig.getInitialCenter().getLatitude(), myMapConfig.getInitialCenter().getLongitude()));
         mapCmd.append("    zoom: 10,\n");
