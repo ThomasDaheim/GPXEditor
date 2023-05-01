@@ -570,10 +570,11 @@ public class GPXEditor implements Initializable {
             importFilesAction(event);
         });
         closeFileMenu.setOnAction((ActionEvent event) -> {
-            saveAllFilesAction(event);
+            closeFilesAction(event);
         });
         closeFileMenu.disableProperty().bind(
-                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
+                // TFE, 20230501: close is only meaningful if at least on item is selected...
+                Bindings.isEmpty(gpxFileList.getSelectionModel().getSelectedItems()));
         saveAllFilesMenu.setOnAction((ActionEvent event) -> {
             saveAllFilesAction(event);
         });
@@ -1455,16 +1456,31 @@ public class GPXEditor implements Initializable {
         return result;
     }
 
-    public Boolean closeFileAction(final ActionEvent event) {
-        return closeFile(gpxFileList.getSelectionModel().getSelectedItem().getValue());
+    public Boolean closeFilesAction(final ActionEvent event) {
+        // TFE, 20230501: close all selected files
+        Boolean result = true;
+        
+        // check fo changes that need saving by closing all files
+        if (gpxFileList.getRoot() != null) {
+            // work on a copy since closeFile removes it from the gpxFileListXML
+            final List<TreeItem<GPXMeasurable>> gpxFiles = new ArrayList<>(gpxFileList.getSelectionModel().getSelectedItems());
+            for (TreeItem<GPXMeasurable> treeitem : gpxFiles) {
+                if (treeitem.getValue().isGPXFile()) {
+                    result = result && closeFile(treeitem.getValue().getGPXFile());
+                }
+
+            }
+        }
+        
+        return result;
     }
 
     public Boolean closeFile(final GPXLineItem item) {
-        if (!item.isGPXFile()) {
+        if (item == null) {
             return false;
         }
         
-        if (item.hasUnsavedChanges()) {
+        if (item.getGPXFile().hasUnsavedChanges()) {
             // gpxfile has changed - do want to save first?
             if (saveChangesDialog(item.getGPXFile())) {
                 saveFile(item);
