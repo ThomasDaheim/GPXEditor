@@ -302,6 +302,14 @@ public class GPXFile extends GPXMeasurable {
         }
     }
     
+    // TFE, 20230105: set file name from metadata name (if any)
+    public void setNameFromMetadata() {
+        if (myGPX.getMetadata() != null && myGPX.getMetadata().getName() != null) {
+            // convert to valid file name
+            setName(myGPX.getMetadata().getName());
+        }
+    }
+    
     @Override
     public String getName() {
         return myGPXFileName;
@@ -309,7 +317,13 @@ public class GPXFile extends GPXMeasurable {
 
     @Override
     public void setName(final String name) {
-        this.myGPXFileName = name;
+        // TFE, 20230501: add extension if not already there
+        String newName = name;
+        if (!newName.endsWith(GPXFileHelper.FileType.GPX.getExtension())) {
+           newName += "." + GPXFileHelper.FileType.GPX.getExtension();
+        }
+        // TFE, 20230501: make sure we only use valid chars for name
+        myGPXFileName = newName.replaceAll("[^a-zA-Z0-9.-_#]", "_");
         setHasUnsavedChanges();
     }
 
