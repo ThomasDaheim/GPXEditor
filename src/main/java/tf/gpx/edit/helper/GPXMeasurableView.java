@@ -236,7 +236,7 @@ public class GPXMeasurableView implements IPreferencesHolder {
                                 final MenuItem renameFile = new MenuItem("Rename");
                                 renameFile.setOnAction((ActionEvent event) -> {
                                     // start editing file name col cell
-                                    final TreeTableColumn<GPXMeasurable, ?> nameGPXCol = myTreeTableView.getColumns().get(1);
+                                    final TreeTableColumn<GPXMeasurable, ?> nameGPXCol = myTreeTableView.getColumns().get(2);
                                     myTreeTableView.edit(getIndex(), nameGPXCol);
                                 });
                                 fileMenu.getItems().add(renameFile);
