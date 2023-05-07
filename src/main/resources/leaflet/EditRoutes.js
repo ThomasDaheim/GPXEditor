@@ -157,25 +157,6 @@ myMap.on('editable:drawing:end', removeTooltip);
 myMap.on('editable:drawing:click', updateTooltip);
 
 /*
- * JSON.stringify doesn't work on LatLngs...
- */
-function coordsToString(coords) {
-    var coordsString = "";
-    
-    var arrayLength = coords.length;
-    for (var i = 0; i < arrayLength; i++) {
-        var latlan = coords[i];
-        
-        coordsString = coordsString + "lat:" + latlan.lat + ", lon:" + latlan.lng;
-        
-        if (i < arrayLength-1) {
-            coordsString = coordsString + " - "
-        }
-    }
-    return coordsString;
-}
-
-/*
  * Enable editing on marker and add callbacks for editing ends
  */
 function makeEditable(layer) {

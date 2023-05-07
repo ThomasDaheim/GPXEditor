@@ -58,7 +58,7 @@ public class TrackMapCallback {
     }
 
     public void updateRoute(final String event, final String route, final String coords) {
-//            System.out.println(event + ", " + route + ", " + coords);
+//        System.out.println(event + ", " + route + ", " + coords);
 
         final List<LatLonElev> latlongs = new ArrayList<>();
         // parse coords string back into LatLongs
