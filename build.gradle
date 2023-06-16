@@ -200,6 +200,9 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
                 // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
                 '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+                // TFE, 20230616: needed for cloning metadata
+                '--add-opens', 'java.base/java.time=ALL-UNNAMED',
+                '--add-opens', 'java.base/java.time.zone=ALL-UNNAMED',
                 '--add-opens', 'java.base/sun.util.calendar=ALL-UNNAMED',
     ]
     
