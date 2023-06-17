@@ -132,7 +132,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class),
     HAMPEL_WINDOW("hampelWindow", Integer.toString(3), Integer.class),
     HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
-    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class);
+    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
+    
+    CHECK_XML_FORMAT("checkGPXFormat", Boolean.toString(true), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

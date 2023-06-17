@@ -432,36 +432,39 @@ public class GPXFileHelper {
     }
 
     public void verifyXMLFile(final File gpxFile, final FileType type) {
-        try {
-            final SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setValidating(false);
-            
-            final SAXParser parser = factory.newSAXParser();
-            final DefaultHandler handler = new DefaultHandler();
+        // TFE, 20230617: do something ONLY if set in preferences...
+        if (GPXEditorPreferences.CHECK_XML_FORMAT.getAsType()) {
+            try {
+                final SAXParserFactory factory = SAXParserFactory.newInstance();
+                factory.setNamespaceAware(true);
+                factory.setValidating(false);
 
-            // TFE, 20211118: support for zip files
-            if (type.isZip()) {
-                try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(gpxFile)))) {
-                    zis.getNextEntry();
-                    parser.parse(zis, handler);
+                final SAXParser parser = factory.newSAXParser();
+                final DefaultHandler handler = new DefaultHandler();
+
+                // TFE, 20211118: support for zip files
+                if (type.isZip()) {
+                    try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(gpxFile)))) {
+                        zis.getNextEntry();
+                        parser.parse(zis, handler);
+                    }
+                } else {
+                    parser.parse(gpxFile, handler);
                 }
-            } else {
-                parser.parse(gpxFile, handler);
-            }
-        } catch(IOException | ParserConfigurationException | SAXException ex) {
-            // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
-            if (myGPXEditor.getScene() != null) {
-//                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
-            
-                final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
-                Optional<ButtonType> doAction = 
-                        ShowAlerts.getInstance().showAlert(
-                                Alert.AlertType.WARNING,
-                                "Warning",
-                                "Invalid file: " + gpxFile.getName(),
-                                ex.getMessage(),
-                                buttonOK);
+            } catch(IOException | ParserConfigurationException | SAXException ex) {
+                // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
+                if (myGPXEditor.getScene() != null) {
+    //                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
+
+                    final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
+                    Optional<ButtonType> doAction = 
+                            ShowAlerts.getInstance().showAlert(
+                                    Alert.AlertType.WARNING,
+                                    "Warning",
+                                    "Invalid file: " + gpxFile.getName(),
+                                    ex.getMessage(),
+                                    buttonOK);
+                }
             }
         }
     }
