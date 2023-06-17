@@ -26,8 +26,8 @@
 package tf.gpx.edit.helper;
 
 import java.util.regex.Pattern;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test match() and lokAt() for some complex regex

@@ -36,7 +36,6 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import tf.gpx.edit.elevation.AssignElevation;
 import tf.helper.javafx.AbstractStage;
 import static tf.helper.javafx.AbstractStage.INSET_TOP;
 import tf.helper.javafx.EnumHelper;

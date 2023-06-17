@@ -43,8 +43,8 @@ import java.util.logging.Logger;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**

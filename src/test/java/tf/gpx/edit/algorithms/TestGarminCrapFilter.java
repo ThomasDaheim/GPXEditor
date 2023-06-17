@@ -27,8 +27,8 @@ package tf.gpx.edit.algorithms;
 
 import java.io.File;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXWaypoint;
 

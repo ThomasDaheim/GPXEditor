@@ -34,8 +34,8 @@ import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.SPA;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**

@@ -27,8 +27,8 @@ package tf.gpx.edit.helper;
 
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *

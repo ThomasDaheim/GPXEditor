@@ -26,9 +26,9 @@
 package tf.gpx.edit.helper;
 
 import java.util.TimeZone;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**

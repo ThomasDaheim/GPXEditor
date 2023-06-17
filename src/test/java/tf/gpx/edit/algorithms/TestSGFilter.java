@@ -26,8 +26,8 @@
 package tf.gpx.edit.algorithms;
 
 import mr.go.sgfilter.SGFilter;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test of the savitzky-golay filter implementation.

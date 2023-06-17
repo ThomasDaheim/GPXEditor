@@ -30,8 +30,8 @@ import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
 import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
 import net.e175.klaus.solarpositioning.PSA;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test of the SPA implementation.

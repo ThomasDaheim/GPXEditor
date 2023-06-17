@@ -27,8 +27,8 @@ package tf.gpx.edit.items;
 
 import java.io.File;
 import me.himanshusoni.gpxparser.modal.Extension;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;

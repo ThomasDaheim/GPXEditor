@@ -28,7 +28,6 @@ package tf.gpx.edit.values;
 
 
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;

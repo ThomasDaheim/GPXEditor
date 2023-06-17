@@ -164,7 +164,7 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField defaultImagePathText = initWideTextField(new TextField(), 400);
     private final TextField imageSizeText = initNumberField(new TextField(), false);
 
-    private final CheckBox checkXMLChkBox = new CheckBox();
+    private final CheckBox validateXMLChkBox = new CheckBox();
 
     private GPXEditor myGPXEditor;
 
@@ -664,9 +664,8 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // check XML files
-        addPrefInput(
-                "Verify XML:", checkXMLChkBox, 
-                "Should XML files be verified on opening", 
+        addPrefInput("Validate XML:", validateXMLChkBox, 
+                "Should XML files be validated on opening", 
                 0, rowNum);
 
         rowNum++;
@@ -901,7 +900,7 @@ public class PreferenceEditor extends AbstractStage {
         initSmoothingParms(GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
         elevationChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType());
         
-        checkXMLChkBox.setSelected(GPXEditorPreferences.CHECK_XML_FORMAT.getAsType());
+        validateXMLChkBox.setSelected(GPXEditorPreferences.VALIDATE_XML_FORMAT.getAsType());
     }
     
     private void savePreferences() {
@@ -961,7 +960,7 @@ public class PreferenceEditor extends AbstractStage {
             TrackMap.getInstance().initPictureIcons();
         }
         
-        GPXEditorPreferences.CHECK_XML_FORMAT.put(checkXMLChkBox.isSelected());
+        GPXEditorPreferences.VALIDATE_XML_FORMAT.put(validateXMLChkBox.isSelected());
         
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);

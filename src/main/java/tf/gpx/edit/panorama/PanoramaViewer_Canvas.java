@@ -29,10 +29,12 @@ import eu.hansolo.fx.charts.*;
 import eu.hansolo.fx.charts.data.XYChartItem;
 import eu.hansolo.fx.charts.series.XYSeries;
 import eu.hansolo.fx.charts.series.XYSeriesBuilder;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.util.*;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -54,10 +56,6 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
-
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.*;
 
 /**
  * Viewer for the "horizon" for a given LatLon position.

@@ -312,7 +312,7 @@ public class GPXFileHelper {
         GPXEditorPreferences.getRecentFiles().addRecentFile(curFile.toFile().getAbsolutePath());
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(curFile.toFile(), FileType.GPX);
+        validateXMLFile(curFile.toFile(), FileType.GPX);
         
         return result;
     }
@@ -396,7 +396,7 @@ public class GPXFileHelper {
         }
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(selectedFile, type);
+        validateXMLFile(selectedFile, type);
         
         return result;
     }
@@ -431,9 +431,9 @@ public class GPXFileHelper {
         return result;
     }
 
-    public void verifyXMLFile(final File gpxFile, final FileType type) {
+    public void validateXMLFile(final File gpxFile, final FileType type) {
         // TFE, 20230617: do something ONLY if set in preferences...
-        if (GPXEditorPreferences.CHECK_XML_FORMAT.getAsType()) {
+        if (GPXEditorPreferences.VALIDATE_XML_FORMAT.getAsType()) {
             try {
                 final SAXParserFactory factory = SAXParserFactory.newInstance();
                 factory.setNamespaceAware(true);

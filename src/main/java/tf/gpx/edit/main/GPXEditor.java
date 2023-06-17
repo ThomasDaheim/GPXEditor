@@ -129,10 +129,10 @@ import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
-import tf.gpx.edit.helper.GPXStructureHelper;
-import tf.gpx.edit.helper.GPXWaypointView;
 import tf.gpx.edit.helper.GPXMeasurableView;
+import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
+import tf.gpx.edit.helper.GPXWaypointView;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
@@ -1289,7 +1289,7 @@ public class GPXEditor implements Initializable {
                         TaskExecutor.executeTask(
                             getScene(), () -> {
                                 // TFE, 20191024 add warning for format issues
-                                GPXFileHelper.getInstance().verifyXMLFile(file, GPXFileHelper.FileType.GPX);
+                                GPXFileHelper.getInstance().validateXMLFile(file, GPXFileHelper.FileType.GPX);
 
                                 gpxFileList.addGPXFile(new GPXFile(file));
 

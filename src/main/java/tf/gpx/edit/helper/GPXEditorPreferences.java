@@ -42,7 +42,6 @@ import tf.gpx.edit.algorithms.WaypointSmoothing;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.elevation.SRTMDownloader;
-import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -134,7 +133,7 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
     DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
     
-    CHECK_XML_FORMAT("checkGPXFormat", Boolean.toString(true), Boolean.class);
+    VALIDATE_XML_FORMAT("validateGPXFormat", Boolean.toString(true), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
