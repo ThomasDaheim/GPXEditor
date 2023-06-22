@@ -104,6 +104,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
+import tf.gpx.edit.actions.InterpolateWaypointInformationAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
 import tf.gpx.edit.actions.MergeDeleteMetadataAction;
@@ -111,6 +112,7 @@ import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
+import tf.gpx.edit.actions.UpdateInformation;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointInformationAction;
@@ -151,9 +153,11 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
-import tf.gpx.edit.values.EditGPXWaypoint;
+import tf.gpx.edit.values.EditGPXWaypoints;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.gpx.edit.values.EditSplitValues;
+import tf.gpx.edit.values.InterpolateGPXWaypoints;
+import tf.gpx.edit.values.InterpolationValues;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -432,7 +436,8 @@ public class GPXEditor implements Initializable {
         GPXTrackviewer.getInstance().setCallback(this);
         DistributionViewer.getInstance().setCallback(this);
         EditGPXMetadata.getInstance().setCallback(this);
-        EditGPXWaypoint.getInstance().setCallback(this);
+        EditGPXWaypoints.getInstance().setCallback(this);
+        InterpolateGPXWaypoints.getInstance().setCallback(this);
         EditLineStyle.getInstance().setCallback(this);
         StatisticsViewer.getInstance().setCallback(this);
         StatusBar.getInstance().setCallback(this);
@@ -1056,7 +1061,7 @@ public class GPXEditor implements Initializable {
         addDoneAction(insertAction, GPXFileHelper.getNameForGPXFile(target.getGPXFile()));
     }
     
-    public void updateSelectedWaypointsInformation(final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue, final boolean doUndo) {
+    public void updateSelectedWaypointsInformation(final UpdateInformation info, final Object newValue, final boolean doUndo) {
         final List<GPXLineItem> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         if(selectedWaypoints.isEmpty()) {
@@ -1069,7 +1074,7 @@ public class GPXEditor implements Initializable {
     
     public void updateLineItemInformation(
             final List<? extends GPXLineItem> lineItems, 
-            final UpdateLineItemInformationAction.UpdateInformation info, 
+            final UpdateInformation info, 
             final Object newValue, 
             final boolean doUndo) {
         if(lineItems.isEmpty()) {
@@ -1092,6 +1097,18 @@ public class GPXEditor implements Initializable {
         }
 
         final IDoUndoAction updateAction = new UpdateWaypointInformationAction(this, waypoints, datapoint);
+        updateAction.doAction();
+        
+        addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
+    }
+    
+    public void interpolateWaypointInformation(final List<GPXWaypoint> waypoints, final InterpolationValues values) {
+        if(waypoints.isEmpty()) {
+            // nothing to delete...
+            return;
+        }
+
+        final IDoUndoAction updateAction = new InterpolateWaypointInformationAction(this, waypoints, values);
         updateAction.doAction();
         
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
@@ -2145,13 +2162,17 @@ public class GPXEditor implements Initializable {
     }
     
     public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
+        EditGPXWaypoints.getInstance().editWaypoints(gpxWaypoints);
     }
 
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
     
+    public void interpolateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final UpdateInformation info) {
+        InterpolateGPXWaypoints.getInstance().interpolateWaypoints(gpxWaypoints, info);
+    }
+
     public void showHorizon(final IGeoCoordinate location) {
         PanoramaViewer.getInstance().showPanorama(location);
     }

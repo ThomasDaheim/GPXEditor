@@ -78,7 +78,7 @@ import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 import me.himanshusoni.gpxparser.modal.Metadata;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.actions.UpdateLineItemInformationAction;
+import tf.gpx.edit.actions.UpdateInformation;
 import tf.gpx.edit.elevation.SRTMDataViewer;
 import tf.gpx.edit.extension.DefaultExtensionHolder;
 import tf.gpx.edit.extension.LineStyle;
@@ -336,7 +336,7 @@ public class GPXMeasurableView implements IPreferencesHolder {
                                 final Menu deleteAttr = new Menu("Delete attribute(s)");
                                 final MenuItem deleteExtensions = new MenuItem("Extensions(s)");
                                 deleteExtensions.setOnAction((ActionEvent event) -> {
-                                    myGPXEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateLineItemInformationAction.UpdateInformation.EXTENSION, null, true);
+                                    myGPXEditor.updateLineItemInformation(getSelectedGPXMeasurables(), UpdateInformation.EXTENSION, null, true);
                                 });
                                 deleteAttr.getItems().add(deleteExtensions);
                                 fileMenu.getItems().add(deleteAttr);

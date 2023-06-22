@@ -68,6 +68,7 @@ import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.viewer.MarkerIcon;
 import tf.gpx.edit.viewer.MarkerManager;
 import tf.helper.javafx.AbstractStage;
@@ -80,10 +81,10 @@ import tf.helper.javafx.TooltipHelper;
  *
  * @author thomas
  */
-public class EditGPXWaypoint extends AbstractStage {
+public class EditGPXWaypoints extends AbstractStage {
     // this is a singleton for everyones use
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
-    private final static EditGPXWaypoint INSTANCE = new EditGPXWaypoint();
+    private final static EditGPXWaypoints INSTANCE = new EditGPXWaypoints();
     
     public final static String KEEP_MULTIPLE_VALUES = "<Keep multiple values>";
     private final static int SYMBOL_SIZE = 32;
@@ -119,7 +120,7 @@ public class EditGPXWaypoint extends AbstractStage {
     
     private List<GPXWaypoint> myGPXWaypoints;
     
-    private EditGPXWaypoint() {
+    private EditGPXWaypoints() {
         super();
         // Exists only to defeat instantiation.
         
@@ -128,16 +129,17 @@ public class EditGPXWaypoint extends AbstractStage {
         initViewer();
     }
 
-    public static EditGPXWaypoint getInstance() {
+    public static EditGPXWaypoints getInstance() {
         return INSTANCE;
     }
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(EditGPXWaypoint.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(EditGPXWaypoints.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene
         setTitle("Edit Waypoint Properties");
+        getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         initModality(Modality.APPLICATION_MODAL); 
         
         // https://de.wikipedia.org/wiki/GPS_Exchange_Format
@@ -534,7 +536,7 @@ public class EditGPXWaypoint extends AbstractStage {
         myGPXEditor = gpxEditor;
     }
     
-    public boolean editWaypoint(final List<GPXWaypoint> gpxWaypoints) {
+    public boolean editWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         assert myGPXEditor != null;
         assert !CollectionUtils.isEmpty(gpxWaypoints);
         
@@ -834,7 +836,7 @@ public class EditGPXWaypoint extends AbstractStage {
             try {
                 result = NumberFormat.getNumberInstance().parse(test.trim()).doubleValue();
             } catch (ParseException ex) {
-                Logger.getLogger(EditGPXWaypoint.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(EditGPXWaypoints.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 

@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.actions.UpdateLineItemInformationAction;
+import tf.gpx.edit.actions.UpdateInformation;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
@@ -188,7 +188,7 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
 //                        System.out.println("gpxWayPoint: " + gpxWayPoint + ", elevation: " + elevation);
                         myEditor.updateLineItemInformation(
                                 Arrays.asList(gpxWayPoint), 
-                                UpdateLineItemInformationAction.UpdateInformation.HEIGHT, 
+                                UpdateInformation.HEIGHT, 
                                 assignHeigths.get(i).getRight(), 
                                 myDoUndo);
                         assignedHeightCount++;

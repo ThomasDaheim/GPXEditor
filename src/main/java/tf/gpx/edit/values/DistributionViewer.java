@@ -47,6 +47,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.CheckBoxListCell;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -60,6 +61,7 @@ import org.controlsfx.control.RangeSlider;
 import tf.gpx.edit.items.GPXLineItem.GPXLineItemData;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.javafx.AbstractStage;
 
 /**
@@ -118,6 +120,7 @@ public class DistributionViewer extends AbstractStage {
     
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
+        getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         getScene().getStylesheets().add(DistributionViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene

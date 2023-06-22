@@ -33,11 +33,13 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.util.converter.DoubleStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+import tf.gpx.edit.main.GPXEditorManager;
 import tf.gpx.edit.values.SplitValue.SplitType;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
@@ -72,6 +74,7 @@ public class EditSplitValues extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
+        getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         getScene().getStylesheets().add(EditSplitValues.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene
