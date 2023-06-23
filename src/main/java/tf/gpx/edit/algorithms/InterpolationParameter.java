@@ -23,26 +23,27 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.values;
+package tf.gpx.edit.algorithms;
 
 import tf.gpx.edit.actions.UpdateInformation;
+import tf.gpx.edit.values.InterpolateGPXWaypoints;
 
 /**
  * Values needed for interpolation of GPXWaypoint data.
  * 
  * @author thomas
  */
-public class InterpolationValues {
+public class InterpolationParameter {
     private UpdateInformation information;
     private int startPos;
     private int endPos;
     private InterpolateGPXWaypoints.InterpolationDirection direction;
     private InterpolateGPXWaypoints.InterpolationMethod method;
     
-    private InterpolationValues() {
+    private InterpolationParameter() {
     }
     
-    public InterpolationValues(
+    public InterpolationParameter(
             final UpdateInformation info, 
             final int start, 
             final int end, 

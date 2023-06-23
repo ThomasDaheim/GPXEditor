@@ -157,7 +157,7 @@ import tf.gpx.edit.values.EditGPXWaypoints;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.gpx.edit.values.EditSplitValues;
 import tf.gpx.edit.values.InterpolateGPXWaypoints;
-import tf.gpx.edit.values.InterpolationValues;
+import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -1102,7 +1102,7 @@ public class GPXEditor implements Initializable {
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
     }
     
-    public void interpolateWaypointInformation(final List<GPXWaypoint> waypoints, final InterpolationValues values) {
+    public void interpolateWaypointInformation(final List<GPXWaypoint> waypoints, final InterpolationParameter values) {
         if(waypoints.isEmpty()) {
             // nothing to delete...
             return;

@@ -36,7 +36,8 @@ import static tf.gpx.edit.actions.UpdateInformation.DATE;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.values.InterpolationValues;
+import tf.gpx.edit.algorithms.InterpolationParameter;
+import tf.gpx.edit.algorithms.WaypointInterpolation;
 
 /**
  *
@@ -45,15 +46,15 @@ import tf.gpx.edit.values.InterpolationValues;
 public class InterpolateWaypointInformationAction extends GPXLineItemAction<GPXWaypoint> {
     private final List<GPXWaypoint> myWaypoints;
     private final List<GPXWaypoint> myStoreGPXWaypoints = new ArrayList<>();
-    private final InterpolationValues myValues;
+    private final InterpolationParameter myParameters;
     
-    private final List<Double> distValues = new LinkedList<>();
+    private List<Double> distances;
     
-    public InterpolateWaypointInformationAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final InterpolationValues values) {
+    public InterpolateWaypointInformationAction(final GPXEditor editor, final List<GPXWaypoint> waypoints, final InterpolationParameter params) {
         super(LineItemAction.UPDATE_WAYPOINTS, editor);
         
         myWaypoints = new ArrayList<>(waypoints);
-        myValues = values;
+        myParameters = params;
         
         initAction();
     }
@@ -65,22 +66,15 @@ public class InterpolateWaypointInformationAction extends GPXLineItemAction<GPXW
             myStoreGPXWaypoints.add(waypoint.cloneMe(true));
         }
         
-        // The only kind of "distance" we have is the actual distance between the waypoints. This gives us the x-coord to use in the interpolation
-        // if we don't have lat / lon values we can't do anything
-        double distance = 0.0;
-        distValues.add(0.0);
-        for (int i = 1; i < myWaypoints.size(); i++) {
-            // don't use getDistance() here since we might not have the waypoints as ordered in a tracksegment / route
-            distance += EarthGeometry.distance(myWaypoints.get(i-1), myWaypoints.get(i));
-            distValues.add(distance);
-        }
+        distances = WaypointInterpolation.calculateDistances(myWaypoints, myParameters);
     }
 
     @Override
     public boolean doHook() {
         boolean result = true;
         
-        interpolateData();
+        // let a class do the work that can be easliy tested without UI
+        WaypointInterpolation.apply(myWaypoints, distances, myParameters);
         
         myEditor.refresh();
         myEditor.updateGPXWaypoints(myWaypoints);
@@ -104,69 +98,9 @@ public class InterpolateWaypointInformationAction extends GPXLineItemAction<GPXW
 
         return result;
     }
-    
-    private void interpolateData() {
-        final GPXWaypoint startPoint = myWaypoints.get(myValues.getStartPos());
-        final GPXWaypoint endPoint = myWaypoints.get(myValues.getEndPos());
-        
-        if (startPoint.getLatitude().isNaN() || startPoint.getLongitude().isNaN()) {
-            System.err.println("No lat / lon for interpolation startpoint.");
-            return;
-        }
-        if (endPoint.getLatitude().isNaN() || endPoint.getLongitude().isNaN()) {
-            System.err.println("No lat / lon for interpolation endpoint.");
-        }
-
-        // select interpolation, select accessor, do stuff
-        // https://stackoverflow.com/questions/36523396/interpolate-function-using-apache-commons-math
-        UnivariateInterpolator ui;
-        switch (myValues.getMethod()) {
-            case LINEAR:
-                ui = new LinearInterpolator();
-                break;
-            default:
-                ui = new LinearInterpolator();
-        }
-        
-        double[] xValues = new double[] {distValues.get(myValues.getStartPos()), distValues.get(myValues.getEndPos())};
-        double[] yValues = new double[2];
-        switch (myValues.getInformation()) {
-            case DATE:
-                yValues[0] = startPoint.getDate().getTime();
-                yValues[1] = endPoint.getDate().getTime();
-        }
-        
-        final UnivariateFunction uf = ui.interpolate(xValues, yValues);
-        // gradient for linear extrapolation
-        final double gradient = (yValues[1] - yValues[0]) / (xValues[1] - xValues[0]);
-                
-        // now go over all waypoints to set values (where there is no data yet)
-        for (int i = 0; i < myWaypoints.size(); i++) {
-            final GPXWaypoint waypoint = myWaypoints.get(i);
-            switch (myValues.getInformation()) {
-                case DATE:
-                    // no date yet AND lat / lon for meaningful distance
-                    if (waypoint.getDate() == null && 
-                            !waypoint.getLatitude().isNaN() && 
-                            !waypoint.getLongitude().isNaN() && 
-                            (i != myValues.getStartPos()) && 
-                            (i != myValues.getEndPos())) {
-                        // now it gets tricky - do we interpolate or extrapolate?
-                        double newValue = Double.NaN;
-                        if (i >= myValues.getStartPos() && i <= myValues.getEndPos()) {
-                            newValue = uf.value(distValues.get(i));
-                        } else {
-                            // extrapolate - linearly
-                            newValue = yValues[0] + (distValues.get(i) - xValues[0]) * gradient;
-                        }
-                        waypoint.setDate(new Date((long) newValue));
-                    }
-            }
-        }
-    }
 
     private void copyValues(final GPXWaypoint from, final GPXWaypoint to) {
-        switch (myValues.getInformation()) {
+        switch (myParameters.getInformation()) {
             case DATE:
                 to.setDate(from.getDate());
                 break;

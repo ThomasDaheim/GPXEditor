@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.values;
 
+import tf.gpx.edit.algorithms.InterpolationParameter;
 import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
@@ -182,7 +183,7 @@ public class InterpolateGPXWaypoints extends AbstractStage {
         // 5th row: Save & Cancel buttons
         final Button saveButton = new Button("Set Properties");
         saveButton.setOnAction((ActionEvent event) -> {
-            myGPXEditor.interpolateWaypointInformation(myGPXWaypoints, new InterpolationValues(myInformation, startPos, endPos, direction, method));
+            myGPXEditor.interpolateWaypointInformation(myGPXWaypoints, new InterpolationParameter(myInformation, startPos, endPos, direction, method));
 
             // done, lets get out of here...
             close();
