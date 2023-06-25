@@ -26,18 +26,12 @@
 package tf.gpx.edit.actions;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
-import org.apache.commons.math3.analysis.interpolation.UnivariateInterpolator;
 import static tf.gpx.edit.actions.UpdateInformation.DATE;
-import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.algorithms.WaypointInterpolation;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.gpx.edit.main.GPXEditor;
 
 /**
  *

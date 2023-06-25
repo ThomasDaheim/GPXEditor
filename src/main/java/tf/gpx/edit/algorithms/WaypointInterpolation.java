@@ -35,7 +35,6 @@ import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.interpolation.UnivariateInterpolator;
 import static tf.gpx.edit.actions.UpdateInformation.DATE;
 import tf.gpx.edit.items.GPXWaypoint;
-import static tf.gpx.edit.values.InterpolateGPXWaypoints.InterpolationMethod.LINEAR;
 
 /**
  * Wrapper for different interpolation algorithms.

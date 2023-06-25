@@ -25,8 +25,10 @@
  */
 package tf.gpx.edit.algorithms;
 
+import java.util.List;
 import tf.gpx.edit.actions.UpdateInformation;
-import tf.gpx.edit.values.InterpolateGPXWaypoints;
+import static tf.gpx.edit.actions.UpdateInformation.DATE;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  * Values needed for interpolation of GPXWaypoint data.
@@ -34,11 +36,43 @@ import tf.gpx.edit.values.InterpolateGPXWaypoints;
  * @author thomas
  */
 public class InterpolationParameter {
+    public enum InterpolationDirection {
+        START_TO_END("From start to end values"),
+        FORWARDS("Forwards from start values"),
+        BACKWARDS("Backwards from end values");
+        
+        private final String direction;
+        
+        private InterpolationDirection(final String dir) {
+            direction = dir;
+        }
+        
+        @Override
+        public String toString() {
+            return direction;
+        }
+    }
+    
+    public enum InterpolationMethod {
+        LINEAR("Linear");
+        
+        private final String method;
+        
+        private InterpolationMethod(final String meth) {
+            method = meth;
+        }
+        
+        @Override
+        public String toString() {
+            return method;
+        }
+    }
+
     private UpdateInformation information;
     private int startPos;
     private int endPos;
-    private InterpolateGPXWaypoints.InterpolationDirection direction;
-    private InterpolateGPXWaypoints.InterpolationMethod method;
+    private InterpolationDirection direction;
+    private InterpolationMethod method;
     
     private InterpolationParameter() {
     }
@@ -47,8 +81,8 @@ public class InterpolationParameter {
             final UpdateInformation info, 
             final int start, 
             final int end, 
-            final InterpolateGPXWaypoints.InterpolationDirection dir, 
-            final InterpolateGPXWaypoints.InterpolationMethod meth) {
+            final InterpolationDirection dir, 
+            final InterpolationMethod meth) {
         information = info;
         startPos = start;
         endPos = end;
@@ -68,11 +102,82 @@ public class InterpolationParameter {
         return endPos;
     }
 
-    public InterpolateGPXWaypoints.InterpolationDirection getDirection() {
+    public InterpolationDirection getDirection() {
         return direction;
     }
 
-    public InterpolateGPXWaypoints.InterpolationMethod getMethod() {
+    public InterpolationMethod getMethod() {
         return method;
+    }
+    
+    public static InterpolationParameter fromGPXWaypoints(final List<GPXWaypoint> waypoints, final UpdateInformation information) {
+        InterpolationParameter result = null;
+        
+        int startPos = -1;
+        int endPos = -1;
+        InterpolationDirection direction = InterpolationDirection.START_TO_END;
+        // TFE, 20230622: so far, only date is available
+        switch (information) {
+            case DATE:
+                // various options!
+                // 1) first and last waypoint have the info => use those values for start & final
+                // 2) last waypoints have the info => interpolate backwards from those to start & final
+                // 3) first waypoints have the info => interpolate forwards from those to start & final
+                // ELSE: nothing we can do here, bummer!
+                
+                // find last waypoint from start with value
+                for (int i = 0; i < waypoints.size(); i++) {
+                    if (waypoints.get(i).getDate() != null) {
+                        startPos = i;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // find first waypoint from end with value
+                for (int i = waypoints.size()-1; i >= 0; i--) {
+                    if (waypoints.get(i).getDate() != null) {
+                        endPos = i;
+                    } else {
+                        break;
+                    }
+                }
+                if (endPos == startPos) {
+                    System.err.println("No empty values for interpolation!");
+                    break;
+                }
+                
+                // no start, but more than one end => interpolate backwards
+                if (startPos == -1) {
+                    if (endPos < waypoints.size()-1) {
+                        startPos = endPos;
+                        endPos++;
+                        direction = InterpolationDirection.BACKWARDS;
+                    } else {
+                        System.err.println("Not enough values for backwards interpolation!");
+                        break;
+                    }
+                }
+                
+                // no end, but more than one start => interpolate forwards
+                if (endPos == -1) {
+                    if (startPos > 0) {
+                        endPos = startPos;
+                        startPos--;
+                        direction = InterpolationDirection.FORWARDS;
+                    } else {
+                        System.err.println("Not enough values for forwards interpolation!");
+                        break;
+                    }
+                }
+
+                result = new InterpolationParameter(information, startPos, endPos, direction, InterpolationMethod.LINEAR);
+                break;
+
+            default:
+                System.err.println("Not yet supported!");
+        }
+        
+        return result;
     }
 }

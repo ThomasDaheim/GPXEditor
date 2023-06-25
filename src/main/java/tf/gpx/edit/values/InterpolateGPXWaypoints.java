@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.values;
 
-import tf.gpx.edit.algorithms.InterpolationParameter;
 import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
@@ -39,6 +38,7 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.collections4.CollectionUtils;
 import tf.gpx.edit.actions.UpdateInformation;
+import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -61,53 +61,18 @@ public class InterpolateGPXWaypoints extends AbstractStage {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static InterpolateGPXWaypoints INSTANCE = new InterpolateGPXWaypoints();
     
-    public enum InterpolationDirection {
-        START_TO_END("From start to end values"),
-        FORWARDS("Forwards from start values"),
-        BACKWARDS("Backwards from end values");
-        
-        private final String direction;
-        
-        private InterpolationDirection(final String dir) {
-            direction = dir;
-        }
-        
-        @Override
-        public String toString() {
-            return direction;
-        }
-    }
-    
-    public enum InterpolationMethod {
-        LINEAR("Linear");
-        
-        private final String method;
-        
-        private InterpolationMethod(final String meth) {
-            method = meth;
-        }
-        
-        @Override
-        public String toString() {
-            return method;
-        }
-    }
-
     private final Label startValueLbl = new Label("");
     private final Label startPosLbl = new Label("");
     private final Label endValueLbl = new Label("");
     private final Label endPosLbl = new Label("");
-    private final Label interDirectionLbl = new Label(InterpolationDirection.START_TO_END.toString());
-    private final Label interMethodLbl = new Label(InterpolationMethod.LINEAR.toString());
+    private final Label interDirectionLbl = new Label(InterpolationParameter.InterpolationDirection.START_TO_END.toString());
+    private final Label interMethodLbl = new Label(InterpolationParameter.InterpolationMethod.LINEAR.toString());
     
     private GPXEditor myGPXEditor;
     
     private List<GPXWaypoint> myGPXWaypoints;
     private UpdateInformation myInformation;
-    private int startPos;
-    private int endPos;
-    private InterpolationDirection direction = InterpolationDirection.START_TO_END;
-    private InterpolationMethod method = InterpolationMethod.LINEAR;
+    private InterpolationParameter params;
 
     private InterpolateGPXWaypoints() {
         super();
@@ -138,7 +103,7 @@ public class InterpolateGPXWaypoints extends AbstractStage {
         getGridPane().add(startValueLbl, 1, rowNum);
         GridPane.setMargin(startValueLbl, INSET_TOP);
         
-        final Label startPLbl = new Label("@position:");
+        final Label startPLbl = new Label("ID:");
         getGridPane().add(startPLbl, 2, rowNum);
         GridPane.setMargin(startPLbl, INSET_TOP);
 
@@ -154,7 +119,7 @@ public class InterpolateGPXWaypoints extends AbstractStage {
         getGridPane().add(endValueLbl, 1, rowNum);
         GridPane.setMargin(endValueLbl, INSET_TOP);
 
-        final Label endPLbl = new Label("@position:");
+        final Label endPLbl = new Label("ID:");
         getGridPane().add(endPLbl, 2, rowNum);
         GridPane.setMargin(endPLbl, INSET_TOP);
 
@@ -183,7 +148,7 @@ public class InterpolateGPXWaypoints extends AbstractStage {
         // 5th row: Save & Cancel buttons
         final Button saveButton = new Button("Set Properties");
         saveButton.setOnAction((ActionEvent event) -> {
-            myGPXEditor.interpolateWaypointInformation(myGPXWaypoints, new InterpolationParameter(myInformation, startPos, endPos, direction, method));
+            myGPXEditor.interpolateWaypointInformation(myGPXWaypoints, params);
 
             // done, lets get out of here...
             close();
@@ -243,77 +208,17 @@ public class InterpolateGPXWaypoints extends AbstractStage {
         startPosLbl.setText("");
         endValueLbl.setText("");
         endPosLbl.setText("");
-        direction = InterpolationDirection.START_TO_END;
+        
+        params = InterpolationParameter.fromGPXWaypoints(myGPXWaypoints, myInformation);
+        
+        if (params != null) {
+            startValueLbl.setText(myGPXWaypoints.get(params.getStartPos()).getDataAsString(GPXLineItem.GPXLineItemData.Date));
+            startPosLbl.setText(myGPXWaypoints.get(params.getStartPos()).getCombinedID());
+            endValueLbl.setText(myGPXWaypoints.get(params.getEndPos()).getDataAsString(GPXLineItem.GPXLineItemData.Date));
+            endPosLbl.setText(myGPXWaypoints.get(params.getEndPos()).getCombinedID());
+            interDirectionLbl.setText(params.getDirection().toString());
 
-        // TFE, 20230622: so far, only date is available
-        switch (myInformation) {
-            case DATE:
-                // various options!
-                // 1) first and last waypoint have the info => use those values for start & final
-                // 2) last waypoints have the info => interpolate backwards from those to start & final
-                // 3) first waypoints have the info => interpolate forwards from those to start & final
-                // ELSE: nothing we can do here, bummer!
-                
-                startPos = -1;
-                // find last waypoint from start with value
-                for (int i = 0; i < myGPXWaypoints.size(); i++) {
-                    if (myGPXWaypoints.get(i).getDate() != null) {
-                        startPos = i;
-                    } else {
-                        break;
-                    }
-                }
-                
-                endPos = -1;
-                // find first waypoint from end with value
-                for (int i = myGPXWaypoints.size()-1; i >= 0; i--) {
-                    if (myGPXWaypoints.get(i).getDate() != null) {
-                        endPos = i;
-                    } else {
-                        break;
-                    }
-                }
-                if (endPos == startPos) {
-                    System.err.println("No empty values for interpolation!");
-                    break;
-                }
-                
-                // no start, but more than one end => interpolate backwards
-                if (startPos == -1) {
-                    if (endPos < myGPXWaypoints.size()-1) {
-                        startPos = endPos;
-                        endPos++;
-                        direction = InterpolationDirection.BACKWARDS;
-                    } else {
-                        System.err.println("Not enough values for backwards interpolation!");
-                        break;
-                    }
-                }
-                
-                // no end, but more than one start => interpolate forwards
-                if (endPos == -1) {
-                    if (startPos > 0) {
-                        endPos = startPos;
-                        startPos--;
-                        direction = InterpolationDirection.FORWARDS;
-                    } else {
-                        System.err.println("Not enough values for forwards interpolation!");
-                        break;
-                    }
-                }
-
-                startValueLbl.setText(myGPXWaypoints.get(startPos).getDataAsString(GPXLineItem.GPXLineItemData.Date));
-                startPosLbl.setText(String.valueOf(startPos));
-                endValueLbl.setText(myGPXWaypoints.get(endPos).getDataAsString(GPXLineItem.GPXLineItemData.Date));
-                endPosLbl.setText(String.valueOf(endPos));
-                interDirectionLbl.setText(direction.toString());
-
-                result = true;
-                break;
-
-
-            default:
-                System.err.println("Not yet supported!");
+            result = true;
         }
         
         return result;
