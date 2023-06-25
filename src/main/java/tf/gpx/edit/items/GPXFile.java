@@ -323,7 +323,7 @@ public class GPXFile extends GPXMeasurable {
            newName += "." + GPXFileHelper.FileType.GPX.getExtension();
         }
         // TFE, 20230501: make sure we only use valid chars for name
-        myGPXFileName = newName.replaceAll("[^a-zA-Z0-9.-_#]", "_");
+        myGPXFileName = newName.replaceAll("[^a-zA-Z0-9\\.\\-_#]", "_");
         setHasUnsavedChanges();
     }
 

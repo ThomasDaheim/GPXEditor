@@ -312,6 +312,11 @@ public class EditGPXMetadata extends AbstractStage {
         return ButtonPressed.ACTION_BUTTON.equals(getButtonPressed());
     }
     
+    // TODO: remove this horrible hack by listener or similar
+    public void setName(final String name) {
+        metaNameTxt.setText(name);
+    }
+    
     private void initMetadata() {
         Metadata metadata = myGPXFile.getGPX().getMetadata();
         if (metadata == null) {

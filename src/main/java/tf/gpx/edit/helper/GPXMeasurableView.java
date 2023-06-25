@@ -93,6 +93,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.values.EditGPXMetadata;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.IPreferencesStore;
@@ -225,7 +226,7 @@ public class GPXMeasurableView implements IPreferencesHolder {
                                 break;
                         }
 
-                        // TFE, 20190812: reset highlight for this rrow - might have been used before ith other gpx...
+                        // TFE, 20190812: reset highlight for this row - might have been used before ith other gpx...
                         getStyleClass().remove("gpxFileRow");
                         
                         final MenuItem showItem = new MenuItem("Show with SRTM");
@@ -322,7 +323,6 @@ public class GPXMeasurableView implements IPreferencesHolder {
                                     Bindings.lessThan(Bindings.size(myTreeTableView.getSelectionModel().getSelectedItems()), 1));
                                 fileMenu.getItems().add(deleteItems);
 
-                                // TODO: figure out how to split tracks
                                 if (!item.isGPXTrack()) {
                                     final MenuItem splitItems = new MenuItem("Split Items");
                                     splitItems.setOnAction((ActionEvent event) -> {
@@ -415,6 +415,29 @@ public class GPXMeasurableView implements IPreferencesHolder {
                                 });
                                 fileMenu.getItems().add(deleteMetadata);
                                 
+                                final Menu renameItem = new Menu("Rename...");
+
+                                final MenuItem fileFromMeta = new MenuItem("File from Metadata");
+                                fileFromMeta.setOnAction((ActionEvent event) -> {
+                                    if (item.getName() != null && !item.getName().isBlank()) {
+                                        item.getGPXFile().setName(item.getName());
+                                        myGPXEditor.refreshGPXFileList();
+                                    }
+                                });
+                                renameItem.getItems().add(fileFromMeta);
+
+                                final MenuItem metaFromFile = new MenuItem("Metadata from file");
+                                metaFromFile.setOnAction((ActionEvent event) -> {
+                                    // file name without the extension
+                                    item.setName(item.getGPXFile().getName().replace("." + GPXFileHelper.FileType.GPX.getExtension(), ""));
+                                    // horrible hack: editor is shown, needs to be updated
+                                    EditGPXMetadata.getInstance().setName(item.getName());
+                                    myGPXEditor.refreshGPXFileList();
+                                });
+                                renameItem.getItems().add(metaFromFile);
+
+                                fileMenu.getItems().add(renameItem);
+
                                 break;
                             default:
                                 break;
