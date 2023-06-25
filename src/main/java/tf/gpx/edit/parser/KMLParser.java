@@ -616,7 +616,7 @@ public class KMLParser extends GPXParser {
                 continue;
             }
             // parse into list of waypoints
-            final String[] coordinates = splitList(coordinateNode);
+            final String[] coordinates = splitList(coordinateNode, KMLConstants.COORD_SEPARATOR);
             final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
                 final String[] coordValues = coordString.split(KMLConstants.VALUE_SEPARATOR);
@@ -725,7 +725,7 @@ public class KMLParser extends GPXParser {
                 // we can handle timestamps and track segments...
                 switch (dataName) {
                     case KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS:
-                        final String[] timestamps = splitList(dataElem);
+                        final String[] timestamps = splitList(dataElem, KMLConstants.TIME_SEPARATOR);
                         
                         if (waypoints.size() == timestamps.length) {
                             for (int j = 0; j < timestamps.length; j++) {
@@ -746,7 +746,7 @@ public class KMLParser extends GPXParser {
 
                         break;
                     case KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES:
-                        final String[] sizes = splitList(dataElem);
+                        final String[] sizes = splitList(dataElem, KMLConstants.COORD_SEPARATOR);
 
                         for (int j = 0; j < sizes.length; j++) {
                             try {
@@ -792,8 +792,8 @@ public class KMLParser extends GPXParser {
         return result;
     }
     
-    private static String[] splitList(final Node node) {
-        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(KMLConstants.COORD_SEPARATOR);
+    private static String[] splitList(final Node node, final String itemSeparator) {
+        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(itemSeparator);
     }
     
     protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {

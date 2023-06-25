@@ -30,6 +30,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 ### Update v5.8
 
 * Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Interpolate dates of waypoints from neighbouring values
 * Timezones: Show/hide timezones on map
 * Offline maps: Not really a code change... Use e.g. Mobile Atlas Creator to download tiles, setup a minimal webserver (e.g. with python), add a new baselayer and voila!
 * Drag&Drop: You can now drop a gpx-file on the map as well
