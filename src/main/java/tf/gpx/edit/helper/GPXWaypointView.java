@@ -650,13 +650,13 @@ public class GPXWaypointView implements IPreferencesHolder {
                     durationTrackCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
                     break;
 
-                case "lengthTrackCol":
-                    final TableColumn<GPXWaypoint, String> lengthTrackCol = ObjectsHelper.uncheckedCast(column);
-                    lengthTrackCol.setCellValueFactory(
+                case "distTrackCol":
+                    final TableColumn<GPXWaypoint, String> distTrackCol = ObjectsHelper.uncheckedCast(column);
+                    distTrackCol.setCellValueFactory(
                             (TableColumn.CellDataFeatures<GPXWaypoint, String> p) -> new SimpleStringProperty(p.getValue().getDataAsString(GPXLineItem.GPXLineItemData.DistanceToPrevious)));
-                    lengthTrackCol.setEditable(false);
-                    lengthTrackCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
-                    lengthTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
+                    distTrackCol.setEditable(false);
+                    distTrackCol.setPrefWidth(GPXEditor.NORMAL_WIDTH);
+                    distTrackCol.setComparator(GPXLineItem.getAsNumberComparator());
                     break;
 
                 case "speedTrackCol":

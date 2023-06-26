@@ -181,6 +181,8 @@ public class GPXEditor implements Initializable {
     public final static double SMALL_WIDTH = 50.0;
     public final static double NORMAL_WIDTH = 70.0;
     public final static double LARGE_WIDTH = 185.0;
+    @FXML
+    private TableColumn<?, ?> distTrackCol;
 
     public static enum MergeDeleteItems {
         MERGE,
@@ -351,8 +353,6 @@ public class GPXEditor implements Initializable {
     private TableColumn<GPXWaypoint, String> nameTrackCol;
     @FXML
     private TableColumn<GPXWaypoint, String> durationTrackCol;
-    @FXML
-    private TableColumn<GPXWaypoint, String> lengthTrackCol;
     @FXML
     private TableColumn<GPXWaypoint, String> speedTrackCol;
     @FXML
@@ -979,7 +979,9 @@ public class GPXEditor implements Initializable {
         gpxWaypoints.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         gpxWaypoints.getSelectionModel().setCellSelectionEnabled(false);
         // automatically adjust width of columns depending on their content
-        gpxWaypoints.setColumnResizePolicy((param) -> true );
+//        gpxWaypoints.setColumnResizePolicy((param) -> true );
+        // TFE, 20230626: no, allow user to resize columns manually!
+        gpxWaypoints.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         
         gpxWaypointSelectionListener = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
 //            System.out.println("gpxWaypointSelectionListener called: " + Instant.now());
