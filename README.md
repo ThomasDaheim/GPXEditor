@@ -29,6 +29,7 @@ Note on "Stationaries": v4.6 includes my first attempt to include such an algori
 
 ### Update v5.8
 
+* Upgrade Leaflet to 1.9.4
 * Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
 * Interpolate dates of waypoints from neighbouring values
 * Timezones: Show/hide timezones on map
@@ -434,7 +435,7 @@ Other things used internally:
 
 * heatmap: https://github.com/HanSolo/FxHeatMap
 
-* leaflet 1.8.0: https://leafletjs.com/
+* leaflet 1.9.4: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.draw: https://github.com/Leaflet/Leaflet.draw
