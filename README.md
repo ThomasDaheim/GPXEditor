@@ -434,7 +434,7 @@ Other things used internally:
 
 * heatmap: https://github.com/HanSolo/FxHeatMap
 
-* leaflet 1.7.1: https://leafletjs.com/
+* leaflet 1.8.0: https://leafletjs.com/
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.draw: https://github.com/Leaflet/Leaflet.draw
