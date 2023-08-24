@@ -222,11 +222,6 @@ run {
 //    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 
-// TFE, 20211102: not working like below
-//task(runSingle) {
-//    args = ["C:\\WUTemp\\feuster.com\\Pictures*C:\\WUTemp\\Temp"]
-//}
-
 test {
 //    exclude '**/*'
     doFirst {
