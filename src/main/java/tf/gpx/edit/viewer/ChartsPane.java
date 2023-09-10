@@ -66,6 +66,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         super();
 
         baseChart = HeightChart.getInstance();
+        // TFE, 20230609: add property to show / hide speed chart
 //        additionalCharts.add(SpeedChart.getInstance());
         
         initialize();
