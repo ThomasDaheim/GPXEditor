@@ -34,6 +34,7 @@ import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -67,7 +68,9 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
 
         baseChart = HeightChart.getInstance();
         // TFE, 20230609: add property to show / hide speed chart
-//        additionalCharts.add(SpeedChart.getInstance());
+        if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
+            additionalCharts.add(SpeedChart.getInstance());
+        }
         
         initialize();
     }

@@ -68,6 +68,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
     private final static String DIST_LABEL = new String(Character.toChars(8658));
     private final static String SPEED_LABEL = "";
+    private final static String SLOPE_LABEL = "";
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
@@ -160,6 +161,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 final Double heightValue = data.YValueProperty().getValue().doubleValue();
 
                 String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
+                if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
+                    waypointText += "\n" + SLOPE_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Slope) + "%";
+                }
                 if (SpeedChart.getInstance().hasNonZeroData()) {
                     waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
                 }
@@ -181,7 +185,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 
                 // align center-center
                 mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
-                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 3.0);
+                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 2.0);
                 mouseText.setVisible(true);
 
                 mouseLine.setStartX(aTrans.getX());

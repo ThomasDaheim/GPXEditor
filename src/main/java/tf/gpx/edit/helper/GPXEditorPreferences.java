@@ -90,6 +90,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
     CHARTSPANE_HEIGHT("chartsPaneHeight", Double.toString(0.25), Double.class),
+    // TFE, 20230917: even more options for chart pane
+    HEIGHT_CHART_SHOW_SLOPE("heightChartShowSlope", Boolean.toString(false), Boolean.class),
+    SHOW_SPEED_CHART("showSpeedChart", Boolean.toString(false), Boolean.class),
 
     WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18), Integer.class),
     WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10), Integer.class),

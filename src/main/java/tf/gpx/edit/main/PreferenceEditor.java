@@ -148,6 +148,8 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField wayLblAngleText = initNumberField(new TextField(), false);
     private final TextField wayIcnSizeText = initNumberField(new TextField(), false);
     private final TextField wayThshldText = initNumberField(new TextField(), false);
+    private final CheckBox showSlopeChkBox = new CheckBox();
+    private final CheckBox showSpeedChartChkBox = new CheckBox();
 
     private final ChoiceBox<ColorMapping> heatColorChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(ColorMapping.class, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
@@ -566,7 +568,7 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
-        addSectionHeader(new Label("HeightChart"), rowNum);
+        addSectionHeader(new Label("Height/Speed Charts"), rowNum);
 
         rowNum++;
         // waypointLabelSize
@@ -598,6 +600,20 @@ public class PreferenceEditor extends AbstractStage {
                 "Maxiumum distance in meters to associate waypoint with track/route - 0 for always", 
                 2, rowNum);
 
+        rowNum++;
+        // showSlope
+        addPrefInput(
+                "Show slope:", showSlopeChkBox, 
+                "Show slope on hover", 
+                0, rowNum);
+        
+        rowNum++;
+        // showSpeedChart
+        addPrefInput(
+                "Show speed chart:", showSpeedChartChkBox, 
+                "Show speed chart", 
+                0, rowNum);
+        
         rowNum++;
         // separator
         addSectionHeader(new Label("HeatMap"), rowNum);
@@ -893,6 +909,8 @@ public class PreferenceEditor extends AbstractStage {
         wayLblAngleText.setText(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsString());
         wayIcnSizeText.setText(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsString());
         wayThshldText.setText(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsString());
+        showSlopeChkBox.setSelected(GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType());
+        showSpeedChartChkBox.setSelected(GPXEditorPreferences.SHOW_SPEED_CHART.getAsType());
         eventText.setText(doubleToString(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
         breakText.setText(GPXEditorPreferences.BREAK_DURATION.getAsString());
         
@@ -960,25 +978,30 @@ public class PreferenceEditor extends AbstractStage {
             TrackMap.getInstance().initPictureIcons();
         }
         
-        GPXEditorPreferences.VALIDATE_XML_FORMAT.put(validateXMLChkBox.isSelected());
-        
         // TFE, 20200625: for map layers we only need to populate MapLayerUsage once we have add / delete since MapLayer is modified directly in the MapLayerTable
         MapLayerUsage.getInstance().savePreferences(GPXEditorPreferences.INSTANCE);
         GPXEditorPreferences.BREAK_DURATION.put(Math.max(Integer.valueOf("0"+breakText.getText().trim()), 0));
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
         GPXEditorPreferences.MATCHING_API_KEY.put(matchingApiKeyText.getText().trim());
+
         GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf("0"+wayIcnSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Math.max(Integer.valueOf("0"+wayLblSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.valueOf("0"+wayLblAngleText.getText().trim()) % 360);
         GPXEditorPreferences.WAYPOINT_THRESHOLD.put(Math.max(Integer.valueOf("0"+wayThshldText.getText().trim()), 0));
+        GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.put(showSlopeChkBox.isSelected());
+        GPXEditorPreferences.SHOW_SPEED_CHART.put(showSpeedChartChkBox.isSelected());
+
         GPXEditorPreferences.CLUSTER_COUNT.put(Math.max(Integer.valueOf("0"+durationText.getText().trim()), 0));
         GPXEditorPreferences.CLUSTER_DURATION.put(Math.max(Integer.valueOf("0"+neighbourText.getText().trim()), 0));
         GPXEditorPreferences.CLUSTER_RADIUS.put(Math.max(Double.valueOf("0"+radiusText.getText().trim()), 0));
+
         GPXEditorPreferences.HEATMAP_COLORMAPPING.put(EnumHelper.getInstance().selectedEnumChoiceBox(ColorMapping.class, heatColorChoiceBox));
         GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.put(EnumHelper.getInstance().selectedEnumChoiceBox(OpacityDistribution.class, opacDistChoiceBox));
         GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(Math.max(Double.valueOf("0"+eventText.getText().trim()), 0));
 
+        GPXEditorPreferences.VALIDATE_XML_FORMAT.put(validateXMLChkBox.isSelected());
+        
         HeatMapPane.getInstance().updateSettings();
     }
     
