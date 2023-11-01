@@ -99,7 +99,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.8'
+version='5.9'
 description = 'GPXEditor - JavaFX GPX file editor'
 
 repositories {
