@@ -474,9 +474,6 @@ public class GPXEditor implements Initializable {
     public void initializeAfterMapLoaded() {
         // TFE, 20200622: now also track map has completed loading...
 
-        // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
-
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
         for (String gpxFile : GPXEditorParameters.getInstance().getGPXFiles()) {

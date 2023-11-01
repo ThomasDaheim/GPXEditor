@@ -635,13 +635,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
                 // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
                 isInitialized = true;
-
-                // TFE, 20200713: now we can enable the overlays per baselayer
-                setOverlaysForBaselayer();
-                // set current layer
-                setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-
-//                System.out.println("  Overlays loaded: " + Instant.now());
+                
+                initializeAfterMapLoaded();
 
                 // TFE, 20190901: load preferences - now things are up & running
                 myGPXEditor.initializeAfterMapLoaded();
@@ -671,6 +666,17 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
 //            System.out.println("Done map initialize: " + Instant.now());
         }
+    }
+    private void initializeAfterMapLoaded() {
+        // TFE, 20200713: now we can enable the overlays per baselayer
+        setOverlaysForBaselayer();
+        // set current layer
+        setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+
+//                System.out.println("  Overlays loaded: " + Instant.now());
+
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
     }
     
     private void handleMouseCntrlPressed(final MouseEvent event) {
