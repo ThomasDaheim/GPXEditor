@@ -83,6 +83,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -103,6 +104,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.actions.ConvertMeasurableAction;
 import tf.gpx.edit.actions.DeleteWaypointsAction;
 import tf.gpx.edit.actions.InsertWaypointsAction;
+import tf.gpx.edit.actions.InterpolateWaypointInformationAction;
 import tf.gpx.edit.actions.InvertMeasurablesAction;
 import tf.gpx.edit.actions.InvertSelectedWaypointsAction;
 import tf.gpx.edit.actions.MergeDeleteMetadataAction;
@@ -110,6 +112,7 @@ import tf.gpx.edit.actions.MergeDeleteRoutesAction;
 import tf.gpx.edit.actions.MergeDeleteTrackSegmentsAction;
 import tf.gpx.edit.actions.MergeDeleteTracksAction;
 import tf.gpx.edit.actions.SplitMeasurablesAction;
+import tf.gpx.edit.actions.UpdateInformation;
 import tf.gpx.edit.actions.UpdateLineItemInformationAction;
 import tf.gpx.edit.actions.UpdateMetadataAction;
 import tf.gpx.edit.actions.UpdateWaypointInformationAction;
@@ -117,6 +120,7 @@ import tf.gpx.edit.actions.UpdateWaypointLatLonElevAction;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.ExecuteAlgorithm;
 import tf.gpx.edit.algorithms.GarminCrapFilter;
+import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.algorithms.WaypointClustering;
 import tf.gpx.edit.algorithms.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
@@ -128,10 +132,10 @@ import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.GPXFileHelper;
 import tf.gpx.edit.helper.GPXListHelper;
+import tf.gpx.edit.helper.GPXMeasurableView;
 import tf.gpx.edit.helper.GPXStructureHelper;
-import tf.gpx.edit.helper.GPXTableView;
-import tf.gpx.edit.helper.GPXTreeTableView;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
+import tf.gpx.edit.helper.GPXWaypointView;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
@@ -150,9 +154,10 @@ import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.values.DistributionViewer;
 import tf.gpx.edit.values.EditGPXMetadata;
-import tf.gpx.edit.values.EditGPXWaypoint;
+import tf.gpx.edit.values.EditGPXWaypoints;
 import tf.gpx.edit.values.EditLineStyle;
 import tf.gpx.edit.values.EditSplitValues;
+import tf.gpx.edit.values.InterpolateGPXWaypoints;
 import tf.gpx.edit.values.SplitValue;
 import tf.gpx.edit.values.StatisticsViewer;
 import tf.gpx.edit.viewer.GPXTrackviewer;
@@ -176,6 +181,8 @@ public class GPXEditor implements Initializable {
     public final static double SMALL_WIDTH = 50.0;
     public final static double NORMAL_WIDTH = 70.0;
     public final static double LARGE_WIDTH = 185.0;
+    @FXML
+    private TableColumn<?, ?> distTrackCol;
 
     public static enum MergeDeleteItems {
         MERGE,
@@ -304,7 +311,7 @@ public class GPXEditor implements Initializable {
     private MenuItem switchMapMenu;
     @FXML
     private TreeTableView<GPXMeasurable> gpxFileListXML;
-    private GPXTreeTableView gpxFileList = null;
+    private GPXMeasurableView gpxFileList = null;
     @FXML
     private TreeTableColumn<GPXMeasurable, String> idGPXCol;
     @FXML
@@ -329,7 +336,7 @@ public class GPXEditor implements Initializable {
     private TableColumn<GPXWaypoint, String> posTrackCol;
     @FXML
     private TableView<GPXWaypoint> gpxWaypointsXML;
-    private GPXTableView gpxWaypoints = null;
+    private GPXWaypointView gpxWaypoints = null;
     @FXML
     private SplitPane splitPane;
     @FXML
@@ -346,8 +353,6 @@ public class GPXEditor implements Initializable {
     private TableColumn<GPXWaypoint, String> nameTrackCol;
     @FXML
     private TableColumn<GPXWaypoint, String> durationTrackCol;
-    @FXML
-    private TableColumn<GPXWaypoint, String> lengthTrackCol;
     @FXML
     private TableColumn<GPXWaypoint, String> speedTrackCol;
     @FXML
@@ -431,23 +436,27 @@ public class GPXEditor implements Initializable {
         GPXTrackviewer.getInstance().setCallback(this);
         DistributionViewer.getInstance().setCallback(this);
         EditGPXMetadata.getInstance().setCallback(this);
-        EditGPXWaypoint.getInstance().setCallback(this);
+        EditGPXWaypoints.getInstance().setCallback(this);
+        InterpolateGPXWaypoints.getInstance().setCallback(this);
         EditLineStyle.getInstance().setCallback(this);
         StatisticsViewer.getInstance().setCallback(this);
         StatusBar.getInstance().setCallback(this);
+        PreferenceEditor.getInstance().setCallback(this);
 
         // set algorithm for distance calculation
         EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
     }
     
     public void lateInitialize() {
-        AboutMenu.getInstance().addAboutMenu(
-                GPXEditor.class, 
-                borderPane.getScene().getWindow(), 
-                helpMenu, 
-                "GPXEditor", 
-                "v5.7", 
-                "https://github.com/ThomasDaheim/GPXEditor");
+        Platform.runLater(() -> {
+            AboutMenu.getInstance().addAboutMenu(
+                    GPXEditor.class, 
+                    borderPane.getScene().getWindow(), 
+                    helpMenu, 
+                    "GPXEditor", 
+                    "v5.8", 
+                    "https://github.com/ThomasDaheim/GPXEditor");
+        });
         
         // check for control key to distinguish between move & copy when dragging
         getWindow().getScene().setOnKeyPressed(event -> {
@@ -464,9 +473,6 @@ public class GPXEditor implements Initializable {
     
     public void initializeAfterMapLoaded() {
         // TFE, 20200622: now also track map has completed loading...
-
-        // TFE, 20180901: load stored values for track & height map
-        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
 
         // TFE, 20171030: open files from command line parameters
         final List<File> gpxFileNames = new ArrayList<>();
@@ -566,10 +572,11 @@ public class GPXEditor implements Initializable {
             importFilesAction(event);
         });
         closeFileMenu.setOnAction((ActionEvent event) -> {
-            saveAllFilesAction(event);
+            closeFilesAction(event);
         });
         closeFileMenu.disableProperty().bind(
-                Bindings.isEmpty(gpxFileList.getRoot().getChildren()));
+                // TFE, 20230501: close is only meaningful if at least on item is selected...
+                Bindings.isEmpty(gpxFileList.getSelectionModel().getSelectedItems()));
         saveAllFilesMenu.setOnAction((ActionEvent event) -> {
             saveAllFilesAction(event);
         });
@@ -867,7 +874,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void initGPXFileList () {
-        gpxFileList = new GPXTreeTableView(gpxFileListXML, this);
+        gpxFileList = new GPXMeasurableView(gpxFileListXML, this);
         gpxFileList.prefHeightProperty().bind(topAnchorPane.heightProperty());
         gpxFileList.prefWidthProperty().bind(topAnchorPane.widthProperty());
         gpxFileList.setEditable(true);
@@ -960,7 +967,7 @@ public class GPXEditor implements Initializable {
     }
     
     private void initGPXWaypointList() {
-        gpxWaypoints = new GPXTableView(gpxWaypointsXML, this);
+        gpxWaypoints = new GPXWaypointView(gpxWaypointsXML, this);
         gpxWaypoints.prefHeightProperty().bind(bottomAnchorPane.heightProperty());
         gpxWaypoints.prefWidthProperty().bind(bottomAnchorPane.widthProperty());
         
@@ -969,7 +976,9 @@ public class GPXEditor implements Initializable {
         gpxWaypoints.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         gpxWaypoints.getSelectionModel().setCellSelectionEnabled(false);
         // automatically adjust width of columns depending on their content
-        gpxWaypoints.setColumnResizePolicy((param) -> true );
+//        gpxWaypoints.setColumnResizePolicy((param) -> true );
+        // TFE, 20230626: no, allow user to resize columns manually!
+        gpxWaypoints.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         
         gpxWaypointSelectionListener = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
 //            System.out.println("gpxWaypointSelectionListener called: " + Instant.now());
@@ -1051,7 +1060,7 @@ public class GPXEditor implements Initializable {
         addDoneAction(insertAction, GPXFileHelper.getNameForGPXFile(target.getGPXFile()));
     }
     
-    public void updateSelectedWaypointsInformation(final UpdateLineItemInformationAction.UpdateInformation info, final Object newValue, final boolean doUndo) {
+    public void updateSelectedWaypointsInformation(final UpdateInformation info, final Object newValue, final boolean doUndo) {
         final List<GPXLineItem> selectedWaypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
 
         if(selectedWaypoints.isEmpty()) {
@@ -1064,7 +1073,7 @@ public class GPXEditor implements Initializable {
     
     public void updateLineItemInformation(
             final List<? extends GPXLineItem> lineItems, 
-            final UpdateLineItemInformationAction.UpdateInformation info, 
+            final UpdateInformation info, 
             final Object newValue, 
             final boolean doUndo) {
         if(lineItems.isEmpty()) {
@@ -1087,6 +1096,18 @@ public class GPXEditor implements Initializable {
         }
 
         final IDoUndoAction updateAction = new UpdateWaypointInformationAction(this, waypoints, datapoint);
+        updateAction.doAction();
+        
+        addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
+    }
+    
+    public void interpolateWaypointInformation(final List<GPXWaypoint> waypoints, final InterpolationParameter values) {
+        if(waypoints.isEmpty()) {
+            // nothing to delete...
+            return;
+        }
+
+        final IDoUndoAction updateAction = new InterpolateWaypointInformationAction(this, waypoints, values);
         updateAction.doAction();
         
         addDoneAction(updateAction, GPXFileHelper.getNameForGPXFile(waypoints.get(0).getGPXFile()));
@@ -1284,7 +1305,7 @@ public class GPXEditor implements Initializable {
                         TaskExecutor.executeTask(
                             getScene(), () -> {
                                 // TFE, 20191024 add warning for format issues
-                                GPXFileHelper.getInstance().verifyXMLFile(file, GPXFileHelper.FileType.GPX);
+                                GPXFileHelper.getInstance().validateXMLFile(file, GPXFileHelper.FileType.GPX);
 
                                 gpxFileList.addGPXFile(new GPXFile(file));
 
@@ -1301,6 +1322,12 @@ public class GPXEditor implements Initializable {
     }
     
     public void showGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean updateViewer, final boolean doFitBounds) {
+        // TFE, 20230226: don't do that in case of multiple actions, e.g. for reduce a gpx file with a large number of tracks / routes
+        // otherwise, the update is called multiple times - but is only necessary at the end of the whole thing...
+        if (runningAction) {
+            return;
+        }
+
         TaskExecutor.executeTask(
             getScene(), () -> {
                 // TFE, 20200103: we don't show waypoints twice - so if a tracksegment and its track are selected only the track is relevant
@@ -1445,16 +1472,31 @@ public class GPXEditor implements Initializable {
         return result;
     }
 
-    public Boolean closeFileAction(final ActionEvent event) {
-        return closeFile(gpxFileList.getSelectionModel().getSelectedItem().getValue());
+    public Boolean closeFilesAction(final ActionEvent event) {
+        // TFE, 20230501: close all selected files
+        Boolean result = true;
+        
+        // check fo changes that need saving by closing all files
+        if (gpxFileList.getRoot() != null) {
+            // work on a copy since closeFile removes it from the gpxFileListXML
+            final List<TreeItem<GPXMeasurable>> gpxFiles = new ArrayList<>(gpxFileList.getSelectionModel().getSelectedItems());
+            for (TreeItem<GPXMeasurable> treeitem : gpxFiles) {
+                if (treeitem.getValue().isGPXFile()) {
+                    result = result && closeFile(treeitem.getValue().getGPXFile());
+                }
+
+            }
+        }
+        
+        return result;
     }
 
     public Boolean closeFile(final GPXLineItem item) {
-        if (!item.isGPXFile()) {
+        if (item == null) {
             return false;
         }
         
-        if (item.hasUnsavedChanges()) {
+        if (item.getGPXFile().hasUnsavedChanges()) {
             // gpxfile has changed - do want to save first?
             if (saveChangesDialog(item.getGPXFile())) {
                 saveFile(item);
@@ -2119,13 +2161,17 @@ public class GPXEditor implements Initializable {
     }
     
     public void editGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
-        EditGPXWaypoint.getInstance().editWaypoint(gpxWaypoints);
+        EditGPXWaypoints.getInstance().editWaypoints(gpxWaypoints);
     }
 
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
         GPXTrackviewer.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
     
+    public void interpolateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final UpdateInformation info) {
+        InterpolateGPXWaypoints.getInstance().interpolateWaypoints(gpxWaypoints, info);
+    }
+
     public void showHorizon(final IGeoCoordinate location) {
         PanoramaViewer.getInstance().showPanorama(location);
     }
@@ -2143,6 +2189,7 @@ public class GPXEditor implements Initializable {
                 getHostServices(),
                 gpxLineItems);
         endAction(result);
+        
         if (result) {
             refresh();
         }
@@ -2280,6 +2327,10 @@ public class GPXEditor implements Initializable {
         return true;
     }
     
+    public boolean isRunningAction() {
+        return runningAction;
+    }
+    
     // add to multipart action or store
     private boolean addDoneAction(final IDoUndoAction action, final String ... key) {
         if (!useTransactions) {
@@ -2307,5 +2358,14 @@ public class GPXEditor implements Initializable {
         } else {
             return null;
         }
+    }
+    
+    // TFE, 20221227: support for dragging gpx files over map, ...
+    public void onDragOver(final DragEvent event) {
+        gpxFileList.onDragOver(event);
+    }
+
+    public void onDragDropped(final DragEvent event) {
+        gpxFileList.onDragDropped(event);
     }
 }

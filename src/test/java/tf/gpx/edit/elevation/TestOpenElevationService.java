@@ -43,8 +43,8 @@ import java.util.logging.Logger;
 import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
 /**
@@ -66,11 +66,11 @@ public class TestOpenElevationService {
         
         try {
             final HttpResponse<String> response = client.send(requestGET, BodyHandlers.ofString());
-            Assert.assertEquals(200, response.statusCode());
+            Assertions.assertEquals(200, response.statusCode());
             result = response.body();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(TestOpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.assertTrue(false);
+            Assertions.assertTrue(false);
         }
         
         return result;
@@ -89,11 +89,11 @@ public class TestOpenElevationService {
         
         try {
             final HttpResponse<String> response = client.send(requestPOST, BodyHandlers.ofString());
-            Assert.assertEquals(200, response.statusCode());
+            Assertions.assertEquals(200, response.statusCode());
             result = response.body();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(TestOpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.assertTrue(false);
+            Assertions.assertTrue(false);
         }
         
         return result;
@@ -101,22 +101,22 @@ public class TestOpenElevationService {
     
     @Test
     public void testOpenelevationPointAPI() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
 
         double heightValue;
 
         // get is checked directly
         heightValue = deserializePointResponse(httpGetResponse("https://api.openrouteservice.org/elevation/point", "api_key="+API_KEY+"&geometry=13.349762,38.11295"));
-        Assert.assertTrue(isCloseEnough(38, heightValue));
+        Assertions.assertTrue(isCloseEnough(38, heightValue));
         
         // post uses standard interface format
         heightValue = getValueForCoordinate(37.645772, 12.638397);
-        Assert.assertTrue(isCloseEnough(13, heightValue));
+        Assertions.assertTrue(isCloseEnough(13, heightValue));
     }
     
     @Test
     public void testOpenelevationLineAPI() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
 
         final List<Double> result = 
                 deserializeLineResponse(
@@ -124,8 +124,8 @@ public class TestOpenElevationService {
                                 "https://api.openrouteservice.org/elevation/line", 
                                 "{\"format_in\":\"polyline\",\"format_out\":\"geojson\",\"geometry\":[[13.349762,38.11295],[86.925,27.9881]]}"));
             
-        Assert.assertTrue(isCloseEnough(38, result.get(0)));
-        Assert.assertTrue(isCloseEnough(8794, result.get(1)));
+        Assertions.assertTrue(isCloseEnough(38, result.get(0)));
+        Assertions.assertTrue(isCloseEnough(8794, result.get(1)));
     }
     
     @Test
@@ -134,22 +134,22 @@ public class TestOpenElevationService {
         // NE hemisphere: MT EVEREST, 27.9881° N, 86.9250° E - 27° 59' 9.8340" N, 86° 55' 21.4428" E - 8848m
         heightValue = getValueForCoordinate(27.9881, 86.9250);
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assert.assertTrue(isCloseEnough(8794 , heightValue));
+        Assertions.assertTrue(isCloseEnough(8794 , heightValue));
 
         // NW hemisphere: MT RAINIER, 46.8523° N, 121.7603° W - 46° 52' 47.8812" N, 121° 43' 36.8616" W - 4392m
         heightValue = getValueForCoordinate(46.8523, -121.7603);
 //        System.out.println("MT RAINIER: " + heightValue);
-        Assert.assertTrue(isCloseEnough(4370, heightValue));
+        Assertions.assertTrue(isCloseEnough(4370, heightValue));
         
         // SE hemisphere: MT COOK, 43.5950° S, 170.1418° E - 43°35'26.81" S, 170°08'16.65" E - 3724m
         heightValue = getValueForCoordinate(-43.5950, 170.1418);
 //        System.out.println("MT COOK: " + heightValue);
-        Assert.assertTrue(isCloseEnough(3711, heightValue));
+        Assertions.assertTrue(isCloseEnough(3711, heightValue));
 
         // SW hemisphere: ACONGAGUA, 32.6532° S, 70.0109° W - 32° 39' 11.4444" S, 70° 0' 39.1104" W - 6908m
         heightValue = getValueForCoordinate(-32.6532, -70.0109);
 //        System.out.println("ACONGAGUA: " + heightValue);
-        Assert.assertTrue(isCloseEnough(6868, heightValue));
+        Assertions.assertTrue(isCloseEnough(6868, heightValue));
     }
     
     public Double getValueForCoordinate(final double latitude, final double longitude) {

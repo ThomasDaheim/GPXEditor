@@ -27,8 +27,8 @@ package tf.gpx.edit.items;
 
 import java.io.File;
 import me.himanshusoni.gpxparser.modal.Extension;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.KnownExtensionAttributes;
 import tf.gpx.edit.extension.LineStyle;
@@ -48,12 +48,12 @@ public class TestLineStyle {
         final Extension extension = new Extension();
         
         LineStyle style = new LineStyle(extension, KnownExtensionAttributes.KnownAttribute.color, LineStyle.defaultColor(GPXLineItem.GPXLineItemType.GPXTrack));
-        Assert.assertFalse(LineStyle.isDifferentFromDefault(style, LineStyle.defaultColor(GPXLineItem.GPXLineItemType.GPXTrack)));
-        Assert.assertTrue(LineStyle.isDifferentFromDefault(style, GarminColor.Transparent));
+        Assertions.assertFalse(LineStyle.isDifferentFromDefault(style, LineStyle.defaultColor(GPXLineItem.GPXLineItemType.GPXTrack)));
+        Assertions.assertTrue(LineStyle.isDifferentFromDefault(style, GarminColor.Transparent));
 
         style.setColor(GarminColor.Transparent);
-        Assert.assertTrue(LineStyle.isDifferentFromDefault(style, LineStyle.defaultColor(GPXLineItem.GPXLineItemType.GPXTrack)));
-        Assert.assertFalse(LineStyle.isDifferentFromDefault(style, GarminColor.Transparent));
+        Assertions.assertTrue(LineStyle.isDifferentFromDefault(style, LineStyle.defaultColor(GPXLineItem.GPXLineItemType.GPXTrack)));
+        Assertions.assertFalse(LineStyle.isDifferentFromDefault(style, GarminColor.Transparent));
     }
     
     @Test
@@ -69,11 +69,11 @@ public class TestLineStyle {
         
         gpxTrack.getLineStyle().setColor(GarminColor.Blue);
         // setter works :-)
-        Assert.assertEquals(lineStyle.getColor(), GarminColor.Blue);
+        Assertions.assertEquals(lineStyle.getColor(), GarminColor.Blue);
         
         // we now have a gpx extension
         final String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
-        Assert.assertEquals(nodeValue, GarminColor.Blue.name());
+        Assertions.assertEquals(nodeValue, GarminColor.Blue.name());
     }
     
     @Test
@@ -100,32 +100,32 @@ public class TestLineStyle {
         
         // no garmin color extensions
         String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
-        Assert.assertNull(nodeValue);
+        Assertions.assertNull(nodeValue);
         
         // line extension values
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.color);
-        Assert.assertEquals(nodeValue, "483D8B");
+        Assertions.assertEquals(nodeValue, "483D8B");
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.opacity);
-        Assert.assertEquals(nodeValue, "0.59");
+        Assertions.assertEquals(nodeValue, "0.59");
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.width);
-        Assert.assertEquals(nodeValue, "6.0");
+        Assertions.assertEquals(nodeValue, "6.0");
         
         // get as garmin color
         final GarminColor color = lineStyle.getColor();
-        Assert.assertEquals(color, GarminColor.DarkMagenta);
+        Assertions.assertEquals(color, GarminColor.DarkMagenta);
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track);
-        Assert.assertEquals(nodeValue, GarminColor.DarkMagenta.name());
+        Assertions.assertEquals(nodeValue, GarminColor.DarkMagenta.name());
     }
     
     private void testIsDefaultExceptColor(final LineStyle lineStyle, final GarminColor color) {
-        Assert.assertEquals(lineStyle.getColor(), color);
-        Assert.assertEquals(lineStyle.getOpacity(), LineStyle.DEFAULT_OPACITY);
-        Assert.assertEquals(lineStyle.getWidth(), LineStyle.DEFAULT_WIDTH);
-        Assert.assertEquals(lineStyle.getPattern(), LineStyle.DEFAULT_PATTERN);
-        Assert.assertEquals(lineStyle.getLinecap(), LineStyle.DEFAULT_LINECAP);
-        Assert.assertEquals(lineStyle.getDashes(), LineStyle.DEFAULT_DASHES);
+        Assertions.assertEquals(lineStyle.getColor(), color);
+        Assertions.assertEquals(lineStyle.getOpacity(), LineStyle.DEFAULT_OPACITY);
+        Assertions.assertEquals(lineStyle.getWidth(), LineStyle.DEFAULT_WIDTH);
+        Assertions.assertEquals(lineStyle.getPattern(), LineStyle.DEFAULT_PATTERN);
+        Assertions.assertEquals(lineStyle.getLinecap(), LineStyle.DEFAULT_LINECAP);
+        Assertions.assertEquals(lineStyle.getDashes(), LineStyle.DEFAULT_DASHES);
     }
 }

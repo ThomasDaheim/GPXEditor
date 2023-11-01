@@ -28,8 +28,6 @@ package tf.gpx.edit.actions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,40 +41,6 @@ import tf.helper.general.ObjectsHelper;
  * @author thomas
  */
 public class UpdateLineItemInformationAction extends GPXLineItemAction<GPXLineItem> {
-    public static enum UpdateInformation {
-        DATE(Date.class),
-        NAME(String.class),
-        EXTENSION(HashMap.class),
-        HEIGHT(Double.class);
-        
-        private final Class myClazz;
-        
-        UpdateInformation(final Class clazz) {
-            myClazz = clazz;
-        }
-        
-        private boolean isCorrectValue(final Object newValue) {
-            if (newValue == null) {
-                return true;
-            }
-            
-            return myClazz.equals(newValue.getClass());
-        }
-        
-        private boolean isCorrectLineItem(final GPXLineItem lineItem) {
-            if (lineItem == null) {
-                return false;
-            }
-            
-            // names and extensions can be updated on all items...
-            if (!EXTENSION.equals(this) && !NAME.equals(this)) {
-                return (lineItem instanceof GPXWaypoint);
-            } else {
-                return true;
-            }
-        }
-    }
-
     private List<GPXLineItem> myLineItems = null;
     private UpdateInformation myInfo = null;
     private Object myValue = null;

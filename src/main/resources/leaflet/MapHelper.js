@@ -322,8 +322,13 @@ function coordsToString(coords) {
     var arrayLength = coords.length;
     for (var i = 0; i < arrayLength; i++) {
         var latlng = coords[i];
-        
-        coordsString = coordsString + "lat:" + latlng.lat + ", lon:" + latlng.lng;
+
+        // TFE, 20230507: routing doesn't return LatLng object but plain array (not sure since when)
+        if (typeof latlng.lat !== 'undefined') {
+            coordsString = coordsString + "lat:" + latlng.lat + ", lon:" + latlng.lng;
+        } else {
+            coordsString = coordsString + "lat:" + latlng[0] + ", lon:" + latlng[1];
+        }
         
         if (i < arrayLength-1) {
             coordsString = coordsString + " - "

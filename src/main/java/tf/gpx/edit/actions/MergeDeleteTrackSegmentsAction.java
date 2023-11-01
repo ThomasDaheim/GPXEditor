@@ -90,7 +90,12 @@ public class MergeDeleteTrackSegmentsAction extends GPXLineItemAction<GPXTrackSe
                     deleteGPXTrackSegments(DeleteCount.ALL);
                 }
 
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 
@@ -109,7 +114,12 @@ public class MergeDeleteTrackSegmentsAction extends GPXLineItemAction<GPXTrackSe
                     undeleteGPXTrackSegments(DeleteCount.ALL);
                 }
 
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 

@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -26,6 +27,7 @@ import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.extension.GarminColor;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.ColorSelection;
 
@@ -64,6 +66,7 @@ public class EditLineStyle extends AbstractStage {
 
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
+        getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         getScene().getStylesheets().add(EditLineStyle.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // create new scene

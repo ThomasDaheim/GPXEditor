@@ -68,6 +68,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
     private final static String DIST_LABEL = new String(Character.toChars(8658));
     private final static String SPEED_LABEL = "";
+    private final static String SLOPE_LABEL = "";
 
     private GPXEditor myGPXEditor;
     private ChartsPane myChartsPane;
@@ -80,6 +81,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private boolean noLayout = false;
     private boolean inShowData = false;
     
+    // TFE, 20230226: put a lower limit on negative heights - on case something crazy is in elevation data
+    // can't go lower than the dead sea...
+    private final static double MIN_ELEVATION = -428.0;
     private double minDistance;
     private double maxDistance;
     private double minHeight;
@@ -157,6 +161,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 final Double heightValue = data.YValueProperty().getValue().doubleValue();
 
                 String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
+                if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
+                    waypointText += "\n" + SLOPE_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Slope) + "%";
+                }
                 if (SpeedChart.getInstance().hasNonZeroData()) {
                     waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
                 }
@@ -178,7 +185,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                 
                 // align center-center
                 mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
-                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 3.0);
+                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 2.0);
                 mouseText.setVisible(true);
 
                 mouseLine.setStartX(aTrans.getX());
@@ -373,11 +380,16 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
     
     @Override
+    public double getYValue(final GPXWaypoint gpxWaypoint) {
+        return gpxWaypoint.getElevation();
+    }
+
+    @Override
     public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
-        final double result = gpxWaypoint.getElevation();
+        final double result = getYValue(gpxWaypoint);
         
         if (doSetMinMax(gpxWaypoint)) {
-            minHeight = Math.min(minHeight, result);
+            minHeight = Math.max(MIN_ELEVATION, Math.min(minHeight, result));
             maxHeight = Math.max(maxHeight, result);
         }
         

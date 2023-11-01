@@ -26,8 +26,8 @@
 package tf.gpx.edit.parser;
 
 import java.io.File;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -42,11 +42,11 @@ public class TestKMLPoints {
     final static GPXFile myGPXFromKMZ = new GPXFile(new File("src/test/resources/test1.kmz"));
     
     private void testGPXStructure(final GPXFile gpxFile) {
-        Assert.assertNotNull(gpxFile);
-        Assert.assertEquals(1, gpxFile.getGPXWaypoints().size());
-        Assert.assertEquals(0, gpxFile.getGPXTracks().size());
-        Assert.assertEquals(0, gpxFile.getGPXRoutes().size());
-        Assert.assertNotNull(gpxFile.getGPXMetadata());
+        Assertions.assertNotNull(gpxFile);
+        Assertions.assertEquals(1, gpxFile.getGPXWaypoints().size());
+        Assertions.assertEquals(0, gpxFile.getGPXTracks().size());
+        Assertions.assertEquals(0, gpxFile.getGPXRoutes().size());
+        Assertions.assertNotNull(gpxFile.getGPXMetadata());
     }
 
     @Test
@@ -61,17 +61,17 @@ public class TestKMLPoints {
 
     private void testWaypoint(final GPXWaypoint waypoint) {
 //        <name>A simple placemark on the ground</name>
-        Assert.assertEquals("A simple placemark on the ground", waypoint.getName());
+        Assertions.assertEquals("A simple placemark on the ground", waypoint.getName());
 //        <description>47.36685263064198, 8.542952335953721 Altitude: 99.0 meters Time: 2021-09-06 09:55:49 MESZ</description>
-        Assert.assertNotNull(waypoint.getDate());
-        Assert.assertEquals("Sat Sep 06 08:55:49 CET 21", waypoint.getDate().toString());
+        Assertions.assertNotNull(waypoint.getDate());
+        Assertions.assertEquals("Sat Sep 06 08:55:49 CET 21", waypoint.getDate().toString());
 //        <coordinates>8.542952335953721,47.36685263064198,99.0</coordinates>
-        Assert.assertEquals(8.542952335953721, waypoint.getLongitude(), 0.01);
-        Assert.assertEquals(47.36685263064198, waypoint.getLatitude(), 0.01);
-        Assert.assertEquals(99.0, waypoint.getElevation(), 0.01);
+        Assertions.assertEquals(8.542952335953721, waypoint.getLongitude(), 0.01);
+        Assertions.assertEquals(47.36685263064198, waypoint.getLatitude(), 0.01);
+        Assertions.assertEquals(99.0, waypoint.getElevation(), 0.01);
 //        <styleUrl>#Winery</styleUrl>
-        Assert.assertNotNull(waypoint.getSym());
-        Assert.assertEquals("Winery", waypoint.getSym());
+        Assertions.assertNotNull(waypoint.getSym());
+        Assertions.assertEquals("Winery", waypoint.getSym());
     }
     
     private void testMetadata(final GPXMetadata metadata) {
@@ -88,24 +88,24 @@ public class TestKMLPoints {
 //          <Data name="gpx:Bounds">45.7575917,47.906826,-1.5981159545,4.8609037</Data>
 //        </ExtendedData>
         
-        Assert.assertEquals("test1", metadata.getName());
-        Assert.assertEquals("Sat Sep 25 21:28:54 CEST 2021", metadata.getDate().toString());
-        Assert.assertEquals("test kml file", metadata.getMetadata().getDesc());
-        Assert.assertEquals("Anyone", metadata.getMetadata().getCopyright().getAuthor());
-        Assert.assertEquals("NO LICENSE", metadata.getMetadata().getCopyright().getLicense());
-        Assert.assertEquals("2021", metadata.getMetadata().getCopyright().getYear());
-        Assert.assertEquals("Anyone", metadata.getMetadata().getAuthor().getName());
-        Assert.assertEquals("me", metadata.getMetadata().getAuthor().getEmail().getId());
-        Assert.assertEquals("myself.i", metadata.getMetadata().getAuthor().getEmail().getDomain());
-        Assert.assertEquals("www.anyone.com", metadata.getMetadata().getAuthor().getLink().getHref());
-        Assert.assertEquals("Homepage", metadata.getMetadata().getAuthor().getLink().getText());
-        Assert.assertEquals("???", metadata.getMetadata().getAuthor().getLink().getType());
-        Assert.assertEquals("test", metadata.getMetadata().getKeywords());
-        Assert.assertEquals(2, metadata.getMetadata().getLinks().size());
-        Assert.assertEquals(45.7575917, metadata.getMetadata().getBounds().getMinLat(), 0.01);
-        Assert.assertEquals(47.906826, metadata.getMetadata().getBounds().getMaxLat(), 0.01);
-        Assert.assertEquals(-1.5981159545, metadata.getMetadata().getBounds().getMinLon(), 0.01);
-        Assert.assertEquals(4.8609037, metadata.getMetadata().getBounds().getMaxLon(), 0.01);
+        Assertions.assertEquals("test1", metadata.getName());
+        Assertions.assertEquals("Sat Sep 25 21:28:54 CEST 2021", metadata.getDate().toString());
+        Assertions.assertEquals("test kml file", metadata.getMetadata().getDesc());
+        Assertions.assertEquals("Anyone", metadata.getMetadata().getCopyright().getAuthor());
+        Assertions.assertEquals("NO LICENSE", metadata.getMetadata().getCopyright().getLicense());
+        Assertions.assertEquals("2021", metadata.getMetadata().getCopyright().getYear());
+        Assertions.assertEquals("Anyone", metadata.getMetadata().getAuthor().getName());
+        Assertions.assertEquals("me", metadata.getMetadata().getAuthor().getEmail().getId());
+        Assertions.assertEquals("myself.i", metadata.getMetadata().getAuthor().getEmail().getDomain());
+        Assertions.assertEquals("www.anyone.com", metadata.getMetadata().getAuthor().getLink().getHref());
+        Assertions.assertEquals("Homepage", metadata.getMetadata().getAuthor().getLink().getText());
+        Assertions.assertEquals("???", metadata.getMetadata().getAuthor().getLink().getType());
+        Assertions.assertEquals("test", metadata.getMetadata().getKeywords());
+        Assertions.assertEquals(2, metadata.getMetadata().getLinks().size());
+        Assertions.assertEquals(45.7575917, metadata.getMetadata().getBounds().getMinLat(), 0.01);
+        Assertions.assertEquals(47.906826, metadata.getMetadata().getBounds().getMaxLat(), 0.01);
+        Assertions.assertEquals(-1.5981159545, metadata.getMetadata().getBounds().getMinLon(), 0.01);
+        Assertions.assertEquals(4.8609037, metadata.getMetadata().getBounds().getMaxLon(), 0.01);
     }
 
     @Test

@@ -190,8 +190,13 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                 myEditor.addGPXFileListListener();
                 myEditor.setStatusFromWaypoints();
 
-                myEditor.refresh();
-                myEditor.refillGPXWaypointList(true);
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refresh();
+                    myEditor.refillGPXWaypointList(true);
+                }
             },
             StatusBar.getInstance());
 
@@ -255,7 +260,12 @@ public class ConvertMeasurableAction extends GPXLineItemAction<GPXMeasurable> {
                 myEditor.addGPXWaypointListListener();
                 myEditor.setStatusFromWaypoints();
 
-                myEditor.refresh();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    myEditor.refresh();
+                }
             },
             StatusBar.getInstance());
 

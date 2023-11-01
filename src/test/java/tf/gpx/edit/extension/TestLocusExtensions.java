@@ -7,8 +7,8 @@ package tf.gpx.edit.extension;
 
 import java.io.File;
 import me.himanshusoni.gpxparser.modal.Extension;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXTrack;
 
@@ -26,15 +26,15 @@ public class TestLocusExtensions {
         
         // locus extension values
         String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.activity);
-        Assert.assertEquals(nodeValue, "walking");
+        Assertions.assertEquals(nodeValue, "walking");
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsColorBase);
-        Assert.assertEquals(nodeValue, "#96483D8B");
+        Assertions.assertEquals(nodeValue, "#96483D8B");
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsWidth);
-        Assert.assertEquals(nodeValue, "6.0");
+        Assertions.assertEquals(nodeValue, "6.0");
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsUnits);
-        Assert.assertEquals(nodeValue, "PIXELS");
+        Assertions.assertEquals(nodeValue, "PIXELS");
     }
 }

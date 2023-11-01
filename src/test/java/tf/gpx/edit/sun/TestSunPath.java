@@ -30,7 +30,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**

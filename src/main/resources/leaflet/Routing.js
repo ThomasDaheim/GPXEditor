@@ -29,6 +29,7 @@ var routingControl = undefined;
 var curRoute = undefined;
 var curLayer = undefined;
 var foundRoute = undefined;
+var statusLbl = undefined;
 
 function initRouting(key) {
     apikey = key;
@@ -84,12 +85,26 @@ function startRouting(layer, routingprofile) {
                 saveBtn.title = 'Save route';
                 L.DomEvent.on(saveBtn, 'click', function(ev) { stopRouting(true) });
                 itinerary._container.insertBefore(saveBtn, collapseBtn);
+                
+                // TFE, 20230507: add text field for showing routing results
+                // "Route with xyz points found."
+                // "Error: No route could be found."
+                statusLbl =  L.DomUtil.create('span', 'statusLbl');
+                statusLbl.innerHTML = 'Routing...';
+                statusLbl.title = 'Routing...';
+                itinerary._container.insertBefore(statusLbl, saveBtn);
             },
             suppressDemoServerWarning: true
         }).on('routesfound', function(e) {
             var routes = e.routes;
+            statusLbl.innerHTML = 'Found ' + routes.length + ' route(s).';
+            statusLbl.title = 'Found ' + routes.length + ' route(s).';
 //            jscallback.log('Found ' + routes.length + ' route(s).');
             foundRoute = routes[0];
+        }).on('routingerror', function(e) {
+            statusLbl.innerHTML = 'Routing error ' + e.message;
+            statusLbl.title = 'Routing error ' + e.message;
+            jscallback.log('Routing error ' + e.message);
         }).addTo(myMap);
                     
         // for use with Leaflet.Editable

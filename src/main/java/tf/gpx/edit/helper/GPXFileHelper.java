@@ -113,6 +113,10 @@ public class GPXFileHelper {
             return isZip;
         }
         
+        public boolean isGPXFormat() {
+            return GPX.equals(this);
+        }
+        
         public boolean isExportFormat() {
             return !GPX.equals(this);
         }
@@ -138,9 +142,22 @@ public class GPXFileHelper {
         public static FileType fromFile(final File file) {
             return fromFileName(file.getName());
         }
+
+        public static boolean isGPXExtension(final String ext) {
+            return GPX.getExtension().equals(ext);
+        }
+        
+        public static boolean isExportExtension(final String ext) {
+            return !GPX.getExtension().equals(ext);
+        }
+        
+        public static boolean isImportExtension(final String ext) {
+            return KML.getExtension().equals(ext) || KMZ.getExtension().equals(ext);
+        }
+        
     }
     
-    private GPXEditor myEditor;
+    private GPXEditor myGPXEditor;
     
     private GPXFileHelper() {
         super();
@@ -151,7 +168,7 @@ public class GPXFileHelper {
     }
 
     public void setCallback(final GPXEditor editor) {
-        myEditor = editor;
+        myGPXEditor = editor;
     }
     
     public List<File> addFiles() {
@@ -168,7 +185,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myEditor.getWindow());
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myGPXEditor.getWindow());
 
         if(selectedFiles != null && !selectedFiles.isEmpty()){
             for (File selectedFile : selectedFiles) {
@@ -208,7 +225,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter(extConcat + "-Files", extFilter));
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myEditor.getWindow());
+        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(myGPXEditor.getWindow());
 
         if(selectedFiles != null && !selectedFiles.isEmpty()){
             for (File selectedFile : selectedFiles) {
@@ -243,7 +260,7 @@ public class GPXFileHelper {
             // das sollte auch in den Worker gehen...
             fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("GPX-Files", extFilter));
-            File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
+            File selectedFile = fileChooser.showSaveDialog(myGPXEditor.getWindow());
 
             if(selectedFile == null){
                 System.out.println("No File selected");
@@ -295,7 +312,7 @@ public class GPXFileHelper {
         GPXEditorPreferences.getRecentFiles().addRecentFile(curFile.toFile().getAbsolutePath());
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(curFile.toFile(), FileType.GPX);
+        validateXMLFile(curFile.toFile(), FileType.GPX);
         
         return result;
     }
@@ -342,7 +359,7 @@ public class GPXFileHelper {
         // das sollte auch in den Worker gehen...
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter(extConcat + "-Files", extFilter));
-        File selectedFile = fileChooser.showSaveDialog(myEditor.getWindow());
+        File selectedFile = fileChooser.showSaveDialog(myGPXEditor.getWindow());
 
         if(selectedFile == null){
             System.out.println("No File selected");
@@ -379,7 +396,7 @@ public class GPXFileHelper {
         }
 
         // TFE, 20191024 add warning for format issues
-        verifyXMLFile(selectedFile, type);
+        validateXMLFile(selectedFile, type);
         
         return result;
     }
@@ -414,37 +431,40 @@ public class GPXFileHelper {
         return result;
     }
 
-    public void verifyXMLFile(final File gpxFile, final FileType type) {
-        try {
-            final SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setValidating(false);
-            
-            final SAXParser parser = factory.newSAXParser();
-            final DefaultHandler handler = new DefaultHandler();
+    public void validateXMLFile(final File gpxFile, final FileType type) {
+        // TFE, 20230617: do something ONLY if set in preferences...
+        if (GPXEditorPreferences.VALIDATE_XML_FORMAT.getAsType()) {
+            try {
+                final SAXParserFactory factory = SAXParserFactory.newInstance();
+                factory.setNamespaceAware(true);
+                factory.setValidating(false);
 
-            // TFE, 20211118: support for zip files
-            if (type.isZip()) {
-                try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(gpxFile)))) {
-                    zis.getNextEntry();
-                    parser.parse(zis, handler);
+                final SAXParser parser = factory.newSAXParser();
+                final DefaultHandler handler = new DefaultHandler();
+
+                // TFE, 20211118: support for zip files
+                if (type.isZip()) {
+                    try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(gpxFile)))) {
+                        zis.getNextEntry();
+                        parser.parse(zis, handler);
+                    }
+                } else {
+                    parser.parse(gpxFile, handler);
                 }
-            } else {
-                parser.parse(gpxFile, handler);
-            }
-        } catch(IOException | ParserConfigurationException | SAXException ex) {
-            // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
-            if (myEditor.getScene() != null) {
-//                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
-            
-                final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
-                Optional<ButtonType> doAction = 
-                        ShowAlerts.getInstance().showAlert(
-                                Alert.AlertType.WARNING,
-                                "Warning",
-                                "Invalid file: " + gpxFile.getName(),
-                                ex.getMessage(),
-                                buttonOK);
+            } catch(IOException | ParserConfigurationException | SAXException ex) {
+                // TFE, 20200628: with file as cmd line arg we might not have a scene to show an alert
+                if (myGPXEditor.getScene() != null) {
+    //                Logger.getLogger(GPXFileHelper.class.getName()).log(Level.SEVERE, null, ex);
+
+                    final ButtonType buttonOK = new ButtonType("Ignore", ButtonBar.ButtonData.RIGHT);
+                    Optional<ButtonType> doAction = 
+                            ShowAlerts.getInstance().showAlert(
+                                    Alert.AlertType.WARNING,
+                                    "Warning",
+                                    "Invalid file: " + gpxFile.getName(),
+                                    ex.getMessage(),
+                                    buttonOK);
+                }
             }
         }
     }

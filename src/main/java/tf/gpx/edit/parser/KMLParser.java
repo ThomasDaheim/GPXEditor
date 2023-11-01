@@ -577,6 +577,8 @@ public class KMLParser extends GPXParser {
             final Node node = nodeList.item(i);
             
             final Node placemark = node.getParentNode();
+            // TFE, 20230225: name can be on Folder level...
+            final Node folder = placemark.getParentNode();
 
 //            <Placemark>
 //              <name>0) Nantes</name>
@@ -599,7 +601,11 @@ public class KMLParser extends GPXParser {
             int number = i+1;
 
             String name = "";
-            final Node nameNode = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_NAME);
+            Node nameNode = getFirstChildNodeByName(placemark, KMLConstants.NODE_PLACEMARK_NAME);
+            if (nameNode == null) {
+                // lets try on folder level
+                nameNode = getFirstChildNodeByName(folder, KMLConstants.NODE_PLACEMARK_NAME);
+            }
             if (nameNode != null) {
                 name = nameNode.getTextContent();
             }
@@ -610,7 +616,7 @@ public class KMLParser extends GPXParser {
                 continue;
             }
             // parse into list of waypoints
-            final String[] coordinates = splitList(coordinateNode);
+            final String[] coordinates = splitList(coordinateNode, KMLConstants.COORD_SEPARATOR);
             final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
                 final String[] coordValues = coordString.split(KMLConstants.VALUE_SEPARATOR);
@@ -719,7 +725,7 @@ public class KMLParser extends GPXParser {
                 // we can handle timestamps and track segments...
                 switch (dataName) {
                     case KMLConstants.VALUE_EXTENDEDDATA_TIMESTAMPS:
-                        final String[] timestamps = splitList(dataElem);
+                        final String[] timestamps = splitList(dataElem, KMLConstants.TIME_SEPARATOR);
                         
                         if (waypoints.size() == timestamps.length) {
                             for (int j = 0; j < timestamps.length; j++) {
@@ -740,7 +746,7 @@ public class KMLParser extends GPXParser {
 
                         break;
                     case KMLConstants.VALUE_EXTENDEDDATA_SEGMENTSIZES:
-                        final String[] sizes = splitList(dataElem);
+                        final String[] sizes = splitList(dataElem, KMLConstants.COORD_SEPARATOR);
 
                         for (int j = 0; j < sizes.length; j++) {
                             try {
@@ -786,8 +792,8 @@ public class KMLParser extends GPXParser {
         return result;
     }
     
-    private static String[] splitList(final Node node) {
-        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(KMLConstants.LINE_SEPARATOR);
+    private static String[] splitList(final Node node, final String itemSeparator) {
+        return node.getTextContent().replaceAll("\\n\\r", KMLConstants.LINE_SEPARATOR).split(itemSeparator);
     }
     
     protected boolean isDifferentFromDefaultStyle(final KMLConstants.PathType pathType, final KMLStyleItem styleItem, final LineStyle.StyleAttribute attribute) {

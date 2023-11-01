@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -52,14 +52,14 @@ public class TestDistribution {
         BinValueDistribution.getInstance().calculateBinValues(myDoubleDistribution);
 
         // bin size = 1
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
-        Assert.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
+        Assertions.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
 
         // all values = 1 / 300 since 1 value in each bin
         myBinValues = BinValueDistribution.getInstance().getBinValues();
         for (int i = 0; i < 300; i++) {
-            Assert.assertEquals(1.0 / 300.0, myBinValues.get(i).right, 0.01);
+            Assertions.assertEquals(1.0 / 300.0, myBinValues.get(i).right, 0.01);
         }
 
         //
@@ -70,14 +70,14 @@ public class TestDistribution {
         BinValueDistribution.getInstance().calculateBinValues(myDoubleDistribution);
 
         // bin size = 0.5
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
-        Assert.assertEquals(600.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
-        Assert.assertEquals(2.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
+        Assertions.assertEquals(600.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
+        Assertions.assertEquals(2.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
 
         // all values = 2 / 300 since 2 values in each bin
         myBinValues = BinValueDistribution.getInstance().getBinValues();
         for (int i = 0; i < 300; i++) {
-            Assert.assertEquals(2.0 / 300.0, myBinValues.get(i).right, 0.01);
+            Assertions.assertEquals(2.0 / 300.0, myBinValues.get(i).right, 0.01);
         }
 
         //
@@ -88,15 +88,15 @@ public class TestDistribution {
         BinValueDistribution.getInstance().calculateBinValues(myDoubleDistribution);
 
         // bin size = 0.5
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
-        Assert.assertEquals(150.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
-        Assert.assertEquals(0.5, BinValueDistribution.getInstance().getBinSize(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
+        Assertions.assertEquals(150.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
+        Assertions.assertEquals(0.5, BinValueDistribution.getInstance().getBinSize(), 0.01);
 
         // every other value = 1 / 150 since one value in every second bin
         myBinValues = BinValueDistribution.getInstance().getBinValues();
         for (int i = 0; i < 300; i++) {
             if (myBinValues.get(i).right > 0.00001) {
-                Assert.assertEquals(1.0 / 150.0, myBinValues.get(i).right, 0.01);
+                Assertions.assertEquals(1.0 / 150.0, myBinValues.get(i).right, 0.01);
             }
         }
     }
@@ -112,18 +112,18 @@ public class TestDistribution {
         {
             myList.addAll(IntStream.range(i, 301).asDoubleStream().boxed().collect(Collectors.toCollection(ArrayList::new)));
         }
-        Assert.assertEquals(300*301/2, myList.size());
+        Assertions.assertEquals(300*301/2, myList.size());
         myDoubleDistribution.setValues(myList);
         BinValueDistribution.getInstance().calculateBinValues(myDoubleDistribution);
 
         // bin size = 1
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
-        Assert.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
+        Assertions.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
 
         myBinValues = BinValueDistribution.getInstance().getBinValues();
         for (int i = 0; i < 300; i++) {
-            Assert.assertEquals((i + 1.0) / (300*301/2), myBinValues.get(i).right, 0.01);
+            Assertions.assertEquals((i + 1.0) / (300*301/2), myBinValues.get(i).right, 0.01);
         }
         
         //
@@ -139,14 +139,14 @@ public class TestDistribution {
         BinValueDistribution.getInstance().calculateBinValues(myDoubleDistribution);
 
         // bin size = 1
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
-        Assert.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
-        Assert.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getMinXValue(), 0.01);
+        Assertions.assertEquals(300.0, BinValueDistribution.getInstance().getMaxXValue(), 0.01);
+        Assertions.assertEquals(1.0, BinValueDistribution.getInstance().getBinSize(), 0.01);
 
         // all values are multiples of 1 / 300
         myBinValues = BinValueDistribution.getInstance().getBinValues();
         for (int i = 0; i < 300; i++) {
-            Assert.assertEquals(0.0, myBinValues.get(i).right % (1.0/300.0), 0.01);
+            Assertions.assertEquals(0.0, myBinValues.get(i).right % (1.0/300.0), 0.01);
         }
     }
 }

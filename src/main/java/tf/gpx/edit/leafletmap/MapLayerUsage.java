@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -169,7 +170,7 @@ public class MapLayerUsage implements IPreferencesHolder {
     }
     
     public List<MapLayer> getKnownMapLayers() {
-        return new ArrayList<>(myLayerConfig.keySet());
+        return new LinkedList<>(myLayerConfig.keySet());
     }
     
     public List<MapLayer> getKnownBaselayer() {
@@ -181,7 +182,7 @@ public class MapLayerUsage implements IPreferencesHolder {
     public List<MapLayer> getAdditionalBaselayer() {
         return myLayerConfig.keySet().stream().filter((t) -> {
             return MapLayer.LayerType.BASELAYER.equals(t.getLayerType()) && t.isDeletable();
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toCollection(LinkedList::new));
     }
     
     public List<MapLayer> getEnabledSortedBaselayer() {
@@ -193,13 +194,13 @@ public class MapLayerUsage implements IPreferencesHolder {
     public List<MapLayer> getKnownOverlays() {
         return myLayerConfig.keySet().stream().filter((t) -> {
             return MapLayer.LayerType.OVERLAY.equals(t.getLayerType());
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toCollection(LinkedList::new));
     }
     
     public List<MapLayer> getAdditionalOverlays() {
         return myLayerConfig.keySet().stream().filter((t) -> {
             return MapLayer.LayerType.OVERLAY.equals(t.getLayerType()) && t.isDeletable();
-        }).collect(Collectors.toList());
+        }).collect(Collectors.toCollection(LinkedList::new));
     }
     
     public List<MapLayer> getEnabledSortedOverlays() {

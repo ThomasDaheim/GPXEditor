@@ -38,7 +38,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.GregorianCalendar;
@@ -65,6 +64,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -77,6 +77,7 @@ import netscape.javascript.JSObject;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.controlsfx.control.PopOver;
 import tf.gpx.edit.elevation.AssignElevation;
@@ -291,8 +292,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private final static String TRACKPOINT_MARKER = "Trackpoint";
     private final static String ROUTEPOINT_MARKER = "Routepoint";
     
-    private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
-    
     // pane on top of LeafletMapView to draw selection rectangle
     private Pane myMapPane;
     // rectangle to select fileWaypointsCount
@@ -328,7 +327,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     private boolean isLoaded = false;
     private boolean isInitialized = false;
     
-    private IElevationProvider elevationProvider;
+    private final IElevationProvider elevationProvider;
 
     private TrackMap() {
         super();
@@ -409,6 +408,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
                 System.out.println("TrackMap: " + arg0.getData());
             });
+                
+            // TFE, 20230130: lets try firebug once again
+            // https://stackoverflow.com/a/73124798
+            //execScript("var firebug=document.createElement('script');firebug.setAttribute('src','https://lupatec.eu/getfirebug/firebug-lite-compressed.js');document.body.appendChild(firebug);(function(){if(window.firebug.version){firebug.init();}else{setTimeout(arguments.callee);}})();void(firebug);");
         
             window = (JSObject) execScript("window"); 
             jscallback = new TrackMapCallback(this);
@@ -421,16 +424,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
             addStyleFromPath(LEAFLET_PATH + "/leaflet" + MIN_EXT + ".css");
 
-            // support to show mouse coordinates
-            addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
-
-            // support to show center coordinates
-            addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
-
             // map helper functions for selecting, clicking, ...
             addScriptFromPath(LEAFLET_PATH + "/MapHelper" + MIN_EXT + ".js");
 
@@ -439,105 +432,103 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             // set api key for open cycle map
 //            execScript("changeMapLayerUrl(1, \"https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png?apikey=" + GPXEditorPreferences.OPENCYCLEMAP_API_KEY.getAsString() + "\");");
 
-            // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
-            // https://github.com/hiasinho/Leaflet.vector-markers
-            addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
-
-//            // https://github.com/Leaflet/Leaflet.Editable
-            addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
-            // TFE, 20200510: draw instead of editable
-            // TFE, 20201025: rolled back since "New Route" not working properly
-            // since we have an optimization for many waypointsToShow here...
-//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
-            
-            // https://github.com/smeijer/leaflet-geosearch
-            // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
-            addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
-            // load search icon later after markers are initialized
-            
-            // support for autorouting
-            // https://github.com/perliedman/leaflet-routing-machine
-            addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/ors-js-client" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteServiceV2" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
-            // we need an api key
-            execScript("initRouting(\"" + GPXEditorPreferences.ROUTING_API_KEY.getAsString() + "\");");
-
-            // support for ruler
-            // https://github.com/gokertanrisever/leaflet-ruler
-            addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
-
-            // add support for lat / lon lines
-            // https://github.com/cloudybay/leaflet.latlng-graticule
-            addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
-
-            // support for custom buttons
-            // https://github.com/CliffCloud/Leaflet.EasyButton
-            addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
-            // TFE, 20200313: support for heat map
-            addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
-            
-            // support to re-center
-            addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
-            
-            // support for playback
-            // https://github.com/hallahan/LeafletPlayback
-            addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
-            addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
-
-            // geolocation not working in webview
-//            // support for locate
-//            // url command in css not working
-//            // https://stackoverflow.com/a/50602814
-//            getWebView().getEngine().setUserStyleSheetLocation(
-//                    "data:,@font-face{font-family: 'FontAwesome';font-weight: normal;font-style: normal;src: url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?v=4.7.0');src: url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.eot").toExternalForm()+"?#iefix&v=4.7.0') format('embedded-opentype'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff2").toExternalForm()+"?v=4.7.0') format('woff2'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.woff").toExternalForm()+"?v=4.7.0') format('woff'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.ttf").toExternalForm()+"?v=4.7.0') format('truetype'), url('" + 
-//                    getClass().getResource("/font-awesome/fontawesome-webfont.svg").toExternalForm()+"?v=4.7.0#fontawesomeregular') format('svg');}");
-//            // https://github.com/domoritz/leaflet-locatecontrol
-//            addStyleFromPath("/font-awesome/font-awesome" + MIN_EXT + ".css");
-//            addStyleFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".css");
-//            addScriptFromPath(LEAFLET_PATH + "/locate/L.Control.Locate" + MIN_EXT + ".js");
-//            addScriptFromPath(LEAFLET_PATH + "/LocateControl" + MIN_EXT + ".js");
-
-            // TFE, 2020820: support for images on maps
-            addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
-            addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
-            addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
-            setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
-            
-            // TFE, 20220309: support for sunrise / sunset lines on map
-            addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
-            addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
-
-//            System.out.println("  JS+CSS loaded: " + Instant.now());
-
-            myMapPane = (Pane) getParent();
-            
             Platform.runLater(() -> {
+                // support to show mouse coordinates
+                addStyleFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/MousePosition/L.Control.MousePosition" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/MousePosition" + MIN_EXT + ".js");
+
+                // support to show center coordinates
+                addStyleFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/MapCenterCoord/L.Control.MapCenterCoord" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/MapCenter" + MIN_EXT + ".js");
+
+                // https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
+                // https://github.com/hiasinho/Leaflet.vector-markers
+                addScriptFromPath(LEAFLET_PATH + "/TrackMarker" + MIN_EXT + ".js");
+
+    //            // https://github.com/Leaflet/Leaflet.Editable
+                addScriptFromPath(LEAFLET_PATH + "/editable/Leaflet.Editable.min.js");
+                // TFE, 20200510: draw instead of editable
+                // TFE, 20201025: rolled back since "New Route" not working properly
+                // since we have an optimization for many waypointsToShow here...
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.draw" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/Leaflet.Draw.Event" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/ext/TouchEvents" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/Edit.Poly" + MIN_EXT + ".js");
+    //            addScriptFromPath(LEAFLET_PATH + "/draw/edit/handler/vertices-edit-lazy" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/EditRoutes" + MIN_EXT + ".js");
+
+                // https://github.com/smeijer/leaflet-geosearch
+                // https://smeijer.github.io/leaflet-geosearch/#openstreetmap
+                addStyleFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/search/leaflet-search.src" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/GeoSearch" + MIN_EXT + ".js");
+                // load search icon later after markers are initialized
+
+                // support for autorouting
+                // https://github.com/perliedman/leaflet-routing-machine
+                addStyleFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/routing/leaflet-routing-machine" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/openrouteservice/ors-js-client" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/openrouteservice/L.Routing.OpenRouteServiceV2" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/geocoder/Control.Geocoder" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Routing" + MIN_EXT + ".js");
+                // we need an api key
+                execScript("initRouting(\"" + GPXEditorPreferences.ROUTING_API_KEY.getAsString() + "\");");
+
+                // support for ruler
+                // https://github.com/gokertanrisever/leaflet-ruler
+                addStyleFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/ruler/leaflet-ruler" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Ruler" + MIN_EXT + ".js");
+
+                // add support for lat / lon lines
+                // https://github.com/cloudybay/leaflet.latlng-graticule
+                addScriptFromPath(LEAFLET_PATH + "/graticule/leaflet.latlng-graticule" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/ShowLatLan" + MIN_EXT + ".js");
+
+                // support for custom buttons
+                // https://github.com/CliffCloud/Leaflet.EasyButton
+                addStyleFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/easybutton/easy-button" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/ChartsPaneButton" + MIN_EXT + ".js");
+                // TFE, 20200313: support for heat map
+                addScriptFromPath(LEAFLET_PATH + "/HeatMapButton" + MIN_EXT + ".js");
+
+                // support to re-center
+                addStyleFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/CenterButton" + MIN_EXT + ".js");
+
+                // support for playback
+                // https://github.com/hallahan/LeafletPlayback
+                addScriptFromPath(LEAFLET_PATH + "/jquery/jquery-3.5.1.slim" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/playback/LeafletPlayback" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/Playback" + MIN_EXT + ".css");
+
+                // geolocation not working in webview
+
+                // TFE, 2020820: support for images on maps
+                addScriptFromPath(LEAFLET_PATH + "/markercluster/leaflet.markercluster-src" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster" + MIN_EXT + ".css");
+                addStyleFromPath(LEAFLET_PATH + "/markercluster/MarkerCluster.Default" + MIN_EXT + ".css");
+                addScriptFromPath(LEAFLET_PATH + "/PictureIcons" + MIN_EXT + ".js");
+                setPictureIconsButtonState(GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType());
+
+                // TFE, 20220309: support for sunrise / sunset lines on map
+                addScriptFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".js");
+                addStyleFromPath(LEAFLET_PATH + "/SunriseSunset" + MIN_EXT + ".css");
+
+                // TFE, 20230201: show / hide timezones overlay
+                addScriptFromPath(LEAFLET_PATH + "/timezones/L.timezones" + MIN_EXT + ".js");
+                addScriptFromPath(LEAFLET_PATH + "/Timezones" + MIN_EXT + ".js");
+
+    //            System.out.println("  JS+CSS loaded: " + Instant.now());
+
+                myMapPane = (Pane) getParent();
+            
                 // TFE, 20200317: add heat map
                 final HeatMapPane heatMapPane = HeatMapPane.getInstance();
                 myMapPane.prefHeightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -617,7 +608,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     }
                 });
 
-    //            // TODO: disable heatmap while dragging
+                // TODO: disable heatmap while dragging
+    
+                // enable drag & drop of gpx by routing events to GPXTreeTableView?
+                getWebView().setOnDragOver((DragEvent event) -> {
+                    myGPXEditor.onDragOver(event);
+                });
+
+                getWebView().setOnDragDropped((DragEvent event) -> {
+                    myGPXEditor.onDragDropped(event);
+                });
 
                 // we want our own context menu!
                 getWebView().setContextMenuEnabled(false);
@@ -635,13 +635,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
                 // TFE, 20210614: needs to be set before call to setCurrentBaselayer()
                 isInitialized = true;
-
-                // TFE, 20200713: now we can enable the overlays per baselayer
-                setOverlaysForBaselayer();
-                // set current layer
-                setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
-
-//                System.out.println("  Overlays loaded: " + Instant.now());
+                
+                initializeAfterMapLoaded();
 
                 // TFE, 20190901: load preferences - now things are up & running
                 myGPXEditor.initializeAfterMapLoaded();
@@ -671,6 +666,17 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 
 //            System.out.println("Done map initialize: " + Instant.now());
         }
+    }
+    private void initializeAfterMapLoaded() {
+        // TFE, 20200713: now we can enable the overlays per baselayer
+        setOverlaysForBaselayer();
+        // set current layer
+        setCurrentBaselayer(GPXEditorPreferences.INITIAL_BASELAYER.getAsType());
+
+//                System.out.println("  Overlays loaded: " + Instant.now());
+
+        // TFE, 20180901: load stored values for track & height map
+        GPXTrackviewer.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
     }
     
     private void handleMouseCntrlPressed(final MouseEvent event) {
@@ -1152,8 +1158,14 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             contextMenu.getProperties().put(KnowProperties.LATLON, latLon);
 
             // TFE, 20200121: show height with coordinate in context menu
-            latLon.setElevation(elevationProvider.getElevationForCoordinate(latLon));
-            showCord.setText(latLon.toString());
+            final Pair<Boolean, Double> elevation = elevationProvider.getElevationForCoordinate(latLon);
+            if (elevation.getLeft()) {
+                latLon.setElevation(elevation.getRight());
+                showCord.setText(latLon.toString());
+            } else {
+                latLon.setElevation(IElevationProvider.NO_ELEVATION);
+                showCord.setText("No elevation found.");
+            }
 
             contextMenu.getProperties().put(KnowProperties.WAYPOINT, currentGPXWaypoint);
 
@@ -1189,39 +1201,11 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    public void setCurrentMarker(final String options, final Double lat, final Double lng) {
-        try {
-            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<HashMap<String,String>>(){}), new LatLonElev(lat, lng));
-        } catch (IOException ex) {
-            currentMarker = null;
-        }
-    }
-    
-    public void removeCurrentMarker() {
-        currentMarker = null;
-    }
-
-    public void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
-        currentGPXWaypoint = fileWaypoints.get(waypoint);
-    }
-    
-    public void removeCurrentWaypoint() {
-        currentGPXWaypoint = null;
-    }
-
-    public void setCurrentGPXRoute(final String route, final Double lat, final Double lng) {
-        currentGPXRoute = routes.get(route);
-    }
-
-    public void removeCurrentGPXRoute() {
-        currentGPXRoute = null;
-    }
-
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
     }
     
-   public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
 //        System.out.println("setGPXWaypoints Start: " + Instant.now());
         myGPXLineItems = lineItems;
 
@@ -1627,7 +1611,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         waypoints.clear();
     }
     
-    public void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
+    protected void selectGPXWaypointsInBoundingBox(final String marker, final BoundingBox boundingBox, final Boolean addToSelection) {
         // TFE, 20200104: for list of lineitems we need to collect waypointsToShow from all of them
         final Set<GPXWaypoint> waypoints = new LinkedHashSet<>();
         for (GPXLineItem lineItem : myGPXLineItems) {
@@ -1636,7 +1620,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         addGPXWaypointsToSelection(waypoints, addToSelection);
     }
     
-    public void selectGPXWaypointFromMarker(final String marker, final LatLonElev newLatLong, final Boolean addToSelection) {
+    protected void selectGPXWaypointFromMarker(final String marker, final LatLonElev newLatLong, final Boolean addToSelection) {
         GPXWaypoint waypoint = null;
                 
         if (fileWaypoints.containsKey(marker)) {
@@ -1962,40 +1946,12 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         return new LatLonElev(mapBounds.getCenterX(), mapBounds.getCenterY());
     }
     
-    public void mapViewChanged(final BoundingBox newBoundingBox) {
-        mapBounds = newBoundingBox;
-        HeatMapPane.getInstance().restore();
-        if (HeatMapPane.getInstance().isVisible()) {
-            updateHeatMapPane();
-        }
-        ChartsPane.getInstance().setViewLimits(mapBounds);
-        
-        // TFE, 20210820: look for new pictures in bounding box - and remove current popover - if visible
-        hidePicturePopup(currentMapImageId);
-        getPicturesInBoundingBox();
-    }
-    
-    public void mapViewChanging(final BoundingBox newBoundingBox) {
-        HeatMapPane.getInstance().hide();
-    }
-    
     public void setChartsPaneButtonState(final MapButtonState state) {
         execScript("setChartsPaneButtonState(\"" + state.toString() + "\");");
-    }
-    public void toggleChartsPane(final Boolean visible) {
-        ChartsPane.getInstance().doSetVisible(visible);
     }
     
     public void setHeatMapButtonState(final MapButtonState state) {
         execScript("setHeatMapButtonState(\"" + state.toString() + "\");");
-    }
-    public void toggleHeatMapPane(final Boolean visible) {
-        if (visible) {
-            updateHeatMapPane();
-        } else {
-            HeatMapPane.getInstance().clearHeatMap();
-        }
-        HeatMapPane.getInstance().setVisible(visible);
     }
     private void updateHeatMapPane() {
 //        System.out.println("trackWaypoints: " + trackWaypoints.size());
@@ -2041,33 +1997,6 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    protected void setPictureIconsButtonState(final boolean state) {
-        execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
-    }
-    protected void togglePictureIcons(final Boolean visible) {
-        // save into preferences
-        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
-        
-        if (!visible) {
-            hidePicturePopup(currentMapImageId);
-        }
-    }
-    protected void showPicturePopup(final Integer id) {
-        currentMapImageId = id;
-        
-        mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
-        mapImagePopOver.setTitle(mapImages.get(id).getBasename());
-        
-        final Point2D mouseLocation = (new Robot()).getMousePosition();
-        mapImagePopOver.setX(mouseLocation.getX());
-        mapImagePopOver.setY(mouseLocation.getY());
-        mapImagePopOver.show(myMapPane.getScene().getWindow());
-    }
-    protected void hidePicturePopup(final Integer id) {
-        currentMapImageId = null;
-        mapImagePopOver.hide();
-    }
-    
     private void getPicturesInBoundingBox() {
         if (GPXEditorPreferences.SHOW_IMAGES_ON_MAP.getAsType()) {
 //            System.out.println("getPicturesInBoundingBox START: " + Instant.now());
@@ -2237,5 +2166,95 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         sb.append("]");
         return sb.toString();
-    }   
+    }
+    
+    // callback functions for leaflet javascript
+
+    protected void setCurrentMarker(final String options, final Double lat, final Double lng) {
+        try {
+            currentMarker = new CurrentMarker(new ObjectMapper().readValue(options, new TypeReference<HashMap<String,String>>(){}), new LatLonElev(lat, lng));
+        } catch (IOException ex) {
+            currentMarker = null;
+        }
+    }
+    
+    protected void removeCurrentMarker() {
+        currentMarker = null;
+    }
+
+    protected void setCurrentWaypoint(final String waypoint, final Double lat, final Double lng) {
+        currentGPXWaypoint = fileWaypoints.get(waypoint);
+    }
+    
+    protected void removeCurrentWaypoint() {
+        currentGPXWaypoint = null;
+    }
+
+    protected void setCurrentGPXRoute(final String route, final Double lat, final Double lng) {
+        currentGPXRoute = routes.get(route);
+    }
+
+    protected void removeCurrentGPXRoute() {
+        currentGPXRoute = null;
+    }
+
+    protected void mapViewChanged(final BoundingBox newBoundingBox) {
+        mapBounds = newBoundingBox;
+        HeatMapPane.getInstance().restore();
+        if (HeatMapPane.getInstance().isVisible()) {
+            updateHeatMapPane();
+        }
+        ChartsPane.getInstance().setViewLimits(mapBounds);
+        
+        // TFE, 20210820: look for new pictures in bounding box - and remove current popover - if visible
+        hidePicturePopup(currentMapImageId);
+        getPicturesInBoundingBox();
+    }
+    
+    protected void mapViewChanging(final BoundingBox newBoundingBox) {
+        HeatMapPane.getInstance().hide();
+    }
+    
+    protected void toggleChartsPane(final Boolean visible) {
+        ChartsPane.getInstance().doSetVisible(visible);
+    }
+    
+    protected void toggleHeatMapPane(final Boolean visible) {
+        if (visible) {
+            updateHeatMapPane();
+        } else {
+            HeatMapPane.getInstance().clearHeatMap();
+        }
+        HeatMapPane.getInstance().setVisible(visible);
+    }
+
+    protected void setPictureIconsButtonState(final boolean state) {
+        execScript("setPictureIconsButtonState(\"" + MapButtonState.fromBoolean(state).toString() + "\");");
+    }
+
+    protected void togglePictureIcons(final Boolean visible) {
+        // save into preferences
+        GPXEditorPreferences.SHOW_IMAGES_ON_MAP.put(visible);
+        
+        if (!visible) {
+            hidePicturePopup(currentMapImageId);
+        }
+    }
+
+    protected void showPicturePopup(final Integer id) {
+        currentMapImageId = id;
+        
+        mapImagePopOver.setContentNode(new MapImageViewer(mapImages.get(id)));
+        mapImagePopOver.setTitle(mapImages.get(id).getBasename());
+        
+        final Point2D mouseLocation = (new Robot()).getMousePosition();
+        mapImagePopOver.setX(mouseLocation.getX());
+        mapImagePopOver.setY(mouseLocation.getY());
+        mapImagePopOver.show(myMapPane.getScene().getWindow());
+    }
+
+    protected void hidePicturePopup(final Integer id) {
+        currentMapImageId = null;
+        mapImagePopOver.hide();
+    }
 }

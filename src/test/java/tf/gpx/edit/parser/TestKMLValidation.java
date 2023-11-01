@@ -31,8 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test KML validation.
@@ -43,10 +43,10 @@ public class TestKMLValidation {
     @Test
     public void testValidKML() {
         try (InputStream kmlFile = new FileInputStream((new File("src/test/resources/test1.kml")).getPath());) {
-            Assert.assertTrue(KMLParser.isValidKML(kmlFile));
+            Assertions.assertTrue(KMLParser.isValidKML(kmlFile));
         } catch (IOException ex) {
             Logger.getLogger(TestKMLValidation.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.fail();
+            Assertions.fail();
         }
     }
 
@@ -54,10 +54,10 @@ public class TestKMLValidation {
     public void testInvalidKML() {
         // TODO: test complex errors - e.g. undefined tags - as well once XSD parsing in KMLParser works
         try (InputStream kmlFile = new FileInputStream((new File("src/test/resources/test2.kml")).getPath());) {
-            Assert.assertFalse(KMLParser.isValidKML(kmlFile));
+            Assertions.assertFalse(KMLParser.isValidKML(kmlFile));
         } catch (IOException ex) {
             Logger.getLogger(TestKMLValidation.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.fail();
+            Assertions.fail();
         }
     }
 }

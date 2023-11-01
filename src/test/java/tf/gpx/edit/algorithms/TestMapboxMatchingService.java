@@ -42,8 +42,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.leafletmap.LatLonElev;
@@ -69,11 +69,11 @@ public class TestMapboxMatchingService {
         
         try {
             final HttpResponse<String> response = client.send(requestGET, BodyHandlers.ofString());
-            Assert.assertEquals(200, response.statusCode());
+            Assertions.assertEquals(200, response.statusCode());
             result = response.body();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(TestMapboxMatchingService.class.getName()).log(Level.SEVERE, null, ex);
-            Assert.assertTrue(false);
+            Assertions.assertTrue(false);
         }
         
         return result;
@@ -81,7 +81,7 @@ public class TestMapboxMatchingService {
     
     @Test
     public void testMatchingAPINoResult() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
 
         // api call expects lon,lat - simply forget that and you won't find a street in the ocean :-)
         final List<LatLonElev> result = 
@@ -90,12 +90,12 @@ public class TestMapboxMatchingService {
                                 "https://api.mapbox.com/matching/v5/mapbox/driving", 
                                 "47.2118105,-1.5646335;47.211411,-1.5642169;47.2110103,-1.5647192;47.2107268,-1.5651917?steps=false&overview=false&geometries=geojson&access_token=" + API_KEY));
         // {"code":"NoSegment","message":"Could not find a matching segment for input coordinates","routes":[]}
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertTrue(result.isEmpty());
     }
     
     @Test
     public void testMatchingAPIPartialResult() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
 
         // api call expects lon,lat - simply forget that and you won't find a street in the ocean :-)
         final List<LatLonElev> result = 
@@ -104,12 +104,12 @@ public class TestMapboxMatchingService {
                                 "https://api.mapbox.com/matching/v5/mapbox/driving", 
                                 "-1.5646335,47.2118105;47.211411,-1.5642169;47.2110103,-1.5647192;47.2107268,-1.5651917?steps=false&overview=false&geometries=geojson&access_token=" + API_KEY));
         // {"code":"NoSegment","message":"Could not find a matching segment for input coordinates","routes":[]}
-        Assert.assertTrue(result.isEmpty());
+        Assertions.assertTrue(result.isEmpty());
     }
     
     @Test
     public void testMatchingAPIExample() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
 
         final List<LatLonElev> result = 
                 deserializeResponse(
@@ -117,20 +117,20 @@ public class TestMapboxMatchingService {
                                 "https://api.mapbox.com/matching/v5/mapbox/driving", 
                                 "-117.17282,32.71204;-117.17288,32.71225;-117.17293,32.71244;-117.17292,32.71256;-117.17298,32.712603;-117.17314,32.71259;-117.17334,32.71254?steps=false&overview=false&geometries=geojson&access_token=" + API_KEY));
         // {"matchings":[{"confidence":0.95084,"weight_name":"auto","weight":49.549,"duration":23.14,"distance":103.816,"legs":[{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":3.392,"duration":3.155,"steps":[],"distance":24.539,"summary":"North Harbor Drive"},{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":2.994,"duration":2.785,"steps":[],"distance":21.663,"summary":"North Harbor Drive"},{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":1.389,"duration":1.311,"steps":[],"distance":13.025,"summary":"North Harbor Drive"},{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":9.799,"duration":5.768,"steps":[],"distance":9.353,"summary":"North Harbor Drive, Tuna Wharf St"},{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":23.478,"duration":4.006,"steps":[],"distance":15.092,"summary":"Tuna Wharf St"},{"via_waypoints":[],"admins":[{"iso_3166_1_alpha3":"USA","iso_3166_1":"US"}],"weight":8.496,"duration":6.114,"steps":[],"distance":20.144,"summary":"Tuna Wharf St"}]}],"tracepoints":[{"matchings_index":0,"waypoint_index":0,"alternatives_count":0,"distance":1.354,"name":"","location":[-117.172834,32.712036]},{"matchings_index":0,"waypoint_index":1,"alternatives_count":0,"distance":2.627,"name":"","location":[-117.172908,32.712246]},{"matchings_index":0,"waypoint_index":2,"alternatives_count":0,"distance":0.931,"name":"","location":[-117.17292,32.71244]},{"matchings_index":0,"waypoint_index":3,"alternatives_count":0,"distance":0.134,"name":"","location":[-117.172922,32.71256]},{"matchings_index":0,"waypoint_index":4,"alternatives_count":0,"distance":0.301,"name":"","location":[-117.17298,32.7126]},{"matchings_index":0,"waypoint_index":5,"alternatives_count":0,"distance":0.795,"name":"","location":[-117.17314,32.712597]},{"matchings_index":0,"waypoint_index":6,"alternatives_count":0,"distance":0.784,"name":"","location":[-117.173344,32.712546]}],"code":"Ok","uuid":"IdMmZIRkWPxHtcbfGMF6-hQ4XpAU0pO-mWhRqJT1hQMAB_krxF7bqg=="}
-        Assert.assertEquals(7, result.size());
+        Assertions.assertEquals(7, result.size());
         
         LatLonElev latLonElev = result.get(0);
-        Assert.assertEquals(32.712036, latLonElev.getLatitude(), delta);
-        Assert.assertEquals(-117.172834, latLonElev.getLongitude(), delta);
+        Assertions.assertEquals(32.712036, latLonElev.getLatitude(), delta);
+        Assertions.assertEquals(-117.172834, latLonElev.getLongitude(), delta);
         
         latLonElev = result.get(6);
-        Assert.assertEquals(32.712546, latLonElev.getLatitude(), delta);
-        Assert.assertEquals(-117.173344, latLonElev.getLongitude(), delta);
+        Assertions.assertEquals(32.712546, latLonElev.getLatitude(), delta);
+        Assertions.assertEquals(-117.173344, latLonElev.getLongitude(), delta);
     }
     
     @Test
     public void testMapboxMatchingService() {
-        Assert.assertFalse(API_KEY.isEmpty());
+        Assertions.assertFalse(API_KEY.isEmpty());
         
         final List<LatLonElev> coords = new ArrayList<>();
         // elevation needs to be conserved
@@ -144,17 +144,17 @@ public class TestMapboxMatchingService {
         
         final List<LatLonElev> result = MapboxMatchingService.getInstance().matchCoordinates(coords);
                 
-        Assert.assertEquals(7, result.size());
+        Assertions.assertEquals(7, result.size());
         
         LatLonElev latLonElev = result.get(0);
-        Assert.assertEquals(32.712036, latLonElev.getLatitude(), delta);
-        Assert.assertEquals(-117.172834, latLonElev.getLongitude(), delta);
-        Assert.assertEquals(1.0, latLonElev.getElevation(), delta);
+        Assertions.assertEquals(32.712036, latLonElev.getLatitude(), delta);
+        Assertions.assertEquals(-117.172834, latLonElev.getLongitude(), delta);
+        Assertions.assertEquals(1.0, latLonElev.getElevation(), delta);
         
         latLonElev = result.get(6);
-        Assert.assertEquals(32.712546, latLonElev.getLatitude(), delta);
-        Assert.assertEquals(-117.173344, latLonElev.getLongitude(), delta);
-        Assert.assertEquals(2.0, latLonElev.getElevation(), delta);
+        Assertions.assertEquals(32.712546, latLonElev.getLatitude(), delta);
+        Assertions.assertEquals(-117.173344, latLonElev.getLongitude(), delta);
+        Assertions.assertEquals(2.0, latLonElev.getElevation(), delta);
     }
     
     private List<LatLonElev> deserializeResponse(final String response) {
@@ -185,11 +185,11 @@ public class TestMapboxMatchingService {
 //                    System.out.println(tracePoint.toString());
                     
                     final JsonNode waypoint_index = tracePoint.get("waypoint_index");
-                    Assert.assertEquals(i, waypoint_index.asInt());
+                    Assertions.assertEquals(i, waypoint_index.asInt());
 
                     final JsonNode location = tracePoint.get("location");
                     final Matcher matcher = LOCATION_PATTERN.matcher(location.toString());
-                    Assert.assertTrue(matcher.matches());
+                    Assertions.assertTrue(matcher.matches());
                     result.add(new LatLonElev(
                         LatLonHelper.latFromString(matcher.group(2)),
                         LatLonHelper.lonFromString(matcher.group(1))));

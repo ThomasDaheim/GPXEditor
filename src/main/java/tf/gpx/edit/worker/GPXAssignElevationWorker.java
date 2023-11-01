@@ -31,7 +31,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import tf.gpx.edit.actions.UpdateLineItemInformationAction;
+import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.actions.UpdateInformation;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
@@ -178,16 +179,18 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
 
             if (!assignPoints.isEmpty()) {
                 // if using OpenElevationService its only one POST call instead of multiple
-                final List<Double> assignHeigths = elevationProvider.getElevationsForCoordinates(assignPoints); 
+                final List<Pair<Boolean, Double>> assignHeigths = elevationProvider.getElevationsForCoordinates(assignPoints); 
                 
                 // TODO: replace by new Update-Action used in smoothing to speed things up into one action
                 int i = 0;
                 for (GPXWaypoint gpxWayPoint : assignPoints) {
-                    final double elevation = assignHeigths.get(i);
-
-                    if (elevation != IElevationProvider.NO_ELEVATION) {
+                    if (assignHeigths.get(i).getLeft()) {
 //                        System.out.println("gpxWayPoint: " + gpxWayPoint + ", elevation: " + elevation);
-                        myEditor.updateLineItemInformation(Arrays.asList(gpxWayPoint), UpdateLineItemInformationAction.UpdateInformation.HEIGHT, elevation, myDoUndo);
+                        myEditor.updateLineItemInformation(
+                                Arrays.asList(gpxWayPoint), 
+                                UpdateInformation.HEIGHT, 
+                                assignHeigths.get(i).getRight(), 
+                                myDoUndo);
                         assignedHeightCount++;
                     } else {
                         noHeightCount++;

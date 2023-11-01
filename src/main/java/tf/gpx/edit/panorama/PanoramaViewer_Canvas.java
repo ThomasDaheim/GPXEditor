@@ -29,17 +29,22 @@ import eu.hansolo.fx.charts.*;
 import eu.hansolo.fx.charts.data.XYChartItem;
 import eu.hansolo.fx.charts.series.XYSeries;
 import eu.hansolo.fx.charts.series.XYSeriesBuilder;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.util.*;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
@@ -51,10 +56,6 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
-
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.util.*;
 
 /**
  * Viewer for the "horizon" for a given LatLon position.
@@ -100,7 +101,7 @@ public class PanoramaViewer_Canvas {
     // toFront() and toBack() only work within the same group...
     private final Group chartGroup = new Group();
     private final StackPane pane = new StackPane();
-    private final Scene scene = new Scene(pane, VIEWER_WIDTH, VIEWER_HEIGHT);
+    private final Scene scene;
     private final Stage stage = new Stage();
     
     // TFE, 20220316: use ony positive values - to be in sync with sunpath algos...
@@ -113,21 +114,25 @@ public class PanoramaViewer_Canvas {
     private double mousePosY;
     private double mouseOldX;
     private double mouseOldY;
-    boolean dragActive = false;
     
     private Panorama panorama;
     
     private IGeoCoordinate location;
-    private TimeZone timeZone;
+    private TimeZone timeZone = null;
     
     private final Label noElevationDataLabel = new Label("No elevation data available");
     
     private PanoramaViewer_Canvas() {
+        // TFE, 20230405: max out width based on screen width
+        scene  = new Scene(pane, Screen.getPrimary().getVisualBounds().getWidth() * 0.95, VIEWER_HEIGHT);
+        
         // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
+        stage.setTitle("GPX Editor - Panorama");
+        stage.getIcons().add(new Image(PanoramaViewer_Canvas.class.getResourceAsStream("/GPXEditorManager.png")));
         stage.setScene(scene);
         
         initialize();
@@ -135,6 +140,10 @@ public class PanoramaViewer_Canvas {
     
     public static PanoramaViewer_Canvas getInstance() {
         return INSTANCE;
+    }
+    
+    private static boolean isNearBy(int value, int test, int range) {
+        return test-range <= value && value <= test+range;
     }
     
     @SuppressWarnings("unchecked")
@@ -159,13 +168,28 @@ public class PanoramaViewer_Canvas {
                 .numberFormatter(new StringConverter<Number>() {
                                     @Override
                                     public String toString(Number object) {
-                                        return switch (object.intValue()) {
-                                            case 180, 180+360 -> "S";
-                                            case 270, 270+360 -> "W";
-                                            case 0, 0+360, 0+360+360 -> "N";
-                                            case 90, 90+360 -> "E";
-                                            default -> ""; //String.valueOf(object.intValue());
-                                        };
+//                                        return switch (object.intValue()) {
+//                                            case 180, 180+360 -> "S";
+//                                            case 270, 270+360 -> "W";
+//                                            case 0, 0+360, 0+360+360 -> "N";
+//                                            case 90, 90+360 -> "E";
+//                                            default -> ""; //String.valueOf(object.intValue());
+//                                        };
+                                        
+                                        // TFE, 20230321 allow for some "width" left and right of the actual N, S, E, W positions
+                                        // otherwise when scrolling you won't see labels
+                                        final int value = object.intValue();
+                                        if (isNearBy(value, 180, 5) || isNearBy(value, 180+360, 5)) {
+                                            return "S";
+                                        } else if (isNearBy(value, 270, 5) || isNearBy(value, 270+360, 5)) {
+                                            return "W";
+                                        } else if (isNearBy(value, 0, 5) || isNearBy(value, 0+360, 5) || isNearBy(value, 0+360+360, 5)) {
+                                            return "N";
+                                        } else if (isNearBy(value, 90, 5) || isNearBy(value, 90+360, 5)) {
+                                            return "E";
+                                        } else {
+                                            return "";
+                                        }
                                     }
 
                                     @Override
@@ -189,7 +213,8 @@ public class PanoramaViewer_Canvas {
                 .tickLabelFontSize(AXIS_FONTSIZE)
                 .autoFontSize(false)
                 .minWidth(1.5*AXIS_WIDTH)
-                .titleFontSize(AXIS_FONTSIZE)
+                // TODO: not scaling properly
+                .titleFontSize(AXIS_FONTSIZE*2)
                 .title("Angle [" + LatLonHelper.DEG_CHAR_1 + "]")
                 .build();
         AnchorPane.setTopAnchor(yAxisElev, 0d);
@@ -251,12 +276,15 @@ public class PanoramaViewer_Canvas {
                     lowerBound = 180 - 180;
                 }
             }
-            xAxisElev.setMinMax(lowerBound, lowerBound + 360);
+            // respect zoom mode - if not 360 degree, don't implicitly zoom
+            final int xWidth = (int) (xAxisElev.getMaxValue() - xAxisElev.getMinValue());
+            final int zoomBorder = Math.max(0, (360 - xWidth) / 2);
+            xAxisElev.setMinMax(lowerBound + zoomBorder / 2, lowerBound + 360 - zoomBorder);
         });
 
         elevationChartLabel.setText("Drag: Shift X" + System.lineSeparator() + 
-                        "Wheel: Zoom Y (slow)" + System.lineSeparator() + 
-                        "ShiftWheel: Zoom Y (fast)" + System.lineSeparator() + 
+                        "Wheel: Zoom Y" + System.lineSeparator() + 
+                        "ShiftWheel: Zoom X" + System.lineSeparator() + 
                         "N/S/E/W: center direction" + System.lineSeparator() + 
                         "P: show/hide sun paths" + System.lineSeparator() + 
                         "C/R: reset view");
@@ -286,8 +314,8 @@ public class PanoramaViewer_Canvas {
     }
     
     private void setAxes() {
-        // initially we want North centered
-        xAxisElev.setMinMax(180d, 180d + 360d);
+        // initially we want SOUTH centered
+        xAxisElev.setMinMax(0d, 360d);
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
@@ -310,12 +338,12 @@ public class PanoramaViewer_Canvas {
     public void showPanorama(final IGeoCoordinate loc) {
         location = loc;
         // TFE, 20220303: timezone is location dependent...
-        timeZone = TimeZoneProvider.getInstance().getTimeZone(loc);
-//        System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
+        // TFE, 20230321: only calculate if needed!
+        timeZone = null;
 
         // get the whole set of LatLonElev around our location
         panorama = new Panorama(
-                loc, 
+                location, 
                 Panorama.DISTANCE_FROM, Panorama.DISTANCE_TO, Panorama.DISTANCE_STEP, 
                 Panorama.ANGEL_FROM, Panorama.ANGEL_TO, Panorama.ANGEL_STEP);
 
@@ -325,7 +353,7 @@ public class PanoramaViewer_Canvas {
     }
     
     private void showData() {
-        // performance... every chqange to chart triggers reapplyCSS()
+        // performance... every change to chart triggers reapplyCSS()
         pane.getChildren().remove(chartGroup);
 
         // and now draw from outer to inner and from darker to brighter color
@@ -419,8 +447,10 @@ public class PanoramaViewer_Canvas {
         final Map<Integer, Integer> colorChangeMap = new HashMap<>();
         for (int i = 0; i < COLOR_STEPS; i++) {
             // we scale with anything between 2 and 1/2
-            final double scaleFact = 1.6 - 1.0 / (COLOR_STEPS-1) * i;
+            // TFE, 20230321: closer slices nearby, larger steps in the distance - so we need to vary more strongly
+            final double scaleFact = 1.5 - 1.0 / (COLOR_STEPS-1) * i;
 //            final double scaleFact = 1;
+//            System.out.println("i: " + i + ", scaleFact: " + scaleFact);
             colorChangeMap.put(i, (int) (scaleFact * colorChange));
         }
 
@@ -524,31 +554,46 @@ public class PanoramaViewer_Canvas {
         // add vertical zoom on mouse wheel
         elevationChart.setOnScroll((t) -> {
             double scaleFact = SCALE_FACT;
-            if (t.isShiftDown()) {
-                scaleFact = Math.pow(SCALE_FACT, 5);
-            }
-            // https://stackoverflow.com/a/52707611
-            // if shift is pressed with mouse wheel x is changed instead of y...
             double scrollDelta = 0d;
+
             if (!t.isShiftDown()) {
+                // scroll y
                 scrollDelta = t.getDeltaY();
+
+                final double lower = yAxisElev.getMinValue();
+                final double upper = yAxisElev.getMaxValue();
+                if (scrollDelta > 0) {
+                    // zoom in - easy, since no bounds to take into account...
+                    yAxisElev.setMinMax(lower / scaleFact, upper / scaleFact);
+                } else {
+                    // scroll out - but not more than 90 degress
+                    final int newLower = (int) Math.floor(lower * scaleFact);
+                    final int newUpper = (int) Math.floor(upper * scaleFact);
+                    if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
+                        yAxisElev.setMinMax(newLower, newUpper);
+                    }
+                }
             } else {
+                // https://stackoverflow.com/a/52707611
+                // if shift is pressed with mouse wheel x is changed instead of y...
+                // scroll x
                 scrollDelta = t.getDeltaX();
+
+                // TFE, 20230407: scroll y axis too
+                final double lower = xAxisElev.getMinValue();
+                final double upper = xAxisElev.getMaxValue();
+                final double center = (upper + lower) / 2;
+                double halfwidth = (upper - lower) / 2;
+                if (scrollDelta > 0) {
+                    halfwidth = halfwidth / scaleFact;
+                } else {
+                    // scroll out - but not more than 180 degress
+                    halfwidth = Math.min(180, halfwidth * scaleFact);
+                }
+                // zoom - and keep center
+                xAxisElev.setMinMax(Math.max(MIN_HOR_ANGLE, center - halfwidth), Math.min(MAX_HOR_ANGLE, center + halfwidth));
             }
             
-            final double lower = yAxisElev.getMinValue();
-            final double upper = yAxisElev.getMaxValue();
-            if (scrollDelta > 0) {
-                // zoom in - easy, since no bounds to take into account...
-                yAxisElev.setMinMax(lower / scaleFact, upper / scaleFact);
-            } else {
-                // scroll out - but not more than 90 degress
-                final int newLower = (int) Math.floor(lower * scaleFact);
-                final int newUpper = (int) Math.floor(upper * scaleFact);
-                if (Math.abs(newLower) <= 90 && Math.abs(newUpper) <= 90) {
-                    yAxisElev.setMinMax(newLower, newUpper);
-                }
-            }
         });
 
         chartGroup.getChildren().add(elevationChart);
@@ -562,6 +607,10 @@ public class PanoramaViewer_Canvas {
             sunPathLabel.setVisible(false);
         } else {
             if (sunPathChartData.isEmpty()) {
+                if (timeZone == null) {
+                    timeZone = TimeZoneProvider.getInstance().getTimeZone(location);
+//                    System.out.println("Setting TimeZone to " + timeZone.getDisplayName());
+                }
                 final ZonedDateTime zonedDateTime = ZonedDateTime.now(timeZone.toZoneId());
 
                 // we need to create the sun path line chart

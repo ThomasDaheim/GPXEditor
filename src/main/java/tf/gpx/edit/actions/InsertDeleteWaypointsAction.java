@@ -74,10 +74,15 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
                 myEditor.addGPXWaypointListListener();
                 myEditor.setStatusFromWaypoints();
 
-                // show remaining waypoints
-                myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
-                // force repaint of gpxFileList to show unsaved items
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    // show remaining waypoints
+                    myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
+                    // force repaint of gpxFileList to show unsaved items
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 
@@ -104,10 +109,15 @@ public abstract class InsertDeleteWaypointsAction extends GPXLineItemAction<GPXW
                 myEditor.addGPXWaypointListListener();
                 myEditor.setStatusFromWaypoints();
 
-                // show remaining waypoints
-                myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
-                // force repaint of gpxFileList to show unsaved items
-                myEditor.refreshGPXFileList();
+                // don't do a repaint while a longrunning action is ongoing
+                // we don't want to trigger N repaints
+                // handler of action eeds to take care of repaint in this case
+                if (!isRunningAction) {
+                    // show remaining waypoints
+                    myEditor.showGPXWaypoints(myEditor.getShownGPXMeasurables(), true, false);
+                    // force repaint of gpxFileList to show unsaved items
+                    myEditor.refreshGPXFileList();
+                }
             },
             StatusBar.getInstance());
 

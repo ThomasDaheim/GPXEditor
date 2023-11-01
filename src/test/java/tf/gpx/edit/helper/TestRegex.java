@@ -26,8 +26,8 @@
 package tf.gpx.edit.helper;
 
 import java.util.regex.Pattern;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test match() and lokAt() for some complex regex
@@ -39,8 +39,8 @@ public class TestRegex {
     private void testMatchLookingAt(final Pattern pattern, final String testString, final int minLength, final boolean matchResult, final boolean lookingAtResult) {
         if (testString != null && testString.length() >= minLength) {
 //            System.out.println("testString: \"" + testString + "\"");
-            Assert.assertEquals(pattern.matcher(testString).matches(), matchResult);
-            Assert.assertEquals(pattern.matcher(testString).lookingAt(), lookingAtResult);
+            Assertions.assertEquals(pattern.matcher(testString).matches(), matchResult);
+            Assertions.assertEquals(pattern.matcher(testString).lookingAt(), lookingAtResult);
         }
     }
     
@@ -170,7 +170,7 @@ public class TestRegex {
         if (!test) {
 //            System.out.println("  and failing!");
         }
-        Assert.assertTrue("testing: " + testString + " for " + result, test);
+        Assertions.assertTrue(test, "testing: " + testString + " for " + result);
     }
     
     private void createAllLATLON1Combinations(final Pattern pattern, final String dir, final String deg, final String min, final String sec, final String subsec, final boolean doShortCombinations, final boolean result) {

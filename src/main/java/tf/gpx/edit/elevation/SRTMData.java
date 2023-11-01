@@ -26,6 +26,7 @@
 package tf.gpx.edit.elevation;
 
 import java.util.Arrays;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  *
@@ -33,7 +34,7 @@ import java.util.Arrays;
  */
 class SRTMData {
     private final static double EPSILON = 0.1d;
-    private final static double NO_DATA = Double.MIN_VALUE;
+    private final static short NO_DATA = Short.MIN_VALUE;
 
     private final String myDataFile;
     private final SRTMDataKey myDataKey;
@@ -110,16 +111,16 @@ class SRTMData {
         return numberCols;
     }
 
-    protected double getValueForCoordinate(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode) {
+    protected Pair<Boolean, Double> getValueForCoordinate(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode) {
         if (isEmpty()) {
-            return NO_DATA;
+            return Pair.of(false, IElevationProvider.NO_ELEVATION);
         }
         
         // actual calculation is the same for all SRTMData instances - so either use helper or static method
         return getValueForCoordinateStatic(latitude, longitude, avarageMode, this);
     }
 
-    private static double getValueForCoordinateStatic(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode, final SRTMData data) {
+    private static Pair<Boolean, Double> getValueForCoordinateStatic(final double latitude, final double longitude, final SRTMDataOptions.SRTMDataAverage avarageMode, final SRTMData data) {
         // https://gis.stackexchange.com/questions/43743/extracting-elevation-from-hgt-file
 //        SRTM data are distributed in two levels: SRTM1 (for the U.S. and its territories and possessions)
 //        with data sampled at one arc-second intervals in latitude and longitude, and SRTM3 (for the world)
@@ -288,7 +289,7 @@ class SRTMData {
             //System.out.println("latitude: " + latitude + ", longitude: " + longitude + ", latarcsecs: " + latarcsecs + ", lonarcsecs: " + lonarcsecs + ", rowNum: " + rowNum + ", colNum: " + colNum + ", result: " + result + ", result2: " + result2);
         }
 
-        return result == NO_DATA ? IElevationProvider.NO_ELEVATION : result;
+        return Pair.of(result != NO_DATA, result == NO_DATA ? IElevationProvider.NO_ELEVATION : result);
     }
     
     private static double distanceOnGrid(final double latDist, final double lonDist) {

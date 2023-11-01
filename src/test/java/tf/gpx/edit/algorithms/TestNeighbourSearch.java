@@ -30,10 +30,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -53,23 +53,23 @@ public class TestNeighbourSearch {
         trackPoints = gpxfile.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
         System.out.println("Starting TestCase: " + Instant.now());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         System.out.println("Ending TestCase: " + Instant.now());
     }
     
     @Test
     public void testGPXFileProperties() {
-        Assert.assertEquals(706, gpxfile.getGPXWaypoints().size());
-        Assert.assertEquals(0, gpxfile.getGPXRoutes().size());
-        Assert.assertEquals(5, gpxfile.getGPXTracks().size());
-        Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
-        Assert.assertEquals(41844, gpxfile.getCombinedGPXWaypoints(null).size());
+        Assertions.assertEquals(706, gpxfile.getGPXWaypoints().size());
+        Assertions.assertEquals(0, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(5, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(41844, gpxfile.getCombinedGPXWaypoints(null).size());
     }
     
     @Test
@@ -116,10 +116,10 @@ public class TestNeighbourSearch {
     public void testOptimalSearch() {
         INearestNeighbourSearcher searcher = NearestNeighbour.getInstance().getOptimalSearcher(
                 EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, trackPoints, NearestNeighbour.KDTREE_LIMIT-1);
-        Assert.assertEquals("Linear searcher expected", NearestNeighbour.SearchAlgorithm.Linear, searcher.getSearchAlgorithm());
+        Assertions.assertEquals(NearestNeighbour.SearchAlgorithm.Linear, searcher.getSearchAlgorithm(), "Linear searcher expected");
 
         searcher = NearestNeighbour.getInstance().getOptimalSearcher(
                 EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, trackPoints, NearestNeighbour.KDTREE_LIMIT);
-        Assert.assertEquals("KDTree searcher expected", NearestNeighbour.SearchAlgorithm.KDTree, searcher.getSearchAlgorithm());
+        Assertions.assertEquals(NearestNeighbour.SearchAlgorithm.KDTree, searcher.getSearchAlgorithm(), "KDTree searcher expected");
     }
 }

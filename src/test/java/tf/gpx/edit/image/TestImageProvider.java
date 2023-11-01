@@ -36,12 +36,12 @@ import java.util.logging.Logger;
 import javafx.geometry.BoundingBox;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.LatLonElev;
@@ -54,7 +54,7 @@ public class TestImageProvider {
     private static String currentPath;
     private static Path testpath;
     
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws IOException {
         // get current look & feel and notes path
         try {
@@ -99,7 +99,7 @@ public class TestImageProvider {
         }        
     }
     
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws IOException {
         // set path name to old value
         if (currentPath != null) {
@@ -115,11 +115,11 @@ public class TestImageProvider {
         }
     }
     
-    @Before
+    @BeforeEach
     public void setUp() {
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
     
@@ -130,20 +130,20 @@ public class TestImageProvider {
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 0.1);
-        Assert.assertEquals("One image at this location", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image at this location");
         MapImage image = images.get(0);
-        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
-        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
-        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
-        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        Assertions.assertEquals("SRTM-NE-Test.jpg", image.getFilename(), "We know your name!");
+        Assertions.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assertions.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assertions.assertEquals("Test image", image.getDescription(), "We know your description!");
         
         // wide enough for both images
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 1.0);
-        Assert.assertEquals("Two images at this location", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two images at this location");
         
         // not wide enough for both images
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 0.5);
-        Assert.assertEquals("One image in this area", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image in this area");
     }
     
     @Test
@@ -153,21 +153,21 @@ public class TestImageProvider {
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, 100);
-        Assert.assertEquals("One image at this location", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image at this location");
         MapImage image = images.get(0);
-        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
-        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
-        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
-        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        Assertions.assertEquals("SRTM-NE-Test.jpg", image.getFilename(), "We know your name!");
+        Assertions.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assertions.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assertions.assertEquals("Test image", image.getDescription(), "We know your description!");
         
         final double distance = EarthGeometry.distance(latlong, new LatLonElev(55.1, 8.1));
         // wide enough for both images
         images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.01);
-        Assert.assertEquals("Two images at this location", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two images at this location");
         
         // not wide enough for both images
         images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 0.99);
-        Assert.assertEquals("One image in this area", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image in this area");
     }
     
     @Test
@@ -177,20 +177,20 @@ public class TestImageProvider {
         
         // exactly on one of the two images
         List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
-        Assert.assertEquals("One image at this location", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image at this location");
         MapImage image = images.get(0);
-        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
-        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
-        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
-        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+        Assertions.assertEquals("SRTM-NE-Test.jpg", image.getFilename(), "We know your name!");
+        Assertions.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+        Assertions.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+        Assertions.assertEquals("Test image", image.getDescription(), "We know your description!");
         
         // wide enough for both images
         images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.1, 8.1, 0.4, 0.4));
-        Assert.assertEquals("Two images at this location", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two images at this location");
         
         // not wide enough for both images
         images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.1, 8.1, 0.399, 0.399));
-        Assert.assertEquals("One image in this area", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image in this area");
     }
     
     @Test
@@ -200,15 +200,15 @@ public class TestImageProvider {
         
         // no image
         List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 0.2, 0.2));
-        Assert.assertEquals("No image at this location", 0, images.size());
+        Assertions.assertEquals(0, images.size(), "No image at this location");
         
         // not wide enough for both images
         images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 0.7, 0.7));
-        Assert.assertEquals("One image in this area", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One image in this area");
 
         // wide enough for both images
         images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(54.4, 7.4, 1.1, 1.1));
-        Assert.assertEquals("Two images in this area", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two images in this area");
     }
     
     // the following can't be tested outside a running javafx application...
@@ -219,15 +219,15 @@ public class TestImageProvider {
 //        
 //        // exactly on one of the two images
 //        List<MapImage> images = ImageProvider.getInstance().getImagesInBoundingBoxDegree(new BoundingBox(55.4, 8.4, 0.2, 0.2));
-//        Assert.assertEquals("One image at this location", 1, images.size());
+//        Assertions.assertEquals("One image at this location", 1, images.size());
 //        MapImage image = images.get(0);
-//        Assert.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
-//        Assert.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
-//        Assert.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
-//        Assert.assertEquals("We know your description!", "Test image", image.getDescription());
+//        Assertions.assertEquals("We know your name!", "SRTM-NE-Test.jpg", image.getFilename());
+//        Assertions.assertEquals(55.5, image.getCoordinate().getLatitude(), 0.01);
+//        Assertions.assertEquals(8.5, image.getCoordinate().getLongitude(), 0.01);
+//        Assertions.assertEquals("We know your description!", "Test image", image.getDescription());
 //        
 //        final Image realImage = image.getImage();
-//        Assert.assertNotNull("We should have an image", realImage);
+//        Assertions.assertNotNull("We should have an image", realImage);
 //    }
     
     @Test
@@ -241,7 +241,7 @@ public class TestImageProvider {
         System.out.println("Short distance: " + distance);
         // wide enough for image with same latitude but not other latitiude
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateMeter(latlong, distance * 1.1);
-        Assert.assertEquals("One images at this location", 1, images.size());
+        Assertions.assertEquals(1, images.size(), "One images at this location");
     }
     
     @Test
@@ -249,31 +249,31 @@ public class TestImageProvider {
         LatLonElev latlong = new LatLonElev(55.5, 180.0);
         
         List<MapImage> images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 4.0);
-        Assert.assertEquals("No image at this location", 0, images.size());
+        Assertions.assertEquals(0, images.size(), "No image at this location");
         
         // this should find the images at 175.5 & -175.5
         // with checking only for E175.5 to W175.5 without going once around the world...
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.0);
-        Assert.assertEquals("Two image at this location", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two image at this location");
         
         // this should find the images at 175.1, 175.5 & -175.5, -175.1
         // with checking only for E175.5 to W175.5 without going once around the world...
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.6);
-        Assert.assertEquals("Four image at this location", 4, images.size());
+        Assertions.assertEquals(4, images.size(), "Four image at this location");
 
         latlong = new LatLonElev(55.5, -179.9);
         
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 4.0);
-        Assert.assertEquals("No image at this location", 0, images.size());
+        Assertions.assertEquals(0, images.size(), "No image at this location");
         
         // this should find the images at 175.1, 175.5 & -175.5
         // with checking only for E175.5 to W175.5 without going once around the world...
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.0);
-        Assert.assertEquals("Two image at this location", 2, images.size());
+        Assertions.assertEquals(2, images.size(), "Two image at this location");
         
         // this should find the images at 175.1, 175.5 & -175.5, -175.1
         // with checking only for E175.5 to W175.5 without going once around the world...
         images = ImageProvider.getInstance().getImagesNearCoordinateDegree(latlong, 5.6);
-        Assert.assertEquals("Four image at this location", 4, images.size());
+        Assertions.assertEquals(4, images.size(), "Four image at this location");
     }
 }

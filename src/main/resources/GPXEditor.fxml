@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
-<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
+<BorderPane id="borderPane" fx:id="borderPane" prefHeight="400.0" prefWidth="1093.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tf.gpx.edit.main.GPXEditor">
    <top>
       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
         <menus>
@@ -181,7 +181,7 @@
                                     <TableColumn fx:id="dateTrackCol" prefWidth="200.0" styleClass="dateCol" text="Date" />
                                     <TableColumn fx:id="nameTrackCol" prefWidth="75.0" text="Name" />
                                     <TableColumn fx:id="durationTrackCol" styleClass="durationCol" text="Duration" />
-                                    <TableColumn fx:id="lengthTrackCol" prefWidth="70.0" styleClass="lengthCol" text="Length&#10;[m]" />
+                                    <TableColumn fx:id="distTrackCol" prefWidth="70.0" styleClass="lengthCol" text="Dist.&#10;[m]" />
                                     <TableColumn fx:id="speedTrackCol" prefWidth="70.0" styleClass="speedCol" text="Speed&#10;[km/h]" />
                                     <TableColumn fx:id="heightTrackCol" prefWidth="70.0" styleClass="heightCol" text="H&#10;[m]" />
                                     <TableColumn fx:id="heightDiffTrackCol" prefWidth="70.0" styleClass="heightDiffCol" text="dH&#10;[m]" />

@@ -27,8 +27,8 @@ package tf.gpx.edit.items;
 
 import java.io.File;
 import javafx.collections.ObservableList;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -55,13 +55,13 @@ public class TestBasicEditing {
 
         final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testbasicediting.gpx"));
         
-        Assert.assertNotNull(gpxfile.getGPXMetadata());
-        Assert.assertEquals(3, gpxfile.getGPXWaypoints().size());
-        Assert.assertEquals(1, gpxfile.getGPXRoutes().size());
-        Assert.assertEquals(11, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
-        Assert.assertEquals(1, gpxfile.getGPXTracks().size());
-        Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
-        Assert.assertEquals(135, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
+        Assertions.assertNotNull(gpxfile.getGPXMetadata());
+        Assertions.assertEquals(3, gpxfile.getGPXWaypoints().size());
+        Assertions.assertEquals(1, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(11, gpxfile.getGPXRoutes().get(0).getGPXWaypoints().size());
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(135, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints().size());
     }
     
     @Test
@@ -84,23 +84,23 @@ public class TestBasicEditing {
 
         // remove last waypoint
         GPXWaypoint removed = waypoints.remove(anzahl-1);
-        Assert.assertEquals(anzahl-1, waypoints.size());
+        Assertions.assertEquals(anzahl-1, waypoints.size());
         removed.setNumber(666);
         
         // add waypoint upfront
         waypoints.add(0, removed);
-        Assert.assertEquals(anzahl, waypoints.size());
-        Assert.assertEquals(removed, waypoints.get(0));
+        Assertions.assertEquals(anzahl, waypoints.size());
+        Assertions.assertEquals(removed, waypoints.get(0));
         // check renumbering
-        Assert.assertEquals(1, waypoints.get(0).getNumber().intValue());
+        Assertions.assertEquals(1, waypoints.get(0).getNumber().intValue());
         
         // add waypoint at the end
         GPXWaypoint added = new GPXWaypoint(parent, 0, 0);
         waypoints.add(added);
-        Assert.assertEquals(anzahl+1, waypoints.size());
-        Assert.assertEquals(added, waypoints.get(anzahl));
+        Assertions.assertEquals(anzahl+1, waypoints.size());
+        Assertions.assertEquals(added, waypoints.get(anzahl));
         // check renumbering
-        Assert.assertEquals(anzahl+1, waypoints.get(anzahl).getNumber().intValue());
+        Assertions.assertEquals(anzahl+1, waypoints.get(anzahl).getNumber().intValue());
     }
     
     @Test
@@ -109,23 +109,23 @@ public class TestBasicEditing {
 
         // remove route
         final GPXRoute removed = gpxfile.getGPXRoutes().remove(0);
-        Assert.assertEquals(0, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(0, gpxfile.getGPXRoutes().size());
         
         removed.setNumber(666);
         // add waypoint upfront
         gpxfile.getGPXRoutes().add(0, removed);
-        Assert.assertEquals(1, gpxfile.getGPXRoutes().size());
-        Assert.assertEquals(removed, gpxfile.getGPXRoutes().get(0));
+        Assertions.assertEquals(1, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(removed, gpxfile.getGPXRoutes().get(0));
         // check renumbering
-        Assert.assertEquals(1, gpxfile.getGPXRoutes().get(0).getNumber().intValue());
+        Assertions.assertEquals(1, gpxfile.getGPXRoutes().get(0).getNumber().intValue());
         
         // add route at the end
         final GPXRoute added = new GPXRoute(gpxfile);
         gpxfile.getGPXRoutes().add(added);
-        Assert.assertEquals(2, gpxfile.getGPXRoutes().size());
-        Assert.assertEquals(added, gpxfile.getGPXRoutes().get(1));
+        Assertions.assertEquals(2, gpxfile.getGPXRoutes().size());
+        Assertions.assertEquals(added, gpxfile.getGPXRoutes().get(1));
         // check renumbering
-        Assert.assertEquals(2, gpxfile.getGPXRoutes().get(1).getNumber().intValue());
+        Assertions.assertEquals(2, gpxfile.getGPXRoutes().get(1).getNumber().intValue());
     }
     
     @Test
@@ -134,23 +134,23 @@ public class TestBasicEditing {
 
         // remove route
         final GPXTrack removed = gpxfile.getGPXTracks().remove(0);
-        Assert.assertEquals(0, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(0, gpxfile.getGPXTracks().size());
         
         removed.setNumber(666);
         // add waypoint upfront
         gpxfile.getGPXTracks().add(0, removed);
-        Assert.assertEquals(1, gpxfile.getGPXTracks().size());
-        Assert.assertEquals(removed, gpxfile.getGPXTracks().get(0));
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(removed, gpxfile.getGPXTracks().get(0));
         // check renumbering
-        Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getNumber().intValue());
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().get(0).getNumber().intValue());
         
         // add route at the end
         final GPXTrack added = new GPXTrack(gpxfile);
         gpxfile.getGPXTracks().add(added);
-        Assert.assertEquals(2, gpxfile.getGPXTracks().size());
-        Assert.assertEquals(added, gpxfile.getGPXTracks().get(1));
+        Assertions.assertEquals(2, gpxfile.getGPXTracks().size());
+        Assertions.assertEquals(added, gpxfile.getGPXTracks().get(1));
         // check renumbering
-        Assert.assertEquals(2, gpxfile.getGPXTracks().get(1).getNumber().intValue());
+        Assertions.assertEquals(2, gpxfile.getGPXTracks().get(1).getNumber().intValue());
     }
     
     @Test
@@ -159,22 +159,22 @@ public class TestBasicEditing {
 
         // remove route
         final GPXTrackSegment removed = gpxfile.getGPXTracks().get(0).getGPXTrackSegments().remove(0);
-        Assert.assertEquals(0, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(0, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
         
         removed.setNumber(666);
         // add waypoint upfront
         gpxfile.getGPXTracks().get(0).getGPXTrackSegments().add(0, removed);
-        Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
-        Assert.assertEquals(removed, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0));
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(removed, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0));
         // check renumbering
-        Assert.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getNumber().intValue());
+        Assertions.assertEquals(1, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getNumber().intValue());
         
         // add route at the end
         final GPXTrackSegment added = new GPXTrackSegment(gpxfile.getGPXTracks().get(0));
         gpxfile.getGPXTracks().get(0).getGPXTrackSegments().add(added);
-        Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
-        Assert.assertEquals(added, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1));
+        Assertions.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().size());
+        Assertions.assertEquals(added, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1));
         // check renumbering
-        Assert.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getNumber().intValue());
+        Assertions.assertEquals(2, gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(1).getNumber().intValue());
     }
 }

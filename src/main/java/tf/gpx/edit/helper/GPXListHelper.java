@@ -28,8 +28,10 @@ package tf.gpx.edit.helper;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -59,37 +61,43 @@ public class GPXListHelper {
     }
 
     // https://stackoverflow.com/a/27646247
+    // TFE, 20230123: assumptions:
+    // the individual sublists "lists" all contain elements of the same type
+    // the type can be different between sublists of "lists"
+    // changes come in for only one type of "T extends GPXLineItem" per listener call
     public static <T extends GPXLineItem> ObservableList<T> concatObservableList(ObservableList<T> into, List<ObservableList<T>> lists) {
         final ObservableList<T> list = into;
         for (ObservableList<T> l : lists) {
             list.addAll(l);
             l.addListener((ListChangeListener.Change<? extends T> c) -> {
+//                System.out.println("ListChange list: " + list.size());
+//                System.out.println("ListChange l: " + l.size());
                 while (c.next()) {
                     if (c.wasAdded()) {
-                        // find index where to add - last index of that type
-                        T lastItem = null;
-                        for (T item : c.getAddedSubList()) {
-                            final GPXLineItem parent = item.getParent();
-                            // TFE, 20220103: speed up finding the last element of a list
-//                            T lastT = list.stream().filter((t) -> {
-//                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
-//                                    }).reduce((a, b) -> b).orElse(null);
-                            T lastT;
-                            // only find last item again if type changes
-                            if (lastItem == null || !GPXLineItemHelper.isSameTypeAs(parent, lastItem.getParent())) {
-                                // https://stackoverflow.com/a/61085463
-                                final Deque<T> deque = new ArrayDeque<>();
-                                list.stream().forEach(deque::push);
-                                lastT = deque.stream().filter((t) -> {
-                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
-                                    }).findFirst().orElse(null);
+//                        System.out.println("c.wasAdded(): " + c.getAddedSize());
+                        // TFE, 20230123: split list by item type and use addall for each sublist
+                        final Map<GPXLineItem.GPXLineItemType, Set<T>> addMap = new HashMap<>();
+                        c.getAddedSubList().stream().forEach((item) -> {
+                            final GPXLineItem.GPXLineItemType parentType = item.getParent().getType();
+                            if (addMap.containsKey(parentType)) {
+                                addMap.get(parentType).add(item);
                             } else {
-                                // if parent type doesn't change lastItem is the lastT
-                                lastT = lastItem;
+                                final Set<T> addSet = new LinkedHashSet<>();
+                                addSet.add(item);
+                                addMap.put(parentType, addSet);
                             }
-
-                            // TFE, 20220103: further speedup would be possible if we collect all items with same parent type
-                            // in temporary list (LinkedHashSet?) and only do addAll here once it changes
+                        });
+                        
+                        // find index where to add - last index of that type
+                        for (GPXLineItem.GPXLineItemType parentType : addMap.keySet()) {
+                            // TFE, 20220103: speed up finding the last element of a list
+                            // https://stackoverflow.com/a/61085463
+                            final Deque<T> deque = new ArrayDeque<>();
+                            list.stream().forEach(deque::push);
+                            final T lastT = deque.stream().filter((t) -> {
+                                    return GPXLineItemHelper.isSameTypeAs(parentType, t.getParent().getType());
+                                }).findFirst().orElse(null);
+                            
                             int addIndex;
                             if (lastT != null) {
                                 addIndex = list.indexOf(lastT) + 1;
@@ -97,17 +105,56 @@ public class GPXListHelper {
                                 // if that type isn't there yet add in front of all
                                 addIndex = 0;
                             }
-                            list.add(addIndex, item);
-
-                            // keep track of last item we handled
-                            lastItem = item;
+//                            System.out.println("c.wasAdded(): adding " + addMap.get(parentType).size() + " items to parent type " + parentType.name() + " add index " + addIndex);
+                            list.addAll(addIndex, addMap.get(parentType));
                         }
+                        
+//                        // find index where to add - last index of that type
+//                        T lastItem = null;
+//                        for (T item : c.getAddedSubList()) {
+//                            final GPXLineItem parent = item.getParent();
+//                            // TFE, 20220103: speed up finding the last element of a list
+////                            T lastT = list.stream().filter((t) -> {
+////                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
+////                                    }).reduce((a, b) -> b).orElse(null);
+//                            T lastT;
+//                            // only find last item again if type changes
+//                            if (lastItem == null || !GPXLineItemHelper.isSameTypeAs(parent, lastItem.getParent())) {
+//                                // https://stackoverflow.com/a/61085463
+//                                final Deque<T> deque = new ArrayDeque<>();
+//                                list.stream().forEach(deque::push);
+//                                lastT = deque.stream().filter((t) -> {
+//                                        return GPXLineItemHelper.isSameTypeAs(parent, t.getParent());
+//                                    }).findFirst().orElse(null);
+//                            } else {
+//                                // if parent type doesn't change lastItem is the lastT
+//                                lastT = lastItem;
+//                            }
+//
+//                            // TFE, 20220103: further speedup would be possible if we collect all items with same parent type
+//                            // in temporary list (LinkedHashSet?) and only do addAll here once it changes
+//                            int addIndex;
+//                            if (lastT != null) {
+//                                addIndex = list.indexOf(lastT) + 1;
+//                            } else {
+//                                // if that type isn't there yet add in front of all
+//                                addIndex = 0;
+//                            }
+//                            list.add(addIndex, item);
+//
+//                            // keep track of last item we handled
+//                            lastItem = item;
+//                        }
                     }
                     if (c.wasRemoved()) {
+//                        System.out.println("c.wasRemoved(): " + c.getRemovedSize());
                         // performance: convert to hashset since its contains() is way faster
                         list.removeAll(new LinkedHashSet<>(c.getRemoved()));
                     }
                 }
+//                System.out.println("ListChange l: " + l.size());
+//                System.out.println("ListChange list: " + list.size());
+//                System.out.println("");
             });
         }
 

@@ -154,6 +154,11 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
     }
     
     @Override
+    public double getYValue(final GPXWaypoint gpxWaypoint) {
+        return gpxWaypoint.getSpeed();
+    }
+
+    @Override
     public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
         final double result = gpxWaypoint.getSpeed();
         

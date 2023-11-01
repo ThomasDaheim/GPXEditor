@@ -70,7 +70,7 @@ public class AxisTic extends Cylinder implements IDirection {
             final double transX, final double transY, final double transZ, 
             final Axis axis, 
             final double thickness, final double length,
-            final int value, final String unit, final ContentDisplay contentDisplay,
+            final String value, final String unit, final ContentDisplay contentDisplay,
             final int fontSize) {
         final AxisTic ticCylinder = new AxisTic(thickness, length);
         ticCylinder.setMaterial(new PhongMaterial(Color.BLACK));
@@ -86,7 +86,7 @@ public class AxisTic extends Cylinder implements IDirection {
         ticCylinder.axis = axis;
         ticCylinder.addAxisListener();
 
-        String labelText = String.valueOf(value) + unit;
+        String labelText = value + unit;
         final Label label = new Label(labelText);
         label.setFont(new Font("Arial", fontSize));
         label.setTextAlignment(TextAlignment.CENTER);
@@ -122,5 +122,4 @@ public class AxisTic extends Cylinder implements IDirection {
             }
         });
     }
-
 }

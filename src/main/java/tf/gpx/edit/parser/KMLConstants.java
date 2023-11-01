@@ -59,6 +59,8 @@ public interface KMLConstants {
     final String VALUE_NO_VALUE = "---";
     final String VALUE_SEPARATOR = ",";
     final String LINE_SEPARATOR = "\n";
+    final String COORD_SEPARATOR = "[ \n]";
+    final String TIME_SEPARATOR = LINE_SEPARATOR;
 
     // TFE, 20200909: use garmin icons from gpsvisualizer
     // https://www.gpsvisualizer.com/google_maps/icons/garmin/

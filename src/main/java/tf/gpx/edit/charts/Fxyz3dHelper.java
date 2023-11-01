@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.charts;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
@@ -49,13 +50,13 @@ public class Fxyz3dHelper {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static Fxyz3dHelper INSTANCE = new Fxyz3dHelper();
     
-    private final static double SPHERE_SIZE = 0.05;
-    private final static boolean SPHERE_VISIBLE = false;
     private final static double AXES_DIST = 1.025;
-    private final static double AXES_THICKNESS = 0.005;
+    private final static double AXES_THICKNESS = 0.004;
     private final static double TIC_LENGTH = 10*AXES_THICKNESS;
     private final static int AXIS_FONT_SIZE = 16;
-
+    
+    private final static DecimalFormat AXIS_FORMATTER = new DecimalFormat("#.##");
+    
     private Fxyz3dHelper() {
         // Exists only to defeat instantiation.
     }
@@ -67,8 +68,13 @@ public class Fxyz3dHelper {
     public Group getAxes(
             final Bounds3D dataBounds, 
             final double elevationScaling,
+            // TFE, 20230205: scale axis thickness, ... with size of viewport
+            final double lineScaling,
             final Map<Shape3D, Label> shape3DToLabel) {
         // org.fxyz3d.scene.Axes
+        
+        final double axesThickness = AXES_THICKNESS * lineScaling;
+        final double ticLength = TIC_LENGTH * lineScaling * lineScaling;
         
         final Group result = new Group();
 
@@ -77,95 +83,109 @@ public class Fxyz3dHelper {
         final double latCenter = (dataBounds.getMaxLat() + dataBounds.getMinLat()) / 2d;
         final double lonCenter = (dataBounds.getMaxLon() + dataBounds.getMinLon()) / 2d;
 
-        final int startLat = (int) Math.ceil(dataBounds.getMinLat());
-        final int endLat = (int) Math.ceil(dataBounds.getMaxLat())-1;
-        final double lonShift = (dataBounds.getMaxLon()-lonCenter) * AXES_DIST;
-        
-        final int startLon = (int) Math.ceil(dataBounds.getMinLon());
-        final int endLon = (int) Math.ceil(dataBounds.getMaxLon())-1;
+        // TODO: negative values
+        final int startLat = (int) Math.floor(dataBounds.getMinLat());
+        final int endLat = (int) Math.ceil(dataBounds.getMaxLat());
         final double latShift = (latCenter-dataBounds.getMinLat()) * AXES_DIST;
         
-        // don't start with a tic at zero
-        final int startElev = Math.max((int) Math.round(dataBounds.getMinElev()/elevationScaling/100d) * 100, 200);
+        final int startLon = (int) Math.floor(dataBounds.getMinLon());
+        final int endLon = (int) Math.ceil(dataBounds.getMaxLon());
+        final double lonShift = (dataBounds.getMaxLon()-lonCenter) * AXES_DIST;
+        
+        final int startElev = (int) Math.round(dataBounds.getMinElev()/elevationScaling/100d) * 100;
         final int endElev = (int) Math.round(dataBounds.getMaxElev()/elevationScaling/100d) * 100;
 
         // add lat axis for min/max values
-        Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        Axis lataxis1 = Axis.getAxisLine(lonShift, 0, 0, Axis.Direction.Z, axesThickness, latDist*AXES_DIST);
         result.getChildren().add(lataxis1);
-        Axis lataxis2 = Axis.getAxisLine(-lonShift, 0, 0, Axis.Direction.Z, AXES_THICKNESS, latDist*AXES_DIST);
+        Axis lataxis2 = Axis.getAxisLine(-lonShift, 0, 0, Axis.Direction.Z, axesThickness, latDist*AXES_DIST);
         result.getChildren().add(lataxis2);
 
         // add lon axis for min/max values
-        Axis lonaxis1 = Axis.getAxisLine(0, 0, latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        Axis lonaxis1 = Axis.getAxisLine(0, 0, latShift, Axis.Direction.X, axesThickness, lonDist*AXES_DIST);
         result.getChildren().add(lonaxis1);
-        Axis lonaxis2 = Axis.getAxisLine(0, 0, -latShift, Axis.Direction.X, AXES_THICKNESS, lonDist*AXES_DIST);
+        Axis lonaxis2 = Axis.getAxisLine(0, 0, -latShift, Axis.Direction.X, axesThickness, lonDist*AXES_DIST);
         result.getChildren().add(lonaxis2);
         
         // lat lines & tics
-        for (int i = startLat; i<= endLat; i++) {
-//            System.out.println("Adding Sphere for lat: " + i);
-//            final Sphere sphere = new Sphere(SPHERE_SIZE);
-//            sphere.setMaterial(new PhongMaterial(Color.YELLOW));
-//            sphere.setTranslateX(lonShift);
-//            sphere.setTranslateZ(latCenter-i);
-//            sphere.setVisible(SPHERE_VISIBLE);
-//            result.getChildren().addAll(sphere);
+        // TFE, 20230212: in case endLat - startLat = SOME_SMALL_NUMBER we need finer stepping
+        float latValue = startLat;
+        float increment = 1;
+        // we might not have one tic in the range...
+        if (Math.abs(dataBounds.getMaxLat() - dataBounds.getMinLat()) <= 0.1) {
+            increment = 0.01f;
+        } else if (Math.abs(dataBounds.getMaxLat() - dataBounds.getMinLat()) <= 1) {
+            increment = 0.1f;
+        }
+        while (latValue <= endLat) {
+            // only add axis tic if inside bounding box
+            if ((latValue >= dataBounds.getMinLat()) && (latValue <= dataBounds.getMaxLat())) {
+                // add axis line across whole lon range for this lat
+                result.getChildren().add(
+                        Axis.getAxisLine(0, 0, latCenter-latValue, Axis.Direction.X, axesThickness / 2d, lonDist*AXES_DIST));
 
-            // add axis line across whole lon range for this lat
-            result.getChildren().add(
-                    Axis.getAxisLine(0, 0, latCenter-i, Axis.Direction.X, AXES_THICKNESS / 2d, lonDist*AXES_DIST));
+                // add tic here as well
+                result.getChildren().add(
+                        AxisTic.getTicAndLabel(shape3DToLabel, 
+                                lonShift, -ticLength*0.5, latCenter-latValue, lataxis1, axesThickness, ticLength, 
+                                AXIS_FORMATTER.format(latValue), LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
 
-            // add tic here as well
-            result.getChildren().add(
-                    AxisTic.getTicAndLabel(shape3DToLabel, 
-                            lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
-
-            // add tic here as well
-            result.getChildren().add(
-                    AxisTic.getTicAndLabel(shape3DToLabel, 
-                            -lonShift, -TIC_LENGTH*0.5, latCenter-i, lataxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                // add tic here as well
+                result.getChildren().add(
+                        AxisTic.getTicAndLabel(shape3DToLabel, 
+                                -lonShift, -ticLength*0.5, latCenter-latValue, lataxis2, axesThickness, ticLength, 
+                                AXIS_FORMATTER.format(latValue), LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+            }
+            
+            latValue += increment;
         }
         
         // lon lines & tics
-        for (int i = startLon; i<= endLon; i++) {
-//            System.out.println("Adding Sphere for lon: " + i);
-//            final Sphere sphere = new Sphere(SPHERE_SIZE);
-//            sphere.setMaterial(new PhongMaterial(Color.SKYBLUE));
-//            sphere.setTranslateX(i-lonCenter);
-//            sphere.setTranslateZ(latShift);
-//            sphere.setVisible(SPHERE_VISIBLE);
-//            result.getChildren().addAll(sphere);
-            
-            // add axis line across whole lat range for this lon
-            result.getChildren().add(
-                    Axis.getAxisLine(i-lonCenter, 0, 0, Axis.Direction.Z, AXES_THICKNESS / 2d, latDist*AXES_DIST));
+        // TFE, 20230212: in case endLon - startLon = SOME_SMALL_NUMBER we need finer stepping
+        float lonValue = startLon;
+        increment = 1;
+        if (Math.abs(dataBounds.getMaxLon() - dataBounds.getMinLon()) <= 0.1) {
+            increment = 0.01f;
+        } else if (Math.abs(dataBounds.getMaxLon() - dataBounds.getMinLon()) <= 1) {
+            increment = 0.1f;
+        }
+        while (lonValue <= endLon) {
+            // only add axis tic if inside bounding box
+            if ((lonValue >= dataBounds.getMinLon()) && (lonValue <= dataBounds.getMaxLon())) {
+                // add axis line across whole lat range for this lon
+                result.getChildren().add(
+                        Axis.getAxisLine(lonValue-lonCenter, 0, 0, Axis.Direction.Z, axesThickness / 2d, latDist*AXES_DIST));
 
-            // add tic here as well
-            result.getChildren().add(
-                    AxisTic.getTicAndLabel(shape3DToLabel, 
-                            i-lonCenter, -TIC_LENGTH*0.5, latShift, lonaxis1, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+                // add tic here as well
+                result.getChildren().add(
+                        AxisTic.getTicAndLabel(shape3DToLabel, 
+                                lonValue-lonCenter, -ticLength*0.5, latShift, lonaxis1, axesThickness, ticLength, 
+                                AXIS_FORMATTER.format(lonValue), LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+
+                // add tic here as well
+                result.getChildren().add(
+                        AxisTic.getTicAndLabel(shape3DToLabel, 
+                                lonValue-lonCenter, -ticLength*0.5, -latShift, lonaxis2, axesThickness, ticLength, 
+                                AXIS_FORMATTER.format(lonValue), LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+            }
             
-            // add tic here as well
-            result.getChildren().add(
-                    AxisTic.getTicAndLabel(shape3DToLabel, 
-                            i-lonCenter, -TIC_LENGTH*0.5, -latShift, lonaxis2, AXES_THICKNESS, TIC_LENGTH, 
-                            i, LatLonHelper.DEG_CHAR_1, ContentDisplay.TOP, AXIS_FONT_SIZE));
+            lonValue += increment;
         }
 
-        // elevation lines & tics
-        final Axis elevaxis = Axis.getAxisLine(lonShift, dataBounds.getMaxElev()/2d, -latShift, Axis.Direction.Y, AXES_THICKNESS, dataBounds.getMaxElev());
-        result.getChildren().add(elevaxis);
-        // TFE, 20220717: limit number of lines & tics for large elevation differences
-        final int elevIncr = (endElev - startElev) / 5;
-        for (int i = startElev; i<= endElev; i = i+elevIncr) {
-            // add tic here as well
-            result.getChildren().add(
-                    AxisTic.getTicAndLabel(shape3DToLabel, 
-                            lonShift + TIC_LENGTH*0.5, Double.valueOf(i)*elevationScaling, -latShift, elevaxis, AXES_THICKNESS, TIC_LENGTH, 
-                            i, " m", ContentDisplay.LEFT, AXIS_FONT_SIZE));
+        // make sure we have any tics at all and not an invinite loop...
+        if (endElev > startElev) {
+            // elevation lines & tics
+             final Axis elevaxis = Axis.getAxisLine(lonShift, endElev*elevationScaling/2d, -latShift, Axis.Direction.Y, axesThickness, endElev*elevationScaling);
+            result.getChildren().add(elevaxis);
+            // TFE, 20220717: limit number of lines & tics for large elevation differences
+            final int elevIncr = (endElev - startElev) / 5;
+            for (int i = startElev; i<= endElev; i += elevIncr) {
+                // add tic here as well
+                result.getChildren().add(
+                        AxisTic.getTicAndLabel(shape3DToLabel, 
+                                lonShift + ticLength*0.5, Double.valueOf(i)*elevationScaling, -latShift, elevaxis, axesThickness, ticLength, 
+                                AXIS_FORMATTER.format(i), " m", ContentDisplay.LEFT, AXIS_FONT_SIZE));
+            }
         }
 
         return result;

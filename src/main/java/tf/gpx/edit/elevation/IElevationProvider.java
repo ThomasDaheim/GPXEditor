@@ -27,11 +27,12 @@ package tf.gpx.edit.elevation;
 
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Interface for all services thart provide elevations.
+ * Interface for all services that provide elevations.
  * 
  * Implementations:
  * - SRTMDataStore
@@ -46,28 +47,28 @@ public interface IElevationProvider {
     
     // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
     // even so this code makes more calls for individual waypoints...
-    default Double getElevationForCoordinate(final double latitude, final double longitude) {
-        final List<Double> results = getElevationsForCoordinates(Arrays.asList(new LatLonElev(latitude, longitude)));
+    default Pair<Boolean, Double> getElevationForCoordinate(final double latitude, final double longitude) {
+        final List<Pair<Boolean, Double>> results = getElevationsForCoordinates(Arrays.asList(new LatLonElev(latitude, longitude)));
         
         if (!results.isEmpty()) {
-            return results.get(0);
+            return Pair.of(results.get(0).getLeft(), results.get(0).getRight());
         } else {
-            return NO_ELEVATION;
+            return Pair.of(false, NO_ELEVATION);
         }
     }
 
     // hard to believe but true: the default use case is to get elevations for a line item or a whole gpx-file
     // even so this code makes more calls for individual waypoints...
-    default Double getElevationForCoordinate(final IGeoCoordinate coord) {
-        final List<Double> results = getElevationsForCoordinates(Arrays.asList(coord));
+    default Pair<Boolean, Double> getElevationForCoordinate(final IGeoCoordinate coord) {
+        final List<Pair<Boolean, Double>> results = getElevationsForCoordinates(Arrays.asList(coord));
         
         if (!results.isEmpty()) {
-            return results.get(0);
+            return Pair.of(results.get(0).getLeft(), results.get(0).getRight());
         } else {
-            return NO_ELEVATION;
+            return Pair.of(false, NO_ELEVATION);
         }
     }
     
     // the only thing you need to implement - list of coordinates
-    List<Double> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords);
+    List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords);
 }

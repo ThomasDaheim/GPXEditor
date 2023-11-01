@@ -36,7 +36,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import tf.gpx.edit.values.EditGPXWaypoint;
+import tf.gpx.edit.values.EditGPXWaypoints;
 
 /**
  *
@@ -119,7 +119,7 @@ public class UpdateWaypointInformationAction extends GPXLineItemAction<GPXWaypoi
     }
     
     private static boolean doSetValue(final String value) {
-        return (value != null && !EditGPXWaypoint.KEEP_MULTIPLE_VALUES.equals(value));
+        return (value != null && !EditGPXWaypoints.KEEP_MULTIPLE_VALUES.equals(value));
     }
 
     private void setMultipleProperties() {
@@ -131,7 +131,7 @@ public class UpdateWaypointInformationAction extends GPXLineItemAction<GPXWaypoi
             setMultipleStringValues(myDatapoint.getName(), GPXWaypoint::setName);
         }
         // value has changed: 1) was set and has changed OR 2) was null and has changed from default
-        // this logic is already done in EditGPXWaypoint.getWaypointData() - so if a value is here set it!
+        // this logic is already done in EditGPXWaypoints.getWaypointData() - so if a value is here set it!
         if (myDatapoint.getSym() != null) {
             setMultipleSymbols(myDatapoint.getSym());
         }

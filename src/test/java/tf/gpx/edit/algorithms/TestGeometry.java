@@ -30,10 +30,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
@@ -55,7 +55,7 @@ public class TestGeometry {
     
     private boolean doSystemOut = true;
     
-    @Before
+    @BeforeEach
     public void setUp() {
         // see http://www.sunearthtools.com/tools/distance.php
         // http://www.gcmap.com/
@@ -181,7 +181,7 @@ public class TestGeometry {
         testPointTriples.add(new TestPointTriple("Real life #1", 35.219181, 80.930611, 35.219153, 80.930619, 35.219119, 80.930625, 0.5255499114173516, 0.2751000559871945));
     }
     
-    @After
+    @AfterEach
     public void tearDown() {
     }
     
@@ -192,7 +192,7 @@ public class TestGeometry {
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Bearing: " + EarthGeometry.bearing(pair.p1, pair.p2) + " - " + pair.bearingRef);
-            Assert.assertEquals(EarthGeometry.bearing(pair.p1, pair.p2), pair.bearingRef, DELTA_ANGLE);
+            Assertions.assertEquals(EarthGeometry.bearing(pair.p1, pair.p2), pair.bearingRef, DELTA_ANGLE);
         }
     }
     
@@ -201,10 +201,10 @@ public class TestGeometry {
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distance(pair.p1, pair.p2) + " - " + pair.distanceHaversineRef);
-            Assert.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
             // should be same for other way around
             //System.out.println("Distance: " + EarthGeometry.distance(pair.p2, pair.p1) + " - " + pair.distanceHaversineRef);
-            Assert.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Haversine), pair.distanceHaversineRef, DELTA_DISTANCE);
         }
     }
     
@@ -213,10 +213,10 @@ public class TestGeometry {
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
 //            if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distance(pair.p1, pair.p2) + " - " + pair.distanceVincentyRef);
-            Assert.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
             // should be same for other way around
 //            if (doSystemOut) System.out.println("Distance: " + EarthGeometry.distance(pair.p2, pair.p1) + " - " + pair.distanceVincentyRef);
-            Assert.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.Vincenty), pair.distanceVincentyRef, DELTA_DISTANCE);
         }
     }
     
@@ -225,7 +225,7 @@ public class TestGeometry {
         for (TestPointPair pair : testPointPairs) {
             final double dist12 = EarthGeometry.distanceForAlgorithm(pair.p1, pair.p2, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
             final double dist21 = EarthGeometry.distanceForAlgorithm(pair.p2, pair.p1, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
-            Assert.assertEquals(dist12, dist21, DELTA_DISTANCE);
+            Assertions.assertEquals(dist12, dist21, DELTA_DISTANCE);
         }
     }
     
@@ -277,10 +277,10 @@ public class TestGeometry {
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);
             //if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircle(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.distanceToGreatCircleRef);
-            Assert.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p2, triple.p3, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p2, triple.p3, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
             // should be same for other way around
             //System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircle(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
-            Assert.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p3, triple.p2, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p3, triple.p2, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
         }
     }
     
@@ -291,12 +291,12 @@ public class TestGeometry {
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);
             //if (doSystemOut) System.out.println("  Area: " + EarthGeometry.triangleArea(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.areaRef);
-            Assert.assertEquals(EarthGeometry.triangleArea(triple.p1, triple.p2, triple.p3, 0.0), triple.areaRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.triangleArea(triple.p1, triple.p2, triple.p3, 0.0), triple.areaRef, DELTA_DISTANCE);
             // should be cyclic
             //if (doSystemOut) System.out.println("  Area: " + EarthGeometry.triangleArea(triple.p3, triple.p1, triple.p2, 0.0) + " - " + triple.areaRef);
             //if (doSystemOut) System.out.println("  Area: " + EarthGeometry.triangleArea(triple.p2, triple.p3, triple.p1, 0.0) + " - " + triple.areaRef);
-            Assert.assertEquals(EarthGeometry.triangleArea(triple.p3, triple.p1, triple.p2, 0.0), triple.areaRef, DELTA_DISTANCE);
-            Assert.assertEquals(EarthGeometry.triangleArea(triple.p2, triple.p3, triple.p1, 0.0), triple.areaRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.triangleArea(triple.p3, triple.p1, triple.p2, 0.0), triple.areaRef, DELTA_DISTANCE);
+            Assertions.assertEquals(EarthGeometry.triangleArea(triple.p2, triple.p3, triple.p1, 0.0), triple.areaRef, DELTA_DISTANCE);
             //System.out.println("");
         }
     }
@@ -305,33 +305,33 @@ public class TestGeometry {
     public void testDestinationPoint() {
         LatLonElev center = new LatLonElev(51.47788, -0.00147);
         LatLonElev destination = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(center, 7794.0, 300.7));
-        Assert.assertEquals(51.5136, destination.getLatitude(), DELTA_LATLON);
-        Assert.assertEquals(-0.0982882, destination.getLongitude(), DELTA_LATLON);
-        Assert.assertEquals(7794, EarthGeometry.distance(center, destination), DELTA_LATLON);
-        Assert.assertEquals(300.7, EarthGeometry.bearing(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(51.5136, destination.getLatitude(), DELTA_LATLON);
+        Assertions.assertEquals(-0.0982882, destination.getLongitude(), DELTA_LATLON);
+        Assertions.assertEquals(7794, EarthGeometry.distance(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(300.7, EarthGeometry.bearing(center, destination), DELTA_LATLON);
 
         // Muenchen nach Meran
         center = new LatLonElev(48.13743, 11.57549);
         destination = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(center, 166.1516 * 1000.0, 191.05));
-        Assert.assertEquals(46.671294, destination.getLatitude(), DELTA_LATLON);
-        Assert.assertEquals(11.15839, destination.getLongitude(), DELTA_LATLON);
-        Assert.assertEquals(166.1516 * 1000.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
-        Assert.assertEquals(191.05, EarthGeometry.bearing(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(46.671294, destination.getLatitude(), DELTA_LATLON);
+        Assertions.assertEquals(11.15839, destination.getLongitude(), DELTA_LATLON);
+        Assertions.assertEquals(166.1516 * 1000.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(191.05, EarthGeometry.bearing(center, destination), DELTA_LATLON);
 
         // Rio nach Meran
         center = new LatLonElev(-22.9068, -43.1729);
         destination = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(center, 9465.0057 * 1000.0, 35.4));
-        Assert.assertEquals(45.629283, destination.getLatitude(), DELTA_LATLON);
-        Assert.assertEquals(12.450465, destination.getLongitude(), DELTA_LATLON);
-        Assert.assertEquals(9465.0057 * 1000.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
-        Assert.assertEquals(35.4, EarthGeometry.bearing(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(45.629283, destination.getLatitude(), DELTA_LATLON);
+        Assertions.assertEquals(12.450465, destination.getLongitude(), DELTA_LATLON);
+        Assertions.assertEquals(9465.0057 * 1000.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(35.4, EarthGeometry.bearing(center, destination), DELTA_LATLON);
 
         // equator to north pole
         center = new LatLonElev(0.0, 0.0);
         destination = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(center, EARTH_CIRCUMFENCE / 4.0, 0.0));
-        Assert.assertEquals(90.000, destination.getLatitude(), DELTA_LATLON);
-        Assert.assertEquals(0.0, destination.getLongitude(), DELTA_LATLON);
-        Assert.assertEquals(EARTH_CIRCUMFENCE / 4.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
-        Assert.assertEquals(0.0, EarthGeometry.bearing(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(90.000, destination.getLatitude(), DELTA_LATLON);
+        Assertions.assertEquals(0.0, destination.getLongitude(), DELTA_LATLON);
+        Assertions.assertEquals(EARTH_CIRCUMFENCE / 4.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
+        Assertions.assertEquals(0.0, EarthGeometry.bearing(center, destination), DELTA_LATLON);
     }
 }

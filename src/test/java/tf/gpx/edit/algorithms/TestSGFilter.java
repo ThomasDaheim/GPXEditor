@@ -26,8 +26,8 @@
 package tf.gpx.edit.algorithms;
 
 import mr.go.sgfilter.SGFilter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test of the savitzky-golay filter implementation.
@@ -75,13 +75,13 @@ public class TestSGFilter {
 
     private void assertCoeffsEqual(double[] coeffs, double[] tabularCoeffs) {
         for (int i = 0; i < tabularCoeffs.length; i++) {
-            Assert.assertEquals(tabularCoeffs[i], coeffs[i], 0.001);
+            Assertions.assertEquals(tabularCoeffs[i], coeffs[i], 0.001);
         }
     }
     
     private void assertResultsEqual(float[] results, double[] real) {
         for (int i = 0; i < real.length; i++) {
-            Assert.assertEquals(real[i], results[i], 0.1);
+            Assertions.assertEquals(real[i], results[i], 0.1);
         }
     }
     
@@ -90,17 +90,17 @@ public class TestSGFilter {
         // test case from https://github.com/swallez/savitzky-golay-filter/blob/master/tests/mr/go/sgfilter/tests/FilterTestCase.java
         double[] coeffs = SGFilter.computeSGCoefficients(5, 5, 2);
         double[] tabularCoeffs = new double[]{-0.084, 0.021, 0.103, 0.161, 0.196, 0.207, 0.196, 0.161, 0.103, 0.021, -0.084};
-        Assert.assertEquals(11, coeffs.length);
+        Assertions.assertEquals(11, coeffs.length);
         assertCoeffsEqual(coeffs, tabularCoeffs);
         
         coeffs = SGFilter.computeSGCoefficients(5, 5, 4);
         tabularCoeffs = new double[]{0.042, -0.105, -0.023, 0.140, 0.280, 0.333, 0.280, 0.140, -0.023, -0.105, 0.042};
-        Assert.assertEquals(11, coeffs.length);
+        Assertions.assertEquals(11, coeffs.length);
         assertCoeffsEqual(coeffs, tabularCoeffs);
         
         coeffs = SGFilter.computeSGCoefficients(4, 0, 2);
         tabularCoeffs = new double[]{0.086, -0.143, -0.086, 0.257, 0.886};
-        Assert.assertEquals(5, coeffs.length);
+        Assertions.assertEquals(5, coeffs.length);
         assertCoeffsEqual(coeffs, tabularCoeffs);
     }
     
@@ -146,9 +146,9 @@ public class TestSGFilter {
         // can't have higher order than points...
         try {
             testForOrder(99);
-            Assert.assertTrue(false);
+            Assertions.assertTrue(false);
         } catch (IllegalArgumentException ex) {
-            Assert.assertTrue(true);
+            Assertions.assertTrue(true);
         }
     }
     
@@ -165,12 +165,12 @@ public class TestSGFilter {
     }
     
     private void testOrder(final double[] result, final double[] checkValues, final double rmse) {
-        Assert.assertEquals(result.length, checkValues.length);
+        Assertions.assertEquals(result.length, checkValues.length);
         
         for (int i = 0; i < result.length; i++) {
-            Assert.assertEquals(result[i], checkValues[i], 0.001);
+            Assertions.assertEquals(result[i], checkValues[i], 0.001);
         }
 
-        Assert.assertEquals(MathHelper.rmse(result, SIMPLE_DATA), rmse, 0.001);
+        Assertions.assertEquals(MathHelper.rmse(result, SIMPLE_DATA), rmse, 0.001);
     }
 }

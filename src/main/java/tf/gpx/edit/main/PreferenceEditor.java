@@ -36,13 +36,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
@@ -51,6 +55,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -79,6 +84,7 @@ import tf.gpx.edit.viewer.HeatMapPane;
 import tf.gpx.edit.viewer.TrackMap;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
+import tf.helper.javafx.ShowAlerts;
 
 /**
  *
@@ -142,6 +148,8 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField wayLblAngleText = initNumberField(new TextField(), false);
     private final TextField wayIcnSizeText = initNumberField(new TextField(), false);
     private final TextField wayThshldText = initNumberField(new TextField(), false);
+    private final CheckBox showSlopeChkBox = new CheckBox();
+    private final CheckBox showSpeedChartChkBox = new CheckBox();
 
     private final ChoiceBox<ColorMapping> heatColorChoiceBox = 
             EnumHelper.getInstance().createChoiceBox(ColorMapping.class, GPXEditorPreferences.HEATMAP_COLORMAPPING.getAsType());
@@ -158,6 +166,10 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField defaultImagePathText = initWideTextField(new TextField(), 400);
     private final TextField imageSizeText = initNumberField(new TextField(), false);
 
+    private final CheckBox validateXMLChkBox = new CheckBox();
+
+    private GPXEditor myGPXEditor;
+
     private PreferenceEditor() {
         super();
         // Exists only to defeat instantiation.
@@ -168,13 +180,18 @@ public class PreferenceEditor extends AbstractStage {
     public static PreferenceEditor getInstance() {
         return INSTANCE;
     }
+
+    public void setCallback(final GPXEditor gpxEditor) {
+        myGPXEditor = gpxEditor;
+    }
     
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getScene().getStylesheets().add(PreferenceEditor.class.getResource("/GPXEditor.min.css").toExternalForm());
 
-        setTitle("Preferences");
+        setTitle("GPX Editor - Preferences");
         initModality(Modality.APPLICATION_MODAL); 
+        getIcons().add(new Image(PreferenceEditor.class.getResourceAsStream("/GPXEditorManager.png")));
         setResizable(true);
         getGridPane().getChildren().clear();
         setHeight(800.0);
@@ -551,7 +568,7 @@ public class PreferenceEditor extends AbstractStage {
 
         rowNum++;
         // separator
-        addSectionHeader(new Label("HeightChart"), rowNum);
+        addSectionHeader(new Label("Height/Speed Charts"), rowNum);
 
         rowNum++;
         // waypointLabelSize
@@ -583,6 +600,20 @@ public class PreferenceEditor extends AbstractStage {
                 "Maxiumum distance in meters to associate waypoint with track/route - 0 for always", 
                 2, rowNum);
 
+        rowNum++;
+        // showSlope
+        addPrefInput(
+                "Show slope:", showSlopeChkBox, 
+                "Show slope on hover", 
+                0, rowNum);
+        
+        rowNum++;
+        // showSpeedChart
+        addPrefInput(
+                "Show speed chart:", showSpeedChartChkBox, 
+                "Show speed chart", 
+                0, rowNum);
+        
         rowNum++;
         // separator
         addSectionHeader(new Label("HeatMap"), rowNum);
@@ -644,14 +675,22 @@ public class PreferenceEditor extends AbstractStage {
         });
         
         rowNum++;
+        // separator
+        addSectionHeader(new Label("Files"), rowNum);
+        
+        rowNum++;
+        // check XML files
+        addPrefInput("Validate XML:", validateXMLChkBox, 
+                "Should XML files be validated on opening", 
+                0, rowNum);
+
+        rowNum++;
         // last row: save / cancel / export / import / clear buttons
         final HBox buttonBox = new HBox();
         
         final Button saveBtn = new Button("Save");
         saveBtn.setOnAction((ActionEvent arg0) -> {
             savePreferences();
-
-            close();
         });
         setActionAccelerator(saveBtn);
         buttonBox.getChildren().add(saveBtn);
@@ -686,7 +725,21 @@ public class PreferenceEditor extends AbstractStage {
         
         final Button clearBtn = new Button("Clear");
         clearBtn.setOnAction((ActionEvent arg0) -> {
-            GPXEditorPreferences.INSTANCE.clear();
+            // TFE, 20230130: additional query if you really want to do that
+            final ButtonType buttonClear = new ButtonType("Clear", ButtonBar.ButtonData.OK_DONE);
+            final ButtonType buttonCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Optional<ButtonType> doAction = 
+                    ShowAlerts.getInstance().showAlert(Alert.AlertType.CONFIRMATION,
+                            "Confirmation",
+                            "Clear preferences?",
+                            "Do you want to clear all current preferences?",
+                            buttonClear,
+                            buttonCancel);
+
+            if (doAction.isPresent() && doAction.get().equals(buttonClear)) {
+                GPXEditorPreferences.INSTANCE.clear();
+            }
+            
         });
         buttonBox.getChildren().add(clearBtn);
         HBox.setMargin(clearBtn, INSET_SMALL);
@@ -856,12 +909,16 @@ public class PreferenceEditor extends AbstractStage {
         wayLblAngleText.setText(GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsString());
         wayIcnSizeText.setText(GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsString());
         wayThshldText.setText(GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsString());
+        showSlopeChkBox.setSelected(GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType());
+        showSpeedChartChkBox.setSelected(GPXEditorPreferences.SHOW_SPEED_CHART.getAsType());
         eventText.setText(doubleToString(GPXEditorPreferences.HEATMAP_EVENTRADIUS.getAsType()));
         breakText.setText(GPXEditorPreferences.BREAK_DURATION.getAsString());
         
         EnumHelper.getInstance().selectEnum(smoothingAlgoChoiceBox, GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
         initSmoothingParms(GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
         elevationChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType());
+        
+        validateXMLChkBox.setSelected(GPXEditorPreferences.VALIDATE_XML_FORMAT.getAsType());
     }
     
     private void savePreferences() {
@@ -927,17 +984,24 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.ROUTING_API_KEY.put(routingApiKeyText.getText().trim());
         GPXEditorPreferences.ROUTING_PROFILE.put(EnumHelper.getInstance().selectedEnumChoiceBox(TrackMap.RoutingProfile.class, profileChoiceBox).name());
         GPXEditorPreferences.MATCHING_API_KEY.put(matchingApiKeyText.getText().trim());
+
         GPXEditorPreferences.WAYPOINT_ICON_SIZE.put(Math.max(Integer.valueOf("0"+wayIcnSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_SIZE.put(Math.max(Integer.valueOf("0"+wayLblSizeText.getText().trim()), 0));
         GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.put(Integer.valueOf("0"+wayLblAngleText.getText().trim()) % 360);
         GPXEditorPreferences.WAYPOINT_THRESHOLD.put(Math.max(Integer.valueOf("0"+wayThshldText.getText().trim()), 0));
+        GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.put(showSlopeChkBox.isSelected());
+        GPXEditorPreferences.SHOW_SPEED_CHART.put(showSpeedChartChkBox.isSelected());
+
         GPXEditorPreferences.CLUSTER_COUNT.put(Math.max(Integer.valueOf("0"+durationText.getText().trim()), 0));
         GPXEditorPreferences.CLUSTER_DURATION.put(Math.max(Integer.valueOf("0"+neighbourText.getText().trim()), 0));
         GPXEditorPreferences.CLUSTER_RADIUS.put(Math.max(Double.valueOf("0"+radiusText.getText().trim()), 0));
+
         GPXEditorPreferences.HEATMAP_COLORMAPPING.put(EnumHelper.getInstance().selectedEnumChoiceBox(ColorMapping.class, heatColorChoiceBox));
         GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.put(EnumHelper.getInstance().selectedEnumChoiceBox(OpacityDistribution.class, opacDistChoiceBox));
         GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(Math.max(Double.valueOf("0"+eventText.getText().trim()), 0));
 
+        GPXEditorPreferences.VALIDATE_XML_FORMAT.put(validateXMLChkBox.isSelected());
+        
         HeatMapPane.getInstance().updateSettings();
     }
     
@@ -1010,6 +1074,8 @@ public class PreferenceEditor extends AbstractStage {
             Logger.getLogger(PreferenceEditor.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        // TFE, 20230411: need to re-init the whole application since table leyouts, ... might have changed!
+        myGPXEditor.initialize(null, null);
         initPreferences();
 
         return true;

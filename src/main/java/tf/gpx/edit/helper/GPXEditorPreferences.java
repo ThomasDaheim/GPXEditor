@@ -90,6 +90,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     // TFE, 20200214: some more options for chart pane
     // inspired by https://www.gpsvisualizer.com/tutorials/profiles_in_maps.html
     CHARTSPANE_HEIGHT("chartsPaneHeight", Double.toString(0.25), Double.class),
+    // TFE, 20230917: even more options for chart pane
+    HEIGHT_CHART_SHOW_SLOPE("heightChartShowSlope", Boolean.toString(false), Boolean.class),
+    SHOW_SPEED_CHART("showSpeedChart", Boolean.toString(false), Boolean.class),
 
     WAYPOINT_ICON_SIZE("waypointIconSize", Integer.toString(18), Integer.class),
     WAYPOINT_LABEL_SIZE("waypointLabelSize", Integer.toString(10), Integer.class),
@@ -131,7 +134,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     DOUBLEEXP_GAMMA("doubleExpGamma", Double.toString(1.0), Double.class),
     HAMPEL_WINDOW("hampelWindow", Integer.toString(3), Integer.class),
     HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
-    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class);
+    DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
+    
+    VALIDATE_XML_FORMAT("validateGPXFormat", Boolean.toString(true), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences
@@ -250,6 +255,9 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     private void importPreferencesImpl(final InputStream is) {
         try {
             Preferences.importPreferences(is);
+            // TFE, 20230411: that dosn't set all the preference variables!
+            // callback to GPXEditor is required to re-init the whole application!
+            // that can't be done here but needs to be done by the caller
         } catch (InvalidPreferencesFormatException | IOException ex) {
             Logger.getLogger(GPXEditorPreferences.class.getName()).log(Level.SEVERE, null, ex);
         }

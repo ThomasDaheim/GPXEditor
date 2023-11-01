@@ -27,8 +27,8 @@ package tf.gpx.edit.algorithms;
 
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test of the single exponential smoothing implementation.
@@ -110,6 +110,6 @@ public class TestDoubleExponentialSmoother {
             803.9218592629109, 
             810.7806665005048};
 
-        Assert.assertArrayEquals(expected, prediction, 0.01);
+        Assertions.assertArrayEquals(expected, prediction, 0.01);
     }
 }

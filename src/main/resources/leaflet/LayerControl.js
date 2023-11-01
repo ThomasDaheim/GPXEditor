@@ -182,12 +182,15 @@ function baselayerchange(e) {
                 myMap.addLayer(overlaysList[index].layer);
             }
         }
-
-        // update Layer control
-        controlLayer.removeLayer(overlaysList[index].layer);
-        if (overlaysList[index].visible) {
-            controlLayer.addOverlay(overlaysList[index].layer, overlaysList[index].name);
-        }
+        
+        // TFE, 20230326: no need to mess around with the layer control after adding the enabled overlays!
+        // The Layers Control listens to what happens on the map.
+        // So if you programmatically add your overlays to the map (`map.addLayer(myOverlay)`), the Layers Control will tick its checkboxes to reflect their presence.prototype    
+//        // update Layer control
+//        controlLayer.removeLayer(overlaysList[index].layer);
+//        if (overlaysList[index].visible) {
+//            controlLayer.addOverlay(overlaysList[index].layer, overlaysList[index].name);
+//        }
     });
 
 //    jscallback.log('baseLayerChange done: ' + e.name + ', ' + currentOverlays);
@@ -215,15 +218,15 @@ function overlayChanged(e, value) {
         }
     }
 
-    logOverlays();
+//    logOverlays();
 }
 myMap.on('overlayadd', overlayadd);
 myMap.on('overlayremove', overlayremove);
 
 function logOverlays() {
-//    jscallback.log('------------------------------------------------------------------------------------------');
-//    for (var i = 0; i < baselayerList.length; i++) {
-//        jscallback.log('baselayer: ' + baselayerList[i].name + ', overlays: ' + baselayerList[i].overlays);
-//    }
-//    jscallback.log('------------------------------------------------------------------------------------------');
+    jscallback.log('------------------------------------------------------------------------------------------');
+    for (var i = 0; i < baselayerList.length; i++) {
+        jscallback.log('baselayer: ' + baselayerList[i].name + ', overlays: ' + baselayerList[i].overlays);
+    }
+    jscallback.log('------------------------------------------------------------------------------------------');
 }
