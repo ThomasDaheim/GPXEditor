@@ -87,7 +87,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         totalYAxisWidth -= YAXIS_SEP;
         
         charts.add(baseChart);
-//        charts.addAll(additionalCharts);
+        charts.addAll(additionalCharts);
         
         setAlignment(Pos.CENTER_LEFT);
         

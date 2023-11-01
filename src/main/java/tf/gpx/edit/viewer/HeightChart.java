@@ -380,8 +380,13 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
     
     @Override
+    public double getYValue(final GPXWaypoint gpxWaypoint) {
+        return gpxWaypoint.getElevation();
+    }
+
+    @Override
     public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
-        final double result = gpxWaypoint.getElevation();
+        final double result = getYValue(gpxWaypoint);
         
         if (doSetMinMax(gpxWaypoint)) {
             minHeight = Math.max(MIN_ELEVATION, Math.min(minHeight, result));

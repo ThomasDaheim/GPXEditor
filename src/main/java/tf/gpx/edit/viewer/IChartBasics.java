@@ -601,6 +601,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         return series.getName().split(DATA_SEP)[1];
     }
 
+    double getYValue(final GPXWaypoint gpxWaypoint);
     double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint);
     default boolean doSetMinMax(final GPXWaypoint gpxWaypoint) {
         // TFE, 20220904: gpx file waypoints are not relevant for the determination of min & max height!
@@ -666,12 +667,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         // init with maximum values
         double minDist = getMinimumDistance();
         double maxDist = getMaximumDistance();
-        double minHght = getMinimumYValue();
-        double maxHght = getMaximumYValue();
+        double minYValue = getMinimumYValue();
+        double maxYValue = getMaximumYValue();
 
         if (newBoundingBox != null) {
-            minHght = Double.MAX_VALUE;
-            maxHght = Double.MIN_VALUE;
+            minYValue = Double.MAX_VALUE;
+            maxYValue = Double.MIN_VALUE;
             
             boolean waypointFound = false;
             // 1. iterate over myPoints
@@ -686,9 +687,9 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                     }
                     maxDist = point.getRight().doubleValue();
                     
-                    final double elevation = waypoint.getElevation();
-                    minHght = Math.min(minHght, elevation);
-                    maxHght = Math.max(maxHght, elevation);
+                    final double yValue = getYValue(waypoint);
+                    minYValue = Math.min(minYValue, yValue);
+                    maxYValue = Math.max(maxYValue, yValue);
                     waypointFound = true;
                 }
             
@@ -701,7 +702,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             // if no waypoint in bounding box show nothing
         }
 
-        setAxes(minDist, maxDist, minHght, maxHght);
+        setAxes(minDist, maxDist, minYValue, maxYValue);
     }
     
     default void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints) {
