@@ -25,7 +25,7 @@ apply plugin: 'application'
 apply plugin: 'com.google.osdetector'
 apply plugin: 'maven-publish'
 
-// TFE, 20230914: build support for executables
+// TFE, 20230914: build support for executables - WORK IN PROGRESS
 // https://foojay.io/today/building-javafx-with-gradle/
 apply plugin: 'org.openjfx.javafxplugin'
 javafx {
