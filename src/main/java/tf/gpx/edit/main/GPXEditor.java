@@ -454,7 +454,7 @@ public class GPXEditor implements Initializable {
                     borderPane.getScene().getWindow(), 
                     helpMenu, 
                     "GPXEditor", 
-                    "v5.8", 
+                    "v5.9", 
                     "https://github.com/ThomasDaheim/GPXEditor");
         });
         
