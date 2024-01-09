@@ -42,7 +42,7 @@ import tf.helper.javafx.UnitConverter;
  * @author thomas
  */
 public class LineStyle {
-    public static final GarminColor DEFAULT_COLOR = GarminColor.DarkGray;
+    public static final GarminColor DEFAULT_COLOR = GarminColor.Black;
     public static final Double DEFAULT_OPACITY = 1.0;
     // width in gpx_style is in millimeters BUT leaflet calculates in pixel...
     // default in leaflet is 2 PIXEL
