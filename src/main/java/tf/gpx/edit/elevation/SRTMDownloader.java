@@ -462,7 +462,9 @@ public class SRTMDownloader {
                 }
 
                 // zipentries contain full path...
-                if (!entry.isDirectory()&& workFilenames.contains(entryName)) {
+                // TFE, 20240107: once we have downloaded a complete zip lets extract all and not only the missing ones!
+                // if (!entry.isDirectory()&& workFilenames.contains(entryName)) {
+                if (!entry.isDirectory()) {
                     // found you!
                     try(InputStream is = zipFile.getInputStream(entry);){
                         System.out.println("  Extracting: \"" + entryName + "\"");
