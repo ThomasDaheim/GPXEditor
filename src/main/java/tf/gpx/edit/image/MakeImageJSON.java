@@ -61,7 +61,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
  * @author thomas
  */
 public class MakeImageJSON {
-    private final static String EXIFTOOL_DEFAULT_PATH = "C:\\Program Files (x86)\\GeoSetter\\tools";
+    private final static String EXIFTOOL_DEFAULT_PATH = "C:\\Program Files (x86)\\GeoSetter beta\\tools";
     
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
 
@@ -71,7 +71,9 @@ public class MakeImageJSON {
     private final static String LINE_SEP = System.lineSeparator();
     private final static String JSON_START = "{" + LINE_SEP + "    \"images\": [" + LINE_SEP;
     private final static String JSON_END = LINE_SEP + "    ]" + LINE_SEP + "}";
-    private final static String JSON_ENTRY = "        {\"name\": \"%s\", \"lat\": \"%s\", \"lon\": \"%s\", \"desc\": \"\"}";
+    private final static String JSON_ENTRY = "        {\"name\": \"%s\", \"lat\": \"%s\", \"lon\": \"%s\", \"desc\": \"\", \"date\": \"%s\"}";
+    
+    private final static String NO_COORDS_FILENAME = "N01E001";
     
     public static void main(String[ ] args) throws Exception {
         System.out.println("MakeImageJSON started");
@@ -141,12 +143,12 @@ public class MakeImageJSON {
         op.addRawArgs("-charset", "FileName=cp1252");
         // get lat / lon unformated as number with sign
         op.addRawArgs("-n");
-        op.addRawArgs("-ext", "jpg");
-        op.addRawArgs("-ext", "gif");
+        op.extension("jpg");
+        op.extension("gif");
         // filter images with gps coordinates only
         op.addRawArgs("-if", "$gpslatitude");
         // output path + filename and gps coordinates per match
-        op.addRawArgs("-p", "$directory/$filename;$gpslatitude;$gpslongitude");
+        op.addRawArgs("-p", "$directory/$filename;$gpslatitude;$gpslongitude;$dateTimeOriginal");
         // search recursively under image path
         op.addRawArgs("-r", imagePathArg);
         
@@ -179,6 +181,10 @@ public class MakeImageJSON {
                 final String pathName = FilenameUtils.getFullPath(elements[0]);
                 final String latitude = elements[1];
                 final String longitude = elements[2];
+                String datetime = "";
+                if (elements.length == 4) {
+                    datetime = elements[3];
+                }
                 
                 if (latitude.isBlank() || longitude.isBlank()) {
                     continue;
@@ -187,14 +193,17 @@ public class MakeImageJSON {
                 // 3) get JSON file name for image
                 final String dataName = SRTMDataHelper.getNameForCoordinate(Double.valueOf(latitude), Double.valueOf(longitude));
                 
-                System.out.println("    Processing " + fileName + " with lat: " + latitude + ", lon: " + longitude + " to JSON file " + dataName + JSON_EXT);
-                
-                // 4) add image info to JSON Stringbuffer (create if not yet there)
-                if (!JSONFiles.containsKey(dataName)) {
-                    JSONFiles.put(dataName, new StringBuilder());
+                // TFE, 20240107: N01E001 are the ones with empty coordinates... lets skip them
+                if (!NO_COORDS_FILENAME.equals(dataName)) {
+                    System.out.println("    Processing " + fileName + " with lat: " + latitude + ", lon: " + longitude + " to JSON file " + dataName + JSON_EXT);
+
+                    // 4) add image info to JSON Stringbuffer (create if not yet there)
+                    if (!JSONFiles.containsKey(dataName)) {
+                        JSONFiles.put(dataName, new StringBuilder());
+                    }
+                    // store with full path
+                    addImageInfoToJSON(elements[0], latitude, longitude, datetime, JSONFiles.get(dataName));
                 }
-                // store with full path
-                addImageInfoToJSON(elements[0], latitude, longitude, JSONFiles.get(dataName));
             }
 
             // 5) finalize all JSON Stringbuffer and write to file
@@ -219,10 +228,10 @@ public class MakeImageJSON {
         System.out.println("MakeImageJSON completed.");
     }
     
-    static private void addImageInfoToJSON(final String filename, final String latitude, final String longitude, final StringBuilder JSON) {
+    static private void addImageInfoToJSON(final String filename, final String latitude, final String longitude, final String datetime, final StringBuilder JSON) {
         if (!JSON.isEmpty()) {
             JSON.append(",").append(LINE_SEP);
         }
-        JSON.append(String.format(Locale.US, JSON_ENTRY, filename, latitude, longitude));
+        JSON.append(String.format(Locale.US, JSON_ENTRY, filename, latitude, longitude, datetime));
     }
 }
