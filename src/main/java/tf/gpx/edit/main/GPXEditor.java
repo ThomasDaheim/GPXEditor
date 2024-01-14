@@ -2051,6 +2051,28 @@ public class GPXEditor implements Initializable {
         addDoneAction(invertAction, getCurrentGPXFileName());
     }
 
+    public void createRouteFromSelectedWaypoints() {
+        // get seleced waypoints
+        final List<GPXWaypoint> waypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
+
+        if (waypoints.isEmpty()) {
+            return;
+        }
+
+        TaskExecutor.executeTask(getScene(), () -> {
+            // use first waypoints file to create route in
+            final String routeName = "route" + (waypoints.get(0).getGPXFile().getGPXRoutes().size() + 1);
+            final GPXRoute route = GPXRoute.fromGPXWaypoints(waypoints.get(0).getGPXFile(), waypoints);
+            route.setName("New " + routeName);
+
+            waypoints.get(0).getGPXFile().getGPXRoutes().add(route);
+
+            // force repaint of gpxFileList to show unsaved items
+            refreshGPXFileList();
+        },
+        StatusBar.getInstance());
+    }
+    
     private void processGPXMeasurables(final Event event, final ProcessType processType) {
         if (!ExecuteAlgorithm.getInstance().selectOptions(processType.getExecutionLevel(), processType.withFindOption())) {
             return;

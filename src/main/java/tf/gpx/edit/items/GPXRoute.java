@@ -108,6 +108,18 @@ public class GPXRoute extends GPXMeasurable {
         myGPXWaypoints.addListener(changeListener);
     }
     
+    // TFE, 20240111: we want to create from a list of waypoints!
+    public static GPXRoute fromGPXWaypoints(final GPXFile gpxFile, final List<GPXWaypoint> waypoints) {
+        final Route route = new Route();
+        
+        // add waypoints without cloning
+        waypoints.stream().forEach((t) -> {
+            route.addRoutePoint(t.getWaypoint());
+        });
+        
+        return new GPXRoute(gpxFile, route);
+    }
+    
     @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
