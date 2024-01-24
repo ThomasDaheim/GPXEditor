@@ -29,12 +29,13 @@ So it was time to start a new self-learning project. And here you see the result
 
 ### Update v5.8
 
-* Upgrade Leaflet to 1.9.4
-* Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Create route from list of selected waypoints
 * Interpolate dates of waypoints from neighbouring values
 * Timezones: Show/hide timezones on map
 * Offline maps: Not really a code change... Use e.g. Mobile Atlas Creator to download tiles, setup a minimal webserver (e.g. with python), add a new baselayer and voila!
 * Drag&Drop: You can now drop a gpx-file on the map as well
+* Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Upgrade Leaflet to 1.9.4
 * Various improvements and bugfixes
 
 ### Update v5.7
