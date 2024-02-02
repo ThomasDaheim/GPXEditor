@@ -1078,7 +1078,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                     latlong.getLatitude() + "," + latlong.getLongitude() + ")" + 
                     searchItem.getSearchString() + ";out;", "UTF-8");
 
-            final URL url = new URL("https://overpass-api.de/api/interpreter");
+            final URL url = URI.create("https://overpass-api.de/api/interpreter").toURL();
             final HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setDoOutput(true);
             urlConnection.setRequestProperty("Content-Type", "application/json; charset=utf-8");

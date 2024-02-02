@@ -28,6 +28,7 @@ package tf.gpx.edit.elevation;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -377,7 +378,7 @@ public class SRTMDownloader {
 
             // only download if not already there
             if (!tempFile.exists() || !tempFile.isFile() || overwrite) {
-                FileUtils.copyURLToFile(new URL(stringURL), tempFile, 1000, 3000);
+                FileUtils.copyURLToFile(URI.create(stringURL).toURL(), tempFile, 1000, 3000);
             } else {
                 System.out.println("  Already downloaded: \"" + stringURL + "\"");
             }
