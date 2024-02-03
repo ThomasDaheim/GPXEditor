@@ -60,6 +60,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Point2D;
+import javafx.scene.CacheHint;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -408,6 +409,9 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             getWebView().getEngine().setOnAlert((WebEvent<String> arg0) -> {
                 System.out.println("TrackMap: " + arg0.getData());
             });
+            
+            getWebView().setCache(true);
+            getWebView().setCacheHint(CacheHint.SPEED);
                 
             // TFE, 20230130: lets try firebug once again
             // https://stackoverflow.com/a/73124798
