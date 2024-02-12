@@ -11,13 +11,13 @@ buildscript {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
         // https://github.com/ben-manes/gradle-versions-plugin
         // task: dependencyUpdates
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.45.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.51.0'
         classpath 'org.openjfx:javafx-plugin:0.1.0'
     }
 }
 
 plugins {
-    id 'org.beryx.runtime' version '1.12.7'
+    id 'org.beryx.runtime' version '1.13.0'
 }
 
 apply plugin: 'java'
@@ -140,16 +140,16 @@ dependencies {
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.16'
 
-    implementation 'commons-cli:commons-cli:1.5.0'
-    implementation 'commons-io:commons-io:2.11.0'
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'commons-cli:commons-cli:1.6.0'
+    implementation 'commons-io:commons-io:2.15.1'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
+    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.11.0'
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.10.0'
-    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.22'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.25.0'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.2.0'
     
     implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
@@ -164,13 +164,13 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.2'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.2'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.14.2'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.14.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.16.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.1'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.16.1'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.16.1'
 
     implementation group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
-    implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '15-r2'
+    implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '17-r1'
     implementation group: 'org.jfxtras', name: 'jfxtras-labs', version: '9.0-r1'
     implementation group: 'org.jfxtras', name: 'jmetro', version: '11.6.16'
 
@@ -182,27 +182,27 @@ dependencies {
     implementation group: 'io.github.ruozhuochen', name: 'savitzky-golay-filter', version: '1.0.1'
     
     // TFE, 20220115: 3rd alternative: fxyz3d
-    implementation 'org.fxyz3d:fxyz3d:0.5.4'
+    implementation 'org.fxyz3d:fxyz3d:0.6.0'
     
     // TFE, 20220201: faster list
-    implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.19'
+    implementation group: 'org.magicwerk.brownies', name: 'brownies-collections', version: '0.9.22'
     
     // sun data
     // TODO: upgrade to 0.1.7 and fix breaking changes
     implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
     
     // timezone provider
+    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.5-11'
     implementation group: 'us.dustinj.timezonemap', name: 'timezonemap', version: '4.5'
-    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.2-5'
     
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
     implementation 'eu.hansolo.fx:charts:17.1.27'
     
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.2'
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.2'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.2'
     // TFE, 20221231: build a test suite for all non-UI tests
-    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.9.2'
+    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.10.2'
     // TFE, 20210216: capture System.err() easily
     testImplementation group: 'com.github.stefanbirkner', name: 'system-lambda', version: '1.2.1'
 }
