@@ -75,7 +75,6 @@ import tf.gpx.edit.items.Bounds3D;
 import tf.gpx.edit.items.GPXLineItem;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
-import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
