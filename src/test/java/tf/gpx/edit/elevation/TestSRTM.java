@@ -434,7 +434,7 @@ public class TestSRTM {
         Assertions.assertTrue(srtmFile.isFile());
         Assertions.assertTrue(srtmFile.canRead());
 
-        // multiple hgt from anarctica - no download
+        // multiple hgt from antarctica - no download
         dataName = SRTMDataHelper.getNameForCoordinate(-89, -107);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(

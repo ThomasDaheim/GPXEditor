@@ -361,6 +361,7 @@ public class SRTMDownloader {
         final List<String> workFilenames = reduceToRequiredFiles(filenames, directory, overwrite);
         if (workFilenames.isEmpty()) {
             // nothing left to do
+            System.out.println("  Already downloaded: \"" + stringURL + "\"");
             return true;
         }
         
