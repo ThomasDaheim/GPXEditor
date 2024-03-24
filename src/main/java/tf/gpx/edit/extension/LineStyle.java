@@ -47,7 +47,8 @@ public class LineStyle {
     // width in gpx_style is in millimeters BUT leaflet calculates in pixel...
     // default in leaflet is 2 PIXEL
     // we work in pixel
-    public static final Integer DEFAULT_WIDTH = 2;
+    // TFE, 20240324: kml linestyle width is in float
+    public static final Double DEFAULT_WIDTH = 2.0;
     public static final String DEFAULT_PATTERN = "";
     public static final Linecap DEFAULT_LINECAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
@@ -110,7 +111,7 @@ public class LineStyle {
     private Optional<GarminColor> myColor;
     private GarminColor myDefaultColor = DEFAULT_COLOR;
     private Optional<Double> myOpacity;
-    private Optional<Integer> myWidth;
+    private Optional<Double> myWidth;
     // TFE, 20221002: set unit from extension or to "PIXEL" if non found
     private WidthUnit myWidthUnit;
     private Optional<String> myPattern;
@@ -134,7 +135,7 @@ public class LineStyle {
         myDefaultColor = defaultCol;
     }
     
-    private LineStyle(final GarminColor color, final Double opacity, final Integer width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
+    private LineStyle(final GarminColor color, final Double opacity, final Double width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
         myItem = null;
         myExtension = null;
         myColorAttribute = null;
@@ -226,7 +227,7 @@ public class LineStyle {
         return DEFAULT_OPACITY;
     }
 
-    public Integer getWidth() {
+    public Double getWidth() {
         if (myWidth == null) {
             String nodeValue = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width);
 
@@ -244,9 +245,9 @@ public class LineStyle {
                 }
                 // convert only if something to do
                 if (!WidthUnit.PIXELS.equals(myWidthUnit)) {
-                    myWidth = Optional.of((int) Math.round(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue))));
+                    myWidth = Optional.of(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue)));
                 } else {
-                    myWidth = Optional.of((int) Math.round(Double.valueOf(nodeValue)));
+                    myWidth = Optional.of(Double.valueOf(nodeValue));
                 }
             }
 
@@ -254,7 +255,7 @@ public class LineStyle {
         return myWidth.get();
     }
     
-    public Integer getDefaultWidth() {
+    public Double getDefaultWidth() {
         return DEFAULT_WIDTH;
     }
 
@@ -336,7 +337,7 @@ public class LineStyle {
         }
     }
     
-    public void setWidth(final Integer width) {
+    public void setWidth(final Double width) {
         // set both our variable and the gpx extension
         myWidth = Optional.of(width);
         
