@@ -776,7 +776,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 if (curWaypoint != null && curWaypoint.getName() != null && !curWaypoint.getName().isEmpty()) {
                     searchString = curWaypoint.getName();
                 } else {
-                    searchString = curLocation.getLatitude().toString() + " " + curLocation.getLongitude().toString();
+                    // TFE, 20240324: insert comma since searching is otherwise messed up for negative lngs
+                    searchString = curLocation.getLatitude().toString() + "," + curLocation.getLongitude().toString();
                 }
 
                 try {
