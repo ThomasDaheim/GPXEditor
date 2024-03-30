@@ -17,7 +17,7 @@ buildscript {
 }
 
 plugins {
-    id 'org.beryx.runtime' version '1.13.0'
+    id 'org.beryx.runtime' version '1.13.1'
 }
 
 apply plugin: 'java'
@@ -141,15 +141,15 @@ dependencies {
     implementation 'tf.JavaHelper:JavaHelper:1.16'
 
     implementation 'commons-cli:commons-cli:1.6.0'
-    implementation 'commons-io:commons-io:2.15.1'
+    implementation 'commons-io:commons-io:2.16.0'
     implementation 'org.apache.commons:commons-lang3:3.14.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation group: 'org.apache.commons', name: 'commons-text', version: '1.11.0'
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.10.0'
-    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.25.0'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.26.1'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.2.0'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.2.1'
     
     implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
@@ -164,10 +164,10 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.16.1'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.16.1'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.16.1'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.16.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.17.0'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.0'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.17.0'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.17.0'
 
     implementation group: 'de.grundid.opendatalab', name: 'geojson-jackson', version: '1.14'
     implementation group: 'org.jfxtras', name: 'jfxtras-controls', version: '17-r1'
@@ -192,12 +192,12 @@ dependencies {
     implementation group: 'net.e175.klaus', name: 'solarpositioning', version: '0.0.9'
     
     // timezone provider
-    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.5-11'
+    implementation group: 'com.github.luben', name: 'zstd-jni', version: '1.5.6-1'
     implementation group: 'us.dustinj.timezonemap', name: 'timezonemap', version: '4.5'
     
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
-    implementation 'eu.hansolo.fx:charts:17.1.27'
+    implementation 'eu.hansolo.fx:charts:21.0.7'
     
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.10.2'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.10.2'
