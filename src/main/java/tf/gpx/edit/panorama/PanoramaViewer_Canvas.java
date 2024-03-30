@@ -71,7 +71,7 @@ public class PanoramaViewer_Canvas {
     private final static PanoramaViewer_Canvas INSTANCE = new PanoramaViewer_Canvas();
 
     private final static int VIEWER_WIDTH = 1400;
-    private final static int VIEWER_HEIGHT = 600;
+    private final static int VIEWER_HEIGHT = 800;
     
     // we want to have a similar angular resolution for the sun path as for the elevations
     // the "average" sun path is 12 hours covering 180 degrees (equinox @ equator)
