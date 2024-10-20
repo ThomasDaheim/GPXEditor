@@ -1815,6 +1815,8 @@ public class GPXEditor implements Initializable {
         
         endAction(true);
         
+        // TFE, 20240705: this might have impacted things that are currently shown
+        showGPXWaypoints(getShownGPXMeasurables(), true, false);
         refreshGPXFileList();
     }
     
