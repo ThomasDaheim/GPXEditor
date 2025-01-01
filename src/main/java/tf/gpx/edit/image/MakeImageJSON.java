@@ -36,6 +36,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
@@ -72,6 +73,8 @@ public class MakeImageJSON {
     private final static String JSON_START = "{" + LINE_SEP + "    \"images\": [" + LINE_SEP;
     private final static String JSON_END = LINE_SEP + "    ]" + LINE_SEP + "}";
     private final static String JSON_ENTRY = "        {\"name\": \"%s\", \"lat\": \"%s\", \"lon\": \"%s\", \"desc\": \"\", \"date\": \"%s\"}";
+    
+    private static final List<String> IGNORE_SUBDIRECTORIES = List.of("HDR", "GIF", "Stitch", "Collage");
     
     private final static String NO_COORDS_FILENAME = "N01E001";
     
@@ -136,7 +139,7 @@ public class MakeImageJSON {
             }
         }
         
-        // 2 find matchingimage files
+        // 2 find matching image files
         final ETOperation op = new ETOperation();
         op.fast();
         op.ignoreMinorErrors();
@@ -151,6 +154,11 @@ public class MakeImageJSON {
         op.addRawArgs("-p", "$directory/$filename;$gpslatitude;$gpslongitude;$dateTimeOriginal");
         // search recursively under image path
         op.addRawArgs("-r", imagePathArg);
+        // TFE, 20250101: exclude certain directories
+        // https://exiftool.org/forum/index.php?topic=7467.0
+        for (String ignore: IGNORE_SUBDIRECTORIES) {
+            op.addRawArgs("-i", ignore);
+        }
         
         System.out.println("  ETOperation '" + op.toString() + "'");
 
