@@ -58,6 +58,7 @@ import tf.gpx.edit.viewer.TrackMap;
  */
 public class LeafletMapView extends StackPane {
     protected final static String LEAFLET_PATH = "/leaflet";
+    protected final static String LEAFLET_VERSION = ".1.8.0";
     protected final static String MIN_EXT = ".min";
     
     private final static String DEFAULT_TRACK_WEIGHT = "2";
@@ -147,8 +148,8 @@ public class LeafletMapView extends StackPane {
     
     private void executeMapSetupScripts() {
         // TFE, 20211105: move from leafletmap.html to code
-        addStyleFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".css");
-        addScriptFromPath(LEAFLET_PATH + "/leaflet/leaflet" + MIN_EXT + ".js");
+        addStyleFromPath(LEAFLET_PATH + "/leaflet/leaflet" + LEAFLET_VERSION + MIN_EXT + ".css");
+        addScriptFromPath(LEAFLET_PATH + "/leaflet/leaflet" + LEAFLET_VERSION + MIN_EXT + ".js");
         addScriptFromPath(LEAFLET_PATH + "/leaflet-color-markers/leaflet-color-markers" + MIN_EXT + ".js");
 
         // collect all required resources for the layers
