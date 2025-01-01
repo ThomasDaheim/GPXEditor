@@ -273,7 +273,7 @@ public class StatisticsViewer extends AbstractStage {
         // data will be shown in a table
         table.setEditable(false);
         table.setSelectionModel(null);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.getStyleClass().add("stat-table");
         
         // Create column Description, Value, Unit

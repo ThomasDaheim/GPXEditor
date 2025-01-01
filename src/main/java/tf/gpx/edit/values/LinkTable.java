@@ -50,7 +50,7 @@ public class LinkTable extends TableView<Link> {
     }
     
     private void initTableView() {
-        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         setEditable(true);
 
         // make room for 4 columns
