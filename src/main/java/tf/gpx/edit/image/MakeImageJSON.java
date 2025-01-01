@@ -80,8 +80,8 @@ public class MakeImageJSON {
         
         boolean result = true;
         
-        String imagePathArg = "";
-        String JSONPathArg = "";
+        String imagePathArg;
+        String JSONPathArg;
         if (args.length > 0) {
             // TFE, 20191218: path with spaces get messed up as arguments...
             // TFE, 20200513: but we migh want to pass 2 parameters - so we merge and split again by our separator :-)
