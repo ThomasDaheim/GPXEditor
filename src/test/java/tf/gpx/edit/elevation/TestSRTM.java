@@ -361,7 +361,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/H30.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/dem3/H30.zip\""));
 
         File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
@@ -400,7 +400,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/SB20.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/dem3/SB20.zip\""));
 
         srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
@@ -421,7 +421,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/ANTDEM3/01-15.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/ANTDEM3/01-15.zip\""));
 
         srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
