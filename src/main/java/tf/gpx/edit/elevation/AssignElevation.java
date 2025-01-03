@@ -80,6 +80,8 @@ public class AssignElevation extends AbstractStage  {
     private HostServices myHostServices;
 
     private boolean hasUpdated = false;
+    
+    private boolean noUI = false;
 
     private AssignElevation() {
         super();
@@ -271,6 +273,8 @@ public class AssignElevation extends AbstractStage  {
         
         hasUpdated = false;
         
+        noUI = false;
+        
         // in case SRTM_NONE is set, disable srtm related fields
         final boolean disableSRTM = ElevationProviderOptions.LookUpMode.SRTM_NONE.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType());
         downloadBtn.setDisable(disableSRTM);
@@ -298,6 +302,9 @@ public class AssignElevation extends AbstractStage  {
         myGPXLineItems = gpxLineItems;
         
         hasUpdated = false;
+        
+        noUI = true;
+        
         // TFE, 20210731: we either allow anything besides SRTM or we have SRTM files - otherwise no height will be found
         if (!ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(GPXEditorPreferences.HEIGHT_LOOKUP_MODE.getAsType()) ||
                 checkSRTMFiles()) {
@@ -326,37 +333,22 @@ public class AssignElevation extends AbstractStage  {
                         GPXAssignElevationWorker.WorkMode.CHECK_DATA_FILES);
         GPXStructureHelper.getInstance().runVisitor(myGPXLineItems, visitor);
         
-        // sorted list of files and mark missing ones
-        fileList.getItems().clear();
-        fileList.getCheckModel().clearChecks();
-        // TFE, 20190809: if called the second time the list of checked items isn't empty
-        // and might be longer than the list of files added here --> check in assignButton.setOnAction fails...
-        // known bug: https://github.com/controlsfx/controlsfx/issues/1098
-
-        final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
         final List<String> missingDataFiles = SRTMDataStore.getInstance().findMissingDataFiles(visitor.getRequiredSRTMDataFiles(), srtmOptions);
         
-        // creates various warnings on second usage!
-        // Mar 31, 2018 8:49:31 PM javafx.scene.CssStyleHelper calculateValue
-        // WARNING: Could not resolve '-fx-text-background-color' while resolving lookups for '-fx-text-fill' from rule '*.check-box' in stylesheet jar:file:/C:/Program%20Files/Java/jdk1.8.0_161/jre/lib/ext/jfxrt.jar!/com/sun/javafx/scene/control/skin/modena/modena.bss        
-        // workaroud https://stackoverflow.com/a/5936614 to suppress warning output NOT WORKING
-//        final PrintStream out = new PrintStream(System.out);
-//        System.setOut(new PrintStream(new OutputStream() {
-//            @Override
-//            public void write(int b) {
-//            }
-//        }));
-//        final PrintStream err = new PrintStream(System.err);
-//        System.setErr(new PrintStream(new OutputStream() {
-//            @Override
-//            public void write(int b) {
-//            }
-//        }));
+        // TFE, 20250103: we have the option of being called without UI - batter don't do anything stupid with the controls in that case...
+        // TODO: move the logic of checking into separat method / class
+        if (!noUI) {
+            // sorted list of files and mark missing ones
+            fileList.getCheckModel().clearChecks();
+            fileList.getItems().clear();
 
-        fileList.getItems().addAll(dataFiles.stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList()));
-        fileList.getCheckModel().checkAll();
-        for (String missingFile : missingDataFiles) {
-            fileList.getCheckModel().clearCheck(missingFile);
+            final List<String> dataFiles = visitor.getRequiredSRTMDataFiles().stream().map(x -> x + "." + SRTMDataStore.HGT_EXT).collect(Collectors.toList());
+
+            fileList.getItems().addAll(dataFiles.stream().sorted(Comparator.naturalOrder()).collect(Collectors.toList()));
+            fileList.getCheckModel().checkAll();
+            for (String missingFile : missingDataFiles) {
+                fileList.getCheckModel().clearCheck(missingFile);
+            }
         }
 
 //        System.setOut(out);
