@@ -126,12 +126,13 @@ public class GPXRoute extends GPXMeasurable {
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        // TFE, 20250103: please, do that befpre adding linestyle sind ti needs the cloned extension to work!
+        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
 
         // TFE, 20220102: LineStyle needs to be cloned as well
         myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
-        
-        // set route via cloner
-        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
         
         if (withChildren) {
             // clone all my children
