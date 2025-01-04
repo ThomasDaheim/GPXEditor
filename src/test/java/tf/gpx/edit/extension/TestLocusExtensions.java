@@ -26,15 +26,15 @@ public class TestLocusExtensions {
         
         // locus extension values
         String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.activity);
-        Assertions.assertEquals(nodeValue, "walking");
+        Assertions.assertEquals("walking", nodeValue);
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsColorBase);
-        Assertions.assertEquals(nodeValue, "#96483D8B");
+        Assertions.assertEquals("#96483D8B", nodeValue);
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsWidth);
-        Assertions.assertEquals(nodeValue, "6.0");
+        Assertions.assertEquals("6.0", nodeValue);
 
         nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.lsUnits);
-        Assertions.assertEquals(nodeValue, "PIXELS");
+        Assertions.assertEquals("PIXELS", nodeValue);
     }
 }

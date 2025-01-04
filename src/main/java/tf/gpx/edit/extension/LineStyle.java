@@ -237,10 +237,15 @@ public class LineStyle {
             } else {
                 // we work in pixel, gpx_style in millimeter
                 // TFE, 20221002: for locus the unit might be PIXEL already
+                // TFE, 20250104: we now have our own extension that might define the unit. So we need to check both... But ours takes precedence!
                 if (myWidthUnit == null) {
+                    String extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits);
+                    if (extUnit == null) {
+                        extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits);
+                    }
                     myWidthUnit = EnumUtils.getEnum(
                             WidthUnit.class, 
-                            KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits), 
+                            extUnit, 
                             WidthUnit.MILLIMETERS);
                 }
                 // convert only if something to do
@@ -342,14 +347,19 @@ public class LineStyle {
         myWidth = Optional.of(width);
         
         if (myExtension != null) {
-            // we work in pixel, gpx_style in millimeter
-            KnownExtensionAttributes.setValueForAttribute(
-                    myExtension, 
-                    KnownExtensionAttributes.KnownAttribute.width, 
-                    Double.toString(
-                            Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
-                            )
-                    );
+            // TFE, 20250104: no longer true! We know also store in pixel together with our own ne extension :-)
+//            // we work in pixel, gpx_style in millimeter
+//            KnownExtensionAttributes.setValueForAttribute(
+//                    myExtension, 
+//                    KnownExtensionAttributes.KnownAttribute.width, 
+//                    Double.toString(
+//                            Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
+//                            )
+//                    );
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
+
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits, WidthUnit.PIXELS.toString());
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geWidth, Double.toString(myWidth.get()));
         }
         if (myItem != null) {
             myItem.lineStyleHasChanged();

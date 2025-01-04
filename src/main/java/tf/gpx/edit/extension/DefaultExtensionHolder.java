@@ -44,10 +44,10 @@ import org.w3c.dom.NodeList;
 
 /**
  * Simple holder for nodelist that can test for type of myExtension present, see also
- 
- https://github.com/pcolby/bipolar/wiki/GPX
- https://developers.strava.com/docs/uploads/
- https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd - <TrackExtension>, <TrackPointExtension>
+ * 
+ * https://github.com/pcolby/bipolar/wiki/GPX
+ * https://developers.strava.com/docs/uploads/
+ * https://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd - <TrackExtension>, <TrackPointExtension>
  * https://www8.garmin.com/xmlschemas/AccelerationExtensionv1.xsd, <AccelerationExtension>
  * http://gpsbabel.2324879.n4.nabble.com/PATCH-Humminbird-extensions-in-gpx-files-td7330.html - <h:*>
  * https://help.routeyou.com/en/topic/view/262/gpxm-file - <gpxmedia>
@@ -69,10 +69,14 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         // 2) directly without xml namespace like <line xmlns="http://www.topografix.com/GPX/gpx_style/0/2"> (https://www.gpsvisualizer.com/examples/barrett_spur.gpx.txt)
         // we try to handle both here
         GPXStyle("gpx_style", "GPXStyle", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd", true),
-        Line("", "line", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd", true);
+        Line("", "line", "http://www.topografix.com/GPX/gpx_style/0/2", "http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd", true),
 //        Humminbird("h", "Humminbird", "", ""),
 //        GPXM("gpxmedia", "GPXM", "", ""),
-//        ClueTrust("gpxdata", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "");
+//        ClueTrust("gpxdata", "ClueTrust", "http://www.cluetrust.com/XML/GPXDATA/1/0", "")
+
+        // TFE, 20250104: finally, we have our own extension as well.
+        // Why? To change the line width unit to pixel - that is what the rest of the worlds uses...
+        GPXEditorLine("gpxeditor_line", "GPXEditorLine", "http://www.feuster.com", "", false);
         
         private final String myNamespace;
         private final String myName;
@@ -127,7 +131,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         super(childNodes);
         
         // TFE, 20211118: extensions can contain other extensions...
-        // so we need to be ale to handle that as well
+        // so we need to be able to handle that as well
         // and since we can't extend from both DummyExtensionHolder AND Extension from gpx-parser
         // we need to find another way to handle this...
         // without changing the classes in gpx-parser to interfaces we can only hold an attribute of type myExtension here and add stuff to it (recursively)

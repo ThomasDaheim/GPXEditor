@@ -59,8 +59,12 @@ public class KnownExtensionAttributes {
         // "locus" as an extension using attributes only BUT they can be extensions to other extensions
         Locus("locus", DefaultExtensionHolder.ExtensionClass.Locus),
 
-        Line("line", DefaultExtensionHolder.ExtensionClass.Line);
+        Line("line", DefaultExtensionHolder.ExtensionClass.Line),
         
+        // TFE, 20250104: finally, we have our own extension as well.
+        // Why? To change the line width unit to pixel - that is what the rest of the worlds uses...
+        GPXEditorLine("gpxeditor_line", DefaultExtensionHolder.ExtensionClass.GPXEditorLine);
+
         private final String myName;
         private final IGPXExtension myExtensionParent;
         
@@ -183,7 +187,13 @@ public class KnownExtensionAttributes {
         // extension groups can have their own extensions...
         lsColorBase("lsColorBase", KnownExtension.Locus, KnownExtension.Line),
         lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line), // same value is set for "width" independent whether lsUnits might be "PIXEL"
-        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line);
+        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line),
+        
+        //
+        // attributes GPXEditorLine
+        //
+        geWidth("geWidth", KnownExtension.GPXEditorLine, KnownExtension.Line), // width in the geUnits
+        geUnits("geUnits", KnownExtension.GPXEditorLine, KnownExtension.Line);
         
         
         private final String myName;
@@ -328,11 +338,16 @@ public class KnownExtensionAttributes {
             Node extNode = null;
 
             if (extensionHolder != null) {
-                extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+                // TFE, 20250104: we must now als write our own extension that is a subnode of line without its own named node
+                if (attr.getExtension().useSeparateNode()) {
+                    extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+                } else {
+                    extNode = extensionHolder.getExtensionForClass(attr.getParentExtension());
+                }
             }
 
             final boolean hasGarminGPX = (extNode != null);
-            if (extNode == null) {
+            if (extNode == null && attr.getExtension().useSeparateNode()) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(attr.getExtension().toString());
                 
