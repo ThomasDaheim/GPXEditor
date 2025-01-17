@@ -256,7 +256,7 @@ public class KnownExtensionAttributes {
         
         // TFE, 20211118: for locus we have extension data that is not enclosed in a specific node but directly under <extensions>...
         if (attr.getExtension().useSeparateNode()) {
-            final Node extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+            final Node extNode = extensionHolder.getExtensionNodeForClass(attr.getExtension());
 
             if (extNode == null) {
                 return result;
@@ -294,7 +294,7 @@ public class KnownExtensionAttributes {
                 }
             }
         } else {
-            final Node extNode = extensionHolder.getExtensionForName(attr.toString());
+            final Node extNode = extensionHolder.getExtensionNodeForName(attr.toString());
 
             if (extNode == null) {
                 return result;
@@ -340,9 +340,10 @@ public class KnownExtensionAttributes {
             if (extensionHolder != null) {
                 // TFE, 20250104: we must now als write our own extension that is a subnode of line without its own named node
                 if (attr.getExtension().useSeparateNode()) {
-                    extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+                    extNode = extensionHolder.getExtensionNodeForClass(attr.getExtension());
                 } else {
-                    extNode = extensionHolder.getExtensionForClass(attr.getParentExtension());
+                    // that is the node for the parent extension
+                    extNode = extensionHolder.getExtensionNodeForClass(attr.getParentExtension());
                 }
             }
 
@@ -361,9 +362,17 @@ public class KnownExtensionAttributes {
             }
 
             // 1) find extension node OR create
+            // TFE, 20250105: in case of attributes without a separat extension node we don't look for a
+            // node with the name of the extension but for the node "extensions"
             NodeList nodeList = null;
+            String findName;
+            if (attr.getExtension().useSeparateNode()) {
+                findName = attr.getExtension().toString();
+            } else {
+                findName = GPXConstants.NODE_EXTENSIONS;
+            }
             // check node itself
-            if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(findName)) {
                 nodeList = extNode.getChildNodes();
             } else {
                 NodeList childNodes = extNode.getChildNodes();
@@ -372,7 +381,7 @@ public class KnownExtensionAttributes {
                 for (int i = 0; i < childNodes.getLength(); i++) {
                     final Node myNode = childNodes.item(i);
 
-                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(findName)) {
                         nodeList = myNode.getChildNodes();
                         break;
                     }

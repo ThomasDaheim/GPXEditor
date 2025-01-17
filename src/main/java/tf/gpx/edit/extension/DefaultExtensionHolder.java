@@ -248,7 +248,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         return result;
     }
     
-    public Node getExtensionForClass(final IGPXExtension type) {
+    public Node getExtensionNodeForClass(final IGPXExtension type) {
         Node result = null;
         
         // make sure "cache" gets filled
@@ -295,7 +295,7 @@ public class DefaultExtensionHolder extends DummyExtensionHolder {
         return result;
     }
 
-    public Node getExtensionForName(final String name) {
+    public Node getExtensionNodeForName(final String name) {
         Node result = null;
         
         // make sure "cache" gets filled
