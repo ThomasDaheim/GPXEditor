@@ -235,6 +235,22 @@ public class KnownExtensionAttributes {
         return INSTANCE;
     }
     
+    // How does the structure with extensions in gpxparser look like?
+    //
+    // EVERYTHING is an extension, including gpx, track, route, ...
+    // An extension can hold arbitrary extension data as HashMap<String, Object>
+    // The String indicates the parser that was used to parse the data
+    // Extension data can be other extensions to enable nested extensions
+    // 
+    // We always use a DefaultExtensionHolder for all kinds of data. This is done by setting it before parsing a gpx/kml file.
+    //
+    // So the structure is
+    //
+    // Extension has extension data
+    //   Extension data is of type DefaultExtensionHolder
+    //     DefaultExtensionHolder has an Extension
+    //       and so on... (in theory - we only have implemented one level of parent extension
+    
     public static String getValueForAttribute(final Extension extension, final KnownAttribute attr) {
         String result = null;
         
@@ -243,6 +259,7 @@ public class KnownExtensionAttributes {
         if (attr.getParentExtension() != null) {
             // TODO: check if extension is of same type as parentExtension
             if (extensionHolder.getExtension() != null) {
+                // get the extension of the extension
                 extensionHolder = (DefaultExtensionHolder) extensionHolder.getExtension().getExtensionData(DefaultExtensionParser.getInstance().getId());
             } else {
                 // we don't have an extension in the extension
@@ -348,6 +365,7 @@ public class KnownExtensionAttributes {
             }
 
             final boolean hasGarminGPX = (extNode != null);
+            // TODO: extNode == null AND !useSeparateNode()???
             if (extNode == null && attr.getExtension().useSeparateNode()) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(attr.getExtension().toString());
