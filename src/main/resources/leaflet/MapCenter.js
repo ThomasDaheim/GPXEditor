@@ -30,7 +30,7 @@ var mapCenterCoord = L.control.mapCenterCoord({
     latlngFormat: 'DD',
     latlngDesignators: false,
     template: 'Center: {y} | {x}',
-    // format without ° because it gets messed up
+    // format without Â° because it gets messed up
     latLngFormatter: function(latIn, lngIn) {
         var lat, lng, deg, min;
 
