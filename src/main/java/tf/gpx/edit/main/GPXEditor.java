@@ -122,7 +122,7 @@ import tf.gpx.edit.algorithms.ExecuteAlgorithm;
 import tf.gpx.edit.algorithms.GarminCrapFilter;
 import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.algorithms.WaypointClustering;
-import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataViewer;

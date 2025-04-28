@@ -23,8 +23,11 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
+package tf.gpx.edit.algorithms.reducer;
 
+import tf.gpx.edit.algorithms.reducer.DouglasPeuckerReducer;
+import tf.gpx.edit.algorithms.reducer.ReumannWitkamReducer;
+import tf.gpx.edit.algorithms.reducer.VisvalingamWhyattReducer;
 import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.helper.GPXEditorPreferences;

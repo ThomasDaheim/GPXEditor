@@ -23,9 +23,10 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
+package tf.gpx.edit.algorithms.reducer;
 
 import java.util.List;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**

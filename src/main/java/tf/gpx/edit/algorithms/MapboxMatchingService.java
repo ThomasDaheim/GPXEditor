@@ -50,9 +50,9 @@ import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.viewer.TrackMap;
 
 /**
- * Use OpenElevationService to provide elevations.
+ * Use MapboxMatchingService to match to map features.
  * 
- * See https://openrouteservice.org/dev/#/api-docs/elevation
+ * See https://docs.mapbox.com/api/navigation/map-matching/
  * 
  * @author thomas
  */

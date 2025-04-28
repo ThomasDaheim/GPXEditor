@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.algorithms;
 
+import tf.gpx.edit.algorithms.smoother.HampelSmoother;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;

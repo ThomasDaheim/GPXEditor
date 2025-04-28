@@ -51,7 +51,7 @@ import tf.helper.javafx.DragResizer;
 public class ChartsPane extends StackPane implements IPreferencesHolder {
     private final static ChartsPane INSTANCE = new ChartsPane();
 
-    // reserved pace per yAxis on the right side
+    // reserved space per yAxis on the right side
     private final static double YAXIS_WIDTH = 60;
     private final static double YAXIS_SEP = 20;
     

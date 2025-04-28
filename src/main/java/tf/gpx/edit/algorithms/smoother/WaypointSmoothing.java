@@ -1,3 +1,5 @@
+package tf.gpx.edit.algorithms.smoother;
+
 /*
  *  Copyright (c) 2014ff Thomas Feuster
  *  All rights reserved.
@@ -23,53 +25,90 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
 
+
+import tf.gpx.edit.algorithms.smoother.DoubleExponentialSmoother;
+import tf.gpx.edit.algorithms.smoother.SavitzkyGolaySmoother;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Common interface for all reduce algorithms.
+ * Wrapper for different smoothing algorithms.
  * 
  * @author thomas
  */
-public interface IWaypointSmoother {
-    /**
-     * Entry for list of Doubles.
-     * 
-     * @param data Double values to process
-     * @param dummy Needed to avoid compiler errors due to same signature after erasure as the GPXWaypoint method
-     * @return List of processed Double values
-     */
-    List<Double> apply(final List<Double> data, final boolean dummy);
+public class WaypointSmoothing implements IWaypointSmoother {
+    private final static WaypointSmoothing INSTANCE = new WaypointSmoothing();
+
+    public static enum SmoothingAlgorithm {
+        Hampel,
+        SavitzkyGolay,
+        DoubleExponential
+    }
     
+    private WaypointSmoothing() {
+        super();
+        // Exists only to defeat instantiation.
+    }
+
+    public static WaypointSmoothing getInstance() {
+        return INSTANCE;
+    }
+
     /**
-     * Entry for list of GPXWaypoints.
+     * Smoothing a list of values by the requested algorithm.
      * 
-     * lat / lon / elev values are filtered independently and new LatLonElev are built from the results.
-     * 
-     * @param data GPXWaypoints to process
-     * @return List of derived LatLonElev values
+     * @param data list of values
+     * @param smoothingAlgo What SmoothingAlgorithm to use
+     * @param dummy Needed to avoid compiler errors due to same signature after erasure as the GPXWaypoint method
+     * @return smoothed list of values
      */
-    default List<LatLonElev> apply(final List<GPXWaypoint> data) {
+    protected static List<Double> apply(
+            final List<Double> data, 
+            final SmoothingAlgorithm smoothingAlgo, 
+            boolean dummy) {
+        List<Double> result = new ArrayList<>(data);
+        
+        switch (smoothingAlgo) {
+            case Hampel:
+                result = HampelSmoother.getInstance().apply(result, dummy);
+                break;
+            case SavitzkyGolay:
+                result = SavitzkyGolaySmoother.getInstance().apply(result, dummy);
+                break;
+            case DoubleExponential:
+                result = DoubleExponentialSmoother.getInstance().apply(result, dummy);
+                break;
+        }
+        
+        return result;
+    }
+    
+    public static List<LatLonElev> apply(
+            final List<GPXWaypoint> data, 
+            final SmoothingAlgorithm smoothingAlgo) {
         // assumption: lat / lon /elevation are independent with respect to fluctuations that we want to eliminate
         // we could apply the algorithm not to the lat / lon values but to the distance/time / course between points calculated from it...
         final List<Double> newLatValues = apply(
                 data.stream().map((t) -> {
                     return t.getLatitude();
-                }).collect(Collectors.toList()), true);
+                }).collect(Collectors.toList()), smoothingAlgo, true);
         final List<Double> newLonValues = apply(
                 data.stream().map((t) -> {
                     return t.getLongitude();
-                }).collect(Collectors.toList()), true);
-        // not using GPXEditorPreferences.SMOOTHING_ELEVATION here since this is only fpr WaypointSmoothing class...
-        final List<Double> newElevValues = apply(
+                }).collect(Collectors.toList()), smoothingAlgo, true);
+        
+        List<Double> newElevValues = 
                 data.stream().map((t) -> {
                     return t.getElevation();
-                }).collect(Collectors.toList()), true);
+                }).collect(Collectors.toList());
+        if (GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType()) {
+            newElevValues = apply(newElevValues, smoothingAlgo, true);
+        }
         
         final List<LatLonElev> result = new ArrayList<>();
         for (int i = 0; i< data.size(); i++) {
@@ -77,5 +116,20 @@ public interface IWaypointSmoother {
         }
         
         return result;
+    }
+
+    @Override
+    public List<Double> apply(List<Double> data, boolean dummy) {
+        return apply(
+                data, 
+                GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType(), 
+                dummy);
+    }
+    
+    @Override
+    public List<LatLonElev> apply(final List<GPXWaypoint> data) {
+        return apply(
+                data, 
+                GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
     }
 }

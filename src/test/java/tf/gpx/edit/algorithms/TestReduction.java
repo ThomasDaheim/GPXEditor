@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.algorithms;
 
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import java.io.File;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
