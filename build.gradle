@@ -283,6 +283,7 @@ test {
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
         jvmArgs = jvmArgs.plus('-Xmx4096M')
+        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
         enableAssertions = true
     }
 
@@ -304,6 +305,7 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
         jvmArgs = jvmArgs.plus(newArgs)
         jvmArgs = jvmArgs.plus('-Xss80M')
         jvmArgs = jvmArgs.plus('-Xmx4096M')
+        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
     }
 }
 
