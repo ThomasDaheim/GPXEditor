@@ -28,7 +28,7 @@ var markerOptions = {
     // options for marker since default icon can't be read from js in jar...
     icon: blueIcon,
     zIndexOffset: 3000
-}
+};
 var playbackOptions = {
     playControl: true,
     dateControl: true,
@@ -36,7 +36,7 @@ var playbackOptions = {
     sliderControl: true,
     speed: 10,
     orientIcons: false,
-    marker: markerOptions,
+    marker: markerOptions
 };
 var playback = null;
 
