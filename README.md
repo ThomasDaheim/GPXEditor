@@ -13,7 +13,7 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Notes
 
-* Note on JavaFX21: Missing leaflet tiles and flickering during zoom. Needed to revert back to JavaFX19.
+* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 24.
 * Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
 * Note on JavaFX17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 * Note on JavaFX14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
@@ -27,6 +27,13 @@ So it was time to start a new self-learning project. And here you see the result
 * Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
+
+### Update v5.9
+
+* Mainly bugfixes and dependency updates.
+* Create route from selected waypoints.
+* Added test class TestSunPathForYear. Outputs a csv with sunrise/sunset dates for a year for a given lat/lon location. The csv contains the astronomical sunrise/sunset dates and the "real" ones, when the sun is above the local horizon.
+* Added example images for different reduction algos as test resources. Thanks to https://github.com/emcconville/point-reduction-algorithms for the effort of doing the comparison! Long story short: Douglas–Peucker is the best algo, no need to implement further ones.
 
 ### Update v5.8
 
@@ -437,7 +444,7 @@ Other things used internally:
 
 * heatmap: https://github.com/HanSolo/FxHeatMap
 
-* leaflet 1.9.4: https://leafletjs.com/
+* leaflet 1.8.0: https://leafletjs.com/ <- 1.94. is not working with recent JavaFX versions (>= 20). Leads to flickering of tiles.
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.draw: https://github.com/Leaflet/Leaflet.draw
