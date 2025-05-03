@@ -358,8 +358,9 @@ public class LineStyle {
 //                    );
             KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
 
-            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits, WidthUnit.PIXELS.toString());
-            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geWidth, Double.toString(myWidth.get()));
+            // TFE, 20250502: not yet working
+//            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits, WidthUnit.PIXELS.toString());
+//            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geWidth, Double.toString(myWidth.get()));
         }
         if (myItem != null) {
             myItem.lineStyleHasChanged();
