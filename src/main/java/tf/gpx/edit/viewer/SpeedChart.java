@@ -34,6 +34,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;

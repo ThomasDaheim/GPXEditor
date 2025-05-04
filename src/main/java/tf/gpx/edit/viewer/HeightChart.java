@@ -56,6 +56,9 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import static tf.gpx.edit.viewer.IChartBasics.CHART_COLOR_NAME;
+import static tf.gpx.edit.viewer.IChartBasics.CHART_COLOR_TRANS_20_SUFFIX;
+import static tf.gpx.edit.viewer.IChartBasics.TRANS20_SUFFIX;
 
 /**
  * Show height chart for GPXWaypoints of GPXLineItem and highlight selected ones
@@ -104,6 +107,8 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
 
     private final Text mouseText = new Text("");
     private final Line mouseLine = new Line();
+    
+    private String currentCSS = "";
 
     private HeightChart() {
         super(new NumberAxis(), new NumberAxis());
@@ -656,7 +661,43 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     @Override
     public void doShowData() {
+        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
+        // TFE, 20250504: a new approach is proposed: to create a css on the fly and add it as stylesheet
+        // https://stackoverflow.com/a/9794096, https://stackoverflow.com/a/69234685
+        // scene.getStylesheets().add("data:text/css;base64," + Base64.getEncoder().encodeToString("* { -fx-color: red; }".getBytes(StandardCharsets.UTF_8)));
+        // that is similar to the code from https://stackoverflow.com/a/12286465 used previously
+        // but instead directly overwrites the CHART_COLOR_X and CHART_COLOR_X_TRANS_20 values with new ones
+        int j = 1;
+        final StringBuilder cssString = new StringBuilder();
+        cssString.append(".root {").append(System.lineSeparator());
+        for (XYChart.Series<Number, Number> series : getChart().getData()) {
+            if (!series.getData().isEmpty()) {
+                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
+                if (!firstWaypoint.getParent().isGPXFile() && series.getName() != null) {
+                    // and now color the series nodes according to lineitem color
+                    final String color = "#" + getSeriesColor(series);
+
+                    cssString.append(CHART_COLOR_NAME).append(j).append(": ").append(color).append(";").append(System.lineSeparator());
+                    cssString.append(CHART_COLOR_NAME).append(j).append(CHART_COLOR_TRANS_20_SUFFIX).append(": ").append(color).append(TRANS20_SUFFIX).append(";").append(System.lineSeparator());
+                }
+                j++;
+            }
+        }
+        cssString.append("}");
+        // and now add the result as css to the stylesheet
+        setStylesheet(cssString.toString());
+        
         super.updateLegend();
         super.seriesChanged(null);
+    }
+    
+    @Override
+    public void setCurrentCss(final String cssString) {
+        currentCSS = cssString;
+    }
+
+    @Override
+    public String getCurrentCss() {
+        return currentCSS;
     }
 }

@@ -26,7 +26,6 @@
 package tf.gpx.edit.viewer;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -81,7 +80,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     }
     
     final static String DATA_URI_CSS_PREFIX = "data:text/css;charset=utf-8;base64,";
-    final static String CHART_COLOR_NAME = "CHART_COLOR_";
+    final static String CHART_COLOR_NAME = "    CHART_COLOR_";
     final static String CHART_COLOR_TRANS_20_SUFFIX = "_TRANS_20";
     final static String TRANS20_SUFFIX = "33";
     
@@ -456,60 +455,6 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         doShowData();
         getChartsPane().applyCss();
         getChartsPane().requestLayout();
-        
-//        // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
-//        int j = 0;
-//        for (XYChart.Series<Number, Number> series : getChart().getData()) {
-//            if (!series.getData().isEmpty()) {
-//                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
-//                if (!firstWaypoint.getParent().isGPXFile() && series.getName() != null) {
-//                    // and now color the series nodes according to lineitem color
-//                    
-//                    // TFE, 20250430: partially working again with newer JavaFX - coloring not exactly below each datapoint but sometimes also above
-//                    // https://stackoverflow.com/a/12286465
-////                    series.getNode().getStyleClass().add(COLOR_STYLE_CLASS_PREFIX + getSeriesColor(series));
-//
-//                    // not working anymore with javafx 15
-//                    // https://gist.github.com/jewelsea/2129306
-////                    final PseudoClass color = ColorPseudoClass.getPseudoClassForColorName(getSeriesColor(series));
-////                    series.getNode().pseudoClassStateChanged(color, true);
-////                    // TFE, 20210104: doesn't seem to be required to color all nodes - and speeds things up a bit :-)
-//////                    final Set<Node> nodes = getChart().lookupAll(".series" + j);
-//////                    for (Node n : nodes) {
-//////                        n.pseudoClassStateChanged(color, true);
-//////                    }
-//                }
-//                j++;
-//            }
-//        }
-        // a new approach is proposed: to create a css on the fly and add it as stylesheet
-        // https://stackoverflow.com/a/9794096, https://stackoverflow.com/a/69234685
-        // scene.getStylesheets().add("data:text/css;base64," + Base64.getEncoder().encodeToString("* { -fx-color: red; }".getBytes(StandardCharsets.UTF_8)));
-        // that is similar to the code from https://stackoverflow.com/a/12286465 used above
-        // but would instead directly overwrite the CHART_COLOR_X and CHART_COLOR_X_TRANS_20 values with new ones
-        // and by that hopefully not lead to coloring artifacts like the code above
-        int j = 0;
-        final StringBuilder cssString = new StringBuilder();
-        for (XYChart.Series<Number, Number> series : getChart().getData()) {
-            if (!series.getData().isEmpty()) {
-                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
-                if (!firstWaypoint.getParent().isGPXFile() && series.getName() != null) {
-                    // and now color the series nodes according to lineitem color
-                    final String color = "#" + getSeriesColor(series);
-                    final String colorTrans20 = color + TRANS20_SUFFIX;
-
-                    cssString.append(CHART_COLOR_NAME).append(j).append(": ").append(color).append(";");
-                    cssString.append(CHART_COLOR_NAME).append(j).append(CHART_COLOR_TRANS_20_SUFFIX).append(": ").append(colorTrans20).append(TRANS20_SUFFIX).append(";");
-                }
-                j++;
-            }
-        }
-        // and now add the result as css to the stylesheet
-        // data:text/css;charset=utf-8;base64,Q0hBUlRfQ09MT1JfMDogIzAwRkZGRjtDSEFSVF9DT0xPUl8wX1RSQU5TXzIwOiAjMDBGRkZGMzM7Q0hBUlRfQ09MT1JfMTogI0ZGMDBGRjtDSEFSVF9DT0xPUl8xX1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfMjogIzAwRkZGRjtDSEFSVF9DT0xPUl8yX1RSQU5TXzIwOiAjMDBGRkZGMzM7Q0hBUlRfQ09MT1JfMzogI0ZGMDBGRjtDSEFSVF9DT0xPUl8zX1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfNDogI0ZGMDBGRjtDSEFSVF9DT0xPUl80X1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfNTogIzAwRkZGRjtDSEFSVF9DT0xPUl81X1RSQU5TXzIwOiAjMDBGRkZGMzM7
-        // getChartsPane().getStylesheets().add("data:text/css;charset=utf-8;base64,Q0hBUlRfQ09MT1JfMDogIzAwRkZGRjtDSEFSVF9DT0xPUl8wX1RSQU5TXzIwOiAjMDBGRkZGMzM7Q0hBUlRfQ09MT1JfMTogI0ZGMDBGRjtDSEFSVF9DT0xPUl8xX1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfMjogIzAwRkZGRjtDSEFSVF9DT0xPUl8yX1RSQU5TXzIwOiAjMDBGRkZGMzM7Q0hBUlRfQ09MT1JfMzogI0ZGMDBGRjtDSEFSVF9DT0xPUl8zX1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfNDogI0ZGMDBGRjtDSEFSVF9DT0xPUl80X1RSQU5TXzIwOiAjRkYwMEZGMzM7Q0hBUlRfQ09MT1JfNTogIzAwRkZGRjtDSEFSVF9DT0xPUl81X1RSQU5TXzIwOiAjMDBGRkZGMzM7");
-        // TFE, 20250502: not yet working
-//        getChartsPane().getStylesheets().add(DATA_URI_CSS_PREFIX + Base64.getEncoder().encodeToString(cssString.toString().getBytes()));
-        
 
 //        final AtomicInteger shownCount = new AtomicInteger(0);
 //        getChart().getData().forEach((t) -> {
@@ -629,10 +574,10 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         // TFE, 20250502: switched to hex color to be used in css. Needs to be hex to derive 20% opacity values easily
         series.setName(seriesID + DATA_SEP + lineItem.getLineStyle().getColor().getHexColor());
     }
-    private static String getSeriesID(final XYChart.Series<Number, Number> series) {
+    default String getSeriesID(final XYChart.Series<Number, Number> series) {
         return series.getName().split(DATA_SEP)[0];
     }
-    private static String getSeriesColor(final XYChart.Series<Number, Number> series) {
+    default String getSeriesColor(final XYChart.Series<Number, Number> series) {
         return series.getName().split(DATA_SEP)[1];
     }
 
@@ -758,5 +703,26 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     
     default public void updateLineStyle(final GPXLineItem lineItem) {
         // nothing todo
+    }
+    
+    //TFE, 20250504: style sheet handling refactored and added way to remove previously css from old waypoints
+    default void setCurrentCss(final String cssString) {
+        // nothing todo
+    }
+    default String getCurrentCss() {
+        // nothing todo
+        return "";
+    }
+    
+    default void setStylesheet(final String cssString) {
+        // lets see if we have a previous css attached
+        String cssBase64 = getCurrentCss();
+        if (!cssBase64.isEmpty()) {
+            getChartsPane().getScene().getStylesheets().remove(cssBase64);
+        }
+
+        cssBase64 = DATA_URI_CSS_PREFIX + Base64.getEncoder().encodeToString(cssString.getBytes());
+        getChartsPane().getScene().getStylesheets().add(cssBase64);
+        setCurrentCss(cssBase64);
     }
 }
