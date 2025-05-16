@@ -666,10 +666,9 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         // https://stackoverflow.com/a/9794096, https://stackoverflow.com/a/69234685
         // scene.getStylesheets().add("data:text/css;base64," + Base64.getEncoder().encodeToString("* { -fx-color: red; }".getBytes(StandardCharsets.UTF_8)));
         // that is similar to the code from https://stackoverflow.com/a/12286465 used previously
-        // but instead directly overwrites the CHART_COLOR_X and CHART_COLOR_X_TRANS_20 values with new ones
-        int j = 1;
+        // but instead directly overwrites the -fx-stroke and -fx-fill values of each series with new ones
+        int j = 0;
         final StringBuilder cssString = new StringBuilder();
-        cssString.append(".root {").append(System.lineSeparator());
         for (XYChart.Series<Number, Number> series : getChart().getData()) {
             if (!series.getData().isEmpty()) {
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
@@ -677,13 +676,16 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
                     // and now color the series nodes according to lineitem color
                     final String color = "#" + getSeriesColor(series);
 
-                    cssString.append(CHART_COLOR_NAME).append(j).append(": ").append(color).append(";").append(System.lineSeparator());
-                    cssString.append(CHART_COLOR_NAME).append(j).append(CHART_COLOR_TRANS_20_SUFFIX).append(": ").append(color).append(TRANS20_SUFFIX).append(";").append(System.lineSeparator());
+                    cssString.append(".series").append(j).append(".chart-series-area-line {").append(System.lineSeparator());
+                    cssString.append("  -fx-stroke: ").append(color).append(";").append(System.lineSeparator());
+                    cssString.append("}").append(System.lineSeparator());
+                    cssString.append(".series").append(j).append(".chart-series-area-fill {").append(System.lineSeparator());
+                    cssString.append("  -fx-fill: ").append(color).append(TRANS20_SUFFIX).append(";").append(System.lineSeparator());
+                    cssString.append("}").append(System.lineSeparator());
                 }
-                j++;
             }
+            j++;
         }
-        cssString.append("}");
         // and now add the result as css to the stylesheet
         setStylesheet(cssString.toString());
         
