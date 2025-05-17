@@ -76,57 +76,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     
     public static enum ChartType {
         HEIGHTCHART,
+        SLOPECHART,
         SPEEDCHART;
     }
     
     final static String DATA_URI_CSS_PREFIX = "data:text/css;charset=utf-8;base64,";
-    final static String CHART_COLOR_NAME = "    CHART_COLOR_";
-    final static String CHART_COLOR_TRANS_20_SUFFIX = "_TRANS_20";
     final static String TRANS20_SUFFIX = "33";
-    
-//    final static String COLOR_STYLE_CLASS_PREFIX = "line-color-";
-//    
-//    public static enum ColorPseudoClass {
-//        BLACK(PseudoClass.getPseudoClass("line-color-Black")),
-//        DARKRED(PseudoClass.getPseudoClass("line-color-DarkRed")),
-//        DARKGREEN(PseudoClass.getPseudoClass("line-color-DarkGreen")),
-//        DARKYELLOW(PseudoClass.getPseudoClass("line-color-GoldenRod")),
-//        DARKBLUE(PseudoClass.getPseudoClass("line-color-DarkBlue")),
-//        DARKMAGENTA(PseudoClass.getPseudoClass("line-color-DarkMagenta")),
-//        DARKCYAN(PseudoClass.getPseudoClass("line-color-DarkCyan")),
-//        DARKGRAY(PseudoClass.getPseudoClass("line-color-DarkGray")),
-//        LIGHTGRAY(PseudoClass.getPseudoClass("line-color-LightGray")),
-//        RED(PseudoClass.getPseudoClass("line-color-Red")),
-//        GREEN(PseudoClass.getPseudoClass("line-color-Green")),
-//        YELLOW(PseudoClass.getPseudoClass("line-color-Yellow")),
-//        BLUE(PseudoClass.getPseudoClass("line-color-Blue")),
-//        MAGENTA(PseudoClass.getPseudoClass("line-color-Magenta")),
-//        CYAN(PseudoClass.getPseudoClass("line-color-Cyan")),
-//        WHITE(PseudoClass.getPseudoClass("line-color-White")),
-//        SILVER(PseudoClass.getPseudoClass("line-color-Silver"));
-//
-//        private final PseudoClass myPseudoClass;
-//        
-//        ColorPseudoClass(final PseudoClass pseudoClass) {
-//            myPseudoClass = pseudoClass;
-//        }
-//        
-//        public PseudoClass getPseudoClass() {
-//            return myPseudoClass;
-//        }
-//        
-//        public static PseudoClass getPseudoClassForColorName(final String colorName) {
-//            PseudoClass result = BLACK.getPseudoClass();
-//            
-//            for (ColorPseudoClass color : ColorPseudoClass.values()) {
-//                if (color.name().toUpperCase().equals(colorName.toUpperCase())) {
-//                    result = color.getPseudoClass();
-//                }
-//            }
-//        
-//            return result;
-//        }
-//    }
     
     default void initialize() {
         getChart().setVisible(false);
