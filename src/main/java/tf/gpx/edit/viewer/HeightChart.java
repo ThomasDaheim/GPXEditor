@@ -56,8 +56,6 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import static tf.gpx.edit.viewer.IChartBasics.CHART_COLOR_NAME;
-import static tf.gpx.edit.viewer.IChartBasics.CHART_COLOR_TRANS_20_SUFFIX;
 import static tf.gpx.edit.viewer.IChartBasics.TRANS20_SUFFIX;
 
 /**

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.algorithms;
 
-import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import java.io.File;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
@@ -35,6 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXTrack;

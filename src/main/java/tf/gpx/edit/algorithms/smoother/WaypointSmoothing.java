@@ -27,8 +27,6 @@ package tf.gpx.edit.algorithms.smoother;
  */
 
 
-import tf.gpx.edit.algorithms.smoother.DoubleExponentialSmoother;
-import tf.gpx.edit.algorithms.smoother.SavitzkyGolaySmoother;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

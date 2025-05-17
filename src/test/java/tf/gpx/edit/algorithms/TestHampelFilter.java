@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.algorithms;
 
-import tf.gpx.edit.algorithms.smoother.HampelSmoother;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import tf.gpx.edit.algorithms.smoother.HampelSmoother;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;

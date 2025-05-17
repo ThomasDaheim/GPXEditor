@@ -25,9 +25,6 @@
  */
 package tf.gpx.edit.algorithms.reducer;
 
-import tf.gpx.edit.algorithms.reducer.DouglasPeuckerReducer;
-import tf.gpx.edit.algorithms.reducer.ReumannWitkamReducer;
-import tf.gpx.edit.algorithms.reducer.VisvalingamWhyattReducer;
 import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.helper.GPXEditorPreferences;
