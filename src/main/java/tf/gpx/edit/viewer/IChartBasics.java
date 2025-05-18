@@ -27,6 +27,7 @@ package tf.gpx.edit.viewer;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
@@ -201,10 +202,12 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             // only files can have file waypoints
             if (fileWaypointsInChart()) {
                 if (lineItem.isGPXFile()) {
-                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem);
+                    // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
+                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem).get(0);
                 } else if (alwaysShowFileWaypoints && !fileShown) {
                     // add file waypoints as well, even though file isn't selected
-                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem.getGPXFile());
+                    // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
+                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem.getGPXFile()).get(0);
                     fileShown = true;
                 }
             }
@@ -212,18 +215,18 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
                 for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
                     // add track segments individually
                     for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                        seriesList.add(getXYChartSeriesForGPXLineItem(gpxTrackSegment));
+                        seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxTrackSegment));
                     }
                 }
             }
             // track segments can have waypoints
             if (lineItem.isGPXTrackSegment()) {
-                seriesList.add(getXYChartSeriesForGPXLineItem(lineItem));
+                seriesList.addAll(getXYChartSeriesForGPXLineItem(lineItem));
             }
             // files and routes can have routes
             if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
                 for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
-                    seriesList.add(getXYChartSeriesForGPXLineItem(gpxRoute));
+                    seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxRoute));
                 }
             }
         }
@@ -505,7 +508,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         });
     }
     
-    private XYChart.Series<Number, Number> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
+    // TFE, 20250518: support that one lineitem can lead to multiple series (e.g. for slope chart)
+    default List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
         final List<XYChart.Data<Number, Number>> dataList = new ArrayList<>();
         
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
@@ -529,7 +533,7 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         
         setSeriesUserData(series, lineItem);
         
-        return series;
+        return Arrays.asList(series);
     }
     
     private static void setSeriesUserData(final XYChart.Series<Number, Number> series, final GPXLineItem lineItem) {

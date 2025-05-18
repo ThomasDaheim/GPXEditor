@@ -78,7 +78,6 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         super();
         
         setTop(MENU_BAR);
-        BorderPane.setMargin(MENU_BAR, new Insets(0,0,36,0));
         setCenter(STACK_PANE);
 
         baseCharts.add(HeightChart.getInstance());
@@ -132,7 +131,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         });
         
         // TFE, 20200214: allow resizing on TOP border
-        DragResizer.makeResizable(this, DragResizer.ResizeArea.TOP);
+        DragResizer.makeResizable(MENU_BAR, DragResizer.ResizeArea.TOP);
         
         // TFE, 20250517: add menu to toggle base charts & enable / disable additional charts
         // base charts: ToggleGroup with RadioMenuItem
