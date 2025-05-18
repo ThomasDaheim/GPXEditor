@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.viewer.charts;
 
-import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -538,7 +537,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
         return Arrays.asList(series);
     }
     
-    private static void setSeriesUserData(final XYChart.Series<Number, Number> series, final GPXLineItem lineItem) {
+    // TFE, 20250518: support that one lineitem can lead to multiple series (e.g. for slope chart)
+    default void setSeriesUserData(final XYChart.Series<Number, Number> series, final GPXLineItem lineItem) {
         String seriesID = lineItem.getCombinedID();
         // add track id for track segments
         if (lineItem.isGPXTrackSegment()) {

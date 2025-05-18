@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.BoundingBox;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
@@ -82,6 +81,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         setCenter(STACK_PANE);
 
         baseCharts.add(HeightChart.getInstance());
+        baseCharts.add(SlopeChart.getInstance());
         // TFE, 20230609: add property to show / hide speed chart
         if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
             additionalCharts.add(SpeedChart.getInstance());

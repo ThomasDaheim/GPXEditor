@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.viewer.charts;
 
-import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -109,7 +108,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     private String currentCSS = "";
 
-    private HeightChart() {
+    protected HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
         xAxis = (NumberAxis) getXAxis();
@@ -137,7 +136,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
 //        });
     }
     
-    private void installMousePointer() {
+    protected void installMousePointer() {
         // TFE, 20190712: install overall mouseText & mouseLine instead as node tooltips
         mouseText.getStyleClass().add("track-popup");
         mouseText.setVisible(false);
@@ -297,7 +296,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         });
     }
     
-    private void hideMousePointer() {
+    protected void hideMousePointer() {
         mouseLine.setStartX(0.0);
         mouseLine.setStartY(0.0);
         mouseLine.setEndX(0.0);
@@ -425,7 +424,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         return true;
     }
     
-    private void selectWaypointsInRange() {
+    protected void selectWaypointsInRange() {
         final List<GPXWaypoint> selectedWaypointsInRange = new ArrayList<>();
 
         // TFE, 20191127: since we don't show all waypoints any more in chart, we need to search over all ones here...
