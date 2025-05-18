@@ -23,8 +23,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.viewer;
+package tf.gpx.edit.viewer.charts;
 
+import tf.gpx.edit.viewer.charts.IChartBasics;
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

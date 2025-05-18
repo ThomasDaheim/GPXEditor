@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.util.List;
 import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;

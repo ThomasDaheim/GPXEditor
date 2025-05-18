@@ -23,8 +23,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.viewer;
+package tf.gpx.edit.viewer.charts;
 
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -56,7 +57,7 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import static tf.gpx.edit.viewer.IChartBasics.TRANS20_SUFFIX;
+import static tf.gpx.edit.viewer.charts.IChartBasics.TRANS20_SUFFIX;
 
 /**
  * Show height chart for GPXWaypoints of GPXLineItem and highlight selected ones

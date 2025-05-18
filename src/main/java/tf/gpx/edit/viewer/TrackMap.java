@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
