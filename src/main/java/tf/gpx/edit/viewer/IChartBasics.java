@@ -75,9 +75,19 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     final static String SHIFT_TEXT = "ShiftText";
     
     public static enum ChartType {
-        HEIGHTCHART,
-        SLOPECHART,
-        SPEEDCHART;
+        HEIGHTCHART("Height"),
+        SLOPECHART("Slope"),
+        SPEEDCHART("Speed");
+        
+        private final String chartName;
+        
+        private ChartType(final String name) {
+            chartName = name;
+        }
+        
+        public String getChartName() {
+            return chartName;
+        }
     }
     
     final static String DATA_URI_CSS_PREFIX = "data:text/css;charset=utf-8;base64,";
@@ -114,6 +124,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
     // only extensions of XYChart allowed
     T getChart();
     Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series);
+    // who are we?
+    public String getChartName();
     
     // TFE, 20210104: improve performance by surpressing intermediate updates in AeraChart and XYChart
     boolean getInShowData();
@@ -371,8 +383,8 @@ public interface IChartBasics<T extends XYChart<Number, Number>> extends IPrefer
             }
         }
 
-        // add labels to series on base chart
-        if (getChartsPane().getBaseChart().equals(this)) {
+        // add labels to series on base charts
+        if (getChartsPane().isBaseChart(this)) {
             for (XYChart.Series<Number, Number> series : seriesList) {
                 // only if not empty and not for file waypoints
                 if (!series.getData().isEmpty() &&

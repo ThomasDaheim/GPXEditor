@@ -202,83 +202,13 @@
 }
 .chart-series-area-line {    
     -fx-stroke-width: 0.1px;
-    -fx-effect: null;
+    -fx-effect: none;
     -fx-cursor: crosshair;
 }
 .chart-series-line {    
     -fx-stroke: #ccc !important;
     -fx-stroke-width: 0.4px !important;
-    -fx-effect: null;
-}
-
-/* TFE, 20191113: pseudoclasses to color line and area in heightchart */
-.line-color-Black *.chart-series-area-fill,
-.line-color-Black *.chart-series-area-line {
-    -fx-fill: black;
-}
-.line-color-DarkRed *.chart-series-area-fill,
-.line-color-DarkRed *.chart-series-area-line {
-    -fx-fill: darkred;
-}
-.line-color-DarkGreen *.chart-series-area-fill,
-.line-color-DarkGreen *.chart-series-area-line {
-    -fx-fill: darkgreen;
-}
-.line-color-GoldenRod *.chart-series-area-fill,
-.line-color-GoldenRod *.chart-series-area-line {
-    -fx-fill: goldenrod;
-}
-.line-color-DarkBlue *.chart-series-area-fill,
-.line-color-DarkBlue *.chart-series-area-line {
-    -fx-fill: darkblue;
-}
-.line-color-DarkMagenta *.chart-series-area-fill,
-.line-color-DarkMagenta *.chart-series-area-line {
-    -fx-fill: darkmagenta;
-}
-.line-color-DarkCyan *.chart-series-area-fill,
-.line-color-DarkCyan *.chart-series-area-line {
-    -fx-fill: darkcyan;
-}
-.line-color-DarkGray *.chart-series-area-fill,
-.line-color-DarkGray *.chart-series-area-line {
-    -fx-fill: darkgray;
-}
-.line-color-LightGray *.chart-series-area-fill,
-.line-color-LightGray *.chart-series-area-line {
-    -fx-fill: lightgray;
-}
-.line-color-Red *.chart-series-area-fill,
-.line-color-Red *.chart-series-area-line {
-    -fx-fill: red;
-}
-.line-color-Green *.chart-series-area-fill,
-.line-color-Green *.chart-series-area-line {
-    -fx-fill: green;
-}
-.line-color-Yellow *.chart-series-area-fill,
-.line-color-Yellow *.chart-series-area-line {
-    -fx-fill: yellow;
-}
-.line-color-Blue *.chart-series-area-fill,
-.line-color-Blue *.chart-series-area-line {
-    -fx-fill: blue;
-}
-.line-color-Magenta *.chart-series-area-fill,
-.line-color-Magenta *.chart-series-area-line {
-    -fx-fill: magenta;
-}
-.line-color-Cyan *.chart-series-area-fill,
-.line-color-Cyan *.chart-series-area-line {
-    -fx-fill: cyan;
-}
-.line-color-White *.chart-series-area-fill,
-.line-color-White *.chart-series-area-line {
-    -fx-fill: white;
-}
-.line-color-Silver *.chart-series-area-fill,
-.line-color-Silver *.chart-series-area-line {
-    -fx-fill: silver;
+    -fx-effect: none;
 }
 
 /* sunpath coloring */

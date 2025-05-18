@@ -28,10 +28,18 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.BoundingBox;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -48,8 +56,11 @@ import tf.helper.javafx.DragResizer;
  * See https://gist.github.com/MaciejDobrowolski/9c99af00668986a0a303 for the idea
  * @author thomas
  */
-public class ChartsPane extends StackPane implements IPreferencesHolder {
+public class ChartsPane extends BorderPane implements IPreferencesHolder {
     private final static ChartsPane INSTANCE = new ChartsPane();
+    
+    private final StackPane STACK_PANE = new StackPane();
+    private final MenuBar MENU_BAR = new MenuBar();
 
     // reserved space per yAxis on the right side
     private final static double YAXIS_WIDTH = 60;
@@ -58,15 +69,19 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
     // TFE, 20191119: hold a list of IChartBasics for height, speed, ...
     private final List<IChartBasics<?>> charts = new ArrayList<>();
 
-    // base is the one with yAxis to the right & mouse interaction
-    private final IChartBasics<?> baseChart;
+    // bases are the one with yAxis to the right & mouse interaction
+    private final List<IChartBasics<?>> baseCharts = new ArrayList<>();
     private final List<IChartBasics<?>> additionalCharts = new ArrayList<>();
     private double totalYAxisWidth = YAXIS_WIDTH + YAXIS_SEP;
 
     private ChartsPane() {
         super();
+        
+        setTop(MENU_BAR);
+        BorderPane.setMargin(MENU_BAR, new Insets(0,0,36,0));
+        setCenter(STACK_PANE);
 
-        baseChart = HeightChart.getInstance();
+        baseCharts.add(HeightChart.getInstance());
         // TFE, 20230609: add property to show / hide speed chart
         if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
             additionalCharts.add(SpeedChart.getInstance());
@@ -81,25 +96,28 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
     
     private void initialize() {
         getStyleClass().add("charts-pane");
+        MENU_BAR.getStyleClass().add("charts-pane");
+        STACK_PANE.getStyleClass().add("charts-pane");
         
         totalYAxisWidth *= additionalCharts.size();
         // n charts only have n-1 separators between them ;-)
         totalYAxisWidth -= YAXIS_SEP;
         
-        charts.add(baseChart);
+        charts.addAll(baseCharts);
         charts.addAll(additionalCharts);
         
-        setAlignment(Pos.CENTER_LEFT);
-        
-        getChildren().clear();
+        STACK_PANE.setAlignment(Pos.CENTER_LEFT);
+        STACK_PANE.getChildren().clear();
 
         // set up margins, ... for xAxis depending on side of yAxis
-        baseChart.setVisible(false);
-        baseChart.setChartsPane(this);
-        final XYChart chart = baseChart.getChart();
-        setFixedAxisWidth(chart);
-        styleChart(chart, true);
-        getChildren().add(resizeChart(chart, true));
+        baseCharts.stream().forEach((t) -> {
+            t.setVisible(false);
+            t.setChartsPane(this);
+            final XYChart chart = t.getChart();
+            setFixedAxisWidth(chart);
+            styleChart(chart, true);
+            STACK_PANE.getChildren().add(resizeChart(chart, true));
+        });
         
         additionalCharts.stream().forEach((t) -> {
             t.setVisible(false);
@@ -109,12 +127,39 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
             setFixedAxisWidth(addChart);
             styleChart(addChart, false);
             final Node node = resizeChart(addChart, false);
-            getChildren().add(node);
+            STACK_PANE.getChildren().add(node);
             node.toFront();
         });
         
         // TFE, 20200214: allow resizing on TOP border
         DragResizer.makeResizable(this, DragResizer.ResizeArea.TOP);
+        
+        // TFE, 20250517: add menu to toggle base charts & enable / disable additional charts
+        // base charts: ToggleGroup with RadioMenuItem
+        final Menu baseMenu = new Menu("Charts");
+        final ToggleGroup toggleGroup = new ToggleGroup();
+        baseCharts.stream().forEach((t) -> {
+            final RadioMenuItem item = new RadioMenuItem(t.getChartName());
+
+            toggleGroup.getToggles().add(item);
+            baseMenu.getItems().add(item);
+
+            // lets link the charts to the menues
+            Bindings.bindBidirectional(t.getChart().visibleProperty(), item.selectedProperty());
+        });
+        
+        // add. charts: individual CheckMenuItem
+        final Menu addMenu = new Menu("Overlays");
+        additionalCharts.stream().forEach((t) -> {
+            CheckMenuItem item = new CheckMenuItem(t.getChartName());
+
+            addMenu.getItems().add(item);
+
+            // lets link the charts to the menues
+            Bindings.bindBidirectional(t.getChart().visibleProperty(), item.selectedProperty());
+        });
+        
+        MENU_BAR.getMenus().addAll(baseMenu, addMenu);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
@@ -154,7 +199,7 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         chart.maxWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
         
         if (!isBase) {
-            chart.translateXProperty().bind(baseChart.getChart().getYAxis().widthProperty());
+            chart.translateXProperty().bind(baseCharts.getFirst().getChart().getYAxis().widthProperty());
             chart.getYAxis().setTranslateX((YAXIS_WIDTH+YAXIS_SEP) * additionalCharts.indexOf(chart));
         }
 
@@ -238,8 +283,8 @@ public class ChartsPane extends StackPane implements IPreferencesHolder {
         });
     }
     
-    public IChartBasics getBaseChart() {
-        return baseChart;
+    public boolean isBaseChart(final IChartBasics<?> chart) {
+        return baseCharts.contains(chart);
     }
     
     public void doSetVisible(final boolean visible) {

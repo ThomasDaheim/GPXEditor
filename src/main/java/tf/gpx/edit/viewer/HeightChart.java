@@ -311,6 +311,11 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     public static HeightChart getInstance() {
         return INSTANCE;
     }
+    
+    @Override
+    public String getChartName() {
+        return ChartType.HEIGHTCHART.getChartName();
+    }
 
     @Override
     public AreaChart<Number, Number> getChart() {

@@ -89,6 +89,11 @@ public class SpeedChart extends LineChart<Number, Number> implements IChartBasic
     }
     
     @Override
+    public String getChartName() {
+        return ChartType.SPEEDCHART.getChartName();
+    }
+
+    @Override
     public LineChart<Number, Number> getChart() {
         return this;
     }
