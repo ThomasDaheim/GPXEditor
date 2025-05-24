@@ -66,27 +66,15 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     private final static double YAXIS_WIDTH = 60;
     private final static double YAXIS_SEP = 20;
     
-    // TFE, 20191119: hold a list of IChartBasics for height, speed, ...
-    private final List<IChartBasics<?>> charts = new ArrayList<>();
+    // TFE, 20191119: hold a list of IChart for height, speed, ...
+    private final List<IChart<?>> charts = new ArrayList<>();
 
     // bases are the one with yAxis to the right & mouse interaction
-    private final List<IChartBasics<?>> baseCharts = new ArrayList<>();
-    private final List<IChartBasics<?>> additionalCharts = new ArrayList<>();
+    private final List<IChart<?>> baseCharts = new ArrayList<>();
+    private final List<IChart<?>> additionalCharts = new ArrayList<>();
     private double totalYAxisWidth = YAXIS_WIDTH + YAXIS_SEP;
 
     private ChartsPane() {
-        super();
-        
-        setTop(MENU_BAR);
-        setCenter(STACK_PANE);
-
-        baseCharts.add(HeightChart.getInstance());
-        baseCharts.add(SlopeChart.getInstance());
-        // TFE, 20230609: add property to show / hide speed chart
-        if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
-            additionalCharts.add(SpeedChart.getInstance());
-        }
-        
         initialize();
     }
     
@@ -95,6 +83,13 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     }
     
     private void initialize() {
+        baseCharts.add(HeightChart.getInstance());
+        baseCharts.add(SlopeChart.getInstance());
+        // TFE, 20230609: add property to show / hide speed chart
+        if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
+            additionalCharts.add(SpeedChart.getInstance());
+        }
+
         getStyleClass().add("charts-pane");
         MENU_BAR.getStyleClass().add("charts-pane");
         STACK_PANE.getStyleClass().add("charts-pane");
@@ -111,7 +106,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
 
         // set up margins, ... for xAxis depending on side of yAxis
         baseCharts.stream().forEach((t) -> {
-            t.setVisible(false);
+            t.getChart().setVisible(false);
             t.setChartsPane(this);
             final XYChart chart = t.getChart();
             setFixedAxisWidth(chart);
@@ -120,7 +115,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         });
         
         additionalCharts.stream().forEach((t) -> {
-            t.setVisible(false);
+            t.getChart().setVisible(false);
             t.setChartsPane(this);
             final XYChart addChart = t.getChart();
             
@@ -131,9 +126,8 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
             node.toFront();
         });
         
-        // TFE, 20200214: allow resizing on TOP border
-        DragResizer.makeResizable(MENU_BAR, DragResizer.ResizeArea.TOP);
-        
+        setCenter(STACK_PANE);
+
         // TFE, 20250517: add menu to toggle base charts & enable / disable additional charts
         // base charts: ToggleGroup with RadioMenuItem
         final Menu baseMenu = new Menu("Charts");
@@ -160,6 +154,11 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         });
         
         MENU_BAR.getMenus().addAll(baseMenu, addMenu);
+
+        setTop(MENU_BAR);
+        
+        // TFE, 20200214: allow resizing on TOP border
+        DragResizer.makeResizable(MENU_BAR, this, DragResizer.ResizeArea.TOP);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
@@ -182,17 +181,12 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     private Node resizeChart(final XYChart chart, final boolean isBase) {
         HBox hBox = new HBox(chart);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.minHeightProperty().bind(heightProperty());
-        hBox.prefHeightProperty().bind(heightProperty());
-        hBox.maxHeightProperty().bind(heightProperty());
-        hBox.minWidthProperty().bind(widthProperty());
-        hBox.prefWidthProperty().bind(widthProperty());
-        hBox.maxWidthProperty().bind(widthProperty());
+
         hBox.setMouseTransparent(!isBase);
 
-        chart.minHeightProperty().bind(hBox.heightProperty());
-        chart.prefHeightProperty().bind(hBox.heightProperty());
-        chart.maxHeightProperty().bind(hBox.heightProperty());
+        chart.minHeightProperty().bind(hBox.minHeightProperty());
+        chart.prefHeightProperty().bind(hBox.prefHeightProperty());
+        chart.maxHeightProperty().bind(hBox.maxHeightProperty());
 
         chart.minWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
         chart.prefWidthProperty().bind(hBox.widthProperty().subtract(totalYAxisWidth));
@@ -283,17 +277,16 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         });
     }
     
-    public boolean isBaseChart(final IChartBasics<?> chart) {
+    public boolean isBaseChart(final IChart<?> chart) {
         return baseCharts.contains(chart);
     }
     
     public void doSetVisible(final boolean visible) {
         setVisible(visible);
         charts.stream().forEach((t) -> {
-            t.setVisible(visible);
+            t.getChart().setVisible(visible);
             if (visible) {
-                t.getChart().layout();
-                t.layoutPlotChildren();
+                t.doLayout();
             }
         });
         layout();

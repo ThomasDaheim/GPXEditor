@@ -27,7 +27,6 @@ package tf.gpx.edit.viewer.charts;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,12 +35,10 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.Node;
-import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.Pane;
@@ -53,17 +50,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
-import static tf.gpx.edit.viewer.charts.IChartBasics.TRANS20_SUFFIX;
 
 /**
  * Show height chart for GPXWaypoints of GPXLineItem and highlight selected ones
  * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
  * @author thomas
  */
-public class HeightChart extends AreaChart<Number, Number> implements IChartBasics<AreaChart<Number, Number>> {
+public class HeightChart extends AbstractChart {
     private final static HeightChart INSTANCE = new HeightChart();
     
     private final static String HEIGHT_LABEL = new String(Character.toChars(8657)) + " ";
@@ -72,23 +67,10 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private final static String SLOPE_LABEL = "";
 
     private GPXEditor myGPXEditor;
-    private ChartsPane myChartsPane;
 
-    private List<GPXMeasurable> myGPXLineItems;
-
-    private final List<Pair<GPXWaypoint, Number>> myPoints = new ArrayList<>();
     private final ObservableList<Triple<GPXWaypoint, Number, Node>> selectedWaypoints;
     
     private boolean noLayout = false;
-    private boolean inShowData = false;
-    
-    // TFE, 20230226: put a lower limit on negative heights - on case something crazy is in elevation data
-    // can't go lower than the dead sea...
-    private final static double MIN_ELEVATION = -428.0;
-    private double minDistance;
-    private double maxDistance;
-    private double minHeight;
-    private double maxHeight;
     
     private double dragStartDistance = Double.MAX_VALUE;
     private double dragEndDistance = Double.MIN_VALUE;
@@ -97,8 +79,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
-    
-    private boolean nonZeroData = false;
 
     private final Region plotArea = (Region) lookup(".chart-plot-background");
     private final Pane chartContent = (Pane) lookup(".chart-content");
@@ -106,8 +86,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     private final Text mouseText = new Text("");
     private final Line mouseLine = new Line();
     
-    private String currentCSS = "";
-
     protected HeightChart() {
         super(new NumberAxis(), new NumberAxis());
         
@@ -156,12 +134,15 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
             double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
             double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
 
+            // we want to show the elevation at this distance
+            XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
+            final Double distValue = data.XValueProperty().getValue().doubleValue();
+            final Double heightValue = data.YValueProperty().getValue().doubleValue();
+
             // onyl show on top of chart area, not on axis
-            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
-                // we want to show the elevation at this distance
-                XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
-                final Double distValue = data.XValueProperty().getValue().doubleValue();
-                final Double heightValue = data.YValueProperty().getValue().doubleValue();
+            // TFE, 20250523: only show INSIDE the actual area covered by the chart or below have the height
+            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && 
+                y >= yAxis.getLowerBound() && (y <= yAxis.getLowerBound() + (yAxis.getUpperBound()-yAxis.getLowerBound()) / 2 || y <= heightValue)) {
 
                 String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
                 if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
@@ -316,26 +297,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     public String getChartName() {
         return ChartType.HEIGHTCHART.getChartName();
     }
-
-    @Override
-    public AreaChart<Number, Number> getChart() {
-        return this;
-    }
-    
-    @Override
-    public Iterator<XYChart.Data<Number, Number>> getDataIterator(final XYChart.Series<Number, Number> series) {
-        return getDisplayedDataIterator(series);
-    }
-    
-    @Override
-    public List<GPXMeasurable> getGPXMeasurables() {
-        return myGPXLineItems;
-    }
-    
-    @Override
-    public void setGPXMeasurables(final List<GPXMeasurable> lineItems) {
-        myGPXLineItems = lineItems;
-    }
     
     @Override
     public void initForNewGPXWaypoints() {
@@ -343,80 +304,13 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
     
     @Override
-    public double getMinimumDistance() {
-        return minDistance;
-    }
-
-    @Override
-    public void setMinimumDistance(final double value) {
-        minDistance = value;
-    }
-
-    @Override
-    public double getMaximumDistance() {
-        return maxDistance;
-    }
-
-    @Override
-    public void setMaximumDistance(final double value) {
-        maxDistance = value;
-    }
-
-    @Override
-    public double getMinimumYValue() {
-        return minHeight;
-    }
-
-    @Override
-    public void setMinimumYValue(final double value) {
-        minHeight = value;
-    }
-
-    @Override
-    public double getMaximumYValue() {
-        return maxHeight;
-    }
-
-    @Override
-    public void setMaximumYValue(final double value) {
-        maxHeight = value;
-    }
-
-    @Override
-    public List<Pair<GPXWaypoint, Number>> getPoints() {
-        return myPoints;
-    }
-    
-    @Override
     public double getYValue(final GPXWaypoint gpxWaypoint) {
         return gpxWaypoint.getElevation();
-    }
-
-    @Override
-    public double getYValueAndSetMinMax(final GPXWaypoint gpxWaypoint) {
-        final double result = getYValue(gpxWaypoint);
-        
-        if (doSetMinMax(gpxWaypoint)) {
-            minHeight = Math.max(MIN_ELEVATION, Math.min(minHeight, result));
-            maxHeight = Math.max(maxHeight, result);
-        }
-        
-        return result;
     }
     
     @Override
     public void setCallback(final GPXEditor gpxEditor) {
         myGPXEditor = gpxEditor;
-    }
-
-    @Override
-    public ChartsPane getChartsPane() {
-        return myChartsPane;
-    }
-    
-    @Override
-    public void setChartsPane(final ChartsPane pane) {
-        myChartsPane = pane;
     }
     
     @Override
@@ -432,7 +326,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         
         double distValue = 0.0;
         
-        for (GPXLineItem lineItem : myGPXLineItems) {
+        for (GPXLineItem lineItem : getGPXMeasurables()) {
             for (GPXWaypoint gpxWaypoint: lineItem.getCombinedGPXWaypoints(null)) {
                 distValue += gpxWaypoint.getDistance() / 1000.0;
 
@@ -507,7 +401,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
 //                .findFirst().orElse(null);
             // TFE, 20191124: speed things up a little...
             Pair<GPXWaypoint, Number> point = null;
-            for (Pair<GPXWaypoint, Number> myPoint : myPoints) {
+            for (Pair<GPXWaypoint, Number> myPoint : getPoints()) {
                 if (myPoint.getLeft().equals(waypoint)) {
                     point = myPoint;
                     break;
@@ -556,16 +450,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
 
     @Override
-    public boolean hasNonZeroData() {
-        return nonZeroData;
-    }
-
-    @Override
-    public void setNonZeroData(final boolean value) {
-        nonZeroData = value;
-    }
-
-    @Override
     public void layoutPlotChildren() {
 //        System.out.println("layoutPlotChildren: " + noLayout);
 //        System.out.println("Printing stack trace:");
@@ -599,7 +483,7 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         }
 
         Pair<GPXWaypoint, Number> prevPair = null;
-        for (Pair<GPXWaypoint, Number> pair : myPoints) {
+        for (Pair<GPXWaypoint, Number> pair : getPoints()) {
             final GPXWaypoint point = pair.getLeft();
             
             // find selected waypoint triple, if any (the fast way)
@@ -637,32 +521,6 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
     }
 
     @Override
-    public boolean getInShowData() {
-        return inShowData;
-    }
-
-    @Override
-    public void setInShowData(final boolean value) {
-        inShowData = value;
-    }
-    
-    @Override
-    protected void updateLegend() {
-        if (inShowData) {
-            return;
-        }
-        super.updateLegend();
-    }
-    
-    @Override
-    protected void seriesChanged(ListChangeListener.Change<? extends Series> c) {
-        if (inShowData) {
-            return;
-        }
-        super.seriesChanged(c);
-    }
-    
-    @Override
     public void doShowData() {
         // TFE, 20210104: need to add color after doShowData() since AreaChart.seriesChanged deletes all styling...
         // TFE, 20250504: a new approach is proposed: to create a css on the fly and add it as stylesheet
@@ -694,15 +552,5 @@ public class HeightChart extends AreaChart<Number, Number> implements IChartBasi
         
         super.updateLegend();
         super.seriesChanged(null);
-    }
-    
-    @Override
-    public void setCurrentCss(final String cssString) {
-        currentCSS = cssString;
-    }
-
-    @Override
-    public String getCurrentCss() {
-        return currentCSS;
     }
 }

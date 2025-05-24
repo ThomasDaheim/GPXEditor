@@ -25,64 +25,40 @@
  */
 package tf.gpx.edit.viewer.charts;
 
-import javafx.geometry.Side;
-import javafx.scene.chart.NumberAxis;
+import java.util.List;
+import javafx.geometry.BoundingBox;
+import javafx.scene.chart.XYChart;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.helper.general.IPreferencesHolder;
 
 /**
- * Show lineStart height chart for GPXWaypoints of lineStart GPXLineItem and highlight selected ones
- * Inspired by https://stackoverflow.com/questions/28952133/how-to-add-two-vertical-lines-with-javafx-linechart/28955561#28955561
+ * Interface for everything required by ChartsPane.
+ * 
+ * This is what you need to implement to be a good chart.
+ * 
  * @author thomas
+ * @param <T>
  */
-public class SpeedChart extends AbstractChart {
-    private final static SpeedChart INSTANCE = new SpeedChart();
+public interface IChart<T extends XYChart<Number, Number>> extends IPreferencesHolder {
+    public void setEnable(final boolean enabled);
 
-    private GPXEditor myGPXEditor;
+    public void setChartsPane(final ChartsPane pane);
 
-    private final NumberAxis xAxis;
-    private final NumberAxis yAxis;
-    
-    private SpeedChart() {
-        super(new NumberAxis(), new NumberAxis());
-        
-        xAxis = (NumberAxis) getXAxis();
-        yAxis = (NumberAxis) getYAxis();
-        
-        xAxis.setLowerBound(0.0);
-        xAxis.setMinorTickVisible(false);
-        xAxis.setTickUnit(1);
-        xAxis.setAutoRanging(false);
-        
-        yAxis.setSide(Side.RIGHT);
-        yAxis.setLabel("Speed [km/h]");
-        getYAxis().setAutoRanging(false);
-        
-        initialize();
-        setCreateSymbols(false);
-    }
-    
-    public static SpeedChart getInstance() {
-        return INSTANCE;
-    }
-    
-    @Override
-    public String getChartName() {
-        return ChartType.SPEEDCHART.getChartName();
-    }
-    
-    @Override
-    public double getYValue(final GPXWaypoint gpxWaypoint) {
-        return gpxWaypoint.getSpeed();
-    }
-    
-    @Override
-    public void setCallback(final GPXEditor gpxEditor) {
-        myGPXEditor = gpxEditor;
-    }
+    public T getChart();
+    public String getChartName();
+    boolean hasNonZeroData();
 
-    @Override
-    public void doShowData() {
-        super.updateLegend();
-    }
+    public  void setViewLimits(final BoundingBox newBoundingBox);
+    public void updateLineStyle(final GPXLineItem lineItem);
+    public void doLayout();
+
+    public void setCallback(final GPXEditor gpxEditor);
+
+    public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds);
+    public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints);
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker);
+    public void clearSelectedGPXWaypoints();
 }
