@@ -30,8 +30,9 @@ So it was time to start a new self-learning project. And here you see the result
 
 ### Update v5.9
 
-* Mainly bugfixes and dependency updates.
+* Added slope chart: similar to height chart but coloring is done based on slope of track/route.
 * Create route from selected waypoints.
+* Bugfixes and dependency updates.
 * Added test class TestSunPathForYear. Outputs a csv with sunrise/sunset dates for a year for a given lat/lon location. The csv contains the astronomical sunrise/sunset dates and the "real" ones, when the sun is above the local horizon.
 * Added example images for different reduction algos as test resources. Thanks to https://github.com/emcconville/point-reduction-algorithms for the effort of doing the comparison! Long story short: Douglas–Peucker is the best algo, no need to implement further ones.
 
