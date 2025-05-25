@@ -306,7 +306,7 @@ public class DistributionViewer extends AbstractStage {
         // 6th row: select button
         final Button deleteButton = new Button("Delete selected points");
         deleteButton.setOnAction((ActionEvent event) -> {
-            if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
+            if (!wayPointList.getCheckModel().getCheckedItems().isEmpty()) {
                 // now more complex - can be waypoints of various track segements...
                 // luckily, we already have a method for that :-)
                 myGPXEditor.deleteWaypoints(wayPointList.getCheckModel().getCheckedItems());
