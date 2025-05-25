@@ -99,7 +99,7 @@ public class InvertSelectedWaypointsAction extends GPXLineItemAction<GPXWaypoint
                 // fastest way to select a number of indices... but still slow for many
                 mySelectionModel.selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(GPXEditor.NO_INTS)));
 
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(mySelectionModel.getSelectedItems(), false, false);
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(mySelectionModel.getSelectedItems(), false, false, false);
                 
                 myEditor.addGPXWaypointListListener();
                 myEditor.setStatusFromWaypoints();

@@ -255,7 +255,7 @@ public class DistributionViewer extends AbstractStage {
             wayPointList.getCheckModel().checkAll();
             
             // select waypoints without listener for check changes
-            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false);
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false, true);
 
             // re-enable listener for checked changes
             wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
@@ -290,7 +290,7 @@ public class DistributionViewer extends AbstractStage {
         });        
         // use explicit listener so that it can be removed during mass update
         listenerCheckChanges = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
-            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false);
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false, true);
         };     
         wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         getGridPane().add(wayPointList, 3, rowNum, 1, 3);

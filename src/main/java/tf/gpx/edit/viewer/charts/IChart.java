@@ -59,6 +59,6 @@ public interface IChart<T extends XYChart<Number, Number>> extends IPreferencesH
 
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds);
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints);
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker);
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo);
     public void clearSelectedGPXWaypoints();
 }

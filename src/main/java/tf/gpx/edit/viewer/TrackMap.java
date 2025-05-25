@@ -1452,7 +1452,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
     }
 
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         if (isDisabled()) {
             return;
         }
@@ -1491,7 +1491,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // int notShownCount = 0;
         int notShownCount = selectedWaypoints.keySet().stream().mapToInt((value) -> {
             if (value.startsWith(NOT_SHOWN)) {
-                return Integer.parseInt(value.substring(NOT_SHOWN.length()));
+                return Integer.valueOf(value.substring(NOT_SHOWN.length()));
             } else {
                 return 0;
             }
@@ -1546,7 +1546,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         }
         
         // TFE, 20210213: if only one waypoint selected, panTo it
-        if (selectedWaypoints.size() == 1) {
+        // TFE, 20250525: don't allways do that! let the caller decide about this behaviour
+        if (selectedWaypoints.size() == 1 && panTo) {
             final Map.Entry<String, GPXWaypoint> entry = selectedWaypoints.entrySet().iterator().next();
             panTo(entry.getValue().getLatitude(), entry.getValue().getLongitude());
         }
@@ -1650,7 +1651,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         if (addToSelection) {
             waypoints.addAll(selectedWaypoints.values());
         }
-        myGPXEditor.selectGPXWaypoints(waypoints.stream().collect(Collectors.toList()), false, false);
+        myGPXEditor.selectGPXWaypoints(waypoints.stream().collect(Collectors.toList()), false, false, false);
     }
             
     public void moveGPXWaypoint(final String marker, final LatLonElev newLatLong) {

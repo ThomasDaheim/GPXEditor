@@ -241,11 +241,11 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         });
     }
 
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         assert gpxWaypoints != null;
 
         charts.stream().forEach((t) -> {
-            t.setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+            t.setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker, panTo);
         });
     }
     

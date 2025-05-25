@@ -179,12 +179,12 @@ public class HeightChart extends AbstractChart {
                 mouseLine.setVisible(true);
                 
                 // callback to highlight waypoint in TrackMap
-                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true);
+                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true, false);
             } else {
                 hideMousePointer();
                 
                 // unset selected waypoint
-                myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
+                myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true, false);
             }
         });
         
@@ -345,11 +345,11 @@ public class HeightChart extends AbstractChart {
             }
         }
         
-        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false);
+        myGPXEditor.selectGPXWaypoints(selectedWaypointsInRange, false, false, false);
     }
 
     @Override
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         if (isDisabled()) {
             return;
         }

@@ -994,7 +994,7 @@ public class GPXEditor implements Initializable {
             
             TaskExecutor.executeTask(
                 getScene(), () -> {
-                    GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+                    GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false, false);
                 },
                 StatusBar.getInstance());
 
@@ -2036,7 +2036,7 @@ public class GPXEditor implements Initializable {
                 gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
 //                System.out.println("after selectIndices(): " + Instant.now());
 
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false, false);
 //                System.out.println("after setSelectedGPXWaypoints(): " + Instant.now());
 
                 addGPXWaypointListListener();
@@ -2235,7 +2235,7 @@ public class GPXEditor implements Initializable {
     //
     // support callback functions for other classes
     // 
-    public void selectGPXWaypoints(final List<GPXWaypoint> waypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void selectGPXWaypoints(final List<GPXWaypoint> waypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
 //        System.out.println("selectGPXWaypoints: " + waypoints.size() + ", " + Instant.now());
 
         TaskExecutor.executeTask(
@@ -2280,7 +2280,7 @@ public class GPXEditor implements Initializable {
                 }
     //            System.out.println("End select:   " + Instant.now());
 
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker);
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker, panTo);
 
                 addGPXWaypointListListener();
                 setStatusFromWaypoints();

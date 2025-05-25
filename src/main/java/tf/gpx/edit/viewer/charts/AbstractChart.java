@@ -710,7 +710,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
     }
     
     @Override
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         if (getChart().isDisabled()) {
             return;
         }

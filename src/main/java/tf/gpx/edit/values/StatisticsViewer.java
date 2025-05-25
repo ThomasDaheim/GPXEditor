@@ -329,7 +329,7 @@ public class StatisticsViewer extends AbstractStage {
         // 2nd row: OK, highlight & Export buttons
         final Button highlightButton = new Button("Select Wpts.");
         highlightButton.setOnAction((ActionEvent event) -> {
-            myGPXEditor.selectGPXWaypoints(extremePoints, false, false);
+            myGPXEditor.selectGPXWaypoints(extremePoints, true, false, true);
         });      
         getGridPane().add(highlightButton, 1, rowNum, 1, 1);
         GridPane.setMargin(highlightButton, INSET_BOTTOM);

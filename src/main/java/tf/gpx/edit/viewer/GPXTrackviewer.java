@@ -92,15 +92,15 @@ public class GPXTrackviewer implements IPreferencesHolder {
         ChartsPane.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;
 
-        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker, panTo);
         
         // this can be done a bit later - get the map drawn as early as possible
         Platform.runLater(() -> {
-            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker, panTo);
         });
     }
     
