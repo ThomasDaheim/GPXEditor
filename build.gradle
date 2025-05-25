@@ -272,7 +272,7 @@ run {
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/visualvm_212/visualvm/lib/deployed/jdk16/windows-amd64/profilerinterface.dll"="C:/PROGRA~1/visualvm_212/visualvm/lib",5140')
         enableAssertions = true
     }
-    args = ["-mapCenter", "46.660578140310854 11.15942716598511"]
+    args = ["-mapCenter", "46.660578140310854 11.15942716598511", "-gpxFiles", "D:/Clouds/ownCloud/Shared/Gemeinsame Dokumente/Urlaub/Gardasee_2025/Variante Brenta/Gardasee_2025_5Tage_2.gpx"]
 //    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 

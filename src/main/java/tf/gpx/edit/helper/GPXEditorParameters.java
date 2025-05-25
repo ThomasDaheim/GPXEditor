@@ -200,7 +200,7 @@ public class GPXEditorParameters {
             
             if (command.hasOption(GPXEditorParameters.CmdOps.gpxFiles.toString())) {
                 value = command.getOptionValue(GPXEditorParameters.CmdOps.gpxFiles.toString());
-                gpxFiles = Arrays.asList(value.split(" "));
+                gpxFiles = Arrays.asList(value.split("\\*"));
                 // System.out.println("Option gpxFiles found: " + value);
             }
             
