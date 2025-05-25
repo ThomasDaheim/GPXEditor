@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer.charts;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -461,8 +462,8 @@ public class HeightChart extends AbstractChart {
 //        }
 //        System.out.println("=====================");
         // TFE, 20200320: layoutPlotChildren called all the time from JavaFX - avoid lengthy calculations if not needed!
-        if (noLayout || !isVisible()) {
-//            System.out.println("HeighChart: sorry, no layout pass @" + Instant.now());
+        if (noLayout) {
+//            System.out.println(getClass().getName() + ": sorry, no layout pass @" + Instant.now());
             return;
         }
 
@@ -550,7 +551,6 @@ public class HeightChart extends AbstractChart {
         // and now add the result as css to the stylesheet
         setStylesheet(cssString.toString());
         
-        super.updateLegend();
         super.seriesChanged(null);
     }
 }

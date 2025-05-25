@@ -27,13 +27,11 @@ package tf.gpx.edit.viewer.charts;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
@@ -186,7 +184,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         if (getChart().isDisabled()) {
             return;
         }
-
+        
         // TFE, 20220325: store previous visibility
         final boolean wasVisible = getChart().isVisible();
         // invisible update - much faster
@@ -347,11 +345,14 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
             dataCount += series.getData().size();
         }
         final Integer dataInt = dataCount;
+
+//        if (this instanceof SlopeChart) {
+//            System.out.println("Gootcha with " + dataCount + " datapoints");
+//        }
         
         // TFE, 20220201: showData takes a long time... lets do it a bit later
-        Platform.runLater(() -> {
-            showData(seriesList, dataInt);
-        });
+        // TFE, 20250525: already done in a runLater? In that case don't do it once again
+        showData(seriesList, dataInt);
         
         setAxes(minDistance, maxDistance, minYValue, maxYValue);
         
@@ -463,15 +464,13 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
 
         inShowData = false;
         doShowData();
-        myChartsPane.applyCss();
-        myChartsPane.requestLayout();
 
 //        final AtomicInteger shownCount = new AtomicInteger(0);
 //        getChart().getData().forEach((t) -> {
 //            XYChart.Series<Number, Number> series = (XYChart.Series<Number, Number>) t;
-//            shownCount.set(shownCount.getAsString() + series.getData().size());
+//            shownCount.set(shownCount.get() + series.getData().size());
 //        });
-//        System.out.println("Datapoints added: " + shownCount.getAsString());
+//        System.out.println("Datapoints added: " + shownCount.get());
     }
     
     protected void adaptLayout() {
@@ -550,7 +549,12 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
     
     // TFE, 20250518: support that one lineitem can lead to multiple series (e.g. for slope chart)
     protected List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
+        final List<XYChart.Series<Number, Number>> result = new ArrayList<>();
+
         final List<XYChart.Data<Number, Number>> dataList = new ArrayList<>();
+        
+        // check if we have any data in this series
+        boolean hasData = false;
         
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
             maxDistance = maxDistance + gpxWaypoint.getDistance();
@@ -558,6 +562,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
             
             if (yValue != 0.0) {
                 nonZeroData = true;
+                hasData = true;
             }
             
 //            System.out.println("adding chart point: " + getMaximumDistance() / 1000.0 + ", " + yValue);
@@ -568,12 +573,15 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
             getPoints().add(Pair.of(gpxWaypoint, maxDistance));
         }
         
-        final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        series.getData().addAll(dataList);
+        if (hasData) {
+            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.getData().addAll(dataList);
+            setSeriesUserData(series, lineItem);
+
+            result.add(series);
+        }
         
-        setSeriesUserData(series, lineItem);
-        
-        return Arrays.asList(series);
+        return result;
     }
     
     // TFE, 20250518: support that one lineitem can lead to multiple series (e.g. for slope chart)

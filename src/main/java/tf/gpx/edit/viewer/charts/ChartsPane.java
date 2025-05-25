@@ -159,6 +159,9 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         
         // TFE, 20200214: allow resizing on TOP border
         DragResizer.makeResizable(MENU_BAR, this, DragResizer.ResizeArea.TOP);
+        
+        // start with height chart until a preference setting is available
+        HeightChart.getInstance().setVisible(true);
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
@@ -222,6 +225,9 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
             t.setGPXWaypoints(lineItems, doFitBounds);
             hasData.set(hasData.get() || t.hasNonZeroData());
         });
+        
+        applyCss();
+        requestLayout();
         setVisible(isVisible && hasData.get());
 
         // if visible changes to false, also the button needs to be pressed
@@ -283,12 +289,6 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     
     public void doSetVisible(final boolean visible) {
         setVisible(visible);
-        charts.stream().forEach((t) -> {
-            t.getChart().setVisible(visible);
-            if (visible) {
-                t.doLayout();
-            }
-        });
         layout();
     }
 }

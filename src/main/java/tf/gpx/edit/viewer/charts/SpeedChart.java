@@ -83,6 +83,6 @@ public class SpeedChart extends AbstractChart {
 
     @Override
     public void doShowData() {
-        super.updateLegend();
+        super.seriesChanged(null);
     }
 }
