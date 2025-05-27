@@ -25,6 +25,15 @@
  */
 package tf.gpx.edit.viewer.charts;
 
+import java.util.ArrayList;
+import java.util.List;
+import javafx.scene.chart.XYChart;
+import javafx.scene.paint.Color;
+import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.items.GPXLineItem;
+import tf.gpx.edit.items.GPXWaypoint;
+import tf.helper.javafx.ColorConverter;
+
 /**
  * Show slope chart for GPXWaypoints of GPXLineItem and highlight selected ones
  * 
@@ -37,7 +46,9 @@ package tf.gpx.edit.viewer.charts;
  */
 public class SlopeChart extends HeightChart {
     private final static SlopeChart INSTANCE = new SlopeChart();
-
+    
+    private Color slopeColor;
+    
     private SlopeChart() {
     }
     
@@ -48,5 +59,74 @@ public class SlopeChart extends HeightChart {
     @Override
     public String getChartName() {
         return ChartType.SLOPECHART.getChartName();
+    }
+
+    // here we change the series whenever the SlopeBin (or better the SlopeBinColor) changes
+    protected List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
+        final List<XYChart.Series<Number, Number>> result = new ArrayList<>();
+
+        List<XYChart.Data<Number, Number>> dataList = new ArrayList<>();
+        
+        // check if we have any data in this series
+        boolean hasData = false;
+        
+        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
+            maxDistance = maxDistance + gpxWaypoint.getDistance();
+            // y value is the same as in height chart - the elevation
+            final double yValue = getYValueAndSetMinMax(gpxWaypoint);
+            
+//            System.out.println("adding chart point: " + getMaximumDistance() / 1000.0 + ", " + yValue);
+            XYChart.Data<Number, Number> data = new XYChart.Data<>(maxDistance/ 1000.0, yValue);
+            data.setExtraValue(gpxWaypoint);
+            
+            dataList.add(data);
+            getPoints().add(Pair.of(gpxWaypoint, maxDistance));
+
+            final Color actColor = SlopeBins.getInstance().getBinColor(gpxWaypoint.getSlope());
+            
+            // now check for change in color and add series if required
+            if (!actColor.equals(slopeColor)) {
+                // add the current series to the result set
+                if (hasData) {
+                    final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                    series.getData().addAll(dataList);
+                    setSeriesUserData(series, lineItem);
+
+                    result.add(series);
+                }
+                
+                // start new series
+                hasData = false;
+                dataList = new ArrayList<>();
+                
+                slopeColor = actColor;
+            }
+
+            if (yValue != 0.0) {
+                nonZeroData = true;
+                hasData = true;
+            }
+        }
+
+        if (hasData) {
+            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+            series.getData().addAll(dataList);
+            setSeriesUserData(series, lineItem);
+
+            result.add(series);
+        }
+        
+        return result;
+    }
+    
+    // here we set the color of the series to the SlopeBin color and not the color of the linestyle
+    protected void setSeriesUserData(final XYChart.Series<Number, Number> series, final GPXLineItem lineItem) {
+        String seriesID = lineItem.getCombinedID();
+        // add track id for track segments
+        if (lineItem.isGPXTrackSegment()) {
+            seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
+        }
+        // TFE, 20250502: switched to hex color to be used in css. Needs to be hex to derive 20% opacity values easily
+        series.setName(seriesID + DATA_SEP + ColorConverter.JavaFXtoRGBHex(slopeColor));
     }
 }

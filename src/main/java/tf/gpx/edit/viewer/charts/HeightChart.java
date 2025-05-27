@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.viewer.charts;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;

@@ -72,7 +72,7 @@ import tf.helper.general.ObjectsHelper;
  * @param <T>
  */
 public abstract class AbstractChart extends AreaChart<Number, Number> implements IChart<AreaChart<Number, Number>> {
-    private final static String DATA_SEP = "-";
+    protected final static String DATA_SEP = "-";
     private final static String SHIFT_LABEL = "ShiftNode";
     private final static String SHIFT_TEXT = "ShiftText";
 
@@ -98,12 +98,12 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
     // TFE, 20230226: put a lower limit on negative heights - on case something crazy is in elevation data
     // can't go lower than the dead sea...
     private final static double MIN_ELEVATION = -428.0;
-    private double minDistance;
-    private double maxDistance;
-    private double minYValue;
-    private double maxYValue;
+    protected double minDistance;
+    protected double maxDistance;
+    protected double minYValue;
+    protected double maxYValue;
     
-    private boolean nonZeroData = false;
+    protected boolean nonZeroData = false;
     
     private ChartsPane myChartsPane;
 
@@ -218,10 +218,10 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         for (GPXLineItem lineItem : lineItems) {
             // only files can have file waypoints
             if (fileWaypointsInChart()) {
-                if (lineItem.isGPXFile()) {
+                if (lineItem.isGPXFile() && !lineItem.getGPXWaypoints().isEmpty()) {
                     // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
                     fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem).get(0);
-                } else if (alwaysShowFileWaypoints && !fileShown) {
+                } else if (alwaysShowFileWaypoints && !fileShown && !lineItem.getGPXFile().getGPXWaypoints().isEmpty()) {
                     // add file waypoints as well, even though file isn't selected
                     // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
                     fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem.getGPXFile()).get(0);
@@ -749,11 +749,13 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         // lets see if we have a previous css attached
         String cssBase64 = getCurrentCss();
         if (!cssBase64.isEmpty()) {
-            myChartsPane.getScene().getStylesheets().remove(cssBase64);
+//            myChartsPane.getScene().getStylesheets().remove(cssBase64);
+            getChart().getStylesheets().remove(cssBase64);
         }
 
         cssBase64 = DATA_URI_CSS_PREFIX + Base64.getEncoder().encodeToString(cssString.getBytes());
-        myChartsPane.getScene().getStylesheets().add(cssBase64);
+//        myChartsPane.getScene().getStylesheets().add(cssBase64);
+        getChart().getStylesheets().add(cssBase64);
         setCurrentCss(cssBase64);
     }
     
