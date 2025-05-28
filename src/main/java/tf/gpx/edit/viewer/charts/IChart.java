@@ -26,8 +26,11 @@
 package tf.gpx.edit.viewer.charts;
 
 import java.util.List;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.scene.chart.XYChart;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseEvent;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -61,4 +64,9 @@ public interface IChart<T extends XYChart<Number, Number>> extends IPreferencesH
     public void updateGPXWaypoints(final List<GPXWaypoint> gpxWaypoints);
     public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo);
     public void clearSelectedGPXWaypoints();
+    
+    public void handleMouseMoved(final MouseEvent e);
+    public void handleMouseExited(final MouseEvent e);
+    public void handleMouseDragged(final MouseEvent e);
+    public void handleDragDone(final DragEvent e);
 }

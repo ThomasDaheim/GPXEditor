@@ -47,6 +47,8 @@ import tf.helper.javafx.ColorConverter;
 public class SlopeChart extends HeightChart {
     private final static SlopeChart INSTANCE = new SlopeChart();
     
+    private final int SKIP_WAYPOINTS = 10;
+    
     private Color slopeColor;
     
     private SlopeChart() {
@@ -63,7 +65,7 @@ public class SlopeChart extends HeightChart {
 
     // here we change the series whenever the SlopeBin (or better the SlopeBinColor) changes
     // in order to speed things up we
-    // - don't check every waypoint
+    // - don't check every waypoint, use SKIP_WAYPOINTS
     // - interpolate the slope-curve using Douglas-Peucker
     @Override
     protected List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
@@ -74,6 +76,7 @@ public class SlopeChart extends HeightChart {
         // check if we have any data in this series
         boolean hasData = false;
         
+        int counter = 0;
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
             maxDistance = maxDistance + gpxWaypoint.getDistance();
             // y value is the same as in height chart - the elevation
@@ -85,26 +88,31 @@ public class SlopeChart extends HeightChart {
             dataList.add(data);
             getPoints().add(Pair.of(gpxWaypoint, maxDistance));
 
-            final Color actColor = SlopeBins.getInstance().getBinColor(gpxWaypoint.getSlope());
-            
-            // now check for change in color and add series if required
-            if (!actColor.equals(slopeColor)) {
-//                System.out.println("New color: " + ColorConverter.JavaFXtoRGBHex(actColor) + " for slope: " + gpxWaypoint.getSlope());
-                // add the current series to the result set
-                if (hasData) {
-                    final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                    series.getData().addAll(dataList);
-                    setSeriesUserData(series, lineItem);
+            // don't check color change for each data point
+            if (counter == 0) {
+                final Color actColor = SlopeBins.getInstance().getBinColor(gpxWaypoint.getSlope());
 
-                    result.add(series);
+                // now check for change in color and add series if required
+                if (!actColor.equals(slopeColor)) {
+//                    System.out.println("New color: " + ColorConverter.JavaFXtoRGBHex(actColor) + " for slope: " + gpxWaypoint.getSlope());
+                    // add the current series to the result set
+                    if (hasData) {
+                        final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                        series.getData().addAll(dataList);
+                        setSeriesUserData(series, lineItem);
+
+                        result.add(series);
+                    }
+
+                    // start new series
+                    hasData = false;
+                    dataList = new ArrayList<>();
+
+                    slopeColor = actColor;
                 }
-                
-                // start new series
-                hasData = false;
-                dataList = new ArrayList<>();
-                
-                slopeColor = actColor;
             }
+            
+            counter = (counter+1) % SKIP_WAYPOINTS;
 
             if (yValue != 0.0) {
                 nonZeroData = true;

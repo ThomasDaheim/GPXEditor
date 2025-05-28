@@ -45,6 +45,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
 import javafx.scene.text.Font;
@@ -764,4 +766,13 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         layout();
         layoutPlotChildren();
     }
+    
+    @Override
+    public void handleMouseMoved(final MouseEvent e) {}
+    @Override
+    public void handleMouseExited(final MouseEvent e) {}
+    @Override
+    public void handleMouseDragged(final MouseEvent e) {}
+    @Override
+    public void handleDragDone(final DragEvent e) {}
 }

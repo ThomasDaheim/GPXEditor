@@ -45,12 +45,12 @@ public class SlopeBins {
     
     // count and dimensions of the bin for pos / neg. slopes
     private final int BIN_COUNT = 10;
-    private final double MAX_SLOPE = 0.2;
+    private final double MAX_SLOPE = 15;
     private final double BIN_WIDTH = MAX_SLOPE / BIN_COUNT;
     
     private final Color NOSLOPE_COLOR = Color.GREEN;
     private final Color MAX_INCR_COLOR = Color.RED;
-    private final Color MAX_DECR_COLOR = Color.RED;
+    private final Color MAX_DECR_COLOR = Color.BLUE;
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
     // Bounds of a bin. Contained in a bin if lower bound <= value < upper bound.

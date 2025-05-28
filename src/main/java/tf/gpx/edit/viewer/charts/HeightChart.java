@@ -41,6 +41,8 @@ import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Line;
@@ -124,157 +126,151 @@ public class HeightChart extends AbstractChart {
         mouseLine.setMouseTransparent(true);
 
         chartContent.getChildren().addAll(mouseLine, mouseText);
+    }
 
-        setOnMouseMoved(e -> {
-            // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
-            Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
-            double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
-            double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
-            double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
-            double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
+    @Override
+    public void handleMouseMoved(final MouseEvent e) {
+        // calculate cursor position in scene, relative to axis, x+y values in axis values
+        // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
+        Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
+        double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
+        double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
+        double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
+        double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
 
+        // we want to show the elevation at this distance
+        XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
+        final Double distValue = data.XValueProperty().getValue().doubleValue();
+        final Double heightValue = data.YValueProperty().getValue().doubleValue();
+
+        // onyl show on top of chart area, not on axis
+        // TFE, 20250523: only show INSIDE the actual area covered by the chart or below have the height
+        if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && 
+            y >= yAxis.getLowerBound() && (y <= yAxis.getLowerBound() + (yAxis.getUpperBound()-yAxis.getLowerBound()) / 2 || y <= heightValue)) {
+
+            String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
+            if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
+                waypointText += "\n" + SLOPE_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Slope) + "%";
+            }
+            if (SpeedChart.getInstance().hasNonZeroData()) {
+                waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
+            }
+            mouseText.setText(waypointText);
+            mouseText.applyCss();
+
+            // we want to show the mouseText at the elevation
+            double yHeight = yAxis.getDisplayPosition(heightValue);
+
+            // and we want to show lineStart mouseLine at this distance from top to bottom
+            // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-mouseLine/40730299#40730299
+            Point2D lineStart = plotArea.localToScene(new Point2D(xPosInAxis, 0));
+            Point2D lineEnd = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
+            Point2D dataPoint = plotArea.localToScene(new Point2D(xPosInAxis, yHeight));
+
+            Point2D aTrans = chartContent.sceneToLocal(lineStart);
+            Point2D bTrans = chartContent.sceneToLocal(lineEnd);
+            Point2D cTrans = chartContent.sceneToLocal(dataPoint);
+
+            // align center-center
+            mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
+            mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 2.0);
+            mouseText.setVisible(true);
+
+            mouseLine.setStartX(aTrans.getX());
+            mouseLine.setStartY(aTrans.getY());
+            mouseLine.setEndX(bTrans.getX());
+            mouseLine.setEndY(bTrans.getY());
+            mouseLine.setVisible(true);
+
+            // callback to highlight waypoint in TrackMap
+            myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true, false);
+        } else {
+            hideMousePointer();
+
+            // unset selected waypoint
+            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true, false);
+        }
+    }
+        
+    // TFE. 20190819: support for marking waypoints with drag
+    // setOnDragDetected not too usefull since it gets triggered only after a few setOnMouseDragged :-(
+    @Override
+    public void handleMouseDragged(final MouseEvent e) {
+        // TFE, 20210107: check for shift modifier as well to avoid dragging when resizing of pane with DragResizer...
+        if (!e.isShiftDown()) {
+            return;
+        }
+
+        if (!dragActive) {
+            // reset previous start / end points of dragging
+            dragStartDistance = Double.MAX_VALUE;
+            dragEndDistance = Double.MIN_VALUE;
+
+            clearSelectedGPXWaypoints();
+        }
+
+        // calculate cursor position in scene, relative to axis, x+y values in axis values
+        // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
+        Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
+        double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
+        double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
+        double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
+        double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
+
+        // only show on top of chart area, not on axis
+        if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
             // we want to show the elevation at this distance
             XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
             final Double distValue = data.XValueProperty().getValue().doubleValue();
             final Double heightValue = data.YValueProperty().getValue().doubleValue();
 
-            // onyl show on top of chart area, not on axis
-            // TFE, 20250523: only show INSIDE the actual area covered by the chart or below have the height
-            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && 
-                y >= yAxis.getLowerBound() && (y <= yAxis.getLowerBound() + (yAxis.getUpperBound()-yAxis.getLowerBound()) / 2 || y <= heightValue)) {
-
-                String waypointText = String.format(HEIGHT_LABEL + "%.2fm", heightValue) + "\n" + String.format(DIST_LABEL + "%.2fkm", distValue);
-                if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
-                    waypointText += "\n" + SLOPE_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Slope) + "%";
-                }
-                if (SpeedChart.getInstance().hasNonZeroData()) {
-                    waypointText += "\n" + SPEED_LABEL + ((GPXWaypoint) data.getExtraValue()).getDataAsString(GPXLineItem.GPXLineItemData.Speed) + "km/h";
-                }
-                mouseText.setText(waypointText);
-                mouseText.applyCss();
-                
-                // we want to show the mouseText at the elevation
-                double yHeight = yAxis.getDisplayPosition(heightValue);
-                
-                // and we want to show lineStart mouseLine at this distance from top to bottom
-                // https://stackoverflow.com/questions/40729795/javafx-area-chart-100-mouseLine/40730299#40730299
-                Point2D lineStart = plotArea.localToScene(new Point2D(xPosInAxis, 0));
-                Point2D lineEnd = plotArea.localToScene(new Point2D(xPosInAxis, plotArea.getHeight()));
-                Point2D dataPoint = plotArea.localToScene(new Point2D(xPosInAxis, yHeight));
-
-                Point2D aTrans = chartContent.sceneToLocal(lineStart);
-                Point2D bTrans = chartContent.sceneToLocal(lineEnd);
-                Point2D cTrans = chartContent.sceneToLocal(dataPoint);
-                
-                // align center-center
-                mouseText.setTranslateX(cTrans.getX() - mouseText.getBoundsInLocal().getWidth() / 2.0);
-                mouseText.setTranslateY(cTrans.getY() - mouseText.getBoundsInLocal().getHeight() / 2.0);
-                mouseText.setVisible(true);
-
-                mouseLine.setStartX(aTrans.getX());
-                mouseLine.setStartY(aTrans.getY());
-                mouseLine.setEndX(bTrans.getX());
-                mouseLine.setEndY(bTrans.getY());
-                mouseLine.setVisible(true);
-                
-                // callback to highlight waypoint in TrackMap
-                myGPXEditor.selectGPXWaypoints(Arrays.asList((GPXWaypoint) data.getExtraValue()), true, true, false);
-            } else {
-                hideMousePointer();
-                
-                // unset selected waypoint
-                myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true, false);
-            }
-        });
-        
-        setOnMouseExited(e -> {
-            // TFE, 20191127 - don't reset everything
-//            mouseLine.setVisible(false);
-//            mouseText.setVisible(false);
-//                
-//            // unset selected waypoint
-//            myGPXEditor.selectGPXWaypoints(Arrays.asList(), true, true);
-        });
-
-        // TFE. 20190819: support for marking waypoints with drag
-        // setOnDragDetected not too usefull since it gets triggered only after a few setOnMouseDragged :-(
-        setOnMouseDragged((e) -> {
-            // TFE, 20210107: check for shift modifier as well to avoid dragging when resizing of pane with DragResizer...
-            if (!e.isShiftDown()) {
-                return;
-            }
-
-            if (!dragActive) {
-                // reset previous start / end points of dragging
-                dragStartDistance = Double.MAX_VALUE;
-                dragEndDistance = Double.MIN_VALUE;
-
-                clearSelectedGPXWaypoints();
-            }
-            
-            // calculate cursor position in scene, relative to axis, x+y values in axis values
-            // https://stackoverflow.com/questions/31375922/javafx-how-to-correctly-implement-getvaluefordisplay-on-y-axis-of-lineStart-xy-mouseLine/31382802#31382802
-            Point2D pointInScene = new Point2D(e.getSceneX(), e.getSceneY());
-            double xPosInAxis = xAxis.sceneToLocal(new Point2D(pointInScene.getX(), 0)).getX();
-            double yPosInAxis = yAxis.sceneToLocal(new Point2D(0, pointInScene.getY())).getY();
-            double x = xAxis.getValueForDisplay(xPosInAxis).doubleValue();
-            double y = yAxis.getValueForDisplay(yPosInAxis).doubleValue();
-
-            // only show on top of chart area, not on axis
-            if (x >= xAxis.getLowerBound() && x <= xAxis.getUpperBound() && y >= 0.0) {
-                // we want to show the elevation at this distance
-                XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
-                final Double distValue = data.XValueProperty().getValue().doubleValue();
-                final Double heightValue = data.YValueProperty().getValue().doubleValue();
-                
 //                System.out.println("setOnMouseDragged: " + " @ " + distValue);
 
-                if (dragActive) {
-                // Math.min / max don't work since you e.g. might drag to the right initially and then drag to the left
+            if (dragActive) {
+            // Math.min / max don't work since you e.g. might drag to the right initially and then drag to the left
 //                dragStartDistance = Math.min(dragStartDistance, distValue);
 //                dragEndDistance = Math.max(dragEndDistance, distValue);
-                    
-                    // compare against >=, <= to handle the case that we getAsString called twice with same distValue
-                    if (distValue <= dragStartDistance) {
+
+                // compare against >=, <= to handle the case that we getAsString called twice with same distValue
+                if (distValue <= dragStartDistance) {
 //                        System.out.println("new start distance");
-                        dragStartDistance = distValue;
-                    } else if(distValue >= dragEndDistance) {
+                    dragStartDistance = distValue;
+                } else if(distValue >= dragEndDistance) {
 //                        System.out.println("new end distance");
+                    dragEndDistance = distValue;
+                } else {
+                    // someone reversed the dragging direction - not a nice thing todo
+                    // figure out how things have beeen reversed
+                    if (distValue <= dragActDistance) {
+                        // changed from right to left
+//                            System.out.println("new reduced end distance");
                         dragEndDistance = distValue;
                     } else {
-                        // someone reversed the dragging direction - not a nice thing todo
-                        // figure out how things have beeen reversed
-                        if (distValue <= dragActDistance) {
-                            // changed from right to left
-//                            System.out.println("new reduced end distance");
-                            dragEndDistance = distValue;
-                        } else {
-                            // changed from left to right
+                        // changed from left to right
 //                            System.out.println("new increased start distance");
-                            dragStartDistance = distValue;
-                        }
+                        dragStartDistance = distValue;
                     }
-                    
-                    // TODO: select all waypoints between start & end
-                    selectWaypointsInRange();
-                } else {
-                    dragStartDistance = distValue;
-                    dragEndDistance = distValue;
-
-                    dragActive = true;
                 }
-                
-                dragActDistance = distValue;
-                
-//                System.out.println("setOnMouseDragged: " + dragStartDistance + " to " + dragEndDistance);
+
+                // TODO: select all waypoints between start & end
+                selectWaypointsInRange();
+            } else {
+                dragStartDistance = distValue;
+                dragEndDistance = distValue;
+
+                dragActive = true;
             }
-        });
-        
-        setOnDragDone((e) -> {
-            dragActive = false;
+
+            dragActDistance = distValue;
+
+//                System.out.println("setOnMouseDragged: " + dragStartDistance + " to " + dragEndDistance);
+        }
+    }
+
+    @Override
+    public void handleDragDone(final DragEvent e) {
+        dragActive = false;
 //            System.out.println("setOnDragDone");
-        });
     }
     
     protected void hideMousePointer() {
@@ -541,7 +537,7 @@ public class HeightChart extends AbstractChart {
                     cssString.append("  -fx-stroke: ").append(color).append(";").append(System.lineSeparator());
                     cssString.append("}").append(System.lineSeparator());
                     cssString.append(".series").append(j).append(".chart-series-area-fill {").append(System.lineSeparator());
-                    cssString.append("  -fx-fill: ").append(color).append(TRANS20_SUFFIX).append(";").append(System.lineSeparator());
+                    cssString.append("  -fx-fill: ").append(color).append(getAreaFillSuffix()).append(";").append(System.lineSeparator());
                     cssString.append("}").append(System.lineSeparator());
                 }
             }
@@ -551,5 +547,9 @@ public class HeightChart extends AbstractChart {
         setStylesheet(cssString.toString());
         
         super.seriesChanged(null);
+    }
+    
+    protected String getAreaFillSuffix() {
+        return TRANS20_SUFFIX;
     }
 }

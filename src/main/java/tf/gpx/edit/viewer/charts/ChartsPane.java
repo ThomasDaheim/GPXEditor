@@ -162,6 +162,29 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         
         // start with height chart until a preference setting is available
         HeightChart.getInstance().setVisible(true);
+
+        // TFE, 20250528: centrally liste to mouse events and then pass them on to the charts for handling
+        setOnMouseMoved(e -> {
+            baseCharts.stream().forEach((t) -> {
+                t.handleMouseMoved(e);
+            });
+        });
+        setOnMouseExited(e -> {
+            baseCharts.stream().forEach((t) -> {
+                t.handleMouseExited(e);
+            });
+        });
+        setOnMouseDragged((e) -> {
+            baseCharts.stream().forEach((t) -> {
+                t.handleMouseDragged(e);
+            });
+        });
+        setOnDragDone((e) -> {
+            baseCharts.stream().forEach((t) -> {
+                t.handleDragDone(e);
+            });
+        });
+        
     }
 
     private void setFixedAxisWidth(final XYChart chart) {
