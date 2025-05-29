@@ -28,6 +28,7 @@ package tf.gpx.edit.algorithms.reducer;
 import java.io.File;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.AfterEach;
@@ -47,6 +48,8 @@ import tf.gpx.edit.items.GPXWaypoint;
 public class TestReduction {
     private static final double DELTA_DISTANCE = 1.0;
     private final String dS;
+    
+    private Instant startTime;
 
     public TestReduction() {
         // TFE, 20181005: with proper support for locals also the test values change
@@ -55,12 +58,15 @@ public class TestReduction {
     
     @BeforeEach
     public void setUp() {
-        System.out.println("Starting TestCase: " + Instant.now());
+        startTime = Instant.now();
+        System.out.println("Starting TestCase: " + startTime);
     }
 
     @AfterEach
     public void tearDown() {
-        System.out.println("Ending TestCase: " + Instant.now());
+        final Instant endTime = Instant.now();
+        System.out.println("Ending TestCase: " + endTime);
+        System.out.println("TestCase duration: " + ChronoUnit.MICROS.between(startTime, endTime));
     }
     
     @Test
@@ -749,6 +755,230 @@ public class TestReduction {
                         Assertions.assertTrue(false);
                         break;
                 }
+            }
+        }
+    }
+
+    @Test
+    public void testRadialDistance() {
+        // results see testReduceReumannWitkam.txt
+        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
+        
+        for (GPXTrack track : gpxfile.getGPXTracks()) {
+            for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
+                final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
+                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                        WaypointReduction.ReductionAlgorithm.RadialDistance,
+                        10.0);
+                
+//                final int size = keep1.length;
+//                switch (trackwaypoints.get(0).getCombinedID()) {
+//                    case "T1.S1.1":
+//                        Assertions.assertEquals(707, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[33]);
+//                        Assertions.assertTrue(keep1[39]);
+//                        Assertions.assertTrue(keep1[700]);
+//                        Assertions.assertTrue(keep1[702]);
+//                        break;
+//                    case "T1.S2.1":
+//                        Assertions.assertEquals(76, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[2]);
+//                        Assertions.assertTrue(keep1[8]);
+//                        Assertions.assertTrue(keep1[66]);
+//                        Assertions.assertTrue(keep1[71]);
+//                        break;
+//                    case "T1.S3.1":
+//                        Assertions.assertEquals(192, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[8]);
+//                        Assertions.assertTrue(keep1[12]);
+//                        Assertions.assertTrue(keep1[185]);
+//                        Assertions.assertTrue(keep1[188]);
+//                        break;
+//                    case "T1.S4.1":
+//                        Assertions.assertEquals(179, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        Assertions.assertTrue(keep1[9]);
+//                        Assertions.assertTrue(keep1[172]);
+//                        Assertions.assertTrue(keep1[173]);
+//                        break;
+//                    case "T1.S5.1":
+//                        Assertions.assertEquals(736, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[10]);
+//                        Assertions.assertTrue(keep1[12]);
+//                        Assertions.assertTrue(keep1[733]);
+//                        Assertions.assertTrue(keep1[734]);
+//                        break;
+//                    case "T1.S6.1":
+//                        Assertions.assertEquals(14, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[4]);
+//                        Assertions.assertTrue(keep1[13]);
+//                        break;
+//                    case "T1.S7.1":
+//                        Assertions.assertEquals(541, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[2]);
+//                        Assertions.assertTrue(keep1[4]);
+//                        Assertions.assertTrue(keep1[431]);
+//                        Assertions.assertTrue(keep1[481]);
+//                        break;
+//                    case "T1.S8.1":
+//                        Assertions.assertEquals(64, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[4]);
+//                        Assertions.assertTrue(keep1[7]);
+//                        Assertions.assertTrue(keep1[52]);
+//                        Assertions.assertTrue(keep1[57]);
+//                        break;
+//                    case "T1.S9.1":
+//                        Assertions.assertEquals(60, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        Assertions.assertTrue(keep1[49]);
+//                        Assertions.assertTrue(keep1[50]);
+//                        break;
+//                    case "T1.S10.1":
+//                        Assertions.assertEquals(6, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        break;
+//                    case "T1.S11.1":
+//                        Assertions.assertEquals(233, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        Assertions.assertTrue(keep1[8]);
+//                        Assertions.assertTrue(keep1[228]);
+//                        Assertions.assertTrue(keep1[232]);
+//                        break;
+//                    case "T2.S1.1":
+//                        Assertions.assertEquals(133, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[22]);
+//                        Assertions.assertTrue(keep1[130]);
+//                        Assertions.assertTrue(keep1[131]);
+//                        break;
+//                    case "T2.S2.1":
+//                        Assertions.assertEquals(144, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[8]);
+//                        Assertions.assertTrue(keep1[141]);
+//                        Assertions.assertTrue(keep1[141]);
+//                        break;
+//                    case "T2.S3.1":
+//                        Assertions.assertEquals(489, size);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        Assertions.assertTrue(keep1[481]);
+//                        Assertions.assertTrue(keep1[484]);
+//                        break;
+//                    case "T3.S1.1":
+//                        Assertions.assertEquals(267, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[22]);
+//                        Assertions.assertTrue(keep1[31]);
+//                        Assertions.assertTrue(keep1[249]);
+//                        Assertions.assertTrue(keep1[251]);
+//                        break;
+//                    case "T3.S2.1":
+//                        Assertions.assertEquals(262, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[46]);
+//                        Assertions.assertTrue(keep1[49]);
+//                        Assertions.assertTrue(keep1[258]);
+//                        Assertions.assertTrue(keep1[260]);
+//                        break;
+//                    case "T3.S3.1":
+//                        Assertions.assertEquals(203, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[4]);
+//                        Assertions.assertTrue(keep1[197]);
+//                        Assertions.assertTrue(keep1[201]);
+//                        break;
+//                    case "T3.S4.1":
+//                        Assertions.assertEquals(392, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[2]);
+//                        Assertions.assertTrue(keep1[4]);
+//                        Assertions.assertTrue(keep1[389]);
+//                        Assertions.assertTrue(keep1[390]);
+//                        break;
+//                    case "T3.S5.1":
+//                        Assertions.assertEquals(209, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[3]);
+//                        Assertions.assertTrue(keep1[6]);
+//                        Assertions.assertTrue(keep1[189]);
+//                        Assertions.assertTrue(keep1[192]);
+//                        break;
+//                    case "T3.S6.1":
+//                        Assertions.assertEquals(497, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[44]);
+//                        Assertions.assertTrue(keep1[47]);
+//                        Assertions.assertTrue(keep1[475]);
+//                        Assertions.assertTrue(keep1[479]);
+//                        break;
+//                    case "T4.S1.1":
+//                        Assertions.assertEquals(1504, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[2]);
+//                        Assertions.assertTrue(keep1[5]);
+//                        Assertions.assertTrue(keep1[1501]);
+//                        Assertions.assertTrue(keep1[1502]);
+//                        break;
+//                    case "T5.S1.1":
+//                        Assertions.assertEquals(1811, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[19]);
+//                        Assertions.assertTrue(keep1[23]);
+//                        Assertions.assertTrue(keep1[1807]);
+//                        Assertions.assertTrue(keep1[1809]);
+//                        break;
+//                    case "T6.S1.1":
+//                        Assertions.assertEquals(1149, size);
+//                        Assertions.assertTrue(keep1[0]);
+//                        Assertions.assertTrue(keep1[size-1]);
+//                        Assertions.assertTrue(keep1[1]);
+//                        Assertions.assertTrue(keep1[3]);
+//                        Assertions.assertTrue(keep1[1142]);
+//                        Assertions.assertTrue(keep1[1143]);
+//                        break;
+//                    default:
+//                        Assertions.assertTrue(false);
+//                        break;
+//                }
             }
         }
     }

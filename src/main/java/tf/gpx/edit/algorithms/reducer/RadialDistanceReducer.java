@@ -25,9 +25,8 @@
  */
 package tf.gpx.edit.algorithms.reducer;
 
-import java.util.Arrays;
 import java.util.List;
-import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -36,6 +35,7 @@ import tf.gpx.edit.items.GPXWaypoint;
  * Based on:
  * Douglas-Peucker: https://github.com/robbyn/hiketools/blob/master/src/org/tastefuljava/hiketools/geo/EarthGeometry.java
  * Reumann-Witkam: http://web.cs.sunyit.edu/~poissad/projects/Curve/about_code/ReumannWitkam.php
+ * Radial Distance: https://github.com/mourner/simplify-js/blob/master/simplify.js
  * 
  * Harvesine distance: https://github.com/chrisveness/geodesy/blob/master/latlon-spherical.js
  * Vincenty distance: https://github.com/grumlimited/geocalc/blob/master/src/main/java/com/grum/geocalc/EarthCalc.java
@@ -44,53 +44,64 @@ import tf.gpx.edit.items.GPXWaypoint;
  * http://web.cs.sunyit.edu/~poissad/projects/Curve/images_image.php
  * https://github.com/emcconville/point-reduction-algorithms
  */
-public class WaypointReduction implements IWaypointReducer {
-    private final static WaypointReduction INSTANCE = new WaypointReduction();
-
-    public static enum ReductionAlgorithm {
-        DouglasPeucker,
-        VisvalingamWhyatt,
-        ReumannWitkam,
-        // TFE, 20250529: very simple reducer where speed is of the essence (e.g. slope charts)
-        RadialDistance
-    }
+public class RadialDistanceReducer implements IWaypointReducer {
+    private final static RadialDistanceReducer INSTANCE = new RadialDistanceReducer();
     
-    private WaypointReduction() {
+    private RadialDistanceReducer() {
         super();
         // Exists only to defeat instantiation.
     }
 
-    public static WaypointReduction getInstance() {
+    public static RadialDistanceReducer getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Simplify track by removing points, using the requested algorithm.
+     * Simplify track by removing points, using the radial distance between points.
+     * 
+     * Distance is calculated using flat topografie
      * 
      * @param track points of the track
-     * @param algorithm What ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
      */
-    public static boolean[] apply(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
-        switch (algorithm) {
-            case DouglasPeucker:
-                return DouglasPeuckerReducer.getInstance().apply(track, epsilon);
-            case VisvalingamWhyatt:
-                return VisvalingamWhyattReducer.getInstance().apply(track, epsilon);
-            case ReumannWitkam:
-                return ReumannWitkamReducer.getInstance().apply(track, epsilon);
-            case RadialDistance:
-                return RadialDistanceReducer.getInstance().apply(track, epsilon);
-            default:
-                boolean[] keep = new boolean[track.size()];
-                Arrays.fill(keep, true);
-                return keep;
+    @Override
+    public boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final double epsilon) {
+        final boolean[] keep = new boolean[track.size()];
+
+        keep[0] = true;
+        keep[track.size()-1] = true;
+        
+        if (track.size() <= 2) {
+            return keep;
         }
+
+        RadialDistanceImpl(track, 0, track.size()-1, epsilon, keep);
+        return keep;
     }
 
-    @Override
-    public boolean[] apply(List<GPXWaypoint> track, double epsilon) {
-        return apply(track, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
+    private static void RadialDistanceImpl(
+            final List<GPXWaypoint> track, 
+            final int first, 
+            final int last,
+            final double epsilon, 
+            final boolean[] keep) {
+        if (last < first) {
+            // empty
+        } else if (last == first) {
+            keep[first] = true;
+        } else {
+            keep[first] = true;
+            keep[last] = true;
+            GPXWaypoint prevPt = track.get(first);
+            for (int i = first+1; i < last; ++i) {
+                if (EarthGeometry.distanceForAlgorithm(prevPt.getWaypoint(), track.get(i).getWaypoint(), EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) > epsilon) {
+                    keep[i] = true;
+                }
+                prevPt = track.get(i);
+            }
+        }
     }
 }

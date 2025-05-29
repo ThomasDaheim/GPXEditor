@@ -302,7 +302,6 @@ public class EarthGeometry {
             final Waypoint b,
             final double accuracy) {
         
-        // check if distances are really big enough to use spherical geometry
         final double distAB = EarthGeometry.distance(a, b);
         final double distPA = EarthGeometry.distance(p, a);
         final double distPB = EarthGeometry.distance(p, b);
