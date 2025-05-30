@@ -97,7 +97,8 @@ public class RadialDistanceReducer implements IWaypointReducer {
             keep[last] = true;
             GPXWaypoint prevPt = track.get(first);
             for (int i = first+1; i < last; ++i) {
-                if (EarthGeometry.distanceForAlgorithm(prevPt.getWaypoint(), track.get(i).getWaypoint(), EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation) > epsilon) {
+                final double distance = EarthGeometry.distanceForAlgorithm(prevPt, track.get(i), EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+                if (distance > epsilon) {
                     keep[i] = true;
                 }
                 prevPt = track.get(i);

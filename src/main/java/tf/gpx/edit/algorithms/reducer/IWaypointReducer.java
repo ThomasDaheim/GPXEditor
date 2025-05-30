@@ -37,6 +37,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 public interface IWaypointReducer {
     boolean[] apply(final List<GPXWaypoint> track, final double epsilon);
     
+    // using distance between points as value to reduce to
     default boolean[] apply(final List<GPXWaypoint> track) {
         return apply(track, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
     }

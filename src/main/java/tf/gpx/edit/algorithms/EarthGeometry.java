@@ -86,6 +86,11 @@ public class EarthGeometry {
         
         return distanceForAlgorithm(p1, p2, getInstance().myAlgorithm);
     }
+    public static double distanceForAlgorithm(final GPXWaypoint p1, final GPXWaypoint p2, final DistanceAlgorithm algorithm) {
+        if ((p1 == null) || (p2 == null)) return 0;
+        
+        return distanceForAlgorithm(p1.getWaypoint(), p2.getWaypoint(), getInstance().myAlgorithm);
+    }
     public static double distanceForAlgorithm(final Waypoint p1, final Waypoint p2, final DistanceAlgorithm algorithm) {
         if ((p1 == null) || (p2 == null)) return 0;
         
