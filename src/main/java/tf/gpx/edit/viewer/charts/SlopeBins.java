@@ -48,9 +48,9 @@ public class SlopeBins {
     private final double MAX_SLOPE = 15;
     private final double BIN_WIDTH = MAX_SLOPE / BIN_COUNT;
     
-    private final Color NOSLOPE_COLOR = Color.GREEN;
+    private final Color NOSLOPE_COLOR = Color.LIGHTGREEN;
     private final Color MAX_INCR_COLOR = Color.RED;
-    private final Color MAX_DECR_COLOR = Color.BLUE;
+    private final Color MAX_DECR_COLOR = Color.DARKGREEN;
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
     // Bounds of a bin. Contained in a bin if lower bound <= value < upper bound.
@@ -86,30 +86,54 @@ public class SlopeBins {
     
     private void initialize() {
         // setup the bins
+        final double noH = NOSLOPE_COLOR.getHue();
+        final double noS = NOSLOPE_COLOR.getSaturation();
+        final double noB = NOSLOPE_COLOR.getBrightness();
+        
+        final double width = ((BIN_COUNT-1) * BIN_WIDTH);
+        
         
         // positive slopes
+        final double inH = MAX_INCR_COLOR.getHue()- noH;
+        final double inS = MAX_INCR_COLOR.getSaturation()- noS;
+        final double inB = MAX_INCR_COLOR.getBrightness()- noB;
         for (int i = 0; i < BIN_COUNT; i++) {
             final BinBound binBound = new BinBound();
             binBound.setLowerBound(i* BIN_WIDTH);
             binBound.setUpperBound((i+1) * BIN_WIDTH);
             
-            // https://stackoverflow.com/a/25214819
-            final double hue = Math.floor((NOSLOPE_COLOR.getHue() + (MAX_INCR_COLOR.getHue() - NOSLOPE_COLOR.getHue()) * (i* BIN_WIDTH) / ((BIN_COUNT-1) * BIN_WIDTH))*100)/100 ;
+            final double t = i / (BIN_COUNT - 1.0);
             
-            myBins.add(Pair.of(binBound, Color.hsb(hue, 1.0, 1.0)));
+            // https://stackoverflow.com/a/25214819
+            final double h = noH + inH * t;
+            final double s = noS + inS * t;
+            final double b = noB + inB * t;
+            
+            myBins.add(Pair.of(binBound, Color.hsb(h, s, b)));
         }
-
+        
         // negative slopes
+        final double deH = MAX_DECR_COLOR.getHue()- noH;
+        final double deS = MAX_DECR_COLOR.getSaturation()- noS;
+        final double deB = MAX_DECR_COLOR.getBrightness()- noB;
         for (int i = 0; i < BIN_COUNT; i++) {
             final BinBound binBound = new BinBound();
             binBound.setUpperBound(- i* BIN_WIDTH);
             binBound.setLowerBound(- (i+1) * BIN_WIDTH);
             
-            // https://stackoverflow.com/a/25214819
-            final double hue = Math.floor((NOSLOPE_COLOR.getHue() + (MAX_DECR_COLOR.getHue() - NOSLOPE_COLOR.getHue()) * (i* BIN_WIDTH) / ((BIN_COUNT-1) * BIN_WIDTH))*100)/100 ;
+            final double t = i / (BIN_COUNT - 1.0);
             
-            myBins.add(Pair.of(binBound, Color.hsb(hue, 1.0, 1.0)));
+            // https://stackoverflow.com/a/25214819
+            final double h = noH + deH * t;
+            final double s = noS + deS * t;
+            final double b = noB + deB * t;
+            
+            myBins.add(Pair.of(binBound, Color.hsb(h, s, b)));
         }
+
+//        myBins.stream().forEach((t) -> {
+//            System.out.println(t);
+//        });
     }
     
     public static SlopeBins getInstance() {
@@ -122,6 +146,7 @@ public class SlopeBins {
         Optional<Pair<BinBound, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
         
         if (bin.isPresent()) {
+//            System.out.println("Value: " + value + ", bin: " + bin.get());
             result = bin.get().getRight();
         }
         

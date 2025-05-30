@@ -66,7 +66,7 @@ public class TestReduction {
     public void tearDown() {
         final Instant endTime = Instant.now();
         System.out.println("Ending TestCase: " + endTime);
-        System.out.println("TestCase duration: " + ChronoUnit.MICROS.between(startTime, endTime));
+        System.out.println("TestCase duration: " + ChronoUnit.MILLIS.between(startTime, endTime));
     }
     
     @Test
