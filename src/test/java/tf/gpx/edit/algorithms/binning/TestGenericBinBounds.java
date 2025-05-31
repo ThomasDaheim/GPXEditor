@@ -25,38 +25,57 @@
  */
 package tf.gpx.edit.algorithms.binning;
 
-import java.util.ArrayList;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * List of generic bins with some add. methods to reduce bins by merging adjacent bins with equal value.
- * 
+ *
  * @author thomas
- * @param <T>
- * @param <S>
  */
-public class GenericBinList<T extends Comparable<T>, S> extends ArrayList<GenericBin<T, S>> {
-    public void mergeEqualAdjacentBins() {
-        if (isEmpty()) {
-            return;
-        }
-        
-        // merge with next bin as long as the value is equal
-        final GenericBinList<T, S> reducedList = new GenericBinList<>();
-        GenericBin<T, S> lastBin = this.getFirst();
-        for (GenericBin<T, S> bin : this) {
-            if (lastBin.getValue().equals(bin.getValue())) {
-                // extend the bounds of the last bin
-                lastBin.getKey().setUpperBound(bin.getKey().getUpperBound());
-            } else {
-                // new bin has started
-                reducedList.add(lastBin);
-                lastBin = bin;
-            }
-        }
-        // and finaly the last bin
-        reducedList.add(lastBin);
-        
-        this.clear();
-        this.addAll(reducedList);
+public class TestGenericBinBounds {
+    private GenericBinBounds<Integer> intBin;
+
+    @BeforeEach
+    void setUp() {
+        intBin = new GenericBinBounds<>();
+        intBin.setLowerBound(10);
+        intBin.setUpperBound(20);
+    }
+
+    @Test
+    void testGettersAndSetters() {
+        assertEquals(10, intBin.getLowerBound());
+        assertEquals(20, intBin.getUpperBound());
+
+        intBin.setLowerBound(5);
+        intBin.setUpperBound(15);
+
+        assertEquals(5, intBin.getLowerBound());
+        assertEquals(15, intBin.getUpperBound());
+    }
+
+    @Test
+    void testIsInBounds() {
+        assertTrue(intBin.isInBounds(10), "Lower bound should be inclusive");
+        assertTrue(intBin.isInBounds(15), "Middle value should be in bounds");
+        assertFalse(intBin.isInBounds(20), "Upper bound should be exclusive");
+        assertFalse(intBin.isInBounds(9), "Below lower bound");
+        assertFalse(intBin.isInBounds(21), "Above upper bound");
+    }
+
+    @Test
+    void testIsInBoundsWithSameBounds() {
+        intBin.setLowerBound(10);
+        intBin.setUpperBound(10);
+
+        assertFalse(intBin.isInBounds(10), "Should be false when bounds are equal");
+    }
+
+    @Test
+    void testNullBounds() {
+        GenericBinBounds<Integer> bin = new GenericBinBounds<>();
+        assertThrows(NullPointerException.class, () -> bin.isInBounds(5));
     }
 }
