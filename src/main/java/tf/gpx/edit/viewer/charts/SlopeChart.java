@@ -27,10 +27,15 @@ package tf.gpx.edit.viewer.charts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.scene.chart.XYChart;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.binning.GenericBin;
+import tf.gpx.edit.algorithms.binning.GenericBinBounds;
+import tf.gpx.edit.algorithms.binning.GenericBinList;
 import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -78,145 +83,77 @@ public class SlopeChart extends HeightChart {
             return result;
         }
         
-        List<XYChart.Data<Number, Number>> dataList = new ArrayList<>();
-        
-        // check if we have any data in this series
-        boolean hasData = false;
-        
-        int counter = 0;
-        GPXWaypoint prevPoint = lineItem.getGPXWaypoints().get(0);
-        slopeColor = SlopeBins.getInstance().getBinColor(0.0);
-        Color actColor = SlopeBins.getInstance().getBinColor(0.0);
+        // binning, part 1
+        // at every checked waypoint create a new bin from the slope from start to end
+        final GenericBinList<Integer, Color> binList = new GenericBinList<>();
 
         // use reduction to get rid of points
         final boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
         // don't start with 0 - first waypoint doesn't have any slope
         check[0] = false;
         
-        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
-            maxDistance = maxDistance + gpxWaypoint.getDistance();
+        GPXWaypoint prevPoint = lineItem.getGPXWaypoints().get(0);
+        int startIndex = 0;
+        for (int i = 0; i < lineItem.getGPXWaypoints().size(); i++) {
+            if (check[i]) {
+                final GPXWaypoint waypoint = lineItem.getGPXWaypoints().get(i);
+                final Color actColor = SlopeBins.getInstance().getBinColor(EarthGeometry.slope(waypoint, prevPoint));
+                final GenericBin<Integer, Color> bin = new GenericBin<>(new GenericBinBounds<>(startIndex, i), actColor);
+                binList.add(bin);
+                
+                startIndex = i;
+                prevPoint = waypoint;
+            }
+        }
+        
+        // binning, part 2
+        // reduce bins bymerging adjacent bins
+        binList.mergeEqualAdjacentBins();
+
+        // binning part 3
+        // go through remaining bins and create series
+        binList.stream().forEach((t) -> {
+            final List<XYChart.Data<Number, Number>> dataList = createDataList(lineItem, t.getBinBounds().getLowerBound(), t.getBinBounds().getUpperBound()+1);
+            
+            Optional<XYChart.Data<Number, Number>> data = dataList.stream().filter((s) -> s.getYValue().doubleValue() != 0.0).findFirst();
+            if (data.isPresent()) {
+                slopeColor = t.getBinValue();
+                final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                series.getData().addAll(dataList);
+                setSeriesUserData(series, lineItem);
+
+                result.add(series);
+            }
+        });
+
+        return result; 
+    }
+
+    private List<XYChart.Data<Number, Number>> createDataList(final GPXLineItem lineItem, final int start, final int end) {
+        final List<GPXWaypoint> waypoints = lineItem.getGPXWaypoints().subList(start, end);
+        final List<XYChart.Data<Number, Number>> result = new ArrayList<>();
+
+        boolean firstPoint = true;
+        for (GPXWaypoint gpxWaypoint : waypoints) {
+            // aaargh, tricky! since we have multiple series with same point as end / start point we need to maike sure that we don't add the distance twice...
+            // so for any other that the first series we reate we shouldn't increase the maxDistance with the value of the first waypoint
+            if (start == 0 || !firstPoint) {
+                maxDistance = maxDistance + gpxWaypoint.getDistance();
+            }
+            firstPoint = false;
             // y value is the same as in height chart - the elevation
             final double yValue = getYValueAndSetMinMax(gpxWaypoint);
 
             if (yValue != 0.0) {
                 nonZeroData = true;
-                hasData = true;
             }
             
             XYChart.Data<Number, Number> data = new XYChart.Data<>(maxDistance/ 1000.0, yValue);
             data.setExtraValue(gpxWaypoint);
             
-            dataList.add(data);
+            result.add(data);
             getPoints().add(Pair.of(gpxWaypoint, maxDistance));
-
-            // don't check color change for each data point
-            if (check[counter]) {
-                // and now the slope to the previous point
-                final double slope = EarthGeometry.slope(gpxWaypoint, prevPoint);
-//                System.out.println("Waypoint: " + gpxWaypoint);
-//                System.out.println("Previous: " + prevPoint);
-//                System.out.println("Elev Diff: " + EarthGeometry.elevationDiff(gpxWaypoint, prevPoint));
-//                System.out.println("Distance: " + EarthGeometry.distance(gpxWaypoint, prevPoint));
-
-                actColor = SlopeBins.getInstance().getBinColor(slope);
-                // now check for change in color and add series if required
-                if (!actColor.equals(slopeColor)) {
-                    slopeColor = actColor;
-
-//                    System.out.println("New color: " + ColorConverter.JavaFXtoRGBHex(actColor) + " for slope: " + slope);
-                    // add the current series to the result set
-                    if (hasData) {
-                        final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                        series.getData().addAll(dataList);
-                        setSeriesUserData(series, lineItem);
-
-                        result.add(series);
-                    } else {
-                        System.out.println("No data!!!");
-                    }
-
-                    // start new series
-                    hasData = false;
-                    dataList = new ArrayList<>();
-                    // last point of old series is first point of new series
-                    dataList.add(data);
-                }
-
-                prevPoint = gpxWaypoint;
-            }
-            
-            counter++;
         }
-        // need to add final series (if any)
-        slopeColor = actColor;
-
-//        Instant endTime = Instant.now();
-//        System.out.println("Half-way getXYChartSeriesForGPXLineItem: " + endTime);
-//        System.out.println("Half-way duration: " + ChronoUnit.MICROS.between(startTime, endTime));
-//
-//        // use reduction to get rid of points
-//        final boolean keep[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.DouglasPeucker, 100);
-//        
-//        counter = 0;
-//        prevPoint = lineItem.getGPXWaypoints().get(0);
-//
-//        for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
-//            maxDistance = maxDistance + gpxWaypoint.getDistance();
-//            // y value is the same as in height chart - the elevation
-//            final double yValue = getYValueAndSetMinMax(gpxWaypoint);
-//            
-//            XYChart.Data<Number, Number> data = new XYChart.Data<>(maxDistance/ 1000.0, yValue);
-//            data.setExtraValue(gpxWaypoint);
-//            
-//            dataList.add(data);
-//            getPoints().add(Pair.of(gpxWaypoint, maxDistance));
-//
-//            // don't check color change for each data point
-//            if (keep[counter]) {
-//                // and now the slope to the previous point
-//                final Color actColor = SlopeBins.getInstance().getBinColor(EarthGeometry.slope(gpxWaypoint, prevPoint));
-//                prevPoint = gpxWaypoint;
-//
-//                // now check for change in color and add series if required
-//                if (!actColor.equals(slopeColor)) {
-////                    System.out.println("New color: " + ColorConverter.JavaFXtoRGBHex(actColor) + " for slope: " + gpxWaypoint.getSlope());
-//                    // add the current series to the result set
-//                    if (hasData) {
-//                        final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-//                        series.getData().addAll(dataList);
-//                        setSeriesUserData(series, lineItem);
-//
-//                        result.add(series);
-//                    }
-//
-//                    // start new series
-//                    hasData = false;
-//                    dataList = new ArrayList<>();
-//
-//                    slopeColor = actColor;
-//                }
-//            }
-//            
-//            counter++;
-//
-//            if (yValue != 0.0) {
-//                nonZeroData = true;
-//                hasData = true;
-//            }
-//        }
-
-        if (nonZeroData) {
-            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-            series.getData().addAll(dataList);
-            setSeriesUserData(series, lineItem);
-
-            result.add(series);
-        }
-
-//        endTime = Instant.now();
-//        System.out.println("Ending getXYChartSeriesForGPXLineItem: " + endTime);
-//        System.out.println("getXYChartSeriesForGPXLineItem duration: " + ChronoUnit.MICROS.between(startTime, endTime) + ", added " + result.size() + " series");
-//        System.out.println();
         
         return result;
     }
@@ -227,7 +164,7 @@ public class SlopeChart extends HeightChart {
         String seriesID = lineItem.getCombinedID();
         // add track id for track segments
         if (lineItem.isGPXTrackSegment()) {
-            seriesID = lineItem.getParent().getCombinedID() + "." + seriesID;
+            seriesID = "";
         }
         series.setName(seriesID + DATA_SEP + ColorConverter.JavaFXtoRGBHex(slopeColor));
     }

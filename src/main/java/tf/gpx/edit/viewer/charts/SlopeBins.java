@@ -74,10 +74,7 @@ public class SlopeBins {
         final double inS = MAX_INCR_COLOR.getSaturation()- noS;
         final double inB = MAX_INCR_COLOR.getBrightness()- noB;
         for (int i = 0; i < BIN_COUNT; i++) {
-            final GenericBinBounds<Double> binBound = new GenericBinBounds<>();
-            binBound.setLowerBound(i* BIN_WIDTH);
-            binBound.setUpperBound((i+1) * BIN_WIDTH);
-            
+            final GenericBinBounds<Double> binBound = new GenericBinBounds<>(i* BIN_WIDTH, (i+1) * BIN_WIDTH);
             final double t = i / (BIN_COUNT - 1.0);
             
             // https://stackoverflow.com/a/25214819
