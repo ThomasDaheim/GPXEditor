@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.scene.paint.Color;
-import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.algorithms.binning.GenericBinBounds;
 
 /**
  * Class to hold info on the bins used in a aslope chart.
@@ -53,32 +53,8 @@ public class SlopeBins {
     private final Color MAX_DECR_COLOR = Color.DARKGREEN;
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
-    // Bounds of a bin. Contained in a bin if lower bound <= value < upper bound.
-    private class BinBound extends MutablePair<Double, Double> {
-        public Double getLowerBound() {
-            return getLeft();
-        }
-        
-        public void setLowerBound(final Double value) {
-            setLeft(value);
-        }
-
-        public Double getUpperBound() {
-            return getRight();
-        }
-
-        public void setUpperBound(final Double value) {
-            setRight(value);
-        }
-
-        public boolean isInBounds(final Double value) {
-            return getLowerBound() <= value && getUpperBound() > value;
-        }
-        
-    }
-    
     // we store bins as pair (lower & upper) and string for color
-    private final List<Pair<BinBound, Color>> myBins = new ArrayList<>();
+    private final List<Pair<GenericBinBounds<Double>, Color>> myBins = new ArrayList<>();
     
     private SlopeBins() {
         initialize();
@@ -97,7 +73,7 @@ public class SlopeBins {
         final double inS = MAX_INCR_COLOR.getSaturation()- noS;
         final double inB = MAX_INCR_COLOR.getBrightness()- noB;
         for (int i = 0; i < BIN_COUNT; i++) {
-            final BinBound binBound = new BinBound();
+            final GenericBinBounds<Double> binBound = new GenericBinBounds<>();
             binBound.setLowerBound(i* BIN_WIDTH);
             binBound.setUpperBound((i+1) * BIN_WIDTH);
             
@@ -116,7 +92,7 @@ public class SlopeBins {
         final double deS = MAX_DECR_COLOR.getSaturation()- noS;
         final double deB = MAX_DECR_COLOR.getBrightness()- noB;
         for (int i = 0; i < BIN_COUNT; i++) {
-            final BinBound binBound = new BinBound();
+            final GenericBinBounds<Double> binBound = new GenericBinBounds<>();
             binBound.setUpperBound(- i* BIN_WIDTH);
             binBound.setLowerBound(- (i+1) * BIN_WIDTH);
             
@@ -138,7 +114,7 @@ public class SlopeBins {
     public Color getBinColor(final Double value) {
         Color result = NOT_FOUND_COLOR;
         
-        Optional<Pair<BinBound, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
+        Optional<Pair<GenericBinBounds<Double>, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
         
         if (bin.isPresent()) {
             result = bin.get().getRight();
