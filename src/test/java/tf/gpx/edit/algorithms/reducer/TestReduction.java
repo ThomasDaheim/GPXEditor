@@ -29,8 +29,10 @@ import java.io.File;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -979,6 +981,39 @@ public class TestReduction {
 //                        Assertions.assertTrue(false);
 //                        break;
 //                }
+            }
+        }
+    }
+
+    @Test
+    public void testNthPoint() {
+        // results see testReduceReumannWitkam.txt
+        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testalgorithms.gpx"));
+        
+        for (GPXTrack track : gpxfile.getGPXTracks()) {
+            for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
+                final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
+                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                        WaypointReduction.ReductionAlgorithm.NthPoint,
+                        10.0);
+                
+                int keepCount = 0;
+                for (int i = 0; i < keep1.length; i++) {
+                    if (keep1[i]) {
+                        keepCount++;
+                    }
+                }
+                final int waypointCount = trackwaypoints.size();
+                
+                // we expect the following number of points:
+                // + wayPointCount \ 10
+                // +1 for start point
+                // +1 for end point IF waypointCount % 10 != 0
+                int expectCount = 1 + (waypointCount / 10);
+                if (waypointCount % 10 != 0) {
+                    expectCount++;
+                }
+                Assertions.assertEquals(expectCount, keepCount);
             }
         }
     }
