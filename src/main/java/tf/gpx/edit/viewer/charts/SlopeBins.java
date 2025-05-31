@@ -92,7 +92,6 @@ public class SlopeBins {
         
         final double width = ((BIN_COUNT-1) * BIN_WIDTH);
         
-        
         // positive slopes
         final double inH = MAX_INCR_COLOR.getHue()- noH;
         final double inS = MAX_INCR_COLOR.getSaturation()- noS;
@@ -130,10 +129,6 @@ public class SlopeBins {
             
             myBins.add(Pair.of(binBound, Color.hsb(h, s, b)));
         }
-
-//        myBins.stream().forEach((t) -> {
-//            System.out.println(t);
-//        });
     }
     
     public static SlopeBins getInstance() {
@@ -146,7 +141,6 @@ public class SlopeBins {
         Optional<Pair<BinBound, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
         
         if (bin.isPresent()) {
-//            System.out.println("Value: " + value + ", bin: " + bin.get());
             result = bin.get().getRight();
         }
         
