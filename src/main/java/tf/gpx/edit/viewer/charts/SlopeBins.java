@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.scene.paint.Color;
-import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
 
 /**
@@ -54,7 +54,7 @@ public class SlopeBins {
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
     // we store bins as pair (lower & upper) and string for color
-    private final List<Pair<GenericBinBounds<Double>, Color>> myBins = new ArrayList<>();
+    private final List<GenericBin<Double, Color>> myBins = new ArrayList<>();
     
     private SlopeBins() {
         initialize();
@@ -84,7 +84,7 @@ public class SlopeBins {
             final double s = noS + inS * t;
             final double b = noB + inB * t;
             
-            myBins.add(Pair.of(binBound, Color.hsb(h, s, b)));
+            myBins.add(new GenericBin<>(binBound, Color.hsb(h, s, b)));
         }
         
         // negative slopes
@@ -103,7 +103,7 @@ public class SlopeBins {
             final double s = noS + deS * t;
             final double b = noB + deB * t;
             
-            myBins.add(Pair.of(binBound, Color.hsb(h, s, b)));
+            myBins.add(new GenericBin<>(binBound, Color.hsb(h, s, b)));
         }
     }
     
@@ -114,7 +114,7 @@ public class SlopeBins {
     public Color getBinColor(final Double value) {
         Color result = NOT_FOUND_COLOR;
         
-        Optional<Pair<GenericBinBounds<Double>, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
+        Optional<GenericBin<Double, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
         
         if (bin.isPresent()) {
             result = bin.get().getRight();
