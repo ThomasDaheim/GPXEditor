@@ -31,6 +31,7 @@ import java.util.Optional;
 import javafx.scene.paint.Color;
 import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
+import tf.gpx.edit.algorithms.binning.GenericBinList;
 
 /**
  * Class to hold info on the bins used in a aslope chart.
@@ -54,7 +55,7 @@ public class SlopeBins {
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
     // we store bins as pair (lower & upper) and string for color
-    private final List<GenericBin<Double, Color>> myBins = new ArrayList<>();
+    private final GenericBinList<Double, Color> myBins = new GenericBinList<>();
     
     private SlopeBins() {
         initialize();
