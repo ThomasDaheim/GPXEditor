@@ -38,4 +38,12 @@ public class GenericBin<T extends Comparable<T>, S> extends ImmutablePair<Generi
     public GenericBin(GenericBinBounds<T> left, S right) {
         super(left, right);
     }
+    
+    public GenericBinBounds<T> getBinBounds() {
+        return getLeft();
+    }
+    
+    public S getBinValue() {
+        return getRight();
+    }
 }

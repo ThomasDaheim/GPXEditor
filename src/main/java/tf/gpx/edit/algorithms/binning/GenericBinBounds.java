@@ -36,6 +36,14 @@ import org.apache.commons.lang3.tuple.MutablePair;
  * @param <T>
  */
 public class GenericBinBounds<T extends Comparable<T>> extends MutablePair<T, T> {
+    public GenericBinBounds() {
+    }
+
+    public GenericBinBounds(final T lowerBound, final T upperBound) {
+        setLeft(lowerBound);
+        setRight(upperBound);
+    }
+
     public T getLowerBound() {
         return getLeft();
     }
