@@ -31,6 +31,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.helper.javafx.ColorConverter;
@@ -65,9 +66,7 @@ public class SlopeChart extends HeightChart {
     }
 
     // here we change the series whenever the SlopeBin (or better the SlopeBinColor) changes
-    // in order to speed things up we
-    // - don't check every waypoint, use SKIP_WAYPOINTS
-    // - interpolate the slope-curve using Douglas-Peucker?
+    // in order to speed things up we don't check every waypoint, use algorithm to reduce points to check slope
     @Override
     protected List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
 //        Instant startTime = Instant.now();
@@ -84,11 +83,15 @@ public class SlopeChart extends HeightChart {
         // check if we have any data in this series
         boolean hasData = false;
         
-        // don't start with 0 - first waypoint doesn't have any slope
-        int counter = 1;
+        int counter = 0;
         GPXWaypoint prevPoint = lineItem.getGPXWaypoints().get(0);
         slopeColor = SlopeBins.getInstance().getBinColor(0.0);
         Color actColor = SlopeBins.getInstance().getBinColor(0.0);
+
+        // use reduction to get rid of points
+        final boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
+        // don't start with 0 - first waypoint doesn't have any slope
+        check[0] = false;
         
         for (GPXWaypoint gpxWaypoint : lineItem.getGPXWaypoints()) {
             maxDistance = maxDistance + gpxWaypoint.getDistance();
@@ -107,7 +110,7 @@ public class SlopeChart extends HeightChart {
             getPoints().add(Pair.of(gpxWaypoint, maxDistance));
 
             // don't check color change for each data point
-            if (counter % SKIP_WAYPOINTS == 0) {
+            if (check[counter]) {
                 // and now the slope to the previous point
                 final double slope = EarthGeometry.slope(gpxWaypoint, prevPoint);
 //                System.out.println("Waypoint: " + gpxWaypoint);
