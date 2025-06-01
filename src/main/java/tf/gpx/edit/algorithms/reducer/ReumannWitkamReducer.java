@@ -62,8 +62,8 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
     */
     @Override
-    public boolean[] apply(final List<GPXWaypoint> track, final double epsilon){
-        final boolean[] keep = new boolean[track.size()];
+    public Boolean[] apply(final List<GPXWaypoint> track, final double epsilon){
+        final Boolean[] keep = new Boolean[track.size()];
         keep[0] = true;
         keep[track.size()-1] = true;
         
@@ -106,5 +106,13 @@ public class ReumannWitkamReducer implements IWaypointReducer {
             index++;
         }
     	return keep;
+    }
+
+    @Override
+    public Boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final Boolean[] toReduce,
+            final double epsilon) {
+        return apply(track, epsilon);
     }
 }

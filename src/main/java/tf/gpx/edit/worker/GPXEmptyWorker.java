@@ -99,7 +99,7 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         return deepthFirst;
     }
     
-    protected void removeGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final boolean keep[]) {
+    protected void removeGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final Boolean keep[]) {
         assert gpxWayPoints.size() == keep.length;
         assert myEditor != null;
         

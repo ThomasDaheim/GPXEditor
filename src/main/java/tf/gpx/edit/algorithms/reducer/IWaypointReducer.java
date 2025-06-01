@@ -35,10 +35,16 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public interface IWaypointReducer {
-    boolean[] apply(final List<GPXWaypoint> track, final double epsilon);
+    Boolean[] apply(final List<GPXWaypoint> track, final double epsilon);
+    Boolean[] apply(final List<GPXWaypoint> track, final Boolean[] toReduce, final double epsilon);
     
-    // using distance between points as value to reduce to
-    default boolean[] apply(final List<GPXWaypoint> track) {
+    default Boolean[] apply(final List<GPXWaypoint> track) {
         return apply(track, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+    }
+    
+    // use only certain points and reduce them - useful for chained invocation of reduction
+    // return boolean list over all points, the ones previously excluded remain excluded
+    default Boolean[] apply(final List<GPXWaypoint> track, final Boolean[] toReduce) {
+        return apply(track, toReduce, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
     }
 }

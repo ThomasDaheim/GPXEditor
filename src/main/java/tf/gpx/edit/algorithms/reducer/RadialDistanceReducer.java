@@ -66,10 +66,10 @@ public class RadialDistanceReducer implements IWaypointReducer {
      * @return the points to keep from the original track
      */
     @Override
-    public boolean[] apply(
+    public Boolean[] apply(
             final List<GPXWaypoint> track, 
             final double epsilon) {
-        final boolean[] keep = new boolean[track.size()];
+        final Boolean[] keep = new Boolean[track.size()];
 
         keep[0] = true;
         keep[track.size()-1] = true;
@@ -82,12 +82,20 @@ public class RadialDistanceReducer implements IWaypointReducer {
         return keep;
     }
 
+    @Override
+    public Boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final Boolean[] toReduce,
+            final double epsilon) {
+        return apply(track, epsilon);
+    }
+
     private static void RadialDistanceImpl(
             final List<GPXWaypoint> track, 
             final int first, 
             final int last,
             final double epsilon, 
-            final boolean[] keep) {
+            final Boolean[] keep) {
         if (last < first) {
             // empty
         } else if (last == first) {

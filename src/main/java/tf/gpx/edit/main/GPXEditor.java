@@ -2085,7 +2085,7 @@ public class GPXEditor implements Initializable {
             final List<GPXTrackSegment> gpxTrackSegments = GPXStructureHelper.getInstance().uniqueGPXTrackSegmentsFromGPXWaypoints(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                boolean keep[];
+                Boolean keep[];
                 
                 switch (processType) {
                     case FIXING:
@@ -2094,11 +2094,11 @@ public class GPXEditor implements Initializable {
                         break;
                     case REDUCING:
                         keep = WaypointReduction.apply(trackwaypoints, 
-                                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                                (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
                                 GPXEditorPreferences.REDUCE_EPSILON.getAsType());
                         break;
                     default:
-                        keep = new boolean[trackwaypoints.size()];
+                        keep = new Boolean[trackwaypoints.size()];
                         Arrays.fill(keep, true);
                 }
 

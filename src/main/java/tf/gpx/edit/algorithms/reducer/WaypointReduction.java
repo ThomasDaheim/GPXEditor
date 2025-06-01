@@ -74,7 +74,7 @@ public class WaypointReduction implements IWaypointReducer {
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original track
      */
-    public static boolean[] apply(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
+    public static Boolean[] apply(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
         switch (algorithm) {
             case DouglasPeucker:
                 return DouglasPeuckerReducer.getInstance().apply(track, epsilon);
@@ -87,14 +87,19 @@ public class WaypointReduction implements IWaypointReducer {
             case NthPoint:
                 return NthPointReducer.getInstance().apply(track, epsilon);
             default:
-                boolean[] keep = new boolean[track.size()];
+                Boolean[] keep = new Boolean[track.size()];
                 Arrays.fill(keep, true);
                 return keep;
         }
     }
 
     @Override
-    public boolean[] apply(List<GPXWaypoint> track, double epsilon) {
-        return apply(track, GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
+    public Boolean[] apply(List<GPXWaypoint> track, double epsilon) {
+        return apply(track, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
+    }
+
+    @Override
+    public Boolean[] apply(List<GPXWaypoint> track, final Boolean[] toReduce, double epsilon) {
+        return apply(track, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
     }
 }

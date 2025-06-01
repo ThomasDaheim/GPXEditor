@@ -49,7 +49,7 @@ public class GPXFixGarminCrapWorker extends GPXEmptyWorker {
         // AND distanceGPXWaypoints prev - next below epsilon
         final List<GPXWaypoint> waypoints = gpxTrackSegment.getGPXWaypoints();
 
-        final boolean keep[] = GarminCrapFilter.applyFilter(waypoints, myParameter);
+        final Boolean keep[] = GarminCrapFilter.applyFilter(waypoints, myParameter);
         
         removeGPXWaypoints(waypoints, keep);
     }

@@ -61,7 +61,7 @@ public class GPXReductionWorker extends GPXEmptyWorker  {
     }
     
     private void reduceGPXWaypoints(final List<GPXWaypoint> waypoints) {
-        final boolean keep[] = WaypointReduction.apply(waypoints, myAlgorithm, myParameter);
+        final Boolean keep[] = WaypointReduction.apply(waypoints, myAlgorithm, myParameter);
         
         removeGPXWaypoints(waypoints, keep);
     }

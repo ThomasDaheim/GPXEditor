@@ -88,7 +88,7 @@ public class SlopeChart extends HeightChart {
         final GenericBinList<Integer, Color> binList = new GenericBinList<>();
 
         // use reduction to get rid of points
-        final boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
+        final Boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
         // don't start with 0 - first waypoint doesn't have any slope
         check[0] = false;
         

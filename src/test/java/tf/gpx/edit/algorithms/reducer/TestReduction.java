@@ -32,7 +32,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,7 +98,7 @@ public class TestReduction {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                final Boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.DouglasPeucker,
                         10.0);
         
@@ -322,7 +321,7 @@ public class TestReduction {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                final Boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.VisvalingamWhyatt,
                         10.0);
                 
@@ -545,7 +544,7 @@ public class TestReduction {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                final Boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.ReumannWitkam,
                         10.0);
                 
@@ -769,7 +768,7 @@ public class TestReduction {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                final Boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.RadialDistance,
                         10.0);
                 
@@ -993,7 +992,7 @@ public class TestReduction {
         for (GPXTrack track : gpxfile.getGPXTracks()) {
             for (GPXTrackSegment tracksegment : track.getGPXTrackSegments()) {
                 final List<GPXWaypoint> trackwaypoints = tracksegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                final boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
+                final Boolean keep1[] = WaypointReduction.apply(trackwaypoints, 
                         WaypointReduction.ReductionAlgorithm.NthPoint,
                         10.0);
                 
