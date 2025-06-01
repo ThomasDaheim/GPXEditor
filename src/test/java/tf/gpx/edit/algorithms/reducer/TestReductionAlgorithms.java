@@ -29,7 +29,6 @@ import java.io.File;
 import java.text.DecimalFormatSymbols;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.AfterEach;
@@ -46,13 +45,13 @@ import tf.gpx.edit.items.GPXWaypoint;
  *
  * @author thomas
  */
-public class TestReduction {
+public class TestReductionAlgorithms {
     private static final double DELTA_DISTANCE = 1.0;
     private final String dS;
     
     private Instant startTime;
 
-    public TestReduction() {
+    public TestReductionAlgorithms() {
         // TFE, 20181005: with proper support for locals also the test values change
         dS = String.valueOf(new DecimalFormatSymbols(Locale.getDefault(Locale.Category.FORMAT)).getDecimalSeparator()); 
     }

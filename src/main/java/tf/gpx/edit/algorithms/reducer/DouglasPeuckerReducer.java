@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.algorithms.reducer;
 
+import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -66,6 +67,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             final List<GPXWaypoint> track, 
             final double epsilon) {
         final Boolean[] keep = new Boolean[track.size()];
+        Arrays.fill(keep, false);
 
         keep[0] = true;
         keep[track.size()-1] = true;
@@ -76,14 +78,6 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
 
         DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, keep);
         return keep;
-    }
-
-    @Override
-    public Boolean[] apply(
-            final List<GPXWaypoint> track, 
-            final Boolean[] toReduce,
-            final double epsilon) {
-        return apply(track, epsilon);
     }
 
     private static void DouglasPeuckerImpl(

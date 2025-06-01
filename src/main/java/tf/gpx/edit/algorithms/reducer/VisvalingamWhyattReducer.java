@@ -26,6 +26,7 @@
 package tf.gpx.edit.algorithms.reducer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.EarthGeometry;
@@ -65,6 +66,8 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
     @Override
     public Boolean[] apply(List<GPXWaypoint> track, double epsilon) {
         final Boolean[] keep = new Boolean[track.size()];
+        Arrays.fill(keep, false);
+
         keep[0] = true;
         keep[track.size()-1] = true;
         
@@ -123,13 +126,5 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
         }
         
     	return keep;
-    }
-
-    @Override
-    public Boolean[] apply(
-            final List<GPXWaypoint> track, 
-            final Boolean[] toReduce,
-            final double epsilon) {
-        return apply(track, epsilon);
     }
 }

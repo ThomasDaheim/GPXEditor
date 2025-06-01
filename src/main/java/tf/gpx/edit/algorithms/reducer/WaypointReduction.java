@@ -67,39 +67,34 @@ public class WaypointReduction implements IWaypointReducer {
     }
 
     /**
-     * Simplify track by removing points, using the requested algorithm.
+     * Simplify waypoints by removing points, using the requested algorithm.
      * 
-     * @param track points of the track
+     * @param waypoints points of the waypoints
      * @param algorithm What ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
-     * @return the points to keep from the original track
+     * @return the points to keep from the original waypoints
      */
-    public static Boolean[] apply(final List<GPXWaypoint> track, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
+    public static Boolean[] apply(final List<GPXWaypoint> waypoints, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
         switch (algorithm) {
             case DouglasPeucker:
-                return DouglasPeuckerReducer.getInstance().apply(track, epsilon);
+                return DouglasPeuckerReducer.getInstance().apply(waypoints, epsilon);
             case VisvalingamWhyatt:
-                return VisvalingamWhyattReducer.getInstance().apply(track, epsilon);
+                return VisvalingamWhyattReducer.getInstance().apply(waypoints, epsilon);
             case ReumannWitkam:
-                return ReumannWitkamReducer.getInstance().apply(track, epsilon);
+                return ReumannWitkamReducer.getInstance().apply(waypoints, epsilon);
             case RadialDistance:
-                return RadialDistanceReducer.getInstance().apply(track, epsilon);
+                return RadialDistanceReducer.getInstance().apply(waypoints, epsilon);
             case NthPoint:
-                return NthPointReducer.getInstance().apply(track, epsilon);
+                return NthPointReducer.getInstance().apply(waypoints, epsilon);
             default:
-                Boolean[] keep = new Boolean[track.size()];
+                Boolean[] keep = new Boolean[waypoints.size()];
                 Arrays.fill(keep, true);
                 return keep;
         }
     }
 
     @Override
-    public Boolean[] apply(List<GPXWaypoint> track, double epsilon) {
-        return apply(track, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
-    }
-
-    @Override
-    public Boolean[] apply(List<GPXWaypoint> track, final Boolean[] toReduce, double epsilon) {
-        return apply(track, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
+    public Boolean[] apply(List<GPXWaypoint> waypoints, double epsilon) {
+        return apply(waypoints, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
     }
 }

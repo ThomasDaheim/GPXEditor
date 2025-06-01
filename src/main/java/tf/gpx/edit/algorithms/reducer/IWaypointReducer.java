@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.algorithms.reducer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -35,16 +37,46 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public interface IWaypointReducer {
-    Boolean[] apply(final List<GPXWaypoint> track, final double epsilon);
-    Boolean[] apply(final List<GPXWaypoint> track, final Boolean[] toReduce, final double epsilon);
-    
-    default Boolean[] apply(final List<GPXWaypoint> track) {
-        return apply(track, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
-    }
-    
+    Boolean[] apply(final List<GPXWaypoint> waypoints, final double epsilon);
+
     // use only certain points and reduce them - useful for chained invocation of reduction
     // return boolean list over all points, the ones previously excluded remain excluded
-    default Boolean[] apply(final List<GPXWaypoint> track, final Boolean[] toReduce) {
-        return apply(track, toReduce, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+    default Boolean[] apply(final List<GPXWaypoint> waypoints, final Boolean[] toReduce, final double epsilon) {
+        assert waypoints.size() == toReduce.length;
+
+        // 1) created a reduced list of only the points to be check
+        final List<GPXWaypoint> toReduceWaypoints = new ArrayList<>();
+        for (int i = 0; i < waypoints.size(); i++) {
+            if (toReduce[i]) {
+                toReduceWaypoints.add(waypoints.get(i));
+            }
+        }
+        
+        // 2) run algo on reduced list
+        final Boolean[] keep = apply(toReduceWaypoints, epsilon);
+        
+        // 3) merge algo result with input check list
+        // for each checked waypoint that is also on the keep list: mark it
+        final Boolean[] result = new Boolean[waypoints.size()];
+        Arrays.fill(result, false);
+        int count = 0;
+        for (int i = 0; i < waypoints.size(); i++) {
+            if (toReduce[i] && keep[count]) {
+                result[i] = true;
+                count++;
+            }
+        }
+
+        return result;
+    }
+    
+    // helper to call without epsilon
+    default Boolean[] apply(final List<GPXWaypoint> waypoints) {
+        return apply(waypoints, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+    }
+    
+    // helper to call without epsilon
+    default Boolean[] apply(final List<GPXWaypoint> waypoints, final Boolean[] toReduce) {
+        return apply(waypoints, toReduce, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
     }
 }
