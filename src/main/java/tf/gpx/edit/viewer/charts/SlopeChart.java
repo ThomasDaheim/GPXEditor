@@ -92,17 +92,25 @@ public class SlopeChart extends HeightChart {
         // don't start with 0 - first waypoint doesn't have any slope
         check[0] = false;
         
+        // Slope is a tricky thing when calculated between points that are not adjacent on the track!
         GPXWaypoint prevPoint = lineItem.getGPXWaypoints().get(0);
         int startIndex = 0;
+        // In that case we need the distance as sum over the distances between all points and not 
+        // the geometric distance between first an dlast point of the set
+        double distance = 0.0;
         for (int i = 0; i < lineItem.getGPXWaypoints().size(); i++) {
+            final GPXWaypoint waypoint = lineItem.getGPXWaypoints().get(i);
+            distance += waypoint.getDistance();
+
             if (check[i]) {
-                final GPXWaypoint waypoint = lineItem.getGPXWaypoints().get(i);
-                final Color actColor = SlopeBins.getInstance().getBinColor(EarthGeometry.slope(waypoint, prevPoint));
+                final double slope = (waypoint.getWaypoint().getElevation() - prevPoint.getWaypoint().getElevation()) / distance * 100.0;
+                final Color actColor = SlopeBins.getInstance().getBinColor(slope);
                 final GenericBin<Integer, Color> bin = new GenericBin<>(new GenericBinBounds<>(startIndex, i), actColor);
                 binList.add(bin);
                 
                 startIndex = i;
                 prevPoint = waypoint;
+                distance = 0.0;
             }
         }
         
@@ -138,7 +146,7 @@ public class SlopeChart extends HeightChart {
             // aaargh, tricky! since we have multiple series with same point as end / start point we need to maike sure that we don't add the distance twice...
             // so for any other that the first series we reate we shouldn't increase the maxDistance with the value of the first waypoint
             if (start == 0 || !firstPoint) {
-                maxDistance = maxDistance + gpxWaypoint.getDistance();
+                maxDistance += gpxWaypoint.getDistance();
             }
             firstPoint = false;
             // y value is the same as in height chart - the elevation

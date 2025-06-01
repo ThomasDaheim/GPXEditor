@@ -25,8 +25,6 @@
  */
 package tf.gpx.edit.viewer.charts;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import javafx.scene.paint.Color;
 import tf.gpx.edit.algorithms.binning.GenericBin;
@@ -46,12 +44,14 @@ public class SlopeBins {
     
     // count and dimensions of the bin for pos / neg. slopes
     private final int BIN_COUNT = 10;
-    private final double MAX_SLOPE = 15;
+    private final double MAX_SLOPE = 20;
     private final double BIN_WIDTH = MAX_SLOPE / BIN_COUNT;
     
     private final Color NOSLOPE_COLOR = Color.LIGHTGREEN;
     private final Color MAX_INCR_COLOR = Color.RED;
+    private final Color PLUSMAX_INCR_COLOR = Color.DARKRED;
     private final Color MAX_DECR_COLOR = Color.DARKGREEN;
+    private final Color PLUSMAX_DECR_COLOR = Color.DARKGREEN;
     private final Color NOT_FOUND_COLOR = Color.GRAY;
     
     // we store bins as pair (lower & upper) and string for color
@@ -112,10 +112,16 @@ public class SlopeBins {
     public Color getBinColor(final Double value) {
         Color result = NOT_FOUND_COLOR;
         
-        Optional<GenericBin<Double, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
-        
-        if (bin.isPresent()) {
-            result = bin.get().getRight();
+        if (value > MAX_SLOPE) {
+            result = PLUSMAX_INCR_COLOR;
+        } else if (value < -MAX_SLOPE) {
+            result = PLUSMAX_DECR_COLOR;
+        } else {
+            Optional<GenericBin<Double, Color>> bin = myBins.stream().filter((t) -> t.getLeft().isInBounds(value)).findFirst();
+
+            if (bin.isPresent()) {
+                result = bin.get().getRight();
+            }
         }
         
         return result;
