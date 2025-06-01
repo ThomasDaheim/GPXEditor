@@ -28,11 +28,9 @@ package tf.gpx.edit.viewer.charts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.scene.chart.XYChart;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.tuple.Pair;
-import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
 import tf.gpx.edit.algorithms.binning.GenericBinList;
@@ -54,7 +52,7 @@ import tf.helper.javafx.ColorConverter;
 public class SlopeChart extends HeightChart {
     private final static SlopeChart INSTANCE = new SlopeChart();
     
-    private final int SKIP_WAYPOINTS = 10;
+    private final int SKIP_WAYPOINTS = 20;
     
     private Color slopeColor;
     

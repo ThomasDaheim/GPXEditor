@@ -25,13 +25,13 @@
  */
 package tf.gpx.edit.viewer;
 
-import tf.gpx.edit.viewer.charts.ChartsPane;
 import java.util.List;
 import javafx.application.Platform;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.IPreferencesStore;
 

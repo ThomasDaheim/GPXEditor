@@ -26,7 +26,6 @@
 package tf.gpx.edit.viewer.charts;
 
 import java.util.List;
-import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.scene.chart.XYChart;
 import javafx.scene.input.DragEvent;
