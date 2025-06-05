@@ -411,7 +411,7 @@ public class GPXFileHelper {
         try (
             FileWriter out = new FileWriter(selectedFile);
             CSVPrinter printer = new CSVPrinter(out,
-                    CSVFormat.DEFAULT.builder().setHeader(worker.getCSVHeader().toArray(new String[0])).build());
+                    CSVFormat.DEFAULT.builder().setHeader(worker.getCSVHeader().toArray(new String[0])).get());
             ) {
             worker.getCSVLines().forEach((t) -> {
                 // no idea, why a nested try & catch is required here...
