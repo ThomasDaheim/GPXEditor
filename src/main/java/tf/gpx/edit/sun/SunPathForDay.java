@@ -165,6 +165,9 @@ public class SunPathForDay {
                 sunNeverRises = true;
                 // than it also doesn't show
                 sunNeverShows = true;
+                
+                // TFE, 20250605: no path to calculate - where done here
+                return;
             }
             default -> {
             }

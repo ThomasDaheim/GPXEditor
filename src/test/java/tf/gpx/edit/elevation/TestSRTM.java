@@ -59,7 +59,7 @@ public class TestSRTM {
     private static double tileDist;
             
     private static Path testpath;
-    private static List<String> dataNames = new ArrayList<>();
+    private final static List<String> dataNames = new ArrayList<>();
 
     public TestSRTM() {
         mySRTMDataReader = ObjectsHelper.uncheckedCast(srtmOptions.getSRTMDataReader());

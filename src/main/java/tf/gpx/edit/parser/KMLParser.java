@@ -855,6 +855,7 @@ public class KMLParser extends GPXParser {
     }
     
     private void populateLineStyle(final Extension extension, final KMLLineStyle styleItem) {
+        // TODO: what is this ever used for?
         LineStyle lineStyle = null;
         if (extension instanceof Track) {
             lineStyle = new LineStyle(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);

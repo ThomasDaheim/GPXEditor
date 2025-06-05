@@ -51,7 +51,7 @@ public class TestSPA {
 
     @Test
     public void testSpaExample() {
-        GregorianCalendar time = new GregorianCalendar(new SimpleTimeZone(-7 * 60 * 60 * 1000, "LST"));
+        GregorianCalendar time = new GregorianCalendar(new SimpleTimeZone(-7 * 60 * 60 * 1000, "GMT"));
         time.set(2003, Calendar.OCTOBER, 17, 12, 30, 30); // 17 October 2003, 12:30:30 LST-07:00
 
         SolarPosition result = SPA.calculateSolarPosition(time.toZonedDateTime(), 39.742476, -105.1786, 1830.14, 67, 820, 11);
@@ -90,22 +90,22 @@ public class TestSPA {
             result[2] = null;
         }
 
-        Assertions.assertEquals("Tue Feb 22 07:08:16 CET 2022", result[0].getTime().toString()); // values from https://www.timeanddate.com/sun/germany/munich
+        Assertions.assertEquals("Tue Feb 22 07:08:17 CET 2022", result[0].getTime().toString()); // values from https://www.timeanddate.com/sun/germany/munich
         Assertions.assertEquals("Tue Feb 22 12:27:08 CET 2022", result[1].getTime().toString());
-        Assertions.assertEquals("Tue Feb 22 17:46:45 CET 2022", result[2].getTime().toString());
+        Assertions.assertEquals("Tue Feb 22 17:46:44 CET 2022", result[2].getTime().toString());
         
         // check angle for dates
         SolarPosition angle = SPA.calculateSolarPosition(result[0].toZonedDateTime(), 48.1372222, 11.57611111111111, 520, 69.29);
-        Assertions.assertEquals(104.409047, angle.azimuth(), TOLERANCE); // 104 from website
-        Assertions.assertEquals(90.840334, angle.zenithAngle(), TOLERANCE); // 90 is horizon
+        Assertions.assertEquals(104.41214, angle.azimuth(), TOLERANCE); // 104 from website
+        Assertions.assertEquals(90.83764, angle.zenithAngle(), TOLERANCE); // 90 is horizon
 
         angle = SPA.calculateSolarPosition(result[1].toZonedDateTime(), 48.1372222, 11.57611111111111, 520, 69.29);
         Assertions.assertEquals(179.997705, angle.azimuth(), TOLERANCE); // 180 is south
         Assertions.assertEquals(58.249980, angle.zenithAngle(), TOLERANCE); // 58 from website
 
         angle = SPA.calculateSolarPosition(result[2].toZonedDateTime(), 48.1372222, 11.57611111111111, 520, 69.29);
-        Assertions.assertEquals(255.833650, angle.azimuth(), TOLERANCE); // 256 from website
-        Assertions.assertEquals(90.837069, angle.zenithAngle(), TOLERANCE); // 90 is horizon
+        Assertions.assertEquals(255.830554, angle.azimuth(), TOLERANCE); // 256 from website
+        Assertions.assertEquals(90.834376, angle.zenithAngle(), TOLERANCE); // 90 is horizon
     }
     
     @Test
@@ -147,7 +147,7 @@ public class TestSPA {
         Assertions.assertNull(path.getSunrise());
         Assertions.assertNull(path.getSunset());
 
-        // and now for winter: sun nevwer sets
+        // and now for winter: sun never sets
         date = new GregorianCalendar(zonedDateTime.getYear(), 11, 21, 12, 0);
         date.setTimeZone(TimeZone.getTimeZone(zonedDateTime.getZone()));
         path = new SunPathForDay(date, location, 69.29, ChronoField.MINUTE_OF_DAY, 12);

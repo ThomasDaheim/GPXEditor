@@ -82,6 +82,7 @@ public class TestKMLTracksRoutes {
 //        <color>808B008B</color>
         Assertions.assertEquals("8B008B", track.getLineStyle().getColor().getHexColor());
         Assertions.assertEquals(0.5, track.getLineStyle().getOpacity(), 0.01);
+        System.out.println("Linewidth check for item " + track);
         Assertions.assertEquals(2, track.getLineStyle().getWidth().intValue());
     }
 

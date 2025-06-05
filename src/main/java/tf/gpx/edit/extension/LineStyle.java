@@ -95,7 +95,7 @@ public class LineStyle {
         }
     }
     
-    // TFE, 20221002: support for lucos map lsUnits extension attribute
+    // TFE, 20221002: support for locus map lsUnits extension attribute
     private static enum WidthUnit {
         PIXELS,
         MILLIMETERS
@@ -250,7 +250,7 @@ public class LineStyle {
                 }
                 // convert only if something to do
                 if (!WidthUnit.PIXELS.equals(myWidthUnit)) {
-                    myWidth = Optional.of(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue)));
+                    myWidth = Optional.of(UnitConverter.getInstance().millimeterToPixel(Double.parseDouble(nodeValue)));
                 } else {
                     myWidth = Optional.of(Double.valueOf(nodeValue));
                 }
@@ -347,15 +347,16 @@ public class LineStyle {
         myWidth = Optional.of(width);
         
         if (myExtension != null) {
+            // TFE, 20250502: not yet working
             // TFE, 20250104: no longer true! We know also store in pixel together with our own ne extension :-)
-//            // we work in pixel, gpx_style in millimeter
-//            KnownExtensionAttributes.setValueForAttribute(
-//                    myExtension, 
-//                    KnownExtensionAttributes.KnownAttribute.width, 
-//                    Double.toString(
-//                            Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
-//                            )
-//                    );
+            // we work in pixel, gpx_style in millimeter
+            KnownExtensionAttributes.setValueForAttribute(
+                    myExtension, 
+                    KnownExtensionAttributes.KnownAttribute.width, 
+                    Double.toString(
+                            Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
+                            )
+                    );
             KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
 
             // TFE, 20250502: not yet working
