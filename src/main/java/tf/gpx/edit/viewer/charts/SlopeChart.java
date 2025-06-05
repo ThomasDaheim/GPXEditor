@@ -34,7 +34,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
 import tf.gpx.edit.algorithms.binning.GenericBinList;
-import tf.gpx.edit.algorithms.reducer.WaypointReduction;
+import tf.gpx.edit.algorithms.reducer.DouglasPeuckerReducer;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.helper.javafx.ColorConverter;
@@ -52,7 +52,7 @@ import tf.helper.javafx.ColorConverter;
 public class SlopeChart extends HeightChart {
     private final static SlopeChart INSTANCE = new SlopeChart();
     
-    private final int SKIP_WAYPOINTS = 20;
+    private final int SKIP_WAYPOINTS = 40;
     
     private Color slopeColor;
     
@@ -86,7 +86,9 @@ public class SlopeChart extends HeightChart {
         final GenericBinList<Integer, Color> binList = new GenericBinList<>();
 
         // use reduction to get rid of points
-        final Boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
+//        final Boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
+        Boolean check[] = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), SKIP_WAYPOINTS);
+        check = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), check, SKIP_WAYPOINTS);
         // don't start with 0 - first waypoint doesn't have any slope
         check[0] = false;
         
