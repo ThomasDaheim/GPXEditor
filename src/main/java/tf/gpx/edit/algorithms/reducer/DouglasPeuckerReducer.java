@@ -60,12 +60,14 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
      * Simplify track by removing points, using the Douglas-Peucker algorithm.
      * @param track points of the track
      * @param epsilon tolerance, in meters
+     * @param algorithm
      * @return the points to keep from the original track
      */
     @Override
     public Boolean[] apply(
             final List<GPXWaypoint> track, 
-            final double epsilon) {
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm) {
         final Boolean[] keep = new Boolean[track.size()];
         Arrays.fill(keep, false);
 
@@ -76,7 +78,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             return keep;
         }
 
-        DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, keep);
+        DouglasPeuckerImpl(track, 0, track.size()-1, epsilon, algorithm, keep);
         return keep;
     }
 
@@ -84,7 +86,8 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             final List<GPXWaypoint> track, 
             final int first, 
             final int last,
-            final double epsilon, 
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm,
             final Boolean[] keep) {
         if (last < first) {
             // empty
@@ -97,7 +100,7 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             final GPXWaypoint startPt = track.get(first);
             final GPXWaypoint endPt = track.get(last);
             for (int i = first+1; i < last; ++i) {
-                double dist = EarthGeometry.distanceToGreatCircle(track.get(i), startPt, endPt, epsilon);
+                double dist = EarthGeometry.distanceToGreatCircleForAlgorithm(track.get(i), startPt, endPt, epsilon, algorithm);
                 if (dist > max) {
                     max = dist;
                     index = i;
@@ -105,8 +108,8 @@ public class DouglasPeuckerReducer implements IWaypointReducer {
             }
             if (max > epsilon) {
                 keep[index] = true;
-                DouglasPeuckerImpl(track, first, index, epsilon, keep);
-                DouglasPeuckerImpl(track, index, last, epsilon, keep);
+                DouglasPeuckerImpl(track, first, index, epsilon, algorithm, keep);
+                DouglasPeuckerImpl(track, index, last, epsilon, algorithm, keep);
             } else if (EarthGeometry.distance(startPt, endPt) > epsilon) {
                 keep[last] = true;
             }

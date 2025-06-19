@@ -69,7 +69,8 @@ public class RadialDistanceReducer implements IWaypointReducer {
     @Override
     public Boolean[] apply(
             final List<GPXWaypoint> track, 
-            final double epsilon) {
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm) {
         final Boolean[] keep = new Boolean[track.size()];
         Arrays.fill(keep, false);
 
@@ -80,7 +81,7 @@ public class RadialDistanceReducer implements IWaypointReducer {
             return keep;
         }
 
-        RadialDistanceImpl(track, 0, track.size()-1, epsilon, keep);
+        RadialDistanceImpl(track, 0, track.size()-1, epsilon, algorithm, keep);
         return keep;
     }
 
@@ -89,6 +90,7 @@ public class RadialDistanceReducer implements IWaypointReducer {
             final int first, 
             final int last,
             final double epsilon, 
+            final EarthGeometry.DistanceAlgorithm algorithm,
             final Boolean[] keep) {
         if (last < first) {
             // empty

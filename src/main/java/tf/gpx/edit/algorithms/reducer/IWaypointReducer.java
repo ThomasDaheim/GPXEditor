@@ -28,6 +28,7 @@ package tf.gpx.edit.algorithms.reducer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
 
@@ -37,11 +38,19 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public interface IWaypointReducer {
-    Boolean[] apply(final List<GPXWaypoint> waypoints, final double epsilon);
+    Boolean[] apply(final List<GPXWaypoint> waypoints, final double epsilon, final EarthGeometry.DistanceAlgorithm algorithm);
+
+    // helper to call algorithm with default distance calculation
+    default Boolean[] apply(final List<GPXWaypoint> waypoints, final double epsilon) {
+        return apply(waypoints, epsilon, EarthGeometry.getInstance().getDistanceAlgorithm());
+    }
 
     // use only certain points and reduce them - useful for chained invocation of reduction
     // return boolean list over all points, the ones previously excluded remain excluded
     default Boolean[] apply(final List<GPXWaypoint> waypoints, final Boolean[] toReduce, final double epsilon) {
+        return apply(waypoints, toReduce, epsilon, EarthGeometry.getInstance().getDistanceAlgorithm());
+    }
+    default Boolean[] apply(final List<GPXWaypoint> waypoints, final Boolean[] toReduce, final double epsilon, final EarthGeometry.DistanceAlgorithm algorithm) {
         assert waypoints.size() == toReduce.length;
 
         // 1) created a reduced list of only the points to be check
@@ -53,7 +62,7 @@ public interface IWaypointReducer {
         }
         
         // 2) run algo on reduced list
-        final Boolean[] keep = apply(toReduceWaypoints, epsilon);
+        final Boolean[] keep = apply(toReduceWaypoints, epsilon, algorithm);
         
         // 3) merge algo result with input check list
         // for each checked waypoint that is also on the keep list: mark it
@@ -77,6 +86,6 @@ public interface IWaypointReducer {
     
     // helper to call without epsilon
     default Boolean[] apply(final List<GPXWaypoint> waypoints, final Boolean[] toReduce) {
-        return apply(waypoints, toReduce, GPXEditorPreferences.REDUCE_EPSILON.getAsType());
+        return apply(waypoints, toReduce, GPXEditorPreferences.REDUCE_EPSILON.getAsType(), EarthGeometry.getInstance().getDistanceAlgorithm());
     }
 }

@@ -187,7 +187,7 @@ public class TestGeometry {
     
     @Test
     public void bearingWaypoints() {
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
+        EarthGeometry.getInstance().setDistanceAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointPair pair : testPointPairs) {
 //            if (doSystemOut) System.out.println("Pair: " + pair.description);
@@ -272,21 +272,21 @@ public class TestGeometry {
     
     @Test
     public void distanceToGreatCircleWaypoints() {
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
+        EarthGeometry.getInstance().setDistanceAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);
-            //if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircle(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.distanceToGreatCircleRef);
+            //if (doSystemOut) System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircleForAlgorithm(triple.p1, triple.p2, triple.p3, 0.0) + " - " + triple.distanceToGreatCircleRef);
             Assertions.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p2, triple.p3, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
             // should be same for other way around
-            //System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircle(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
+            //System.out.println("  Distance: " + EarthGeometry.distanceToGreatCircleForAlgorithm(triple.p1, triple.p3, triple.p2, 0.0) + " - " + triple.distanceToGreatCircleRef);
             Assertions.assertEquals(EarthGeometry.distanceToGreatCircle(triple.p1, triple.p3, triple.p2, 0.0), triple.distanceToGreatCircleRef, DELTA_DISTANCE);
         }
     }
     
     @Test
     public void triangleAreaWaypoints() {
-        EarthGeometry.getInstance().setAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
+        EarthGeometry.getInstance().setDistanceAlgorithm(EarthGeometry.DistanceAlgorithm.Haversine);
 
         for (TestPointTriple triple : testPointTriples) {
 //            if (doSystemOut) System.out.println("Triple: " + triple.description);

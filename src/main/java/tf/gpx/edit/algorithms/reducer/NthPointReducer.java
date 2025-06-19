@@ -27,6 +27,7 @@ package tf.gpx.edit.algorithms.reducer;
 
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.items.GPXWaypoint;
 
 /**
@@ -69,7 +70,8 @@ public class NthPointReducer implements IWaypointReducer {
     @Override
     public Boolean[] apply(
             final List<GPXWaypoint> track, 
-            final double epsilon) {
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm) {
         final Boolean[] keep = new Boolean[track.size()];
         Arrays.fill(keep, false);
 
@@ -80,7 +82,7 @@ public class NthPointReducer implements IWaypointReducer {
             return keep;
         }
 
-        NthPointImpl(track, 0, track.size()-1, epsilon, keep);
+        NthPointImpl(track, 0, track.size()-1, epsilon, algorithm, keep);
         return keep;
     }
 
@@ -89,6 +91,7 @@ public class NthPointReducer implements IWaypointReducer {
             final int first, 
             final int last,
             final double epsilon, 
+            final EarthGeometry.DistanceAlgorithm algorithm,
             final Boolean[] keep) {
         if (last < first) {
             // empty

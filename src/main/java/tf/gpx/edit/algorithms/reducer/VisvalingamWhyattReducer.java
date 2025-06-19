@@ -64,7 +64,10 @@ public class VisvalingamWhyattReducer implements IWaypointReducer {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/whyatt.php
     */
     @Override
-    public Boolean[] apply(List<GPXWaypoint> track, double epsilon) {
+    public Boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm) {
         final Boolean[] keep = new Boolean[track.size()];
         Arrays.fill(keep, false);
 

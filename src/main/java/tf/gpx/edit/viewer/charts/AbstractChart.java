@@ -71,7 +71,6 @@ import tf.helper.general.ObjectsHelper;
  * Abstract class to hold stuff required by all charts.
  * 
  * @author thomas
- * @param <T>
  */
 public abstract class AbstractChart extends AreaChart<Number, Number> implements IChart<AreaChart<Number, Number>> {
     protected final static String DATA_SEP = "-";

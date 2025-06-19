@@ -56,11 +56,11 @@ public class EarthGeometry {
         return INSTANCE;
     }
 
-    public DistanceAlgorithm getAlgorithm() {
+    public DistanceAlgorithm getDistanceAlgorithm() {
         return myAlgorithm;
     }
 
-    public void setAlgorithm(final DistanceAlgorithm algorithm) {
+    public void setDistanceAlgorithm(final DistanceAlgorithm algorithm) {
         myAlgorithm = algorithm;
     }
     
@@ -299,17 +299,34 @@ public class EarthGeometry {
             final GPXWaypoint b,
             final double accuracy) {
         // delegate to waypoint function
-        return distanceToGreatCircle(p.getWaypoint(), a.getWaypoint(), b.getWaypoint(), accuracy);
+        return distanceToGreatCircleForAlgorithm(p, a, b, accuracy, getInstance().myAlgorithm);
+    }
+    public static double distanceToGreatCircleForAlgorithm(
+            final GPXWaypoint p,
+            final GPXWaypoint a,
+            final GPXWaypoint b,
+            final double accuracy,
+            final DistanceAlgorithm algorithm) {
+        // delegate to waypoint function
+        return distanceToGreatCircleForAlgorithm(p.getWaypoint(), a.getWaypoint(), b.getWaypoint(), accuracy, algorithm);
     }
     public static double distanceToGreatCircle(
             final Waypoint p,
             final Waypoint a,
             final Waypoint b,
             final double accuracy) {
-        
-        final double distAB = EarthGeometry.distance(a, b);
-        final double distPA = EarthGeometry.distance(p, a);
-        final double distPB = EarthGeometry.distance(p, b);
+        // delegate to waypoint function
+        return distanceToGreatCircleForAlgorithm(p, a, b, accuracy, getInstance().myAlgorithm);
+    }
+    public static double distanceToGreatCircleForAlgorithm(
+            final Waypoint p,
+            final Waypoint a,
+            final Waypoint b,
+            final double accuracy,
+            final DistanceAlgorithm algorithm) {
+        final double distAB = EarthGeometry.distanceForAlgorithm(a, b, algorithm);
+        final double distPA = EarthGeometry.distanceForAlgorithm(p, a, algorithm);
+        final double distPB = EarthGeometry.distanceForAlgorithm(p, b, algorithm);
         if ((distAB == 0.0) || (distPA == 0.0) || (distPB == 0.0)) return 0.0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;

@@ -84,6 +84,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     
     private void initialize() {
         baseCharts.add(HeightChart.getInstance());
+        // TFE, 20250618: currently, takes to long to show SlopeChart, lets disable
         baseCharts.add(SlopeChart.getInstance());
         // TFE, 20230609: add property to show / hide speed chart
         if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {

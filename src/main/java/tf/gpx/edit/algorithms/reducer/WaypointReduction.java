@@ -27,6 +27,7 @@ package tf.gpx.edit.algorithms.reducer;
 
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
 
@@ -67,25 +68,35 @@ public class WaypointReduction implements IWaypointReducer {
     }
 
     /**
-     * Simplify waypoints by removing points, using the requested algorithm.
+     * Simplify waypoints by removing points, using the requested reductionAlgorithm.
      * 
      * @param waypoints points of the waypoints
-     * @param algorithm What ReductionAlgorithm to use
+     * @param reductionAlgorithm What ReductionAlgorithm to use
      * @param epsilon tolerance, in meters
      * @return the points to keep from the original waypoints
      */
-    public static Boolean[] apply(final List<GPXWaypoint> waypoints, final WaypointReduction.ReductionAlgorithm algorithm, final double epsilon) {
-        switch (algorithm) {
+    public static Boolean[] apply(
+            final List<GPXWaypoint> waypoints, 
+            final WaypointReduction.ReductionAlgorithm reductionAlgorithm, 
+            final double epsilon) {
+        return apply(waypoints, reductionAlgorithm, epsilon, EarthGeometry.getInstance().getDistanceAlgorithm());
+    }
+    public static Boolean[] apply(
+            final List<GPXWaypoint> waypoints, 
+            final WaypointReduction.ReductionAlgorithm reductionAlgorithm, 
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm distanceAlgorithm) {
+        switch (reductionAlgorithm) {
             case DouglasPeucker:
-                return DouglasPeuckerReducer.getInstance().apply(waypoints, epsilon);
+                return DouglasPeuckerReducer.getInstance().apply(waypoints, epsilon, distanceAlgorithm);
             case VisvalingamWhyatt:
-                return VisvalingamWhyattReducer.getInstance().apply(waypoints, epsilon);
+                return VisvalingamWhyattReducer.getInstance().apply(waypoints, epsilon, distanceAlgorithm);
             case ReumannWitkam:
-                return ReumannWitkamReducer.getInstance().apply(waypoints, epsilon);
+                return ReumannWitkamReducer.getInstance().apply(waypoints, epsilon, distanceAlgorithm);
             case RadialDistance:
-                return RadialDistanceReducer.getInstance().apply(waypoints, epsilon);
+                return RadialDistanceReducer.getInstance().apply(waypoints, epsilon, distanceAlgorithm);
             case NthPoint:
-                return NthPointReducer.getInstance().apply(waypoints, epsilon);
+                return NthPointReducer.getInstance().apply(waypoints, epsilon, distanceAlgorithm);
             default:
                 Boolean[] keep = new Boolean[waypoints.size()];
                 Arrays.fill(keep, true);
@@ -94,7 +105,10 @@ public class WaypointReduction implements IWaypointReducer {
     }
 
     @Override
-    public Boolean[] apply(List<GPXWaypoint> waypoints, double epsilon) {
-        return apply(waypoints, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon);
+    public Boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm distanceAlgorithm) {
+        return apply(track, (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(), epsilon, distanceAlgorithm);
     }
 }

@@ -73,7 +73,7 @@ public class GPXTrackviewer implements IPreferencesHolder {
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert myGPXEditor != null;
         assert lineItems != null;
-
+        
         // show in LeafletMapView map
         TrackMap.getInstance().setGPXWaypoints(lineItems, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();

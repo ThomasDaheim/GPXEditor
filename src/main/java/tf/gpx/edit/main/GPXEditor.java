@@ -444,7 +444,7 @@ public class GPXEditor implements Initializable {
         PreferenceEditor.getInstance().setCallback(this);
 
         // set algorithm for distance calculation
-        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
+        EarthGeometry.getInstance().setDistanceAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
     }
     
     public void lateInitialize() {

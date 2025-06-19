@@ -63,7 +63,10 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     *   http://web.cs.sunyit.edu/~poissad/projects/Curve/about_algorithms/douglas.php
     */
     @Override
-    public Boolean[] apply(final List<GPXWaypoint> track, final double epsilon){
+    public Boolean[] apply(
+            final List<GPXWaypoint> track, 
+            final double epsilon,
+            final EarthGeometry.DistanceAlgorithm algorithm) {
         final Boolean[] keep = new Boolean[track.size()];
         Arrays.fill(keep, false);
 
@@ -80,14 +83,14 @@ public class ReumannWitkamReducer implements IWaypointReducer {
     	while( index < list.size()-3 ){
 //            System.out.println("index: " + index);
             // TFE, 20200906: special case alert! distance between index, index+1, index+2 can be 0!
-            // in this case distanceToGreatCircle will always return 0 and all points of the track will be removed
-            if (EarthGeometry.distance(list.get(index), list.get(index+1)) > 0.0 &&
-                    EarthGeometry.distance(list.get(index), list.get(index+2)) > 0.0 &&
-                    EarthGeometry.distance(list.get(index+1), list.get(index+2)) > 0.0) {
+            // in this case distanceToGreatCircleForAlgorithm will always return 0 and all points of the track will be removed
+            if (EarthGeometry.distanceForAlgorithm(list.get(index), list.get(index+1), algorithm) > 0.0 &&
+                    EarthGeometry.distanceForAlgorithm(list.get(index), list.get(index+2), algorithm) > 0.0 &&
+                    EarthGeometry.distanceForAlgorithm(list.get(index+1), list.get(index+2), algorithm) > 0.0) {
                 int firstOut= index+2;
 //                System.out.println("firstOut: " + firstOut);
                 // go forward til outside tolerance area
-                while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircle(list.get(firstOut), list.get(index), list.get(index+1), epsilon) < epsilon ){
+                while ( firstOut < list.size() && EarthGeometry.distanceToGreatCircleForAlgorithm(list.get(firstOut), list.get(index), list.get(index+1), epsilon, algorithm) < epsilon ){
 //                    System.out.println("firstOut: " + firstOut);
                     firstOut++;
                 }

@@ -31,6 +31,7 @@ import java.util.Optional;
 import javafx.scene.chart.XYChart;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.algorithms.EarthGeometry;
 import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
 import tf.gpx.edit.algorithms.binning.GenericBinList;
@@ -87,8 +88,8 @@ public class SlopeChart extends HeightChart {
 
         // use reduction to get rid of points
 //        final Boolean check[] = WaypointReduction.apply(lineItem.getGPXWaypoints(), WaypointReduction.ReductionAlgorithm.NthPoint, SKIP_WAYPOINTS);
-        Boolean check[] = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), SKIP_WAYPOINTS);
-        check = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), check, SKIP_WAYPOINTS);
+        Boolean check[] = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), SKIP_WAYPOINTS, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+        check = DouglasPeuckerReducer.getInstance().apply(lineItem.getGPXWaypoints(), check, SKIP_WAYPOINTS, EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
         // don't start with 0 - first waypoint doesn't have any slope
         check[0] = false;
         
