@@ -82,6 +82,11 @@ public class SpeedChart extends AbstractChart {
     }
 
     @Override
+    protected double getNumberOfWaypointsReduceFactor() {
+        return 10.0;
+    }
+
+    @Override
     public void doShowData() {
         super.seriesChanged(null);
     }

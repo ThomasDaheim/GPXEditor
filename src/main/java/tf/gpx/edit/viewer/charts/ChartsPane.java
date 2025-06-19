@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckMenuItem;
@@ -242,16 +243,23 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert lineItems != null;
 
+        // TFE, 20250619: speeding up things by avoiding unnecessary applyCss
+        // removing all charts from stackpane and add them to a group
+        final Group speedGroup = new Group();
+        speedGroup.getChildren().addAll(STACK_PANE.getChildren());
+        STACK_PANE.getChildren().clear();
+        
         final boolean isVisible = isVisible();
+        setVisible(false);
         final AtomicBoolean hasData = new AtomicBoolean(false);
         // show all chart
         charts.stream().forEach((t) -> {
             t.setGPXWaypoints(lineItems, doFitBounds);
             hasData.set(hasData.get() || t.hasNonZeroData());
         });
+
+        STACK_PANE.getChildren().addAll(speedGroup.getChildren());
         
-        applyCss();
-        requestLayout();
         setVisible(isVisible && hasData.get());
 
         // if visible changes to false, also the button needs to be pressed

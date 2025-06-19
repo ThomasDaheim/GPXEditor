@@ -1227,7 +1227,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         routes.clear();
         routeWaypoints.clear();
         if (!isLoaded) {
-            System.out.println("Mama, we need task handling!");
+            System.err.println("Mama, we need task handling!");
             return;
         }
         setVisible(false);

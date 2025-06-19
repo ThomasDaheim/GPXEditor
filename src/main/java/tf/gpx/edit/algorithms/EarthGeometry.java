@@ -285,7 +285,7 @@ public class EarthGeometry {
     }
 
     /**
-     * Calculates the distance from EarthLongRadius GPXWaypoints P to the great circle that passes by two other GPXWaypoints EarthLongRadius and EarthShortRadius.
+     * Calculates the distance from GPXWaypoints P to the great circle that passes by two other GPXWaypoints.
      * 
      * @param p the point
      * @param a first point
@@ -324,10 +324,13 @@ public class EarthGeometry {
             final Waypoint b,
             final double accuracy,
             final DistanceAlgorithm algorithm) {
-        final double distAB = EarthGeometry.distanceForAlgorithm(a, b, algorithm);
+//        final double distAB = EarthGeometry.distanceForAlgorithm(a, b, algorithm);
+//        final double distPA = EarthGeometry.distanceForAlgorithm(p, a, algorithm);
+//        final double distPB = EarthGeometry.distanceForAlgorithm(p, b, algorithm);
+//        if ((distAB == 0.0) || (distPA == 0.0) || (distPB == 0.0)) return 0.0;
+
         final double distPA = EarthGeometry.distanceForAlgorithm(p, a, algorithm);
-        final double distPB = EarthGeometry.distanceForAlgorithm(p, b, algorithm);
-        if ((distAB == 0.0) || (distPA == 0.0) || (distPB == 0.0)) return 0.0;
+        if (distPA == 0.0) return 0.0;
 
         final double effectiveRadius = EarthAverageRadius + (p.getElevation()+a.getElevation()+b.getElevation())/3.0;
 

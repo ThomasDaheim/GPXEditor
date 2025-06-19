@@ -32,7 +32,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.concurrent.Task;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.scene.CacheHint;
@@ -201,170 +203,184 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
             return;
         }
         
-        minDistance = 0d;
-        maxDistance = 0d;
-        minYValue = Double.MAX_VALUE;
-        maxYValue = -Double.MAX_VALUE;
+        // do caculations in a separate thread
+        final Task<Void> setTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                minDistance = 0d;
+                maxDistance = 0d;
+                minYValue = Double.MAX_VALUE;
+                maxYValue = -Double.MAX_VALUE;
 
-        final boolean alwaysShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
-        
-        // TFE, 20191112: create series per track & route to be able to handle different colors
-        final List<XYChart.Series<Number, Number>> seriesList = new ArrayList<>();
-        // TFE, 20200212: file waypoints need special treatment 
-        // need to calculate distance from other waypoints to show correctly on chart
-        XYChart.Series<Number, Number> fileWaypointSeries = null;
-        
-        // show file waypoints only once
-        boolean fileShown = false;
-        for (GPXLineItem lineItem : lineItems) {
-            // only files can have file waypoints
-            if (fileWaypointsInChart()) {
-                if (lineItem.isGPXFile() && !lineItem.getGPXWaypoints().isEmpty()) {
-                    // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
-                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem).get(0);
-                } else if (alwaysShowFileWaypoints && !fileShown && !lineItem.getGPXFile().getGPXWaypoints().isEmpty()) {
-                    // add file waypoints as well, even though file isn't selected
-                    // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
-                    fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem.getGPXFile()).get(0);
-                    fileShown = true;
-                }
-            }
-            if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
-                for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
-                    // add track segments individually
-                    for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                        seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxTrackSegment));
+                final boolean alwaysShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
+
+                // TFE, 20191112: create series per track & route to be able to handle different colors
+                final List<XYChart.Series<Number, Number>> seriesList = new ArrayList<>();
+                // TFE, 20200212: file waypoints need special treatment 
+                // need to calculate distance from other waypoints to show correctly on chart
+                XYChart.Series<Number, Number> fileWaypointSeries = null;
+
+                // show file waypoints only once
+                boolean fileShown = false;
+                for (GPXLineItem lineItem : lineItems) {
+                    // only files can have file waypoints
+                    if (fileWaypointsInChart()) {
+                        if (lineItem.isGPXFile() && !lineItem.getGPXWaypoints().isEmpty()) {
+                            // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
+                            fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem).get(0);
+                        } else if (alwaysShowFileWaypoints && !fileShown && !lineItem.getGPXFile().getGPXWaypoints().isEmpty()) {
+                            // add file waypoints as well, even though file isn't selected
+                            // TFE, 20250518: not sure if there might be any scenario where waypoints need to be split into different series...
+                            fileWaypointSeries = getXYChartSeriesForGPXLineItem(lineItem.getGPXFile()).get(0);
+                            fileShown = true;
+                        }
+                    }
+                    if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
+                        for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
+                            // add track segments individually
+                            for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
+                                seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxTrackSegment));
+                            }
+                        }
+                    }
+                    // track segments can have waypoints
+                    if (lineItem.isGPXTrackSegment()) {
+                        seriesList.addAll(getXYChartSeriesForGPXLineItem(lineItem));
+                    }
+                    // files and routes can have routes
+                    if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
+                        for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
+                            seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxRoute));
+                        }
                     }
                 }
-            }
-            // track segments can have waypoints
-            if (lineItem.isGPXTrackSegment()) {
-                seriesList.addAll(getXYChartSeriesForGPXLineItem(lineItem));
-            }
-            // files and routes can have routes
-            if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
-                for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
-                    seriesList.addAll(getXYChartSeriesForGPXLineItem(gpxRoute));
-                }
-            }
-        }
-        
-        // TODO: improve performance or make optional!
-        // - run as (parallel) tasks and re-paint series once its completed: https://docs.oracle.com/javafx/2/threads/jfxpub-threads.htm 
-        // - use better algorithm <- for some limit of trackpoints and waypoints
-        //   http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree, view-source:https://www.oc.nps.edu/oc2902w/coord/geodesy.js
-        //   https://gis.stackexchange.com/a/4857
-        //   https://github.com/jelmerk/hnswlib
-        if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
-            int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
-            int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType();
-            int waypointLabelAngle = GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType();
-            int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType();
 
-            // merge seriesList into one big series to iterate all in one loop
-//            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
-//            for (XYChart.Series<Number, Number> series : seriesList) {
-//                flatSeries.getData().addAll(series.getData());
-//            }
-            
-            final List<GPXWaypoint> flatWaypoints = seriesList.stream().map((t) -> {
-                    return t.getData();
-                }
-            ).flatMap(Collection::stream).map((t) -> {
-                return ((GPXWaypoint) t.getExtraValue());
-            }).collect(Collectors.toList());
-            
-            // TFE, 20210124: could be empty waypoint list!
-            if (!flatWaypoints.isEmpty()) {
-                final INearestNeighbourSearcher searcher = NearestNeighbour.getInstance().getOptimalSearcher(
-                        EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
+                // TODO: improve performance or make optional!
+                // - run as (parallel) tasks and re-paint series once its completed: https://docs.oracle.com/javafx/2/threads/jfxpub-threads.htm 
+                // - use better algorithm <- for some limit of trackpoints and waypoints
+                //   http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree, view-source:https://www.oc.nps.edu/oc2902w/coord/geodesy.js
+                //   https://gis.stackexchange.com/a/4857
+                //   https://github.com/jelmerk/hnswlib
+                if (fileWaypointSeries != null && CollectionUtils.isNotEmpty(fileWaypointSeries.getData())) {
+                    int waypointIconSize = GPXEditorPreferences.WAYPOINT_ICON_SIZE.getAsType();
+                    int waypointLabelSize = GPXEditorPreferences.WAYPOINT_LABEL_SIZE.getAsType();
+                    int waypointLabelAngle = GPXEditorPreferences.WAYPOINT_LABEL_ANGLE.getAsType();
+                    int waypointThreshold = GPXEditorPreferences.WAYPOINT_THRESHOLD.getAsType();
 
-                for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
-                    // 1. check file waypoints against other waypoints for minimum distance
-                    final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
+                    // merge seriesList into one big series to iterate all in one loop
+        //            XYChart.Series<Number, Number> flatSeries = new XYChart.Series<>();
+        //            for (XYChart.Series<Number, Number> series : seriesList) {
+        //                flatSeries.getData().addAll(series.getData());
+        //            }
 
-    //                XYChart.Data<Number, Number> closest = null;
-    //                double mindistance = Double.MAX_VALUE;
-    //                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
-    //                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
-    //                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
-    //                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
-    //                            fileWaypoint.getWaypoint(), 
-    //                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
-    //                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
-    //                    if (distance < mindistance) {
-    //                        closest = waypoint;
-    //                        mindistance = distance;
-    //                    }
-    //                }
+                    final List<GPXWaypoint> flatWaypoints = seriesList.stream().map((t) -> {
+                            return t.getData();
+                        }
+                    ).flatMap(Collection::stream).map((t) -> {
+                        return ((GPXWaypoint) t.getExtraValue());
+                    }).collect(Collectors.toList());
 
-                    final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbour(fileWaypoint);
+                    // TFE, 20210124: could be empty waypoint list!
+                    if (!flatWaypoints.isEmpty()) {
+                        final INearestNeighbourSearcher searcher = NearestNeighbour.getInstance().getOptimalSearcher(
+                                EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation, flatWaypoints, fileWaypointSeries.getData().size());
 
-                    if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
-    //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
+                        for (XYChart.Data<Number, Number> data : fileWaypointSeries.getData()) {
+                            // 1. check file waypoints against other waypoints for minimum distance
+                            final GPXWaypoint fileWaypoint = (GPXWaypoint) data.getExtraValue();
 
-                        final double xValue = getPoints().stream().filter((t) -> {
-                            return t.getLeft().equals(closest.getLeft());
-                        }).findFirst().get().getRight().doubleValue() / 1000.0;
+            //                XYChart.Data<Number, Number> closest = null;
+            //                double mindistance = Double.MAX_VALUE;
+            //                for (XYChart.Data<Number, Number> waypoint : flatSeries.getData()) {
+            //                    // TFE, 20210103: use fastest algorithm here - this only makes sense if points are close to waypoints...
+            //                    // final double distance = EarthGeometry.distanceGPXWaypoints(fileWaypoint, (GPXWaypoint) waypoint.getExtraValue());
+            //                    final double distance = EarthGeometry.distanceWaypointsForAlgorithm(
+            //                            fileWaypoint.getWaypoint(), 
+            //                            ((GPXWaypoint) waypoint.getExtraValue()).getWaypoint(),
+            //                            EarthGeometry.DistanceAlgorithm.SmallDistanceApproximation);
+            //                    if (distance < mindistance) {
+            //                        closest = waypoint;
+            //                        mindistance = distance;
+            //                    }
+            //                }
 
-                        data.setXValue(xValue);
+                            final Pair<GPXWaypoint, Double> closest = searcher.getNearestNeighbour(fileWaypoint);
 
-                        // 2. add text & icon as label to node
-                        final Label text = new Label(fileWaypoint.getName());
-                        text.getStyleClass().add("item-id");
-                        text.setFont(Font.font("Verdana", waypointLabelSize));
-                        text.setRotate(360.0 - waypointLabelAngle);
-                        text.setBorder(Border.EMPTY);
-                        text.setBackground(Background.EMPTY);
-                        text.setPadding(Insets.EMPTY);
-                        text.setVisible(true);
-                        text.setMouseTransparent(true);
-                        // nodes are shown center-center aligned, hack needed to avoid that
-                        text.setUserData(SHIFT_LABEL);
+                            if (closest.getLeft() != null && (closest.getRight() < waypointThreshold || waypointThreshold == 0)) {
+            //                    System.out.println(fileWaypointSeries.getData().indexOf(data) + 1 + ": " + fileWaypoint.getName() + ", " + ((GPXWaypoint) closest.getExtraValue()).getID() + ", " + closest.getXValue());
 
-                        // add waypoint icon
-                        final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
-                        final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
-                        text.setGraphic(new ImageView(image));
-                        text.setGraphicTextGap(0);
+                                final double xValue = getPoints().stream().filter((t) -> {
+                                    return t.getLeft().equals(closest.getLeft());
+                                }).findFirst().get().getRight().doubleValue() / 1000.0;
 
-                        data.setNode(text);
+                                data.setXValue(xValue);
+
+                                // 2. add text & icon as label to node
+                                final Label text = new Label(fileWaypoint.getName());
+                                text.getStyleClass().add("item-id");
+                                text.setFont(Font.font("Verdana", waypointLabelSize));
+                                text.setRotate(360.0 - waypointLabelAngle);
+                                text.setBorder(Border.EMPTY);
+                                text.setBackground(Background.EMPTY);
+                                text.setPadding(Insets.EMPTY);
+                                text.setVisible(true);
+                                text.setMouseTransparent(true);
+                                // nodes are shown center-center aligned, hack needed to avoid that
+                                text.setUserData(SHIFT_LABEL);
+
+                                // add waypoint icon
+                                final String iconBase64 = MarkerManager.getInstance().getIcon(MarkerManager.getInstance().getMarkerForSymbol(fileWaypoint.getSym()).getIconName());
+                                final Image image = new Image(new ByteArrayInputStream(Base64.getDecoder().decode(iconBase64)), waypointIconSize, waypointIconSize, false, false);
+                                text.setGraphic(new ImageView(image));
+                                text.setGraphicTextGap(0);
+
+                                data.setNode(text);
+                            }
+
+                            // add each file waypoint as own series - we don't want to have aera or lines drawn...
+                            final XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                            series.getData().add(data);
+                            setSeriesUserData(series, fileWaypoint);
+
+                            seriesList.add(series);
+                        }
                     }
-
-                    // add each file waypoint as own series - we don't want to have aera or lines drawn...
-                    final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                    series.getData().add(data);
-                    setSeriesUserData(series, fileWaypoint);
-
-                    seriesList.add(series);
                 }
-            }
-        }
         
-        int dataCount = 0;
-        for (XYChart.Series<Number, Number> series : seriesList) {
-            dataCount += series.getData().size();
-        }
-        final Integer dataInt = dataCount;
+                int dataCount = 0;
+                for (XYChart.Series<Number, Number> series : seriesList) {
+                    dataCount += series.getData().size();
+                }
+                final Integer dataInt = dataCount;
+                
+                Platform.runLater(() -> {
+            //        if (this instanceof SlopeChart) {
+            //            System.out.println("Gootcha with " + dataCount + " datapoints");
+            //        }
 
-//        if (this instanceof SlopeChart) {
-//            System.out.println("Gootcha with " + dataCount + " datapoints");
-//        }
+                    // TFE, 20220201: showData takes a long time... lets do it a bit later
+                    // TFE, 20250525: already done in a runLater? In that case don't do it once again
+                    showData(seriesList, dataInt);
+
+                    setAxes(minDistance, maxDistance, minYValue, maxYValue);
+
+                    // hide chart if no waypoints have been set
+                    // TFE, 20210108: don't switch on here in case there are data points
+                    if (dataInt == 0) {
+                        getChart().setVisible(false);
+                    } else {
+                        // TFE, 20220325: restore previous visibility
+                        getChart().setVisible(wasVisible);
+                    }
+                });
+                
+
+                return (Void) null;
+            }
+        };
         
-        // TFE, 20220201: showData takes a long time... lets do it a bit later
-        // TFE, 20250525: already done in a runLater? In that case don't do it once again
-        showData(seriesList, dataInt);
-        
-        setAxes(minDistance, maxDistance, minYValue, maxYValue);
-        
-        // hide chart if no waypoints have been set
-        // TFE, 20210108: don't switch on here in case there are data points
-        if (dataCount == 0) {
-            getChart().setVisible(false);
-        } else {
-            // TFE, 20220325: restore previous visibility
-            getChart().setVisible(wasVisible);
-        }
+        //start Task
+        new Thread(setTask).start();
     }
     
     @Override
@@ -388,6 +404,12 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         super.seriesChanged(c);
     }
     
+    // TFE, 20250619: give the individual charts the chance to reduce the number of waypoints that should be shown
+    // helpful for e.g. slope chart with a large number of color changes and long run time for layout
+    protected double getNumberOfWaypointsReduceFactor() {
+        return 1.0;
+    }
+
     private void showData(final List<XYChart.Series<Number, Number>> seriesList, final int dataCount) {
         inShowData = true;
         
@@ -398,6 +420,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
                 (Integer) GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType() / 
+                getNumberOfWaypointsReduceFactor();
                 // might have no waypoints at all...
                 Math.max(dataCount * 1.0, 1.0);
         
@@ -415,12 +438,15 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                     reducedSeries.getData().addAll(series.getData());
                  } else {
                     // we only show a subset of other waypoints - up to MAX_WAYPOINTS
+                    // TFE, 20250619: we always show first & last point to avoid gaps in the chart
+                    int j = 0, last = series.getData().size()-1;
                     for (XYChart.Data<Number, Number> data : series.getData()) {
                         i++;    
-                        if (i * ratio >= count) {
+                        if ((i * ratio >= count) || (j == 0) || (j == last)){
                             reducedSeries.getData().add(data);
                             count++;
                         }
+                        j++;
                     }
                }
 
