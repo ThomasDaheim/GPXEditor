@@ -47,7 +47,7 @@ import tf.helper.general.ObjectsHelper;
 public class TaskExecutor {
     private final static TaskExecutor INSTANCE = new TaskExecutor();
     
-    private final static ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private final static ExecutorService executorService = Executors.newFixedThreadPool(3);
     
     private TaskExecutor() {
         super();
