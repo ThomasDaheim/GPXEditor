@@ -73,9 +73,6 @@ public class SlopeChart extends HeightChart {
     // in order to speed things up we don't check every waypoint, use algorithm to reduce points to check slope
     @Override
     protected List<XYChart.Series<Number, Number>> getXYChartSeriesForGPXLineItem(final GPXLineItem lineItem) {
-//        Instant startTime = Instant.now();
-//        System.out.println("Starting getXYChartSeriesForGPXLineItem: " + startTime);
-
         final List<XYChart.Series<Number, Number>> result = new ArrayList<>();
         
         if (lineItem.getGPXWaypoints().isEmpty()) {
@@ -116,7 +113,7 @@ public class SlopeChart extends HeightChart {
         }
         
         // binning, part 2
-        // reduce bins bymerging adjacent bins
+        // reduce bins by merging adjacent bins
         binList.mergeEqualAdjacentBins();
 
         // binning part 3

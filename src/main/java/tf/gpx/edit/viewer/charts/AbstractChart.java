@@ -26,19 +26,26 @@
 package tf.gpx.edit.viewer.charts;
 
 import java.io.ByteArrayInputStream;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.Axis;
@@ -51,6 +58,11 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
+import javafx.scene.shape.ClosePath;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.shape.PathElement;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -207,6 +219,8 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         final Task<Void> setTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
+//                Instant startCalc = Instant.now();
+
                 minDistance = 0d;
                 maxDistance = 0d;
                 minYValue = Double.MAX_VALUE;
@@ -254,9 +268,10 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                         }
                     }
                 }
+                
+//                System.out.println(getChartName() + "Chart: total of " + seriesList.size() + " series.");
 
                 // TODO: improve performance or make optional!
-                // - run as (parallel) tasks and re-paint series once its completed: https://docs.oracle.com/javafx/2/threads/jfxpub-threads.htm 
                 // - use better algorithm <- for some limit of trackpoints and waypoints
                 //   http://lith.me/code/2015/06/08/Nearest-Neighbor-Search-with-KDTree, view-source:https://www.oc.nps.edu/oc2902w/coord/geodesy.js
                 //   https://gis.stackexchange.com/a/4857
@@ -354,12 +369,8 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                 final Integer dataInt = dataCount;
                 
                 Platform.runLater(() -> {
-            //        if (this instanceof SlopeChart) {
-            //            System.out.println("Gootcha with " + dataCount + " datapoints");
-            //        }
+//                    Instant startShow = Instant.now();
 
-                    // TFE, 20220201: showData takes a long time... lets do it a bit later
-                    // TFE, 20250525: already done in a runLater? In that case don't do it once again
                     showData(seriesList, dataInt);
 
                     setAxes(minDistance, maxDistance, minYValue, maxYValue);
@@ -372,8 +383,13 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                         // TFE, 20220325: restore previous visibility
                         getChart().setVisible(wasVisible);
                     }
+                
+//                    Instant endShow = Instant.now();
+//                    System.out.println(getChartName() + "Chart.setGPXWaypoints, show:  " + ChronoUnit.MILLIS.between(startShow, endShow) + " milliseconds");
                 });
                 
+//                Instant endCalc = Instant.now();
+//                System.out.println(getChartName() + "Chart.setGPXWaypoints, calc:  " + ChronoUnit.MILLIS.between(startCalc, endCalc) + " milliseconds");
 
                 return (Void) null;
             }
@@ -420,7 +436,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         // TFE, 20190819: make number of waypoints to show a preference
         final double ratio = 
                 (Integer) GPXEditorPreferences.MAX_WAYPOINTS_TO_SHOW.getAsType() / 
-                getNumberOfWaypointsReduceFactor();
+                getNumberOfWaypointsReduceFactor() /
                 // might have no waypoints at all...
                 Math.max(dataCount * 1.0, 1.0);
         
@@ -429,30 +445,36 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         int count = 0, i = 0;
         for (XYChart.Series<Number, Number> series : seriesList) {
             if (!series.getData().isEmpty()) {
-                final XYChart.Series<Number, Number> reducedSeries = new XYChart.Series<>();
-                reducedSeries.setName(series.getName());
+                // TFE, 20250620: lets collect into simple lists before using javafx observable entities
+                final List<XYChart.Data<Number, Number>> reducedData = new ArrayList<>();
 
                 final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
                 if (firstWaypoint.isGPXFileWaypoint()) {
                     // we show all file waypoints
-                    reducedSeries.getData().addAll(series.getData());
+                    reducedData.addAll(series.getData());
                  } else {
                     // we only show a subset of other waypoints - up to MAX_WAYPOINTS
                     // TFE, 20250619: we always show first & last point to avoid gaps in the chart
                     int j = 0, last = series.getData().size()-1;
                     for (XYChart.Data<Number, Number> data : series.getData()) {
-                        i++;    
                         if ((i * ratio >= count) || (j == 0) || (j == last)){
-                            reducedSeries.getData().add(data);
+                            reducedData.add(data);
                             count++;
                         }
+                        i++;    
                         j++;
                     }
-               }
+                }
+
+                final XYChart.Series<Number, Number> reducedSeries = new XYChart.Series<>();
+                reducedSeries.setName(series.getName());
+                reducedSeries.getData().addAll(reducedData);
 
                 getChart().getData().add(reducedSeries); 
             }
         }
+
+//        System.out.println(getChartName() + "Chart: " + dataCount + " points given, total of " + count + " points shown.");
 
         // add labels to series on base charts
         if (myChartsPane.isBaseChart(this)) {
@@ -800,4 +822,119 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
     public void handleMouseDragged(final MouseEvent e) {}
     @Override
     public void handleDragDone(final DragEvent e) {}
+    
+    @Override
+    protected void layoutPlotChildren() {
+        List<LineTo> constructedPath = new ArrayList<>(getData().size());
+        for (int seriesIndex=0; seriesIndex < getData().size(); seriesIndex++) {
+            Series<Number, Number> series = getData().get(seriesIndex);
+            DoubleProperty seriesYAnimMultiplier = new SimpleDoubleProperty(this, "seriesYMultiplier");
+            seriesYAnimMultiplier.setValue(1d);
+            final ObservableList<Node> children = ((Group) series.getNode()).getChildren();
+            Path fillPath = (Path) children.get(0);
+            Path linePath = (Path) children.get(1);
+            makePaths(series, constructedPath, fillPath, linePath, seriesYAnimMultiplier.get());
+        }
+    }
+
+    private void makePaths(Series<Number, Number> series,
+                                List<LineTo> constructedPath,
+                                Path fillPath, Path linePath,
+                                double yAnimMultiplier)
+    {
+        final Axis<Number> axisX = getXAxis();
+        final Axis<Number> axisY = getYAxis();
+        final double hlw = linePath.getStrokeWidth() / 2.0;
+//        final boolean sortX = (sortAxis == SortingPolicy.X_AXIS);
+//        final boolean sortY = (sortAxis == SortingPolicy.Y_AXIS);
+        final boolean sortX = false;
+        final boolean sortY = false;
+        final double dataXMin = sortX ? -hlw : Double.NEGATIVE_INFINITY;
+        final double dataXMax = sortX ? axisX.getWidth() + hlw : Double.POSITIVE_INFINITY;
+        final double dataYMin = sortY ? -hlw : Double.NEGATIVE_INFINITY;
+        final double dataYMax = sortY ? axisY.getHeight() + hlw : Double.POSITIVE_INFINITY;
+        LineTo prevDataPoint = null;
+        LineTo nextDataPoint = null;
+//        ObservableList<PathElement> lineElements = linePath.getElements();
+//        ObservableList<PathElement> fillElements = null;
+        List<PathElement> lineElements = linePath.getElements();
+        List<PathElement> fillElements = null;
+        if (fillPath != null) {
+            fillElements = fillPath.getElements();
+            fillElements.clear();
+        }
+        lineElements.clear();
+        constructedPath.clear();
+        for (Iterator<Data<Number, Number>> it = getDisplayedDataIterator(series); it.hasNext(); ) {
+            Data<Number, Number> item = it.next();
+            double x = axisX.getDisplayPosition(item.getXValue());
+            double y = axisY.getDisplayPosition(
+                    axisY.toRealValue(axisY.toNumericValue(item.getYValue()) * yAnimMultiplier));
+            boolean skip = (Double.isNaN(x) || Double.isNaN(y));
+            Node symbol = item.getNode();
+            if (symbol != null) {
+                final double w = symbol.prefWidth(-1);
+                final double h = symbol.prefHeight(-1);
+                if (skip) {
+                    symbol.resizeRelocate(-w*2, -h*2, w, h);
+                } else {
+                    symbol.resizeRelocate(x-(w/2), y-(h/2), w, h);
+                }
+            }
+            if (skip) continue;
+            if (x < dataXMin || y < dataYMin) {
+                if (prevDataPoint == null) {
+                    prevDataPoint = new LineTo(x, y);
+                } else if ((sortX && prevDataPoint.getX() <= x) ||
+                           (sortY && prevDataPoint.getY() <= y))
+                {
+                    prevDataPoint.setX(x);
+                    prevDataPoint.setY(y);
+                }
+            } else if (x <= dataXMax && y <= dataYMax) {
+                constructedPath.add(new LineTo(x, y));
+            } else {
+                if (nextDataPoint == null) {
+                    nextDataPoint = new LineTo(x, y);
+                } else if ((sortX && x < nextDataPoint.getX()) ||
+                           (sortY && y < nextDataPoint.getY()))
+                {
+                    nextDataPoint.setX(x);
+                    nextDataPoint.setY(y);
+                }
+            }
+        }
+
+        if (!constructedPath.isEmpty() || prevDataPoint != null || nextDataPoint != null) {
+            if (sortX) {
+                Collections.sort(constructedPath, (e1, e2) -> Double.compare(e1.getX(), e2.getX()));
+            } else if (sortY) {
+                Collections.sort(constructedPath, (e1, e2) -> Double.compare(e1.getY(), e2.getY()));
+            } else {
+                // assert prevDataPoint == null && nextDataPoint == null
+            }
+            if (prevDataPoint != null) {
+                constructedPath.add(0, prevDataPoint);
+            }
+            if (nextDataPoint != null) {
+                constructedPath.add(nextDataPoint);
+            }
+
+            // assert !constructedPath.isEmpty()
+            LineTo first = constructedPath.get(0);
+            LineTo last = constructedPath.get(constructedPath.size()-1);
+
+            lineElements.add(new MoveTo(first.getX(), first.getY()));
+            lineElements.addAll(constructedPath);
+
+            if (fillPath != null) {
+                double yOrigin = axisY.getDisplayPosition(axisY.toRealValue(0.0));
+
+                fillElements.add(new MoveTo(first.getX(), yOrigin));
+                fillElements.addAll(constructedPath);
+                fillElements.add(new LineTo(last.getX(), yOrigin));
+                fillElements.add(new ClosePath());
+            }
+        }
+    }
 }

@@ -242,7 +242,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert lineItems != null;
-
+        
         // TFE, 20250619: speeding up things by avoiding unnecessary applyCss
         // removing all charts from stackpane and add them to a group
         final Group speedGroup = new Group();
