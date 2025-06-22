@@ -121,7 +121,7 @@ public class DistributionViewer extends AbstractStage {
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-        getScene().getStylesheets().add(DistributionViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor_StatisticsViewer.min.css").toExternalForm());
 
         // create new scene
         setTitle("Distributions");

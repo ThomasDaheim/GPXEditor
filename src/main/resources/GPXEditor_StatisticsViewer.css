@@ -36,40 +36,67 @@
 */
 
 /*
-    undo/redo
+    bin distribution chart
 */
-.redo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+.unpad-chart {
+    -fx-padding: 0px;
 }
-.undo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+.chart-content {
+    -fx-padding: 0px;
 }
-
-/* TFE, 20200511: disabled items in waypoint icon combobox */
-.combo-box-popup .list-cell:disabled,
-.icon-groupname-label {
-    -fx-background-color: darkgrey;
-    -fx-font-weight: bold;
-    -fx-underline: true;
-    -fx-opacity: 1.0;
-    -fx-padding: 0;
-    -fx-margin: 0;
+.chart-plot-background {
+    -fx-background-color: white;
 }
-.icon-label {
-    /* TODO: centering of graphics not yet working */
-    -fx-padding: 0 0 0 -16;
-    -fx-margin: 0;
+.chart-vertical-grid-lines {
+    -fx-stroke: white;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: white;
 }
 
-/* TFE, 20200807: slider tick labels */
-.slider .axis {
-    -fx-tick-label-fill: -fx-text-inner-color;
+/*
+    bin distribution min / max slider
+*/
+/* https://stackoverflow.com/questions/28721542/javafx-controlsfx-css-for-rangeslider */
+.range-slider .low-thumb {
+    -fx-shape: "M2.998-0.07L3-1.499l2.998,4L3,6.501l-0.002-1.43l1.976-2.57L2.998-0.07z";
+    -fx-translate-x: -5;
+}
+.range-slider .high-thumb {
+    -fx-shape: "M5.997,5.072L5.995,6.501l-2.998-4l2.998-4l0.002,1.43l-1.976,2.57L5.997,5.072z";
+    -fx-translate-x: 5;
+}
+.range-slider .range-bar {
+    -fx-background-color: #000080;
+}
+
+.small-text {
+    -fx-font-size: 1.0em;
+}
+
+/*
+    no empty rows in statistics table
+*/
+.table-row-cell:empty {
+    -fx-background-color: white;
+    -fx-border-color: white;
+} 
+.table-row-cell:empty .table-cell {
+    -fx-border-width: 0px;
+}
+.stat-table *.scroll-bar:vertical *.increment-button,
+.stat-table *.scroll-bar:vertical *.decrement-button {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.stat-table *.scroll-bar:vertical *.increment-arrow, 
+.stat-table *.scroll-bar:vertical *.decrement-arrow {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-shape: null;
 }

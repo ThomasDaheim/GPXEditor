@@ -45,6 +45,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Insets;
 import javafx.scene.CacheHint;
 import javafx.scene.Cursor;
+import javafx.scene.DepthTest;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
@@ -142,6 +143,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
         getChart().setLegendVisible(false);
         getChart().setCursor(Cursor.DEFAULT);
         getChart().setSnapToPixel(true);
+        getChart().setDepthTest(DepthTest.DISABLE);
         
         getChart().getXAxis().setAnimated(false);
         getChart().getYAxis().setAnimated(false);
@@ -440,6 +442,9 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                 // might have no waypoints at all...
                 Math.max(dataCount * 1.0, 1.0);
         
+        // TFE, 20250620: lets collect into simple lists before using javafx observable entities
+        final List<XYChart.Series<Number, Number>> reducedSeriesList = new ArrayList<>();
+
         // TFE, 20191125: only show up to GPXEditorPreferenceStore.MAX_WAYPOINTS_TO_SHOW wayoints
         // similar logic to TrackMap.showWaypoints - could maybe be abstracted
         int count = 0, i = 0;
@@ -470,14 +475,18 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                 reducedSeries.setName(series.getName());
                 reducedSeries.getData().addAll(reducedData);
 
-                getChart().getData().add(reducedSeries); 
+                reducedSeriesList.add(reducedSeries); 
             }
         }
+
+        getChart().getData().addAll(reducedSeriesList); 
 
 //        System.out.println(getChartName() + "Chart: " + dataCount + " points given, total of " + count + " points shown.");
 
         // add labels to series on base charts
         if (myChartsPane.isBaseChart(this)) {
+            final List<XYChart.Series<Number, Number>> idSeriesList = new ArrayList<>();
+
             for (XYChart.Series<Number, Number> series : seriesList) {
                 // only if not empty and not for file waypoints
                 if (!series.getData().isEmpty() &&
@@ -505,10 +514,12 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                         final XYChart.Series<Number, Number> idSeries = new XYChart.Series<>();
                         idSeries.getData().add(idLabel);
 
-                        getChart().getData().add(idSeries); 
+                        idSeriesList.add(idSeries);
                     }
                 }
             }
+
+            getChart().getData().addAll(idSeriesList); 
         }
 
         inShowData = false;

@@ -1,0 +1,156 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* 
+    Created on : Nov 9, 2016, 7:58:50 PM
+    Author     : Thomas
+*/
+
+@import 'customize-metro.min.css';
+
+
+/*
+    see https://github.com/openjdk/jfx/blob/master/modules/javafx.controls/src/main/resources/com/sun/javafx/scene/control/skin/modena/modena.css for default values
+*/
+
+
+/* sunpath coloring */
+.sunpath-today.chart-series-line {
+    -fx-stroke: yellow !important;
+    -fx-stroke-width: 2px !important;
+}
+.sunpath-summer.chart-series-line {
+    -fx-stroke: green !important;
+    -fx-stroke-width: 2px !important;
+}
+.sunpath-winter.chart-series-line {
+    -fx-stroke: blue !important;
+    -fx-stroke-width: 2px !important;
+}
+
+/* TFE, 20191113: pseudoclasses to color line and area in horizonviewer */
+/* https://kevingimbel.de/blog/2021/06/darken-and-lighten-colors-with-css/ */
+.horizon-pane {
+    -fx-fill: white;
+    -fx-background-color: white;
+}
+.color-step-0 *.chart-series-area-fill,
+.color-step-1 *.chart-series-area-fill,
+.color-step-2 *.chart-series-area-fill,
+.color-step-3 *.chart-series-area-fill,
+.color-step-4 *.chart-series-area-fill,
+.color-step-5 *.chart-series-area-fill,
+.color-step-6 *.chart-series-area-fill,
+.color-step-7 *.chart-series-area-fill {
+    -fx-opacity: 1.0;
+}
+.color-step-0 *.chart-series-area-fill {
+    -fx-fill: #0C11E6;
+}
+.color-step-1 *.chart-series-area-fill {
+    -fx-fill: #3A40DE;
+}
+.color-step-2 *.chart-series-area-fill {
+    -fx-fill: #3B40DA;
+}
+.color-step-3 *.chart-series-area-fill {
+    -fx-fill: #4D51D9;
+}
+.color-step-4 *.chart-series-area-fill {
+    -fx-fill: #8285D2;
+}
+.color-step-5 *.chart-series-area-fill {
+    -fx-fill: #A7A6CE;
+}
+.color-step-6 *.chart-series-area-fill {
+    -fx-fill: #BCBECD;
+}
+.color-step-7 *.chart-series-area-fill {
+    -fx-fill: #C6C7C9;
+}
+.color-step-0 *.chart-series-area-line,
+.color-step-1 *.chart-series-area-line,
+.color-step-2 *.chart-series-area-line,
+.color-step-3 *.chart-series-area-line,
+.color-step-4 *.chart-series-area-line,
+.color-step-5 *.chart-series-area-line,
+.color-step-6 *.chart-series-area-line,
+.color-step-7 *.chart-series-area-line {
+    -fx-stroke: #696969;
+    -fx-stroke-width: 1px;
+    -fx-stroke-dash-array: 2 6 6 2;
+}
+.horizon-tooltip *.chart-area-symbol {
+    -fx-background-color: #696969, #696969 !important;
+    -fx-background-radius: 0px !important;
+    -fx-scale-x: 0.6 !important;
+    -fx-scale-y: 0.6 !important;
+}
+
+.chart-vertical-zero-line {
+    -fx-stroke: black;
+    -fx-stroke-width: 0.5px;
+}
+.chart-horizontal-zero-line {
+    -fx-stroke: black;
+    -fx-stroke-width: 0.5px;
+}
+
+.horizon-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4 4 4 60;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
+}
+.sunpath-viewer-label {
+    -fx-background-color: transparent;
+    -fx-padding: 4 20 4 4;
+    -fx-text-alignment: left;
+    -fx-text-origin: top;
+}
+.sunpath-noelevationdata-label {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 0;
+    -fx-text-alignment: center;
+    -fx-font-size: 200%;
+    -fx-font-weight: bold;
+}
+
+.track-popup {
+    -fx-fill: black;
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-text-origin: top;
+    -fx-line-spacing: -4;
+}
+
+* .item-id {
+    -fx-fill: black;
+    -fx-font-size: 8;
+    -fx-text-alignment: right;
+    -fx-padding: 0px;
+    -fx-margin: 0px;
+}

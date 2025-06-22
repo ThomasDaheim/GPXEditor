@@ -129,6 +129,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     
     private void initialize() {
         getStyleClass().add("status-bar");
+        getStylesheets().add(StatusBar.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // progressbar only visible if action is running
         myTaskProgress.visibleProperty().bind(myTaskText.isNotEmpty());

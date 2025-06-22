@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Pos;
+import javafx.scene.CacheHint;
+import javafx.scene.DepthTest;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
@@ -95,6 +97,13 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         getStyleClass().add("charts-pane");
         MENU_BAR.getStyleClass().add("charts-pane");
         STACK_PANE.getStyleClass().add("charts-pane");
+        
+        setCache(true);
+        setCacheShape(true);
+        setCacheHint(CacheHint.SPEED);
+        setDepthTest(DepthTest.DISABLE);
+        
+        getStylesheets().add(ChartsPane.class.getResource("/GPXEditor_ChartsPane.min.css").toExternalForm());
         
         totalYAxisWidth *= additionalCharts.size();
         // n charts only have n-1 separators between them ;-)

@@ -28,48 +28,64 @@
     Author     : Thomas
 */
 
-@import 'customize-metro.min.css';
-
-
 /*
-    see https://github.com/openjdk/jfx/blob/master/modules/javafx.controls/src/main/resources/com/sun/javafx/scene/control/skin/modena/modena.css for default values
+    mother of all charts
 */
-
+.charts-pane {
+    -fx-fill: white;
+    -fx-background-color: white;
+    -fx-opacity: 0.9;
+}
 /*
-    undo/redo
+    elevation, speed, ... chart
 */
-.redo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+.chart {
+    -fx-fill: transparent;
+    -fx-background-color: transparent;
+    -fx-cursor: none;
 }
-.undo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+.chart-content .chart-plot-background {
+    -fx-fill: transparent;
+    -fx-background-color: transparent;
+}
+.chart-plot-background {
+    -fx-cursor: crosshair;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
+}
+.chart-vert-rect { 
+    -fx-border-style: none dotted none none;
+    -fx-border-width: 5px;
+    -fx-border-color: red;    
+    -fx-fill: red;
+    -fx-opacity: 0.1;
+}
+.chart-series-area-fill {
+    -fx-cursor: crosshair;
+}
+.chart-series-area-line {    
+    -fx-stroke-width: 0.1px;
+    -fx-effect: none;
+    -fx-cursor: crosshair;
+}
+.chart-series-line {    
+    -fx-stroke: #ccc !important;
+    -fx-stroke-width: 0.4px !important;
+    -fx-effect: none;
 }
 
-/* TFE, 20200511: disabled items in waypoint icon combobox */
-.combo-box-popup .list-cell:disabled,
-.icon-groupname-label {
-    -fx-background-color: darkgrey;
-    -fx-font-weight: bold;
-    -fx-underline: true;
-    -fx-opacity: 1.0;
-    -fx-padding: 0;
-    -fx-margin: 0;
+/* TFE, 20220731: coloring of tooltip in horizon chart */
+.charts-tooltip {
+    -fx-background-color: white;
 }
-.icon-label {
-    /* TODO: centering of graphics not yet working */
-    -fx-padding: 0 0 0 -16;
-    -fx-margin: 0;
-}
-
-/* TFE, 20200807: slider tick labels */
-.slider .axis {
-    -fx-tick-label-fill: -fx-text-inner-color;
+.charts-tooltip .label {
+    -fx-text-fill: black;
+    -fx-font-weight: normal;
+    -fx-font-family: 'Helvetica', Arial, sans-serif;
 }

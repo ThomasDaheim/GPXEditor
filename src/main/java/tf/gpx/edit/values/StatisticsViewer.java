@@ -257,7 +257,7 @@ public class StatisticsViewer extends AbstractStage {
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor_StatisticsViewer.min.css").toExternalForm());
 
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {

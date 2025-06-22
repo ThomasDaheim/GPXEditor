@@ -342,6 +342,8 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         
         setVisible(false);
         
+        getStylesheets().add(TrackMap.class.getResource("/GPXEditor_TrackMap.min.css").toExternalForm());
+        
         // init popover for images
         mapImagePopOver.setAutoHide(false);
         mapImagePopOver.setAutoFix(true);

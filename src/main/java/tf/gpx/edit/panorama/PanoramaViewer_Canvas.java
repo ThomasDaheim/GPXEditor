@@ -128,7 +128,7 @@ public class PanoramaViewer_Canvas {
         
         // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
-        scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
+        scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor_PanoramaViewer.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setTitle("GPX Editor - Panorama");

@@ -36,40 +36,30 @@
 */
 
 /*
-    undo/redo
+    map chart
 */
-.redo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+.file-waypoint {
 }
-.undo-button {
+.canvasPane {
+    -fx-fill: transparent;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
     -fx-padding: 0;
     -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
+}
+.selectRect {
+    -fx-fill: transparent;
+    -fx-stroke: black;
+    -fx-stroke-width: 2;
 }
 
-/* TFE, 20200511: disabled items in waypoint icon combobox */
-.combo-box-popup .list-cell:disabled,
-.icon-groupname-label {
-    -fx-background-color: darkgrey;
-    -fx-font-weight: bold;
-    -fx-underline: true;
-    -fx-opacity: 1.0;
-    -fx-padding: 0;
-    -fx-margin: 0;
-}
-.icon-label {
-    /* TODO: centering of graphics not yet working */
-    -fx-padding: 0 0 0 -16;
-    -fx-margin: 0;
+/*
+    the heatmap
+*/
+.heat-map-pane {
 }
 
-/* TFE, 20200807: slider tick labels */
-.slider .axis {
-    -fx-tick-label-fill: -fx-text-inner-color;
+/* TFE, 20210828: node showing the mapimage and title */
+.mapImageViewer > * {
 }
+
