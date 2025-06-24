@@ -27,6 +27,7 @@ package tf.gpx.edit.viewer.charts;
 
 import javafx.geometry.Side;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 
@@ -81,13 +82,30 @@ public class SpeedChart extends AbstractChart {
         myGPXEditor = gpxEditor;
     }
 
-    @Override
-    protected double getNumberOfWaypointsReduceFactor() {
-        return 10.0;
-    }
-
+    
     @Override
     public void doShowData() {
+        // TFE, 20250624: we need to update cs of the speed chart to not color the area and to show a solid black line
+        int j = 0;
+        final StringBuilder cssString = new StringBuilder();
+        for (XYChart.Series<Number, Number> series : getChart().getData()) {
+            if (!series.getData().isEmpty()) {
+                final GPXWaypoint firstWaypoint = (GPXWaypoint) series.getData().get(0).getExtraValue();
+                if (!firstWaypoint.getParent().isGPXFile() && series.getName() != null) {
+                    // and now color the series nodes according to lineitem color
+                    cssString.append(".series").append(j).append(".chart-series-area-line {").append(System.lineSeparator());
+                    cssString.append("  -fx-stroke: #000000; -fx-stroke-width: 0.5px;").append(System.lineSeparator());
+                    cssString.append("}").append(System.lineSeparator());
+                    cssString.append(".series").append(j).append(".chart-series-area-fill {").append(System.lineSeparator());
+                    cssString.append("  -fx-fill: none;").append(System.lineSeparator());
+                    cssString.append("}").append(System.lineSeparator());
+                }
+            }
+            j++;
+        }
+        // and now add the result as css to the stylesheet
+        setStylesheet(cssString.toString());
+        
         super.seriesChanged(null);
     }
 }

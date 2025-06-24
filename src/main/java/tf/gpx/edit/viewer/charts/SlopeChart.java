@@ -180,4 +180,9 @@ public class SlopeChart extends HeightChart {
     protected String getAreaFillSuffix() {
         return "";
     }
+
+    @Override
+    protected double getNumberOfWaypointsReduceFactor() {
+        return 10.0;
+    }
 }
