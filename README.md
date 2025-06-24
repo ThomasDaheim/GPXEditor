@@ -13,7 +13,7 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Notes
 
-* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 24.
+* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 23.
 * Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
 * Note on JavaFX17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 * Note on JavaFX14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
@@ -30,7 +30,7 @@ So it was time to start a new self-learning project. And here you see the result
 
 ### Update v5.9
 
-* Added slope chart: similar to height chart but coloring is done based on slope of track/route.
+* Added slope chart: Similar to height chart but coloring is done based on slope of track/route. This takes some time to create, even after various speed improvements. If things get to slow: there is a preference to disable the slope chart.
 * Create route from selected waypoints.
 * Bugfixes and dependency updates.
 * Added test class TestSunPathForYear. Outputs a csv with sunrise/sunset dates for a year for a given lat/lon location. The csv contains the astronomical sunrise/sunset dates and the "real" ones, when the sun is above the local horizon.
@@ -407,37 +407,39 @@ Explicit dependencies:
 
 * 'tf.JavaHelper:JavaHelper:1.15': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 
-* 'commons-cli:commons-cli:1.5.0'
-* 'commons-io:commons-io:2.11.0'
-* 'org.apache.commons:commons-lang3:3.12.0'
-* 'org.apache.commons:commons-collections4:4.4'
-* 'org.apache.commons:commons-text:1.10.0'
+* 'commons-cli:commons-cli:1.9.0'
+* 'commons-io:commons-io:2.19.0'
+* 'org.apache.commons:commons-lang3:3.17.0'
+* 'org.apache.commons:commons-collections4:4.5.0'
+* 'org.apache.commons:commons-text:1.13.1'
 * 'org.apache.commons:commons-math3:3.6.1'
-* 'org.apache.commons:commons-csv:1.7'
-* 'org.apache.commons:commons-compress:1.22'
+* 'org.apache.commons:commons-csv:1.14.0'
+* 'org.apache.commons:commons-compress:1.27.1'
 * 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-* 'org.controlsfx:controlsfx:11.1.2'
+* 'org.controlsfx:controlsfx:11.2.2'
 * 'de.jensd:fontawesomefx:8.9'
 * NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-dataformat-xml:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-dataformat-csv:2.14.0'
+* 'com.fasterxml.jackson.core:jackson-core:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-xml:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-csv:2.19.0'
 * 'de.grundid.opendatalab:geojson-jackson:1.14'
-* 'org.jfxtras:jfxtras-controls:15-r2'
+* 'org.jfxtras:jfxtras-controls:17-r1'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
 * 'org.jfxtras:jmetro:11.6.16'
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'org.im4java:im4java:1.4.0'
 * 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-* 'org.fxyz3d:fxyz3d:0.5.4'
-* 'org.magicwerk.brownies:brownies-collections:0.9.19'
-* 'net.e175.klaus:solarpositioning:0.0.9'
+* 'org.fxyz3d:fxyz3d:0.6.0'
+* 'org.magicwerk.brownies:brownies-collections:0.9.23'
+* 'net.e175.klaus:solarpositioning:2.0.5'
+* 'com.github.luben:zstd-jni:1.5.7-3'
 * 'us.dustinj.timezonemap:timezonemap:4.5'
-* 'com.github.luben:zstd-jni:1.5.2-5'
-* 'eu.hansolo.fx:charts:17.1.25'
+* 'eu.hansolo.fx:charts:21.0.7'
 
-* 'org.junit.jupiter:junit-jupiter-api:4.13.2'
+* 'org.junit.jupiter:junit-jupiter-api:5.13.0'
+* 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
+* 'org.junit.jupiter:junit-platform-suite-engine:1.13.0'
 * 'com.github.stefanbirkner:system-lambda:1.2.1'
 
 
