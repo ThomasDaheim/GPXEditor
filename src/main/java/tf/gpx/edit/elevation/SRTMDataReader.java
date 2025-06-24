@@ -27,10 +27,14 @@ package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,19 +110,34 @@ class SRTMDataReader implements ISRTMDataReader {
             if (!SRTMDataHelper.SRTMDataType.INVALID.equals(srtmType)) {
                 result = new SRTMData(srtmFile.getAbsolutePath(), name, srtmType);
                 
+//                final Instant startTime = Instant.now();
                 // TFE, 20220302: updated file reading from https://pulasthisupun.blogspot.com/2016/06/reading-and-writing-binary-files-in.html
                 try (
-//                        RandomAccessFile rIn = new RandomAccessFile(srtmFile, "r"); 
-//                        FileChannel inChannel = rIn.getChannel();
-                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
+                        RandomAccessFile rIn = new RandomAccessFile(srtmFile, "r"); 
+//                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
                         ) {
-                    ByteBuffer buf = ByteBuffer.allocate((int) fileLength); 
+//                    Instant testTime = Instant.now();
+//                    System.out.println();
+//                    System.out.println("Time to create FileChannel: " + ChronoUnit.MICROS.between(startTime, testTime));
+//
+//                    ByteBuffer buf = ByteBuffer.allocate((int) fileLength); 
+//                    buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
+//                    testTime = Instant.now();
+//                    System.out.println("Time to create ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
+//
+//                    inChannel.position(0); 
+//                    inChannel.read(buf); 
+//                    testTime = Instant.now();
+//                    System.out.println("Time to read ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
+
+                    // TFE, 20250624: small speedup with using a MappedByteBuffer
+                    final MappedByteBuffer buf = rIn.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, rIn.length());
                     buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
-                    
-                    inChannel.position(0); 
-                    inChannel.read(buf); 
-                    
-                    buf.flip();
+//                    testTime = Instant.now();
+//                    System.out.println("Time to create ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
+                    buf.load();
+//                    testTime = Instant.now();
+//                    System.out.println("Time to read ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
 
 //                    Height files have the extension .HGT and are signed two byte integers.
 //                    The bytes are in Motorola "big-endian" order with the most significant byte first,
@@ -127,15 +146,6 @@ class SRTMDataReader implements ISRTMDataReader {
 //                    Intel ("little-endian") order so some byte-swapping may be necessary.
 //                    Heights are in meters referenced to the WGS84/EGM96 geoid.
 //                    Data voids are assigned the value -32768.
-
-//                    inChannel.position(0); 
-//                    inChannel.read(buf); 
-//                    
-//                    // Check the byte order. 
-//                    buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
-//                    buf.rewind(); 
-//                    byte[] ba = new byte[(int) fileLength]; 
-//                    buf.get(ba); 
                     short z; 
                     int pos = 0; 
                     for (int row = 0; row < rows; row++) { 
@@ -146,6 +156,8 @@ class SRTMDataReader implements ISRTMDataReader {
                             pos += DATA_SIZE; 
                         } 
                     } 
+//                    testTime = Instant.now();
+//                    System.out.println("Time to read SRTMData: " + ChronoUnit.MICROS.between(startTime, testTime));
                 } catch (OutOfMemoryError | IOException ex) { 
                     Logger.getLogger(SRTMDataReader.class.getName()).log(Level.SEVERE, null, ex);
                 }                  
