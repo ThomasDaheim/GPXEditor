@@ -26,8 +26,6 @@
 package tf.gpx.edit.viewer.charts;
 
 import java.io.ByteArrayInputStream;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
