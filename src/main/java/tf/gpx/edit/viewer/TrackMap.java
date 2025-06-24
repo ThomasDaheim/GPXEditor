@@ -1247,69 +1247,72 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             return;
         }
         
-        final List<List<GPXWaypoint>> masterList = new ArrayList<>();
-        final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
+        // TFE, 20250624: make sure this is done after all the other aspects of setting up charts / viwers / maps for new waypoints.
+        Platform.runLater(() -> {
+            final List<List<GPXWaypoint>> masterList = new ArrayList<>();
+            final boolean alwayShowFileWaypoints = GPXEditorPreferences.ALWAYS_SHOW_FILE_WAYPOINTS.getAsType();
 
-        // TFE, 20200206: store number of filewaypoints for later use...
-        int fileWaypointCount = 0;
-        // TFE, 20221105: see if we also show a complete file - in that case we include the file waypoints in the bounds
-        boolean fileIsShown = false;
-        for (GPXLineItem lineItem : myGPXLineItems) {
-//            System.out.println("Processing item: " + lineItem);
-            
-            // only files can have file waypointsToShow
-            if (lineItem.isGPXFile()) {
-                masterList.add(lineItem.getGPXWaypoints());
-                fileWaypointCount = masterList.get(0).size();
-                fileIsShown = true;
-            } else if (alwayShowFileWaypoints && fileWaypointCount == 0) {
-                // TFE, 20220904: only add file waypoints once even if multiple line items are shown
-                // TFE, 20190818: add file waypointsToShow as well, even though file isn't selected
-                masterList.add(lineItem.getGPXFile().getGPXWaypoints());
-                fileWaypointCount = masterList.get(0).size();
-            }
-            
-            // TFE, 20180508: getAsString waypointsToShow from trackSegments ONLY if you're no tracksegment...
-            // otherwise, we never only show points from a single tracksegment!
-            // files and trackSegments can have trackSegments
-            if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
-                for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
-                    // add track segments individually
-                    for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
-                        masterList.add(gpxTrackSegment.getGPXWaypoints());
+            // TFE, 20200206: store number of filewaypoints for later use...
+            int fileWaypointCount = 0;
+            // TFE, 20221105: see if we also show a complete file - in that case we include the file waypoints in the bounds
+            boolean fileIsShown = false;
+            for (GPXLineItem lineItem : myGPXLineItems) {
+    //            System.out.println("Processing item: " + lineItem);
+
+                // only files can have file waypointsToShow
+                if (lineItem.isGPXFile()) {
+                    masterList.add(lineItem.getGPXWaypoints());
+                    fileWaypointCount = masterList.get(0).size();
+                    fileIsShown = true;
+                } else if (alwayShowFileWaypoints && fileWaypointCount == 0) {
+                    // TFE, 20220904: only add file waypoints once even if multiple line items are shown
+                    // TFE, 20190818: add file waypointsToShow as well, even though file isn't selected
+                    masterList.add(lineItem.getGPXFile().getGPXWaypoints());
+                    fileWaypointCount = masterList.get(0).size();
+                }
+
+                // TFE, 20180508: getAsString waypointsToShow from trackSegments ONLY if you're no tracksegment...
+                // otherwise, we never only show points from a single tracksegment!
+                // files and trackSegments can have trackSegments
+                if (lineItem.isGPXFile() || lineItem.isGPXTrack()) {
+                    for (GPXTrack gpxTrack : lineItem.getGPXTracks()) {
+                        // add track segments individually
+                        for (GPXTrackSegment gpxTrackSegment : gpxTrack.getGPXTrackSegments()) {
+                            masterList.add(gpxTrackSegment.getGPXWaypoints());
+                        }
+                    }
+                }
+                // track segments can have track segments
+                if (lineItem.isGPXTrackSegment()) {
+                    masterList.add(lineItem.getGPXWaypoints());
+                }
+                // files and routes can have routes
+                if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
+                    for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
+                        masterList.add(gpxRoute.getGPXWaypoints());
                     }
                 }
             }
-            // track segments can have track segments
-            if (lineItem.isGPXTrackSegment()) {
-                masterList.add(lineItem.getGPXWaypoints());
+
+            int waypointCount = 0;
+            for (List<GPXWaypoint> gpxWaypoints : masterList) {
+                waypointCount += gpxWaypoints.size();
             }
-            // files and routes can have routes
-            if (lineItem.isGPXFile() || lineItem.isGPXRoute()) {
-                for (GPXRoute gpxRoute : lineItem.getGPXRoutes()) {
-                    masterList.add(gpxRoute.getGPXWaypoints());
-                }
+
+            // TFE, 20200206: in case we have only file waypointsToShow we need to include them in calculation of bounds - e.g. for new, empty tracksegment
+            // TFE, 20221105: if we click on a file we want to see the whole thing and not only the waypoints from trackes & routes
+            final double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount) && !fileIsShown);
+
+            // TFE, 20190822: setMapBounds fails for no waypointsToShow...
+            if (bounds[4] > 0d && waypointCount > 0) {
+    //            setView(getCenter(), getZoom());
+
+                // use map.fitBounds to avoid calculation of center and zoom
+                execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ", " + doFitBounds + ");");
+    //            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
             }
-        }
-
-        int waypointCount = 0;
-        for (List<GPXWaypoint> gpxWaypoints : masterList) {
-            waypointCount += gpxWaypoints.size();
-        }
-        
-        // TFE, 20200206: in case we have only file waypointsToShow we need to include them in calculation of bounds - e.g. for new, empty tracksegment
-        // TFE, 20221105: if we click on a file we want to see the whole thing and not only the waypoints from trackes & routes
-        final double[] bounds = showWaypoints(masterList, waypointCount, alwayShowFileWaypoints && !(fileWaypointCount == waypointCount) && !fileIsShown);
-
-        // TFE, 20190822: setMapBounds fails for no waypointsToShow...
-        if (bounds[4] > 0d && waypointCount > 0) {
-//            setView(getCenter(), getZoom());
-
-            // use map.fitBounds to avoid calculation of center and zoom
-            execScript("setMapBounds(" + bounds[0] + ", " + bounds[1] + ", " + bounds[2] + ", " + bounds[3] + ", " + doFitBounds + ");");
-//            System.out.println("setMapBounds done: " + (new Date()).getTime() + ", " + bounds[0] + ", " + bounds[2] + ", " + bounds[1] + ", " + bounds[3]);
-        }
-//        System.out.println("setGPXWaypoints End:  " + Instant.now());
+    //        System.out.println("setGPXWaypoints End:  " + Instant.now());
+        });
     }
     private double[] showWaypoints(final List<List<GPXWaypoint>> masterList, final int waypointCount, final boolean ignoreFileWayPointsInBounds) {
         // TFE, 20180516: ignore fileWaypointsCount in count of wwaypoints to show. Otherwise no trackSegments getAsString shown if already enough waypointsToShow...
