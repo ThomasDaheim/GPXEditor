@@ -80,12 +80,11 @@
     -fx-effect: none;
 }
 
-/* TFE, 20220731: coloring of tooltip in horizon chart */
-.charts-tooltip {
-    -fx-background-color: white;
-}
-.charts-tooltip .label {
-    -fx-text-fill: black;
-    -fx-font-weight: normal;
-    -fx-font-family: 'Helvetica', Arial, sans-serif;
+.track-popup {
+    -fx-fill: black;
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-text-origin: top;
+    -fx-line-spacing: -4;
 }

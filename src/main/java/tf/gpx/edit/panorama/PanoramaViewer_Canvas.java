@@ -126,7 +126,6 @@ public class PanoramaViewer_Canvas {
         // TFE, 20230405: max out width based on screen width
         scene  = new Scene(pane, Screen.getPrimary().getVisualBounds().getWidth() * 0.95, VIEWER_HEIGHT);
         
-        // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
         scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor_PanoramaViewer.min.css").toExternalForm());
 
