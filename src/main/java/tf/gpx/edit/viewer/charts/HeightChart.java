@@ -140,6 +140,9 @@ public class HeightChart extends AbstractChart {
 
         // we want to show the elevation at this distance
         XYChart.Data<Number, Number> data = getNearestDataForXValue(x);
+        if (data == null) {
+            return;
+        }
         final Double distValue = data.XValueProperty().getValue().doubleValue();
         final Double heightValue = data.YValueProperty().getValue().doubleValue();
 

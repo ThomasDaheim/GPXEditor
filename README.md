@@ -31,6 +31,7 @@ So it was time to start a new self-learning project. And here you see the result
 ### Update v5.9
 
 * Added slope chart: Similar to height chart but coloring is done based on slope of track/route. This takes some time to create, even after various speed improvements. If things get to slow: there is a preference to disable the slope chart.
+* Coloring of height charts now working once again.
 * Create route from selected waypoints.
 * Bugfixes and dependency updates.
 * Added test class TestSunPathForYear. Outputs a csv with sunrise/sunset dates for a year for a given lat/lon location. The csv contains the astronomical sunrise/sunset dates and the "real" ones, when the sun is above the local horizon.
@@ -477,5 +478,5 @@ Other things used internally:
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
 * add TestFX UI test cases
-* add task handling for long running activities
-* ... any other features from GPS-Track-Analyse.NET that are useful for menu
+* add more task handling for long running activities
+* ... any other features from GPS-Track-Analyse.NET that are useful for me

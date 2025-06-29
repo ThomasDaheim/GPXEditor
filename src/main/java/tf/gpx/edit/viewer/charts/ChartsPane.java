@@ -87,14 +87,9 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
     
     private void initialize() {
         baseCharts.add(HeightChart.getInstance());
-        // TFE, 20250618: currently, takes to long to show SlopeChart, lets disable
-        if (GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType()) {
-            baseCharts.add(SlopeChart.getInstance());
-        }
-    // TFE, 20230609: add property to show / hide speed chart
-        if (GPXEditorPreferences.SHOW_SPEED_CHART.getAsType()) {
-            additionalCharts.add(SpeedChart.getInstance());
-        }
+        baseCharts.add(SlopeChart.getInstance());
+
+        additionalCharts.add(SpeedChart.getInstance());
 
         getStyleClass().add("charts-pane");
         MENU_BAR.getStyleClass().add("charts-pane");
@@ -153,6 +148,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
 
             // lets link the charts to the menues
             Bindings.bindBidirectional(t.getChart().visibleProperty(), item.selectedProperty());
+            Bindings.bindBidirectional(t.getChart().disableProperty(), item.disableProperty());
         });
         
         // add. charts: individual CheckMenuItem
@@ -164,6 +160,7 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
 
             // lets link the charts to the menues
             Bindings.bindBidirectional(t.getChart().visibleProperty(), item.selectedProperty());
+            Bindings.bindBidirectional(t.getChart().disableProperty(), item.disableProperty());
         });
         
         MENU_BAR.getMenus().addAll(baseMenu, addMenu);
@@ -263,11 +260,14 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
         final boolean isVisible = isVisible();
         setVisible(false);
         final AtomicBoolean hasData = new AtomicBoolean(false);
-        // show all chart
-        charts.stream().forEach((t) -> {
-            t.setGPXWaypoints(lineItems, doFitBounds);
-            hasData.set(hasData.get() || t.hasNonZeroData());
-        });
+        // show all charts
+        // TFE, 20250625: check the preferences here and add/remove charts dynamically: GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE, GPXEditorPreferences.SHOW_SPEED_CHART
+        HeightChart.getInstance().getChart().setVisible(true);
+        setupChart(HeightChart.getInstance(), true, hasData, lineItems, doFitBounds);
+        SlopeChart.getInstance().getChart().setVisible(false);
+        setupChart(SlopeChart.getInstance(), GPXEditorPreferences.HEIGHT_CHART_SHOW_SLOPE.getAsType(), hasData, lineItems, doFitBounds);
+        SpeedChart.getInstance().getChart().setVisible(false);
+        setupChart(SpeedChart.getInstance(), GPXEditorPreferences.SHOW_SPEED_CHART.getAsType(), hasData, lineItems, doFitBounds);
 
         STACK_PANE.getChildren().addAll(speedGroup.getChildren());
         
@@ -275,6 +275,16 @@ public class ChartsPane extends BorderPane implements IPreferencesHolder {
 
         // if visible changes to false, also the button needs to be pressed
         TrackMap.getInstance().setChartsPaneButtonState(TrackMap.MapButtonState.fromBoolean(isVisible()));
+    }
+    
+    private void setupChart(final IChart<?> chart, final boolean useChart, final AtomicBoolean hasData, final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
+        if (useChart) {
+            chart.getChart().setDisable(false);
+            chart.setGPXWaypoints(lineItems, doFitBounds);
+            hasData.set(hasData.get() || chart.hasNonZeroData());
+        } else {
+            chart.getChart().setDisable(true);
+        }
     }
     
     public void clearSelectedGPXWaypoints() {
