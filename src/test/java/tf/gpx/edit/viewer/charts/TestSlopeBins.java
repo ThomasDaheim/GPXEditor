@@ -49,11 +49,11 @@ public class TestSlopeBins {
     @Test
     public void testBinColorWithinEachBin() {
         // Values chosen are within the bin ranges
-        assertNotEquals(Color.GRAY, slopeBins.getBinColor(0.015), "Should return a valid bin color");
-        assertNotEquals(Color.GRAY, slopeBins.getBinColor(0.045), "Should return a valid bin color");
-        assertNotEquals(Color.GRAY, slopeBins.getBinColor(0.075), "Should return a valid bin color");
-        assertNotEquals(Color.GRAY, slopeBins.getBinColor(0.105), "Should return a valid bin color");
-        assertNotEquals(Color.GRAY, slopeBins.getBinColor(0.135), "Should return a valid bin color");
+        assertNotEquals(Color.GRAY, slopeBins.getBinColor(15.0), "Should return a valid bin color");
+        assertNotEquals(Color.GRAY, slopeBins.getBinColor(4.5), "Should return a valid bin color");
+        assertNotEquals(Color.GRAY, slopeBins.getBinColor(7.5), "Should return a valid bin color");
+        assertNotEquals(Color.GRAY, slopeBins.getBinColor(-10.5), "Should return a valid bin color");
+        assertNotEquals(Color.GRAY, slopeBins.getBinColor(-13.5), "Should return a valid bin color");
     }
 
     @Test
@@ -64,13 +64,13 @@ public class TestSlopeBins {
 
     @Test
     public void testBinColorOnUpperBounds() {
-        assertEquals(Color.GRAY, slopeBins.getBinColor(0.15), "Upper bound of last bin should be exclusive");
+        assertEquals(Color.GRAY, slopeBins.getBinColor(20.0), "Upper bound of last bin should be exclusive");
     }
 
     @Test
     public void testBinColorOutOfRange() {
-        assertEquals(Color.GRAY, slopeBins.getBinColor(-0.01), "Negative value should return NOT_FOUND_COLOR");
-        assertEquals(Color.GRAY, slopeBins.getBinColor(0.16), "Value greater than all bins should return NOT_FOUND_COLOR");
+        assertEquals(Color.DARKRED, slopeBins.getBinColor(100.0), "Value greater than all bins should return PLUSMAX_INCR_COLOR");
+        assertEquals(Color.DARKGREEN, slopeBins.getBinColor(-100.0), "Value greater than all bins should return PLUSMAX_DECR_COLOR");
     }
 
     @Test

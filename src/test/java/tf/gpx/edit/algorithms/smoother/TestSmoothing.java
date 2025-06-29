@@ -438,7 +438,7 @@ public class TestSmoothing {
                 Assertions.assertEquals(rmse(trackwaypoints, smoothed), rmse_results[i], 0.001);
                     }
                 }
-                System.out.println("rmse: " + best_result[0] + ", alpha: " + best_result[1] + ", gamma: " + best_result[2]);
+//                System.out.println("rmse: " + best_result[0] + ", alpha: " + best_result[1] + ", gamma: " + best_result[2]);
             }
         }
 
