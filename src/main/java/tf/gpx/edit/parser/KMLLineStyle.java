@@ -40,7 +40,7 @@ import tf.helper.javafx.ColorConverter;
 public class KMLLineStyle extends KMLStyleItem {
     private String myDefaultColor = LineStyle.DEFAULT_COLOR.getHexColor();
     private String myColor = myDefaultColor;
-    private Integer myWidth = LineStyle.DEFAULT_WIDTH;
+    private Double myWidth = LineStyle.DEFAULT_WIDTH;
 
     public KMLLineStyle() {
         super(KMLStyleItem.KMLStyleType.LineStyle);
@@ -68,15 +68,15 @@ public class KMLLineStyle extends KMLStyleItem {
         return ColorConverter.KMLToJavaFX(myColor);
     }
 
-    public Integer getWidth() {
+    public Double getWidth() {
         return myWidth;
     }
 
-    public void setWidth(final Integer width) {
+    public void setWidth(final Double width) {
         myWidth = width;
     }
     
-    public void setWidthIfDefault(final Integer width) {
+    public void setWidthIfDefault(final Double width) {
         if (LineStyle.DEFAULT_WIDTH.equals(myWidth)) {
             myWidth = width;
         }
@@ -92,7 +92,7 @@ public class KMLLineStyle extends KMLStyleItem {
         attr = KMLParser.getFirstChildNodeByName(node, KMLConstants.NODE_STYLE_WIDTH);
         if (attr != null) {
             try {
-                myWidth = Integer.valueOf(attr.getTextContent());
+                myWidth = Double.valueOf(attr.getTextContent());
             } catch (NumberFormatException ex) {
                 Logger.getLogger(KMLLineStyle.class.getName()).log(Level.SEVERE, null, ex);
             }

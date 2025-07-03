@@ -58,12 +58,12 @@ public class GarminCrapFilter {
      * @param parameter tolerance, in meters
      * @return the points to keep from the original track
      */
-    public static boolean[] applyFilter(final List<GPXWaypoint> track, final double parameter) {
+    public static Boolean[] applyFilter(final List<GPXWaypoint> track, final double parameter) {
         return fixSingleTooFarAway(track, parameter);
     }
 
-    private static boolean[] fixSingleTooFarAway(List<GPXWaypoint> track, double maxDistance) {
-        final boolean[] keep = new boolean[track.size()];
+    private static Boolean[] fixSingleTooFarAway(List<GPXWaypoint> track, double maxDistance) {
+        final Boolean[] keep = new Boolean[track.size()];
         
         if (track.isEmpty()) {
             // nothing to do

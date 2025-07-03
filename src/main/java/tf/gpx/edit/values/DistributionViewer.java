@@ -121,7 +121,7 @@ public class DistributionViewer extends AbstractStage {
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-        getScene().getStylesheets().add(DistributionViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor_StatisticsViewer.min.css").toExternalForm());
 
         // create new scene
         setTitle("Distributions");
@@ -255,7 +255,7 @@ public class DistributionViewer extends AbstractStage {
             wayPointList.getCheckModel().checkAll();
             
             // select waypoints without listener for check changes
-            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false);
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false, true);
 
             // re-enable listener for checked changes
             wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
@@ -290,7 +290,7 @@ public class DistributionViewer extends AbstractStage {
         });        
         // use explicit listener so that it can be removed during mass update
         listenerCheckChanges = (ListChangeListener.Change<? extends GPXWaypoint> c) -> {
-            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false);
+            myGPXEditor.selectGPXWaypoints(wayPointList.getCheckModel().getCheckedItems(), true, false, true);
         };     
         wayPointList.getCheckModel().getCheckedItems().addListener(listenerCheckChanges);
         getGridPane().add(wayPointList, 3, rowNum, 1, 3);
@@ -306,7 +306,7 @@ public class DistributionViewer extends AbstractStage {
         // 6th row: select button
         final Button deleteButton = new Button("Delete selected points");
         deleteButton.setOnAction((ActionEvent event) -> {
-            if (wayPointList.getCheckModel().getCheckedItems().size() > 0) {
+            if (!wayPointList.getCheckModel().getCheckedItems().isEmpty()) {
                 // now more complex - can be waypoints of various track segements...
                 // luckily, we already have a method for that :-)
                 myGPXEditor.deleteWaypoints(wayPointList.getCheckModel().getCheckedItems());

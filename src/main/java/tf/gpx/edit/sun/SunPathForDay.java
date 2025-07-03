@@ -37,7 +37,9 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import net.e175.klaus.solarpositioning.DeltaT;
+import net.e175.klaus.solarpositioning.Grena3;
 import net.e175.klaus.solarpositioning.SPA;
+import net.e175.klaus.solarpositioning.SunriseResult;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
@@ -55,7 +57,7 @@ import tf.helper.general.ObjectsHelper;
  * Attention: 
  * 
  * The azimuth angle range of the sun path can potentially cross 0 DEG (=North) 
- * for any location south of tropic of cancer. That means tha simple checking of 
+ * for any location south of tropic of cancer. That means that simple checking of 
  * min/max azimuth angle to find the range for the horizon fails.
  * So we need fancy logic to deal with the wrap around 0 / 360 DEG.
  * 
@@ -127,7 +129,7 @@ public class SunPathForDay {
         if (delT != null) {
             deltaT = delT;
         } else {
-            deltaT = DeltaT.estimate(date);
+            deltaT = DeltaT.estimate(date.get(GregorianCalendar.YEAR));
         }
         
         intervalType = interType;
@@ -141,37 +143,42 @@ public class SunPathForDay {
             return;
         }
         
-        final GregorianCalendar[] result = SPA.calculateSunriseTransitSet(pathDate, location.getLatitude(), location.getLongitude(), deltaT);
-        sunrise = result [0];
-        transit = result [1];
-        sunset = result [2];
-        
+        final SunriseResult result = SPA.calculateSunriseTransitSet(pathDate.toZonedDateTime(), location.getLatitude(), location.getLongitude(), deltaT);
+        switch (result) {
+            case SunriseResult.RegularDay regularDay -> {
+                sunrise = GregorianCalendar.from(regularDay.sunrise());
+                transit = GregorianCalendar.from(regularDay.transit());
+                sunset = GregorianCalendar.from(regularDay.sunset());
+            }
+            case SunriseResult.AllDay allDay -> {
+                sunrise = null;
+                transit = GregorianCalendar.from(allDay.transit());
+                sunset = null;
+                sunNeverSets = true;
+            }
+            case SunriseResult.AllNight allNight -> {
+                sunrise = null;
+                transit = null;
+                sunset = null;
+                
+                // sun doesn't rise... nothing to do
+                sunNeverRises = true;
+                // than it also doesn't show
+                sunNeverShows = true;
+                
+                // TFE, 20250605: no path to calculate - where done here
+                return;
+            }
+            default -> {
+            }
+        }
+
         // init for "Horizon" here as well - until someone gives us a real horizon to check against
         if (sunrise != null) {
             sunAboveHorizon.put(ObjectsHelper.uncheckedCast(sunrise.clone()), null);
         }
         if (sunset != null) {
             sunBelowHorizon.put(ObjectsHelper.uncheckedCast(sunset.clone()), null);
-        }
-        
-        // we only need the path if the sun really rises...
-        if (sunrise == null || sunset == null) {
-            // could be always above or always below horizon...
-            AzimuthElevationAngle angle = 
-                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
-//            AzimuthElevationAngle angle = 
-//                AzimuthElevationAngle.of(SPA.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
-            
-            if (angle.getElevation() < 0) {
-                // sun doesn't rise... nothing to do
-                sunNeverRises = true;
-                // than it also doesn't show
-                sunNeverShows = true;
-                return;
-            } else {
-                sunNeverSets = true;
-                // its not clear if it also shows
-            }
         }
         
         GregorianCalendar startTime;
@@ -202,7 +209,7 @@ public class SunPathForDay {
         GregorianCalendar pathSunset = null;
         
         AzimuthElevationAngle pathAngle = 
-                AzimuthElevationAngle.of(PSAPlus.calculateSolarPosition(startTime, location.getLatitude(), location.getLongitude(), deltaT));
+                AzimuthElevationAngle.of(Grena3.calculateSolarPosition(startTime.toZonedDateTime(), location.getLatitude(), location.getLongitude(), deltaT));
 //        AzimuthElevationAngle pathAngle = 
 //            AzimuthElevationAngle.of(SPA.calculateSolarPosition(startTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
         sunPath.put(startTime, pathAngle);
@@ -221,8 +228,10 @@ public class SunPathForDay {
         // keep track of "direction"
         AzimuthElevationAngle lastAngle = null;
         while (pathTime.before(endTime)) {
-            pathAngle = AzimuthElevationAngle.of(
-                    PSAPlus.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), deltaT));
+            pathAngle = 
+                    AzimuthElevationAngle.of(Grena3.calculateSolarPosition(pathTime.toZonedDateTime(), location.getLatitude(), location.getLongitude(), deltaT));
+
+//                    PSAPlus.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), deltaT);
 //            pathAngle = 
 //                AzimuthElevationAngle.of(SPA.calculateSolarPosition(pathTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
             sunPath.put(pathTime, pathAngle);
@@ -246,8 +255,9 @@ public class SunPathForDay {
             pathTime = ((GregorianCalendar) pathTime.clone());
             pathTime.add(Calendar.MINUTE, interval);
             if (prevPathTime.before(transit) && pathTime.after(transit)) {
-                pathAngle = AzimuthElevationAngle.of(
-                        PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT));
+                pathAngle = 
+                        AzimuthElevationAngle.of(Grena3.calculateSolarPosition(transit.toZonedDateTime(), location.getLatitude(), location.getLongitude(), deltaT));
+//                pathAngle = PSAPlus.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), deltaT);
 //                pathAngle = 
 //                    AzimuthElevationAngle.of(SPA.calculateSolarPosition(transit, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
                 sunPath.put(transit, pathAngle);
@@ -272,8 +282,10 @@ public class SunPathForDay {
             }
         }
 
-        pathAngle = AzimuthElevationAngle.of(
-                PSAPlus.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), deltaT));
+        pathAngle = 
+                AzimuthElevationAngle.of(Grena3.calculateSolarPosition(endTime.toZonedDateTime(), location.getLatitude(), location.getLongitude(), deltaT));
+
+//        pathAngle = PSAPlus.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), deltaT);
 //        pathAngle = 
 //            AzimuthElevationAngle.of(SPA.calculateSolarPosition(endTime, location.getLatitude(), location.getLongitude(), location.getElevation(), deltaT));
         sunPath.put(endTime, pathAngle);

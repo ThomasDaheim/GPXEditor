@@ -108,18 +108,31 @@ public class GPXRoute extends GPXMeasurable {
         myGPXWaypoints.addListener(changeListener);
     }
     
+    // TFE, 20240111: we want to create from a list of waypoints!
+    public static GPXRoute fromGPXWaypoints(final GPXFile gpxFile, final List<GPXWaypoint> waypoints) {
+        final Route route = new Route();
+        
+        // add waypoints without cloning
+        waypoints.stream().forEach((t) -> {
+            route.addRoutePoint(t.getWaypoint());
+        });
+        
+        return new GPXRoute(gpxFile, route);
+    }
+    
     @Override
     public <T extends GPXLineItem> T cloneMe(final boolean withChildren) {
         final GPXRoute myClone = new GPXRoute();
         
         // parent needs to be set initially - list functions use this for checking
         myClone.myGPXFile = myGPXFile;
+        
+        // set route via cloner
+        // TFE, 20250103: please, do that befpre adding linestyle sind ti needs the cloned extension to work!
+        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
 
         // TFE, 20220102: LineStyle needs to be cloned as well
         myClone.myLineStyle = new LineStyle(myClone, KnownExtensionAttributes.KnownAttribute.DisplayColor_Route, LineStyle.DEFAULT_ROUTE_COLOR);
-        
-        // set route via cloner
-        myClone.myRoute = ExtensionCloner.getInstance().deepClone(myRoute);
         
         if (withChildren) {
             // clone all my children

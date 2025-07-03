@@ -81,13 +81,11 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     private static final String SEPERATOR = "|";
     
     private static final String FORMAT_WAYPOINT_STRING = "Waypoint: %s";
-    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: start-end: %s, cumul.: %s, Duration: overall: %s, cumul.: %s, Speed [km/h]: overall: %s, cumul.: %s";
+    private static final String FORMAT_WAYPOINTS_STRING = "Waypoints: %d, Distance [km]: beeline: %s, actual: %s, Duration: beeline: %s, actual: %s, Speed [km/h]: beeline: %s, actual: %s";
     private static final String CNTRL_TEXT = "CNTRL";
     private static final String CLIPBOARD_TEXT = "CLPB: ";
     private static final String WAYPOINT_TEXT = "WPTS";
     private static final String ITEM_TEXT = "ITMS";
-    private static final String DO_TEXT = "REDO";
-    private static final String UNDO_TEXT = "UNDO";
     private static final DateTimeFormatter DATETIMEFORMATTER = DateTimeFormatter.ofPattern("EEE dd.MM.yyyy HH:mm");
     
     private Label myLabel;
@@ -131,6 +129,7 @@ public class StatusBar extends HBox implements ITaskExecutionConsumer {
     
     private void initialize() {
         getStyleClass().add("status-bar");
+        getStylesheets().add(StatusBar.class.getResource("/GPXEditor.min.css").toExternalForm());
 
         // progressbar only visible if action is running
         myTaskProgress.visibleProperty().bind(myTaskText.isNotEmpty());

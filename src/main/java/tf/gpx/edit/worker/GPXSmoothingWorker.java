@@ -26,7 +26,7 @@
 package tf.gpx.edit.worker;
 
 import java.util.List;
-import tf.gpx.edit.algorithms.WaypointSmoothing;
+import tf.gpx.edit.algorithms.smoother.WaypointSmoothing;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;

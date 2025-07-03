@@ -43,6 +43,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tf.helper.general.ObjectsHelper;
 
@@ -59,7 +60,7 @@ public class TestSRTM {
     private static double tileDist;
             
     private static Path testpath;
-    private static List<String> dataNames = new ArrayList<>();
+    private final static List<String> dataNames = new ArrayList<>();
 
     public TestSRTM() {
         mySRTMDataReader = ObjectsHelper.uncheckedCast(srtmOptions.getSRTMDataReader());
@@ -119,6 +120,7 @@ public class TestSRTM {
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void createSRTMData() {
         mySRTMDataReader.setUseInstance(false);
         Assertions.assertTrue(mySRTMDataReader.checkSRTMDataFile("Test", "Test"));
@@ -135,6 +137,7 @@ public class TestSRTM {
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void getSingleValues() {
         mySRTMDataReader.setUseInstance(false);
         srtmOptions.setSRTMDataAverage(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY);
@@ -147,14 +150,14 @@ public class TestSRTM {
         double heightValue;
         // lower left corner - value should be 1200
         heightValue = elevation.getElevationForCoordinate(45, 10).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
         
         // lower right corner - value should be a bit less than 1200 + 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(45, 11 - delta).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0, heightValue, 0.01);
         
         // upper left corner - value should be 0
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -164,16 +167,17 @@ public class TestSRTM {
         // upper right corner - value should be 1200
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
         
         // grid center - value should be 1200
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void getAverageValues() {
         mySRTMDataReader.setUseInstance(false);
         srtmOptions.setSRTMDataAverage(SRTMDataOptions.SRTMDataAverage.AVERAGE_NEIGHBOURS);
@@ -186,14 +190,14 @@ public class TestSRTM {
         double heightValue;
         // lower left corner - value should be 1200, since exactly on tile center
         heightValue = elevation.getElevationForCoordinate(45, 10).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
         
         // lower right corner - value should be 1200 + 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(45, 11 - delta).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0 == (int) heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0, heightValue, 0.01);
         
         // upper left corner - value should be 0, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
@@ -203,42 +207,43 @@ public class TestSRTM {
         // upper right corner - value should be 1200, since exactly on tile center
         // need to move a bit away from full degree - otherwise, next hgt file is used...
         heightValue = elevation.getElevationForCoordinate(46 - delta, 11 - delta).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
         
         // grid center - value should be 600 + 600
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0 == (int) heightValue);
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals(SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 1.0, heightValue, 0.01);
         
         // now choose points directly on line between 2 tile centers
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
         heightValue = elevation.getElevationForCoordinate(45, 10 + tileDist/2.0).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue, delta);
 
         // average should be done using those two tiles only (1200 + 1201) / 2 = 1200,5
         heightValue = elevation.getElevationForCoordinate(45.5, 10.5 + tileDist/2.0).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue));
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 + 0.5, heightValue, delta);
 
         // and now for a point between to rows...
         
         // average should be done using those two tiles only (1199 + 1200) / 2 = 1199,5
         heightValue = elevation.getElevationForCoordinate(45 + tileDist/2.0, 10).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 - 0.5, heightValue));
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0 - 0.5, heightValue, delta);
         
         // and now for point directly on the corner of 4 tiles...
 
         // average should be done using for tiles with same wweight (1199 + 1200 + 1200 + 1201) / 4 = 1200
         heightValue = elevation.getElevationForCoordinate(45.5 + tileDist/2.0, 10.5 + tileDist/2.0).getRight();
-        Assertions.assertFalse(IElevationProvider.NO_ELEVATION == heightValue);
-        Assertions.assertTrue(isCloseEnough((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue));
+        Assertions.assertNotEquals(IElevationProvider.NO_ELEVATION, heightValue);
+        Assertions.assertEquals((SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() + SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() - 2.0) / 2.0, heightValue, delta);
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void checkRealValues() {
         mySRTMDataReader.setUseInstance(true);
         srtmOptions.setSRTMDataAverage(SRTMDataOptions.SRTMDataAverage.NEAREST_ONLY);
@@ -248,29 +253,26 @@ public class TestSRTM {
         // NE hemisphere: MT EVEREST, 27.9881° N, 86.9250° E - 27° 59' 9.8340" N, 86° 55' 21.4428" E - 8848m
         heightValue = elevation.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(8840, heightValue));
+        Assertions.assertEquals(8840, heightValue, delta);
 
         // NW hemisphere: MT RAINIER, 46.8523° N, 121.7603° W - 46° 52' 47.8812" N, 121° 43' 36.8616" W - 4392m
         heightValue = elevation.getElevationForCoordinate(46.8523, -121.7603).getRight();
 //        System.out.println("MT RAINIER: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(4369, heightValue));
+        Assertions.assertEquals(4369, heightValue, delta);
         
         // SE hemisphere: MT COOK, 43.5950° S, 170.1418° E - 43°35'26.81" S, 170°08'16.65" E - 3724m
         heightValue = elevation.getElevationForCoordinate(-43.5950, 170.1418).getRight();
 //        System.out.println("MT COOK: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(3712, heightValue));
+        Assertions.assertEquals(3712, heightValue, delta);
 
         // SW hemisphere: ACONGAGUA, 32.6532° S, 70.0109° W - 32° 39' 11.4444" S, 70° 0' 39.1104" W - 6908m
         heightValue = elevation.getElevationForCoordinate(-32.6532, -70.0109).getRight();
 //        System.out.println("ACONGAGUA: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(6929, heightValue));
-    }
-    
-    private boolean isCloseEnough(final double val1, final double val2) {
-        return (Math.abs(val1 - val2) < delta);
+        Assertions.assertEquals(6929, heightValue, delta);
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void testDownloadSRTM1() {
         final String dataName = SRTMDataHelper.getNameForCoordinate(27.9881, 86.9250);
         
@@ -303,6 +305,7 @@ public class TestSRTM {
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void testSRTM3Names() {
         // names accoding to pattern
         Assertions.assertEquals("A31", SRTMDownloader.getSRTM3NameForCoordinates(0, 0));
@@ -352,6 +355,7 @@ public class TestSRTM {
     }
 
     @Test
+    @Tag("NoSuiteTest")
     public void testDownloadSRTM3() throws Exception {
         // single hgt from standard zip - store zip
         String dataName = SRTMDataHelper.getNameForCoordinate(30, -4);
@@ -361,7 +365,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/H30.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/dem3/H30.zip\""));
 
         File srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
@@ -400,7 +404,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/dem3/SB20.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/dem3/SB20.zip\""));
 
         srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
@@ -421,7 +425,7 @@ public class TestSRTM {
             SRTMDownloader.downloadSRTM3Files(dataNames, testpath.toString(), false);
           });
         System.out.println(resultOut);
-        Assertions.assertTrue(resultOut.contains("Downloading: \"http://viewfinderpanoramas.org/ANTDEM3/01-15.zip\""));
+        Assertions.assertTrue(resultOut.contains("Downloading: \"https://viewfinderpanoramas.org/ANTDEM3/01-15.zip\""));
 
         srtmFile = Paths.get(testpath.toString(), dataName + "." + SRTMDataStore.HGT_EXT).toFile();
         Assertions.assertTrue(srtmFile.exists());
@@ -434,7 +438,7 @@ public class TestSRTM {
         Assertions.assertTrue(srtmFile.isFile());
         Assertions.assertTrue(srtmFile.canRead());
 
-        // multiple hgt from anarctica - no download
+        // multiple hgt from antarctica - no download
         dataName = SRTMDataHelper.getNameForCoordinate(-89, -107);
         dataNames.clear();
         dataNames.addAll(Arrays.asList(

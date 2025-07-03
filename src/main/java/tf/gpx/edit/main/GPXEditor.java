@@ -122,7 +122,7 @@ import tf.gpx.edit.algorithms.ExecuteAlgorithm;
 import tf.gpx.edit.algorithms.GarminCrapFilter;
 import tf.gpx.edit.algorithms.InterpolationParameter;
 import tf.gpx.edit.algorithms.WaypointClustering;
-import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.elevation.AssignElevation;
 import tf.gpx.edit.elevation.FindElevation;
 import tf.gpx.edit.elevation.SRTMDataViewer;
@@ -444,7 +444,7 @@ public class GPXEditor implements Initializable {
         PreferenceEditor.getInstance().setCallback(this);
 
         // set algorithm for distance calculation
-        EarthGeometry.getInstance().setAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
+        EarthGeometry.getInstance().setDistanceAlgorithm(GPXEditorPreferences.DISTANCE_ALGORITHM.getAsType());
     }
     
     public void lateInitialize() {
@@ -994,7 +994,7 @@ public class GPXEditor implements Initializable {
             
             TaskExecutor.executeTask(
                 getScene(), () -> {
-                    GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+                    GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false, false);
                 },
                 StatusBar.getInstance());
 
@@ -1815,6 +1815,8 @@ public class GPXEditor implements Initializable {
         
         endAction(true);
         
+        // TFE, 20240705: this might have impacted things that are currently shown
+        showGPXWaypoints(getShownGPXMeasurables(), true, false);
         refreshGPXFileList();
     }
     
@@ -2034,7 +2036,7 @@ public class GPXEditor implements Initializable {
                 gpxWaypoints.getSelectionModel().selectIndices(-1, ArrayUtils.toPrimitive(selectedList.toArray(NO_INTS)));
 //                System.out.println("after selectIndices(): " + Instant.now());
 
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false);
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(gpxWaypoints.getSelectionModel().getSelectedItems(), false, false, false);
 //                System.out.println("after setSelectedGPXWaypoints(): " + Instant.now());
 
                 addGPXWaypointListListener();
@@ -2051,6 +2053,28 @@ public class GPXEditor implements Initializable {
         addDoneAction(invertAction, getCurrentGPXFileName());
     }
 
+    public void createRouteFromSelectedWaypoints() {
+        // get seleced waypoints
+        final List<GPXWaypoint> waypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
+
+        if (waypoints.isEmpty()) {
+            return;
+        }
+
+        TaskExecutor.executeTask(getScene(), () -> {
+            // use first waypoints file to create route in
+            final String routeName = "route" + (waypoints.get(0).getGPXFile().getGPXRoutes().size() + 1);
+            final GPXRoute route = GPXRoute.fromGPXWaypoints(waypoints.get(0).getGPXFile(), waypoints);
+            route.setName("New " + routeName);
+
+            waypoints.get(0).getGPXFile().getGPXRoutes().add(route);
+
+            // force repaint of gpxFileList to show unsaved items
+            refreshGPXFileList();
+        },
+        StatusBar.getInstance());
+    }
+    
     private void processGPXMeasurables(final Event event, final ProcessType processType) {
         if (!ExecuteAlgorithm.getInstance().selectOptions(processType.getExecutionLevel(), processType.withFindOption())) {
             return;
@@ -2061,7 +2085,7 @@ public class GPXEditor implements Initializable {
             final List<GPXTrackSegment> gpxTrackSegments = GPXStructureHelper.getInstance().uniqueGPXTrackSegmentsFromGPXWaypoints(gpxWaypoints.getItems());
             for (GPXTrackSegment gpxTrackSegment : gpxTrackSegments) {
                 final List<GPXWaypoint> trackwaypoints = gpxTrackSegment.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrackSegment);
-                boolean keep[];
+                Boolean keep[];
                 
                 switch (processType) {
                     case FIXING:
@@ -2070,11 +2094,11 @@ public class GPXEditor implements Initializable {
                         break;
                     case REDUCING:
                         keep = WaypointReduction.apply(trackwaypoints, 
-                                GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
+                                (WaypointReduction.ReductionAlgorithm) GPXEditorPreferences.REDUCTION_ALGORITHM.getAsType(),
                                 GPXEditorPreferences.REDUCE_EPSILON.getAsType());
                         break;
                     default:
-                        keep = new boolean[trackwaypoints.size()];
+                        keep = new Boolean[trackwaypoints.size()];
                         Arrays.fill(keep, true);
                 }
 
@@ -2211,7 +2235,7 @@ public class GPXEditor implements Initializable {
     //
     // support callback functions for other classes
     // 
-    public void selectGPXWaypoints(final List<GPXWaypoint> waypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void selectGPXWaypoints(final List<GPXWaypoint> waypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
 //        System.out.println("selectGPXWaypoints: " + waypoints.size() + ", " + Instant.now());
 
         TaskExecutor.executeTask(
@@ -2256,7 +2280,7 @@ public class GPXEditor implements Initializable {
                 }
     //            System.out.println("End select:   " + Instant.now());
 
-                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker);
+                GPXTrackviewer.getInstance().setSelectedGPXWaypoints(waypoints, highlightIfHidden, useLineMarker, panTo);
 
                 addGPXWaypointListListener();
                 setStatusFromWaypoints();

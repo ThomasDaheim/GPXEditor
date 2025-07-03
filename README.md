@@ -13,9 +13,10 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Notes
 
+* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 23.
 * Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
-* Note on Java 17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
-* Note on Java 14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
+* Note on JavaFX17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
+* Note on JavaFX14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 * Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 * Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
@@ -27,14 +28,24 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Following features are available via UI:
 
+### Update v5.9
+
+* Added slope chart: Similar to height chart but coloring is done based on slope of track/route. This takes some time to create, even after various speed improvements. If things get to slow: there is a preference to disable the slope chart.
+* Coloring of height charts now working once again.
+* Create route from selected waypoints.
+* Bugfixes and dependency updates.
+* Added test class TestSunPathForYear. Outputs a csv with sunrise/sunset dates for a year for a given lat/lon location. The csv contains the astronomical sunrise/sunset dates and the "real" ones, when the sun is above the local horizon.
+* Added example images for different reduction algos as test resources. Thanks to https://github.com/emcconville/point-reduction-algorithms for the effort of doing the comparison! Long story short: Douglas–Peucker is the best algo, no need to implement further ones.
+
 ### Update v5.8
 
-* Upgrade Leaflet to 1.9.4
-* Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Create route from list of selected waypoints
 * Interpolate dates of waypoints from neighbouring values
 * Timezones: Show/hide timezones on map
 * Offline maps: Not really a code change... Use e.g. Mobile Atlas Creator to download tiles, setup a minimal webserver (e.g. with python), add a new baselayer and voila!
 * Drag&Drop: You can now drop a gpx-file on the map as well
+* Performance: Updates to handle (select / delete) large number of waypoints. Main impact: use JavaFX 19 :-)
+* Upgrade Leaflet to 1.9.4
 * Various improvements and bugfixes
 
 ### Update v5.7
@@ -397,37 +408,39 @@ Explicit dependencies:
 
 * 'tf.JavaHelper:JavaHelper:1.15': https://github.com/ThomasDaheim/JavaHelper, not available via maven <- any help appreciated on how to best include as sub/meta/... repository
 
-* 'commons-cli:commons-cli:1.5.0'
-* 'commons-io:commons-io:2.11.0'
-* 'org.apache.commons:commons-lang3:3.12.0'
-* 'org.apache.commons:commons-collections4:4.4'
-* 'org.apache.commons:commons-text:1.10.0'
+* 'commons-cli:commons-cli:1.9.0'
+* 'commons-io:commons-io:2.19.0'
+* 'org.apache.commons:commons-lang3:3.17.0'
+* 'org.apache.commons:commons-collections4:4.5.0'
+* 'org.apache.commons:commons-text:1.13.1'
 * 'org.apache.commons:commons-math3:3.6.1'
-* 'org.apache.commons:commons-csv:1.7'
-* 'org.apache.commons:commons-compress:1.22'
+* 'org.apache.commons:commons-csv:1.14.0'
+* 'org.apache.commons:commons-compress:1.27.1'
 * 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-* 'org.controlsfx:controlsfx:11.1.2'
+* 'org.controlsfx:controlsfx:11.2.2'
 * 'de.jensd:fontawesomefx:8.9'
 * NOT USED ANYMORE BUT STILL A SOURCE OF INSPIRATION: 'de.saring:leafletmap:1.0.5-SNAPSHOT': https://github.com/ssaring/sportstracker, not available via maven
-* 'com.fasterxml.jackson.core:jackson-core:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-dataformat-xml:2.14.0'
-* 'com.fasterxml.jackson.core:jackson-dataformat-csv:2.14.0'
+* 'com.fasterxml.jackson.core:jackson-core:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-xml:2.19.0'
+* 'com.fasterxml.jackson.core:jackson-dataformat-csv:2.19.0'
 * 'de.grundid.opendatalab:geojson-jackson:1.14'
-* 'org.jfxtras:jfxtras-controls:15-r2'
+* 'org.jfxtras:jfxtras-controls:17-r1'
 * 'org.jfxtras:jfxtras-labs:9.0-r1'
 * 'org.jfxtras:jmetro:11.6.16'
 * 'uk.com.robust-it:cloning:1.9.12'
 * 'org.im4java:im4java:1.4.0'
 * 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-* 'org.fxyz3d:fxyz3d:0.5.4'
-* 'org.magicwerk.brownies:brownies-collections:0.9.19'
-* 'net.e175.klaus:solarpositioning:0.0.9'
+* 'org.fxyz3d:fxyz3d:0.6.0'
+* 'org.magicwerk.brownies:brownies-collections:0.9.23'
+* 'net.e175.klaus:solarpositioning:2.0.5'
+* 'com.github.luben:zstd-jni:1.5.7-3'
 * 'us.dustinj.timezonemap:timezonemap:4.5'
-* 'com.github.luben:zstd-jni:1.5.2-5'
-* 'eu.hansolo.fx:charts:17.1.25'
+* 'eu.hansolo.fx:charts:21.0.7'
 
-* 'org.junit.jupiter:junit-jupiter-api:4.13.2'
+* 'org.junit.jupiter:junit-jupiter-api:5.13.0'
+* 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
+* 'org.junit.jupiter:junit-platform-suite-engine:1.13.0'
 * 'com.github.stefanbirkner:system-lambda:1.2.1'
 
 
@@ -435,7 +448,7 @@ Other things used internally:
 
 * heatmap: https://github.com/HanSolo/FxHeatMap
 
-* leaflet 1.9.4: https://leafletjs.com/
+* leaflet 1.8.0: https://leafletjs.com/ <- 1.94. is not working with recent JavaFX versions (>= 20). Leads to flickering of tiles.
 * leaflet.MapCenterCoord: https://github.com/xguaita/Leaflet.MapCenterCoord
 * leaflet.MousePosition: https://github.com/ardhi/Leaflet.MousePosition
 * leaflet.draw: https://github.com/Leaflet/Leaflet.draw
@@ -465,5 +478,5 @@ Other things used internally:
 The following features are still on my todo-list - but I don't promise any timeline :-)
 
 * add TestFX UI test cases
-* add task handling for long running activities
-* ... any other features from GPS-Track-Analyse.NET that are useful for menu
+* add more task handling for long running activities
+* ... any other features from GPS-Track-Analyse.NET that are useful for me

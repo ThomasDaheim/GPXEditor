@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* 
+    Created on : Nov 9, 2016, 7:58:50 PM
+    Author     : Thomas
+*/
+
+@import 'customize-metro.min.css';
+
+
+/*
+    see https://github.com/openjdk/jfx/blob/master/modules/javafx.controls/src/main/resources/com/sun/javafx/scene/control/skin/modena/modena.css for default values
+*/
+
+/*
+    treetableview for gpxfiles, tracks, tracksegments
+*/
+/* https://stackoverflow.com/a/47338913 */
+.tree-table-row-cell {
+    -fx-background-color: -fx-table-cell-border-color, -fx-background;
+    -fx-background-insets: 0, 0 0 1 0;
+}
+/* Let odd rows look different */
+.tree-table-row-cell:odd {
+    -fx-background: -fx-control-inner-background-alt;
+}
+/* Selected when control is focused */
+.tree-table-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-table-row-cell:selected {
+    -fx-background: -fx-selection-bar;
+    -fx-table-cell-border-color: derive(-fx-selection-bar, 20%);
+}
+/* Selected when control is not focused */
+.tree-table-row-cell:filled:selected {
+    -fx-background: -fx-selection-bar-non-focused;
+    -fx-table-cell-border-color: derive(-fx-selection-bar-non-focused, 20%);
+}
+.tree-table-row-cell:drop-target-above {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: black transparent transparent transparent;
+}
+.tree-table-row-cell:drop-target-below {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: transparent transparent black transparent;
+}
+
+.tree-table-view .table-cell, .tree-table-view .column-header {
+    -fx-padding: 0 5 0 5;
+}
+.table-view .table-cell, .table-view .column-header {
+    -fx-padding: 0 5 0 5;
+}
+
+.gpxFileList .gpxFileRow .text {
+  -fx-font-weight: bold;
+}
+
+.gpxFileList .startCol,
+.gpxFileList .durationCol,
+.gpxFileList .extCol,
+.gpxTrackList .posCol, 
+.gpxTrackList .dateCol,
+.gpxTrackList .durationCol,
+.gpxTrackList .extCol {
+  -fx-alignment: CENTER;
+}
+
+.gpxFileList .lengthCol,
+.gpxFileList .speedCol,
+.gpxFileList .cumAccCol,
+.gpxFileList .cumDescCol,
+.gpxFileList .noItemsCol,
+.gpxTrackList .lengthCol,
+.gpxTrackList .speedCol,
+.gpxTrackList .heightCol,
+.gpxTrackList .heightDiffCol,
+.gpxTrackList .slopeCol {
+  -fx-alignment: CENTER_RIGHT;
+}
+
+.extension-popup {
+    -fx-font-size: 0.9em;
+}
+
+/*
+    tableview for gpxwaypoints
+*/
+.table-view .table-cell {
+    -fx-padding: 0 5 0 5;
+}
+.table-row-cell:drop-target-above {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: black transparent transparent transparent;
+}
+.table-row-cell:drop-target-below {
+    -fx-background-color: -fx-table-cell-border-color, derive(-fx-control-inner-background,-25%);
+    -fx-background-insets: 0, 1, 2;
+    -fx-border-color: transparent transparent black transparent;
+}
+
+.hasUnsavedChanges {
+    -fx-font-style: italic;
+}
+
+.firstRow {
+    -fx-font-weight: bold;
+}
+
+.highlightedRow {
+    -fx-background-color: firebrick;
+}

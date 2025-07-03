@@ -221,7 +221,7 @@ public class KMLParser extends GPXParser {
                     // for line style we might need to modify the default color!
                     if (KMLStyleItem.KMLStyleType.LineStyle.equals(styleType)) {
                         switch (nodeId) {
-                            case KMLConstants.LINESTYLE_TRACKS:
+                            case KMLConstants.LINESTYLE_TRACKS, KMLConstants.LINESTYLE_LINE:
                                 ((KMLLineStyle) styleItem).setDefaultColor(LineStyle.DEFAULT_TRACK_COLOR.getHexColor());
                                 break;
                             case KMLConstants.LINESTYLE_ROUTES:
@@ -619,14 +619,17 @@ public class KMLParser extends GPXParser {
             final String[] coordinates = splitList(coordinateNode, KMLConstants.COORD_SEPARATOR);
             final ArrayList<Waypoint> waypoints = new ArrayList<>();
             for (String coordString : coordinates) {
-                final String[] coordValues = coordString.split(KMLConstants.VALUE_SEPARATOR);
-                if (coordValues.length < 2) {
-                    Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Not enough coordinates: %s", coordString);
-                    continue;
+                // TFE, 20240324: export from google maps splits into a number of empty strings between the coordinates
+                if (!coordString.isEmpty()) {
+                    final String[] coordValues = coordString.split(KMLConstants.VALUE_SEPARATOR);
+                    if (coordValues.length < 2) {
+                        Logger.getLogger(KMLParser.class.getName()).log(Level.WARNING, "Not enough coordinates: %s", coordString);
+                        continue;
+                    }
+
+                    // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
+                    waypoints.add(waypointFromString(coordValues));
                 }
-                
-                // <coordinates>0.001, 47.23454062939539, 37.488440304870444</coordinates>
-                waypoints.add(waypointFromString(coordValues));
             }
 
             KMLLineStyle styleItem = null;
@@ -640,11 +643,15 @@ public class KMLParser extends GPXParser {
                 if (styleUrl.startsWith("#")) {
                     styleUrl = styleUrl.substring(1);
                     
-                    if (KMLConstants.LINESTYLE_TRACKS.equals(styleUrl)) {
+                    // TFE, 20240324: support for google maps kml export
+                    if (KMLConstants.LINESTYLE_TRACKS.equals(styleUrl) || styleUrl.contains(KMLConstants.LINESTYLE_LINE)) {
                         pathType = KMLConstants.PathType.Track;
                     }
                     
-                    styleItem = (KMLLineStyle) styleMap.get(styleUrl).getKMLStyleItems().get(KMLStyleItem.KMLStyleType.LineStyle);
+                    final KMLStyle temp = (KMLStyle) styleMap.get(styleUrl);
+                    if (temp != null) {
+                        styleItem = (KMLLineStyle) temp.getKMLStyleItems().get(KMLStyleItem.KMLStyleType.LineStyle);
+                    }
                 }
             }
             
@@ -848,6 +855,7 @@ public class KMLParser extends GPXParser {
     }
     
     private void populateLineStyle(final Extension extension, final KMLLineStyle styleItem) {
+        // TODO: what is this ever used for?
         LineStyle lineStyle = null;
         if (extension instanceof Track) {
             lineStyle = new LineStyle(extension, KnownExtensionAttributes.KnownAttribute.DisplayColor_Track, LineStyle.DEFAULT_TRACK_COLOR);

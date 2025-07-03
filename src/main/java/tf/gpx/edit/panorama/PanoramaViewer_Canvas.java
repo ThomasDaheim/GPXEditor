@@ -71,7 +71,7 @@ public class PanoramaViewer_Canvas {
     private final static PanoramaViewer_Canvas INSTANCE = new PanoramaViewer_Canvas();
 
     private final static int VIEWER_WIDTH = 1400;
-    private final static int VIEWER_HEIGHT = 600;
+    private final static int VIEWER_HEIGHT = 800;
     
     // we want to have a similar angular resolution for the sun path as for the elevations
     // the "average" sun path is 12 hours covering 180 degrees (equinox @ equator)
@@ -126,9 +126,8 @@ public class PanoramaViewer_Canvas {
         // TFE, 20230405: max out width based on screen width
         scene  = new Scene(pane, Screen.getPrimary().getVisualBounds().getWidth() * 0.95, VIEWER_HEIGHT);
         
-        // Exists only to defeat instantiation.
         (new JMetro(Style.LIGHT)).setScene(scene);
-        scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor.min.css").toExternalForm());
+        scene.getStylesheets().add(PanoramaViewer_Canvas.class.getResource("/GPXEditor_PanoramaViewer.min.css").toExternalForm());
 
         stage.initModality(Modality.APPLICATION_MODAL); 
         stage.setTitle("GPX Editor - Panorama");

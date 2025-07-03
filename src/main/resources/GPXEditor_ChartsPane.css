@@ -1,0 +1,90 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* 
+    Created on : Nov 9, 2016, 7:58:50 PM
+    Author     : Thomas
+*/
+
+/*
+    mother of all charts
+*/
+.charts-pane {
+    -fx-fill: white;
+    -fx-background-color: white;
+    -fx-opacity: 0.9;
+}
+/*
+    elevation, speed, ... chart
+*/
+.chart {
+    -fx-fill: transparent;
+    -fx-background-color: transparent;
+    -fx-cursor: none;
+}
+.chart-content .chart-plot-background {
+    -fx-fill: transparent;
+    -fx-background-color: transparent;
+}
+.chart-plot-background {
+    -fx-cursor: crosshair;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0px;
+}
+.chart-vert-rect { 
+    -fx-border-style: none dotted none none;
+    -fx-border-width: 5px;
+    -fx-border-color: red;    
+    -fx-fill: red;
+    -fx-opacity: 0.1;
+}
+.chart-series-area-fill {
+    -fx-cursor: crosshair;
+}
+.chart-series-area-line {    
+    -fx-stroke-width: 0.1px;
+    -fx-effect: none;
+    -fx-cursor: crosshair;
+}
+.chart-series-line {    
+    -fx-stroke: #ccc !important;
+    -fx-stroke-width: 0.4px !important;
+    -fx-effect: none;
+}
+
+.track-popup {
+    -fx-fill: black;
+    -fx-font-size: 10;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+    -fx-text-origin: top;
+    -fx-line-spacing: -4;
+}

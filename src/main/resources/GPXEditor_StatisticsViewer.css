@@ -1,0 +1,102 @@
+/*
+ * Copyright (c) 2014ff Thomas Feuster
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/* 
+    Created on : Nov 9, 2016, 7:58:50 PM
+    Author     : Thomas
+*/
+
+@import 'customize-metro.min.css';
+
+
+/*
+    see https://github.com/openjdk/jfx/blob/master/modules/javafx.controls/src/main/resources/com/sun/javafx/scene/control/skin/modena/modena.css for default values
+*/
+
+/*
+    bin distribution chart
+*/
+.unpad-chart {
+    -fx-padding: 0px;
+}
+.chart-content {
+    -fx-padding: 0px;
+}
+.chart-plot-background {
+    -fx-background-color: white;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: white;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: white;
+}
+
+/*
+    bin distribution min / max slider
+*/
+/* https://stackoverflow.com/questions/28721542/javafx-controlsfx-css-for-rangeslider */
+.range-slider .low-thumb {
+    -fx-shape: "M2.998-0.07L3-1.499l2.998,4L3,6.501l-0.002-1.43l1.976-2.57L2.998-0.07z";
+    -fx-translate-x: -5;
+}
+.range-slider .high-thumb {
+    -fx-shape: "M5.997,5.072L5.995,6.501l-2.998-4l2.998-4l0.002,1.43l-1.976,2.57L5.997,5.072z";
+    -fx-translate-x: 5;
+}
+.range-slider .range-bar {
+    -fx-background-color: #000080;
+}
+
+.small-text {
+    -fx-font-size: 1.0em;
+}
+
+/*
+    no empty rows in statistics table
+*/
+.table-row-cell:empty {
+    -fx-background-color: white;
+    -fx-border-color: white;
+} 
+.table-row-cell:empty .table-cell {
+    -fx-border-width: 0px;
+}
+.stat-table *.scroll-bar:vertical *.increment-button,
+.stat-table *.scroll-bar:vertical *.decrement-button {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.stat-table *.scroll-bar:vertical *.increment-arrow, 
+.stat-table *.scroll-bar:vertical *.decrement-arrow {
+    -fx-background-color: null;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-shape: null;
+}

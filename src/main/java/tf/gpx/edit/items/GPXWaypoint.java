@@ -27,8 +27,10 @@ package tf.gpx.edit.items;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import me.himanshusoni.gpxparser.modal.Extension;
@@ -60,6 +62,9 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     
     private boolean myHighlight = false;
     private String myMarker = "";
+    
+    // TFE, 20250619: speed up things by caching speed, distance, elevationDiff, slope to previous waypoint
+    final Map<GPXLineItemData, Double> myDataCache = new HashMap<>();
 
     private GPXWaypoint() {
         super(GPXLineItemType.GPXWaypoint);
@@ -79,14 +84,14 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
         
         // if possible add waypoint to parent class
         Extension content = gpxParent.getExtension();
-        if (content instanceof GPX) {
-            ((GPX) content).addWaypoint(myWaypoint);
+        if (content instanceof GPX gpx) {
+            gpx.addWaypoint(myWaypoint);
         }
-        if (content instanceof TrackSegment) {
-            ((TrackSegment) content).addWaypoint(myWaypoint);
+        if (content instanceof TrackSegment trackSegment) {
+            trackSegment.addWaypoint(myWaypoint);
         }
-        if (content instanceof Route) {
-            ((Route) content).addRoutePoint(myWaypoint);
+        if (content instanceof Route route) {
+            route.addRoutePoint(myWaypoint);
         }
     }
     
@@ -148,6 +153,7 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     
     protected void setPrevGPXWaypoint(final GPXWaypoint wayPoint) {
         myPrevGPXWaypoint = wayPoint;
+        myDataCache.clear();
     }
     
     public GPXWaypoint getNextGPXWaypoint() {
@@ -694,19 +700,39 @@ public class GPXWaypoint extends GPXLineItem implements IGeoCoordinate  {
     
     public double getSpeed() {
         // TFE, 20200207: don't use gpxxx:speed even if available! track might have changed since recorded
-        return EarthGeometry.speed(this, myPrevGPXWaypoint);
+        Double result = myDataCache.get(GPXLineItemData.Speed);
+        if (result == null) {
+            result = EarthGeometry.speed(this, myPrevGPXWaypoint);
+            myDataCache.put(GPXLineItemData.Speed, result);
+        }
+        return result;
     }
     
     public double getDistance() {
-        return EarthGeometry.distance(this, myPrevGPXWaypoint);
+        Double result = myDataCache.get(GPXLineItemData.DistanceToPrevious);
+        if (result == null) {
+            result = EarthGeometry.distance(this, myPrevGPXWaypoint);
+            myDataCache.put(GPXLineItemData.DistanceToPrevious, result);
+        }
+        return result;
     }
     
     public double getElevationDiff() {
-        return EarthGeometry.elevationDiff(this, myPrevGPXWaypoint);
+        Double result = myDataCache.get(GPXLineItemData.ElevationDifferenceToPrevious);
+        if (result == null) {
+            result = EarthGeometry.elevationDiff(this, myPrevGPXWaypoint);
+            myDataCache.put(GPXLineItemData.ElevationDifferenceToPrevious, result);
+        }
+        return result;
     }
     
     public double getSlope() {
-        return EarthGeometry.slope(this, myPrevGPXWaypoint);
+        Double result = myDataCache.get(GPXLineItemData.Slope);
+        if (result == null) {
+            result = EarthGeometry.slope(this, myPrevGPXWaypoint);
+            myDataCache.put(GPXLineItemData.Slope, result);
+        }
+        return result;
     }
     
     @Override

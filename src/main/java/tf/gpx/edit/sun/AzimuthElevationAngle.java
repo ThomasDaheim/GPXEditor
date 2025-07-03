@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.sun;
 
-import net.e175.klaus.solarpositioning.AzimuthZenithAngle;
+import net.e175.klaus.solarpositioning.SolarPosition;
 
 /**
  *
@@ -90,20 +90,12 @@ public class AzimuthElevationAngle implements Comparable<AzimuthElevationAngle> 
         this.elevation = elevation;
     }
     
-    public boolean equalsAzimuthZenithAngle(final AzimuthZenithAngle angle) {
-        return this.equals(of(angle));
-    }
-    
-    public static AzimuthElevationAngle of(final AzimuthZenithAngle angle) {
-        if (angle == null) {
-            return null;
-        }
-
-        return new AzimuthElevationAngle(angle.getAzimuth(), 90 - angle.getZenithAngle());
-    }
-    
     public static AzimuthElevationAngle of(final double azi, final double elev) {
         return new AzimuthElevationAngle(azi, elev);
+    }
+
+    public static AzimuthElevationAngle of(SolarPosition position) {
+        return new AzimuthElevationAngle(position.azimuth(), 90.0 - position.zenithAngle());
     }
 
     @Override

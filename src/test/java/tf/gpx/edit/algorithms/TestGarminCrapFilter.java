@@ -44,7 +44,7 @@ public class TestGarminCrapFilter {
         
         final List<GPXWaypoint> waypoints = gpxfile.getGPXTracks().get(0).getGPXTrackSegments().get(0).getGPXWaypoints();
         Assertions.assertEquals(263, waypoints.size());
-        final boolean[] keep = GarminCrapFilter.applyFilter(waypoints, 1000.0);
+        final Boolean[] keep = GarminCrapFilter.applyFilter(waypoints, 1000.0);
         Assertions.assertEquals(263, keep.length);
         
         // should remove forst & last waypoint ONLY

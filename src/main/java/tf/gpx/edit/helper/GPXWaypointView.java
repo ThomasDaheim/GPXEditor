@@ -201,6 +201,13 @@ public class GPXWaypointView implements IPreferencesHolder {
             replaceWaypoints.disableProperty().bind(
                     Bindings.lessThan(Bindings.size(myTableView.getSelectionModel().getSelectedItems()), 3));
             selected.getItems().add(replaceWaypoints);
+            
+            // TFE, 20240111: option to create a route from selected waypoints
+            final MenuItem createRoute = new MenuItem("Create route");
+            createRoute.setOnAction((ActionEvent event) -> {
+                myGPXEditor.createRouteFromSelectedWaypoints();
+            });
+            selected.getItems().add(createRoute);
 
             final Menu deleteAttr = new Menu("Delete attributes");
             final MenuItem deleteNames = new MenuItem("Name");

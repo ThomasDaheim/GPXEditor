@@ -44,6 +44,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.general.ObjectsHelper;
@@ -140,6 +141,7 @@ public class TestElevationProvider {
     
     // 1 coord available in srtm with all combinations
     @Test
+    @Tag("NoSuiteTest")
     public void testAvailable() {
         initElevationProviders();
         
@@ -147,23 +149,24 @@ public class TestElevationProvider {
         // NE hemisphere: MT EVEREST, 27.9881° N, 86.9250° E - 27° 59' 9.8340" N, 86° 55' 21.4428" E - 8848m
         heightValue = srtmOnly.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(8840, heightValue));
+        Assertions.assertEquals(8840, heightValue, delta);
 
         heightValue = srtmFirst.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(8840, heightValue));
+        Assertions.assertEquals(8840, heightValue, delta);
 
         heightValue = srtmLast.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(8794, heightValue));
+        Assertions.assertEquals(8794, heightValue, delta);
 
         heightValue = srtmNone.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(8794, heightValue));
+        Assertions.assertEquals(8794, heightValue, delta);
     }
     
     // 1 coord not available in srtm with all combinations
     @Test
+    @Tag("NoSuiteTest")
     public void testUnavailable() {
         initElevationProviders();
         
@@ -177,19 +180,20 @@ public class TestElevationProvider {
 
         heightValue = srtmFirst.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(517, heightValue));
+        Assertions.assertEquals(517, heightValue, delta);
 
         heightValue = srtmLast.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(517, heightValue));
+        Assertions.assertEquals(517, heightValue, delta);
 
         heightValue = srtmNone.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
-        Assertions.assertTrue(isCloseEnough(517, heightValue));
+        Assertions.assertEquals(517, heightValue, delta);
     }
     
     // list coords of available / not-available with all combinations
     @Test
+    @Tag("NoSuiteTest")
     public void testMixedList() {
         initElevationProviders();
         
@@ -199,23 +203,24 @@ public class TestElevationProvider {
         
         List<Double> heightValues;
         heightValues = heightValues(srtmOnly.getElevationsForCoordinates(coords));
-        Assertions.assertTrue(isCloseEnough(8840, heightValues.get(0)));
-        Assertions.assertTrue(heightValues.get(1) == IElevationProvider.NO_ELEVATION);
+        Assertions.assertEquals(8840, heightValues.get(0), delta);
+        Assertions.assertEquals(heightValues.get(1), IElevationProvider.NO_ELEVATION);
 
         heightValues = heightValues(srtmFirst.getElevationsForCoordinates(coords));
-        Assertions.assertTrue(isCloseEnough(8840, heightValues.get(0)));
-        Assertions.assertTrue(isCloseEnough(517, heightValues.get(1)));
+        Assertions.assertEquals(8840, heightValues.get(0), delta);
+        Assertions.assertEquals(517, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmLast.getElevationsForCoordinates(coords));
-        Assertions.assertTrue(isCloseEnough(8794, heightValues.get(0)));
-        Assertions.assertTrue(isCloseEnough(517, heightValues.get(1)));
+        Assertions.assertEquals(8794, heightValues.get(0), delta);
+        Assertions.assertEquals(517, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmNone.getElevationsForCoordinates(coords));
-        Assertions.assertTrue(isCloseEnough(8794, heightValues.get(0)));
-        Assertions.assertTrue(isCloseEnough(517, heightValues.get(1)));
+        Assertions.assertEquals(8794, heightValues.get(0), delta);
+        Assertions.assertEquals(517, heightValues.get(1), delta);
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void testPseudoLargeNumber() {
         initElevationProviders();
 
@@ -235,19 +240,20 @@ public class TestElevationProvider {
         Duration duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration SRTM: " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
-        Assertions.assertTrue(isCloseEnough(8840, heightValues.get(0)));
-        Assertions.assertTrue(heightValues.size() == count);
+        Assertions.assertEquals(8840, heightValues.get(0), delta);
+        Assertions.assertEquals(count, heightValues.size());
 
         startTime = Instant.now();
         heightValues = heightValues(srtmNone.getElevationsForCoordinates(coords));
         duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration OEP:  " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
-        Assertions.assertTrue(isCloseEnough(8794, heightValues.get(0)));
-        Assertions.assertTrue(heightValues.size() == count);
+        Assertions.assertEquals(8794, heightValues.get(0), delta);
+        Assertions.assertEquals(count, heightValues.size());
     }
     
     @Test
+    @Tag("NoSuiteTest")
     public void testLargeNumber() {
         initElevationProviders();
 
@@ -269,20 +275,16 @@ public class TestElevationProvider {
         Duration duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration SRTM: " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
-        Assertions.assertTrue(isCloseEnough(8840, heightValues.get(0)));
-        Assertions.assertTrue(heightValues.size() == count);
+        Assertions.assertEquals(8840, heightValues.get(0), delta);
+        Assertions.assertEquals(count, heightValues.size());
 
         startTime = Instant.now();
         heightValues = heightValues(srtmNone.getElevationsForCoordinates(coords));
         duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration OEP:  " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
-        Assertions.assertTrue(isCloseEnough(8794, heightValues.get(0)));
-        Assertions.assertTrue(heightValues.size() == count);
-    }
-    
-    private boolean isCloseEnough(final double val1, final double val2) {
-        return (Math.abs(val1 - val2) < delta);
+        Assertions.assertEquals(8794, heightValues.get(0), delta);
+        Assertions.assertEquals(count, heightValues.size());
     }
     
     private List<Double> heightValues(final List<Pair<Boolean, Double>> elevations) {

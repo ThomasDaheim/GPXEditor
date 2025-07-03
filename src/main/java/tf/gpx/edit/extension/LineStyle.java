@@ -42,12 +42,13 @@ import tf.helper.javafx.UnitConverter;
  * @author thomas
  */
 public class LineStyle {
-    public static final GarminColor DEFAULT_COLOR = GarminColor.DarkGray;
+    public static final GarminColor DEFAULT_COLOR = GarminColor.Black;
     public static final Double DEFAULT_OPACITY = 1.0;
     // width in gpx_style is in millimeters BUT leaflet calculates in pixel...
     // default in leaflet is 2 PIXEL
     // we work in pixel
-    public static final Integer DEFAULT_WIDTH = 2;
+    // TFE, 20240324: kml linestyle width is in float
+    public static final Double DEFAULT_WIDTH = 2.0;
     public static final String DEFAULT_PATTERN = "";
     public static final Linecap DEFAULT_LINECAP = Linecap.Round;
     public static final List<Dash> DEFAULT_DASHES = new ArrayList<>();
@@ -94,7 +95,7 @@ public class LineStyle {
         }
     }
     
-    // TFE, 20221002: support for lucos map lsUnits extension attribute
+    // TFE, 20221002: support for locus map lsUnits extension attribute
     private static enum WidthUnit {
         PIXELS,
         MILLIMETERS
@@ -110,7 +111,7 @@ public class LineStyle {
     private Optional<GarminColor> myColor;
     private GarminColor myDefaultColor = DEFAULT_COLOR;
     private Optional<Double> myOpacity;
-    private Optional<Integer> myWidth;
+    private Optional<Double> myWidth;
     // TFE, 20221002: set unit from extension or to "PIXEL" if non found
     private WidthUnit myWidthUnit;
     private Optional<String> myPattern;
@@ -134,7 +135,7 @@ public class LineStyle {
         myDefaultColor = defaultCol;
     }
     
-    private LineStyle(final GarminColor color, final Double opacity, final Integer width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
+    private LineStyle(final GarminColor color, final Double opacity, final Double width, final String pattern, final Linecap linecap, final List<Dash> dashes) {
         myItem = null;
         myExtension = null;
         myColorAttribute = null;
@@ -226,7 +227,7 @@ public class LineStyle {
         return DEFAULT_OPACITY;
     }
 
-    public Integer getWidth() {
+    public Double getWidth() {
         if (myWidth == null) {
             String nodeValue = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width);
 
@@ -236,17 +237,22 @@ public class LineStyle {
             } else {
                 // we work in pixel, gpx_style in millimeter
                 // TFE, 20221002: for locus the unit might be PIXEL already
+                // TFE, 20250104: we now have our own extension that might define the unit. So we need to check both... But ours takes precedence!
                 if (myWidthUnit == null) {
+                    String extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits);
+                    if (extUnit == null) {
+                        extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits);
+                    }
                     myWidthUnit = EnumUtils.getEnum(
                             WidthUnit.class, 
-                            KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits), 
+                            extUnit, 
                             WidthUnit.MILLIMETERS);
                 }
                 // convert only if something to do
                 if (!WidthUnit.PIXELS.equals(myWidthUnit)) {
-                    myWidth = Optional.of((int) Math.round(UnitConverter.getInstance().millimeterToPixel(Double.valueOf(nodeValue))));
+                    myWidth = Optional.of(UnitConverter.getInstance().millimeterToPixel(Double.parseDouble(nodeValue)));
                 } else {
-                    myWidth = Optional.of((int) Math.round(Double.valueOf(nodeValue)));
+                    myWidth = Optional.of(Double.valueOf(nodeValue));
                 }
             }
 
@@ -254,7 +260,7 @@ public class LineStyle {
         return myWidth.get();
     }
     
-    public Integer getDefaultWidth() {
+    public Double getDefaultWidth() {
         return DEFAULT_WIDTH;
     }
 
@@ -336,11 +342,13 @@ public class LineStyle {
         }
     }
     
-    public void setWidth(final Integer width) {
+    public void setWidth(final Double width) {
         // set both our variable and the gpx extension
         myWidth = Optional.of(width);
         
         if (myExtension != null) {
+            // TFE, 20250502: not yet working
+            // TFE, 20250104: no longer true! We know also store in pixel together with our own ne extension :-)
             // we work in pixel, gpx_style in millimeter
             KnownExtensionAttributes.setValueForAttribute(
                     myExtension, 
@@ -349,6 +357,11 @@ public class LineStyle {
                             Precision.round(UnitConverter.getInstance().pixelToMillimeter(myWidth.get()), 2)
                             )
                     );
+            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.width, Double.toString(myWidth.get()));
+
+            // TFE, 20250502: not yet working
+//            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits, WidthUnit.PIXELS.toString());
+//            KnownExtensionAttributes.setValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geWidth, Double.toString(myWidth.get()));
         }
         if (myItem != null) {
             myItem.lineStyleHasChanged();

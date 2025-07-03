@@ -153,7 +153,10 @@ public class GPXMeasurableView implements IPreferencesHolder {
         myTreeTableView.setSortMode(TreeSortMode.ALL_DESCENDANTS);
         
         myTreeTableView.setCache(true);
+        myTreeTableView.setCacheShape(true);
         myTreeTableView.setCacheHint(CacheHint.SPEED);
+        
+        myTreeTableView.getStylesheets().add(GPXMeasurableView.class.getResource("/GPXEditor_GPXMeasurableView.min.css").toExternalForm());
         
         Platform.runLater(() -> {
             TableMenuUtils.addCustomTreeTableViewMenu(myTreeTableView);

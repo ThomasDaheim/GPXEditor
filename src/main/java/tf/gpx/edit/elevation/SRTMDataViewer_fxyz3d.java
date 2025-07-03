@@ -67,13 +67,14 @@ import org.fxyz3d.scene.paint.Palette;
 import org.fxyz3d.shapes.composites.PolyLine3D;
 import org.fxyz3d.utils.CameraTransformer;
 import tf.gpx.edit.algorithms.EarthGeometry;
-import tf.gpx.edit.charts.Axis;
-import tf.gpx.edit.charts.Fxyz3dHelper;
-import tf.gpx.edit.charts.SurfacePlotMesh_Fast;
+import tf.gpx.edit.elevation.charts.Axis;
+import tf.gpx.edit.elevation.charts.Fxyz3dHelper;
+import tf.gpx.edit.elevation.charts.SurfacePlotMesh_Fast;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.Bounds3D;
 import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXMeasurable;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
+import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
@@ -115,6 +116,9 @@ public class SRTMDataViewer_fxyz3d {
     // so lineScaling should by 2 * sqrt(gpx to show) / sqrt(Deutschland_2018_reduced.gpx)
     private double lineScaling = 1;
     private final static double LINE_BASE_AREA = 471.41;
+    
+    // TFE, 20240109: in case of a single waypoint to show we still want to have some padding around to show SOMETHING
+    private final double MIN_LATLON_PADDING = 0.05;
 
     // axes need to be scaled as well in such a scenario
     private double axesScaling = 1;
@@ -202,12 +206,14 @@ public class SRTMDataViewer_fxyz3d {
         
         if (gpxLineItem != null) {
             final Bounds3D itemBounds = new Bounds3D(gpxLineItem.getBounds3D());
+            
             // leave some space at the edges...
-            final double latPadding = (itemBounds.getMaxLat() - itemBounds.getMinLat()) / 20d;
+            // TFE, 20240109: in case of a single waypoint this doesn't add anything since diff is zero!
+            final double latPadding = Math.max((itemBounds.getMaxLat() - itemBounds.getMinLat()) / 20d, MIN_LATLON_PADDING);
             itemBounds.setMaxLat(itemBounds.getMaxLat() + latPadding);
             itemBounds.setMinLat(itemBounds.getMinLat() - latPadding);
 
-            final double lonPadding = (itemBounds.getMaxLon() - itemBounds.getMinLon()) / 20d;
+            final double lonPadding = Math.max((itemBounds.getMaxLon() - itemBounds.getMinLon()) / 20d, MIN_LATLON_PADDING);
             itemBounds.setMaxLon(itemBounds.getMaxLon() + lonPadding);
             itemBounds.setMinLon(itemBounds.getMinLon() - lonPadding);
 
@@ -425,10 +431,20 @@ public class SRTMDataViewer_fxyz3d {
         if (gpxLineItem != null) {
             // TFE, 20220106: special case: show only one single waypoint in its surrounding...
             switch (gpxLineItem.getType()) {
-                case GPXWaypoint, GPXTrackSegment:
-                    lines.add(getPolyLine3D(((GPXMeasurable) gpxLineItem).getBounds3D(), gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
+                case GPXWaypoint:
+                    lines.add(getPolyLine3D(gpxLineItem.getBounds3D(), gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getParent().getType())));
+                    break;
+                case GPXTrackSegment:
+                    lines.add(getPolyLine3D(gpxLineItem.getBounds3D(), gpxLineItem.getCombinedGPXWaypoints(gpxLineItem.getType())));
                     break;
                 default: // covers tracks, routes and gpxfile...
+                    // TFE, 20240109: also shows waypoints of files!
+                    if (GPXLineItem.GPXLineItemType.GPXFile.equals(gpxLineItem.getType())) {
+                        for (GPXWaypoint gpxWaypoint : gpxLineItem.getGPXWaypoints()) {
+                            lines.add(getPolyLine3D(gpxWaypoint.getBounds3D(), gpxWaypoint.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXFile)));
+                        }
+                    }
+                    
                     // add tracks individually with their color
                     for (GPXTrack gpxTrack : gpxLineItem.getGPXTracks()) {
                         lines.add(getPolyLine3D(gpxTrack.getBounds3D(), gpxTrack.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack)));
@@ -440,6 +456,10 @@ public class SRTMDataViewer_fxyz3d {
                     }
             }
         }
+        if (CollectionUtils.isEmpty(lines)) {
+            return;
+        }
+
         nodeGroup.getChildren().addAll(lines);
         
         final Group labelGroup = new Group();
@@ -478,7 +498,7 @@ public class SRTMDataViewer_fxyz3d {
         final Group sceneRoot = new Group(subScene);
         sceneRoot.getChildren().addAll(labelGroup);
         
-        // some explanation for rote & zoom
+        // some explanation for rotate & zoom
         final Label label = 
                 new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() + 
                         "RgtBtn: Shift X+Y" + System.lineSeparator() + 
@@ -856,11 +876,17 @@ public class SRTMDataViewer_fxyz3d {
             
             i = (i+1) % DATA_FRACTION;
         }
+
+        float resultScaling = (float) (LINE_WIDTH * lineScaling);
+        if (gpxWaypoints.size() == 1) {
+            // if only a single point, lets make it bigger
+            resultScaling *= 3.0;
+        }
         
         final PolyLine3D result = new PolyLine3D(
                 points, 
                 // TFE, 20230205: added scaling based on viewport dimensions
-                (float) (LINE_WIDTH * lineScaling), 
+                resultScaling, 
                 gpxWaypoints.get(0).getLineStyle().getColor().getJavaFXColor(), 
                 PolyLine3D.LineType.TRIANGLE);
         result.setUserData(dataBounds);

@@ -32,7 +32,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
- * Wrapper for different smoothing algorithms.
+ * Wrapper for different matching algorithms.
  * 
  * @author thomas
  */

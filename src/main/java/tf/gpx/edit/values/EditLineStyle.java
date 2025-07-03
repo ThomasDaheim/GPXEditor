@@ -247,7 +247,7 @@ public class EditLineStyle extends AbstractStage {
     
     private void setLineStyle() {
         myLineStyle.setColor(GarminColor.getGarminColorForJavaFXColor((Color) myColorList.getSelectionModel().getSelectedItem().getUserData()));
-        myLineStyle.setWidth((int) Math.round(myWidthSlider.getValue()));
+        myLineStyle.setWidth(myWidthSlider.getValue());
         myLineStyle.setOpacity(myOpacitySlider.getValue());
         myLineStyle.setLinecap(LineStyle.Linecap.valueOf(myCapList.getSelectionModel().getSelectedItem()));
     }

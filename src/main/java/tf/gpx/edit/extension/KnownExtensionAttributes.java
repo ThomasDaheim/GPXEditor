@@ -59,8 +59,12 @@ public class KnownExtensionAttributes {
         // "locus" as an extension using attributes only BUT they can be extensions to other extensions
         Locus("locus", DefaultExtensionHolder.ExtensionClass.Locus),
 
-        Line("line", DefaultExtensionHolder.ExtensionClass.Line);
+        Line("line", DefaultExtensionHolder.ExtensionClass.Line),
         
+        // TFE, 20250104: finally, we have our own extension as well.
+        // Why? To change the line width unit to pixel - that is what the rest of the worlds uses...
+        GPXEditorLine("gpxeditor_line", DefaultExtensionHolder.ExtensionClass.GPXEditorLine);
+
         private final String myName;
         private final IGPXExtension myExtensionParent;
         
@@ -183,7 +187,13 @@ public class KnownExtensionAttributes {
         // extension groups can have their own extensions...
         lsColorBase("lsColorBase", KnownExtension.Locus, KnownExtension.Line),
         lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line), // same value is set for "width" independent whether lsUnits might be "PIXEL"
-        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line);
+        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line),
+        
+        //
+        // attributes GPXEditorLine
+        //
+        geWidth("geWidth", KnownExtension.GPXEditorLine, KnownExtension.Line), // width in the geUnits
+        geUnits("geUnits", KnownExtension.GPXEditorLine, KnownExtension.Line);
         
         
         private final String myName;
@@ -225,6 +235,22 @@ public class KnownExtensionAttributes {
         return INSTANCE;
     }
     
+    // How does the structure with extensions in gpxparser look like?
+    //
+    // EVERYTHING is an extension, including gpx, track, route, ...
+    // An extension can hold arbitrary extension data as HashMap<String, Object>
+    // The String indicates the parser that was used to parse the data
+    // Extension data can be other extensions to enable nested extensions
+    // 
+    // We always use a DefaultExtensionHolder for all kinds of data. This is done by setting it before parsing a gpx/kml file.
+    //
+    // So the structure is
+    //
+    // Extension has extension data
+    //   Extension data is of type DefaultExtensionHolder
+    //     DefaultExtensionHolder has an Extension
+    //       and so on... (in theory - we only have implemented one level of parent extension
+    
     public static String getValueForAttribute(final Extension extension, final KnownAttribute attr) {
         String result = null;
         
@@ -233,6 +259,7 @@ public class KnownExtensionAttributes {
         if (attr.getParentExtension() != null) {
             // TODO: check if extension is of same type as parentExtension
             if (extensionHolder.getExtension() != null) {
+                // get the extension of the extension
                 extensionHolder = (DefaultExtensionHolder) extensionHolder.getExtension().getExtensionData(DefaultExtensionParser.getInstance().getId());
             } else {
                 // we don't have an extension in the extension
@@ -246,7 +273,7 @@ public class KnownExtensionAttributes {
         
         // TFE, 20211118: for locus we have extension data that is not enclosed in a specific node but directly under <extensions>...
         if (attr.getExtension().useSeparateNode()) {
-            final Node extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+            final Node extNode = extensionHolder.getExtensionNodeForClass(attr.getExtension());
 
             if (extNode == null) {
                 return result;
@@ -284,7 +311,7 @@ public class KnownExtensionAttributes {
                 }
             }
         } else {
-            final Node extNode = extensionHolder.getExtensionForName(attr.toString());
+            final Node extNode = extensionHolder.getExtensionNodeForName(attr.toString());
 
             if (extNode == null) {
                 return result;
@@ -328,11 +355,18 @@ public class KnownExtensionAttributes {
             Node extNode = null;
 
             if (extensionHolder != null) {
-                extNode = extensionHolder.getExtensionForClass(attr.getExtension());
+                // TFE, 20250104: we must now als write our own extension that is a subnode of line without its own named node
+                if (attr.getExtension().useSeparateNode()) {
+                    extNode = extensionHolder.getExtensionNodeForClass(attr.getExtension());
+                } else {
+                    // that is the node for the parent extension
+                    extNode = extensionHolder.getExtensionNodeForClass(attr.getParentExtension());
+                }
             }
 
             final boolean hasGarminGPX = (extNode != null);
-            if (extNode == null) {
+            // TODO: extNode == null AND !useSeparateNode()???
+            if (extNode == null && attr.getExtension().useSeparateNode()) {
                 // create new node for GarminGPX;
                 extNode = doc.createElement(attr.getExtension().toString());
                 
@@ -346,9 +380,17 @@ public class KnownExtensionAttributes {
             }
 
             // 1) find extension node OR create
+            // TFE, 20250105: in case of attributes without a separat extension node we don't look for a
+            // node with the name of the extension but for the node "extensions"
             NodeList nodeList = null;
+            String findName;
+            if (attr.getExtension().useSeparateNode()) {
+                findName = attr.getExtension().toString();
+            } else {
+                findName = GPXConstants.NODE_EXTENSIONS;
+            }
             // check node itself
-            if (extNode.getNodeName() != null && extNode.getNodeName().equals(attr.getExtension().toString())) {
+            if (extNode.getNodeName() != null && extNode.getNodeName().equals(findName)) {
                 nodeList = extNode.getChildNodes();
             } else {
                 NodeList childNodes = extNode.getChildNodes();
@@ -357,7 +399,7 @@ public class KnownExtensionAttributes {
                 for (int i = 0; i < childNodes.getLength(); i++) {
                     final Node myNode = childNodes.item(i);
 
-                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(attr.getExtension().toString())) {
+                    if (myNode.getNodeName() != null && myNode.getNodeName().equals(findName)) {
                         nodeList = myNode.getChildNodes();
                         break;
                     }

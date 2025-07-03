@@ -23,6 +23,9 @@
                 <locus:lsColorBase>#96483D8B</locus:lsColorBase>
                 <locus:lsWidth>6.0</locus:lsWidth>
                 <locus:lsUnits>PIXELS</locus:lsUnits>
+                <!-- TFE, 20250104, We have our own line-extension-extension now! -->
+                <gpxeditor_line:geWidth>4.0</gpxeditor_line:geWidth>
+                <gpxeditor_line:geUnits>PIXELS</gpxeditor_line:geUnits>
             </extensions>
         </line>
         <locus:activity>walking</locus:activity>

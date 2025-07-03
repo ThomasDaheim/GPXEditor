@@ -28,7 +28,7 @@ package tf.gpx.edit.elevation;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -56,8 +56,8 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
  */
 public class SRTMDownloader {
     public final static String DOWNLOAD_LOCATION_SRTM1 = "https://step.esa.int/auxdata/dem/SRTMGL1";
-    public final static String DOWNLOAD_URL_SRTM3 = "http://viewfinderpanoramas.org/dem3";
-    public final static String DOWNLOAD_URL_SRTM3_ANT = "http://viewfinderpanoramas.org/ANTDEM3";
+    public final static String DOWNLOAD_URL_SRTM3 = "https://viewfinderpanoramas.org/dem3";
+    public final static String DOWNLOAD_URL_SRTM3_ANT = "https://viewfinderpanoramas.org/ANTDEM3";
     public final static String DOWNLOAD_LOCATION_SRTM3 = DOWNLOAD_URL_SRTM3 + ".html";
     
     private final static String SRTM1_EXTENSION = ".SRTMGL1." + SRTMDataStore.HGT_EXT;
@@ -361,6 +361,7 @@ public class SRTMDownloader {
         final List<String> workFilenames = reduceToRequiredFiles(filenames, directory, overwrite);
         if (workFilenames.isEmpty()) {
             // nothing left to do
+            System.out.println("  Already downloaded: \"" + stringURL + "\"");
             return true;
         }
         
@@ -377,7 +378,7 @@ public class SRTMDownloader {
 
             // only download if not already there
             if (!tempFile.exists() || !tempFile.isFile() || overwrite) {
-                FileUtils.copyURLToFile(new URL(stringURL), tempFile, 1000, 3000);
+                FileUtils.copyURLToFile(URI.create(stringURL).toURL(), tempFile, 2000, 5000);
             } else {
                 System.out.println("  Already downloaded: \"" + stringURL + "\"");
             }
@@ -462,7 +463,9 @@ public class SRTMDownloader {
                 }
 
                 // zipentries contain full path...
-                if (!entry.isDirectory()&& workFilenames.contains(entryName)) {
+                // TFE, 20240107: once we have downloaded a complete zip lets extract all and not only the missing ones!
+                // if (!entry.isDirectory()&& workFilenames.contains(entryName)) {
+                if (!entry.isDirectory()) {
                     // found you!
                     try(InputStream is = zipFile.getInputStream(entry);){
                         System.out.println("  Extracting: \"" + entryName + "\"");

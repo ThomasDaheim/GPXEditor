@@ -70,6 +70,8 @@ public interface KMLConstants {
     
     final String LINESTYLE_TRACKS = "tracksLineStyle";
     final String LINESTYLE_ROUTES = "routesLineStyle";
+    // TFE, 20240324: google map kml export uses <StyleMap id="line-1267FF-5000-nodesc">
+    final String LINESTYLE_LINE = "line";
 
     // constants to match XSD definition of nodes and attributes
     final String KML_XSD = "http://www.opengis.net/kml/2.2";

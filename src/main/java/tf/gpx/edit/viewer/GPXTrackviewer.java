@@ -31,6 +31,7 @@ import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXMeasurable;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
+import tf.gpx.edit.viewer.charts.ChartsPane;
 import tf.helper.general.IPreferencesHolder;
 import tf.helper.general.IPreferencesStore;
 
@@ -72,7 +73,7 @@ public class GPXTrackviewer implements IPreferencesHolder {
     public void setGPXWaypoints(final List<GPXMeasurable> lineItems, final boolean doFitBounds) {
         assert myGPXEditor != null;
         assert lineItems != null;
-
+        
         // show in LeafletMapView map
         TrackMap.getInstance().setGPXWaypoints(lineItems, doFitBounds);
         TrackMap.getInstance().clearSelectedGPXWaypoints();
@@ -91,15 +92,15 @@ public class GPXTrackviewer implements IPreferencesHolder {
         ChartsPane.getInstance().updateGPXWaypoints(gpxWaypoints);
     }
 
-    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker) {
+    public void setSelectedGPXWaypoints(final List<GPXWaypoint> gpxWaypoints, final Boolean highlightIfHidden, final Boolean useLineMarker, final boolean panTo) {
         assert myGPXEditor != null;
         assert gpxWaypoints != null;
 
-        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+        TrackMap.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker, panTo);
         
         // this can be done a bit later - get the map drawn as early as possible
         Platform.runLater(() -> {
-            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker);
+            ChartsPane.getInstance().setSelectedGPXWaypoints(gpxWaypoints, highlightIfHidden, useLineMarker, panTo);
         });
     }
     

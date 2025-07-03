@@ -57,7 +57,7 @@ public class BinValueDistribution {
     }
     
     public <T> void calculateBinValues(final ValueDistribution<T> valueDistribution) {
-        assert valueDistribution != null && valueDistribution.getValues().size() > 0;
+        assert valueDistribution != null && !valueDistribution.getValues().isEmpty();
 
         // calc max & min values to determine bin size
         calculateMinMaxXValues(valueDistribution);

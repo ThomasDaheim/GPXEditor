@@ -257,7 +257,7 @@ public class StatisticsViewer extends AbstractStage {
     private void initViewer() {
         (new JMetro(Style.LIGHT)).setScene(getScene());
         getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
-        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+        getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor_StatisticsViewer.min.css").toExternalForm());
 
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
@@ -273,7 +273,8 @@ public class StatisticsViewer extends AbstractStage {
         // data will be shown in a table
         table.setEditable(false);
         table.setSelectionModel(null);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+//        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getStyleClass().add("stat-table");
         
         // Create column Description, Value, Unit
@@ -328,7 +329,7 @@ public class StatisticsViewer extends AbstractStage {
         // 2nd row: OK, highlight & Export buttons
         final Button highlightButton = new Button("Select Wpts.");
         highlightButton.setOnAction((ActionEvent event) -> {
-            myGPXEditor.selectGPXWaypoints(extremePoints, false, false);
+            myGPXEditor.selectGPXWaypoints(extremePoints, true, false, true);
         });      
         getGridPane().add(highlightButton, 1, rowNum, 1, 1);
         GridPane.setMargin(highlightButton, INSET_BOTTOM);
@@ -576,7 +577,7 @@ public class StatisticsViewer extends AbstractStage {
             try (
                     FileWriter out = new FileWriter(selectedFile);
                     CSVPrinter printer = new CSVPrinter(out,
-                            CSVFormat.DEFAULT.builder().setHeader("Observable", "Value", "Unit", "Where", "When").build())
+                            CSVFormat.DEFAULT.builder().setHeader("Observable", "Value", "Unit", "Where", "When").get())
                 ) {
                 statisticsList.forEach((t) -> {
                     // no idea, why a nested try & catch is required here...

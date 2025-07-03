@@ -42,12 +42,18 @@ class SRTMData {
     private final int numberRows;
     private final int numberCols;
 
+    // TFE, 20250624: speed up things a bit - clone() is faster than fill()
+    private final short[] myInitValues; 
+
     public SRTMData(final String dataFile, final String name, final SRTMDataHelper.SRTMDataType type) {
         myDataFile = dataFile;
         myDataKey = new SRTMDataKey(name, type);
         myDataValues = new short[type.getDataCount()][];
         numberRows = type.getDataCount();
         numberCols = type.getDataCount();
+        
+        myInitValues = new short[numberCols];
+        Arrays.fill(myInitValues, (short) IElevationProvider.NO_ELEVATION);
     }
     
     public SRTMDataKey getKey() {
@@ -96,11 +102,7 @@ class SRTMData {
     }
     
     private short[] initDataRow() {
-        short[] result = new short[numberCols];
-        
-        Arrays.fill(result, (short) IElevationProvider.NO_ELEVATION);
-        
-        return result;
+        return myInitValues.clone();
     }
 
     public int getNumberRows() {

@@ -12,7 +12,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import tf.gpx.edit.algorithms.WaypointReduction;
+import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
@@ -200,7 +200,7 @@ public class GPXEditorParameters {
             
             if (command.hasOption(GPXEditorParameters.CmdOps.gpxFiles.toString())) {
                 value = command.getOptionValue(GPXEditorParameters.CmdOps.gpxFiles.toString());
-                gpxFiles = Arrays.asList(value.split(" "));
+                gpxFiles = Arrays.asList(value.split("\\*"));
                 // System.out.println("Option gpxFiles found: " + value);
             }
             
