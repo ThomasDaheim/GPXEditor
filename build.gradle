@@ -72,7 +72,7 @@ if (!hasProperty('mainClass')) {
 mainClassName = 'tf.gpx.edit.main.GPXEditorManager'
 def appName='GPXEditor'
 group='tf.GPXEditor'
-version='5.9'
+version='5.10'
 description = 'GPXEditor - JavaFX GPX file editor'
 
 repositories {
@@ -111,7 +111,7 @@ dependencies {
     implementation "org.openjfx:javafx-media:$javafx_version:$platform"
     
     // TFE, 20191209: our own helper library
-    implementation 'tf.JavaHelper:JavaHelper:1.16'
+    implementation 'tf.JavaHelper:JavaHelper:1.17'
 
     implementation 'commons-cli:commons-cli:1.9.0'
     implementation 'commons-io:commons-io:2.19.0'
