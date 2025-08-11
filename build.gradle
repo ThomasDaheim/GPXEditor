@@ -12,7 +12,6 @@ buildscript {
         // https://github.com/ben-manes/gradle-versions-plugin
         // task: dependencyUpdates
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.52.0'
-        classpath 'org.openjfx:javafx-plugin:0.1.0'
     }
 }
 
