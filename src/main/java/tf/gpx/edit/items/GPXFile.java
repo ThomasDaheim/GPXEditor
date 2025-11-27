@@ -100,8 +100,11 @@ public class GPXFile extends GPXMeasurable {
         
         myGPX = FileParser.getInstance().loadFromFile(gpxFile);
 
+        // TFE, 20251127: special case of a totaly empty gpx file: we should store the basic xml structure
+        boolean emptyGPX = true;
         if (myGPX.getMetadata() != null) {
             myGPXMetadata.add(new GPXMetadata(this, myGPX.getMetadata()));
+            emptyGPX = false;
         }
 
         // TFE, 20180203: gpx without tracks is valid!
@@ -111,21 +114,24 @@ public class GPXFile extends GPXMeasurable {
                 myGPXTracks.add(new GPXTrack(this, track));
             }
             assert (myGPXTracks.size() == myGPX.getTracks().size());
+            emptyGPX = emptyGPX && myGPX.getTracks().isEmpty();
         }
         // TFE, 20180214: gpx can have routes and waypoints too
-        if (myGPX.getRoutes()!= null) {
+        if (myGPX.getRoutes() != null) {
             myGPXRoutes = GPXListHelper.initForCapacity(myGPXRoutes, myGPX.getRoutes());
             for (Route route : myGPX.getRoutes()) {
                 myGPXRoutes.add(new GPXRoute(this, route));
             }
             assert (myGPXRoutes.size() == myGPX.getRoutes().size());
+            emptyGPX = emptyGPX && myGPX.getRoutes().isEmpty();
         }
-        if (myGPX.getWaypoints()!= null) {
+        if (myGPX.getWaypoints() != null) {
             myGPXWaypoints = GPXListHelper.initForCapacity(myGPXWaypoints, myGPX.getWaypoints());
             for (Waypoint waypoint : myGPX.getWaypoints()) {
                 myGPXWaypoints.add(new GPXWaypoint(this, waypoint, myGPXWaypoints.size()+1));
             }
             assert (myGPXWaypoints.size() == myGPX.getWaypoints().size());
+            emptyGPX = emptyGPX && myGPX.getWaypoints().isEmpty();
         }
 
         // TF, 20170606: add gpx track acording to number in case its set
@@ -135,6 +141,9 @@ public class GPXFile extends GPXMeasurable {
         if (!myGPXRoutes.isEmpty()) {
             Collections.sort(myGPXRoutes, myGPXRoutes.get(0).getComparator());
         }
+        
+        // TFE, 20251127: check also, if we don't have any previous headers to determine completely empty gpx
+        emptyGPX = emptyGPX && (myGPX.getXmlns() == null || myGPX.getXmlns().isEmpty());
 
         // TFE, 20180201: update header data & meta data
         setHeader();
@@ -146,6 +155,10 @@ public class GPXFile extends GPXMeasurable {
         if (!GPXFileHelper.FileType.GPX.equals(GPXFileHelper.FileType.fromFileName(myGPXFileName))) {
             // we have done an import
             myGPXFileName = myGPXFileName.replace(GPXFileHelper.FileType.fromFileName(myGPXFileName).getExtension(), GPXFileHelper.FileType.GPX.getExtension());
+            setHasUnsavedChanges();
+        }
+        
+        if (emptyGPX) {
             setHasUnsavedChanges();
         }
     }
