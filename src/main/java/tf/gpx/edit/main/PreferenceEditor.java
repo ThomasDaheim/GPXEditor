@@ -555,8 +555,8 @@ public class PreferenceEditor extends AbstractStage {
         // matching api key
         rowNum++;
         addPrefInput(
-                "MapBox Matching API key:", matchingApiKeyText, 
-                "API key for Mapbox matching service", 
+                "MapBox API key:", matchingApiKeyText, 
+                "API key for Mapbox services", 
                 0, rowNum, 3, 1);
 
         rowNum++;
