@@ -167,7 +167,7 @@ public class Panorama {
                 // the point where looking at
                 final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
                 final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(target);
-                target.setElevation(elevationService.getElevationForCoordinate(target).getRight());
+                target.setElevation(elevation.getRight());
                 
                 if (noElevationData && elevation.getLeft()) {
                     noElevationData = false;
