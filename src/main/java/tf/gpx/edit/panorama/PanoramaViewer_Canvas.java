@@ -414,24 +414,55 @@ public class PanoramaViewer_Canvas {
         final Map<Double, Double> visibleMap = new TreeMap<>();
         for(int i = dataSetList.size() - 1; i >= 0; i--) {
             final List<XYChartItem> dataSet = dataSetList.get(i);
-            
+
+            XYChartItem lastData = null;
+            boolean lastVisible  = false;
             final Set<XYChartItem> invisibleData = new HashSet<>();
             for (XYChartItem data : dataSet) {
-                if (!visibleMap.containsKey(data.getX()) || data.getY() > visibleMap.get(data.getX())) {
+                boolean visible = !visibleMap.containsKey(data.getX()) || data.getY() > visibleMap.get(data.getX());
+                if (visible) {
                     // new highest elevation for this azimuth
                     visibleMap.put(data.getX(), data.getY());
+
+                    // TFE, 20251126: remove invisible points from chart
+                    // BUT BEWARE
+                    // you should leave the first / last invisible point since otherwise the lines get messed up
+                    if (!lastVisible && lastData != null) {
+                        invisibleData.remove(lastData);
+                    }
                 } else {
-//                    // point not visible!
-////                    System.out.println("Datapoint not visible: " + data);
-                    invisibleData.add(data);
+                    // point not visible!
+//                    System.out.println("Datapoint not visible: " + data);
+
+                    // TFE, 20251126: remove invisible points from chart
+                    // BUT BEWARE
+                    // you should leave the first / last invisible point since otherwise the lines get messed up
+                    if (!lastVisible) {
+                        invisibleData.add(data);
+                    }
+                    
                     // TFE, 20220904: remove tooltip since not visible - saves time & resources
                     data.setTooltipText("");
                 }
+                
+                lastData = data;
+                lastVisible = visible;
             }
             
-            if (dataSet.size() == invisibleData.size()) {
+//            System.out.println("Data size: " + dataSet.size() + ", invisible data size: " + invisibleData.size());
+            
+            if (invisibleData.size() == dataSet.size()) {
                 // we don't need the whole set...
                 invisibleSeries.add(dataSetList.get(i));
+            } else {
+                // TFE, 20251126
+                // we use SMOOTH_AREA - that means that we can only move points when they are at least 3 steps away from an "edge"
+                // otherwise the smoothing algo will run wild an produce artifacts
+                // currently, not worth the effort
+//                for (XYChartItem data : invisibleData) {
+//                    data.setY(panorama.getMinElevationAngle().getElevation());
+//                }
+//                dataSetList.get(i).removeAll(invisibleData);
             }
         }
         dataSetList.removeAll(invisibleSeries);
@@ -469,6 +500,7 @@ public class PanoramaViewer_Canvas {
             final XYSeries series = XYSeriesBuilder.create()
                     .items(dataSet)
                     .chartType(ChartType.SMOOTH_AREA)
+//                    .chartType(ChartType.SMOOTH_LINE)
                     .symbolsVisible(true)
                     .symbolSize(4)
                     .symbolStroke(Color.valueOf("696969"))
