@@ -187,7 +187,7 @@ public class MapLayer {
     }
     
     private String randomKey() {
-        return RandomStringUtils.random(10, true, true);
+        return RandomStringUtils.secure().next(10, true, true);
     }
 
     protected String toPreferenceString() {
