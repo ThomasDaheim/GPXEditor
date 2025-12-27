@@ -11,12 +11,12 @@ buildscript {
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
         // https://github.com/ben-manes/gradle-versions-plugin
         // task: dependencyUpdates
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.52.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.53.0'
     }
 }
 
 plugins {
-    id 'org.beryx.runtime' version '1.13.1'
+    id 'org.beryx.runtime' version '2.0.1'
 }
 
 // Use a plugin (https://github.com/crotwell/gradle-macappbundle) to create a Mac OS X .app and .dmg
@@ -105,16 +105,16 @@ dependencies {
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.17'
 
-    implementation 'commons-cli:commons-cli:1.9.0'
-    implementation 'commons-io:commons-io:2.19.0'
-    implementation 'org.apache.commons:commons-lang3:3.17.0'
+    implementation 'commons-cli:commons-cli:1.11.0'
+    implementation 'commons-io:commons-io:2.21.0'
+    implementation 'org.apache.commons:commons-lang3:3.20.0'
     implementation 'org.apache.commons:commons-collections4:4.5.0'
-    implementation 'org.apache.commons:commons-text:1.13.1'
+    implementation 'org.apache.commons:commons-text:1.15.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
-    implementation 'org.apache.commons:commons-csv:1.14.0'
-    implementation 'org.apache.commons:commons-compress:1.27.1'
+    implementation 'org.apache.commons:commons-csv:1.14.1'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
-    implementation 'org.controlsfx:controlsfx:11.2.2'
+    implementation 'org.controlsfx:controlsfx:11.2.3'
     
     implementation 'de.jensd:fontawesomefx:8.9'
     // TFE, 20210310: not working since GlyphsDude not found
@@ -129,10 +129,10 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.19.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.19.0'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.19.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.20.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1'
 
     implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'
@@ -154,16 +154,16 @@ dependencies {
     
     // sun data
     // TODO: upgrade to 0.1.7 and fix breaking changes
-    implementation 'net.e175.klaus:solarpositioning:2.0.5'
+    implementation 'net.e175.klaus:solarpositioning:2.0.12'
     
     // timezone provider
-    implementation 'com.github.luben:zstd-jni:1.5.7-3'
+    implementation 'com.github.luben:zstd-jni:1.5.7-6'
     implementation 'us.dustinj.timezonemap:timezonemap:4.5'
     
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
-    // 21.0.25 gives Illegal character in path at index 128
-    implementation 'eu.hansolo.fx:charts:21.0.7'
+    // 21.0.23ff gives Illegal character in path at index 128
+    implementation 'eu.hansolo.fx:charts:21.0.21'
     
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
