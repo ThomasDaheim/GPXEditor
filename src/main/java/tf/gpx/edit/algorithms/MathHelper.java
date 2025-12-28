@@ -28,6 +28,7 @@ package tf.gpx.edit.algorithms;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * Calculates 
@@ -108,6 +109,6 @@ public class MathHelper {
             result += (array1[i] - array2[i])*(array1[i] - array2[i]);
         }
         
-        return Math.sqrt(result) / array1.length;
+        return FastMath.sqrt(result) / array1.length;
     }
 }
