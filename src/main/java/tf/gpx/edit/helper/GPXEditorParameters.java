@@ -48,7 +48,7 @@ public class GPXEditorParameters {
     private int deleteCount = Integer.MIN_VALUE;
     private List<String> gpxFiles = new ArrayList<>();
     private boolean ignoreParams = false;
-    private IGeoCoordinate mapCenter = new LatLonElev(48.137154, 11.576124);
+    private IGeoCoordinate mapCenter = null;
     
     private List<String> argsList;
     private List<String> optsList;
@@ -258,8 +258,7 @@ public class GPXEditorParameters {
                 value = command.getOptionValue(GPXEditorParameters.CmdOps.mapCenter.toString());
                 String[] latlon = value.split(" ");
                 
-                mapCenter.setLatitude(Double.parseDouble(latlon[0]));
-                mapCenter.setLongitude(Double.parseDouble(latlon[1]));
+                mapCenter = new LatLonElev(Double.valueOf(latlon[0]), Double.valueOf(latlon[1]));
             }
         } catch (ParseException|NumberFormatException|NullPointerException ex) {
             Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
@@ -321,6 +320,11 @@ public class GPXEditorParameters {
     
     public IGeoCoordinate getMapCenter() {
         return mapCenter;
+    }
+
+    // TFE, 20251228: option to use e.g. ip location in case no parameter has been given
+    public void setMapCenter(final IGeoCoordinate center) {
+        mapCenter = center;
     }
 
     private void help(final Options options) {

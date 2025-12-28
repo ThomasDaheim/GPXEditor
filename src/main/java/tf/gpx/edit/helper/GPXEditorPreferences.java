@@ -136,7 +136,10 @@ public enum GPXEditorPreferences implements IPreferencesStore {
     HAMPEL_THRESHOLD("hampelThreshold", Double.toString(3), Double.class),
     DO_SMOOTHING_FOR_ELEVATION("smoothingElevation", Boolean.toString(false), Boolean.class),
     
-    VALIDATE_XML_FORMAT("validateGPXFormat", Boolean.toString(true), Boolean.class);
+    VALIDATE_XML_FORMAT("validateGPXFormat", Boolean.toString(true), Boolean.class),
+    
+    // TFE, 20252812: option to pan to current location @ programm start if no gpx-files as parameters
+    PAN_TO_CURRENTLOCATION_ON_START("panToCurrentLocationOnStart", Boolean.toString(true), Boolean.class);
     
     // additional preferences not handled here as enums
     // tableview settings: ColumnOrder, ColumnWidth, ColumnVisibility, SortOrder - see tf.helper.javafx.TableViewPreferences

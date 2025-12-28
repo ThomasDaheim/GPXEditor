@@ -136,6 +136,7 @@ import tf.gpx.edit.helper.GPXMeasurableView;
 import tf.gpx.edit.helper.GPXStructureHelper;
 import tf.gpx.edit.helper.GPXWaypointNeighbours;
 import tf.gpx.edit.helper.GPXWaypointView;
+import tf.gpx.edit.helper.LocationHelper;
 import tf.gpx.edit.helper.TaskExecutor;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
@@ -181,8 +182,6 @@ public class GPXEditor implements Initializable {
     public final static double SMALL_WIDTH = 50.0;
     public final static double NORMAL_WIDTH = 70.0;
     public final static double LARGE_WIDTH = 185.0;
-    @FXML
-    private TableColumn<?, ?> distTrackCol;
 
     public static enum MergeDeleteItems {
         MERGE,
@@ -306,6 +305,8 @@ public class GPXEditor implements Initializable {
     @FXML
     private MenuItem clearFileMenu;
     @FXML
+    private MenuItem gotoCoordinate;
+    @FXML
     private MenuItem saveMapMenu;
     @FXML
     private MenuItem switchMapMenu;
@@ -362,6 +363,8 @@ public class GPXEditor implements Initializable {
     @FXML
     private TableColumn<GPXWaypoint, String> slopeTrackCol;
     @FXML
+    private TableColumn<?, ?> distTrackCol;
+    @FXML
     private MenuItem preferencesMenu;
     @FXML
     private MenuItem saveAllFilesMenu;
@@ -406,6 +409,16 @@ public class GPXEditor implements Initializable {
     
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+            // if we don't have a center, use the one from IP location
+        if (GPXEditorParameters.getInstance().getMapCenter() == null) {
+            if (GPXEditorPreferences.PAN_TO_CURRENTLOCATION_ON_START.getAsType()) {
+                // TFE, 20251228: added option to use current location as staring point for the map - needs to be setup before the TrackMap is used initially
+                GPXEditorParameters.getInstance().setMapCenter(LocationHelper.getInstance().getLocationFromPublicIP());
+            } else {
+                GPXEditorParameters.getInstance().setMapCenter(LocationHelper.getInstance().getDefaultLocation());
+            }
+        }
+        
         // TFE, 20200713: needs to happen before map gets loaded
         // TFE, 20220402: do as first thing since leaflet rendering takes some time and every millisecond helps
         MapLayerUsage.getInstance().loadPreferences(GPXEditorPreferences.INSTANCE);
@@ -728,6 +741,11 @@ public class GPXEditor implements Initializable {
             }
         });
         saveMapMenu.disableProperty().bind(Bindings.not(TrackMap.getInstance().visibleProperty()));
+        
+        // TFE, 20251228: also have a menu item for this - not only the context menu on the map
+        gotoCoordinate.setOnAction((ActionEvent event) -> {
+            TrackMap.getInstance().gotoCoordinate(true);
+        });
         
         // TFE, 20190828: is that really need after various performance improvements?
         switchMapMenu.setUserData("TRUE");

@@ -13,7 +13,8 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Notes
 
-* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 23.
+* Note on JavaFX25: Performance improvements have been added. Slope Chart now doesn't slow down the loading of gpx too much.
+* Note on JavaFX20+: I have made GPXEditor run successfully with all Java/JavaFX Version up to 25.
 * Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
 * Note on JavaFX17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 * Note on JavaFX14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
@@ -27,6 +28,11 @@ So it was time to start a new self-learning project. And here you see the result
 * Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
+
+### Update v5.10
+
+* Added option on "Goto coordinate" to use current location based on public IP.
+* Via preference you can now pan to current location on startup. Sequence of coordinate usage: 1) if given, -mapCenter param is used, 2) if preference set, current location is used 3) hard-coded default location is used
 
 ### Update v5.9
 

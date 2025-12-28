@@ -166,6 +166,7 @@ public class PreferenceEditor extends AbstractStage {
     private final TextField defaultImagePathText = initWideTextField(new TextField(), 400);
     private final TextField imageSizeText = initNumberField(new TextField(), false);
 
+    private final CheckBox panToCurrentLocationBox = new CheckBox();
     private final CheckBox validateXMLChkBox = new CheckBox();
 
     private GPXEditor myGPXEditor;
@@ -676,8 +677,14 @@ public class PreferenceEditor extends AbstractStage {
         
         rowNum++;
         // separator
-        addSectionHeader(new Label("Files"), rowNum);
+        addSectionHeader(new Label("Misc"), rowNum);
         
+        rowNum++;
+        // pan to current location?
+        addPrefInput("Pan to current location on startup:", panToCurrentLocationBox, 
+                "Should the map pan to the current location on startup", 
+                0, rowNum);
+
         rowNum++;
         // check XML files
         addPrefInput("Validate XML:", validateXMLChkBox, 
@@ -918,6 +925,7 @@ public class PreferenceEditor extends AbstractStage {
         initSmoothingParms(GPXEditorPreferences.SMOOTHING_ALGORITHM.getAsType());
         elevationChkBox.setSelected(GPXEditorPreferences.DO_SMOOTHING_FOR_ELEVATION.getAsType());
         
+        panToCurrentLocationBox.setSelected(GPXEditorPreferences.PAN_TO_CURRENTLOCATION_ON_START.getAsType());
         validateXMLChkBox.setSelected(GPXEditorPreferences.VALIDATE_XML_FORMAT.getAsType());
     }
     
@@ -1000,6 +1008,7 @@ public class PreferenceEditor extends AbstractStage {
         GPXEditorPreferences.HEATMAP_OPACITYDISTRIBUTION.put(EnumHelper.getInstance().selectedEnumChoiceBox(OpacityDistribution.class, opacDistChoiceBox));
         GPXEditorPreferences.HEATMAP_EVENTRADIUS.put(Math.max(Double.valueOf("0"+eventText.getText().trim()), 0));
 
+        GPXEditorPreferences.PAN_TO_CURRENTLOCATION_ON_START.put(panToCurrentLocationBox.isSelected());
         GPXEditorPreferences.VALIDATE_XML_FORMAT.put(validateXMLChkBox.isSelected());
         
         HeatMapPane.getInstance().updateSettings();

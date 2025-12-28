@@ -28,6 +28,7 @@ package tf.gpx.edit.viewer;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
@@ -36,13 +37,16 @@ import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.helper.LocationHelper;
 import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.RestrictiveTextField;
 import tf.helper.javafx.TooltipHelper;
 
 /**
- *
+ * Small dialog to enter lat / lon coordinates
+ * OR choose to use coordinates based on ip address
+ * 
  * @author thomas
  */
 public class EnterLatLon extends AbstractStage {
@@ -52,6 +56,8 @@ public class EnterLatLon extends AbstractStage {
     
     private final RestrictiveTextField waypointLatitudeTxt = new RestrictiveTextField();
     private final RestrictiveTextField waypointLongitudeTxt = new RestrictiveTextField();
+
+    private final CheckBox useIPLocation = new CheckBox();
     
     private LatLonElev latLon = null;
     
@@ -111,7 +117,36 @@ public class EnterLatLon extends AbstractStage {
         GridPane.setMargin(waypointLongitudeTxt, INSET_TOP);
 
         rowNum++;
-        // 7th row: store elevation
+        // use ip location?
+        final Label ipLbl = new Label("Use IP Location:");
+        getGridPane().add(ipLbl, 0, rowNum);
+        GridPane.setMargin(ipLbl, INSET_TOP);
+        
+        final Tooltip ipTooltip = new Tooltip("Estimate current lat/lon based on the public IP address");
+        TooltipHelper.updateTooltipBehavior(ipTooltip, 0, 10000, 0, true);
+        useIPLocation.setTooltip(ipTooltip);
+
+        getGridPane().add(useIPLocation, 1, rowNum);
+        GridPane.setMargin(useIPLocation, INSET_TOP);
+        useIPLocation.selectedProperty().addListener((ov, t, t1) -> {
+            if (t1 != null && t1) {
+                // lets use the ip location
+                final LatLonElev ipLocation = LocationHelper.getInstance().getLocationFromPublicIP();
+                if (ipLocation != null) {
+                    waypointLatitudeTxt.setText(ipLocation.getLatitude().toString());
+                    waypointLongitudeTxt.setText(ipLocation.getLongitude().toString());
+                }
+
+                waypointLatitudeTxt.setDisable(true);
+                waypointLongitudeTxt.setDisable(true);
+            } else {
+                waypointLatitudeTxt.setDisable(false);
+                waypointLongitudeTxt.setDisable(false);
+            }
+        });
+
+        rowNum++;
+        // goto elevation
         final Button findButton = new Button("Done");
         findButton.setOnAction((ActionEvent event) -> {
             if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 

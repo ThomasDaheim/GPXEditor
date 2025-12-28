@@ -1030,22 +1030,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // TFE, 20220814: add goto menu item
         final MenuItem gotoCoordinate = new MenuItem("Goto Coordinate");
         gotoCoordinate.setOnAction((event) -> {
-            EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
-            if (EnterLatLon.getInstance().wasActionButtonPressed()) {
-                final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
-                if (latLon != null) {
-                    // mark this on the map
-                    // show as search result with same icon
-                    execScript("clearSearchResults();");
-                    final String result = 
-                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
-                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
-                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
-
-                    // pan to it
-                    panTo(latLon.getLatitude(), latLon.getLongitude());
-                }
-            }
+            gotoCoordinate(true);
         });
         
         contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, showHorizon, showSunriseSunset);
@@ -2123,6 +2108,27 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             
 //            System.out.println("setOverlaysForBaselayer " + base.getName() + " to " + transformToJavascriptArray(preferenceValues, false));
             execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
+        }
+    }
+    
+    public void gotoCoordinate(final boolean asSearchResult) {
+        EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
+        if (EnterLatLon.getInstance().wasActionButtonPressed()) {
+            final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
+            if (latLon != null) {
+                if (asSearchResult) {
+                    // mark this on the map
+                    // show as search result with same icon
+                    execScript("clearSearchResults();");
+                    final String result = 
+                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
+                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
+                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
+                }
+
+                // pan to it
+                panTo(latLon.getLatitude(), latLon.getLongitude());
+            }
         }
     }
 
