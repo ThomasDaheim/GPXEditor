@@ -259,6 +259,11 @@ public class StatisticsViewer extends AbstractStage {
         getIcons().add(new Image(GPXEditorManager.class.getResourceAsStream("/GPXEditorManager.png")));
         getScene().getStylesheets().add(StatisticsViewer.class.getResource("/GPXEditor_StatisticsViewer.min.css").toExternalForm());
 
+        // TFE, 20260106: doesn't fit the width of the table anymore...
+        setResizable(true);
+        setWidth(1000.0);
+        getGridPane().setPrefWidth(1000);
+
         // add one item to list for each enum value
         for (StatisticData data : StatisticData.values()) {
             statisticsList.add(new StatisticValue(data));
