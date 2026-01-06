@@ -1950,6 +1950,14 @@ public class GPXEditor implements Initializable {
         addGPXWaypointListListener();
     }
     
+    public void centerMapOnWaypoints() {
+        final List<GPXWaypoint> waypoints = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedItems());
+        final GPXWaypoint centerPoint = WaypointClustering.closestToCenter(waypoints);
+        
+        // and now pan to this waypoint
+        TrackMap.getInstance().panTo(centerPoint.getLatitude(), centerPoint.getLongitude());
+    }
+    
     public void replaceByCenter() {
         // get seleced waypoint indices
         final List<Integer> selectedIndices = new ArrayList<>(gpxWaypoints.getSelectionModel().getSelectedIndices());
