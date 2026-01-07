@@ -44,7 +44,7 @@ import tf.gpx.edit.main.GPXEditor;
  */
 public class GPXEmptyWorker implements IGPXLineItemVisitor {
     protected double myParameter = Double.MIN_VALUE;
-    protected boolean deepthFirst = true;
+    protected boolean depthFirst = true;
     
     protected GPXEditor myEditor;
 
@@ -52,10 +52,10 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
         super ();
     }
 
-    protected GPXEmptyWorker(final boolean deepth) {
+    protected GPXEmptyWorker(final boolean depth) {
         super ();
         
-        deepthFirst = deepth;
+        depthFirst = depth;
     }
 
     protected GPXEmptyWorker(final double parameter) {
@@ -95,8 +95,8 @@ public class GPXEmptyWorker implements IGPXLineItemVisitor {
     }
 
     @Override
-    public boolean deepthFirst() {
-        return deepthFirst;
+    public boolean depthFirst() {
+        return depthFirst;
     }
     
     protected void removeGPXWaypoints(final List<GPXWaypoint> gpxWayPoints, final Boolean keep[]) {

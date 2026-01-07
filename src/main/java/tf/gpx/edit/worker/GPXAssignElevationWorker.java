@@ -27,6 +27,7 @@ package tf.gpx.edit.worker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,8 +40,6 @@ import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.elevation.SRTMDataHelper;
 import tf.gpx.edit.elevation.SRTMDataOptions;
 import tf.gpx.edit.items.GPXFile;
-import tf.gpx.edit.items.GPXLineItem;
-import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
@@ -60,20 +59,36 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
     private final boolean myDoUndo;
     private Set<String> requiredDataFiles = new LinkedHashSet<>();
     
+    private Set<GPXWaypoint> gpxWayPoints = null;
+    
     private int assignedHeightCount = 0;
     private int noHeightCount = 0;
     private int alreadyHeightCount = 0;
     
-    private GPXLineItem workingRoot = null;
-
     private final IElevationProvider elevationProvider;
 
+    // TFE, 20260107: Performance!
+    // In the previous implementation all visitXYZ Methods called 
+    // assignElevation() with the list of Waypoints from getCombinedGPXWaypoints()
+    // Effectively setting the elevation for all waypoints at itself and all child lineitems.
+    // To avoid duplicate calls for waypoints isChildOf() was used to check
+    // whether an item was already handled. For large gpx-Files this is a performance bottleneck
+    // E.g. 1/3 of call time to show a large file with the SRTM data was spent in isChildOf()
+    // BUT if we do each waypoint individually, we don't have a single transaction on which we can make a sinle undo...
+    // So lets try differently...
+    // - Store "root" set of waypoints from lineitem for which this visitor is called
+    // - assignElevation() for the "root" set
+    // - for GPXWaypoint check, if already in the "root" set; if yes, do nothing
+    
     public GPXAssignElevationWorker(final WorkMode workMode) {
         this(new ElevationProviderOptions(), new SRTMDataOptions(), false, workMode);
     }
 
     public GPXAssignElevationWorker(final ElevationProviderOptions elevOptions, final SRTMDataOptions srtmOptions, final boolean doUndo, final WorkMode workMode) {
-        super (false);
+        super(false);
+        
+        // TFE, 20260701: this shoudl speed up things...
+        depthFirst = false;
         
         elevationProvider = new ElevationProviderBuilder(elevOptions, srtmOptions).build();
         myDoUndo = doUndo;
@@ -110,52 +125,44 @@ public class GPXAssignElevationWorker extends GPXEmptyWorker {
 
     @Override
     public void visitGPXFile(final GPXFile gpxFile) {
-        workingRoot = gpxFile;
-        assignElevation(gpxFile.getCombinedGPXWaypoints(null));
+        if (gpxWayPoints == null) {
+            gpxWayPoints = new HashSet<>(gpxFile.getCombinedGPXWaypoints(null));
+            assignElevation(gpxWayPoints);
+        }
     }
 
     @Override
     public void visitGPXTrack(final GPXTrack gpxTrack) {
-        if (workingRoot == null) {
-            workingRoot = gpxTrack;
-        }
-        // TFE, 20210207: have we already visited the gpxfile?
-        if (!GPXLineItemHelper.isChildOf(gpxTrack, workingRoot)) {
-            assignElevation(gpxTrack.getCombinedGPXWaypoints(null));
+        if (gpxWayPoints == null) {
+            gpxWayPoints = new HashSet<>(gpxTrack.getCombinedGPXWaypoints(null));
+            assignElevation(gpxWayPoints);
         }
     }
 
     @Override
     public void visitGPXTrackSegment(final GPXTrackSegment gpxTrackSegment) {
-        if (workingRoot == null) {
-            workingRoot = gpxTrackSegment;
-        }
-        // TFE, 20210207: have we already visited the gpxfile OR the gpxTrack?
-        if (!GPXLineItemHelper.isChildOf(gpxTrackSegment, workingRoot)) {
-            assignElevation(gpxTrackSegment.getCombinedGPXWaypoints(null));
+        if (gpxWayPoints == null) {
+            gpxWayPoints = new HashSet<>(gpxTrackSegment.getCombinedGPXWaypoints(null));
+            assignElevation(gpxWayPoints);
         }
     }
 
     @Override
     public void visitGPXRoute(final GPXRoute gpxRoute) {
-        if (workingRoot == null) {
-            workingRoot = gpxRoute;
-        }
-        // TFE, 20210207: have we already visited the gpxfile?
-        if (!GPXLineItemHelper.isChildOf(gpxRoute, workingRoot)) {
-            assignElevation(gpxRoute.getCombinedGPXWaypoints(null));
+        if (gpxWayPoints == null) {
+            gpxWayPoints = new HashSet<>(gpxRoute.getCombinedGPXWaypoints(null));
+            assignElevation(gpxWayPoints);
         }
     }
 
     @Override
     public void visitGPXWaypoint(GPXWaypoint gpxWayPoint) {
-        // TFE, 20210207: have we already visited the parent? or the parents parent or the parents parents parent...
-        if (!GPXLineItemHelper.isChildOf(gpxWayPoint, workingRoot)) {
-            assignElevation(Arrays.asList(gpxWayPoint));
+        if (gpxWayPoints == null || !gpxWayPoints.contains(gpxWayPoint)) {
+            assignElevation(new HashSet<>(Arrays.asList(gpxWayPoint)));
         }
     }
     
-    private void assignElevation(final List<GPXWaypoint> gpxWayPoints) {
+    private void assignElevation(final Set<GPXWaypoint> gpxWayPoints) {
         // TFE, 20210207: wherever possible do complete list of waypoints!
         if (WorkMode.CHECK_DATA_FILES.equals(myWorkMode)) {
             // file a set with the required data field names

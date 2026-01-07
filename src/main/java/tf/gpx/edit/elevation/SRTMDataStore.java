@@ -97,16 +97,20 @@ class SRTMDataStore {
         SRTMDataKey result = null;
         
         // TODO: speed this up! called umpteen times for data viewer...
-        final List<SRTMDataKey> dataEntries = srtmStore.keySet().stream().
+        // TFE, 20260107: not so easy!
+        // - findFirst() instead of collect() is SLOWER
+        // - using a TreeMap with a comparator() for SRTMDataKey is even slower
+        // - avoiding collect(Collectors.toList()) helps a bit
+        final SRTMDataKey[] dataEntries = srtmStore.keySet().stream().
                 filter((SRTMDataKey key) -> {
                     return key.getKey().equals(dataName);
                 }).
                 sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
-                collect(Collectors.toList());
+                toArray(SRTMDataKey[]::new);
         
-        if (!dataEntries.isEmpty()) {
+        if (dataEntries.length != 0) {
             // sorted by type and therefore sorted by accuracy :-)
-            result = dataEntries.get(0);
+            result = dataEntries[0];
         }
         
         return result;

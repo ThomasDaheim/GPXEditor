@@ -36,7 +36,6 @@ class SRTMData {
     private final static double EPSILON = 0.1d;
     private final static short NO_DATA = Short.MIN_VALUE;
 
-    private final String myDataFile;
     private final SRTMDataKey myDataKey;
     private final short[][] myDataValues; 
     private final int numberRows;
@@ -46,7 +45,6 @@ class SRTMData {
     private final short[] myInitValues; 
 
     public SRTMData(final String dataFile, final String name, final SRTMDataHelper.SRTMDataType type) {
-        myDataFile = dataFile;
         myDataKey = new SRTMDataKey(name, type);
         myDataValues = new short[type.getDataCount()][];
         numberRows = type.getDataCount();
