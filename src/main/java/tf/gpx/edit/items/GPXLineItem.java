@@ -342,7 +342,7 @@ public abstract class GPXLineItem implements IStylableItem {
 
     // visitor support
     public void acceptVisitor(final IGPXLineItemVisitor visitor) {
-        if (visitor.deepthFirst()) {
+        if (visitor.depthFirst()) {
             visitChildren(visitor);
             visitMe(visitor);
         } else {
