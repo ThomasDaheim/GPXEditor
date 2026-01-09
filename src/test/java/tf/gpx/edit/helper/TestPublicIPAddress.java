@@ -29,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,10 +41,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import org.junit.jupiter.api.Test;
-import tf.gpx.edit.algorithms.MapboxMatchingService;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *
@@ -88,7 +84,7 @@ public class TestPublicIPAddress {
                         "TestPublicIPAddress returned: {0}, {1}", new Object[]{response.statusCode(), response.body()});
             }
         } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(MapboxMatchingService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TestPublicIPAddress.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         try {
@@ -99,7 +95,7 @@ public class TestPublicIPAddress {
             
             System.out.println("latitude: " + lat.asText() + "; longitude: " + lon.asText());
         } catch (JsonProcessingException ex) {
-            Logger.getLogger(MapboxMatchingService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TestPublicIPAddress.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

@@ -133,6 +133,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.1'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1'
+    
+    // TFE, 20260109: this can work with a path that contains arrays...
+    implementation 'com.jayway.jsonpath:json-path:2.10.0';
 
     implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'

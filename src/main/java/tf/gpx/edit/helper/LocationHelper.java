@@ -36,7 +36,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tf.gpx.edit.algorithms.MapboxMatchingService;
 import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
@@ -104,7 +103,7 @@ public class LocationHelper {
 
                 latLonFromPublicIP = new LatLonElev(LatLonHelper.latFromString(lat.asText()), LatLonHelper.lonFromString(lon.asText()));
             } catch (JsonProcessingException ex) {
-                Logger.getLogger(MapboxMatchingService.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(LocationHelper.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             // the fallback of all fallbacks

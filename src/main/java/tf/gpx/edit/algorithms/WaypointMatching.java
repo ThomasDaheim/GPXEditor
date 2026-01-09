@@ -30,6 +30,7 @@ import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.mapbox.MapboxMatchingService;
 
 /**
  * Wrapper for different matching algorithms.

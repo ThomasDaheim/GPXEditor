@@ -23,7 +23,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.algorithms;
+package tf.gpx.edit.mapbox;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -66,7 +66,6 @@ public class MapboxMatchingService {
     private final static String OK_CODE = "\"Ok\"";
     private final static String NODE_CODE = "code";
     private final static String NODE_TRACEPOINTS = "tracepoints";
-    private final static String NODE_WAYPOINT_INDEX = "waypoint_index";
     private final static String NODE_LOCATION = "location";
 
     private static final HttpClient client = HttpClient.newHttpClient();
