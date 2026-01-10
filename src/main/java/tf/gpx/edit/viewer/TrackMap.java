@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.viewer;
 
+import tf.gpx.edit.values.EnterLatLon;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
@@ -2112,7 +2113,7 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
     }
     
     public void gotoCoordinate(final boolean asSearchResult) {
-        EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
+        EnterLatLon.getInstance().show(myGPXEditor.getHostServices());
         if (EnterLatLon.getInstance().wasActionButtonPressed()) {
             final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
             if (latLon != null) {

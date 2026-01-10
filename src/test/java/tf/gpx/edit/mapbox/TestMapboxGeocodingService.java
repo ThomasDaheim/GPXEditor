@@ -25,14 +25,6 @@
  */
 package tf.gpx.edit.mapbox;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
@@ -50,20 +42,40 @@ public class TestMapboxGeocodingService {
     public void testMapboxGeocodingServiceForward() {
         Assertions.assertFalse(API_KEY.isEmpty());
         
-        final LatLonElev result = MapboxGeocodingService.getInstance().forwardGeocoding("Los Angeles");
+        final ForwardGeocodingResult result = MapboxGeocodingService.getInstance().forwardGeocoding("Los Angeles");
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(-118.254187, result.getLongitude());
-        Assertions.assertEquals(34.048051, result.getLatitude());
+        
+        Assertions.assertNotNull(result.getLatLonElev());
+        Assertions.assertEquals(-118.254187, result.getLatLonElev().getLongitude());
+        Assertions.assertEquals(34.048051, result.getLatLonElev().getLatitude());
+
+        Assertions.assertNotNull(result.getBoundingBox());
+        Assertions.assertNotNull(result.getBoundingBox().getSouthwest());
+        Assertions.assertEquals(-118.52144, result.getBoundingBox().getSouthwest().getLongitude());
+        Assertions.assertEquals(33.900939, result.getBoundingBox().getSouthwest().getLatitude());
+        Assertions.assertNotNull(result.getBoundingBox().getNortheast());
+        Assertions.assertEquals(-118.126839, result.getBoundingBox().getNortheast().getLongitude());
+        Assertions.assertEquals(34.161439, result.getBoundingBox().getNortheast().getLatitude());
     }
     
     @Test
     public void testMapboxGeocodingServiceReverse() {
         Assertions.assertFalse(API_KEY.isEmpty());
         
-        final String result = MapboxGeocodingService.getInstance().reverseGeocoding(new LatLonElev(34.048051, -118.254187));
+        final ReverseGeocodingResult result = MapboxGeocodingService.getInstance().reverseGeocoding(new LatLonElev(34.048051, -118.254187));
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals("Los Angeles, California 90013, United States", result);
+        Assertions.assertEquals(-118.25421, result.getLatLonElev().getLongitude());
+        Assertions.assertEquals(34.04826, result.getLatLonElev().getLatitude());
+        Assertions.assertEquals("555 South Olive Street, Los Angeles, California 90013, United States", result.getPlace());
+        Assertions.assertEquals("555 South Olive Street", result.getAddress());
+        Assertions.assertEquals("South Olive Street", result.getStreet());
+        Assertions.assertEquals("The Financial District", result.getNeighborhood());
+        Assertions.assertEquals("90013", result.getPostcode());
+        Assertions.assertEquals("", result.getLocality());
+        Assertions.assertEquals("Los Angeles County", result.getDistrict());
+        Assertions.assertEquals("California", result.getRegion());
+        Assertions.assertEquals("United States", result.getCountry());
     }
 }

@@ -23,7 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.viewer;
+package tf.gpx.edit.values;
 
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
@@ -147,7 +147,7 @@ public class EnterLatLon extends AbstractStage {
 
         rowNum++;
         // goto elevation
-        final Button findButton = new Button("Done");
+        final Button findButton = new Button("Goto");
         findButton.setOnAction((ActionEvent event) -> {
             if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 
                     Double.isNaN(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()))) {
@@ -161,16 +161,30 @@ public class EnterLatLon extends AbstractStage {
         getGridPane().add(findButton, 0, rowNum, 1, 1);
         GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
 
+        // what is there?
+        final Button infoBtn = new Button("Info");
+        infoBtn.setOnAction((ActionEvent arg0) -> {
+            if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 
+                    Double.isNaN(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()))) {
+            } else {
+                latLon = new LatLonElev(LatLonHelper.latFromString(waypointLatitudeTxt.getText()), LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
+                LatLonInfoViewer.getInstance().show(myHostServices, latLon);
+            }
+        });
+        getGridPane().add(infoBtn, 1, rowNum, 1, 1);
+        GridPane.setMargin(infoBtn, INSET_TOP_BOTTOM);
+
+        // goto cancel
         final Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
             close();
         });
-        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
+        getGridPane().add(cancelBtn, 2, rowNum, 1, 1);
         setCancelAccelerator(cancelBtn);
-        HBox.setMargin(cancelBtn, INSET_SMALL);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
    }
     
-    public void get(final HostServices hostServices) {
+    public void show(final HostServices hostServices) {
         myHostServices = hostServices;
         
         showAndWait();
