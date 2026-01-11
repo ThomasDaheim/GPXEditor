@@ -115,6 +115,7 @@ import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
+import tf.gpx.edit.values.LatLonInfoViewer;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.viewer.charts.ChartsPane;
 import tf.helper.general.IPreferencesHolder;
@@ -1034,7 +1035,13 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
             gotoCoordinate(true);
         });
         
-        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, showHorizon, showSunriseSunset);
+        // TFE, 20260111: add info on coordinate
+        final MenuItem infoForCoordinate = new MenuItem("What is here?");
+        infoForCoordinate.setOnAction((event) -> {
+            infoForCoordinate(ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON)));
+        });
+        
+        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, infoForCoordinate, showHorizon, showSunriseSunset);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -2131,6 +2138,10 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
                 panTo(latLon.getLatitude(), latLon.getLongitude());
             }
         }
+    }
+    
+    public void infoForCoordinate(final LatLonElev latlon) {
+        LatLonInfoViewer.getInstance().show(myGPXEditor.getHostServices(), latlon);
     }
 
     // TFE, 20190901: support to store & load overlay settings per baselayer

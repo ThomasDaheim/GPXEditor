@@ -29,6 +29,7 @@ import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
@@ -51,14 +52,20 @@ public class LatLonInfoViewer extends AbstractStage {
     
     private ReverseGeocodingResult info = null;
     
-    private Label latlon = new Label("");
-    private Label address = new Label("");
-    private Label neighborhood = new Label("");
-    private Label postcode = new Label("");
-    private Label locality = new Label("");
-    private Label district = new Label("");
-    private Label region = new Label("");
-    private Label country = new Label("");
+    private final Label adrLabel = new Label("Address:");
+    private final Label address = new Label("");
+    private final Label neiLbl = new Label("Neighborhood:");
+    private final Label neighborhood = new Label("");
+    private final Label pstLbl = new Label("Postcode:");
+    private final Label postcode = new Label("");
+    private final Label locLbl = new Label("Locality:");
+    private final Label locality = new Label("");
+    private final Label dstLbl = new Label("District:");
+    private final Label district = new Label("");
+    private final Label regLbl = new Label("Region:");
+    private final Label region = new Label("");
+    private final Label cntLbl = new Label("Country:");
+    private final Label country = new Label("");
     
     // host services from main application
     private HostServices myHostServices;
@@ -66,6 +73,13 @@ public class LatLonInfoViewer extends AbstractStage {
     private LatLonInfoViewer() {
         super();
         // Exists only to defeat instantiation.
+        
+        (new JMetro(Style.LIGHT)).setScene(getScene());
+        getScene().getStylesheets().add(LatLonInfoViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
+
+        // create new scene
+        setTitle("Info for coordinate");
+        initModality(Modality.WINDOW_MODAL);
         
         initViewer();
     }
@@ -75,78 +89,81 @@ public class LatLonInfoViewer extends AbstractStage {
     }
 
     private void initViewer() {
-        (new JMetro(Style.LIGHT)).setScene(getScene());
-        getScene().getStylesheets().add(LatLonInfoViewer.class.getResource("/GPXEditor.min.css").toExternalForm());
-
-        // create new scene
-        setTitle("Info for coordinate");
-        initModality(Modality.WINDOW_MODAL);
+        // remove anything from previous calls
+        getGridPane().getChildren().clear();
        
         int rowNum = 0;
-        final Label latlonLabel = new Label("Coordinates:");
-        getGridPane().add(latlonLabel, 0, rowNum);
-        GridPane.setMargin(latlonLabel, INSET_TOP);
 
-        getGridPane().add(latlon, 1, rowNum);
-        GridPane.setMargin(latlon, INSET_TOP);
+        if (!address.getText().isEmpty()) {
+            getGridPane().add(adrLabel, 0, rowNum);
+            GridPane.setMargin(adrLabel, INSET_TOP);
 
-        rowNum++;
-        final Label adrLabel = new Label("Address:");
-        getGridPane().add(adrLabel, 0, rowNum);
-        GridPane.setMargin(adrLabel, INSET_TOP);
+            getGridPane().add(address, 1, rowNum);
+            GridPane.setMargin(address, INSET_TOP);
+            
+            rowNum++;
+        }
 
-        getGridPane().add(address, 1, rowNum);
-        GridPane.setMargin(address, INSET_TOP);
+        if (!neighborhood.getText().isEmpty()) {
+            getGridPane().add(neiLbl, 0, rowNum);
+            GridPane.setMargin(neiLbl, INSET_TOP);
 
-        rowNum++;
-        final Label neiLbl = new Label("Neighborhood:");
-        getGridPane().add(neiLbl, 0, rowNum);
-        GridPane.setMargin(neiLbl, INSET_TOP);
+            getGridPane().add(neighborhood, 1, rowNum);
+            GridPane.setMargin(neighborhood, INSET_TOP);
 
-        getGridPane().add(neighborhood, 1, rowNum);
-        GridPane.setMargin(neighborhood, INSET_TOP);
-
-        rowNum++;
-        final Label pstLbl = new Label("Postcode:");
-        getGridPane().add(pstLbl, 0, rowNum);
-        GridPane.setMargin(pstLbl, INSET_TOP);
+            rowNum++;
+        }
         
-        getGridPane().add(postcode, 1, rowNum);
-        GridPane.setMargin(postcode, INSET_TOP);
+        if (!postcode.getText().isEmpty()) {
+            getGridPane().add(pstLbl, 0, rowNum);
+            GridPane.setMargin(pstLbl, INSET_TOP);
 
-        rowNum++;
-        final Label locLbl = new Label("Locality:");
-        getGridPane().add(locLbl, 0, rowNum);
-        GridPane.setMargin(locLbl, INSET_TOP);
+            getGridPane().add(postcode, 1, rowNum);
+            GridPane.setMargin(postcode, INSET_TOP);
+
+            rowNum++;
+        }
         
-        getGridPane().add(locality, 1, rowNum);
-        GridPane.setMargin(locality, INSET_TOP);
+        if (!locality.getText().isEmpty()) {
+            getGridPane().add(locLbl, 0, rowNum);
+            GridPane.setMargin(locLbl, INSET_TOP);
 
-        rowNum++;
-        final Label dstLbl = new Label("District:");
-        getGridPane().add(dstLbl, 0, rowNum);
-        GridPane.setMargin(dstLbl, INSET_TOP);
+            getGridPane().add(locality, 1, rowNum);
+            GridPane.setMargin(locality, INSET_TOP);
+
+            rowNum++;
+        }
         
-        getGridPane().add(district, 1, rowNum);
-        GridPane.setMargin(district, INSET_TOP);
+        if (!district.getText().isEmpty()) {
+            getGridPane().add(dstLbl, 0, rowNum);
+            GridPane.setMargin(dstLbl, INSET_TOP);
 
-        rowNum++;
-        final Label regLbl = new Label("Region:");
-        getGridPane().add(regLbl, 0, rowNum);
-        GridPane.setMargin(regLbl, INSET_TOP);
+            getGridPane().add(district, 1, rowNum);
+            GridPane.setMargin(district, INSET_TOP);
 
-        getGridPane().add(region, 1, rowNum);
-        GridPane.setMargin(region, INSET_TOP);
+            rowNum++;
+        }
+        
+        if (!region.getText().isEmpty()) {
+            getGridPane().add(regLbl, 0, rowNum);
+            GridPane.setMargin(regLbl, INSET_TOP);
 
-        rowNum++;
-        final Label cntLbl = new Label("Country:");
-        getGridPane().add(cntLbl, 0, rowNum);
-        GridPane.setMargin(cntLbl, INSET_TOP);
+            getGridPane().add(region, 1, rowNum);
+            GridPane.setMargin(region, INSET_TOP);
 
-        getGridPane().add(country, 1, rowNum);
-        GridPane.setMargin(country, INSET_TOP);
+            rowNum++;
+        }
 
-        rowNum++;
+        if (!country.getText().isEmpty()) {
+            getGridPane().add(cntLbl, 0, rowNum);
+            GridPane.setMargin(cntLbl, INSET_TOP);
+
+            getGridPane().add(country, 1, rowNum);
+            GridPane.setMargin(country, INSET_TOP);
+
+            rowNum++;
+        }
+        
         // done here
         final Button OKButton = new Button("OK");
         OKButton.setOnAction((ActionEvent event) -> {
@@ -161,17 +178,23 @@ public class LatLonInfoViewer extends AbstractStage {
         cancelBtn.setOnAction((ActionEvent arg0) -> {
             close();
         });
-        getGridPane().add(cancelBtn, 2, rowNum, 1, 1);
+        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
         setCancelAccelerator(cancelBtn);
         GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
    }
     
     public void show(final HostServices hostServices, final LatLonElev latlonelev) {
+        setLatLon(hostServices, latlonelev);
+        
+        showAndWait();
+    }
+    
+    public void setLatLon(final HostServices hostServices, final LatLonElev latlonelev) {
         myHostServices = hostServices;
         info = MapboxGeocodingService.getInstance().reverseGeocoding(latlonelev);
         
         if (info != null) {
-            latlon.setText(info.getLatLonElev().toString());
+            setTitle(info.getLatLonElev().toString());
             address.setText(info.getPlace());
             neighborhood.setText(info.getNeighborhood());
             postcode.setText(info.getPostcode());
@@ -180,7 +203,7 @@ public class LatLonInfoViewer extends AbstractStage {
             region.setText(info.getRegion());
             country.setText(info.getCountry());
         } else {
-            latlon.setText("");
+            setTitle("No waypoint given");
             address.setText("");
             neighborhood.setText("");
             postcode.setText("");
@@ -190,6 +213,18 @@ public class LatLonInfoViewer extends AbstractStage {
             country.setText("");
         }
         
-        showAndWait();
+        initViewer();
+    }
+    
+    public static boolean isCompleteCode(final KeyCode code) {
+        return isSaveCode(code) || isCancelCode(code);
+    }
+
+    public static boolean isSaveCode(final KeyCode code) {
+        return KeyCode.ACCEPT.equals(code);
+    }
+
+    public static boolean isCancelCode(final KeyCode code) {
+        return KeyCode.ESCAPE.equals(code);
     }
 }

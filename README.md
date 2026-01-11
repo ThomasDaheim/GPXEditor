@@ -32,7 +32,9 @@ So it was time to start a new self-learning project. And here you see the result
 ### Update v5.10
 
 * Added option on "Goto coordinate" to use current location based on public IP.
+* Added option on "What is here?" tshow info on coordinate using reverse geocoding.
 * Via preference you can now pan to current location on startup. Sequence of coordinate usage: 1) if given, -mapCenter param is used, 2) if preference set, current location is used 3) hard-coded default location is used
+* Various performance improvements.
 
 ### Update v5.9
 

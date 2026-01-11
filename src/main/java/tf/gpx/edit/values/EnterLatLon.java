@@ -32,7 +32,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
@@ -161,6 +160,14 @@ public class EnterLatLon extends AbstractStage {
         getGridPane().add(findButton, 0, rowNum, 1, 1);
         GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
 
+        // TFE, 20260111: not working right away - not reacting to escape to close
+//        final PopOver popOver = new PopOver();
+//        popOver.setAutoHide(false);
+//        popOver.setAutoFix(true);
+//        popOver.setCloseButtonEnabled(true);
+//        popOver.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+//        popOver.setArrowSize(0);
+            
         // what is there?
         final Button infoBtn = new Button("Info");
         infoBtn.setOnAction((ActionEvent arg0) -> {
@@ -169,6 +176,15 @@ public class EnterLatLon extends AbstractStage {
             } else {
                 latLon = new LatLonElev(LatLonHelper.latFromString(waypointLatitudeTxt.getText()), LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
                 LatLonInfoViewer.getInstance().show(myHostServices, latLon);
+
+//                LatLonInfoViewer.getInstance().setLatLon(myHostServices, latLon);
+//                popOver.setContentNode(LatLonInfoViewer.getInstance().getGridPane());
+//                popOver.addEventHandler(KeyEvent.KEY_PRESSED, (t) -> {
+//                    if (LatLonInfoViewer.isCompleteCode(t.getCode())) {
+//                        popOver.hide();
+//                    }
+//                });
+//                popOver.show(infoBtn);
             }
         });
         getGridPane().add(infoBtn, 1, rowNum, 1, 1);
