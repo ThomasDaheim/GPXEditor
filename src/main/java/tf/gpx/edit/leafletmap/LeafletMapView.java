@@ -380,7 +380,7 @@ public class LeafletMapView extends StackPane {
      *
      * @param positions list of track positions
      * @param color color of track
-     * @param weight weight of track
+     * @param weight weight of track (width in pixels)
      * @param opacity opacity of track
      * @param linecap linecap to be used for track
      * @param fitBounds should map.fitBounds be called after adding track
