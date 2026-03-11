@@ -433,7 +433,7 @@ public class GPXRoute extends GPXMeasurable {
      * @return the minimum height of the route
      */
     @Override
-    public double getMinHeight() {
+    public double getMinElevationPosition() {
         if (myMinHeight != null) {
             return myMinHeight;
         }
@@ -454,7 +454,7 @@ public class GPXRoute extends GPXMeasurable {
      * @return the maximum height of the route
      */
     @Override
-    public double getMaxHeight() {
+    public double getMaxElevation() {
         if (myMaxHeight != null) {
             return myMaxHeight;
         }

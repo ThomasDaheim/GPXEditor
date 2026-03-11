@@ -178,12 +178,13 @@ public class StatisticsViewer extends AbstractStage {
 
         Break3("", "", String.class, null),
 
-        // height & slope
-        StartHeight("Initial Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
-        EndHeight("Final Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
-        MinHeight("Min. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
-        MaxHeight("Max. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
-        AvgHeight("Avg. Height", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        // TFE, 20260306: lets use "elevation" instead of "height", please
+        // elevation & slope
+        StartElevation("Initial Elevation", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        EndElevation("Final Elevation", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        MinElevation("Min. Elevation", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        MaxElevation("Max. Elevation", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
+        AvgElevation("Avg. Elevation", "m", Double.class, GPXLineItem.GPXLineItemData.Elevation.getFormat()),
         CumulativeAscent("Total Ascent", "m", Double.class, GPXLineItem.GPXLineItemData.CumulativeAscent.getFormat()),
         CumulativeDescent("Total Descent", "m", Double.class, GPXLineItem.GPXLineItemData.CumulativeDescent.getFormat()),
         MaxSlopeAscent("Max. Slope asc.", "%", Double.class, GPXLineItem.GPXLineItemData.Slope.getFormat()),
@@ -203,6 +204,9 @@ public class StatisticsViewer extends AbstractStage {
         MaxSpeedDescent("Max. Speed desc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
         AvgSpeeedDescent("Avg. Speed desc.", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
         AvgSpeeedDescentNoPause("Avg. Speed desc. w/o pause", "km/h", Double.class, GPXLineItem.GPXLineItemData.Speed.getFormat()),
+        
+        // TFE, 20260306: lets add some distances between start/end and min/max height
+        
         ;
         
         private final String description;
@@ -400,10 +404,10 @@ public class StatisticsViewer extends AbstractStage {
         double totalLength = myGPXMeasurable.getLength();
         statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
         
-        statisticsList.get(StatisticData.StartHeight.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
-        statisticsList.get(StatisticData.EndHeight.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
-        statisticsList.get(StatisticData.MinHeight.ordinal()).setValue(myGPXMeasurable.getMinHeight());
-        statisticsList.get(StatisticData.MaxHeight.ordinal()).setValue(myGPXMeasurable.getMaxHeight());
+        statisticsList.get(StatisticData.StartElevation.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
+        statisticsList.get(StatisticData.StartElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(0));
+        statisticsList.get(StatisticData.EndElevation.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
+        statisticsList.get(StatisticData.EndElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(gpxWaypoints.size()-1));
 
         statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXMeasurable.getCumulativeAscent());
         statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXMeasurable.getCumulativeDescent());
@@ -411,7 +415,9 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXMeasurable.getCumulativeDuration()*1000d*3.6d);
 
         Date startDate = gpxWaypoints.get(0).getDate();
+        GPXWaypoint startDateGPXWaypoint = gpxWaypoints.get(0);
         Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();
+        GPXWaypoint endDateGPXWaypoint = gpxWaypoints.get(gpxWaypoints.size()-1);
         double lengthAsc = 0.0;
         double lengthDesc = 0.0;
         long durationAsc = 0;
@@ -419,6 +425,12 @@ public class StatisticsViewer extends AbstractStage {
         long durationDesc = 0;
         long durationDescNoPause = 0;
         
+        // TFE, 20260306: lets calculate min/max here - not needed anywhere else
+        double minElevation = Double.MAX_VALUE;
+        GPXWaypoint minElevationGPXWaypoint = null;
+        double maxElevation = Double.MIN_VALUE;
+        GPXWaypoint maxElevationGPXWaypoint = null;
+
         double avgHeight = 0.0;
         double maxSlopeAsc = 0.0;
         GPXWaypoint maxSlopeAscGPXWaypoint = null;
@@ -454,9 +466,11 @@ public class StatisticsViewer extends AbstractStage {
             final Date waypointDate = waypoint.getDate();
             if (startDate == null || startDate.after(waypointDate)) {
                 startDate = waypointDate;
+                startDateGPXWaypoint = waypoint;
             }
             if (endDate == null || endDate.before(waypointDate)) {
                 endDate = waypointDate;
+                endDateGPXWaypoint = waypoint;
             }
             
             final double duration = waypoint.getCumulativeDuration();
@@ -467,6 +481,16 @@ public class StatisticsViewer extends AbstractStage {
                 isBreak = true;
 //                System.out.println("prevGPXWaypoint: " + prevGPXWaypoint);
 //                System.out.println("waypoint: " + waypoint);
+            }
+            
+            // TFE, 20260306: lets calculate min/max here - not needed anywhere else
+            if (waypoint.getElevation() <= minElevation) {
+                minElevation = waypoint.getElevation();
+                minElevationGPXWaypoint = waypoint;
+            }
+            if (waypoint.getElevation() >= maxElevation) {
+                maxElevation = waypoint.getElevation();
+                maxElevationGPXWaypoint = waypoint;
             }
             
             avgHeight += waypoint.getElevation();
@@ -520,7 +544,9 @@ public class StatisticsViewer extends AbstractStage {
         }
         
         statisticsList.get(StatisticData.Start.ordinal()).setValue(startDate);
+        statisticsList.get(StatisticData.Start.ordinal()).setGPXWaypoint(startDateGPXWaypoint);
         statisticsList.get(StatisticData.End.ordinal()).setValue(endDate);
+        statisticsList.get(StatisticData.End.ordinal()).setGPXWaypoint(endDateGPXWaypoint);
 
         // average values
         avgHeight /= gpxWaypoints.size();
@@ -538,7 +564,12 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.DurationDescent.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationDesc));
         statisticsList.get(StatisticData.DurationDescentNoPause.ordinal()).setValue(GPXLineItemHelper.formatDurationAsString(durationDescNoPause));
 
-        statisticsList.get(StatisticData.AvgHeight.ordinal()).setValue(avgHeight);
+        statisticsList.get(StatisticData.MinElevation.ordinal()).setValue(minElevation);
+        statisticsList.get(StatisticData.MinElevation.ordinal()).setGPXWaypoint(minElevationGPXWaypoint);
+        statisticsList.get(StatisticData.MaxElevation.ordinal()).setValue(maxElevation);
+        statisticsList.get(StatisticData.MaxElevation.ordinal()).setGPXWaypoint(maxElevationGPXWaypoint);
+
+        statisticsList.get(StatisticData.AvgElevation.ordinal()).setValue(avgHeight);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setValue(maxSlopeAsc);
         statisticsList.get(StatisticData.MaxSlopeAscent.ordinal()).setGPXWaypoint(maxSlopeAscGPXWaypoint);
         extremePoints.add(maxSlopeAscGPXWaypoint);
