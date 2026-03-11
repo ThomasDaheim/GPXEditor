@@ -175,8 +175,8 @@ public class TestElevationProvider {
         final Pair<Boolean, Double> elevation = srtmOnly.getElevationForCoordinate(48.135125, 11.581981);
         heightValue = srtmOnly.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
-        Assertions.assertTrue(heightValue == IElevationProvider.NO_ELEVATION);
-        Assertions.assertTrue(!elevation.getLeft());
+        Assertions.assertEquals(IElevationProvider.NO_ELEVATION, heightValue, delta);
+        Assertions.assertFalse(elevation.getLeft());
 
         heightValue = srtmFirst.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
@@ -204,7 +204,7 @@ public class TestElevationProvider {
         List<Double> heightValues;
         heightValues = heightValues(srtmOnly.getElevationsForCoordinates(coords));
         Assertions.assertEquals(8840, heightValues.get(0), delta);
-        Assertions.assertEquals(heightValues.get(1), IElevationProvider.NO_ELEVATION);
+        Assertions.assertEquals(IElevationProvider.NO_ELEVATION, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmFirst.getElevationsForCoordinates(coords));
         Assertions.assertEquals(8840, heightValues.get(0), delta);

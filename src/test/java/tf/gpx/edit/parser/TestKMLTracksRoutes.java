@@ -83,7 +83,8 @@ public class TestKMLTracksRoutes {
         Assertions.assertEquals("8B008B", track.getLineStyle().getColor().getHexColor());
         Assertions.assertEquals(0.5, track.getLineStyle().getOpacity(), 0.01);
         // TFE, 20250626: value is 0.07 as long as we don't switch to storing unit pixels as well; then it should be 2
-        Assertions.assertEquals(0.07, track.getLineStyle().getWidth(), 0.01);
+        // TFE, 20260311: and now we have switched to pixel!
+        Assertions.assertEquals(2.0, track.getLineStyle().getWidth(), 0.01);
     }
 
     @Test
@@ -117,7 +118,8 @@ public class TestKMLTracksRoutes {
         Assertions.assertEquals("FFFF00", route.getLineStyle().getColor().getHexColor());
         Assertions.assertEquals(0.5, route.getLineStyle().getOpacity(), 0.01);
         // TFE, 20250626: value is 0.07 as long as we don't switch to storing unit pixels as well; then it should be 2
-        Assertions.assertEquals(0.07, route.getLineStyle().getWidth(), 0.01);
+        // TFE, 20260311: and now we have switched to pixel!
+        Assertions.assertEquals(2.0, route.getLineStyle().getWidth(), 0.01);
     }
     
     @Test

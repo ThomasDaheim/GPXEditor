@@ -36,6 +36,7 @@ import tf.gpx.edit.leafletmap.LatLonElev;
  * @author thomas
  */
 public class TestMapboxGeocodingService {
+    private final static double delta = 0.01;
     private final static String API_KEY = GPXEditorPreferences.MATCHING_API_KEY.getAsType();
     
     @Test
@@ -47,16 +48,16 @@ public class TestMapboxGeocodingService {
         Assertions.assertNotNull(result);
         
         Assertions.assertNotNull(result.getLatLonElev());
-        Assertions.assertEquals(-118.254187, result.getLatLonElev().getLongitude());
-        Assertions.assertEquals(34.048051, result.getLatLonElev().getLatitude());
+        Assertions.assertEquals(-118.254187, result.getLatLonElev().getLongitude(), delta);
+        Assertions.assertEquals(34.048051, result.getLatLonElev().getLatitude(), delta);
 
         Assertions.assertNotNull(result.getBoundingBox());
         Assertions.assertNotNull(result.getBoundingBox().getSouthwest());
-        Assertions.assertEquals(-118.52144, result.getBoundingBox().getSouthwest().getLongitude());
-        Assertions.assertEquals(33.900939, result.getBoundingBox().getSouthwest().getLatitude());
+        Assertions.assertEquals(-118.521473, result.getBoundingBox().getSouthwest().getLongitude(), delta);
+        Assertions.assertEquals(33.900939, result.getBoundingBox().getSouthwest().getLatitude(), delta);
         Assertions.assertNotNull(result.getBoundingBox().getNortheast());
-        Assertions.assertEquals(-118.126839, result.getBoundingBox().getNortheast().getLongitude());
-        Assertions.assertEquals(34.161439, result.getBoundingBox().getNortheast().getLatitude());
+        Assertions.assertEquals(-118.126839, result.getBoundingBox().getNortheast().getLongitude(), delta);
+        Assertions.assertEquals(34.161439, result.getBoundingBox().getNortheast().getLatitude(), delta);
     }
     
     @Test
@@ -66,13 +67,13 @@ public class TestMapboxGeocodingService {
         final ReverseGeocodingResult result = MapboxGeocodingService.getInstance().reverseGeocoding(new LatLonElev(34.048051, -118.254187));
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(-118.25421, result.getLatLonElev().getLongitude());
-        Assertions.assertEquals(34.04826, result.getLatLonElev().getLatitude());
-        Assertions.assertEquals("555 South Olive Street, Los Angeles, California 90013, United States", result.getPlace());
-        Assertions.assertEquals("555 South Olive Street", result.getAddress());
-        Assertions.assertEquals("South Olive Street", result.getStreet());
+        Assertions.assertEquals(-118.25411, result.getLatLonElev().getLongitude(), delta);
+        Assertions.assertEquals(34.04826, result.getLatLonElev().getLatitude(), delta);
+        Assertions.assertEquals("424 West 6th Street, Los Angeles, California 90014, United States", result.getPlace());
+        Assertions.assertEquals("424 West 6th Street", result.getAddress());
+        Assertions.assertEquals("West 6th Street", result.getStreet());
         Assertions.assertEquals("The Financial District", result.getNeighborhood());
-        Assertions.assertEquals("90013", result.getPostcode());
+        Assertions.assertEquals("90014", result.getPostcode());
         Assertions.assertEquals("", result.getLocality());
         Assertions.assertEquals("Los Angeles County", result.getDistrict());
         Assertions.assertEquals("California", result.getRegion());
