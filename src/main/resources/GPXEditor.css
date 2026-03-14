@@ -38,14 +38,7 @@
 /*
     undo/redo
 */
-.redo-button {
-    -fx-padding: 0;
-    -fx-margin: 0;
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
-    -fx-background-insets: 0px;
-}
-.undo-button {
+.redo-button, .undo-button {
     -fx-padding: 0;
     -fx-margin: 0;
     -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;

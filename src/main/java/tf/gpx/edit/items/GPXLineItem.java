@@ -36,6 +36,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.magicwerk.brownies.collections.GapList;
 import tf.gpx.edit.extension.IStylableItem;
 import tf.gpx.edit.extension.LineStyle;
 
@@ -313,7 +314,10 @@ public abstract class GPXLineItem implements IStylableItem {
         // nothing to invert for waypoints...
         if (!GPXLineItemType.GPXWaypoint.equals(getType())) {
             // invert order of children
-            List<? extends GPXLineItem> children = getChildren();
+            // TFE, 20260208: this is painfully slow for a large number of waypoints. lets play around with it.
+            // the usual culprit: working direct on the Observablelist from getChildren()...
+            // lets use temporary normal java list
+            List<? extends GPXLineItem> children = new GapList<>(getChildren());
             Collections.reverse(children);
             setChildren(children);
 
@@ -406,8 +410,8 @@ public abstract class GPXLineItem implements IStylableItem {
                     return id1.compareTo(id2);
                 }
 
-                final Double d1 = Double.parseDouble(id1);
-                final Double d2 = Double.parseDouble(id2);
+                final Double d1 = Double.valueOf(id1);
+                final Double d2 = Double.valueOf(id2);
 
                 return d1.compareTo(d2);
             } else {
