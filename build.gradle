@@ -129,15 +129,15 @@ dependencies {
 //    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
 //    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
     
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.20.1'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.1'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.21.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.2'
     
     // TFE, 20260109: this can work with a path that contains arrays...
-    implementation 'com.jayway.jsonpath:json-path:2.10.0';
+    implementation 'com.jayway.jsonpath:json-path:3.0.0';
 
-    implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
+    implementation 'de.grundid.opendatalab:geojson-jackson:3.0'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'
     implementation 'org.jfxtras:jfxtras-labs:9.0-r1'
     implementation 'org.jfxtras:jmetro:11.6.16'
@@ -153,14 +153,14 @@ dependencies {
     implementation 'org.fxyz3d:fxyz3d:0.6.0'
     
     // TFE, 20220201: faster list
-    implementation 'org.magicwerk.brownies:brownies-collections:0.9.23'
+    implementation 'org.magicwerk.brownies:brownies-collections:0.9.24'
     
     // sun data
     // TODO: upgrade to 0.1.7 and fix breaking changes
     implementation 'net.e175.klaus:solarpositioning:2.0.12'
     
     // timezone provider
-    implementation 'com.github.luben:zstd-jni:1.5.7-6'
+    implementation 'com.github.luben:zstd-jni:1.5.7-7'
     implementation 'us.dustinj.timezonemap:timezonemap:4.5'
     
     // TFE, 20220320: change to charts based on canvas for performance
