@@ -37,7 +37,7 @@ import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.LocationHelper;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.RestrictiveTextField;
 import tf.helper.javafx.TooltipHelper;

@@ -25,7 +25,7 @@
  */
 package tf.gpx.edit.mapbox;
 
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Class to hold result from reverse geocoding call to mapbox.

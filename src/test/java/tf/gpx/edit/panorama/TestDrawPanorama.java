@@ -37,7 +37,7 @@ import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.elevation.SRTMDataOptions;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
 /**

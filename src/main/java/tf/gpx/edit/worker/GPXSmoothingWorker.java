@@ -30,7 +30,7 @@ import tf.gpx.edit.algorithms.smoother.WaypointSmoothing;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  *

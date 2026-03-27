@@ -28,7 +28,7 @@ package tf.gpx.edit.viewer;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.BoundingBox;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Callback from JS used in TrackMap.

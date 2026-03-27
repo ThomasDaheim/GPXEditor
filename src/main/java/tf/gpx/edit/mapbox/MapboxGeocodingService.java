@@ -40,7 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.leafletmap.BoundingBox;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Use MapboxGeocodingService for forward and reverse geocoding.

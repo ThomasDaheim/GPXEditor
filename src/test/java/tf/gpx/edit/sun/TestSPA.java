@@ -37,7 +37,7 @@ import net.e175.klaus.solarpositioning.SolarPosition;
 import net.e175.klaus.solarpositioning.SunriseResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Test of the SPA implementation.

@@ -36,7 +36,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  * Various ways to obtain the current location.

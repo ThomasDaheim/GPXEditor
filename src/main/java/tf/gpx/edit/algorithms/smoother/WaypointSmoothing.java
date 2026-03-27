@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Wrapper for different smoothing algorithms.

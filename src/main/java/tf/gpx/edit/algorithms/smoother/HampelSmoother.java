@@ -34,7 +34,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import tf.gpx.edit.algorithms.MathHelper;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Impementation of the hampel filter (https://asp-eurasipjournals.springeropen.com/articles/10.1186/s13634-016-0383-6)

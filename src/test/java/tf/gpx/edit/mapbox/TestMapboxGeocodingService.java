@@ -28,7 +28,7 @@ package tf.gpx.edit.mapbox;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * See https://openrouteservice.org/dev/#/api-docs/elevation

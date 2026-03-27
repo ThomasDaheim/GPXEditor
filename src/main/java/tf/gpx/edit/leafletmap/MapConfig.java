@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import tf.gpx.edit.helper.LatLonElev;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

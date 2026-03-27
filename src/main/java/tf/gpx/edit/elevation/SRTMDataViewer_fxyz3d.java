@@ -78,7 +78,7 @@ import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.worker.GPXAssignElevationWorker;
 import tf.helper.general.ObjectsHelper;
 import tf.helper.javafx.ShowAlerts;

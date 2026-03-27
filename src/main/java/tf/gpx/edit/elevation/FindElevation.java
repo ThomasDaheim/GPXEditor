@@ -45,7 +45,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 import tf.gpx.edit.helper.LatLonHelper;
 import static tf.gpx.edit.items.GPXLineItem.DOUBLE_FORMAT_2;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.EnumHelper;
 import tf.helper.javafx.RestrictiveTextField;

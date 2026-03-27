@@ -25,6 +25,7 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import tf.gpx.edit.helper.LatLonElev;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;

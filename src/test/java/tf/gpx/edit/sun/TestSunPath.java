@@ -31,7 +31,7 @@ import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.junit.jupiter.api.Test;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Test of the SPA implementation.

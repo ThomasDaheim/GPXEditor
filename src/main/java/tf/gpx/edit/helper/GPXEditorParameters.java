@@ -14,7 +14,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use

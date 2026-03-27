@@ -34,7 +34,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.mapbox.MapboxGeocodingService;
 import tf.gpx.edit.mapbox.ReverseGeocodingResult;
 import tf.helper.javafx.AbstractStage;

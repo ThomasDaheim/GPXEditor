@@ -150,7 +150,7 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.leafletmap.MapLayerUsage;
 import tf.gpx.edit.panorama.PanoramaViewer;
 import tf.gpx.edit.values.DistributionViewer;

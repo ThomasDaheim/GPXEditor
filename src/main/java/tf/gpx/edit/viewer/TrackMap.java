@@ -105,7 +105,7 @@ import tf.gpx.edit.leafletmap.ColorMarker;
 import tf.gpx.edit.leafletmap.ControlPosition;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.IMarker;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.leafletmap.LeafletMapView;
 import tf.gpx.edit.leafletmap.MapConfig;
 import tf.gpx.edit.leafletmap.MapLayer;

@@ -25,6 +25,8 @@
  */
 package tf.gpx.edit.leafletmap;
 
+import tf.gpx.edit.helper.LatLonElev;
+
 /**
  * Immutable value class for defining a geo position - including elevation.
  * 

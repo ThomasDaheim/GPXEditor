@@ -42,7 +42,7 @@ import net.e175.klaus.solarpositioning.SPA;
 import net.e175.klaus.solarpositioning.SunriseResult;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.panorama.Horizon;
 import tf.gpx.edit.panorama.Panorama;
 import tf.helper.general.DateTimeCalendarHelper;

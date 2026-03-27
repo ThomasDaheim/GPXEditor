@@ -38,7 +38,7 @@ import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrack;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXTrackSegment;
 import static tf.gpx.edit.items.GPXLineItem.GPXLineItemType.GPXWaypoint;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
 /**

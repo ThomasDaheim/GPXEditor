@@ -43,17 +43,21 @@ import javafx.geometry.HPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import javafx.util.converter.DefaultStringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FilenameUtils;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LineSegment;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.items.GPXMeasurable;
@@ -61,6 +65,7 @@ import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.main.GPXEditorManager;
 import tf.helper.javafx.AbstractStage;
+import tf.helper.javafx.TooltipHelper;
 
 /**
  *
@@ -84,6 +89,8 @@ public class StatisticsViewer extends AbstractStage {
         private final StatisticData myData;
         private Object myValue = null;
         private GPXWaypoint myGPXWaypoint = null;
+        private LineSegment toStart = null;
+        private LineSegment toEnd = null;
         
         StatisticValue (final StatisticData data) {
             myData = data;
@@ -97,6 +104,10 @@ public class StatisticsViewer extends AbstractStage {
             myValue = value;
         }
 
+        public StatisticData getStatisticData() {
+            return myData;
+        }
+        
         /**
          * @return the myGPXWaypoint
          */
@@ -109,6 +120,28 @@ public class StatisticsViewer extends AbstractStage {
          */
         public void setGPXWaypoint(final GPXWaypoint waypoint) {
             myGPXWaypoint = waypoint;
+            
+            // TFE, 20260326: add support for distance to start / end
+            GPXWaypoint point = statisticsList.get(StatisticData.Start.ordinal()).getGPXWaypoint();
+            if (point == null || myGPXWaypoint == null) {
+                toStart = null;
+            } else {
+                toStart = new LineSegment(point, myGPXWaypoint);
+            }
+            point = statisticsList.get(StatisticData.End.ordinal()).getGPXWaypoint();
+            if (point == null || myGPXWaypoint == null) {
+                toEnd = null;
+            } else {
+                toEnd = new LineSegment(myGPXWaypoint, point);
+            }
+        }
+        
+        public LineSegment getToStart() {
+            return toStart;
+        }
+        
+        public LineSegment getToEnd() {
+            return toEnd;
         }
         
         private String getDescription() {
@@ -304,6 +337,54 @@ public class StatisticsViewer extends AbstractStage {
         unitCol.setSortable(false);
         
         TableColumn<StatisticValue, String> locCol = new TableColumn<>("Where");
+        locCol.setCellFactory(col -> new TextFieldTableCell<StatisticValue, String>(new DefaultStringConverter()) {
+            @Override
+            public void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setTooltip(null);
+                if (!empty && item != null) {
+                    setText(item);
+
+                    final StatisticValue value = (StatisticValue) getTableRow().getItem();
+                    if (!StatisticData.Start.equals(value.getStatisticData()) && 
+                        ! StatisticData.End.equals(value.getStatisticData()) && 
+                        ! StatisticData.StartElevation.equals(value.getStatisticData()) && 
+                        ! StatisticData.EndElevation.equals(value.getStatisticData())) {
+                        final LineSegment toStart = value.getToStart();
+                        final LineSegment toEnd = value.getToEnd();
+                        if (toStart != null && toEnd != null) {
+                            final Tooltip tooltip = new Tooltip();
+
+                            // build tooltip from information toStart and toEnd
+                            StringBuilder builder = new StringBuilder();
+                            builder.append("To Start\n");
+                            builder.append("Dist. ");
+                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getLength()/1000.0));
+                            builder.append(" km, ");
+                            builder.append("Elev. ");
+                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getElevationDiff()));
+                            builder.append(" m, ");
+                            builder.append("Time ");
+                            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toStart.getTimeDiff())));
+                            builder.append("\nTo End\n");
+                            builder.append("Dist. ");
+                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getLength()/1000.0));
+                            builder.append(" km, ");
+                            builder.append("Elev. ");
+                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getElevationDiff()));
+                            builder.append(" m, ");
+                            builder.append("Time ");
+                            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toEnd.getTimeDiff())));
+                            
+                            tooltip.setText(builder.toString());
+                            TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
+                            setTooltip(tooltip);
+                        }
+                    }
+                }
+            }
+        });
+        
         locCol.setCellValueFactory(
                 (TableColumn.CellDataFeatures<StatisticValue, String> p) -> new SimpleStringProperty(p.getValue().getLocation()));
         locCol.setSortable(false);
@@ -394,30 +475,12 @@ public class StatisticsViewer extends AbstractStage {
         breakDuration *= 60*1000;
         
         final List<GPXWaypoint> gpxWaypoints = myGPXMeasurable.getCombinedGPXWaypoints(GPXLineItem.GPXLineItemType.GPXTrack);
-        
-        // set values that don't need calculation
-        statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
-        
-        // format duration as in getCumulativeDurationAsString
-        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXMeasurable));
-        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXMeasurable));
-        double totalLength = myGPXMeasurable.getLength();
-        statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
-        
-        statisticsList.get(StatisticData.StartElevation.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
-        statisticsList.get(StatisticData.StartElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(0));
-        statisticsList.get(StatisticData.EndElevation.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
-        statisticsList.get(StatisticData.EndElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(gpxWaypoints.size()-1));
 
-        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXMeasurable.getCumulativeAscent());
-        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXMeasurable.getCumulativeDescent());
+        GPXWaypoint startPoint = gpxWaypoints.get(0);
+        GPXWaypoint endPoint = gpxWaypoints.get(gpxWaypoints.size()-1);
         
-        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXMeasurable.getCumulativeDuration()*1000d*3.6d);
-
         Date startDate = gpxWaypoints.get(0).getDate();
-        GPXWaypoint startDateGPXWaypoint = gpxWaypoints.get(0);
         Date endDate = gpxWaypoints.get(gpxWaypoints.size()-1).getDate();
-        GPXWaypoint endDateGPXWaypoint = gpxWaypoints.get(gpxWaypoints.size()-1);
         double lengthAsc = 0.0;
         double lengthDesc = 0.0;
         long durationAsc = 0;
@@ -464,13 +527,14 @@ public class StatisticsViewer extends AbstractStage {
         for (GPXWaypoint waypoint : gpxWaypoints) {
             // TFE, 20190908: start & end don't need to be first & last waypoint...
             final Date waypointDate = waypoint.getDate();
-            if (startDate == null || startDate.after(waypointDate)) {
+            // TFE, 20260327: use new date only if not null
+            if ((waypointDate != null) && ((startDate == null) || startDate.after(waypointDate))) {
                 startDate = waypointDate;
-                startDateGPXWaypoint = waypoint;
+                startPoint = waypoint;
             }
-            if (endDate == null || endDate.before(waypointDate)) {
+            if ((waypointDate != null) && ((endDate == null) || endDate.before(waypointDate))) {
                 endDate = waypointDate;
-                endDateGPXWaypoint = waypoint;
+                endPoint = waypoint;
             }
             
             final double duration = waypoint.getCumulativeDuration();
@@ -543,10 +607,28 @@ public class StatisticsViewer extends AbstractStage {
             prevGPXWaypoint = waypoint;
         }
         
+        statisticsList.get(StatisticData.Count.ordinal()).setValue(gpxWaypoints.size());
+        
         statisticsList.get(StatisticData.Start.ordinal()).setValue(startDate);
-        statisticsList.get(StatisticData.Start.ordinal()).setGPXWaypoint(startDateGPXWaypoint);
+        statisticsList.get(StatisticData.Start.ordinal()).setGPXWaypoint(startPoint);
         statisticsList.get(StatisticData.End.ordinal()).setValue(endDate);
-        statisticsList.get(StatisticData.End.ordinal()).setGPXWaypoint(endDateGPXWaypoint);
+        statisticsList.get(StatisticData.End.ordinal()).setGPXWaypoint(endPoint);
+
+        // format duration as in getCumulativeDurationAsString
+        statisticsList.get(StatisticData.DurationOverall.ordinal()).setValue(GPXLineItemHelper.getOverallDurationAsString(myGPXMeasurable));
+        statisticsList.get(StatisticData.DurationCumulative.ordinal()).setValue(GPXLineItemHelper.getCumulativeDurationAsString(myGPXMeasurable));
+        double totalLength = myGPXMeasurable.getLength();
+        statisticsList.get(StatisticData.Length.ordinal()).setValue(totalLength/1000d);
+        
+        statisticsList.get(StatisticData.StartElevation.ordinal()).setValue(gpxWaypoints.get(0).getElevation());
+        statisticsList.get(StatisticData.StartElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(0));
+        statisticsList.get(StatisticData.EndElevation.ordinal()).setValue(gpxWaypoints.get(gpxWaypoints.size()-1).getElevation());
+        statisticsList.get(StatisticData.EndElevation.ordinal()).setGPXWaypoint(gpxWaypoints.get(gpxWaypoints.size()-1));
+
+        statisticsList.get(StatisticData.CumulativeAscent.ordinal()).setValue(myGPXMeasurable.getCumulativeAscent());
+        statisticsList.get(StatisticData.CumulativeDescent.ordinal()).setValue(myGPXMeasurable.getCumulativeDescent());
+        
+        statisticsList.get(StatisticData.AvgSpeeed.ordinal()).setValue(totalLength/myGPXMeasurable.getCumulativeDuration()*1000d*3.6d);
 
         // average values
         avgHeight /= gpxWaypoints.size();
@@ -579,16 +661,29 @@ public class StatisticsViewer extends AbstractStage {
         statisticsList.get(StatisticData.AvgSlopeAscent.ordinal()).setValue(avgSlopeAsc);
         statisticsList.get(StatisticData.AvgSlopeDescent.ordinal()).setValue(avgSlopeDesc);
         
-        statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
-        statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
-        extremePoints.add(maxSpeedGPXWaypoint);
+        // TFE, 20260327: we don't always have speed...
+        if (maxSpeedGPXWaypoint != null) {
+            statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
+            statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
+            extremePoints.add(maxSpeedGPXWaypoint);
+        } else {
+            statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(null);
+        }
         statisticsList.get(StatisticData.AvgSpeeedNoPause.ordinal()).setValue(totalLength/(durationAscNoPause+durationDescNoPause)*1000d*3.6d);
-        statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
-        statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
-        extremePoints.add(maxSpeedAscGPXWaypoint);
-        statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
-        statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
-        extremePoints.add(maxSpeedDescGPXWaypoint);
+        if (maxSpeedAscGPXWaypoint != null) {
+            statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
+            statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
+            extremePoints.add(maxSpeedAscGPXWaypoint);
+        } else {
+            statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(null);
+        }
+        if (maxSpeedDescGPXWaypoint != null) {
+            statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
+            statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
+            extremePoints.add(maxSpeedDescGPXWaypoint);
+        } else {
+            statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(null);
+        }
         statisticsList.get(StatisticData.AvgSpeeedAscent.ordinal()).setValue(lengthAsc/durationAsc*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedAscentNoPause.ordinal()).setValue(lengthAsc/durationAscNoPause*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
