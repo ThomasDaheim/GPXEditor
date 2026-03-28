@@ -62,7 +62,7 @@ public class LineSegment {
         if (endPoint.getTime() != null && startPoint.getTime() != null) {
             timeDiff = endPoint.getTime().getTime() - startPoint.getTime().getTime();
         } else {
-            timeDiff =  0;
+            timeDiff =  -1;
         }
     }
     

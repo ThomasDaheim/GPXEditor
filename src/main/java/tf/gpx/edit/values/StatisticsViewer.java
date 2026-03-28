@@ -356,27 +356,7 @@ public class StatisticsViewer extends AbstractStage {
                             final Tooltip tooltip = new Tooltip();
 
                             // build tooltip from information toStart and toEnd
-                            StringBuilder builder = new StringBuilder();
-                            builder.append("To Start\n");
-                            builder.append("Dist. ");
-                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getLength()/1000.0));
-                            builder.append(" km, ");
-                            builder.append("Elev. ");
-                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getElevationDiff()));
-                            builder.append(" m, ");
-                            builder.append("Time ");
-                            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toStart.getTimeDiff())));
-                            builder.append("\nTo End\n");
-                            builder.append("Dist. ");
-                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getLength()/1000.0));
-                            builder.append(" km, ");
-                            builder.append("Elev. ");
-                            builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getElevationDiff()));
-                            builder.append(" m, ");
-                            builder.append("Time ");
-                            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toEnd.getTimeDiff())));
-                            
-                            tooltip.setText(builder.toString());
+                            tooltip.setText(buildStartEndInfo(toStart, toEnd, "\n"));
                             TooltipHelper.updateTooltipBehavior(tooltip, 0, 10000, 0, true);
                             setTooltip(tooltip);
                         }
@@ -440,6 +420,38 @@ public class StatisticsViewer extends AbstractStage {
         final ColumnConstraints col3 = new ColumnConstraints();
         col3.setPercentWidth(33);
         getGridPane().getColumnConstraints().addAll(col1, col2, col3);
+    }
+    
+    private String buildStartEndInfo(final LineSegment toStart, final LineSegment toEnd, final String separator) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("To Start: ");
+        builder.append("Dist. ");
+        builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getLength()/1000.0));
+        builder.append(" km, ");
+        builder.append("Elev. ");
+        builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toStart.getElevationDiff()));
+        builder.append(" m");
+        long timeDiff = toStart.getTimeDiff();
+        if (timeDiff >= 0) {
+            builder.append(", ");
+            builder.append("Time ");
+            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toStart.getTimeDiff())));
+        }
+        builder.append(separator);
+        builder.append("To End: ");
+        builder.append("Dist. ");
+        builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getLength()/1000.0));
+        builder.append(" km, ");
+        builder.append("Elev. ");
+        builder.append(GPXLineItem.DOUBLE_FORMAT_1.format(toEnd.getElevationDiff()));
+        builder.append(" m");
+        timeDiff = toStart.getTimeDiff();
+        if (timeDiff >= 0) {
+            builder.append(", ");
+            builder.append("Time ");
+            builder.append(GPXLineItem.TIME_FORMAT.format(new Date(toEnd.getTimeDiff())));
+        }
+        return builder.toString();
     }
     
     public boolean showStatistics(final GPXMeasurable gpxMeasurable) {
@@ -665,25 +677,19 @@ public class StatisticsViewer extends AbstractStage {
         if (maxSpeedGPXWaypoint != null) {
             statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(maxSpeed);
             statisticsList.get(StatisticData.MaxSpeed.ordinal()).setGPXWaypoint(maxSpeedGPXWaypoint);
-            extremePoints.add(maxSpeedGPXWaypoint);
-        } else {
-            statisticsList.get(StatisticData.MaxSpeed.ordinal()).setValue(null);
         }
+        extremePoints.add(maxSpeedGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedNoPause.ordinal()).setValue(totalLength/(durationAscNoPause+durationDescNoPause)*1000d*3.6d);
         if (maxSpeedAscGPXWaypoint != null) {
             statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(maxSpeedAsc);
             statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setGPXWaypoint(maxSpeedAscGPXWaypoint);
-            extremePoints.add(maxSpeedAscGPXWaypoint);
-        } else {
-            statisticsList.get(StatisticData.MaxSpeedAscent.ordinal()).setValue(null);
         }
+        extremePoints.add(maxSpeedAscGPXWaypoint);
         if (maxSpeedDescGPXWaypoint != null) {
             statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(maxSpeedDesc);
             statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setGPXWaypoint(maxSpeedDescGPXWaypoint);
-            extremePoints.add(maxSpeedDescGPXWaypoint);
-        } else {
-            statisticsList.get(StatisticData.MaxSpeedDescent.ordinal()).setValue(null);
         }
+        extremePoints.add(maxSpeedDescGPXWaypoint);
         statisticsList.get(StatisticData.AvgSpeeedAscent.ordinal()).setValue(lengthAsc/durationAsc*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedAscentNoPause.ordinal()).setValue(lengthAsc/durationAscNoPause*1000d*3.6d);
         statisticsList.get(StatisticData.AvgSpeeedDescent.ordinal()).setValue(lengthDesc/durationDesc*1000d*3.6d);
@@ -708,12 +714,24 @@ public class StatisticsViewer extends AbstractStage {
             try (
                     FileWriter out = new FileWriter(selectedFile);
                     CSVPrinter printer = new CSVPrinter(out,
-                            CSVFormat.DEFAULT.builder().setHeader("Observable", "Value", "Unit", "Where", "When").get())
+                            CSVFormat.DEFAULT.builder().setHeader("Observable", "Value", "Unit", "Where", "When", "Start/End").get())
                 ) {
                 statisticsList.forEach((t) -> {
                     // no idea, why a nested try & catch is required here...
                     try {
-                        printer.printRecord(t.getDescription(), t.getStringValue(), t.getUnit(), t.getLocation(), t.getTime());
+                        String startendInfo = "";
+                        if (!StatisticData.Start.equals(t.getStatisticData()) && 
+                            ! StatisticData.End.equals(t.getStatisticData()) && 
+                            ! StatisticData.StartElevation.equals(t.getStatisticData()) && 
+                            ! StatisticData.EndElevation.equals(t.getStatisticData())) {
+                            final LineSegment toStart = t.getToStart();
+                            final LineSegment toEnd = t.getToEnd();
+                            if (toStart != null && toEnd != null) {
+                                startendInfo = buildStartEndInfo(toStart, toEnd, " - ");
+                            }
+                        }
+
+                        printer.printRecord(t.getDescription(), t.getStringValue(), t.getUnit(), t.getLocation(), t.getTime(), startendInfo);
                     } catch (IOException ex) {
                         Logger.getLogger(StatisticsViewer.class.getName()).log(Level.SEVERE, null, ex);
                     }
