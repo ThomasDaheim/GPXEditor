@@ -508,7 +508,7 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
                         idLabel.setExtraValue((GPXWaypoint) series.getData().get(0).getExtraValue());
                         idLabel.setNode(text);
 
-                        // add each label as own series - we don't want to have aera or linees drawn...
+                        // add each label as own series - we don't want to have aera or lines drawn...
                         final XYChart.Series<Number, Number> idSeries = new XYChart.Series<>();
                         idSeries.getData().add(idLabel);
 
