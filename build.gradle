@@ -1,36 +1,24 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven {
-          url = 'https://plugins.gradle.org/m2/'
-        }
-    }
-    dependencies {
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
-        // https://github.com/ben-manes/gradle-versions-plugin
-        // task: dependencyUpdates
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.53.0'
-    }
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.google.osdetector' version '1.7.3'
+    // https://github.com/ben-manes/gradle-versions-plugin
+    // task: dependencyUpdates
+    id 'com.github.ben-manes.versions' version '0.53.0'
 }
 
-apply plugin: 'java'
-apply plugin: 'application'
-apply plugin: 'com.google.osdetector'
-apply plugin: 'com.github.ben-manes.versions' // provides dependencyUpdates command
-
-ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-// TFE, 20251224: Updates for Java25 and Gradle 9
-application {
-    mainClass.set('tf.gpx.edit.main.GPXEditorManager')
-}
 def appName='GPXEditor'
 group='tf.GPXEditor'
 version='5.10'
 description = 'GPXEditor - JavaFX GPX file editor'
+
+def fxPlatform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 repositories {
     mavenLocal() {
@@ -52,14 +40,14 @@ repositories {
 dependencies {
     // JavaFX explicit dependencies
     def javafx_version='25.0.1'
-    implementation "org.openjfx:javafx-base:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-graphics:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-controls:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-fxml:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-swing:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-web:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-media:$javafx_version:$platform"
-    
+    implementation "org.openjfx:javafx-base:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-graphics:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-controls:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-fxml:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-swing:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-web:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-media:$javafx_version:$fxPlatform"
+
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.17'
 
@@ -77,13 +65,14 @@ dependencies {
     // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
     implementation 'de.jensd:fontawesomefx:8.9'
 
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.21.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.2'
-    
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.21.2')
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+
     // TFE, 20260109: this can work with a path that contains arrays...
-    implementation 'com.jayway.jsonpath:json-path:3.0.0';
+    implementation 'com.jayway.jsonpath:json-path:3.0.0'
 
     implementation 'de.grundid.opendatalab:geojson-jackson:3.0'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'
@@ -91,18 +80,18 @@ dependencies {
     implementation 'org.jfxtras:jmetro:11.6.16'
 
     implementation 'uk.com.robust-it:cloning:1.9.12'
-    
+
     implementation 'org.im4java:im4java:1.4.0'
-    
+
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-    
+
     // TFE, 20220115: 3rd alternative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.6.0'
-    
+
     // TFE, 20220201: faster list
     implementation 'org.magicwerk.brownies:brownies-collections:0.9.24'
-    
+
     // sun data
     implementation 'net.e175.klaus:solarpositioning:2.0.12'
 
@@ -113,33 +102,43 @@ dependencies {
         implementation 'org.apache.commons:commons-compress:1.28.0'
         implementation 'com.github.luben:zstd-jni:1.5.7-7'
     }
-    
+
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
     // 21.0.23ff gives Illegal character in path at index 128
     implementation 'eu.hansolo.fx:charts:21.0.21'
-    
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
+
+    testImplementation platform('org.junit:junit-bom:5.13.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     // TFE, 20221231: build a test suite for all non-UI tests
-    testImplementation 'org.junit.platform:junit-platform-suite-engine:1.13.0'
+    testImplementation 'org.junit.platform:junit-platform-suite-engine'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     // TFE, 20210216: capture System.err() easily
     testImplementation 'com.github.stefanbirkner:system-lambda:1.2.1'
 }
 
-[compileJava, compileTestJava].each { task ->
-    task.doFirst {
-        options.compilerArgs = [
-                '--module-path', classpath.asPath,
-                '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
-                '-Xlint:unchecked',
-                '-Xlint:deprecation',
-        ]
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+}
+
+// JavaFX needs to be on the module path at runtime - only the platform specific jars
+// the whole classpath / lib dir would fail on duplicate automatic modules (e.g. jfxtras-all)
+def javafxJars = configurations.runtimeClasspath.filter { it.name.startsWith('javafx-') && !(it.name ==~ /javafx-[a-z]+-[\d.]+\.jar/) }
+
+abstract class ModulePathArgumentProvider implements CommandLineArgumentProvider {
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract ConfigurableFileCollection getModulePath()
+
+    @Override
+    Iterable<String> asArguments() {
+        return ['--module-path', modulePath.asPath]
     }
 }
 
 // see https://github.com/kelemen/netbeans-gradle-project/issues/403 on how to extend gradle tasks
-def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
+def javafxArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
                 // various exports needed at run time - see https://stackoverflow.com/a/52142071
                 '--add-exports', 'javafx.graphics/com.sun.javafx.util=ALL-UNNAMED',
                 '--add-exports', 'javafx.base/com.sun.javafx.reflect=ALL-UNNAMED',
@@ -173,21 +172,22 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--enable-native-access', 'javafx.web',
                 '--enable-native-access', 'ALL-UNNAMED',
     ]
-def memoryArgs = ['-Xss80M', '-Xmx4096M', '-Dprism.maxvram=1G']
+def jvmFlags = javafxArgs + ['-Xss80M', '-Xmx4096M', '-Dprism.maxvram=1G']
 
-// used by "run" and by the generated start scripts in build/install/GPXEditor/bin
+// TFE, 20251224: Updates for Java25 and Gradle 9
 application {
-    applicationDefaultJvmArgs = newArgs + memoryArgs + ['-enableassertions']
+    mainClass = 'tf.gpx.edit.main.GPXEditorManager'
+    // used by "run" and by the generated start scripts in build/install/GPXEditor/bin
+    applicationDefaultJvmArgs = jvmFlags + ['-enableassertions']
 }
 
 // start scripts need the javafx jars on the module path - inject it with the script's own APP_HOME
-// only the platform specific javafx jars - the whole lib dir would fail on duplicate automatic modules (e.g. jfxtras-all)
 startScripts {
     def ownJar = tasks.named('jar').flatMap { it.archiveFileName }
+    def fxJarNames = javafxJars.elements.map { files -> files.collect { it.asFile.name } }
     doLast {
-        def fxJars = classpath.files*.name.findAll { it.startsWith('javafx-') && !(it ==~ /javafx-[a-z]+-[\d.]+\.jar/) }
-        def windowsModulePath = fxJars.collect { "%APP_HOME%\\lib\\${it}" }.join(';')
-        def unixModulePath = fxJars.collect { '$APP_HOME/lib/' + it }.join(':')
+        def windowsModulePath = fxJarNames.get().collect { "%APP_HOME%\\lib\\${it}" }.join(';')
+        def unixModulePath = fxJarNames.get().collect { '$APP_HOME/lib/' + it }.join(':')
         windowsScript.text = windowsScript.text.replace('set DEFAULT_JVM_OPTS=', "set DEFAULT_JVM_OPTS=\"--module-path=${windowsModulePath}\" ")
         // list of all jars is too long for the windows command line - use wildcard but keep our own jar first
         windowsScript.text = windowsScript.text.replaceFirst(/(?m)^set CLASSPATH=.*$/, java.util.regex.Matcher.quoteReplacement("set CLASSPATH=%APP_HOME%\\lib\\${ownJar.get()};%APP_HOME%\\lib\\*"))
@@ -196,29 +196,22 @@ startScripts {
 }
 
 // extend Netbeans Gradle "Run" task
-run {
-    doFirst {
-        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
-        enableAssertions = true
-    }
+tasks.named('run', JavaExec) {
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    enableAssertions = true
 //    args = ["-mapCenter", "46.660578140310854 11.15942716598511", "-gpxFiles", "D:/Clouds/ownCloud/Shared/Gemeinsame Dokumente/Urlaub/Gardasee_2025/Variante Brenta/Gardasee_2025_5Tage_2.gpx"]
     args = ["-mapCenter", "46.660578140310854 11.15942716598511"]
 //    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 
-test {
+tasks.named('test', Test) {
 //    exclude '**/*'
-    doFirst {
-        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
-        enableAssertions = true
-    }
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    jvmArgs(jvmFlags)
+    enableAssertions = true
 
     // https://stackoverflow.com/a/35467005
-    testLogging.showStandardStreams = true;   
+    testLogging.showStandardStreams = true
     useJUnitPlatform()
 }
 
@@ -239,13 +232,15 @@ jar {
 
 sourceSets {
     main {
-        resources { 
+        resources {
             // only use minified files
-            exclude { 
-                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.')) 
+            exclude {
+                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.'))
             }
-        } 
-    }  
+        }
+    }
 }
 
-build.finalizedBy(installDist)
+tasks.named('build') {
+    finalizedBy 'installDist'
+}
