@@ -23,6 +23,8 @@ So it was time to start a new self-learning project. And here you see the result
 
 * Note on running GPXEditor: GPXEditor needs a number of --add-modules and --add-exports JVM options (see build.gradle). Use "gradlew installDist" and start GPXEditor with the generated scripts under build/install/GPXEditor/bin - they contain all required options.
 
+* Note on Windows exe: "gradlew jpackageImage" creates a portable folder build/jpackage/image/GPXEditor with GPXEditor.exe and its own Java runtime incl. JavaFX - no installed Java required. "gradlew jpackageInstaller" additionally creates an installer build/jpackage/installer/GPXEditor-&lt;version&gt;.exe (requires WiX Toolset 3). The JavaFX jmods are downloaded once from gluonhq.com.
+
 * Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
 
 * Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).

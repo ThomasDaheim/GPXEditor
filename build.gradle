@@ -13,6 +13,7 @@ version='5.10'
 description = 'GPXEditor - JavaFX GPX file editor'
 
 def fxPlatform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
+def javafxVersion = '25.0.1'
 
 java {
     toolchain {
@@ -39,14 +40,13 @@ repositories {
 
 dependencies {
     // JavaFX explicit dependencies
-    def javafx_version='25.0.1'
-    implementation "org.openjfx:javafx-base:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-graphics:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-controls:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-fxml:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-swing:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-web:$javafx_version:$fxPlatform"
-    implementation "org.openjfx:javafx-media:$javafx_version:$fxPlatform"
+    implementation "org.openjfx:javafx-base:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-graphics:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-controls:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-fxml:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-swing:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-web:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-media:$javafxVersion:$fxPlatform"
 
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.17'
@@ -213,6 +213,146 @@ tasks.named('test', Test) {
     // https://stackoverflow.com/a/35467005
     testLogging.showStandardStreams = true
     useJUnitPlatform()
+}
+
+// TFE, 20261026: Windows exe via jpackage - own java runtime incl. javafx, no installed java required
+//   gradlew jpackageImage     -> build/jpackage/image/GPXEditor/GPXEditor.exe (portable folder)
+//   gradlew jpackageInstaller -> build/jpackage/installer/GPXEditor-<version>.exe (needs WiX 3, found via %WIX%)
+// javafx is linked into the runtime from the javafx jmods - when updating javafxVersion also update the sha256
+// see https://gluonhq.com/products/javafx/
+def javafxJmodsUrl = "https://download2.gluonhq.com/openjfx/${javafxVersion}/openjfx-${javafxVersion}_windows-x64_bin-jmods.zip"
+def javafxJmodsSha256 = '8f52d62b386bcf33a7c6077da052717446dd4238f2f92298bb0788cdcef9b4ed'
+// outside of build dir to survive "clean"
+def javafxJmodsDir = new File(gradle.gradleUserHomeDir, "caches/javafx-jmods/${javafxVersion}")
+// java modules used by GPXEditor and its libraries (jdeps) + locale data, charsets & crypto that jdeps can't detect
+def runtimeModules = ['java.base', 'java.desktop', 'java.logging', 'java.management', 'java.naming', 'java.net.http',
+                      'java.prefs', 'java.scripting', 'java.sql', 'java.xml', 'jdk.accessibility', 'jdk.charsets',
+                      'jdk.crypto.ec', 'jdk.crypto.mscapi', 'jdk.jsobject', 'jdk.localedata', 'jdk.unsupported', 'jdk.zipfs',
+                      'javafx.base', 'javafx.graphics', 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.web', 'javafx.media']
+def appVersion = version
+def appDescription = description
+def appVendor = 'Thomas Feuster'
+def jpackageExe = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+        .map { it.metadata.installationPath.file('bin/jpackage.exe').asFile.absolutePath }
+// jpackage wants one token per --java-options: "--add-exports", "x" -> "--add-exports=x"
+def jpackageJavaOptions = []
+(jvmFlags + ['-enableassertions']).each { arg ->
+    if (!arg.startsWith('-') && jpackageJavaOptions) {
+        jpackageJavaOptions[-1] = jpackageJavaOptions[-1] + '=' + arg
+    } else {
+        jpackageJavaOptions << arg
+    }
+}
+
+abstract class DownloadJmodsTask extends DefaultTask {
+    @Input abstract Property<String> getUrl()
+    @Input abstract Property<String> getSha256()
+    @OutputDirectory abstract DirectoryProperty getDestinationDir()
+    @Inject abstract FileSystemOperations getFs()
+    @Inject abstract ArchiveOperations getArchives()
+
+    @TaskAction
+    void download() {
+        def zip = new File(temporaryDir, 'jmods.zip')
+        new URI(url.get()).toURL().withInputStream { input -> zip.withOutputStream { it << input } }
+        def actual = java.security.MessageDigest.getInstance('SHA-256').digest(zip.bytes).encodeHex().toString()
+        if (actual != sha256.get()) {
+            throw new GradleException("SHA-256 mismatch for ${url.get()}: expected ${sha256.get()}, got ${actual}")
+        }
+        fs.sync {
+            from(archives.zipTree(zip)) {
+                include '**/*.jmod'
+                eachFile { it.path = it.name }
+            }
+            into destinationDir
+            includeEmptyDirs = false
+        }
+        zip.delete()
+    }
+}
+
+abstract class JPackageTask extends DefaultTask {
+    @Input abstract Property<String> getJpackage()
+    @Input abstract ListProperty<String> getArguments()
+    @InputFiles @PathSensitive(PathSensitivity.RELATIVE) abstract ConfigurableFileCollection getSources()
+    @Input @Optional abstract Property<String> getWixHome()
+    @OutputDirectory abstract DirectoryProperty getDestinationDir()
+    @Inject abstract ExecOperations getExecOps()
+    @Inject abstract FileSystemOperations getFs()
+
+    @TaskAction
+    void pack() {
+        // jpackage refuses to overwrite existing output
+        fs.delete { delete destinationDir }
+        execOps.exec {
+            executable jpackage.get()
+            args arguments.get()
+            args '--dest', destinationDir.get().asFile.absolutePath
+            if (wixHome.present) {
+                environment 'PATH', "${wixHome.get()}\\bin;${System.getenv('PATH')}"
+            }
+        }
+    }
+}
+
+def downloadJavafxJmods = tasks.register('downloadJavafxJmods', DownloadJmodsTask) {
+    url = javafxJmodsUrl
+    sha256 = javafxJmodsSha256
+    destinationDir = javafxJmodsDir
+}
+
+// application jars without javafx - javafx comes with the runtime
+def jpackageInputDir = layout.buildDirectory.dir('jpackage/input')
+def jpackageInput = tasks.register('jpackageInput', Sync) {
+    from(tasks.named('jar'))
+    from(configurations.runtimeClasspath) {
+        exclude 'javafx-*', 'jdk-jsobject-*'
+    }
+    into jpackageInputDir
+}
+
+def jpackageImageDir = layout.buildDirectory.dir('jpackage/image')
+def jpackageImage = tasks.register('jpackageImage', JPackageTask) {
+    group = 'distribution'
+    description = 'Creates a portable GPXEditor folder with GPXEditor.exe and its own java runtime.'
+    sources.from(jpackageInput, downloadJavafxJmods)
+    jpackage = jpackageExe
+    destinationDir = jpackageImageDir
+    def mainJar = tasks.named('jar').flatMap { it.archiveFileName }
+    arguments.addAll(['--type', 'app-image',
+                      '--name', appName,
+                      '--app-version', appVersion,
+                      '--vendor', appVendor,
+                      '--description', appDescription,
+                      '--icon', file('src/main/resources/GPXEditorManager.ico').absolutePath,
+                      '--input', jpackageInputDir.get().asFile.absolutePath,
+                      '--main-class', 'tf.gpx.edit.main.GPXEditorManager',
+                      '--module-path', javafxJmodsDir.absolutePath,
+                      '--add-modules', runtimeModules.join(','),
+                      '--jlink-options', '--strip-debug --no-header-files --no-man-pages --strip-native-commands'])
+    arguments.addAll(mainJar.map { ['--main-jar', it] })
+    arguments.addAll(jpackageJavaOptions.collectMany { ['--java-options', it] })
+}
+
+tasks.register('jpackageInstaller', JPackageTask) {
+    group = 'distribution'
+    description = 'Creates a Windows installer GPXEditor-<version>.exe from the jpackageImage.'
+    sources.from(jpackageImage)
+    jpackage = jpackageExe
+    destinationDir = layout.buildDirectory.dir('jpackage/installer')
+    wixHome = providers.environmentVariable('WIX')
+    arguments.addAll(['--type', 'exe',
+                      '--app-image', jpackageImageDir.get().dir(appName).asFile.absolutePath,
+                      '--name', appName,
+                      '--app-version', appVersion,
+                      '--vendor', appVendor,
+                      '--description', appDescription,
+                      '--win-menu',
+                      '--win-shortcut',
+                      '--win-dir-chooser',
+                      '--win-per-user-install',
+                      // fixed id so that a new version replaces the installed one
+                      '--win-upgrade-uuid', 'fecd95c1-b9f1-4e0c-9075-721a5f95a9d8'])
 }
 
 jar {
