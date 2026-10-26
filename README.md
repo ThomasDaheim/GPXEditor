@@ -21,7 +21,7 @@ So it was time to start a new self-learning project. And here you see the result
 * Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 * Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
-* Note on running GPXEditor: Analogous to the --add-modules and --add-exports in build.gradle you also need the same set of commands when trying to run GPXEditor. To show how this should look like please see GPXEditor.bat.
+* Note on running GPXEditor: GPXEditor needs a number of --add-modules and --add-exports JVM options (see build.gradle). Use "gradlew installDist" and start GPXEditor with the generated scripts under build/install/GPXEditor/bin - they contain all required options.
 
 * Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
 

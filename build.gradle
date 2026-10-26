@@ -75,6 +75,11 @@ repositories {
             mavenPom()
             artifact()
         }
+        // only our own helper library and the self-built gpx-parser 1.14 come from the local repo - everything else from remote repos
+        content {
+            includeGroup 'tf.JavaHelper'
+            includeGroup 'me.himanshusoni.gpxparser'
+        }
     }
     mavenCentral()
     // You may define additional repositories, or even remove "mavenCentral()".
@@ -184,8 +189,8 @@ task unzip(type: Copy) {
     into outputDir
 }
 
-compileJava {
-    doFirst {
+[compileJava, compileTestJava].each { task ->
+    task.doFirst {
         options.compilerArgs = [
                 '--module-path', classpath.asPath,
                 '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
@@ -231,15 +236,32 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--enable-native-access', 'javafx.web',
                 '--enable-native-access', 'ALL-UNNAMED',
     ]
-    
+def memoryArgs = ['-Xss80M', '-Xmx4096M', '-Dprism.maxvram=1G']
+
+// used by "run" and by the generated start scripts in build/install/GPXEditor/bin
+application {
+    applicationDefaultJvmArgs = newArgs + memoryArgs + ['-enableassertions']
+}
+
+// start scripts need the javafx jars on the module path - inject it with the script's own APP_HOME
+// only the platform specific javafx jars - the whole lib dir would fail on duplicate automatic modules (e.g. jfxtras-all)
+startScripts {
+    def ownJar = tasks.named('jar').flatMap { it.archiveFileName }
+    doLast {
+        def fxJars = classpath.files*.name.findAll { it.startsWith('javafx-') && !(it ==~ /javafx-[a-z]+-[\d.]+\.jar/) }
+        def windowsModulePath = fxJars.collect { "%APP_HOME%\\lib\\${it}" }.join(';')
+        def unixModulePath = fxJars.collect { '$APP_HOME/lib/' + it }.join(':')
+        windowsScript.text = windowsScript.text.replace('set DEFAULT_JVM_OPTS=', "set DEFAULT_JVM_OPTS=\"--module-path=${windowsModulePath}\" ")
+        // list of all jars is too long for the windows command line - use wildcard but keep our own jar first
+        windowsScript.text = windowsScript.text.replaceFirst(/(?m)^set CLASSPATH=.*$/, java.util.regex.Matcher.quoteReplacement("set CLASSPATH=%APP_HOME%\\lib\\${ownJar.get()};%APP_HOME%\\lib\\*"))
+        unixScript.text = unixScript.text.replace('\nexec "$JAVACMD" "$@"', "\nexec \"\$JAVACMD\" --module-path=\"${unixModulePath}\" \"\$@\"")
+    }
+}
+
 // extend Netbeans Gradle "Run" task
 run {
     doFirst {
         jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
         // profiler not working with netbeans...
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
 //        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/visualvm_212/visualvm/lib/deployed/jdk16/windows-amd64/profilerinterface.dll"="C:/PROGRA~1/visualvm_212/visualvm/lib",5140')
@@ -264,23 +286,6 @@ test {
     // https://stackoverflow.com/a/35467005
     testLogging.showStandardStreams = true;   
     useJUnitPlatform()
-}
-
-// extend Netbeans Gradle "Debug" task
-task(debug, dependsOn: 'classes', type: JavaExec) {
-    doFirst {
-        main = 'tf.gpx.edit.main.GPXEditorManager'
-        classpath = sourceSets.main.runtimeClasspath
-        jvmArgs = jvmArgs.plus([
-                '--module-path', classpath.asPath,
-                "-Xdebug",
-                "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005",
-        ])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
-    }
 }
 
 jar {
