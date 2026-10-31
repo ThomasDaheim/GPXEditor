@@ -74,6 +74,21 @@ public class TestSlopeBins {
     }
 
     @Test
+    public void testBinColorsForLegend() {
+        final java.util.List<Color> colors = slopeBins.getBinColors();
+        final int binsPerSide = (int) Math.round(slopeBins.getMaxSlope() / slopeBins.getBinWidth());
+
+        // one color per bin, sorted from -max to +max
+        assertEquals(2 * binsPerSide, colors.size());
+        for (int i = 0; i < colors.size(); i++) {
+            final double slopeInBin = -slopeBins.getMaxSlope() + (i + 0.5) * slopeBins.getBinWidth();
+            assertEquals(slopeBins.getBinColor(slopeInBin), colors.get(i), "Color for bin " + i);
+        }
+        assertEquals(slopeBins.getBinColor(-100.0), slopeBins.getBelowMaxSlopeColor());
+        assertEquals(slopeBins.getBinColor(100.0), slopeBins.getAboveMaxSlopeColor());
+    }
+
+    @Test
     public void testBinColorNullInput() {
         assertThrows(NullPointerException.class, () -> slopeBins.getBinColor(null), "Null input should throw NPE");
     }

@@ -76,10 +76,17 @@ public class SlopeChart extends HeightChart {
     private final Group slopeGroup = new Group();
     private final Map<Color, Path> slopePaths = new HashMap<>();
 
+    // TFE, 20261031: legend in the upper right corner of the plot area
+    private final static double LEGEND_OFFSET = 10.0;
+    private final SlopeLegend legend = new SlopeLegend();
+
     private SlopeChart() {
         slopeGroup.setMouseTransparent(true);
         // behind the (invisible) series, labels and selection
         getPlotChildren().add(0, slopeGroup);
+
+        legend.setVisible(false);
+        chartContent.getChildren().add(legend);
     }
 
     public static SlopeChart getInstance() {
@@ -157,6 +164,15 @@ public class SlopeChart extends HeightChart {
         }
 
         layoutSlopePaths();
+        layoutLegend();
+    }
+
+    private void layoutLegend() {
+        legend.setVisible(!segments.isEmpty());
+        // plot area is a child of chartContent as well
+        legend.relocate(
+                plotArea.getLayoutX() + plotArea.getWidth() - legend.getLegendWidth() - LEGEND_OFFSET,
+                plotArea.getLayoutY() + LEGEND_OFFSET);
     }
 
     private void layoutSlopePaths() {

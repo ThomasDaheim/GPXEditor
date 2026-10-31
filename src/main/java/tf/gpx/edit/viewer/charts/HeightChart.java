@@ -83,8 +83,9 @@ public class HeightChart extends AbstractChart {
     private final NumberAxis xAxis;
     private final NumberAxis yAxis;
 
-    private final Region plotArea = (Region) lookup(".chart-plot-background");
-    private final Pane chartContent = (Pane) lookup(".chart-content");
+    // TFE, 20261031: protected - SlopeChart adds its legend here
+    protected final Region plotArea = (Region) lookup(".chart-plot-background");
+    protected final Pane chartContent = (Pane) lookup(".chart-content");
 
     private final Text mouseText = new Text("");
     private final Line mouseLine = new Line();
