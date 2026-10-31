@@ -67,6 +67,12 @@ public class OpenElevationService implements IElevationProvider {
     private final static int STATUS_OK = 200;
     private final static int STATUS_OK2 = 201;
     private final static int STATUS_NO_DATA = 404;
+    private final static int STATUS_FORBIDDEN = 403;
+    private final static String QUOTA_EXCEEDED = "Quota exceeded";
+
+    // TFE, 20261031: remember if the daily / per minute limit of the api key has been hit
+    // used by tests to skip instead of fail - can be reset via resetQuotaExceeded()
+    private static volatile boolean quotaExceeded = false;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -87,7 +93,15 @@ public class OpenElevationService implements IElevationProvider {
     public ElevationProviderOptions getElevationProviderOptions() {
         return elevOptions;
     }
-    
+
+    public static boolean isQuotaExceeded() {
+        return quotaExceeded;
+    }
+
+    public static void resetQuotaExceeded() {
+        quotaExceeded = false;
+    }
+
     @Override
     public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
         API_KEY = GPXEditorPreferences.ROUTING_API_KEY.getAsType();
@@ -145,6 +159,9 @@ public class OpenElevationService implements IElevationProvider {
             if (response.statusCode() == STATUS_OK || response.statusCode() == STATUS_OK2) {
                 result = response.body();
             } else {
+                if (response.statusCode() == STATUS_FORBIDDEN && response.body().contains(QUOTA_EXCEEDED)) {
+                    quotaExceeded = true;
+                }
                 // TFE, 20220311: no error message for "outside SRTM data range"
                 if (response.statusCode() != STATUS_NO_DATA) {
                     Logger.getLogger(OpenElevationService.class.getName()).log(Level.SEVERE, 

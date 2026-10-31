@@ -41,6 +41,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -77,6 +78,8 @@ public class TestPublicIPAddress {
         
         try {
             final HttpResponse<String> response = client.send(requestGET, HttpResponse.BodyHandlers.ofString());
+            // TFE, 20261031: rate limit of the free service reached - that's no error of ours, skip the test instead of failing
+            Assumptions.assumeFalse(429 == response.statusCode(), "ipapi.co rate limit reached - test skipped");
             if (200 == response.statusCode()) {
                 result = response.body();
             } else {
