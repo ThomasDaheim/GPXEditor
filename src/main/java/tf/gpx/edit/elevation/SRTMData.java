@@ -99,6 +99,16 @@ class SRTMData {
         }
     }
     
+    // TFE, 20261031: set a complete row at once - faster than setValue() for each value when reading files
+    public void setRowValues(final int rowNum, final short[] values) {
+        assert rowNum > -1;
+        assert values.length == numberCols;
+
+        if (rowNum < numberRows) {
+            myDataValues[rowNum] = values;
+        }
+    }
+
     private short[] initDataRow() {
         return myInitValues.clone();
     }

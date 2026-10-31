@@ -27,9 +27,13 @@ package tf.gpx.edit.elevation;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +47,8 @@ class SRTMDataReader implements ISRTMDataReader {
     private final static SRTMDataReader INSTANCE = new SRTMDataReader();
     
     private final static int DATA_SIZE = 2;
+    // hgt files are big-endian signed shorts
+    private final static ValueLayout.OfShort BIG_ENDIAN_SHORT = ValueLayout.JAVA_SHORT_UNALIGNED.withOrder(ByteOrder.BIG_ENDIAN);
     protected final static long DATA_SIZE_SRTM1 = SRTMDataHelper.SRTMDataType.SRTM1.getDataCount() * SRTMDataHelper.SRTMDataType.SRTM1.getDataCount() * DATA_SIZE;
     protected final static long DATA_SIZE_SRTM3 = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() * SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() * DATA_SIZE;
 
@@ -107,9 +113,11 @@ class SRTMDataReader implements ISRTMDataReader {
                 
 //                final Instant startTime = Instant.now();
                 // TFE, 20220302: updated file reading from https://pulasthisupun.blogspot.com/2016/06/reading-and-writing-binary-files-in.html
+                // TFE, 20261031: map via FFM - the arena unmaps the file when closed
+                // (a MappedByteBuffer keeps the file locked on windows until garbage collected => no delete / overwrite possible)
                 try (
-                        RandomAccessFile rIn = new RandomAccessFile(srtmFile, "r"); 
-//                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
+                        FileChannel inChannel = FileChannel.open(srtmFile.toPath(), StandardOpenOption.READ);
+                        Arena arena = Arena.ofConfined();
                         ) {
 //                    Instant testTime = Instant.now();
 //                    System.out.println();
@@ -126,12 +134,7 @@ class SRTMDataReader implements ISRTMDataReader {
 //                    System.out.println("Time to read ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
 
                     // TFE, 20250624: small speedup with using a MappedByteBuffer
-                    // TFE, 20261031: but a mapped file stays locked on windows until the buffer is garbage collected
-                    // => file can't be deleted or overwritten (e.g. by SRTM1 download) - read it in one go instead
-                    final byte[] data = new byte[(int) rIn.length()];
-                    rIn.readFully(data);
-                    final ByteBuffer buf = ByteBuffer.wrap(data);
-                    buf.order(java.nio.ByteOrder.BIG_ENDIAN);
+                    final MemorySegment data = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, inChannel.size(), arena);
 //                    testTime = Instant.now();
 //                    System.out.println("Time to create ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
 //                    testTime = Instant.now();
@@ -144,16 +147,12 @@ class SRTMDataReader implements ISRTMDataReader {
 //                    Intel ("little-endian") order so some byte-swapping may be necessary.
 //                    Heights are in meters referenced to the WGS84/EGM96 geoid.
 //                    Data voids are assigned the value -32768.
-                    short z; 
-                    int pos = 0; 
-                    for (int row = 0; row < rows; row++) { 
-                        for (int col = 0; col < cols; col++) { 
-                            z = buf.getShort(pos); 
-                            //System.out.println("row: " + row + ", col: " + col + ", z: " + z);
-                            result.setValue(row, col, z); 
-                            pos += DATA_SIZE; 
-                        } 
-                    } 
+                    // TFE, 20261031: copy complete rows at once (big-endian) - as fast as the former MappedByteBuffer
+                    for (int row = 0; row < rows; row++) {
+                        final short[] rowValues = new short[cols];
+                        MemorySegment.copy(data, BIG_ENDIAN_SHORT, (long) row * cols * DATA_SIZE, rowValues, 0, cols);
+                        result.setRowValues(row, rowValues);
+                    }
 //                    testTime = Instant.now();
 //                    System.out.println("Time to read SRTMData: " + ChronoUnit.MICROS.between(startTime, testTime));
                 } catch (OutOfMemoryError | IOException ex) { 
