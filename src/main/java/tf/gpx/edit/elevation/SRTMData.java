@@ -37,15 +37,18 @@ class SRTMData {
     private final static short NO_DATA = Short.MIN_VALUE;
 
     private final SRTMDataKey myDataKey;
-    private final short[][] myDataValues; 
+    // TFE, 20261031: numeric key of the tile - comparing that is much faster than creating & comparing names for each lookup
+    private final long myTileKey;
+    private final short[][] myDataValues;
     private final int numberRows;
     private final int numberCols;
 
     // TFE, 20250624: speed up things a bit - clone() is faster than fill()
-    private final short[] myInitValues; 
+    private final short[] myInitValues;
 
     public SRTMData(final String dataFile, final String name, final SRTMDataHelper.SRTMDataType type) {
         myDataKey = new SRTMDataKey(name, type);
+        myTileKey = SRTMDataHelper.getKeyForName(name);
         myDataValues = new short[type.getDataCount()][];
         numberRows = type.getDataCount();
         numberCols = type.getDataCount();
@@ -155,7 +158,11 @@ class SRTMData {
         double result = NO_DATA;
         
         // convert lon & lat to name & check against self
-        if (SRTMDataHelper.getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey())) {
+        // TFE, 20261031: compare numeric keys if possible - names only for data that doesn't follow the naming scheme
+        final boolean isMyTile = (data.myTileKey != SRTMDataHelper.NO_KEY) ?
+                data.myTileKey == SRTMDataHelper.getKeyForCoordinate(latitude, longitude) :
+                SRTMDataHelper.getNameForCoordinate(latitude, longitude).equals(data.getKey().getKey());
+        if (isMyTile) {
             //System.out.println("SRTM data found: " + data.getKey().getKey());
             // convert lon & lat to col & row
             
