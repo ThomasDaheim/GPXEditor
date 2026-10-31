@@ -114,7 +114,8 @@ public class SlopeBins {
     public Color getBinColor(final Double value) {
         Color result = NOT_FOUND_COLOR;
         
-        if (value > MAX_SLOPE) {
+        // TFE, 20261031: bins include their lower bound but not the upper one - so exactly MAX_SLOPE is "above max"
+        if (value >= MAX_SLOPE) {
             result = PLUSMAX_INCR_COLOR;
         } else if (value < -MAX_SLOPE) {
             result = PLUSMAX_DECR_COLOR;

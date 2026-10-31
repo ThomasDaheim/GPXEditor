@@ -64,7 +64,16 @@ public class TestSlopeBins {
 
     @Test
     public void testBinColorOnUpperBounds() {
-        assertEquals(Color.GRAY, slopeBins.getBinColor(20.0), "Upper bound of last bin should be exclusive");
+        // upper bound of last bin is exclusive - exactly max slope belongs to "above max"
+        assertEquals(Color.DARKRED, slopeBins.getBinColor(20.0), "Max slope should return PLUSMAX_INCR_COLOR");
+        assertEquals(slopeBins.getBinColor(19.99), slopeBins.getBinColors().get(slopeBins.getBinColors().size()-1), "Just below max slope should be in last bin");
+        // lower bound of first bin is inclusive - exactly -max slope is still in the first bin
+        assertEquals(slopeBins.getBinColors().get(0), slopeBins.getBinColor(-20.0), "Minus max slope should be in first bin");
+
+        // no gaps anywhere between -max and +max
+        for (double value = -25.0; value <= 25.0; value += 0.5) {
+            assertNotEquals(Color.GRAY, slopeBins.getBinColor(value), "No color for " + value);
+        }
     }
 
     @Test
