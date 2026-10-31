@@ -32,6 +32,7 @@ import eu.hansolo.fx.charts.series.XYSeriesBuilder;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -121,7 +122,36 @@ public class PanoramaViewer_Canvas {
     private TimeZone timeZone = null;
     
     private final Label noElevationDataLabel = new Label("No elevation data available");
-    
+
+    // TFE, 20261031: tooltip text is only needed when the mouse is over a point - create it lazily
+    // formatting it upfront for all points (twice, for 0-360 and 360-720) was a noticeable part of the setup time
+    private static class PanoramaChartItem extends XYChartItem {
+        private final double distance;
+        private final double elevation;
+        private String tooltipText;
+
+        PanoramaChartItem(final double azimuth, final double elevationAngle, final double distance, final double elevation) {
+            super(azimuth, elevationAngle);
+            this.distance = distance;
+            this.elevation = elevation;
+            // null => not yet created
+            tooltipText = null;
+        }
+
+        @Override
+        public String getTooltipText() {
+            if (tooltipText == null) {
+                tooltipText = String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", elevation);
+            }
+            return tooltipText;
+        }
+
+        @Override
+        public void setTooltipText(final String text) {
+            tooltipText = text;
+        }
+    }
+
     private PanoramaViewer_Canvas() {
         // TFE, 20230405: max out width based on screen width
         scene  = new Scene(pane, Screen.getPrimary().getVisualBounds().getWidth() * 0.95, VIEWER_HEIGHT);
@@ -358,8 +388,13 @@ public class PanoramaViewer_Canvas {
         // and now draw from outer to inner and from darker to brighter color
         // see Horizon_PodTriglavom.jpg for expected result
         calcViewingAngles();
-        drawPanorama();
+        // TFE, 20261031: every change of axes or series redraws the whole chart
+        // so remove the old panorama first, set the axes and only then add the new data - one full redraw only
+        if (elevationChart != null) {
+            getElevationSeries().clear();
+        }
         setAxes();
+        drawPanorama();
 
         // we didn't have any data - lets alert the user
         noElevationDataLabel.setVisible(panorama.noElevationData());
@@ -389,15 +424,13 @@ public class PanoramaViewer_Canvas {
                 double azimuthAngle = coord.getLeft().getAzimuth();
                 final double elevationAngle = coord.getLeft().getElevation();
                 
-                // need to set tooltip here right away
-                XYChartItem data = new XYChartItem(azimuthAngle, elevationAngle, "",
-                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
+                // tooltip is created lazily
+                XYChartItem data = new PanoramaChartItem(azimuthAngle, elevationAngle, distance, coord.getRight().getElevation());
                 dataSet.add(data);
-                
+
                 // add data > 360 as well to have it available for dragging
                 azimuthAngle += 360;
-                data = new XYChartItem(azimuthAngle, elevationAngle, "",
-                        String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", coord.getRight().getElevation()));
+                data = new PanoramaChartItem(azimuthAngle, elevationAngle, distance, coord.getRight().getElevation());
                 dataSet.add(data);
             }
             // sort data since we added stuff before & after
@@ -527,7 +560,24 @@ public class PanoramaViewer_Canvas {
     }
 
     @SuppressWarnings("unchecked")
+    private ObservableList<XYSeries> getElevationSeries() {
+        return (ObservableList<XYSeries>) (ObservableList<?>) elevationChart.getXYPane().getListOfSeries();
+    }
+
+    @SuppressWarnings("unchecked")
     private void drawPanorama() {
+        // TFE, 20261031: re-use existing chart - creating a new one triggers various full redraws
+        if (elevationChart != null) {
+            // sun path belongs to the previous location
+            if (sunPathChart != null) {
+                chartGroup.getChildren().remove(sunPathChart);
+                sunPathChart = null;
+            }
+
+            getElevationSeries().setAll(elevationChartData);
+            return;
+        }
+
         chartGroup.getChildren().clear();
 
         // create charts from data
