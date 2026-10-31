@@ -160,6 +160,44 @@ public class TestSlopeSegments {
         Assertions.assertEquals(SlopeBins.getInstance().getBinColor(10.0), result.get(0).getColor());
     }
 
+    @Test
+    public void testMergeNarrowSegments() {
+        // 10km flat, then 400m hike: 200m 30% up & 200m 30% down, then 10km flat - point every 10m
+        final int count = 2041;
+        final double[] distances = new double[count];
+        final double[] elevations = new double[count];
+        for (int i = 0; i < count; i++) {
+            distances[i] = i * 10.0;
+            if (i > 1000 && i <= 1020) {
+                elevations[i] = elevations[i-1] + 3.0;
+            } else if (i > 1020 && i <= 1040) {
+                elevations[i] = elevations[i-1] - 3.0;
+            } else if (i > 0) {
+                elevations[i] = elevations[i-1];
+            }
+        }
+        final List<SlopeSegments.SlopeSegment> segments = SlopeSegments.calculate(distances, elevations, 0);
+        Assertions.assertEquals(4, segments.size());
+
+        // zoomed in: 1 pixel per 10m - nothing to merge
+        List<SlopeSegments.SlopeSegment> result = SlopeSegments.mergeNarrowSegments(segments,
+                (i) -> distances[i] / 10.0, (i) -> distances[i], (i) -> elevations[i], 2.0);
+        Assertions.assertEquals(4, result.size());
+
+        // zoomed out: 1 pixel per 1km - up & down of the hike are combined to average slope 0 => only one segment left
+        result = SlopeSegments.mergeNarrowSegments(segments,
+                (i) -> distances[i] / 1000.0, (i) -> distances[i], (i) -> elevations[i], 2.0);
+        checkContiguous(result, count);
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(SlopeBins.getInstance().getBinColor(0.0), result.get(0).getColor());
+
+        // single narrow segment next to a wide one keeps its color
+        result = SlopeSegments.mergeNarrowSegments(segments.subList(0, 2),
+                (i) -> distances[i] / 300.0, (i) -> distances[i], (i) -> elevations[i], 2.0);
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertEquals(segments.get(1).getColor(), result.get(1).getColor());
+    }
+
     private void checkContiguous(final List<SlopeSegments.SlopeSegment> result, final int count) {
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(OFFSET * (result.get(0).getStart() == 0 ? 0 : 1), result.get(0).getStart());

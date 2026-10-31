@@ -62,8 +62,10 @@ import tf.gpx.edit.items.GPXWaypoint;
 public class SlopeChart extends HeightChart {
     private final static SlopeChart INSTANCE = new SlopeChart();
 
-    // skip points closer than this on the x axis [pixel] when drawing
+    // combine points closer than this on the x axis [pixel] when drawing
     private final static double MIN_PIXEL_DISTANCE = 0.5;
+    // segments narrower than this [pixel] are merged for drawing
+    private final static double MIN_SEGMENT_WIDTH = 2.0;
 
     // the series themselves are invisible
     private final static String TRANSPARENT = "00000000";
@@ -181,26 +183,50 @@ public class SlopeChart extends HeightChart {
         final List<Pair<GPXWaypoint, Number>> points = getPoints();
         final double yOrigin = yAxis.getDisplayPosition(yAxis.toRealValue(0.0));
 
+        // data might have changed in between
+        if (!segments.isEmpty() && segments.get(segments.size()-1).getEnd() >= points.size()) {
+            return;
+        }
+
+        // segments too narrow to be seen are combined - otherwise random colors in case of many segments per pixel
+        final List<SlopeSegments.SlopeSegment> drawSegments = SlopeSegments.mergeNarrowSegments(
+                segments,
+                (i) -> xAxis.getDisplayPosition(points.get(i).getRight().doubleValue() / 1000.0),
+                (i) -> points.get(i).getRight().doubleValue(),
+                (i) -> getYValue(points.get(i).getLeft()),
+                MIN_SEGMENT_WIDTH);
+
         // collect path elements per color first and set them at once - avoids lots of change events
         final Map<Color, List<PathElement>> elementsPerColor = new HashMap<>();
-        for (SlopeSegments.SlopeSegment segment : segments) {
-            if (segment.getEnd() >= points.size()) {
-                // data has changed in between
-                continue;
-            }
+        for (SlopeSegments.SlopeSegment segment : drawSegments) {
             final List<PathElement> elements = elementsPerColor.computeIfAbsent(segment.getColor(), (t) -> new ArrayList<>());
 
             final double xStart = xAxis.getDisplayPosition(points.get(segment.getStart()).getRight().doubleValue() / 1000.0);
             elements.add(new MoveTo(xStart, yOrigin));
-            double lastX = Double.NEGATIVE_INFINITY;
+            // more than one point per pixel doesn't make a visible difference - but keep the highest one to not cut off peaks
+            double bucketX = Double.NaN;
+            double bucketY = 0.0;
             double x = xStart;
+            double y = yOrigin;
             for (int i = segment.getStart(); i <= segment.getEnd(); i++) {
                 x = xAxis.getDisplayPosition(points.get(i).getRight().doubleValue() / 1000.0);
-                // more than one point per pixel doesn't make a visible difference
-                if (x - lastX >= MIN_PIXEL_DISTANCE || i == segment.getEnd()) {
-                    elements.add(new LineTo(x, yAxis.getDisplayPosition(getYValue(points.get(i).getLeft()))));
-                    lastX = x;
+                y = yAxis.getDisplayPosition(getYValue(points.get(i).getLeft()));
+                if (Double.isNaN(bucketX)) {
+                    bucketX = x;
+                    bucketY = y;
+                } else if (x - bucketX < MIN_PIXEL_DISTANCE) {
+                    // smaller y is higher up
+                    bucketY = Math.min(bucketY, y);
+                } else {
+                    elements.add(new LineTo(bucketX, bucketY));
+                    bucketX = x;
+                    bucketY = y;
                 }
+            }
+            elements.add(new LineTo(bucketX, bucketY));
+            // end exactly at the last point - that's where the next segment starts
+            if (x != bucketX) {
+                elements.add(new LineTo(x, y));
             }
             elements.add(new LineTo(x, yOrigin));
             elements.add(new ClosePath());

@@ -29,6 +29,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.IntToDoubleFunction;
 import javafx.scene.paint.Color;
 
 /**
@@ -135,6 +136,93 @@ public class SlopeSegments {
         }
 
         return result;
+    }
+
+    /**
+     * Merge segments that are too narrow to be seen on the screen.
+     *
+     * TFE, 20261031: on long tracks (e.g. a road trip with some hikes in between) many segments fall into the same pixel.
+     * Which color is visible then only depends on the drawing order - showing random stripes.
+     * Runs of narrow segments are therefore combined into chunks of at least minWidth with the color of their average slope.
+     *
+     * @param segments as calculated by calculate()
+     * @param xPosition display position of a point index [pixel]
+     * @param distance cumulated distance of a point index [m]
+     * @param elevation elevation of a point index [m]
+     * @param minWidth minimum width of a segment [pixel]
+     * @return segments to draw
+     */
+    public static List<SlopeSegment> mergeNarrowSegments(
+            final List<SlopeSegment> segments,
+            final IntToDoubleFunction xPosition,
+            final IntToDoubleFunction distance,
+            final IntToDoubleFunction elevation,
+            final double minWidth) {
+        final List<SlopeSegment> result = new ArrayList<>();
+
+        SlopeSegment chunk = null;
+        int chunkCount = 0;
+        for (SlopeSegment segment : segments) {
+            if (width(segment, xPosition) >= minWidth) {
+                addChunk(result, chunk, chunkCount, distance, elevation);
+                chunk = null;
+                addSegment(result, segment);
+                continue;
+            }
+
+            if (chunk != null && chunk.getEnd() == segment.getStart()) {
+                chunk.end = segment.getEnd();
+                chunkCount++;
+            } else {
+                addChunk(result, chunk, chunkCount, distance, elevation);
+                chunk = new SlopeSegment(segment.getStart(), segment.getEnd(), segment.getColor());
+                chunkCount = 1;
+            }
+
+            if (width(chunk, xPosition) >= minWidth) {
+                addChunk(result, chunk, chunkCount, distance, elevation);
+                chunk = null;
+            }
+        }
+        addChunk(result, chunk, chunkCount, distance, elevation);
+
+        return result;
+    }
+
+    private static double width(final SlopeSegment segment, final IntToDoubleFunction xPosition) {
+        return xPosition.applyAsDouble(segment.getEnd()) - xPosition.applyAsDouble(segment.getStart());
+    }
+
+    private static void addChunk(
+            final List<SlopeSegment> result,
+            final SlopeSegment chunk,
+            final int chunkCount,
+            final IntToDoubleFunction distance,
+            final IntToDoubleFunction elevation) {
+        if (chunk == null) {
+            return;
+        }
+
+        Color color = chunk.getColor();
+        if (chunkCount > 1) {
+            // color of the average slope over the chunk
+            final double length = distance.applyAsDouble(chunk.getEnd()) - distance.applyAsDouble(chunk.getStart());
+            if (length > 0.0) {
+                color = SlopeBins.getInstance().getBinColor(
+                        (elevation.applyAsDouble(chunk.getEnd()) - elevation.applyAsDouble(chunk.getStart())) / length * 100.0);
+            }
+        }
+        addSegment(result, new SlopeSegment(chunk.getStart(), chunk.getEnd(), color));
+    }
+
+    // add a copy - merge with previous one if adjacent and same color
+    private static void addSegment(final List<SlopeSegment> result, final SlopeSegment segment) {
+        final SlopeSegment previous = result.isEmpty() ? null : result.get(result.size()-1);
+        if (previous != null && previous.getEnd() == segment.getStart() && previous.getColor().equals(segment.getColor())) {
+            previous.end = segment.getEnd();
+        } else {
+            result.add(new SlopeSegment(segment.getStart(), segment.getEnd(), segment.getColor()));
+        }
     }
 
     // Douglas-Peucker on the height profile with vertical distance to the line between start & end
