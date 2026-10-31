@@ -72,7 +72,8 @@ public class HeightChart extends AbstractChart {
 
     private final ObservableList<Triple<GPXWaypoint, Number, Node>> selectedWaypoints;
     
-    private boolean noLayout = false;
+    // TFE, 20261031: protected - SlopeChart needs to know as well
+    protected boolean noLayout = false;
     
     private double dragStartDistance = Double.MAX_VALUE;
     private double dragEndDistance = Double.MIN_VALUE;
