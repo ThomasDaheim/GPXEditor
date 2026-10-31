@@ -32,14 +32,17 @@ import eu.hansolo.fx.charts.series.XYSeriesBuilder;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
-import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -50,7 +53,6 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
-import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
@@ -71,7 +73,6 @@ public class PanoramaViewer_Canvas {
     // http://www.javaworld.com/article/2073352/core-java/simply-singleton.html
     private final static PanoramaViewer_Canvas INSTANCE = new PanoramaViewer_Canvas();
 
-    private final static int VIEWER_WIDTH = 1400;
     private final static int VIEWER_HEIGHT = 800;
     
     // we want to have a similar angular resolution for the sun path as for the elevations
@@ -84,14 +85,42 @@ public class PanoramaViewer_Canvas {
     
     private final static double SCALE_FACT = 1.1;
 
-    private final static int COLOR_STEPS = 8; // we have 8 color steps defined in CSS
+    // TFE, 20261031: terrain colors from near to far - same colors as used before for the distance slices
+    private final static Color[] TERRAIN_COLORS = {
+        Color.web("#C6C7C9"), Color.web("#BCBECD"), Color.web("#A7A6CE"), Color.web("#8285D2"),
+        Color.web("#4D51D9"), Color.web("#3B40DA"), Color.web("#3A40DE"), Color.web("#0C11E6")};
+    // color lookup by distance - sqrt to have more variation nearby
+    private final static int COLOR_LOOKUP_SIZE = 256;
+    private final static int[] TERRAIN_COLOR_LOOKUP = new int[COLOR_LOOKUP_SIZE];
+    private final static int RIDGE_COLOR = toArgb(Color.web("#696969"));
+    static {
+        for (int i = 0; i < COLOR_LOOKUP_SIZE; i++) {
+            final double pos = (double) i / (COLOR_LOOKUP_SIZE - 1) * (TERRAIN_COLORS.length - 1);
+            final int index = Math.min((int) pos, TERRAIN_COLORS.length - 2);
+            TERRAIN_COLOR_LOOKUP[i] = toArgb(TERRAIN_COLORS[index].interpolate(TERRAIN_COLORS[index + 1], pos - index));
+        }
+    }
 
     // switched to https://stackoverflow.com/a/33736255 for an area chart that colors to the lower axis
 //    private final AreaChart<Number, Number> elevationChart = new SmoothFilledAreaChart<>(new NumberAxis(), new NumberAxis());
+    // TFE, 20261031: chart is only used for the axes - terrain is drawn as image into its XYPane
     private XYChart<XYChartItem> elevationChart;
     private Axis xAxisElev;
     private Axis yAxisElev;
     private final List<XYSeries> elevationChartData = new ArrayList<>();
+    private final ImageView terrainView = new ImageView();
+    private WritableImage terrainImage;
+    private int[] terrainPixels;
+    // distance ring per pixel - used for the contour lines
+    private short[] terrainRings;
+    private final static short SKY_RING = -1;
+    // rings for the contour lines [m]: every 250m up to 5km, every 1km up to 30km, every 2.5km beyond
+    private final static double RING_NEAR_LIMIT = 5000.0;
+    private final static double RING_NEAR_STEP = 250.0;
+    private final static double RING_MIDDLE_LIMIT = 30000.0;
+    private final static double RING_MIDDLE_STEP = 1000.0;
+    private final static double RING_FAR_STEP = 2500.0;
+    private final Tooltip terrainTooltip = new Tooltip();
 //    private final LineChart<Number, Number> sunPathChart = new LineChart<>(new NumberAxis(), new NumberAxis());
     private final Label elevationChartLabel = new Label();
     private XYChart<XYChartItem> sunPathChart;
@@ -116,40 +145,19 @@ public class PanoramaViewer_Canvas {
     private double mouseOldX;
     private double mouseOldY;
     
-    private Panorama panorama;
-    
+    // TFE, 20261031: ray casting instead of concentric circles - see PanoramaRays
+    private PanoramaRays panorama;
+
     private IGeoCoordinate location;
     private TimeZone timeZone = null;
-    
+
     private final Label noElevationDataLabel = new Label("No elevation data available");
 
-    // TFE, 20261031: tooltip text is only needed when the mouse is over a point - create it lazily
-    // formatting it upfront for all points (twice, for 0-360 and 360-720) was a noticeable part of the setup time
-    private static class PanoramaChartItem extends XYChartItem {
-        private final double distance;
-        private final double elevation;
-        private String tooltipText;
-
-        PanoramaChartItem(final double azimuth, final double elevationAngle, final double distance, final double elevation) {
-            super(azimuth, elevationAngle);
-            this.distance = distance;
-            this.elevation = elevation;
-            // null => not yet created
-            tooltipText = null;
-        }
-
-        @Override
-        public String getTooltipText() {
-            if (tooltipText == null) {
-                tooltipText = String.format("Dist: %.1fkm", distance / 1000) + "\n" + String.format("Elev. %.1fm", elevation);
-            }
-            return tooltipText;
-        }
-
-        @Override
-        public void setTooltipText(final String text) {
-            tooltipText = text;
-        }
+    private static int toArgb(final Color color) {
+        return ((int) Math.round(color.getOpacity() * 255) << 24) |
+                ((int) Math.round(color.getRed() * 255) << 16) |
+                ((int) Math.round(color.getGreen() * 255) << 8) |
+                (int) Math.round(color.getBlue() * 255);
     }
 
     private PanoramaViewer_Canvas() {
@@ -349,17 +357,17 @@ public class PanoramaViewer_Canvas {
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
         double minValue;
-        if (panorama.getMinElevationAngle().getElevation() > 0) {
-            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*0.9)/5.0);
+        if (panorama.getMinElevationAngle() > 0) {
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*0.9)/5.0);
         } else {
-            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle().getElevation()*1.1)/5.0);
+            minValue = 5.0*Math.round(Math.floor(panorama.getMinElevationAngle()*1.1)/5.0);
         }
         // max shouldn't be smaller than MIN_VERT_ANGLE
         double maxValue;
-        if (panorama.getMaxElevationAngle().getElevation() > 0) {
-            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*1.1) + 1);
+        if (panorama.getMaxElevationAngle() > 0) {
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*1.1) + 1);
         } else {
-            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle().getElevation()*0.9) + 1);
+            maxValue = Math.max(MIN_VERT_ANGLE, Math.floor(panorama.getMaxElevationAngle()*0.9) + 1);
         }
         yAxisElev.setMinMax(minValue, maxValue);
     }
@@ -370,11 +378,8 @@ public class PanoramaViewer_Canvas {
         // TFE, 20230321: only calculate if needed!
         timeZone = null;
 
-        // get the whole set of LatLonElev around our location
-        panorama = new Panorama(
-                location, 
-                Panorama.DISTANCE_FROM, Panorama.DISTANCE_TO, Panorama.DISTANCE_STEP, 
-                Panorama.ANGEL_FROM, Panorama.ANGEL_TO, Panorama.ANGEL_STEP);
+        // TFE, 20261031: ray casting for all directions - see PanoramaRays
+        panorama = new PanoramaRays(location);
 
         showData();
         
@@ -385,204 +390,189 @@ public class PanoramaViewer_Canvas {
         // performance... every change to chart triggers reapplyCSS()
         pane.getChildren().remove(chartGroup);
 
-        // and now draw from outer to inner and from darker to brighter color
-        // see Horizon_PodTriglavom.jpg for expected result
-        calcViewingAngles();
-        // TFE, 20261031: every change of axes or series redraws the whole chart
-        // so remove the old panorama first, set the axes and only then add the new data - one full redraw only
-        if (elevationChart != null) {
-            getElevationSeries().clear();
-        }
+        // sun path belongs to the previous location - we clear the data here so we know if we should get it on first showing
+        sunPathChartData.clear();
+        sunPathLabel.setVisible(false);
+
         setAxes();
         drawPanorama();
+        renderTerrain();
 
         // we didn't have any data - lets alert the user
         noElevationDataLabel.setVisible(panorama.noElevationData());
-        
+
         pane.getChildren().add(chartGroup);
     }
 
-    @SuppressWarnings("unchecked")
-    private void calcViewingAngles() {
-        elevationChartData.clear();
-        // we also clear sun path data here so we know if we should get it on first showing
-        sunPathChartData.clear();
-        sunPathLabel.setVisible(false);
-        
-        // fill basic list and create series only after we have checked for invisible data...
-        final List<List<XYChartItem>> dataSetList = new ArrayList<>();
-
-        double lastValue = Double.MAX_VALUE;
-        for (Map.Entry<Double, List<Pair<AzimuthElevationAngle, IGeoCoordinate>>> elevationList : panorama.getPanoramaViewingAngles().entrySet()) {
-            assert elevationList.getKey() < lastValue;
-            final Double distance = elevationList.getKey();
-            
-            final List<XYChartItem> dataSet = new ArrayList<>();
-            // every slice is a new series
-            for (Pair<AzimuthElevationAngle, IGeoCoordinate> coord : elevationList.getValue()) {
-                // the angle we're looking up / down
-                double azimuthAngle = coord.getLeft().getAzimuth();
-                final double elevationAngle = coord.getLeft().getElevation();
-                
-                // tooltip is created lazily
-                XYChartItem data = new PanoramaChartItem(azimuthAngle, elevationAngle, distance, coord.getRight().getElevation());
-                dataSet.add(data);
-
-                // add data > 360 as well to have it available for dragging
-                azimuthAngle += 360;
-                data = new PanoramaChartItem(azimuthAngle, elevationAngle, distance, coord.getRight().getElevation());
-                dataSet.add(data);
-            }
-            // sort data since we added stuff before & after
-            Collections.sort(dataSet, Comparator.comparingDouble(d -> d.getX()));
-            
-            dataSetList.add(dataSet);
-
-            lastValue = elevationList.getKey();
+    /**
+     * TFE, 20261031: draw the terrain from the rays into an image with the size of the XYPane of the chart.
+     *
+     * For each pixel column the ray for its azimuth is used. Each span of the ray is mapped to its pixel rows.
+     * Spans don't overlap - so every pixel is set only once, no z-ordering needed.
+     * Also called on any change of the axes (dragging, zooming) and of the size - only the image is redrawn,
+     * nothing needs to be calculated again.
+     */
+    private void renderTerrain() {
+        if (panorama == null || elevationChart == null) {
+            return;
         }
-        
-        // check which points are actually visible
-        // go from front to back and check if above horizon (that we also build up this way...)
-        final Set<List<XYChartItem>> invisibleSeries = new HashSet<>();
-        final Map<Double, Double> visibleMap = new TreeMap<>();
-        for(int i = dataSetList.size() - 1; i >= 0; i--) {
-            final List<XYChartItem> dataSet = dataSetList.get(i);
 
-            XYChartItem lastData = null;
-            boolean lastVisible  = false;
-            final Set<XYChartItem> invisibleData = new HashSet<>();
-            for (XYChartItem data : dataSet) {
-                boolean visible = !visibleMap.containsKey(data.getX()) || data.getY() > visibleMap.get(data.getX());
-                if (visible) {
-                    // new highest elevation for this azimuth
-                    visibleMap.put(data.getX(), data.getY());
+        final XYPane<?> xyPane = elevationChart.getXYPane();
+        final int width = (int) Math.round(xyPane.getWidth());
+        final int height = (int) Math.round(xyPane.getHeight());
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        if (terrainImage == null || (int) terrainImage.getWidth() != width || (int) terrainImage.getHeight() != height) {
+            terrainImage = new WritableImage(width, height);
+            terrainPixels = new int[width * height];
+            terrainRings = new short[width * height];
+            terrainView.setImage(terrainImage);
+        }
+        // transparent = sky - sun path chart behind shines through
+        Arrays.fill(terrainPixels, 0);
+        Arrays.fill(terrainRings, SKY_RING);
 
-                    // TFE, 20251126: remove invisible points from chart
-                    // BUT BEWARE
-                    // you should leave the first / last invisible point since otherwise the lines get messed up
-                    if (!lastVisible && lastData != null) {
-                        invisibleData.remove(lastData);
-                    }
-                } else {
-                    // point not visible!
-//                    System.out.println("Datapoint not visible: " + data);
+        final double xMin = xAxisElev.getMinValue();
+        final double xRange = xAxisElev.getMaxValue() - xMin;
+        final double yMax = yAxisElev.getMaxValue();
+        final double yRange = yMax - yAxisElev.getMinValue();
+        if (xRange <= 0.0 || yRange <= 0.0) {
+            return;
+        }
+        final double pixelPerDegree = height / yRange;
 
-                    // TFE, 20251126: remove invisible points from chart
-                    // BUT BEWARE
-                    // you should leave the first / last invisible point since otherwise the lines get messed up
-                    if (!lastVisible) {
-                        invisibleData.add(data);
-                    }
-                    
-                    // TFE, 20220904: remove tooltip since not visible - saves time & resources
-                    data.setTooltipText("");
+        for (int col = 0; col < width; col++) {
+            final double azimuth = xMin + xRange * (col + 0.5) / width;
+            final float[] spans = panorama.getSpans(PanoramaRays.getRayForAzimuth(azimuth));
+
+            for (int pos = 0; pos < spans.length; pos += PanoramaRays.SPAN_SIZE) {
+                final int top = (int) Math.round((yMax - spans[pos + PanoramaRays.SPAN_HIGH_ANGLE]) * pixelPerDegree);
+                // nearest span goes down to the bottom - that's the ground in front of the viewer
+                final int bottom = (pos == 0) ? height : (int) Math.round((yMax - spans[pos + PanoramaRays.SPAN_LOW_ANGLE]) * pixelPerDegree);
+
+                final int from = Math.max(top, 0);
+                final int to = Math.min(bottom, height);
+                if (from >= to) {
+                    continue;
                 }
-                
-                lastData = data;
-                lastVisible = visible;
-            }
-            
-//            System.out.println("Data size: " + dataSet.size() + ", invisible data size: " + invisibleData.size());
-            
-            if (invisibleData.size() == dataSet.size()) {
-                // we don't need the whole set...
-                invisibleSeries.add(dataSetList.get(i));
-            } else {
-                // TFE, 20251126
-                // we use SMOOTH_AREA - that means that we can only move points when they are at least 3 steps away from an "edge"
-                // otherwise the smoothing algo will run wild an produce artifacts
-                // currently, not worth the effort
-//                for (XYChartItem data : invisibleData) {
-//                    data.setY(panorama.getMinElevationAngle().getElevation());
-//                }
-//                dataSetList.get(i).removeAll(invisibleData);
+
+                final double distance = spans[pos + PanoramaRays.SPAN_DISTANCE];
+                final int color = TERRAIN_COLOR_LOOKUP[(int) Math.round(Math.sqrt(distance / PanoramaRays.MAX_DISTANCE) * (COLOR_LOOKUP_SIZE - 1))];
+                final short ring = getDistanceRing(distance);
+                for (int row = from; row < to; row++) {
+                    terrainPixels[row * width + col] = color;
+                    terrainRings[row * width + col] = ring;
+                }
             }
         }
-        dataSetList.removeAll(invisibleSeries);
-        
-        // now we are left with only the datasets that are actually visible
-        // time to build XYChart.Series
-        int seriesColor = 0;
-        // every n-th step we change the color
-        double colorChange = dataSetList.size() / COLOR_STEPS;
-        // not really every n-th step... initially less often, finally more often
-        // such that on COLOR_STEPS / 2 we use the average value and anything between 1.8 - 0.4 otherwise
-        final Map<Integer, Integer> colorChangeMap = new HashMap<>();
-        for (int i = 0; i < COLOR_STEPS; i++) {
-            // we scale with anything between 2 and 1/2
-            // TFE, 20230321: closer slices nearby, larger steps in the distance - so we need to vary more strongly
-            final double scaleFact = 1.5 - 1.0 / (COLOR_STEPS-1) * i;
-//            final double scaleFact = 1;
-//            System.out.println("i: " + i + ", scaleFact: " + scaleFact);
-            colorChangeMap.put(i, (int) (scaleFact * colorChange));
-        }
 
-        // performance: add everything to the chart in one go...
-        final List<XYSeries> seriesSet = new ArrayList<>();
+        drawContours(width, height);
 
-        int count = 0;
-        for (List<XYChartItem> dataSet : dataSetList) {
-            // there is surely some clever way to do this... autoincrement?
-            count++;
-            if (count >= colorChangeMap.get(seriesColor)) {
-                count = 0;
-                // due to rounding to int we can run over the number of colors...
-                seriesColor = Math.min(seriesColor+1, COLOR_STEPS-1);
-            }
-
-            final XYSeries series = XYSeriesBuilder.create()
-                    .items(dataSet)
-                    .chartType(ChartType.SMOOTH_AREA)
-//                    .chartType(ChartType.SMOOTH_LINE)
-                    .symbolsVisible(true)
-                    .symbolSize(4)
-                    .symbolStroke(Color.valueOf("696969"))
-                    .stroke(Paint.valueOf("696969"))
-                    .strokeWidth(1)
-                    .build();
-            
-            // surely, some clever way with enum would help here...
-            switch (seriesColor) {
-                case 0 -> series.setFill(Color.web("#0C11E6"));
-                case 1 -> series.setFill(Color.web("#3A40DE"));
-                case 2 -> series.setFill(Color.web("#3B40DA"));
-                case 3 -> series.setFill(Color.web("#4D51D9"));
-                case 4 -> series.setFill(Color.web("#8285D2"));
-                case 5 -> series.setFill(Color.web("#A7A6CE"));
-                case 6 -> series.setFill(Color.web("#BCBECD"));
-                case 7 -> series.setFill(Color.web("#C6C7C9"));
-            }
-
-            seriesSet.add(series);
-        }
-        
-        elevationChartData.addAll(seriesSet);
+        terrainImage.getPixelWriter().setPixels(0, 0, width, height, PixelFormat.getIntArgbInstance(), terrainPixels, 0, width);
     }
 
-    @SuppressWarnings("unchecked")
-    private ObservableList<XYSeries> getElevationSeries() {
-        return (ObservableList<XYSeries>) (ObservableList<?>) elevationChart.getXYPane().getListOfSeries();
+    /**
+     * TFE, 20261031: contour lines - where neighbouring pixels belong to different distance rings.
+     *
+     * That gives lines of equal distance across the visible slopes (like the outlines of the distance slices before)
+     * and also the ridges (large jump in distance) and the skyline. The line is drawn on the more distant pixel.
+     */
+    private void drawContours(final int width, final int height) {
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                final int index = row * width + col;
+                final short ring = terrainRings[index];
+                if (ring == SKY_RING) {
+                    continue;
+                }
+                // skyline: sky above
+                if (row > 0 && terrainRings[index - width] == SKY_RING) {
+                    terrainPixels[index] = RIDGE_COLOR;
+                    continue;
+                }
+                // closer terrain next to us
+                if ((row < height - 1 && isCloser(terrainRings[index + width], ring)) ||
+                        (row > 0 && isCloser(terrainRings[index - width], ring)) ||
+                        (col < width - 1 && isCloser(terrainRings[index + 1], ring)) ||
+                        (col > 0 && isCloser(terrainRings[index - 1], ring))) {
+                    terrainPixels[index] = RIDGE_COLOR;
+                }
+            }
+        }
+    }
+
+    private static boolean isCloser(final short other, final short ring) {
+        return other != SKY_RING && other < ring;
+    }
+
+    // distance rings for the contour lines: dense nearby, wider further away - similar to the distance slices used before
+    private static short getDistanceRing(final double distance) {
+        if (distance < RING_NEAR_LIMIT) {
+            return (short) (distance / RING_NEAR_STEP);
+        } else if (distance < RING_MIDDLE_LIMIT) {
+            return (short) (RING_NEAR_LIMIT / RING_NEAR_STEP + (distance - RING_NEAR_LIMIT) / RING_MIDDLE_STEP);
+        } else {
+            return (short) (RING_NEAR_LIMIT / RING_NEAR_STEP + (RING_MIDDLE_LIMIT - RING_NEAR_LIMIT) / RING_MIDDLE_STEP + (distance - RING_MIDDLE_LIMIT) / RING_FAR_STEP);
+        }
+    }
+
+    // distance & elevation of the terrain at the mouse position
+    private void updateTerrainTooltip(final double x, final double y, final double screenX, final double screenY) {
+        if (panorama == null || terrainImage == null) {
+            return;
+        }
+
+        final double azimuth = xAxisElev.getMinValue() + (xAxisElev.getMaxValue() - xAxisElev.getMinValue()) * x / terrainImage.getWidth();
+        final double elevationAngle = yAxisElev.getMaxValue() - (yAxisElev.getMaxValue() - yAxisElev.getMinValue()) * y / terrainImage.getHeight();
+        final int ray = PanoramaRays.getRayForAzimuth(azimuth);
+        final int span = panorama.getSpanForAngle(ray, elevationAngle);
+
+        if (span < 0) {
+            terrainTooltip.hide();
+            return;
+        }
+        final float[] spans = panorama.getSpans(ray);
+        final int pos = span * PanoramaRays.SPAN_SIZE;
+        terrainTooltip.setText(
+                String.format("Dist: %.1fkm", spans[pos + PanoramaRays.SPAN_DISTANCE] / 1000) + "\n" +
+                String.format("Elev. %.1fm", spans[pos + PanoramaRays.SPAN_ELEVATION]));
+        // follow the mouse
+        terrainTooltip.show(terrainView, screenX + 12, screenY + 12);
     }
 
     @SuppressWarnings("unchecked")
     private void drawPanorama() {
-        // TFE, 20261031: re-use existing chart - creating a new one triggers various full redraws
+        // TFE, 20261031: re-use existing chart
         if (elevationChart != null) {
             // sun path belongs to the previous location
             if (sunPathChart != null) {
                 chartGroup.getChildren().remove(sunPathChart);
                 sunPathChart = null;
             }
-
-            getElevationSeries().setAll(elevationChartData);
             return;
         }
 
         chartGroup.getChildren().clear();
 
         // create charts from data
+        // TFE, 20261031: without any series - only the axes are needed, terrain is an image in the XYPane
         elevationChart = initializeChart(elevationChartData, xAxisElev, yAxisElev);
-        
+
+        // terrain image fills the XYPane - redraw it whenever axes or size change
+        terrainView.setManaged(false);
+        elevationChart.getXYPane().getChildren().add(terrainView);
+        xAxisElev.minValueProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+        xAxisElev.maxValueProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+        yAxisElev.minValueProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+        yAxisElev.maxValueProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+        elevationChart.getXYPane().widthProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+        elevationChart.getXYPane().heightProperty().addListener((ov, oldValue, newValue) -> renderTerrain());
+
+        // tooltip with distance & elevation for the terrain under the mouse
+        terrainView.setOnMouseMoved((e) -> updateTerrainTooltip(e.getX(), e.getY(), e.getScreenX(), e.getScreenY()));
+        terrainView.setOnMouseExited((e) -> terrainTooltip.hide());
+
         // there is no common ancestor of area and line chart that implements createSymbols...
         elevationChart.toFront();
         
