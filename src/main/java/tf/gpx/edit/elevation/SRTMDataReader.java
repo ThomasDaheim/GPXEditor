@@ -28,8 +28,7 @@ package tf.gpx.edit.elevation;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -127,11 +126,14 @@ class SRTMDataReader implements ISRTMDataReader {
 //                    System.out.println("Time to read ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
 
                     // TFE, 20250624: small speedup with using a MappedByteBuffer
-                    final MappedByteBuffer buf = rIn.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, rIn.length());
-                    buf.order(java.nio.ByteOrder.BIG_ENDIAN); 
+                    // TFE, 20261031: but a mapped file stays locked on windows until the buffer is garbage collected
+                    // => file can't be deleted or overwritten (e.g. by SRTM1 download) - read it in one go instead
+                    final byte[] data = new byte[(int) rIn.length()];
+                    rIn.readFully(data);
+                    final ByteBuffer buf = ByteBuffer.wrap(data);
+                    buf.order(java.nio.ByteOrder.BIG_ENDIAN);
 //                    testTime = Instant.now();
 //                    System.out.println("Time to create ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
-                    buf.load();
 //                    testTime = Instant.now();
 //                    System.out.println("Time to read ByteBuffer: " + ChronoUnit.MICROS.between(startTime, testTime));
 

@@ -204,7 +204,8 @@ public class OpenElevationService implements IElevationProvider {
         }
         
         // add enough values to fill the list
-        for (int i = 0; i < coords.size() - result.size(); i++) {
+        // TFE, 20261031: loop condition must not depend on the growing result - otherwise only half of the missing values were added
+        while (result.size() < coords.size()) {
             result.add(Pair.of(false, IElevationProvider.NO_ELEVATION));
         }
         

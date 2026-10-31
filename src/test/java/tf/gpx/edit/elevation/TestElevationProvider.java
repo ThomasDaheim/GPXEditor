@@ -120,6 +120,9 @@ public class TestElevationProvider {
     }
     
     private void initElevationProviders() {
+        // other tests might have filled the store with synthetic data for the same tiles
+        SRTMDataStore.getInstance().clearStore();
+
         if (srtmOnly == null) {
             final ElevationProviderOptions elevOptions = new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY);
             srtmOnly = new ElevationProviderBuilder(elevOptions, srtmOptions).build();

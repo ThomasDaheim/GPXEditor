@@ -69,12 +69,12 @@ public class TestMapboxGeocodingService {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(-118.25411, result.getLatLonElev().getLongitude(), delta);
         Assertions.assertEquals(34.04826, result.getLatLonElev().getLatitude(), delta);
-        Assertions.assertEquals("424 West 6th Street, Los Angeles, California 90014, United States", result.getPlace());
-        Assertions.assertEquals("424 West 6th Street", result.getAddress());
-        Assertions.assertEquals("West 6th Street", result.getStreet());
-        Assertions.assertEquals("The Financial District", result.getNeighborhood());
-        Assertions.assertEquals("90014", result.getPostcode());
-        Assertions.assertEquals("", result.getLocality());
+        // TFE, 20261031: mapbox changes the nearest address from time to time (was "424 West 6th Street", now "555 South Olive Street")
+        // so only check that all parts are there and consistent - and the values that won't change
+        Assertions.assertFalse(result.getStreet().isEmpty());
+        Assertions.assertTrue(result.getAddress().endsWith(result.getStreet()));
+        Assertions.assertTrue(result.getPlace().startsWith(result.getAddress() + ", Los Angeles, California " + result.getPostcode()));
+        Assertions.assertTrue(result.getPostcode().startsWith("900"));
         Assertions.assertEquals("Los Angeles County", result.getDistrict());
         Assertions.assertEquals("California", result.getRegion());
         Assertions.assertEquals("United States", result.getCountry());

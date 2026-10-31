@@ -136,7 +136,9 @@ dependencies {
     // TFE, 20260109: this can work with a path that contains arrays...
     implementation 'com.jayway.jsonpath:json-path:3.0.0'
 
-    implementation 'de.grundid.opendatalab:geojson-jackson:3.0'
+    // TFE, 20261031: 3.0 is built for jackson 3 (tools.jackson) - with our jackson 2 ObjectMapper the coordinates
+    // can't be deserialized anymore (openrouteservice elevation lookup broken) - stay with 1.14 as long as we use jackson 2
+    implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'
     implementation 'org.jfxtras:jfxtras-labs:9.0-r1'
     implementation 'org.jfxtras:jmetro:11.6.16'

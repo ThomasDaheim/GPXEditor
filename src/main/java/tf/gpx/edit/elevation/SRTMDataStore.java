@@ -76,6 +76,11 @@ class SRTMDataStore {
         return result;
     }
     
+    // TFE, 20261031: tests need to start with an empty store - otherwise data from previous tests is used
+    protected void clearStore() {
+        srtmStore.clear();
+    }
+
     protected void addMissingDataToStore(final SRTMData newData) {
         assert newData != null;
         
