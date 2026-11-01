@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
@@ -122,6 +123,15 @@ public class SRTMDataViewer_fxyz3d {
 
     // axes need to be scaled as well in such a scenario
     private double axesScaling = 1;
+
+    // range for rotation around x-axis - for mouse and keys
+    // 90 is looking straight down, 180 is looking horizontally - anything else would be looking from below
+    // TFE, 20261101: MathUtils.clamp is (value, min, max) - before only a lower bound of -60 was effective
+    private final static double MIN_ROTATE_X = 90.0;
+    private final static double MAX_ROTATE_X = 180.0;
+
+    // additional light to brighten up the slopes facing away from the camera
+    private final static Color AMBIENT_LIGHT = Color.gray(0.35);
     
     private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private SurfacePlotMesh_Fast surface;
@@ -521,6 +531,8 @@ public class SRTMDataViewer_fxyz3d {
         });
 
         // TFE, 20230205: scale axis thickness, ... with size of viewport
+        // TFE, 20261101: labels of previous calls are still in the map - and would show up again at (0,0)
+        ticToLabel.clear();
         axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, elevationScaling, axesScaling, ticToLabel);
         nodeGroup.getChildren().add(axes);
         labelGroup.getChildren().addAll(ticToLabel.values());
@@ -545,6 +557,10 @@ public class SRTMDataViewer_fxyz3d {
         light.translateYProperty().bind(camera.translateYProperty());
         light.translateZProperty().bind(camera.translateZProperty());
         light.setLightOn(true);
+
+        // TFE, 20261101: without ambient light all slopes facing away from the camera are black
+        final AmbientLight ambient = new AmbientLight(AMBIENT_LIGHT);
+        cameraTransform.getChildren().add(ambient);
     }
     
     private void resetLightAndCamera() {
@@ -585,11 +601,12 @@ public class SRTMDataViewer_fxyz3d {
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
                 case S:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() - 1.0*scaleFact);
+                    // TFE, 20261101: same range as for mouse dragging
+                    cameraTransform.rx.setAngle(MathUtils.clamp(cameraTransform.rx.getAngle() - 1.0*scaleFact, MIN_ROTATE_X, MAX_ROTATE_X));
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
                 case W:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() + 1.0*scaleFact);
+                    cameraTransform.rx.setAngle(MathUtils.clamp(cameraTransform.rx.getAngle() + 1.0*scaleFact, MIN_ROTATE_X, MAX_ROTATE_X));
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
                 case D:
@@ -671,9 +688,7 @@ public class SRTMDataViewer_fxyz3d {
             if (me.isPrimaryButtonDown()) {
                 cameraTransform.ry.setAngle(((cameraTransform.ry.getAngle() + mouseDeltaX * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180); // +
                 cameraTransform.rx.setAngle(
-                        MathUtils.clamp(-60, 
-                        (((cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180),
-                        60)); // - 
+                        MathUtils.clamp(cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0, MIN_ROTATE_X, MAX_ROTATE_X)); // -
                 
             } else if (me.isSecondaryButtonDown()) {
                 cameraTransform.t.setX(cameraTransform.t.getX() - mouseDeltaX * modifierFactor * modifier * 0.1); // -
