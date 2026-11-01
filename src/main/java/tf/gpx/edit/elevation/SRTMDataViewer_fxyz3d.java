@@ -47,7 +47,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.PickResult;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
@@ -128,6 +130,19 @@ public class SRTMDataViewer_fxyz3d {
     // TFE, 20261101: MathUtils.clamp is (value, min, max) - before only a lower bound of -60 was effective
     private final static double MIN_ROTATE_X = 90.0;
     private final static double MAX_ROTATE_X = 180.0;
+
+    // camera: field of view, clip planes relative to camera distance, zoom range relative to initial distance
+    private final static double CAMERA_FOV = 60.0;
+    private final static double NEAR_CLIP = 0.01;
+    private final static double FAR_CLIP = 10.0;
+    private final static double MIN_ZOOM = 0.01;
+    private final static double MAX_ZOOM = 5.0;
+    // zoom factor per mouse wheel step
+    private final static double ZOOM_STEP = 1.1;
+    // pan per arrow key relative to camera distance
+    private final static double KEY_PAN = 0.02;
+    private double baseDistance = 1.0;
+    private Group sceneGroup;
     
     private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private SurfacePlotMesh_Fast surface;
@@ -431,6 +446,7 @@ public class SRTMDataViewer_fxyz3d {
         axesScaling = FastMath.sqrt(lineScaling);
         
         final Group nodeGroup = new Group(cameraTransform, surface);
+        sceneGroup = nodeGroup;
         
         lines = new ArrayList<>();
         // add waypoints from gpxLineItem (if any)
@@ -506,11 +522,13 @@ public class SRTMDataViewer_fxyz3d {
         
         // some explanation for rotate & zoom
         final Label label = 
-                new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() + 
-                        "RgtBtn: Shift X+Y" + System.lineSeparator() + 
-                        "Wheel: Zoom" + System.lineSeparator() + 
-                        "Up/Down/Left/Right: Shift X+Y" + System.lineSeparator() + 
-                        "W/S/A/D: Rotate X+Y");
+                new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() +
+                        "RgtBtn: Shift X+Y" + System.lineSeparator() +
+                        "Wheel: Zoom" + System.lineSeparator() +
+                        "Double click: Rotate & zoom around point" + System.lineSeparator() +
+                        "Up/Down/Left/Right: Shift X+Y" + System.lineSeparator() +
+                        "W/S/A/D: Rotate X+Y" + System.lineSeparator() +
+                        "C/R: Reset view");
         label.getStyleClass().add("srtm-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
         
@@ -539,9 +557,7 @@ public class SRTMDataViewer_fxyz3d {
     }
     
     private void initLightAndCamera() {
-        camera.setNearClip(0.1);
-        camera.setFarClip(1000.0);
-        camera.setFieldOfView(60);
+        camera.setFieldOfView(CAMERA_FOV);
         
         cameraTransform.getChildren().add(camera);
         cameraTransform.rx.setAngle(120.0);
@@ -559,11 +575,55 @@ public class SRTMDataViewer_fxyz3d {
         cameraTransform.rx.setAngle(120.0);
         cameraTransform.ry.setAngle(0.0);
         cameraTransform.t.setX(0.0);
-        cameraTransform.t.setY(0.0);
+        // TFE, 20261101: pivot in the middle of the terrain and not at elevation 0 below it
+        cameraTransform.t.setY(minElevation <= maxElevation ? (minElevation + maxElevation) / 2.0 : 0.0);
         cameraTransform.t.setZ(0.0);
         camera.setTranslateX(0.0);
         camera.setTranslateY(0.0);
-        camera.setTranslateZ(-1.2*Math.max(latDist, lonDist));
+        baseDistance = 1.2*Math.max(latDist, lonDist);
+        setCameraDistance(baseDistance);
+    }
+
+    // TFE, 20261101: zoom by moving the camera towards the pivot (= origin of cameraTransform)
+    // before the camera was scaled in z - that also moved the near clip plane and cut off the front of the surface
+    private double getCameraDistance() {
+        return -camera.getTranslateZ();
+    }
+
+    private void setCameraDistance(final double distance) {
+        final double newDistance = MathUtils.clamp(distance, MIN_ZOOM * baseDistance, MAX_ZOOM * baseDistance);
+        camera.setTranslateZ(-newDistance);
+        // clip planes need to follow - fixed values cut off everything for small areas (distance ~0.2)
+        camera.setNearClip(NEAR_CLIP * newDistance);
+        camera.setFarClip(FAR_CLIP * Math.max(newDistance, baseDistance));
+    }
+
+    // world units per pixel at the distance of the pivot - to let the surface follow the mouse when panning
+    private double getPanPerPixel() {
+        return 2.0 * getCameraDistance() * Math.tan(Math.toRadians(CAMERA_FOV / 2.0)) / scene.getHeight();
+    }
+
+    // TFE, 20261101: rotate & zoom around the clicked point
+    private void setPivot(final PickResult pickResult) {
+        Node node = pickResult.getIntersectedNode();
+        if (node == null || pickResult.getIntersectedPoint() == null) {
+            return;
+        }
+        // transform intersected point up to the root of the 3D scene
+        javafx.geometry.Point3D point = pickResult.getIntersectedPoint();
+        while (node != null && node != sceneGroup) {
+            point = node.localToParent(point);
+            node = node.getParent();
+        }
+        if (node == null) {
+            // not part of our 3D scene
+            return;
+        }
+        cameraTransform.t.setX(point.getX());
+        cameraTransform.t.setY(point.getY());
+        cameraTransform.t.setZ(point.getZ());
+        camera.setTranslateX(0.0);
+        camera.setTranslateY(0.0);
     }
     
     private void initUserControls(final Scene node) {
@@ -576,20 +636,21 @@ public class SRTMDataViewer_fxyz3d {
                 case ESCAPE:
                     stage.close();
                     break;
+                // TFE, 20261101: step relative to the camera distance - fixed values are way too big for small areas
                 case UP:
-                    camera.setTranslateY(camera.getTranslateY() + 0.1*scaleFact);
+                    camera.setTranslateY(camera.getTranslateY() + KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateY: " + camera.getTranslateY());
                     break;
                 case DOWN:
-                    camera.setTranslateY(camera.getTranslateY() - 0.1*scaleFact);
+                    camera.setTranslateY(camera.getTranslateY() - KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateY: " + camera.getTranslateY());
                     break;
                 case RIGHT:
-                    camera.setTranslateX(camera.getTranslateX() - 0.1*scaleFact);
+                    camera.setTranslateX(camera.getTranslateX() - KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
                 case LEFT:
-                    camera.setTranslateX(camera.getTranslateX() + 0.1*scaleFact);
+                    camera.setTranslateX(camera.getTranslateX() + KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
                 case S:
@@ -633,21 +694,12 @@ public class SRTMDataViewer_fxyz3d {
                 scrollDelta = t.getDeltaX();
             }
             
-            // TFE, 20230213: we also need scaling for the zoom-steps we do
-            final double value = 0.05*scaleFact * axesScaling;
+            // TFE, 20261101: zoom in steps relative to the current distance - same feel for small & large areas
+            final double factor = Math.pow(ZOOM_STEP, scaleFact);
             if (scrollDelta > 0) {
-                // TODO: not working in the moment
-//                if (!t.isControlDown()) {
-                    camera.setScaleZ(camera.getScaleZ() + value);
-//                } else {
-//                    scaleEverything(Axis.Direction.Y, value);
-//                }
-            } else {
-//                if (!t.isControlDown()) {
-                    camera.setScaleZ(camera.getScaleZ() - value);
-//                } else {
-//                    scaleEverything(Axis.Direction.Y, -value);
-//                }
+                setCameraDistance(getCameraDistance() / factor);
+            } else if (scrollDelta < 0) {
+                setCameraDistance(getCameraDistance() * factor);
             }
             
             Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
@@ -683,14 +735,21 @@ public class SRTMDataViewer_fxyz3d {
                         MathUtils.clamp(cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0, MIN_ROTATE_X, MAX_ROTATE_X)); // -
                 
             } else if (me.isSecondaryButtonDown()) {
-                cameraTransform.t.setX(cameraTransform.t.getX() - mouseDeltaX * modifierFactor * modifier * 0.1); // -
-                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.1); // -
+                // TFE, 20261101: pan in the view plane - surface follows the mouse
+                final double panPerPixel = getPanPerPixel();
+                camera.setTranslateX(camera.getTranslateX() - mouseDeltaX * panPerPixel);
+                camera.setTranslateY(camera.getTranslateY() - mouseDeltaY * panPerPixel);
             } else if (me.isMiddleButtonDown()) {
-                double z = camera.getTranslateZ();
-                double newZ = z + mouseDeltaX * modifierFactor * modifier;
-                camera.setTranslateZ(newZ);
+                setCameraDistance(getCameraDistance() * Math.pow(ZOOM_STEP, -mouseDeltaX * modifierFactor));
             }
             Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
+        });
+
+        node.setOnMouseClicked((MouseEvent me) -> {
+            if (MouseButton.PRIMARY.equals(me.getButton()) && me.getClickCount() == 2) {
+                setPivot(me.getPickResult());
+                Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
+            }
         });
     }
     
