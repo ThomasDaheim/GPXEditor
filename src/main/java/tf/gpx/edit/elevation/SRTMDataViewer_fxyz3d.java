@@ -873,10 +873,8 @@ public class SRTMDataViewer_fxyz3d {
 //        System.out.println("Bounds:  " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());
 //        System.out.println("Shifted: " + latCenter + ", " + latDist + ", " + lonCenter + ", " + lonDist);
 
-        // we don't want to plot the full set, only 1/4 of it
-        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
-        final int steps = dataCount / DATA_FRACTION;
-        
+        final int steps = getSurfaceSteps();
+
         // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
         surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
         surface.setCullFace(CullFace.NONE);
@@ -961,6 +959,40 @@ public class SRTMDataViewer_fxyz3d {
         return new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 0.5);
     }
 
+    // TFE, 20261101: scaled elevation of the surface at a waypoint
+    // the surface is a grid with linear interpolation in between - so the max of the 4 surrounding grid points
+    // is never below the surface - and the track can't vanish in it
+    // in case there is no srtm data at all we use the gpx elevation
+    private double getSurfaceElevation(final GPXWaypoint waypoint) {
+        final int steps = getSurfaceSteps();
+        final double x = waypoint.getLongitude() - lonCenter;
+        final double z = latCenter - waypoint.getLatitude();
+        // same grid as in SurfacePlotMesh_Fast: -range/2 to + range/2 in steps
+        final int i0 = Math.max(0, Math.min(steps - 1, (int) Math.floor((x / lonDist + 0.5) * steps)));
+        final int j0 = Math.max(0, Math.min(steps - 1, (int) Math.floor((z / latDist + 0.5) * steps)));
+
+        double result = -Double.MAX_VALUE;
+        for (int i = i0; i <= i0 + 1; i++) {
+            for (int j = j0; j <= j0 + 1; j++) {
+                final double gridLon = lonCenter - lonDist / 2d + i * lonDist / steps;
+                final double gridLat = latCenter - (-latDist / 2d + j * latDist / steps);
+                final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(gridLat, gridLon);
+                if (elevation.getLeft()) {
+                    result = Math.max(result, Math.max(0d, elevationScaler.apply(elevation.getRight())));
+                }
+            }
+        }
+        if (result == -Double.MAX_VALUE) {
+            result = elevationScaler.apply(waypoint.getElevation());
+        }
+        return result;
+    }
+
+    private int getSurfaceSteps() {
+        // we don't want to plot the full set, only 1/4 of it
+        return SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() / DATA_FRACTION;
+    }
+
     private PolyLine3D getPolyLine3D(final Bounds3D dataBounds, final List<GPXWaypoint> gpxWaypoints) {
         if (gpxWaypoints == null || gpxWaypoints.isEmpty()) {
             return null;
@@ -980,9 +1012,10 @@ public class SRTMDataViewer_fxyz3d {
             if (i == 0) {
                 // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
                 points.add(new Point3D(
-                        waypoint.getLongitude()-lonCenter, 
+                        waypoint.getLongitude()-lonCenter,
                         // TFE, 20230205: added scaling based on viewport dimensions
-                        elevationScaler.apply(waypoint.getElevation()) + LINE_RAISE * lineScaling, 
+                        // TFE, 20261101: clamp to the surface instead of using the gpx elevation
+                        getSurfaceElevation(waypoint) + LINE_RAISE * lineScaling,
                         latCenter-waypoint.getLatitude()));
             }
             
