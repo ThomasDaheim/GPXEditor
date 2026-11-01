@@ -137,6 +137,9 @@ public class PanoramaViewer_Canvas {
     // TFE, 20220316: use ony positive values - to be in sync with sunpath algos...
     private final static double MIN_HOR_ANGLE = 0.0;
     private final static double MAX_HOR_ANGLE = 720.0;
+    // initial view: from EAST over SOUTH to WEST
+    private final static double INITIAL_HOR_ANGLE_FROM = 90.0;
+    private final static double INITIAL_HOR_ANGLE_TO = 270.0;
 
     private final static double MIN_VERT_ANGLE = 25.0;
 
@@ -299,24 +302,32 @@ public class PanoramaViewer_Canvas {
         pane.getStyleClass().add("horizon-pane");
         
         scene.setOnKeyPressed((t) -> {
-            // lowerBound is always: what you want to center - 180
-            int lowerBound = 0;
-            switch (t.getCode()) {
-                case ESCAPE -> stage.close();
-                case C, R -> setAxes();
-                case N -> lowerBound = 360 - 180;
-                case S -> lowerBound = 180 - 180;
-                case E -> lowerBound = 90+360 - 180;
-                case W -> lowerBound = 270 - 180;
+            // TFE, 20261101: only the direction keys change the direction
+            // before, any key re-centered the view to south - e.g. SHIFT when zooming with SHIFT + mouse wheel
+            final Double center = switch (t.getCode()) {
+                case N -> 360.0;
+                case S -> 180.0;
+                case E -> 90.0 + 360.0;
+                case W -> 270.0;
                 case P -> {
                     showHideSunPath();
-                    lowerBound = 180 - 180;
+                    yield 180.0;
                 }
+                case ESCAPE -> {
+                    stage.close();
+                    yield null;
+                }
+                case C, R -> {
+                    setAxes();
+                    yield null;
+                }
+                default -> null;
+            };
+            if (center != null) {
+                // respect zoom mode - keep the current width around the new center
+                final double halfWidth = (xAxisElev.getMaxValue() - xAxisElev.getMinValue()) / 2.0;
+                xAxisElev.setMinMax(center - halfWidth, center + halfWidth);
             }
-            // respect zoom mode - if not 360 degree, don't implicitly zoom
-            final int xWidth = (int) (xAxisElev.getMaxValue() - xAxisElev.getMinValue());
-            final int zoomBorder = Math.max(0, (360 - xWidth) / 2);
-            xAxisElev.setMinMax(lowerBound + zoomBorder / 2, lowerBound + 360 - zoomBorder);
         });
 
         elevationChartLabel.setText("Drag: Shift X" + System.lineSeparator() + 
@@ -352,7 +363,8 @@ public class PanoramaViewer_Canvas {
     
     private void setAxes() {
         // initially we want SOUTH centered
-        xAxisElev.setMinMax(0d, 360d);
+        // TFE, 20261101: only from EAST to WEST - full 360 degree is too wide to see details
+        xAxisElev.setMinMax(INITIAL_HOR_ANGLE_FROM, INITIAL_HOR_ANGLE_TO);
 
         // y-axis needs to be set - x is fixed
         // match min to next 5-value
