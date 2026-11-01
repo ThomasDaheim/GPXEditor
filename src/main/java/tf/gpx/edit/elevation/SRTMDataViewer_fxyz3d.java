@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
@@ -129,9 +128,6 @@ public class SRTMDataViewer_fxyz3d {
     // TFE, 20261101: MathUtils.clamp is (value, min, max) - before only a lower bound of -60 was effective
     private final static double MIN_ROTATE_X = 90.0;
     private final static double MAX_ROTATE_X = 180.0;
-
-    // additional light to brighten up the slopes facing away from the camera
-    private final static Color AMBIENT_LIGHT = Color.gray(0.35);
     
     private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private SurfacePlotMesh_Fast surface;
@@ -557,10 +553,6 @@ public class SRTMDataViewer_fxyz3d {
         light.translateYProperty().bind(camera.translateYProperty());
         light.translateZProperty().bind(camera.translateZProperty());
         light.setLightOn(true);
-
-        // TFE, 20261101: without ambient light all slopes facing away from the camera are black
-        final AmbientLight ambient = new AmbientLight(AMBIENT_LIGHT);
-        cameraTransform.getChildren().add(ambient);
     }
     
     private void resetLightAndCamera() {
