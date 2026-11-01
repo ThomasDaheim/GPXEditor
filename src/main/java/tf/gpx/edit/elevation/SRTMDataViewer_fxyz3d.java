@@ -50,7 +50,12 @@ import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
+import javafx.geometry.Insets;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
@@ -532,7 +537,11 @@ public class SRTMDataViewer_fxyz3d {
         label.getStyleClass().add("srtm-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
         
-        scene = new Scene(new StackPane(sceneRoot, label), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
+        final Node legend = getLegend();
+        StackPane.setAlignment(legend, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(legend, new Insets(8));
+
+        scene = new Scene(new StackPane(sceneRoot, label, legend), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
         label.toFront();
         scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
         initUserControls(scene);
@@ -869,47 +878,81 @@ public class SRTMDataViewer_fxyz3d {
         surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
         surface.setCullFace(CullFace.NONE);
         
-        ElevationColors colors;
+        final List<Color> elevationColors = getElevationColors();
+        final ElevationColors colors = new ElevationColors(elevationColors);
         // we have 8 colors + "transparent" that should be used for zero values
         // we want to use the "transparent" ONLY for zero values
         if (hasNoElevation) {
-            colors = new ElevationColors(
-                        Color.TRANSPARENT,
-                        adaptColor(Color.BLUE), 
-                        adaptColor(Color.LIGHTBLUE), 
-                        adaptColor(Color.CYAN), 
-                        adaptColor(Color.GREEN), 
-                        adaptColor(Color.YELLOW), 
-                        adaptColor(Color.ORANGE), 
-                        adaptColor(Color.RED), 
-                        adaptColor(Color.DARKRED));
-        } else {
-            colors = new ElevationColors(
-                        adaptColor(Color.BLUE), 
-                        adaptColor(Color.LIGHTBLUE), 
-                        adaptColor(Color.CYAN), 
-                        adaptColor(Color.GREEN), 
-                        adaptColor(Color.YELLOW), 
-                        adaptColor(Color.ORANGE), 
-                        adaptColor(Color.RED), 
-                        adaptColor(Color.DARKRED));
+            colors.getColors().add(0, Color.TRANSPARENT);
         }
-        
-        surface.setTextureModeVertices3D(colors, 
+
+        // TFE, 20261101: fxyz3d maps the range min - max of the function values over ALL vertices to the palette
+        // before no data returned -200*minElevation - and that stretched the range so that all real values ended up in the top colors
+        // and since Point3D.y is a float the lowest point itself was often below the double minElevation and got that value as well
+        // now: no data is exactly one color band below minElevation - so that it gets index 0 = transparent
+        final double minColorElevation = (float) minElevation;
+        final double maxColorElevation = (float) maxElevation;
+        final double noDataElevation = minColorElevation - (maxColorElevation - minColorElevation) / elevationColors.size();
+        surface.setTextureModeVertices3D(colors,
                 p -> {
-                    // so elevation for zero should be something so much lower than minElevation that it will
-                    // certainly be shown as transparent without impacting the other color range
-                    if (p.y >= minElevation) {
-                        return p.y;
+                    if (p.y >= minColorElevation) {
+                        return Math.min(p.y, maxColorElevation);
                     } else {
-//                        System.out.println("Returning artifical height");
-                        return - 200d*minElevation;
+                        return noDataElevation;
                     }
-                        });
+                });
         surface.setDrawMode(DrawMode.FILL);
         surface.setUserData(dataBounds);
     }
     
+    // colors from low to high - used for surface & legend
+    private List<Color> getElevationColors() {
+        return new ArrayList<>(List.of(
+                adaptColor(Color.BLUE),
+                adaptColor(Color.LIGHTBLUE),
+                adaptColor(Color.CYAN),
+                adaptColor(Color.GREEN),
+                adaptColor(Color.YELLOW),
+                adaptColor(Color.ORANGE),
+                adaptColor(Color.RED),
+                adaptColor(Color.DARKRED)));
+    }
+
+    // TFE, 20261101: legend for the elevation colors - highest on top
+    private Node getLegend() {
+        final VBox legend = new VBox(2);
+        legend.getStyleClass().add("srtm-viewer-label");
+        legend.setPadding(new Insets(4));
+        legend.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8);");
+        legend.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        legend.setMouseTransparent(true);
+
+        // back from scaled values to meters
+        final double minMeter = minElevation / elevationScaling;
+        final double maxMeter = maxElevation / elevationScaling;
+        final List<Color> elevationColors = getElevationColors();
+        final double step = (maxMeter - minMeter) / elevationColors.size();
+        for (int i = elevationColors.size() - 1; i >= 0; i--) {
+            legend.getChildren().add(getLegendEntry(elevationColors.get(i),
+                    String.format("%.0f - %.0f m", minMeter + i * step, minMeter + (i + 1) * step)));
+        }
+        if (hasNoElevation) {
+            legend.getChildren().add(getLegendEntry(Color.TRANSPARENT, "No data"));
+        }
+
+        return legend;
+    }
+
+    private Node getLegendEntry(final Color color, final String text) {
+        // white below since the surface colors are semi-transparent
+        final Rectangle box = new Rectangle(20, 14, color);
+        box.setStroke(Color.GRAY);
+        final Rectangle background = new Rectangle(20, 14, Color.WHITE);
+        final HBox entry = new HBox(6, new StackPane(background, box), new Label(text));
+        entry.setAlignment(Pos.CENTER_LEFT);
+        return entry;
+    }
+
     private Color adaptColor(final Color color) {
         final Color tempColor =  color.saturate().saturate().saturate();
         return new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 0.5);
