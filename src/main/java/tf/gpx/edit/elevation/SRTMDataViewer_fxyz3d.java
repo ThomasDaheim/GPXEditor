@@ -129,6 +129,8 @@ public class SRTMDataViewer_fxyz3d {
 
     // axes need to be scaled as well in such a scenario
     private double axesScaling = 1;
+    // calibrated with an area of ~2 degrees where the previous sqrt-scaling looked good
+    private final static double AXES_SCALING_PER_DEGREE = 0.46;
 
     // range for rotation around x-axis - for mouse and keys
     // 90 is looking straight down, 180 is looking horizontally - anything else would be looking from below
@@ -447,8 +449,9 @@ public class SRTMDataViewer_fxyz3d {
         final Waypoint ph = new Waypoint(dataBounds.getMaxLat(), dataBounds.getMinLon());
         final double line_area = FastMath.sqrt((EarthGeometry.distance(p0, pw) / 1000.0) * (EarthGeometry.distance(p0, ph) / 1000.0));
         lineScaling = 2f * line_area / LINE_BASE_AREA;
-        // axes would get too thin to fast
-        axesScaling = FastMath.sqrt(lineScaling);
+        // TFE, 20261101: axes linear with the size of the area in degrees (= units of the 3D scene)
+        // before sqrt(lineScaling) - axes got way too thick for small areas
+        axesScaling = AXES_SCALING_PER_DEGREE * Math.max(latDist, lonDist);
         
         final Group nodeGroup = new Group(cameraTransform, surface);
         sceneGroup = nodeGroup;
