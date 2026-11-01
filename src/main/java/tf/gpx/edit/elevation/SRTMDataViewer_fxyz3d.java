@@ -118,6 +118,9 @@ public class SRTMDataViewer_fxyz3d {
     // TFE, 20261101: line is a triangular tube reaching width/4 below its center - plus a bit against z-fighting
     // more isn't needed since the line is clamped to the surface
     private final static double LINE_RAISE = 0.3*LINE_WIDTH;
+
+    // TFE, 20261101: surface is opaque now - colors are mixed with white instead
+    private final static double SURFACE_WHITE_BLEND = 0.5;
     
     // assumption: scaling is somehow related to the area of the map
     // lets start with sqrt(lat size * lon size) in some measure
@@ -959,7 +962,9 @@ public class SRTMDataViewer_fxyz3d {
 
     private Color adaptColor(final Color color) {
         final Color tempColor =  color.saturate().saturate().saturate();
-        return new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 0.5);
+        // TFE, 20261101: opaque but mixed with white - looks like the previous alpha 0.5 on the white background
+        // without the parts behind the surface shining through
+        return tempColor.interpolate(Color.WHITE, SURFACE_WHITE_BLEND);
     }
 
     // TFE, 20261101: scaled elevation of the surface at a waypoint
