@@ -113,7 +113,8 @@ public class SRTMDataViewer_fxyz3d {
     // TFE, 20230205: we need some scaling here for different sizes of maps
     // below values are good for Deutschland_2018_reduced.gpx
     // but horrible for HangingValleys.gpx
-    private final static double LINE_WIDTH = 0.03;
+    // TFE, 20261101: half of it is enough now that the track is clamped to the surface
+    private final static double LINE_WIDTH = 0.015;
     // TFE, 20261101: line is a triangular tube reaching width/4 below its center - plus a bit against z-fighting
     // more isn't needed since the line is clamped to the surface
     private final static double LINE_RAISE = 0.3*LINE_WIDTH;
