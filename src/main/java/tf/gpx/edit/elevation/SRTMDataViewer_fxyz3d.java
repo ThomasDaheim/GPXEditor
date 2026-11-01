@@ -114,7 +114,9 @@ public class SRTMDataViewer_fxyz3d {
     // below values are good for Deutschland_2018_reduced.gpx
     // but horrible for HangingValleys.gpx
     private final static double LINE_WIDTH = 0.03;
-    private final static double LINE_RAISE = 0.75*LINE_WIDTH;
+    // TFE, 20261101: line is a triangular tube reaching width/4 below its center - plus a bit against z-fighting
+    // more isn't needed since the line is clamped to the surface
+    private final static double LINE_RAISE = 0.3*LINE_WIDTH;
     
     // assumption: scaling is somehow related to the area of the map
     // lets start with sqrt(lat size * lon size) in some measure
@@ -999,8 +1001,7 @@ public class SRTMDataViewer_fxyz3d {
         }
 
         final List<Point3D> points = new ArrayList<>();
-        // use only every DATA_FRACTION waypoint
-        int i = 0;
+        // TFE, 20261101: use all waypoints - with only every DATA_FRACTION waypoint the straight line in between dips into the surface
         for (GPXWaypoint waypoint : gpxWaypoints) {
 //            if (Math.abs(waypoint.getLatitude()-latCenter) > latDist) {
 //                System.err.println("Latitude outside bounds! " + (waypoint.getLatitude()-latCenter));
@@ -1009,17 +1010,13 @@ public class SRTMDataViewer_fxyz3d {
 //                System.err.println("Longitude outside bounds! " + (waypoint.getLongitude()-lonCenter));
 //            }
 
-            if (i == 0) {
-                // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
-                points.add(new Point3D(
-                        waypoint.getLongitude()-lonCenter,
-                        // TFE, 20230205: added scaling based on viewport dimensions
-                        // TFE, 20261101: clamp to the surface instead of using the gpx elevation
-                        getSurfaceElevation(waypoint) + LINE_RAISE * lineScaling,
-                        latCenter-waypoint.getLatitude()));
-            }
-            
-            i = (i+1) % DATA_FRACTION;
+            // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
+            points.add(new Point3D(
+                    waypoint.getLongitude()-lonCenter,
+                    // TFE, 20230205: added scaling based on viewport dimensions
+                    // TFE, 20261101: clamp to the surface instead of using the gpx elevation
+                    getSurfaceElevation(waypoint) + LINE_RAISE * lineScaling,
+                    latCenter-waypoint.getLatitude()));
         }
 
         float resultScaling = (float) (LINE_WIDTH * lineScaling);
