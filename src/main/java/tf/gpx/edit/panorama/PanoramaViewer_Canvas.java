@@ -64,8 +64,33 @@ import tf.gpx.edit.sun.SunPathForSpecialsDates;
  * Viewer for the "horizon" for a given LatLon position.
  * 
  * It calculates for a given distance range the angle to look up / down for each direction to the horizon.
- * The 
- * 
+ * The
+ *
+ * TFE, 20261101: Findings from a prototype for showing the names of visible peaks - NOT part of the code.
+ * The prototype is available as git stash "Panorama peak names via overpass - prototype 2026-11-01".
+ *
+ * Approach:
+ * - names from OpenStreetMap via overpass api - one query for all named peaks:
+ *   [out:json][timeout:120];node["natural"="peak"]["name"](south,west,north,east);out;
+ *   query for a bounding box, filter to MAX_DISTANCE afterwards. "around:" is not faster.
+ * - reverse geocoding per peak (as for "What is here?") is no option: returns the nearest address / POI and
+ *   would need one request per peak.
+ * - visibility via PanoramaRays: peak is visible if no closer terrain on its ray has a higher elevation angle.
+ *   Terrain within max(300m, 2% of distance) in front of the peak is ignored - the SRTM grid is too coarse there.
+ *   Elevation angle from the SRTM elevation at the peak (same source as the drawn terrain), at least the highest
+ *   terrain on the ray around the peak - so the label line ends on the drawn summit. OSM "ele" only for the text.
+ * - labels: vertical text starting ~160px below the top, thin line down to the summit, higher peaks first,
+ *   labels closer than 14px to an already placed one are skipped. Re-positioned with the terrain image.
+ *
+ * Results for Meran (46.67N / 11.16E, 100km):
+ * - overpass needs ~50s (independent of bbox / around - time is spent on the server): 12410 named peaks, 2.8MB
+ *   => a local cache per 1 degree tile (like the SRTM files) would be required for real use
+ * - visibility check & labels are fast (ms), ~25 labels for the initial view east - south - west
+ * - long bilingual names in South Tyrol ("Schönegg - Monte del Cambio (1781m)") are cut off at the top
+ *   => shorten names (e.g. part before " - ") or adapt the label area
+ * - many labels for small nearby summits in front of large mountains - correct but looks busy
+ *   => filter by minimum elevation / prominence
+ *
  * @author thomas
  */
 public class PanoramaViewer_Canvas {
