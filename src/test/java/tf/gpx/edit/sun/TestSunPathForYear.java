@@ -87,7 +87,7 @@ public class TestSunPathForYear {
         try (
                 FileWriter out = new FileWriter(outputFile);
                 CSVPrinter printer = new CSVPrinter(out,
-                        CSVFormat.DEFAULT.builder().setHeader("Date", "Sunrise", "Sun above", "Sunset", "Sun below").build())
+                        CSVFormat.DEFAULT.builder().setHeader("Date", "Sunrise", "Sun above", "Sunset", "Sun below").get())
             ) {
 
             for (int i = 1; i <= daysToCalc; i++) {
