@@ -113,7 +113,7 @@ dependencies {
     implementation "org.openjfx:jdk-jsobject:$javafxVersion:$fxPlatform"
 
     // TFE, 20191209: our own helper library
-    implementation 'tf.JavaHelper:JavaHelper:1.17'
+    implementation 'tf.JavaHelper:JavaHelper:1.18'
 
     implementation 'commons-cli:commons-cli:1.11.0'
     implementation 'commons-io:commons-io:2.21.0'

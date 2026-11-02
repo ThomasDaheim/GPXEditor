@@ -59,6 +59,7 @@ import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
+import tf.helper.javafx.ColorConverter;
 
 /**
  * Viewer for the "horizon" for a given LatLon position.
@@ -117,12 +118,12 @@ public class PanoramaViewer_Canvas {
     // color lookup by distance - sqrt to have more variation nearby
     private final static int COLOR_LOOKUP_SIZE = 256;
     private final static int[] TERRAIN_COLOR_LOOKUP = new int[COLOR_LOOKUP_SIZE];
-    private final static int RIDGE_COLOR = toArgb(Color.web("#696969"));
+    private final static int RIDGE_COLOR = ColorConverter.JavaFXtoARGB(Color.web("#696969"));
     static {
         for (int i = 0; i < COLOR_LOOKUP_SIZE; i++) {
             final double pos = (double) i / (COLOR_LOOKUP_SIZE - 1) * (TERRAIN_COLORS.length - 1);
             final int index = Math.min((int) pos, TERRAIN_COLORS.length - 2);
-            TERRAIN_COLOR_LOOKUP[i] = toArgb(TERRAIN_COLORS[index].interpolate(TERRAIN_COLORS[index + 1], pos - index));
+            TERRAIN_COLOR_LOOKUP[i] = ColorConverter.JavaFXtoARGB(TERRAIN_COLORS[index].interpolate(TERRAIN_COLORS[index + 1], pos - index));
         }
     }
 
@@ -180,13 +181,6 @@ public class PanoramaViewer_Canvas {
     private TimeZone timeZone = null;
 
     private final Label noElevationDataLabel = new Label("No elevation data available");
-
-    private static int toArgb(final Color color) {
-        return ((int) Math.round(color.getOpacity() * 255) << 24) |
-                ((int) Math.round(color.getRed() * 255) << 16) |
-                ((int) Math.round(color.getGreen() * 255) << 8) |
-                (int) Math.round(color.getBlue() * 255);
-    }
 
     private PanoramaViewer_Canvas() {
         // TFE, 20230405: max out width based on screen width
