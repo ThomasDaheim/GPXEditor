@@ -108,6 +108,9 @@ dependencies {
     implementation "org.openjfx:javafx-swing:$javafxVersion:$fxPlatform"
     implementation "org.openjfx:javafx-web:$javafxVersion:$fxPlatform"
     implementation "org.openjfx:javafx-media:$javafxVersion:$fxPlatform"
+    // TFE, 20261102: JSObject (netscape.javascript) for WebView - the module jdk.jsobject of the JDK is deprecated for removal
+    // since JDK 24, JavaFX delivers its own one (see jsobjectJar below)
+    implementation "org.openjfx:jdk-jsobject:$javafxVersion:$fxPlatform"
 
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.17'
@@ -184,28 +187,47 @@ dependencies {
     testImplementation 'com.github.stefanbirkner:system-lambda:1.2.1'
 }
 
-// no --module-path / --add-modules needed for compiling: on the classpath all JavaFX packages (incl. com.sun.*) are accessible
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
-}
-
 // JavaFX needs to be on the module path at runtime - only the platform specific jars
 // the whole classpath / lib dir would fail on duplicate automatic modules (e.g. jfxtras-all)
 // maven delivers each JavaFX module twice: an empty javafx-base-25.0.1.jar and the real javafx-base-25.0.1-win.jar - keep only the latter
 def javafxJars = configurations.runtimeClasspath.filter { it.name.startsWith('javafx-') && !(it.name ==~ /javafx-[a-z]+-[\d.]+\.jar/) }
 
-// adds "--module-path <javafx jars>" to the JVM of run / test - evaluated lazily when the task executes
+// TFE, 20261102: jdk.jsobject (netscape.javascript.JSObject) from JavaFX instead of the JDK
+// the JDK module is deprecated for removal since JDK 24 ("warning: [removal] JSObject ...") - JavaFX delivers its own one
+// the JDK module is "upgradeable": it needs to be replaced via --upgrade-module-path - on the normal --module-path
+// the JDK module would still win since system modules take precedence
+def jsobjectJar = configurations.runtimeClasspath.filter { it.name.startsWith('jdk-jsobject-') && !(it.name ==~ /jdk-jsobject-[\d.]+\.jar/) }
+
+// adds "<option> <files>" to the JVM of run / test / javac - evaluated lazily when the task executes
 // (instead of the former doFirst { jvmArgs = ... } which doesn't work with the configuration cache)
+// option: --module-path for the javafx jars, --upgrade-module-path for jdk.jsobject
 abstract class ModulePathArgumentProvider implements CommandLineArgumentProvider {
+    @Input
+    abstract Property<String> getOption()
+
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
     abstract ConfigurableFileCollection getModulePath()
 
+    ModulePathArgumentProvider() {
+        option.convention('--module-path')
+    }
+
     @Override
     Iterable<String> asArguments() {
-        return ['--module-path', modulePath.asPath]
+        return [option.get(), modulePath.asPath]
     }
+}
+
+// no --module-path / --add-modules needed for compiling: on the classpath all JavaFX packages (incl. com.sun.*) are accessible
+// only jdk.jsobject needs to be upgraded - otherwise javac uses the deprecated one of the JDK
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+    options.compilerArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap {
+        option = '--upgrade-module-path'
+        modulePath.from(jsobjectJar)
+    })
 }
 
 // JVM options needed to run GPXEditor - single source for run, test, start scripts and jpackage
@@ -260,16 +282,20 @@ application {
 //   windows: DEFAULT_JVM_OPTS gets "--module-path=%APP_HOME%\lib\javafx-...-win.jar;..." and CLASSPATH becomes
 //            "<own jar>;lib\*" - our jar first, since it contains classes that also exist in libraries (eu.hansolo.fx.heatmap)
 //   unix:    "--module-path=..." is added to the final exec line (DEFAULT_JVM_OPTS doesn't expand $APP_HOME there)
+//   both:    "--upgrade-module-path=..." for jdk.jsobject from JavaFX - same way as the module path
 startScripts {
     def ownJar = tasks.named('jar').flatMap { it.archiveFileName }
     def fxJarNames = javafxJars.elements.map { files -> files.collect { it.asFile.name } }
+    def jsobjectJarNames = jsobjectJar.elements.map { files -> files.collect { it.asFile.name } }
     doLast {
         def windowsModulePath = fxJarNames.get().collect { "%APP_HOME%\\lib\\${it}" }.join(';')
         def unixModulePath = fxJarNames.get().collect { '$APP_HOME/lib/' + it }.join(':')
-        windowsScript.text = windowsScript.text.replace('set DEFAULT_JVM_OPTS=', "set DEFAULT_JVM_OPTS=\"--module-path=${windowsModulePath}\" ")
+        def windowsUpgradePath = jsobjectJarNames.get().collect { "%APP_HOME%\\lib\\${it}" }.join(';')
+        def unixUpgradePath = jsobjectJarNames.get().collect { '$APP_HOME/lib/' + it }.join(':')
+        windowsScript.text = windowsScript.text.replace('set DEFAULT_JVM_OPTS=', "set DEFAULT_JVM_OPTS=\"--module-path=${windowsModulePath}\" \"--upgrade-module-path=${windowsUpgradePath}\" ")
         // list of all jars is too long for the windows command line - use wildcard but keep our own jar first
         windowsScript.text = windowsScript.text.replaceFirst(/(?m)^set CLASSPATH=.*$/, java.util.regex.Matcher.quoteReplacement("set CLASSPATH=%APP_HOME%\\lib\\${ownJar.get()};%APP_HOME%\\lib\\*"))
-        unixScript.text = unixScript.text.replace('\nexec "$JAVACMD" "$@"', "\nexec \"\$JAVACMD\" --module-path=\"${unixModulePath}\" \"\$@\"")
+        unixScript.text = unixScript.text.replace('\nexec "$JAVACMD" "$@"', "\nexec \"\$JAVACMD\" --module-path=\"${unixModulePath}\" --upgrade-module-path=\"${unixUpgradePath}\" \"\$@\"")
     }
 }
 
@@ -277,6 +303,7 @@ startScripts {
 // for debugging use "run --debug-jvm" (port 5005)
 tasks.named('run', JavaExec) {
     jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { option = '--upgrade-module-path'; modulePath.from(jsobjectJar) })
     enableAssertions = true
 //    args = ["-mapCenter", "46.660578140310854 11.15942716598511", "-gpxFiles", "D:/Clouds/ownCloud/Shared/Gemeinsame Dokumente/Urlaub/Gardasee_2025/Variante Brenta/Gardasee_2025_5Tage_2.gpx"]
     args = ["-mapCenter", "46.660578140310854 11.15942716598511"]
@@ -286,6 +313,7 @@ tasks.named('run', JavaExec) {
 tasks.named('test', Test) {
 //    exclude '**/*'
     jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { option = '--upgrade-module-path'; modulePath.from(jsobjectJar) })
     jvmArgs(jvmFlags)
     enableAssertions = true
 
@@ -406,6 +434,9 @@ def downloadJavafxJmods = tasks.register('downloadJavafxJmods', DownloadJmodsTas
 
 // application jars without javafx - javafx comes with the runtime
 // jdk-jsobject is excluded as well: the module jdk.jsobject is part of the runtime (JDK and JavaFX jmods)
+// TFE, 20261102: jlink currently takes the (deprecated) jdk.jsobject of the JDK even though the JavaFX jmod is on the
+// module path - no problem: the deprecation only matters for javac and once the JDK drops the module, the JavaFX one
+// is the only one left and gets linked
 // jpackage puts all jars of this folder on the classpath, the main jar first
 def jpackageInputDir = layout.buildDirectory.dir('jpackage/input')
 def jpackageInput = tasks.register('jpackageInput', Sync) {
