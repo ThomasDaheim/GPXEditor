@@ -65,10 +65,12 @@ import tf.helper.javafx.ColorConverter;
  * Viewer for the "horizon" for a given LatLon position.
  * 
  * It calculates for a given distance range the angle to look up / down for each direction to the horizon.
- * The
  *
  * TFE, 20261101: Findings from a prototype for showing the names of visible peaks - NOT part of the code.
  * The prototype is available as git stash "Panorama peak names via overpass - prototype 2026-11-01".
+ *
+ * Result: not feasible with the overpass api as provider - a single query takes ~50s on the server.
+ * Would only work with a local cache of the peaks (e.g. per 1 degree tile like SRTM) - not implemented.
  *
  * Approach:
  * - names from OpenStreetMap via overpass api - one query for all named peaks:
