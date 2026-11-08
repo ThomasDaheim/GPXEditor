@@ -113,6 +113,8 @@ public class TestSRTM {
     
     @BeforeEach
     public void setUp() {
+        // tests use synthetic and real data for the same tiles - and other tests might have filled the store as well
+        SRTMDataStore.getInstance().clearStore();
     }
     
     @AfterEach

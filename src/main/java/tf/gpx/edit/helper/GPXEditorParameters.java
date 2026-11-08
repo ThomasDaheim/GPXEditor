@@ -1,5 +1,6 @@
 package tf.gpx.edit.helper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,9 +10,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.help.HelpFormatter;
 import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
@@ -328,9 +329,15 @@ public class GPXEditorParameters {
 
     private void help(final Options options) {
         // This prints out some help
-        HelpFormatter formater = new HelpFormatter();
+        // TFE, 20261102: org.apache.commons.cli.HelpFormatter is deprecated - use the new one from the help package
+        // no "Since" column since our options don't have that information
+        final HelpFormatter formater = HelpFormatter.builder().setShowSince(false).get();
 
-        formater.printHelp("GPXEditor", "Valid options are:", options, "Continue using only recognized options");
+        try {
+            formater.printHelp("GPXEditor", "Valid options are:", options, "Continue using only recognized options", false);
+        } catch (IOException ex) {
+            Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //System.exit(0);
     }    
 }

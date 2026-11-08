@@ -47,8 +47,15 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.PickResult;
+import javafx.geometry.Insets;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
@@ -106,8 +113,14 @@ public class SRTMDataViewer_fxyz3d {
     // TFE, 20230205: we need some scaling here for different sizes of maps
     // below values are good for Deutschland_2018_reduced.gpx
     // but horrible for HangingValleys.gpx
-    private final static double LINE_WIDTH = 0.03;
-    private final static double LINE_RAISE = 0.75*LINE_WIDTH;
+    // TFE, 20261101: half of it is enough now that the track is clamped to the surface
+    private final static double LINE_WIDTH = 0.015;
+    // TFE, 20261101: line is a triangular tube reaching width/4 below its center - plus a bit against z-fighting
+    // more isn't needed since the line is clamped to the surface
+    private final static double LINE_RAISE = 0.3*LINE_WIDTH;
+
+    // TFE, 20261101: surface is opaque now - colors are mixed with white instead
+    private final static double SURFACE_WHITE_BLEND = 0.5;
     
     // assumption: scaling is somehow related to the area of the map
     // lets start with sqrt(lat size * lon size) in some measure
@@ -122,6 +135,27 @@ public class SRTMDataViewer_fxyz3d {
 
     // axes need to be scaled as well in such a scenario
     private double axesScaling = 1;
+    // calibrated with an area of ~2 degrees where the previous sqrt-scaling looked good
+    private final static double AXES_SCALING_PER_DEGREE = 0.46;
+
+    // range for rotation around x-axis - for mouse and keys
+    // 90 is looking straight down, 180 is looking horizontally - anything else would be looking from below
+    // TFE, 20261101: MathUtils.clamp is (value, min, max) - before only a lower bound of -60 was effective
+    private final static double MIN_ROTATE_X = 90.0;
+    private final static double MAX_ROTATE_X = 180.0;
+
+    // camera: field of view, clip planes relative to camera distance, zoom range relative to initial distance
+    private final static double CAMERA_FOV = 60.0;
+    private final static double NEAR_CLIP = 0.01;
+    private final static double FAR_CLIP = 10.0;
+    private final static double MIN_ZOOM = 0.01;
+    private final static double MAX_ZOOM = 5.0;
+    // zoom factor per mouse wheel step
+    private final static double ZOOM_STEP = 1.1;
+    // pan per arrow key relative to camera distance
+    private final static double KEY_PAN = 0.02;
+    private double baseDistance = 1.0;
+    private Group sceneGroup;
     
     private final Map<Shape3D, Label> ticToLabel = new HashMap<>();
     private SurfacePlotMesh_Fast surface;
@@ -421,10 +455,12 @@ public class SRTMDataViewer_fxyz3d {
         final Waypoint ph = new Waypoint(dataBounds.getMaxLat(), dataBounds.getMinLon());
         final double line_area = FastMath.sqrt((EarthGeometry.distance(p0, pw) / 1000.0) * (EarthGeometry.distance(p0, ph) / 1000.0));
         lineScaling = 2f * line_area / LINE_BASE_AREA;
-        // axes would get too thin to fast
-        axesScaling = FastMath.sqrt(lineScaling);
+        // TFE, 20261101: axes linear with the size of the area in degrees (= units of the 3D scene)
+        // before sqrt(lineScaling) - axes got way too thick for small areas
+        axesScaling = AXES_SCALING_PER_DEGREE * Math.max(latDist, lonDist);
         
         final Group nodeGroup = new Group(cameraTransform, surface);
+        sceneGroup = nodeGroup;
         
         lines = new ArrayList<>();
         // add waypoints from gpxLineItem (if any)
@@ -500,15 +536,21 @@ public class SRTMDataViewer_fxyz3d {
         
         // some explanation for rotate & zoom
         final Label label = 
-                new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() + 
-                        "RgtBtn: Shift X+Y" + System.lineSeparator() + 
-                        "Wheel: Zoom" + System.lineSeparator() + 
-                        "Up/Down/Left/Right: Shift X+Y" + System.lineSeparator() + 
-                        "W/S/A/D: Rotate X+Y");
+                new Label("Drag: Rotate X+Y+Z" + System.lineSeparator() +
+                        "RgtBtn: Shift X+Y" + System.lineSeparator() +
+                        "Wheel: Zoom" + System.lineSeparator() +
+                        "Double click: Rotate & zoom around point" + System.lineSeparator() +
+                        "Up/Down/Left/Right: Shift X+Y" + System.lineSeparator() +
+                        "W/S/A/D: Rotate X+Y" + System.lineSeparator() +
+                        "C/R: Reset view");
         label.getStyleClass().add("srtm-viewer-label");
         StackPane.setAlignment(label, Pos.TOP_LEFT);
         
-        scene = new Scene(new StackPane(sceneRoot, label), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
+        final Node legend = getLegend();
+        StackPane.setAlignment(legend, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(legend, new Insets(8));
+
+        scene = new Scene(new StackPane(sceneRoot, label, legend), MAP_WIDTH, MAP_HEIGHT, true, SceneAntialiasing.BALANCED);
         label.toFront();
         scene.getStylesheets().add(SRTMDataViewer_fxyz3d.class.getResource("/GPXEditor.min.css").toExternalForm());
         initUserControls(scene);
@@ -521,6 +563,8 @@ public class SRTMDataViewer_fxyz3d {
         });
 
         // TFE, 20230205: scale axis thickness, ... with size of viewport
+        // TFE, 20261101: labels of previous calls are still in the map - and would show up again at (0,0)
+        ticToLabel.clear();
         axes = Fxyz3dHelper.getInstance().getAxes(dataBounds, elevationScaling, axesScaling, ticToLabel);
         nodeGroup.getChildren().add(axes);
         labelGroup.getChildren().addAll(ticToLabel.values());
@@ -531,9 +575,7 @@ public class SRTMDataViewer_fxyz3d {
     }
     
     private void initLightAndCamera() {
-        camera.setNearClip(0.1);
-        camera.setFarClip(1000.0);
-        camera.setFieldOfView(60);
+        camera.setFieldOfView(CAMERA_FOV);
         
         cameraTransform.getChildren().add(camera);
         cameraTransform.rx.setAngle(120.0);
@@ -551,11 +593,55 @@ public class SRTMDataViewer_fxyz3d {
         cameraTransform.rx.setAngle(120.0);
         cameraTransform.ry.setAngle(0.0);
         cameraTransform.t.setX(0.0);
-        cameraTransform.t.setY(0.0);
+        // TFE, 20261101: pivot in the middle of the terrain and not at elevation 0 below it
+        cameraTransform.t.setY(minElevation <= maxElevation ? (minElevation + maxElevation) / 2.0 : 0.0);
         cameraTransform.t.setZ(0.0);
         camera.setTranslateX(0.0);
         camera.setTranslateY(0.0);
-        camera.setTranslateZ(-1.2*Math.max(latDist, lonDist));
+        baseDistance = 1.2*Math.max(latDist, lonDist);
+        setCameraDistance(baseDistance);
+    }
+
+    // TFE, 20261101: zoom by moving the camera towards the pivot (= origin of cameraTransform)
+    // before the camera was scaled in z - that also moved the near clip plane and cut off the front of the surface
+    private double getCameraDistance() {
+        return -camera.getTranslateZ();
+    }
+
+    private void setCameraDistance(final double distance) {
+        final double newDistance = MathUtils.clamp(distance, MIN_ZOOM * baseDistance, MAX_ZOOM * baseDistance);
+        camera.setTranslateZ(-newDistance);
+        // clip planes need to follow - fixed values cut off everything for small areas (distance ~0.2)
+        camera.setNearClip(NEAR_CLIP * newDistance);
+        camera.setFarClip(FAR_CLIP * Math.max(newDistance, baseDistance));
+    }
+
+    // world units per pixel at the distance of the pivot - to let the surface follow the mouse when panning
+    private double getPanPerPixel() {
+        return 2.0 * getCameraDistance() * Math.tan(Math.toRadians(CAMERA_FOV / 2.0)) / scene.getHeight();
+    }
+
+    // TFE, 20261101: rotate & zoom around the clicked point
+    private void setPivot(final PickResult pickResult) {
+        Node node = pickResult.getIntersectedNode();
+        if (node == null || pickResult.getIntersectedPoint() == null) {
+            return;
+        }
+        // transform intersected point up to the root of the 3D scene
+        javafx.geometry.Point3D point = pickResult.getIntersectedPoint();
+        while (node != null && node != sceneGroup) {
+            point = node.localToParent(point);
+            node = node.getParent();
+        }
+        if (node == null) {
+            // not part of our 3D scene
+            return;
+        }
+        cameraTransform.t.setX(point.getX());
+        cameraTransform.t.setY(point.getY());
+        cameraTransform.t.setZ(point.getZ());
+        camera.setTranslateX(0.0);
+        camera.setTranslateY(0.0);
     }
     
     private void initUserControls(final Scene node) {
@@ -568,28 +654,30 @@ public class SRTMDataViewer_fxyz3d {
                 case ESCAPE:
                     stage.close();
                     break;
+                // TFE, 20261101: step relative to the camera distance - fixed values are way too big for small areas
                 case UP:
-                    camera.setTranslateY(camera.getTranslateY() + 0.1*scaleFact);
+                    camera.setTranslateY(camera.getTranslateY() + KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateY: " + camera.getTranslateY());
                     break;
                 case DOWN:
-                    camera.setTranslateY(camera.getTranslateY() - 0.1*scaleFact);
+                    camera.setTranslateY(camera.getTranslateY() - KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateY: " + camera.getTranslateY());
                     break;
                 case RIGHT:
-                    camera.setTranslateX(camera.getTranslateX() - 0.1*scaleFact);
+                    camera.setTranslateX(camera.getTranslateX() - KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
                 case LEFT:
-                    camera.setTranslateX(camera.getTranslateX() + 0.1*scaleFact);
+                    camera.setTranslateX(camera.getTranslateX() + KEY_PAN*getCameraDistance()*scaleFact);
 //                    System.out.println("setTranslateX: " + camera.getTranslateX());
                     break;
                 case S:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() - 1.0*scaleFact);
+                    // TFE, 20261101: same range as for mouse dragging
+                    cameraTransform.rx.setAngle(MathUtils.clamp(cameraTransform.rx.getAngle() - 1.0*scaleFact, MIN_ROTATE_X, MAX_ROTATE_X));
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
                 case W:
-                    cameraTransform.rx.setAngle(cameraTransform.rx.getAngle() + 1.0*scaleFact);
+                    cameraTransform.rx.setAngle(MathUtils.clamp(cameraTransform.rx.getAngle() + 1.0*scaleFact, MIN_ROTATE_X, MAX_ROTATE_X));
 //                    System.out.println("rx.setAngle: " + cameraTransform.rx.getAngle());
                     break;
                 case D:
@@ -624,21 +712,12 @@ public class SRTMDataViewer_fxyz3d {
                 scrollDelta = t.getDeltaX();
             }
             
-            // TFE, 20230213: we also need scaling for the zoom-steps we do
-            final double value = 0.05*scaleFact * axesScaling;
+            // TFE, 20261101: zoom in steps relative to the current distance - same feel for small & large areas
+            final double factor = Math.pow(ZOOM_STEP, scaleFact);
             if (scrollDelta > 0) {
-                // TODO: not working in the moment
-//                if (!t.isControlDown()) {
-                    camera.setScaleZ(camera.getScaleZ() + value);
-//                } else {
-//                    scaleEverything(Axis.Direction.Y, value);
-//                }
-            } else {
-//                if (!t.isControlDown()) {
-                    camera.setScaleZ(camera.getScaleZ() - value);
-//                } else {
-//                    scaleEverything(Axis.Direction.Y, -value);
-//                }
+                setCameraDistance(getCameraDistance() / factor);
+            } else if (scrollDelta < 0) {
+                setCameraDistance(getCameraDistance() * factor);
             }
             
             Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
@@ -671,19 +750,24 @@ public class SRTMDataViewer_fxyz3d {
             if (me.isPrimaryButtonDown()) {
                 cameraTransform.ry.setAngle(((cameraTransform.ry.getAngle() + mouseDeltaX * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180); // +
                 cameraTransform.rx.setAngle(
-                        MathUtils.clamp(-60, 
-                        (((cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0) % 360 + 540) % 360 - 180),
-                        60)); // - 
+                        MathUtils.clamp(cameraTransform.rx.getAngle() - mouseDeltaY * modifierFactor * modifier * 2.0, MIN_ROTATE_X, MAX_ROTATE_X)); // -
                 
             } else if (me.isSecondaryButtonDown()) {
-                cameraTransform.t.setX(cameraTransform.t.getX() - mouseDeltaX * modifierFactor * modifier * 0.1); // -
-                cameraTransform.t.setY(cameraTransform.t.getY() + mouseDeltaY * modifierFactor * modifier * 0.1); // -
+                // TFE, 20261101: pan in the view plane - surface follows the mouse
+                final double panPerPixel = getPanPerPixel();
+                camera.setTranslateX(camera.getTranslateX() - mouseDeltaX * panPerPixel);
+                camera.setTranslateY(camera.getTranslateY() - mouseDeltaY * panPerPixel);
             } else if (me.isMiddleButtonDown()) {
-                double z = camera.getTranslateZ();
-                double newZ = z + mouseDeltaX * modifierFactor * modifier;
-                camera.setTranslateZ(newZ);
+                setCameraDistance(getCameraDistance() * Math.pow(ZOOM_STEP, -mouseDeltaX * modifierFactor));
             }
             Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
+        });
+
+        node.setOnMouseClicked((MouseEvent me) -> {
+            if (MouseButton.PRIMARY.equals(me.getButton()) && me.getClickCount() == 2) {
+                setPivot(me.getPickResult());
+                Fxyz3dHelper.getInstance().updateLabels(scene, ticToLabel, true);
+            }
         });
     }
     
@@ -795,58 +879,126 @@ public class SRTMDataViewer_fxyz3d {
 //        System.out.println("Bounds:  " + dataBounds.getMinLat() + ", " + dataBounds.getMaxLat() + ", " + dataBounds.getMinLon() + ", " + dataBounds.getMaxLon());
 //        System.out.println("Shifted: " + latCenter + ", " + latDist + ", " + lonCenter + ", " + lonDist);
 
-        // we don't want to plot the full set, only 1/4 of it
-        final int dataCount = SRTMDataHelper.SRTMDataType.SRTM3.getDataCount();
-        final int steps = dataCount / DATA_FRACTION;
-        
+        final int steps = getSurfaceSteps();
+
         // SurfacePlotMesh is good for a known function since it avoids DelaunayMesh...
         surface = new SurfacePlotMesh_Fast(elevationFunction, lonDist, latDist, steps, steps, 1);
         surface.setCullFace(CullFace.NONE);
         
-        ElevationColors colors;
+        final List<Color> elevationColors = getElevationColors();
+        final ElevationColors colors = new ElevationColors(elevationColors);
         // we have 8 colors + "transparent" that should be used for zero values
         // we want to use the "transparent" ONLY for zero values
         if (hasNoElevation) {
-            colors = new ElevationColors(
-                        Color.TRANSPARENT,
-                        adaptColor(Color.BLUE), 
-                        adaptColor(Color.LIGHTBLUE), 
-                        adaptColor(Color.CYAN), 
-                        adaptColor(Color.GREEN), 
-                        adaptColor(Color.YELLOW), 
-                        adaptColor(Color.ORANGE), 
-                        adaptColor(Color.RED), 
-                        adaptColor(Color.DARKRED));
-        } else {
-            colors = new ElevationColors(
-                        adaptColor(Color.BLUE), 
-                        adaptColor(Color.LIGHTBLUE), 
-                        adaptColor(Color.CYAN), 
-                        adaptColor(Color.GREEN), 
-                        adaptColor(Color.YELLOW), 
-                        adaptColor(Color.ORANGE), 
-                        adaptColor(Color.RED), 
-                        adaptColor(Color.DARKRED));
+            colors.getColors().add(0, Color.TRANSPARENT);
         }
-        
-        surface.setTextureModeVertices3D(colors, 
+
+        // TFE, 20261101: fxyz3d maps the range min - max of the function values over ALL vertices to the palette
+        // before no data returned -200*minElevation - and that stretched the range so that all real values ended up in the top colors
+        // and since Point3D.y is a float the lowest point itself was often below the double minElevation and got that value as well
+        // now: no data is exactly one color band below minElevation - so that it gets index 0 = transparent
+        final double minColorElevation = (float) minElevation;
+        final double maxColorElevation = (float) maxElevation;
+        final double noDataElevation = minColorElevation - (maxColorElevation - minColorElevation) / elevationColors.size();
+        surface.setTextureModeVertices3D(colors,
                 p -> {
-                    // so elevation for zero should be something so much lower than minElevation that it will
-                    // certainly be shown as transparent without impacting the other color range
-                    if (p.y >= minElevation) {
-                        return p.y;
+                    if (p.y >= minColorElevation) {
+                        return Math.min(p.y, maxColorElevation);
                     } else {
-//                        System.out.println("Returning artifical height");
-                        return - 200d*minElevation;
+                        return noDataElevation;
                     }
-                        });
+                });
         surface.setDrawMode(DrawMode.FILL);
         surface.setUserData(dataBounds);
     }
     
+    // colors from low to high - used for surface & legend
+    private List<Color> getElevationColors() {
+        return new ArrayList<>(List.of(
+                adaptColor(Color.BLUE),
+                adaptColor(Color.LIGHTBLUE),
+                adaptColor(Color.CYAN),
+                adaptColor(Color.GREEN),
+                adaptColor(Color.YELLOW),
+                adaptColor(Color.ORANGE),
+                adaptColor(Color.RED),
+                adaptColor(Color.DARKRED)));
+    }
+
+    // TFE, 20261101: legend for the elevation colors - highest on top
+    private Node getLegend() {
+        final VBox legend = new VBox(2);
+        legend.getStyleClass().add("srtm-viewer-label");
+        legend.setPadding(new Insets(4));
+        legend.setStyle("-fx-background-color: rgba(255, 255, 255, 0.8);");
+        legend.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        legend.setMouseTransparent(true);
+
+        // back from scaled values to meters
+        final double minMeter = minElevation / elevationScaling;
+        final double maxMeter = maxElevation / elevationScaling;
+        final List<Color> elevationColors = getElevationColors();
+        final double step = (maxMeter - minMeter) / elevationColors.size();
+        for (int i = elevationColors.size() - 1; i >= 0; i--) {
+            legend.getChildren().add(getLegendEntry(elevationColors.get(i),
+                    String.format("%.0f - %.0f m", minMeter + i * step, minMeter + (i + 1) * step)));
+        }
+        if (hasNoElevation) {
+            legend.getChildren().add(getLegendEntry(Color.TRANSPARENT, "No data"));
+        }
+
+        return legend;
+    }
+
+    private Node getLegendEntry(final Color color, final String text) {
+        // white below since the surface colors are semi-transparent
+        final Rectangle box = new Rectangle(20, 14, color);
+        box.setStroke(Color.GRAY);
+        final Rectangle background = new Rectangle(20, 14, Color.WHITE);
+        final HBox entry = new HBox(6, new StackPane(background, box), new Label(text));
+        entry.setAlignment(Pos.CENTER_LEFT);
+        return entry;
+    }
+
     private Color adaptColor(final Color color) {
         final Color tempColor =  color.saturate().saturate().saturate();
-        return new Color(tempColor.getRed(), tempColor.getGreen(), tempColor.getBlue(), 0.5);
+        // TFE, 20261101: opaque but mixed with white - looks like the previous alpha 0.5 on the white background
+        // without the parts behind the surface shining through
+        return tempColor.interpolate(Color.WHITE, SURFACE_WHITE_BLEND);
+    }
+
+    // TFE, 20261101: scaled elevation of the surface at a waypoint
+    // the surface is a grid with linear interpolation in between - so the max of the 4 surrounding grid points
+    // is never below the surface - and the track can't vanish in it
+    // in case there is no srtm data at all we use the gpx elevation
+    private double getSurfaceElevation(final GPXWaypoint waypoint) {
+        final int steps = getSurfaceSteps();
+        final double x = waypoint.getLongitude() - lonCenter;
+        final double z = latCenter - waypoint.getLatitude();
+        // same grid as in SurfacePlotMesh_Fast: -range/2 to + range/2 in steps
+        final int i0 = Math.max(0, Math.min(steps - 1, (int) Math.floor((x / lonDist + 0.5) * steps)));
+        final int j0 = Math.max(0, Math.min(steps - 1, (int) Math.floor((z / latDist + 0.5) * steps)));
+
+        double result = -Double.MAX_VALUE;
+        for (int i = i0; i <= i0 + 1; i++) {
+            for (int j = j0; j <= j0 + 1; j++) {
+                final double gridLon = lonCenter - lonDist / 2d + i * lonDist / steps;
+                final double gridLat = latCenter - (-latDist / 2d + j * latDist / steps);
+                final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(gridLat, gridLon);
+                if (elevation.getLeft()) {
+                    result = Math.max(result, Math.max(0d, elevationScaler.apply(elevation.getRight())));
+                }
+            }
+        }
+        if (result == -Double.MAX_VALUE) {
+            result = elevationScaler.apply(waypoint.getElevation());
+        }
+        return result;
+    }
+
+    private int getSurfaceSteps() {
+        // we don't want to plot the full set, only 1/4 of it
+        return SRTMDataHelper.SRTMDataType.SRTM3.getDataCount() / DATA_FRACTION;
     }
 
     private PolyLine3D getPolyLine3D(final Bounds3D dataBounds, final List<GPXWaypoint> gpxWaypoints) {
@@ -855,8 +1007,7 @@ public class SRTMDataViewer_fxyz3d {
         }
 
         final List<Point3D> points = new ArrayList<>();
-        // use only every DATA_FRACTION waypoint
-        int i = 0;
+        // TFE, 20261101: use all waypoints - with only every DATA_FRACTION waypoint the straight line in between dips into the surface
         for (GPXWaypoint waypoint : gpxWaypoints) {
 //            if (Math.abs(waypoint.getLatitude()-latCenter) > latDist) {
 //                System.err.println("Latitude outside bounds! " + (waypoint.getLatitude()-latCenter));
@@ -865,16 +1016,13 @@ public class SRTMDataViewer_fxyz3d {
 //                System.err.println("Longitude outside bounds! " + (waypoint.getLongitude()-lonCenter));
 //            }
 
-            if (i == 0) {
-                // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
-                points.add(new Point3D(
-                        waypoint.getLongitude()-lonCenter, 
-                        // TFE, 20230205: added scaling based on viewport dimensions
-                        elevationScaler.apply(waypoint.getElevation()) + LINE_RAISE * lineScaling, 
-                        latCenter-waypoint.getLatitude()));
-            }
-            
-            i = (i+1) % DATA_FRACTION;
+            // shift lat/lon to the window around "0" AND raise the line a bit above the surface to make sure all traingles are visible
+            points.add(new Point3D(
+                    waypoint.getLongitude()-lonCenter,
+                    // TFE, 20230205: added scaling based on viewport dimensions
+                    // TFE, 20261101: clamp to the surface instead of using the gpx elevation
+                    getSurfaceElevation(waypoint) + LINE_RAISE * lineScaling,
+                    latCenter-waypoint.getLatitude()));
         }
 
         float resultScaling = (float) (LINE_WIDTH * lineScaling);

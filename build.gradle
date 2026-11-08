@@ -1,71 +1,85 @@
-// support for javafx11 - see https://openjfx.io/openjfx-docs/#gradle
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven {
-          url = 'https://plugins.gradle.org/m2/'
-        }
-    }
-    dependencies {
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
-        // https://github.com/ben-manes/gradle-versions-plugin
-        // task: dependencyUpdates
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.53.0'
-    }
-}
+// =====================================================================================================================
+// GPXEditor build
+// =====================================================================================================================
+//
+// Requirements
+//   - JDK 25 (Gradle toolchain, e.g. Temurin 25) - Gradle 9 via gradlew
+//   - in the local maven repo (~/.m2): tf.JavaHelper:JavaHelper and the self-built me.himanshusoni.gpxparser:gpx-parser:1.14
+//     (both are NOT available in maven central - on a fresh machine they need to be built / installed first)
+//   - only for jpackageInstaller: WiX Toolset 3, found via the %WIX% environment variable set by the WiX installer
+//
+// Main tasks
+//   gradlew build                -> compile, test, jar + installDist (runs automatically after build)
+//   gradlew run                  -> start GPXEditor from the IDE / command line
+//   gradlew run --debug-jvm      -> start GPXEditor and wait for a debugger on port 5005
+//   gradlew installDist          -> build/install/GPXEditor with lib/ and bin/GPXEditor(.bat) start scripts
+//                                   (start scripts contain all required JVM options - needs an installed Java 25)
+//   gradlew jpackageImage        -> build/jpackage/image/GPXEditor: portable folder with GPXEditor.exe and its own
+//                                   Java runtime incl. JavaFX - no installed Java required, can be copied anywhere
+//   gradlew jpackageInstaller    -> build/jpackage/installer/GPXEditor-<version>.exe: Windows installer for the above
+//   gradlew dependencyUpdates    -> list newer versions of all dependencies
+//   gradlew test --tests "*NonUITests" -> test suite of all non-UI tests
+//
+// How JavaFX is wired (GPXEditor itself is non-modular, i.e. runs from the classpath)
+//   - compile: JavaFX jars on the classpath are sufficient, no module path needed
+//   - run / test / start scripts: the JavaFX jars of the current platform are put on the module path, all other jars
+//     stay on the classpath. Putting the whole classpath / lib dir on the module path fails with
+//     "Two versions of module jfxtras.icalendaragenda found" (jfxtras-all contains the same modules again)
+//   - jpackage: JavaFX is linked into the runtime from the JavaFX jmods (download from gluonhq.com), the JavaFX jars are
+//     not part of the app folder
+//   - all JVM options (--add-modules / --add-exports / --add-opens / memory) are defined once in jvmFlags below and
+//     shared by run, test, the start scripts and jpackage
+//
+// Updating versions
+//   - JavaFX: change javafxVersion AND javafxJmodsSha256 - the checksum is published next to the jmods zip on
+//     https://gluonhq.com/products/javafx/ (e.g. <url of the zip>.sha256). A wrong checksum stops the build.
+//   - application version: change version below - it ends up in the jar name, the exe and the installer
+//
+// Known warnings / limitations
+//   - jpackageImage prints "Warning: No JDK Modules found": harmless - Temurin 25 doesn't ship a jmods folder anymore
+//     (JEP 493), jlink takes the modules from the running JDK instead
+//   - the jar manifest contains a build timestamp - therefore jar and jpackageImage are never up-to-date and always
+//     rebuild (~20s for jpackageImage)
+//   - jpackage only builds for the OS it runs on - the jpackage tasks are set up for Windows x64 only
+//   - TestOpenElevationService and TestMapboxGeocodingService call online services and currently fail
+//     (independent of the build setup)
+//
+// History of the build file cleanup (TFE, 20261026)
+//   - gradle-wrapper.jar is now tracked in git (was excluded by *.jar in .gitignore)
+//   - generated start scripts carry all JVM options -> handmade GPXEditor.bat removed
+//   - Windows start script uses lib\* as classpath (full jar list exceeded the command line limit)
+//   - removed broken "debug" task (JavaExec.main no longer exists in Gradle 8+) -> use "run --debug-jvm"
+//   - mavenLocal() restricted to the two libraries that only exist there (see above)
+//   - removed unused jzy3d repo, maven-publish / idea / org.beryx.runtime plugins, unzip task and dead comments
+//   - plugins {} block, Java toolchain, BOMs for Jackson & JUnit, lazy task configuration (configuration cache)
+//   - Windows exe via jpackage (see end of file)
+// =====================================================================================================================
 
 plugins {
-    id 'org.beryx.runtime' version '2.0.1'
+    id 'java'
+    id 'application'
+    id 'com.google.osdetector' version '1.7.3'
+    // https://github.com/ben-manes/gradle-versions-plugin
+    // task: dependencyUpdates
+    id 'com.github.ben-manes.versions' version '0.53.0'
 }
 
-// Use a plugin (https://github.com/crotwell/gradle-macappbundle) to create a Mac OS X .app and .dmg
-// plugins {
-//     id "edu.sc.seis.macAppBundle" version "2.3.1"
-// }
-// macAppBundle {
-//     mainClassName   = "tf.ownnote.ui.main.OwnNoteEditorManager"
-//     icon            = "src/main/resources/ownNoteEditor.icns"
-//     volumeName      = "ownNoteEditor"
-//     dmgName         = "ownNoteEditor"
-//     // TFE, 20200504: some change in Gradle now requires values for below attributes - but I have no clue what to put here...
-//     backgroundImage = "TBD"
-//     certIdentity    = "TBD"
-//     jreHome         = "TBD"
-//     keyChain        = "TBD"
-//     javaProperties.put("apple.laf.useScreenMenuBar", "true")
-//     // Uncomment the next line to bundle the JRE with the Mac OS X application
-//     //bundleJRE     = true
-// }
-// configurations.default.canBeResolved=true
-
-apply plugin: 'java'
-apply plugin: 'application'
-apply plugin: 'com.google.osdetector'
-apply plugin: 'maven-publish'
-
-// see https://github.com/kelemen/netbeans-gradle-project/issues/179
-apply plugin: 'idea'
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
-    }
-}
-apply plugin: 'com.github.ben-manes.versions' // provides dependencyUpdates command
-
-ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-// TFE, 20251224: Updates for Java25 and Gradle 9
-application {
-    mainClass.set('tf.gpx.edit.main.GPXEditorManager')
-}
 def appName='GPXEditor'
 group='tf.GPXEditor'
 version='5.10'
 description = 'GPXEditor - JavaFX GPX file editor'
+
+// classifier of the platform specific JavaFX jars (win / mac / linux)
+def fxPlatform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
+// used for the JavaFX jars AND the jmods for jpackage - when changing also update javafxJmodsSha256 further down
+def javafxVersion = '25.0.1'
+
+// Gradle picks an installed JDK 25 for compile, run and test - independent of the JDK Gradle itself runs with
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 repositories {
     mavenLocal() {
@@ -75,33 +89,29 @@ repositories {
             mavenPom()
             artifact()
         }
+        // only our own helper library and the self-built gpx-parser 1.14 come from the local repo - everything else from remote repos
+        // (otherwise any outdated / self-built jar lying around in ~/.m2 could silently end up in the build)
+        content {
+            includeGroup 'tf.JavaHelper'
+            includeGroup 'me.himanshusoni.gpxparser'
+        }
     }
     mavenCentral()
-    // You may define additional repositories, or even remove "mavenCentral()".
-    // Read more about repositories here:
-    //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:repositories
-    maven {
-        url = 'https://maven.jzy3d.org/releases'
-    }
 }
 
 dependencies {
     // JavaFX explicit dependencies
-//    def javafx_version='11.0.2'
-//    def javafx_version='14'
-//    def javafx_version='15.0.1'
-//    def javafx_version='17.0.1'
-//    def javafx_version='19.0.2.1'
-//    def javafx_version='21.0.2'
-    def javafx_version='25.0.1'
-    implementation "org.openjfx:javafx-base:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-graphics:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-controls:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-fxml:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-swing:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-web:$javafx_version:$platform"
-    implementation "org.openjfx:javafx-media:$javafx_version:$platform"
-    
+    implementation "org.openjfx:javafx-base:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-graphics:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-controls:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-fxml:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-swing:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-web:$javafxVersion:$fxPlatform"
+    implementation "org.openjfx:javafx-media:$javafxVersion:$fxPlatform"
+    // TFE, 20261102: JSObject (netscape.javascript) for WebView - the module jdk.jsobject of the JDK is deprecated for removal
+    // since JDK 24, JavaFX delivers its own one (see jsobjectJar below)
+    implementation "org.openjfx:jdk-jsobject:$javafxVersion:$fxPlatform"
+
     // TFE, 20191209: our own helper library
     implementation 'tf.JavaHelper:JavaHelper:1.17'
 
@@ -112,91 +122,117 @@ dependencies {
     implementation 'org.apache.commons:commons-text:1.15.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.apache.commons:commons-csv:1.14.1'
-    implementation 'org.apache.commons:commons-compress:1.28.0'
     implementation 'me.himanshusoni.gpxparser:gpx-parser:1.14'
     implementation 'org.controlsfx:controlsfx:11.2.3'
-    
-    implementation 'de.jensd:fontawesomefx:8.9'
-    // TFE, 20210310: not working since GlyphsDude not found
-    // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
-//    compile 'de.jensd:fontawesomefx-commons:9.1.2'
-//    compile 'de.jensd:fontawesomefx-emojione:3.1.1-9.1.2'
-//    compile 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
-//    compile 'de.jensd:fontawesomefx-icons525:4.6.3'
-//    compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
-//    compile 'de.jensd:fontawesomefx-materialicons:2.2.0-9.1.2'
-//    compile 'de.jensd:fontawesomefx-materialstackicons:2.1-5-9.1.2'
-//    compile 'de.jensd:fontawesomefx-octicons:4.3.0-9.1.2'
-//    compile 'de.jensd:fontawesomefx-weathericons:2.0.10-9.1.2'
-    
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.21.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.2'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.2'
-    
-    // TFE, 20260109: this can work with a path that contains arrays...
-    implementation 'com.jayway.jsonpath:json-path:3.0.0';
 
-    implementation 'de.grundid.opendatalab:geojson-jackson:3.0'
+    // TFE, 20210310: newer versions not working since GlyphsDude not found
+    // https://bitbucket.org/Jerady/fontawesomefx/issues/72/glyphsdude-and-package
+    implementation 'de.jensd:fontawesomefx:8.9'
+
+    // BOM: one version for all jackson modules
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.21.2')
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+
+    // TFE, 20260109: this can work with a path that contains arrays...
+    implementation 'com.jayway.jsonpath:json-path:3.0.0'
+
+    // TFE, 20261031: 3.0 is built for jackson 3 (tools.jackson) - with our jackson 2 ObjectMapper the coordinates
+    // can't be deserialized anymore (openrouteservice elevation lookup broken) - stay with 1.14 as long as we use jackson 2
+    implementation 'de.grundid.opendatalab:geojson-jackson:1.14'
     implementation 'org.jfxtras:jfxtras-controls:17-r1'
     implementation 'org.jfxtras:jfxtras-labs:9.0-r1'
     implementation 'org.jfxtras:jmetro:11.6.16'
 
     implementation 'uk.com.robust-it:cloning:1.9.12'
-    
+
     implementation 'org.im4java:im4java:1.4.0'
-    
+
     // TFE, 20211222: Savitzky-Golay-Filter for track smoothing
     implementation 'io.github.ruozhuochen:savitzky-golay-filter:1.0.1'
-    
+
     // TFE, 20220115: 3rd alternative: fxyz3d
     implementation 'org.fxyz3d:fxyz3d:0.6.0'
-    
+
     // TFE, 20220201: faster list
     implementation 'org.magicwerk.brownies:brownies-collections:0.9.24'
-    
+
     // sun data
-    // TODO: upgrade to 0.1.7 and fix breaking changes
     implementation 'net.e175.klaus:solarpositioning:2.0.12'
-    
+
     // timezone provider
-    implementation 'com.github.luben:zstd-jni:1.5.7-7'
     implementation 'us.dustinj.timezonemap:timezonemap:4.5'
-    
+    constraints {
+        // timezonemap brings outdated versions (commons-compress 1.20 has known vulnerabilities)
+        // constraints only raise the versions, GPXEditor doesn't use these libraries directly
+        implementation 'org.apache.commons:commons-compress:1.28.0'
+        implementation 'com.github.luben:zstd-jni:1.5.7-7'
+    }
+
     // TFE, 20220320: change to charts based on canvas for performance
     // latest version compatible with javafx 15 is for 11
     // 21.0.23ff gives Illegal character in path at index 128
     implementation 'eu.hansolo.fx:charts:21.0.21'
-    
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
+
+    // BOM: one version for all junit modules
+    testImplementation platform('org.junit:junit-bom:5.13.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     // TFE, 20221231: build a test suite for all non-UI tests
-    testImplementation 'org.junit.platform:junit-platform-suite-engine:1.13.0'
+    testImplementation 'org.junit.platform:junit-platform-suite-engine'
+    // Gradle 9 doesn't provide the launcher automatically anymore
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     // TFE, 20210216: capture System.err() easily
     testImplementation 'com.github.stefanbirkner:system-lambda:1.2.1'
 }
 
-task unzip(type: Copy) {
-    def zipFile = file("${buildDir}/distributions/GPXEditor-${version}.zip")
-    def outputDir = file("dist")
- 
-    from zipTree(zipFile)
-    into outputDir
-}
+// JavaFX needs to be on the module path at runtime - only the platform specific jars
+// the whole classpath / lib dir would fail on duplicate automatic modules (e.g. jfxtras-all)
+// maven delivers each JavaFX module twice: an empty javafx-base-25.0.1.jar and the real javafx-base-25.0.1-win.jar - keep only the latter
+def javafxJars = configurations.runtimeClasspath.filter { it.name.startsWith('javafx-') && !(it.name ==~ /javafx-[a-z]+-[\d.]+\.jar/) }
 
-compileJava {
-    doFirst {
-        options.compilerArgs = [
-                '--module-path', classpath.asPath,
-                '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
-                '-Xlint:unchecked',
-                '-Xlint:deprecation',
-        ]
+// TFE, 20261102: jdk.jsobject (netscape.javascript.JSObject) from JavaFX instead of the JDK
+// the JDK module is deprecated for removal since JDK 24 ("warning: [removal] JSObject ...") - JavaFX delivers its own one
+// the JDK module is "upgradeable": it needs to be replaced via --upgrade-module-path - on the normal --module-path
+// the JDK module would still win since system modules take precedence
+def jsobjectJar = configurations.runtimeClasspath.filter { it.name.startsWith('jdk-jsobject-') && !(it.name ==~ /jdk-jsobject-[\d.]+\.jar/) }
+
+// adds "<option> <files>" to the JVM of run / test / javac - evaluated lazily when the task executes
+// (instead of the former doFirst { jvmArgs = ... } which doesn't work with the configuration cache)
+// option: --module-path for the javafx jars, --upgrade-module-path for jdk.jsobject
+abstract class ModulePathArgumentProvider implements CommandLineArgumentProvider {
+    @Input
+    abstract Property<String> getOption()
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract ConfigurableFileCollection getModulePath()
+
+    ModulePathArgumentProvider() {
+        option.convention('--module-path')
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        return [option.get(), modulePath.asPath]
     }
 }
 
-// see https://github.com/kelemen/netbeans-gradle-project/issues/403 on how to extend gradle tasks
-def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
+// no --module-path / --add-modules needed for compiling: on the classpath all JavaFX packages (incl. com.sun.*) are accessible
+// only jdk.jsobject needs to be upgraded - otherwise javac uses the deprecated one of the JDK
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+    options.compilerArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap {
+        option = '--upgrade-module-path'
+        modulePath.from(jsobjectJar)
+    })
+}
+
+// JVM options needed to run GPXEditor - single source for run, test, start scripts and jpackage
+// --add-exports: GPXEditor and several libraries (controlsfx, jfxtras, ...) use JavaFX internals
+def javafxArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,javafx.fxml,javafx.web,javafx.swing,javafx.media',
                 // various exports needed at run time - see https://stackoverflow.com/a/52142071
                 '--add-exports', 'javafx.graphics/com.sun.javafx.util=ALL-UNNAMED',
                 '--add-exports', 'javafx.base/com.sun.javafx.reflect=ALL-UNNAMED',
@@ -217,7 +253,6 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--add-exports', 'javafx.graphics/com.sun.javafx.scene.traversal=ALL-UNNAMED',
                 '--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
                 '--add-exports', 'javafx.graphics/com.sun.javafx.scene.input=ALL-UNNAMED',
-                '--add-exports', 'javafx.base/com.sun.javafx.collections=ALL-UNNAMED',
                 '--add-opens', 'javafx.graphics/javafx.scene.layout=ALL-UNNAMED',
                 // TFE, 20200803: workaround for "WARNING: Illegal reflective access by com.rits.cloning.Cloner"
                 // https://github.com/x-stream/xstream/issues/101#issuecomment-667734663
@@ -231,56 +266,231 @@ def newArgs = [ '--add-modules', 'javafx.controls,javafx.graphics,javafx.base,ja
                 '--enable-native-access', 'javafx.web',
                 '--enable-native-access', 'ALL-UNNAMED',
     ]
-    
-// extend Netbeans Gradle "Run" task
-run {
-    doFirst {
-        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
-        // profiler not working with netbeans...
-//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib/deployed/jdk16/windows-amd64/profilerinterface.dll=C:/PROGRA~1/NetBeans-12.0/netbeans/profiler/lib",5140')
-//        jvmArgs = jvmArgs.plus('-agentpath:"C:/PROGRA~1/visualvm_212/visualvm/lib/deployed/jdk16/windows-amd64/profilerinterface.dll"="C:/PROGRA~1/visualvm_212/visualvm/lib",5140')
-        enableAssertions = true
+// memory settings: thread stack size, max heap, max video memory for JavaFX (prism)
+def jvmFlags = javafxArgs + ['-Xss80M', '-Xmx4096M', '-Dprism.maxvram=1G']
+
+// TFE, 20251224: Updates for Java25 and Gradle 9
+application {
+    mainClass = 'tf.gpx.edit.main.GPXEditorManager'
+    // used by "run" and by the generated start scripts in build/install/GPXEditor/bin
+    // assertions are enabled everywhere (run, test, start scripts, exe) - as it has always been the case
+    applicationDefaultJvmArgs = jvmFlags + ['-enableassertions']
+}
+
+// start scripts need the javafx jars on the module path - inject it with the script's own APP_HOME
+// Gradle's start script template has no option for this, so the generated scripts are patched afterwards:
+//   windows: DEFAULT_JVM_OPTS gets "--module-path=%APP_HOME%\lib\javafx-...-win.jar;..." and CLASSPATH becomes
+//            "<own jar>;lib\*" - our jar first, since it contains classes that also exist in libraries (eu.hansolo.fx.heatmap)
+//   unix:    "--module-path=..." is added to the final exec line (DEFAULT_JVM_OPTS doesn't expand $APP_HOME there)
+//   both:    "--upgrade-module-path=..." for jdk.jsobject from JavaFX - same way as the module path
+startScripts {
+    def ownJar = tasks.named('jar').flatMap { it.archiveFileName }
+    def fxJarNames = javafxJars.elements.map { files -> files.collect { it.asFile.name } }
+    def jsobjectJarNames = jsobjectJar.elements.map { files -> files.collect { it.asFile.name } }
+    doLast {
+        def windowsModulePath = fxJarNames.get().collect { "%APP_HOME%\\lib\\${it}" }.join(';')
+        def unixModulePath = fxJarNames.get().collect { '$APP_HOME/lib/' + it }.join(':')
+        def windowsUpgradePath = jsobjectJarNames.get().collect { "%APP_HOME%\\lib\\${it}" }.join(';')
+        def unixUpgradePath = jsobjectJarNames.get().collect { '$APP_HOME/lib/' + it }.join(':')
+        windowsScript.text = windowsScript.text.replace('set DEFAULT_JVM_OPTS=', "set DEFAULT_JVM_OPTS=\"--module-path=${windowsModulePath}\" \"--upgrade-module-path=${windowsUpgradePath}\" ")
+        // list of all jars is too long for the windows command line - use wildcard but keep our own jar first
+        windowsScript.text = windowsScript.text.replaceFirst(/(?m)^set CLASSPATH=.*$/, java.util.regex.Matcher.quoteReplacement("set CLASSPATH=%APP_HOME%\\lib\\${ownJar.get()};%APP_HOME%\\lib\\*"))
+        unixScript.text = unixScript.text.replace('\nexec "$JAVACMD" "$@"', "\nexec \"\$JAVACMD\" --module-path=\"${unixModulePath}\" --upgrade-module-path=\"${unixUpgradePath}\" \"\$@\"")
     }
+}
+
+// extend Netbeans Gradle "Run" task - JVM options come from application.applicationDefaultJvmArgs
+// for debugging use "run --debug-jvm" (port 5005)
+tasks.named('run', JavaExec) {
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { option = '--upgrade-module-path'; modulePath.from(jsobjectJar) })
+    enableAssertions = true
 //    args = ["-mapCenter", "46.660578140310854 11.15942716598511", "-gpxFiles", "D:/Clouds/ownCloud/Shared/Gemeinsame Dokumente/Urlaub/Gardasee_2025/Variante Brenta/Gardasee_2025_5Tage_2.gpx"]
     args = ["-mapCenter", "46.660578140310854 11.15942716598511"]
 //    args = ["-mergeFiles", "P:/Pictures/Raw/GPX/*.gpx"]
 }
 
-test {
+tasks.named('test', Test) {
 //    exclude '**/*'
-    doFirst {
-        jvmArgs = jvmArgs.plus(['--module-path', classpath.asPath,])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
-        enableAssertions = true
-    }
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { modulePath.from(javafxJars) })
+    jvmArgumentProviders.add(objects.newInstance(ModulePathArgumentProvider).tap { option = '--upgrade-module-path'; modulePath.from(jsobjectJar) })
+    jvmArgs(jvmFlags)
+    enableAssertions = true
 
     // https://stackoverflow.com/a/35467005
-    testLogging.showStandardStreams = true;   
+    testLogging.showStandardStreams = true
     useJUnitPlatform()
 }
 
-// extend Netbeans Gradle "Debug" task
-task(debug, dependsOn: 'classes', type: JavaExec) {
-    doFirst {
-        main = 'tf.gpx.edit.main.GPXEditorManager'
-        classpath = sourceSets.main.runtimeClasspath
-        jvmArgs = jvmArgs.plus([
-                '--module-path', classpath.asPath,
-                "-Xdebug",
-                "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005",
-        ])
-        jvmArgs = jvmArgs.plus(newArgs)
-        jvmArgs = jvmArgs.plus('-Xss80M')
-        jvmArgs = jvmArgs.plus('-Xmx4096M')
-        jvmArgs = jvmArgs.plus('-Dprism.maxvram=1G')
+// ---------------------------------------------------------------------------------------------------------------------
+// TFE, 20261026: Windows exe via jpackage - own java runtime incl. javafx, no installed java required
+//   gradlew jpackageImage     -> build/jpackage/image/GPXEditor/GPXEditor.exe (portable folder)
+//   gradlew jpackageInstaller -> build/jpackage/installer/GPXEditor-<version>.exe (needs WiX 3, found via %WIX%)
+//
+// Task chain
+//   downloadJavafxJmods -> once: JavaFX jmods zip from gluonhq.com, SHA-256 check, *.jmod into the Gradle user home
+//   jpackageInput       -> build/jpackage/input: our jar + all runtime jars EXCEPT the JavaFX jars
+//   jpackageImage       -> jpackage --type app-image: runs jlink internally (JDK modules + JavaFX jmods -> runtime/),
+//                          copies the input jars to app/ and creates GPXEditor.exe incl. icon and JVM options
+//                          (the options end up in app/GPXEditor.cfg)
+//   jpackageInstaller   -> jpackage --type exe: wraps the app image into an installer (per-user install, start menu,
+//                          desktop shortcut, choice of directory)
+//
+// No plugin (e.g. org.beryx.runtime) is used: jpackage does the jlink step itself and the JavaFX jmods can be passed
+// directly via --module-path.
+//
+// javafx is linked into the runtime from the javafx jmods - when updating javafxVersion also update the sha256
+// see https://gluonhq.com/products/javafx/
+// ---------------------------------------------------------------------------------------------------------------------
+def javafxJmodsUrl = "https://download2.gluonhq.com/openjfx/${javafxVersion}/openjfx-${javafxVersion}_windows-x64_bin-jmods.zip"
+def javafxJmodsSha256 = '8f52d62b386bcf33a7c6077da052717446dd4238f2f92298bb0788cdcef9b4ed'
+// outside of build dir to survive "clean"
+def javafxJmodsDir = new File(gradle.gradleUserHomeDir, "caches/javafx-jmods/${javafxVersion}")
+// java modules used by GPXEditor and its libraries (jdeps) + locale data, charsets & crypto that jdeps can't detect
+// determined via "jdeps --print-module-deps" per jar of build/install/GPXEditor/lib (jdeps fails on the complete
+// classpath due to the multi-release jars of jackson 3)
+// TROUBLESHOOTING: if something only fails in the exe (ClassNotFoundException, NoClassDefFoundError, missing locale or
+// charset, TLS errors) a module is missing here - add it and rebuild. "java --list-modules" shows all available ones.
+def runtimeModules = ['java.base', 'java.desktop', 'java.logging', 'java.management', 'java.naming', 'java.net.http',
+                      'java.prefs', 'java.scripting', 'java.sql', 'java.xml', 'jdk.accessibility', 'jdk.charsets',
+                      'jdk.crypto.ec', 'jdk.crypto.mscapi', 'jdk.jsobject', 'jdk.localedata', 'jdk.unsupported', 'jdk.zipfs',
+                      'javafx.base', 'javafx.graphics', 'javafx.controls', 'javafx.fxml', 'javafx.swing', 'javafx.web', 'javafx.media']
+// copies of project properties - inside the task configuration "version" / "description" would refer to the task
+def appVersion = version
+def appDescription = description
+def appVendor = 'Thomas Feuster'
+def jpackageExe = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+        .map { it.metadata.installationPath.file('bin/jpackage.exe').asFile.absolutePath }
+// jpackage wants one token per --java-options: "--add-exports", "x" -> "--add-exports=x"
+def jpackageJavaOptions = []
+(jvmFlags + ['-enableassertions']).each { arg ->
+    if (!arg.startsWith('-') && jpackageJavaOptions) {
+        jpackageJavaOptions[-1] = jpackageJavaOptions[-1] + '=' + arg
+    } else {
+        jpackageJavaOptions << arg
     }
+}
+
+// downloads the jmods zip, verifies its SHA-256 and extracts all *.jmod flat into destinationDir
+// up-to-date as long as url / checksum don't change and destinationDir exists -> download only once per version
+abstract class DownloadJmodsTask extends DefaultTask {
+    @Input abstract Property<String> getUrl()
+    @Input abstract Property<String> getSha256()
+    @OutputDirectory abstract DirectoryProperty getDestinationDir()
+    @Inject abstract FileSystemOperations getFs()
+    @Inject abstract ArchiveOperations getArchives()
+
+    @TaskAction
+    void download() {
+        def zip = new File(temporaryDir, 'jmods.zip')
+        new URI(url.get()).toURL().withInputStream { input -> zip.withOutputStream { it << input } }
+        def actual = java.security.MessageDigest.getInstance('SHA-256').digest(zip.bytes).encodeHex().toString()
+        if (actual != sha256.get()) {
+            throw new GradleException("SHA-256 mismatch for ${url.get()}: expected ${sha256.get()}, got ${actual}")
+        }
+        fs.sync {
+            from(archives.zipTree(zip)) {
+                include '**/*.jmod'
+                eachFile { it.path = it.name }
+            }
+            into destinationDir
+            includeEmptyDirs = false
+        }
+        zip.delete()
+    }
+}
+
+// runs jpackage from the JDK 25 toolchain with the given arguments into destinationDir
+// wixHome: if set, <wixHome>\bin is added to the PATH since jpackage needs candle.exe / light.exe for installers
+abstract class JPackageTask extends DefaultTask {
+    @Input abstract Property<String> getJpackage()
+    @Input abstract ListProperty<String> getArguments()
+    @InputFiles @PathSensitive(PathSensitivity.RELATIVE) abstract ConfigurableFileCollection getSources()
+    @Input @Optional abstract Property<String> getWixHome()
+    @OutputDirectory abstract DirectoryProperty getDestinationDir()
+    @Inject abstract ExecOperations getExecOps()
+    @Inject abstract FileSystemOperations getFs()
+
+    @TaskAction
+    void pack() {
+        // jpackage refuses to overwrite existing output
+        fs.delete { delete destinationDir }
+        execOps.exec {
+            executable jpackage.get()
+            args arguments.get()
+            args '--dest', destinationDir.get().asFile.absolutePath
+            if (wixHome.present) {
+                environment 'PATH', "${wixHome.get()}\\bin;${System.getenv('PATH')}"
+            }
+        }
+    }
+}
+
+def downloadJavafxJmods = tasks.register('downloadJavafxJmods', DownloadJmodsTask) {
+    url = javafxJmodsUrl
+    sha256 = javafxJmodsSha256
+    destinationDir = javafxJmodsDir
+}
+
+// application jars without javafx - javafx comes with the runtime
+// jdk-jsobject is excluded as well: the module jdk.jsobject is part of the runtime (JDK and JavaFX jmods)
+// TFE, 20261102: jlink currently takes the (deprecated) jdk.jsobject of the JDK even though the JavaFX jmod is on the
+// module path - no problem: the deprecation only matters for javac and once the JDK drops the module, the JavaFX one
+// is the only one left and gets linked
+// jpackage puts all jars of this folder on the classpath, the main jar first
+def jpackageInputDir = layout.buildDirectory.dir('jpackage/input')
+def jpackageInput = tasks.register('jpackageInput', Sync) {
+    from(tasks.named('jar'))
+    from(configurations.runtimeClasspath) {
+        exclude 'javafx-*', 'jdk-jsobject-*'
+    }
+    into jpackageInputDir
+}
+
+def jpackageImageDir = layout.buildDirectory.dir('jpackage/image')
+def jpackageImage = tasks.register('jpackageImage', JPackageTask) {
+    group = 'distribution'
+    description = 'Creates a portable GPXEditor folder with GPXEditor.exe and its own java runtime.'
+    sources.from(jpackageInput, downloadJavafxJmods)
+    jpackage = jpackageExe
+    destinationDir = jpackageImageDir
+    def mainJar = tasks.named('jar').flatMap { it.archiveFileName }
+    arguments.addAll(['--type', 'app-image',
+                      '--name', appName,
+                      '--app-version', appVersion,
+                      '--vendor', appVendor,
+                      '--description', appDescription,
+                      '--icon', file('src/main/resources/GPXEditorManager.ico').absolutePath,
+                      '--input', jpackageInputDir.get().asFile.absolutePath,
+                      '--main-class', 'tf.gpx.edit.main.GPXEditorManager',
+                      '--module-path', javafxJmodsDir.absolutePath,
+                      '--add-modules', runtimeModules.join(','),
+                      // smaller runtime: no debug info, headers, man pages and java.exe & co. (GPXEditor.exe is the launcher)
+                      '--jlink-options', '--strip-debug --no-header-files --no-man-pages --strip-native-commands'])
+    arguments.addAll(mainJar.map { ['--main-jar', it] })
+    arguments.addAll(jpackageJavaOptions.collectMany { ['--java-options', it] })
+}
+
+tasks.register('jpackageInstaller', JPackageTask) {
+    group = 'distribution'
+    description = 'Creates a Windows installer GPXEditor-<version>.exe from the jpackageImage.'
+    sources.from(jpackageImage)
+    jpackage = jpackageExe
+    destinationDir = layout.buildDirectory.dir('jpackage/installer')
+    wixHome = providers.environmentVariable('WIX')
+    arguments.addAll(['--type', 'exe',
+                      '--app-image', jpackageImageDir.get().dir(appName).asFile.absolutePath,
+                      '--name', appName,
+                      '--app-version', appVersion,
+                      '--vendor', appVendor,
+                      '--description', appDescription,
+                      '--win-menu',
+                      '--win-shortcut',
+                      '--win-dir-chooser',
+                      // installs into the user profile - no admin rights required
+                      '--win-per-user-install',
+                      // fixed id so that a new version replaces the installed one - never change!
+                      '--win-upgrade-uuid', 'fecd95c1-b9f1-4e0c-9075-721a5f95a9d8'])
 }
 
 jar {
@@ -300,13 +510,16 @@ jar {
 
 sourceSets {
     main {
-        resources { 
+        resources {
             // only use minified files
-            exclude { 
-                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.')) 
+            exclude {
+                FileTreeElement elem -> ((elem.name.contains('.js') || elem.name.contains('.css')) && !elem.name.contains('.min.'))
             }
-        } 
-    }  
+        }
+    }
 }
 
-build.finalizedBy(installDist)
+// after each build the runnable distribution under build/install/GPXEditor is up to date
+tasks.named('build') {
+    finalizedBy 'installDist'
+}

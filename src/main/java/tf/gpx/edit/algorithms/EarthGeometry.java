@@ -38,6 +38,9 @@ public class EarthGeometry {
     
     // https://math.wikia.org/wiki/Ellipsoidal_quadratic_mean_radius
     public static final double EarthEQMRadius = FastMath.sqrt(3.0 * EarthLongRadius2 + EarthShortRadius2) / 2.0;
+    // TFE, 20261031: standard value for terrestrial refraction - light bends a bit along the earth curvature
+    // https://en.wikipedia.org/wiki/Atmospheric_refraction#Terrestrial_refraction
+    public static final double RefractionCoefficient = 0.13;
     public static final int VincentyIterations = 100;
     public static final double VincentyAccuracy = 1e-12;
     public static final double VincentyNearlyAntipodal = 1e-4;
@@ -221,18 +224,33 @@ public class EarthGeometry {
 
         final IGeoCoordinate c2_flat = c2.cloneMe();
         c2_flat.setElevation(0.0);
-        
-        return distance(c1, c2);
+
+        // TFE, 20261031: use the flat copies - otherwise the elevation is still part of the distance
+        return distance(c1_flat, c2_flat);
     }
-    
+
+    /**
+     * Angle to look up / down from c1 to see c2, in degrees.
+     *
+     * TFE, 20261031: take earth curvature and atmospheric refraction into account.
+     * Far away points are lower than on a flat earth by d^2 / 2R - reduced by the refraction of the light in the atmosphere.
+     * For 100km that's about 680m.
+     *
+     * @param c1 point of the viewer
+     * @param c2 point to look at
+     * @return the elevation angle, in degrees
+     */
     public static double elevationAngle(final IGeoCoordinate c1, final IGeoCoordinate c2) {
         final double elevation_diff = c2.getElevation() - c1.getElevation();
-        if (elevation_diff == 0.0) {
-            return 0.0;
-        }
         final double distance2D = distance2D(c1, c2);
+        if (distance2D == 0.0) {
+            // straight up / down - or the same point
+            return FastMath.signum(elevation_diff) * 90.0;
+        }
 
-        return FastMath.toDegrees(FastMath.atan(elevation_diff / distance2D));
+        final double curvatureDrop = distance2D * distance2D / (2.0 * EarthAverageRadius) * (1.0 - RefractionCoefficient);
+
+        return FastMath.toDegrees(FastMath.atan2(elevation_diff - curvatureDrop, distance2D));
     }
     
     /**

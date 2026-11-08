@@ -42,9 +42,11 @@ import tf.gpx.edit.items.GPXWaypoint;
  * @author thomas
  */
 public class TestInterpolate {
-    final static GPXFile gpxfile = new GPXFile(new File("src/test/resources/TestInterpolateDate.gpx"));
-    final static GPXTrack completeTrack = getTrackByName(gpxfile, "Complete");
-    final static List<GPXWaypoint> completeWaypoints = completeTrack.getGPXTrackSegments().get(0).getGPXWaypoints();
+    // TFE, 20261031: not static - interpolation changes the waypoints, each test needs the original data
+    // (JUnit creates a new instance per test method)
+    final GPXFile gpxfile = new GPXFile(new File("src/test/resources/TestInterpolateDate.gpx"));
+    final GPXTrack completeTrack = getTrackByName(gpxfile, "Complete");
+    final List<GPXWaypoint> completeWaypoints = completeTrack.getGPXTrackSegments().get(0).getGPXWaypoints();
         
     @Test
     public void extrapolateForwards() {

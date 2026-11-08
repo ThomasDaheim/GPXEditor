@@ -62,8 +62,48 @@ public class ElevationProvider implements IElevationProvider {
         return elevOptions;
     }
 
+    // TFE, 20261031: single lookups don't need the list / map handling of getElevationsForCoordinates()
+    // that overhead was larger than the actual lookup in the SRTM data (e.g. for panorama with ~1 mio lookups)
+    @Override
+    public Pair<Boolean, Double> getElevationForCoordinate(final double latitude, final double longitude) {
+        switch (elevOptions.getLookUpMode()) {
+            case SRTM_ONLY:
+                return srtmService.getElevationForCoordinate(latitude, longitude);
+            case SRTM_FIRST:
+                final Pair<Boolean, Double> result = srtmService.getElevationForCoordinate(latitude, longitude);
+                if (result.getLeft()) {
+                    return result;
+                }
+                return olServices.getElevationForCoordinate(latitude, longitude);
+            default:
+                return IElevationProvider.super.getElevationForCoordinate(latitude, longitude);
+        }
+    }
+
+    @Override
+    public Pair<Boolean, Double> getElevationForCoordinate(final IGeoCoordinate coord) {
+        return getElevationForCoordinate(coord.getLatitude(), coord.getLongitude());
+    }
+
     @Override
     public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
+        // TFE, 20261031: removing duplicate coordinates via a map only pays off for the (slow) open elevation service
+        // for srtm lookups the map handling took more time than the lookups themselves
+        if (ElevationProviderOptions.LookUpMode.SRTM_ONLY.equals(elevOptions.getLookUpMode())) {
+            return srtmService.getElevationsForCoordinates(coords);
+        }
+        if (ElevationProviderOptions.LookUpMode.SRTM_FIRST.equals(elevOptions.getLookUpMode())) {
+            final List<Pair<Boolean, Double>> result = new ArrayList<>(srtmService.getElevationsForCoordinates(coords));
+            // fallback for missing values - each distinct coordinate only once
+            final Map<IGeoCoordinate, Pair<Boolean, Double>> fallback = new HashMap<>();
+            for (int i = 0; i < result.size(); i++) {
+                if (!result.get(i).getLeft()) {
+                    result.set(i, fallback.computeIfAbsent(coords.get(i), (t) -> olServices.getElevationForCoordinate(t)));
+                }
+            }
+            return result;
+        }
+
         // use map for easier replacement of elevations
         // https://www.baeldung.com/java-collectors-tomap
         final Map<IGeoCoordinate, Pair<Boolean, Double>> coordElevMap = new HashMap<>();

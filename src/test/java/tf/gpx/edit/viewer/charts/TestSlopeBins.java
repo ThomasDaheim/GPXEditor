@@ -64,13 +64,37 @@ public class TestSlopeBins {
 
     @Test
     public void testBinColorOnUpperBounds() {
-        assertEquals(Color.GRAY, slopeBins.getBinColor(20.0), "Upper bound of last bin should be exclusive");
+        // upper bound of last bin is exclusive - exactly max slope belongs to "above max"
+        assertEquals(Color.DARKRED, slopeBins.getBinColor(20.0), "Max slope should return PLUSMAX_INCR_COLOR");
+        assertEquals(slopeBins.getBinColor(19.99), slopeBins.getBinColors().get(slopeBins.getBinColors().size()-1), "Just below max slope should be in last bin");
+        // lower bound of first bin is inclusive - exactly -max slope is still in the first bin
+        assertEquals(slopeBins.getBinColors().get(0), slopeBins.getBinColor(-20.0), "Minus max slope should be in first bin");
+
+        // no gaps anywhere between -max and +max
+        for (double value = -25.0; value <= 25.0; value += 0.5) {
+            assertNotEquals(Color.GRAY, slopeBins.getBinColor(value), "No color for " + value);
+        }
     }
 
     @Test
     public void testBinColorOutOfRange() {
         assertEquals(Color.DARKRED, slopeBins.getBinColor(100.0), "Value greater than all bins should return PLUSMAX_INCR_COLOR");
         assertEquals(Color.DARKGREEN, slopeBins.getBinColor(-100.0), "Value greater than all bins should return PLUSMAX_DECR_COLOR");
+    }
+
+    @Test
+    public void testBinColorsForLegend() {
+        final java.util.List<Color> colors = slopeBins.getBinColors();
+        final int binsPerSide = (int) Math.round(slopeBins.getMaxSlope() / slopeBins.getBinWidth());
+
+        // one color per bin, sorted from -max to +max
+        assertEquals(2 * binsPerSide, colors.size());
+        for (int i = 0; i < colors.size(); i++) {
+            final double slopeInBin = -slopeBins.getMaxSlope() + (i + 0.5) * slopeBins.getBinWidth();
+            assertEquals(slopeBins.getBinColor(slopeInBin), colors.get(i), "Color for bin " + i);
+        }
+        assertEquals(slopeBins.getBinColor(-100.0), slopeBins.getBelowMaxSlopeColor());
+        assertEquals(slopeBins.getBinColor(100.0), slopeBins.getAboveMaxSlopeColor());
     }
 
     @Test

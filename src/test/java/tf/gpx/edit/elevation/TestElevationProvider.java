@@ -43,6 +43,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,10 @@ public class TestElevationProvider {
     }
     
     private void initElevationProviders() {
+        // other tests might have filled the store with synthetic data for the same tiles
+        SRTMDataStore.getInstance().clearStore();
+        OpenElevationService.resetQuotaExceeded();
+
         if (srtmOnly == null) {
             final ElevationProviderOptions elevOptions = new ElevationProviderOptions(ElevationProviderOptions.LookUpMode.SRTM_ONLY);
             srtmOnly = new ElevationProviderBuilder(elevOptions, srtmOptions).build();
@@ -157,10 +162,12 @@ public class TestElevationProvider {
 
         heightValue = srtmLast.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValue, delta);
 
         heightValue = srtmNone.getElevationForCoordinate(27.9881, 86.9250).getRight();
 //        System.out.println("MT EVEREST: " + heightValue);
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValue, delta);
     }
     
@@ -180,14 +187,17 @@ public class TestElevationProvider {
 
         heightValue = srtmFirst.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
+        skipOnQuotaExceeded();
         Assertions.assertEquals(517, heightValue, delta);
 
         heightValue = srtmLast.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
+        skipOnQuotaExceeded();
         Assertions.assertEquals(517, heightValue, delta);
 
         heightValue = srtmNone.getElevationForCoordinate(48.135125, 11.581981).getRight();
 //        System.out.println("Munich City: " + heightValue);
+        skipOnQuotaExceeded();
         Assertions.assertEquals(517, heightValue, delta);
     }
     
@@ -207,14 +217,17 @@ public class TestElevationProvider {
         Assertions.assertEquals(IElevationProvider.NO_ELEVATION, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmFirst.getElevationsForCoordinates(coords));
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8840, heightValues.get(0), delta);
         Assertions.assertEquals(517, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmLast.getElevationsForCoordinates(coords));
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValues.get(0), delta);
         Assertions.assertEquals(517, heightValues.get(1), delta);
 
         heightValues = heightValues(srtmNone.getElevationsForCoordinates(coords));
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValues.get(0), delta);
         Assertions.assertEquals(517, heightValues.get(1), delta);
     }
@@ -248,10 +261,11 @@ public class TestElevationProvider {
         duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration OEP:  " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValues.get(0), delta);
         Assertions.assertEquals(count, heightValues.size());
     }
-    
+
     @Test
     @Tag("NoSuiteTest")
     public void testLargeNumber() {
@@ -283,10 +297,17 @@ public class TestElevationProvider {
         duration = Duration.between(startTime, Instant.now());
         System.out.println("Duration OEP:  " + DurationFormatUtils.formatDurationHMS(duration.toMillis()));
 
+        skipOnQuotaExceeded();
         Assertions.assertEquals(8794, heightValues.get(0), delta);
         Assertions.assertEquals(count, heightValues.size());
     }
-    
+
+    // TFE, 20261031: limit of the free openrouteservice api key reached - that's no error of ours, skip the test instead of failing
+    // call after the lookups that use openrouteservice and before checking their values
+    private void skipOnQuotaExceeded() {
+        Assumptions.assumeFalse(OpenElevationService.isQuotaExceeded(), "openrouteservice quota exceeded - test skipped");
+    }
+
     private List<Double> heightValues(final List<Pair<Boolean, Double>> elevations) {
         return elevations.stream().map((t) -> {
             return t.getRight();

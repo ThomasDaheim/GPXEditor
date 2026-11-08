@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FilenameUtils;
 
 /**
@@ -44,6 +44,11 @@ class SRTMDataStore {
     public final static String HGT_EXT = "hgt";
 
     private final Map<SRTMDataKey, SRTMData> srtmStore = new HashMap<>();
+    // TFE, 20261031: most accurate data per name - avoids searching through all keys of the store for each lookup
+    private final Map<String, SRTMData> bestDataForName = new HashMap<>();
+    // TFE, 20261031: data per numeric tile key for lookups by coordinate - no name needs to be created
+    // concurrent since lookups can come from multiple threads (e.g. parallel streams), loading of new data is synchronized
+    private final Map<Long, SRTMData> dataForTileKey = new ConcurrentHashMap<>();
 
     // this only makes sense with options
     private SRTMDataStore() {
@@ -52,8 +57,21 @@ class SRTMDataStore {
     public static SRTMDataStore getInstance() {
         return INSTANCE;
     }
-    
-    protected SRTMData getDataForName(final String dataName, final SRTMDataOptions srtmOptions) {
+
+    // TFE, 20261031: fast path for lookups by coordinate
+    protected SRTMData getDataForCoordinate(final double latitude, final double longitude, final SRTMDataOptions srtmOptions) {
+        final long tileKey = SRTMDataHelper.getKeyForCoordinate(latitude, longitude);
+
+        SRTMData result = dataForTileKey.get(tileKey);
+        if (result == null) {
+            result = getDataForName(SRTMDataHelper.getNameForCoordinate(latitude, longitude), srtmOptions);
+            dataForTileKey.put(tileKey, result);
+        }
+
+        return result;
+    }
+
+    protected synchronized SRTMData getDataForName(final String dataName, final SRTMDataOptions srtmOptions) {
         SRTMData result;
 
         String name = dataName;
@@ -62,58 +80,52 @@ class SRTMDataStore {
         }
 
         // check store for matching data
-        SRTMDataKey dataKey = dataKeyForName(name);
-        
-        if (dataKey == null) {
+        result = bestDataForName.get(name);
+
+        if (result == null) {
             // if not found: try to read file and add to store
             result = srtmOptions.getSRTMDataReader().readSRTMData(name, srtmOptions.getSRTMDataPath());
-            
-            srtmStore.put(result.getKey(), result);
-        } else {
-            result = srtmStore.get(dataKey);
+
+            putData(result);
         }
-        
+
         return result;
     }
-    
-    protected void addMissingDataToStore(final SRTMData newData) {
+
+    // TFE, 20261031: tests need to start with an empty store - otherwise data from previous tests is used
+    protected synchronized void clearStore() {
+        srtmStore.clear();
+        bestDataForName.clear();
+        dataForTileKey.clear();
+    }
+
+    protected synchronized void addMissingDataToStore(final SRTMData newData) {
         assert newData != null;
-        
+
         // check validity of data
         if (SRTMDataHelper.SRTMDataType.INVALID.equals(newData.getKey().getValue())) {
             return;
         }
-        
-        // check store for matching data
-        SRTMDataKey dataKey = dataKeyForName(newData.getKey().getKey());
 
         // add if not already there
-        if (dataKey == null) {
-            srtmStore.put(newData.getKey(), newData);
+        if (!bestDataForName.containsKey(newData.getKey().getKey())) {
+            putData(newData);
         }
     }
-    
-    private SRTMDataKey dataKeyForName(final String dataName) {
-        SRTMDataKey result = null;
-        
-        // TODO: speed this up! called umpteen times for data viewer...
-        // TFE, 20260107: not so easy!
-        // - findFirst() instead of collect() is SLOWER
-        // - using a TreeMap with a comparator() for SRTMDataKey is even slower
-        // - avoiding collect(Collectors.toList()) helps a bit
-        final SRTMDataKey[] dataEntries = srtmStore.keySet().stream().
-                filter((SRTMDataKey key) -> {
-                    return key.getKey().equals(dataName);
-                }).
-                sorted((SRTMDataKey key1, SRTMDataKey key2) -> key1.getValue().compareTo(key2.getValue())).
-                toArray(SRTMDataKey[]::new);
-        
-        if (dataEntries.length != 0) {
-            // sorted by type and therefore sorted by accuracy :-)
-            result = dataEntries[0];
+
+    private void putData(final SRTMData data) {
+        srtmStore.put(data.getKey(), data);
+
+        // types are sorted by accuracy :-) SRTM1 before SRTM3 before EMPTY
+        final SRTMData best = bestDataForName.get(data.getKey().getKey());
+        if (best == null || data.getKey().getValue().compareTo(best.getKey().getValue()) < 0) {
+            bestDataForName.put(data.getKey().getKey(), data);
+            // lookups by coordinate need to find the new data as well
+            final long tileKey = SRTMDataHelper.getKeyForName(data.getKey().getKey());
+            if (tileKey != SRTMDataHelper.NO_KEY) {
+                dataForTileKey.remove(tileKey);
+            }
         }
-        
-        return result;
     }
 
     protected List<String> findMissingDataFiles(final List<String> srtmnames, final SRTMDataOptions srtmOptions) {

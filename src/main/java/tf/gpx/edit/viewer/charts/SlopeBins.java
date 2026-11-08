@@ -25,7 +25,9 @@
  */
 package tf.gpx.edit.viewer.charts;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.scene.paint.Color;
 import tf.gpx.edit.algorithms.binning.GenericBin;
 import tf.gpx.edit.algorithms.binning.GenericBinBounds;
@@ -112,7 +114,8 @@ public class SlopeBins {
     public Color getBinColor(final Double value) {
         Color result = NOT_FOUND_COLOR;
         
-        if (value > MAX_SLOPE) {
+        // TFE, 20261031: bins include their lower bound but not the upper one - so exactly MAX_SLOPE is "above max"
+        if (value >= MAX_SLOPE) {
             result = PLUSMAX_INCR_COLOR;
         } else if (value < -MAX_SLOPE) {
             result = PLUSMAX_DECR_COLOR;
@@ -123,7 +126,32 @@ public class SlopeBins {
                 result = bin.get().getRight();
             }
         }
-        
+
         return result;
+    }
+
+    // TFE, 20261031: info required for the legend in the slope chart
+    public double getMaxSlope() {
+        return MAX_SLOPE;
+    }
+
+    public double getBinWidth() {
+        return BIN_WIDTH;
+    }
+
+    // colors for all slopes from -MAX_SLOPE to MAX_SLOPE - one per bin, sorted by slope
+    public List<Color> getBinColors() {
+        return myBins.stream().
+                sorted((t1, t2) -> t1.getBinBounds().getLowerBound().compareTo(t2.getBinBounds().getLowerBound())).
+                map((t) -> t.getBinValue()).
+                collect(Collectors.toList());
+    }
+
+    public Color getBelowMaxSlopeColor() {
+        return PLUSMAX_DECR_COLOR;
+    }
+
+    public Color getAboveMaxSlopeColor() {
+        return PLUSMAX_INCR_COLOR;
     }
 }
