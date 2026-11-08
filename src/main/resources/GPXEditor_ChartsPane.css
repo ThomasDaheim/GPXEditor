@@ -76,14 +76,6 @@
     -fx-effect: none;
 }
 
-/* TFE, 20260522: style the labels for file waypoints with names */
-.chart-area-symbol {
-    -fx-font-size: 10;
-    -fx-font-weight: bold;
-    -fx-stroke-width: 0;
-    -fx-border-width: 0;
-}
-
 .track-popup {
     -fx-fill: black;
     -fx-font-size: 10;
