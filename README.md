@@ -37,7 +37,7 @@ So it was time to start a new self-learning project. And here you see the result
 * Added option on "Goto coordinate" to use current location based on public IP.
 * Added option on "What is here?" tshow info on coordinate using reverse geocoding.
 * Via preference you can now pan to current location on startup. Sequence of coordinate usage: 1) if given, -mapCenter param is used, 2) if preference set, current location is used 3) hard-coded default location is used
-* Various performance improvements.
+* Asked AI for help on a few issues, mainly performance of SRTM Data Viewer, Panorama and Slope Charts - all the rendering - intensive stuff.
 
 ### Update v5.9
 
