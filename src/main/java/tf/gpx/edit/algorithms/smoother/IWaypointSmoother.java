@@ -28,8 +28,8 @@ package tf.gpx.edit.algorithms.smoother;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.items.GPXWaypoint;
 
 /**
  * Common interface for all reduce algorithms.

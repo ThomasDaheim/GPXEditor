@@ -43,10 +43,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.items.GPXLineItemHelper;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.viewer.TrackMap;
 
 /**

@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.viewer;
 
-import tf.gpx.edit.values.EnterLatLon;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
@@ -89,6 +88,7 @@ import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
@@ -105,7 +105,6 @@ import tf.gpx.edit.leafletmap.ColorMarker;
 import tf.gpx.edit.leafletmap.ControlPosition;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.IMarker;
-import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.leafletmap.LeafletMapView;
 import tf.gpx.edit.leafletmap.MapConfig;
 import tf.gpx.edit.leafletmap.MapLayer;
@@ -115,6 +114,7 @@ import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
+import tf.gpx.edit.values.EnterLatLon;
 import tf.gpx.edit.values.LatLonInfoViewer;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.viewer.charts.ChartsPane;

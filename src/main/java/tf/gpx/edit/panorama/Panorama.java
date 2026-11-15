@@ -38,8 +38,8 @@ import tf.gpx.edit.elevation.ElevationProvider;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
-import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.helper.general.ObjectsHelper;
 

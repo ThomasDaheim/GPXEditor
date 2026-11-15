@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.mapbox;
 
-import tf.gpx.edit.leafletmap.BoundingBox;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.leafletmap.BoundingBox;
 
 /**
  * Class to hold result from forward geocoding call to mapbox.

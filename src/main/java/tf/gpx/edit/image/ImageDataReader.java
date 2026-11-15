@@ -38,8 +38,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.helper.LatLonHelper;
 
 /**
  *

@@ -28,6 +28,7 @@ package tf.gpx.edit.worker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.items.GPXFile;
 import tf.gpx.edit.items.GPXMetadata;
 import tf.gpx.edit.items.GPXRoute;
@@ -35,7 +36,6 @@ import tf.gpx.edit.items.GPXTrack;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
 import tf.gpx.edit.items.IGPXLineItemVisitor;
-import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.main.GPXEditor;
 
 /**

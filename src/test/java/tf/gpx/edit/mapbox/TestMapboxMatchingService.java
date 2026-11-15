@@ -45,8 +45,8 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.helper.LatLonHelper;
 
 /**
  * See https://openrouteservice.org/dev/#/api-docs/elevation

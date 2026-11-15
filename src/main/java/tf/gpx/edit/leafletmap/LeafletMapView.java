@@ -25,7 +25,6 @@
  */
 package tf.gpx.edit.leafletmap;
 
-import tf.gpx.edit.helper.LatLonElev;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -44,6 +43,7 @@ import javafx.scene.web.WebView;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.viewer.TrackMap;
 
 /**

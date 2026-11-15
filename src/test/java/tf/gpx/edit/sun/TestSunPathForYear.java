@@ -38,8 +38,8 @@ import java.util.logging.Logger;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.junit.jupiter.api.Test;
-import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.LatLonElev;
+import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.panorama.Panorama;
 import tf.gpx.edit.values.StatisticsViewer;
 
