@@ -28,6 +28,7 @@ package tf.gpx.edit.leafletmap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import tf.gpx.edit.helper.LatLonElev;
 
 /**
  * Class for defining the layers and controls in the map to be shown.

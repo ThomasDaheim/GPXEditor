@@ -59,11 +59,14 @@ public class KnownExtensionAttributes {
         // "locus" as an extension using attributes only BUT they can be extensions to other extensions
         Locus("locus", DefaultExtensionHolder.ExtensionClass.Locus),
 
-        Line("line", DefaultExtensionHolder.ExtensionClass.Line),
+        Line("line", DefaultExtensionHolder.ExtensionClass.Line);
         
         // TFE, 20250104: finally, we have our own extension as well.
         // Why? To change the line width unit to pixel - that is what the rest of the worlds uses...
-        GPXEditorLine("gpxeditor_line", DefaultExtensionHolder.ExtensionClass.GPXEditorLine);
+        // TFE, 20260119: lets not go that way... everyone ignores the specification in gpx_style.xsd anyways...
+        // "<xsd:documentation> Width, in millimeters, of the line </xsd:documentation>"
+        // so we also simply use pixels - or better device independent pixel <- once we know how to do that...
+//        GPXEditorLine("gpxeditor_line", DefaultExtensionHolder.ExtensionClass.GPXEditorLine);
 
         private final String myName;
         private final IGPXExtension myExtensionParent;
@@ -187,13 +190,14 @@ public class KnownExtensionAttributes {
         // extension groups can have their own extensions...
         lsColorBase("lsColorBase", KnownExtension.Locus, KnownExtension.Line),
         lsWidth("lsWidth", KnownExtension.Locus, KnownExtension.Line), // same value is set for "width" independent whether lsUnits might be "PIXEL"
-        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line),
+        lsUnits("lsUnits", KnownExtension.Locus, KnownExtension.Line);
         
         //
         // attributes GPXEditorLine
         //
-        geWidth("geWidth", KnownExtension.GPXEditorLine, KnownExtension.Line), // width in the geUnits
-        geUnits("geUnits", KnownExtension.GPXEditorLine, KnownExtension.Line);
+        // TFE, 20260119: we don't do things this way
+//        geWidth("geWidth", KnownExtension.GPXEditorLine, KnownExtension.Line), // width in the geUnits
+//        geUnits("geUnits", KnownExtension.GPXEditorLine, KnownExtension.Line);
         
         
         private final String myName;

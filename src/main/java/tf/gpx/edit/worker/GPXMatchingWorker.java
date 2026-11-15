@@ -27,10 +27,10 @@ package tf.gpx.edit.worker;
 
 import java.util.List;
 import tf.gpx.edit.algorithms.WaypointMatching;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.items.GPXRoute;
 import tf.gpx.edit.items.GPXTrackSegment;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *

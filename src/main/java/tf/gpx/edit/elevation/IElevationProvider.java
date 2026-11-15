@@ -28,8 +28,8 @@ package tf.gpx.edit.elevation;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  * Interface for all services that provide elevations.

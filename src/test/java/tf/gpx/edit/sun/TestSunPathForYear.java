@@ -38,8 +38,8 @@ import java.util.logging.Logger;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.junit.jupiter.api.Test;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.helper.LatLonHelper;
-import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.panorama.Panorama;
 import tf.gpx.edit.values.StatisticsViewer;
 
@@ -64,8 +64,10 @@ public class TestSunPathForYear {
             // we expect two parameters: lat lon
             location = new LatLonElev(LatLonHelper.latFromString(args[0]), LatLonHelper.lonFromString(args[0]));
         } else {
-            // lets use Meran :-) 46.660578140310854 11.15942716598511
-            location = new LatLonElev(46.660578140310854, 11.15942716598511);
+//            // lets use Meran :-) 46.660578140310854 11.15942716598511
+//            location = new LatLonElev(46.660578140310854, 11.15942716598511);
+            // lets use München :-) 46.660578140310854 11.15942716598511
+            location = new LatLonElev(48.164, 11.5945);
         }
 
         // that doesn't change over the path of a year
@@ -85,7 +87,7 @@ public class TestSunPathForYear {
         try (
                 FileWriter out = new FileWriter(outputFile);
                 CSVPrinter printer = new CSVPrinter(out,
-                        CSVFormat.DEFAULT.builder().setHeader("Date", "Sunrise", "Sun above", "Sunset", "Sun below").build())
+                        CSVFormat.DEFAULT.builder().setHeader("Date", "Sunrise", "Sun above", "Sunset", "Sun below").get())
             ) {
 
             for (int i = 1; i <= daysToCalc; i++) {

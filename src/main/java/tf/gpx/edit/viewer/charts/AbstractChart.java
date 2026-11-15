@@ -540,13 +540,13 @@ public abstract class AbstractChart extends AreaChart<Number, Number> implements
             final XYChart.Series<Number, Number> series = ObjectsHelper.uncheckedCast(t);
             for (Iterator<XYChart.Data<Number, Number>> it = getDisplayedDataIterator(series); it.hasNext(); ) {
                 XYChart.Data<Number, Number> data = it.next();
-                final double xVal = getChart().getXAxis().getDisplayPosition(data.getXValue());
-                final double yVal = getChart().getYAxis().getDisplayPosition(data.getYValue());
-                if (Double.isNaN(xVal) || Double.isNaN(yVal)) {
-                    continue;
-                }
                 Node symbol = data.getNode();
                 if (symbol != null) {
+                    final double xVal = getChart().getXAxis().getDisplayPosition(data.getXValue());
+                    final double yVal = getChart().getYAxis().getDisplayPosition(data.getYValue());
+                    if (Double.isNaN(xVal) || Double.isNaN(yVal)) {
+                        continue;
+                    }
                     symbol.applyCss();
                     if (SHIFT_LABEL.equals((String) symbol.getUserData())) {
                         // https://github.com/ojdkbuild/lookaside_openjfx/blob/master/modules/controls/src/main/java/javafx/scene/chart/AreaChart.java

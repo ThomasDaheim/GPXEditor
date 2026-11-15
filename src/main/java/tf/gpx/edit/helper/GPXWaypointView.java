@@ -194,6 +194,14 @@ public class GPXWaypointView implements IPreferencesHolder {
             });
             selected.getItems().add(deleteWaypoints);
             
+            // TFE, 20260106: option to center map on selected waypoints (on their center, to be precise)
+            final MenuItem centerMapOnWaypoints = new MenuItem("Show on Map");
+            centerMapOnWaypoints.setOnAction((ActionEvent event) -> {
+                myGPXEditor.centerMapOnWaypoints();
+            });
+            selected.getItems().add(centerMapOnWaypoints);
+            
+            
             final MenuItem replaceWaypoints = new MenuItem("Replace by Center");
             replaceWaypoints.setOnAction((ActionEvent event) -> {
                 myGPXEditor.replaceByCenter();

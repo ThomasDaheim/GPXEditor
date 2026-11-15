@@ -48,7 +48,7 @@ public class GPXExtractCSVLinesWorker extends GPXEmptyWorker {
     public GPXExtractCSVLinesWorker() {
         super ();
         
-        deepthFirst = false;
+        depthFirst = false;
     }
     
     public List<String> getCSVHeader() {

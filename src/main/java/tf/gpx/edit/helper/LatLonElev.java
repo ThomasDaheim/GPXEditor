@@ -23,9 +23,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.leafletmap;
+package tf.gpx.edit.helper;
 
-import tf.gpx.edit.helper.LatLonHelper;
+import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
 /**
  * Immutable value class for defining a geo position - including elevation.

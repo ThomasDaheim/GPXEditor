@@ -88,6 +88,7 @@ import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.extension.LineStyle;
 import tf.gpx.edit.helper.GPXEditorParameters;
 import tf.gpx.edit.helper.GPXEditorPreferences;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.helper.LatLonHelper;
 import tf.gpx.edit.helper.TimeZoneProvider;
 import tf.gpx.edit.image.ImageProvider;
@@ -104,7 +105,6 @@ import tf.gpx.edit.leafletmap.ColorMarker;
 import tf.gpx.edit.leafletmap.ControlPosition;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 import tf.gpx.edit.leafletmap.IMarker;
-import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.leafletmap.LeafletMapView;
 import tf.gpx.edit.leafletmap.MapConfig;
 import tf.gpx.edit.leafletmap.MapLayer;
@@ -114,6 +114,8 @@ import tf.gpx.edit.leafletmap.ZoomControlConfig;
 import tf.gpx.edit.main.GPXEditor;
 import tf.gpx.edit.sun.SunPathForDay;
 import tf.gpx.edit.sun.SunPathForSpecialsDates;
+import tf.gpx.edit.values.EnterLatLon;
+import tf.gpx.edit.values.LatLonInfoViewer;
 import tf.gpx.edit.viewer.MarkerManager.SpecialMarker;
 import tf.gpx.edit.viewer.charts.ChartsPane;
 import tf.helper.general.IPreferencesHolder;
@@ -1030,25 +1032,16 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
         // TFE, 20220814: add goto menu item
         final MenuItem gotoCoordinate = new MenuItem("Goto Coordinate");
         gotoCoordinate.setOnAction((event) -> {
-            EnterLatLon.getInstance().get(myGPXEditor.getHostServices());
-            if (EnterLatLon.getInstance().wasActionButtonPressed()) {
-                final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
-                if (latLon != null) {
-                    // mark this on the map
-                    // show as search result with same icon
-                    execScript("clearSearchResults();");
-                    final String result = 
-                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
-                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
-                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
-
-                    // pan to it
-                    panTo(latLon.getLatitude(), latLon.getLongitude());
-                }
-            }
+            gotoCoordinate(true);
         });
         
-        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, showHorizon, showSunriseSunset);
+        // TFE, 20260111: add info on coordinate
+        final MenuItem infoForCoordinate = new MenuItem("What is here?");
+        infoForCoordinate.setOnAction((event) -> {
+            infoForCoordinate(ObjectsHelper.uncheckedCast(contextMenu.getProperties().get(KnowProperties.LATLON)));
+        });
+        
+        contextMenu.getItems().addAll(showCord, editWaypoint, addWaypoint, addRoute, separator, searchPoints, gotoCoordinate, infoForCoordinate, showHorizon, showSunriseSunset);
 
 //        // tricky: setOnShowing isn't useful here since its not called for two subsequent right mouse clicks...
         contextMenu.anchorXProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -2124,6 +2117,31 @@ public class TrackMap extends LeafletMapView implements IPreferencesHolder {
 //            System.out.println("setOverlaysForBaselayer " + base.getName() + " to " + transformToJavascriptArray(preferenceValues, false));
             execScript("setOverlayValues(\"" + base.getName() + "\", " + transformToJavascriptArray(preferenceValues, false) + ");");
         }
+    }
+    
+    public void gotoCoordinate(final boolean asSearchResult) {
+        EnterLatLon.getInstance().show(myGPXEditor.getHostServices());
+        if (EnterLatLon.getInstance().wasActionButtonPressed()) {
+            final LatLonElev latLon = EnterLatLon.getInstance().getLatLon();
+            if (latLon != null) {
+                if (asSearchResult) {
+                    // mark this on the map
+                    // show as search result with same icon
+                    execScript("clearSearchResults();");
+                    final String result = 
+                            "{ \"elements\": [ { \"type\": \"node\", \"lat\": " + latLon.getLatitude() + 
+                            ", \"lon\": " + latLon.getLongitude() + "} ] }";
+                    execScript("showSearchResults(\"" + SearchItem.SearchResult.name() + "\", \"" + StringEscapeUtils.escapeEcmaScript(result) + "\", \"" + SearchItem.SearchResult.getResultMarker().getMarkerIcon().getIconJSName() + "\");");
+                }
+
+                // pan to it
+                panTo(latLon.getLatitude(), latLon.getLongitude());
+            }
+        }
+    }
+    
+    public void infoForCoordinate(final LatLonElev latlon) {
+        LatLonInfoViewer.getInstance().show(myGPXEditor.getHostServices(), latlon);
     }
 
     // TFE, 20190901: support to store & load overlay settings per baselayer

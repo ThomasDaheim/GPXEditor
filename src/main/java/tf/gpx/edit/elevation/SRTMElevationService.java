@@ -25,8 +25,8 @@
  */
 package tf.gpx.edit.elevation;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
 
@@ -70,16 +70,15 @@ public class SRTMElevationService implements IElevationProvider {
     
     @Override
     public List<Pair<Boolean, Double>> getElevationsForCoordinates(final List<? extends IGeoCoordinate> coords) {
-        return coords.stream().map((t) -> {
-            return getElevationForCoordinate(t.getLatitude(), t.getLongitude());
-        }).collect(Collectors.toList());
+        final List<Pair<Boolean, Double>> result = new ArrayList<>(coords.size());
+        for (IGeoCoordinate coord : coords) {
+            result.add(getElevationForCoordinate(coord.getLatitude(), coord.getLongitude()));
+        }
+        return result;
     }
     
     SRTMData getSRTMData(final double latitude, final double longitude) {
-        // construct name from coordinates
-        final String dataName = SRTMDataHelper.getNameForCoordinate(latitude, longitude);
-        
-        // check store for matching data
-        return SRTMDataStore.getInstance().getDataForName(dataName, srtmOptions);
+        // TFE, 20261031: lookup by numeric tile key - name is only constructed when data needs to be loaded
+        return SRTMDataStore.getInstance().getDataForCoordinate(latitude, longitude, srtmOptions);
     }
 }

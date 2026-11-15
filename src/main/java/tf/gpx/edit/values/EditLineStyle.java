@@ -146,6 +146,7 @@ public class EditLineStyle extends AbstractStage {
             if (t1 == null) {
                 return;
             }
+            // assumes width is in pixels!
             myDemoLine.setStrokeWidth(t1.doubleValue());
         });
         myOpacitySlider.valueProperty().addListener((ov, t, t1) -> {

@@ -51,11 +51,7 @@
 .chart-plot-background {
     -fx-cursor: crosshair;
 }
-.chart-vertical-grid-lines {
-    -fx-stroke: transparent;
-    -fx-stroke-width: 0px;
-}
-.chart-horizontal-grid-lines {
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
     -fx-stroke: transparent;
     -fx-stroke-width: 0px;
 }

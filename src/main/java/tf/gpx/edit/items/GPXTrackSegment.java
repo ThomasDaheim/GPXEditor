@@ -462,7 +462,7 @@ public class GPXTrackSegment extends GPXMeasurable {
      * @return the minimum height of the track
      */
     @Override
-    public double getMinHeight() {
+    public double getMinElevationPosition() {
         if (myMinHeight != null) {
             return myMinHeight;
         }
@@ -483,7 +483,7 @@ public class GPXTrackSegment extends GPXMeasurable {
      * @return the maximum height of the track
      */
     @Override
-    public double getMaxHeight() {
+    public double getMaxElevation() {
         if (myMaxHeight != null) {
             return myMaxHeight;
         }

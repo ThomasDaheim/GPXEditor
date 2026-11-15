@@ -1,5 +1,6 @@
 package tf.gpx.edit.helper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,12 +10,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.help.HelpFormatter;
 import tf.gpx.edit.algorithms.reducer.WaypointReduction;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 public class GPXEditorParameters {
     // this is a singleton for everyones use
@@ -48,7 +48,7 @@ public class GPXEditorParameters {
     private int deleteCount = Integer.MIN_VALUE;
     private List<String> gpxFiles = new ArrayList<>();
     private boolean ignoreParams = false;
-    private IGeoCoordinate mapCenter = new LatLonElev(48.137154, 11.576124);
+    private IGeoCoordinate mapCenter = null;
     
     private List<String> argsList;
     private List<String> optsList;
@@ -258,8 +258,7 @@ public class GPXEditorParameters {
                 value = command.getOptionValue(GPXEditorParameters.CmdOps.mapCenter.toString());
                 String[] latlon = value.split(" ");
                 
-                mapCenter.setLatitude(Double.parseDouble(latlon[0]));
-                mapCenter.setLongitude(Double.parseDouble(latlon[1]));
+                mapCenter = new LatLonElev(Double.valueOf(latlon[0]), Double.valueOf(latlon[1]));
             }
         } catch (ParseException|NumberFormatException|NullPointerException ex) {
             Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
@@ -323,11 +322,22 @@ public class GPXEditorParameters {
         return mapCenter;
     }
 
+    // TFE, 20251228: option to use e.g. ip location in case no parameter has been given
+    public void setMapCenter(final IGeoCoordinate center) {
+        mapCenter = center;
+    }
+
     private void help(final Options options) {
         // This prints out some help
-        HelpFormatter formater = new HelpFormatter();
+        // TFE, 20261102: org.apache.commons.cli.HelpFormatter is deprecated - use the new one from the help package
+        // no "Since" column since our options don't have that information
+        final HelpFormatter formater = HelpFormatter.builder().setShowSince(false).get();
 
-        formater.printHelp("GPXEditor", "Valid options are:", options, "Continue using only recognized options");
+        try {
+            formater.printHelp("GPXEditor", "Valid options are:", options, "Continue using only recognized options", false);
+        } catch (IOException ex) {
+            Logger.getLogger(GPXEditorParameters.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //System.exit(0);
     }    
 }

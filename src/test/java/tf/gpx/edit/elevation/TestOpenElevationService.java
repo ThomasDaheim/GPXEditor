@@ -44,6 +44,7 @@ import org.geojson.LineString;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import tf.gpx.edit.helper.GPXEditorPreferences;
 
@@ -66,6 +67,7 @@ public class TestOpenElevationService {
         
         try {
             final HttpResponse<String> response = client.send(requestGET, BodyHandlers.ofString());
+            skipOnQuotaExceeded(response);
             Assertions.assertEquals(200, response.statusCode());
             result = response.body();
         } catch (IOException | InterruptedException ex) {
@@ -89,14 +91,21 @@ public class TestOpenElevationService {
         
         try {
             final HttpResponse<String> response = client.send(requestPOST, BodyHandlers.ofString());
+            skipOnQuotaExceeded(response);
             Assertions.assertEquals(200, response.statusCode());
             result = response.body();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(TestOpenElevationService.class.getName()).log(Level.SEVERE, null, ex);
             Assertions.assertTrue(false);
         }
-        
+
         return result;
+    }
+
+    // TFE, 20261031: limit of the free api key reached - that's no error of ours, skip the test instead of failing
+    private void skipOnQuotaExceeded(final HttpResponse<String> response) {
+        Assumptions.assumeFalse(response.statusCode() == 403 && response.body().contains("Quota exceeded"),
+                "openrouteservice quota exceeded - test skipped");
     }
     
     @Test

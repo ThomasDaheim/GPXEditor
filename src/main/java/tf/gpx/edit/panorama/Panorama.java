@@ -38,8 +38,8 @@ import tf.gpx.edit.elevation.ElevationProvider;
 import tf.gpx.edit.elevation.ElevationProviderBuilder;
 import tf.gpx.edit.elevation.ElevationProviderOptions;
 import tf.gpx.edit.elevation.SRTMDataOptions;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.leafletmap.IGeoCoordinate;
-import tf.gpx.edit.leafletmap.LatLonElev;
 import tf.gpx.edit.sun.AzimuthElevationAngle;
 import tf.helper.general.ObjectsHelper;
 
@@ -167,7 +167,7 @@ public class Panorama {
                 // the point where looking at
                 final LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(location, distance, angle));
                 final Pair<Boolean, Double> elevation = elevationService.getElevationForCoordinate(target);
-                target.setElevation(elevationService.getElevationForCoordinate(target).getRight());
+                target.setElevation(elevation.getRight());
                 
                 if (noElevationData && elevation.getLeft()) {
                     noElevationData = false;

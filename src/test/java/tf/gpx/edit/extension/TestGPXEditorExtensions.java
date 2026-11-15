@@ -6,7 +6,6 @@
 package tf.gpx.edit.extension;
 
 import java.io.File;
-import me.himanshusoni.gpxparser.modal.Extension;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Node;
@@ -18,36 +17,37 @@ import tf.gpx.edit.items.GPXTrack;
  * @author thomas
  */
 public class TestGPXEditorExtensions {
-    @Test
-    public void testFileWithGPXEditorExtensions() {
-        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testxmnls.gpx"));
-        
-        final GPXTrack gpxTrack = gpxfile.getGPXTracks().get(0);
-        final Extension extension = gpxTrack.getExtension();
-        
-        // gpxeditor_line extension values
-        String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geWidth);
-        Assertions.assertEquals("4.0", nodeValue);
+        // TFE, 20260119: we don't do things this way
+//    @Test
+//    public void testFileWithGPXEditorExtensions() {
+//        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testxmnls.gpx"));
+//        
+//        final GPXTrack gpxTrack = gpxfile.getGPXTracks().get(0);
+//        final Extension extension = gpxTrack.getExtension();
+//        
+//        // gpxeditor_line extension values
+//        String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geWidth);
+//        Assertions.assertEquals("4.0", nodeValue);
+//
+//        nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geUnits);
+//        Assertions.assertEquals("PIXELS", nodeValue);
+//    }
 
-        nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geUnits);
-        Assertions.assertEquals("PIXELS", nodeValue);
-    }
-
-    @Test
-    public void updateGPXEditorExtensions() {
-        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testxmnls.gpx"));
-        
-        final GPXTrack gpxTrack = gpxfile.getGPXTracks().get(0);
-        
-        // update LineStyle through its class
-        gpxTrack.getLineStyle().setWidth(6.0);
-        
-        // and now read it again
-        final Extension extension = gpxTrack.getExtension();
-        String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geWidth);
-        // TFE, 20250605: new handling of line extensions not yet completed, otherwise it should be 6
-        Assertions.assertEquals("4.0", nodeValue);
-    }
+//    @Test
+//    public void updateGPXEditorExtensions() {
+//        final GPXFile gpxfile = new GPXFile(new File("src/test/resources/testxmnls.gpx"));
+//        
+//        final GPXTrack gpxTrack = gpxfile.getGPXTracks().get(0);
+//        
+//        // update LineStyle through its class
+//        gpxTrack.getLineStyle().setWidth(6.0);
+//        
+//        // and now read it again
+//        final Extension extension = gpxTrack.getExtension();
+//        String nodeValue = KnownExtensionAttributes.getValueForAttribute(extension, KnownExtensionAttributes.KnownAttribute.geWidth);
+//        // TFE, 20250605: new handling of line extensions not yet completed, otherwise it should be 6
+//        Assertions.assertEquals("4.0", nodeValue);
+//    }
 
     @Test
     public void noGPXEditorExtensions() {

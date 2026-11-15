@@ -30,7 +30,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import tf.gpx.edit.elevation.IElevationProvider;
 import tf.gpx.edit.items.GPXLineItem;
 import tf.gpx.edit.items.GPXWaypoint;
-import tf.gpx.edit.leafletmap.LatLonElev;
 
 /**
  *

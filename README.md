@@ -13,20 +13,31 @@ So it was time to start a new self-learning project. And here you see the result
 
 ## Notes
 
-* Note on JavaFX20+: I have made GPXEditor run successfully with all JavaFX Version up to 23.
+* Note on JavaFX25: Performance improvements have been added. Slope Chart now doesn't slow down the loading of gpx too much.
+* Note on JavaFX20+: I have made GPXEditor run successfully with all Java/JavaFX Version up to 25.
 * Note on JavaFX19: The bug from JavaFX17 seems to be fixed. Also, significant performance improvements have been added.
 * Note on JavaFX17: In JavaFX17 a bug was introduced (see https://stackoverflow.com/a/70300669) that leads to "hanging" of leaflet map after some mouse movements; works as Java 17 with JavaFX 15
 * Note on JavaFX14: Due to bug fixes in JavaFX 14 the speed of the application has increased without any doing from my end :-)
 * Note on Java 11: There is a version of controlsfx for Java9 and later. Together with various tweaks to build.gradle this now also runs under Java 11. See e.g. https://github.com/kelemen/netbeans-gradle-project/issues/403 an some of the discussion that where required to get there...
 * Note on Java 10: This code itself requires only small changes in TooltipHelper to run under Java 10. However, on of the controlsfx I'm using (RangeSlider) doesn't work with Java 10 out of the box. So for now its Java 8. Until either controlsfx gets fixed or I manage to find a replacement for RangeSlider...
 
-* Note on running GPXEditor: Analogous to the --add-modules and --add-exports in build.gradle you also need the same set of commands when trying to run GPXEditor. To show how this should look like please see GPXEditor.bat.
+* Note on running GPXEditor: GPXEditor needs a number of --add-modules and --add-exports JVM options (see build.gradle). Use "gradlew installDist" and start GPXEditor with the generated scripts under build/install/GPXEditor/bin - they contain all required options.
+
+* Note on Windows exe: "gradlew jpackageImage" creates a portable folder build/jpackage/image/GPXEditor with GPXEditor.exe and its own Java runtime incl. JavaFX - no installed Java required. "gradlew jpackageInstaller" additionally creates an installer build/jpackage/installer/GPXEditor-&lt;version&gt;.exe (requires WiX Toolset 3). The JavaFX jmods are downloaded once from gluonhq.com.
 
 * Note on height data files: There are a number of data files with height data available that can be used. GPXEditor can read SRTM files (*.hgt) for both 3 and 1 arsec resolution. A comparison of available datasets can be found under https://www.gpsvisualizer.com/elevation with links to download the required files.
 
 * Note on "Stationaries": v4.6 includes my first attempt to include such an algorithm. Its based on the numbers of "neighbours" each waypoint has in a given radius. A Stationary is then defined as a cluster of points with a given number of neighbours (set via preferences) in a given radius (set via preferences) spanning a given duration (set via preferences).
 
 ## Following features are available via UI:
+
+### Update v5.10
+
+* Changed default linewidth unit to pixel (from millimeter). The gpx-spceification says the unit it millimeters but no one in the world gives a sxxx. So we'll also use pixel... Sorry, if some tracks now look a bit funny.
+* Added option on "Goto coordinate" to use current location based on public IP.
+* Added option on "What is here?" tshow info on coordinate using reverse geocoding.
+* Via preference you can now pan to current location on startup. Sequence of coordinate usage: 1) if given, -mapCenter param is used, 2) if preference set, current location is used 3) hard-coded default location is used
+* Asked AI for help on a few issues, mainly performance of SRTM Data Viewer, Panorama and Slope Charts - all the rendering - intensive stuff.
 
 ### Update v5.9
 

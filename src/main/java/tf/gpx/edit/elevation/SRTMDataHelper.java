@@ -110,6 +110,40 @@ public class SRTMDataHelper {
         return result.toString();
     }
 
+    // TFE, 20261031: numeric key of the tile for a coordinate - same tile as getNameForCoordinate() but without creating a string
+    // used for fast lookups of the tile in the SRTMDataStore
+    public final static long NO_KEY = -1L;
+
+    public static long getKeyForCoordinate(final double latitude, final double longitude) {
+        // same logic as in getNameForCoordinate()
+        final boolean north = latitude > 0;
+        double latAbs = Math.abs(latitude);
+        if (!north && latAbs % 1 != 0) {
+            latAbs++;
+        }
+        final boolean east = longitude > 0;
+        double lonAbs = Math.abs(longitude);
+        if (!east && lonAbs % 1 != 0) {
+            lonAbs++;
+        }
+        return buildKey(north, (int) latAbs, east, (int) lonAbs);
+    }
+
+    public static long getKeyForName(final String name) {
+        long result = NO_KEY;
+
+        final Matcher matcher = namePattern.matcher(name);
+        if (matcher.matches()) {
+            result = buildKey("N".equals(matcher.group(1)), Integer.parseInt(matcher.group(2)), "E".equals(matcher.group(3)), Integer.parseInt(matcher.group(4)));
+        }
+
+        return result;
+    }
+
+    private static long buildKey(final boolean north, final int latAbs, final boolean east, final int lonAbs) {
+        return ((north ? 1L : 0L) << 40) | ((long) latAbs << 24) | ((east ? 1L : 0L) << 20) | lonAbs;
+    }
+
     public static int getLatitudeForName(final String name) {
         int result = Integer.MIN_VALUE;
         

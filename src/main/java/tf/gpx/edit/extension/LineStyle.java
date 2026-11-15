@@ -238,15 +238,14 @@ public class LineStyle {
                 // we work in pixel, gpx_style in millimeter
                 // TFE, 20221002: for locus the unit might be PIXEL already
                 // TFE, 20250104: we now have our own extension that might define the unit. So we need to check both... But ours takes precedence!
+                // TFE, 20260119: we don't do things this way
                 if (myWidthUnit == null) {
-                    String extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.geUnits);
-                    if (extUnit == null) {
-                        extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits);
-                    }
+                    final String extUnit = KnownExtensionAttributes.getValueForAttribute(myExtension, KnownExtensionAttributes.KnownAttribute.lsUnits);
                     myWidthUnit = EnumUtils.getEnum(
                             WidthUnit.class, 
                             extUnit, 
-                            WidthUnit.MILLIMETERS);
+                            // default is pixel - even so documentation says differently
+                            WidthUnit.PIXELS);
                 }
                 // convert only if something to do
                 if (!WidthUnit.PIXELS.equals(myWidthUnit)) {

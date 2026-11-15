@@ -34,7 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.helper.general.ObjectsHelper;
 
 /**
@@ -333,5 +333,30 @@ public class TestGeometry {
         Assertions.assertEquals(0.0, destination.getLongitude(), DELTA_LATLON);
         Assertions.assertEquals(EARTH_CIRCUMFENCE / 4.0, EarthGeometry.distance(center, destination), DELTA_LATLON);
         Assertions.assertEquals(0.0, EarthGeometry.bearing(center, destination), DELTA_LATLON);
+    }
+
+    @Test
+    public void testElevationAngle() {
+        final LatLonElev viewer = new LatLonElev(46.67, 11.16);
+        viewer.setElevation(300.0);
+
+        // close by: earth curvature doesn't matter - 100m up on 1km
+        LatLonElev target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(viewer, 1000.0, 90.0));
+        target.setElevation(400.0);
+        Assertions.assertEquals(Math.toDegrees(Math.atan(0.1)), EarthGeometry.elevationAngle(viewer, target), 0.01);
+
+        // flat distance doesn't depend on the elevation
+        Assertions.assertEquals(1000.0, EarthGeometry.distance2D(viewer, target), 0.1);
+
+        // same height 100km away is below the horizon: d^2 / 2R * (1 - refraction) = 682m
+        target = ObjectsHelper.uncheckedCast(EarthGeometry.destinationPoint(viewer, 100000.0, 90.0));
+        target.setElevation(300.0);
+        final double drop = 100000.0 * 100000.0 / (2.0 * EarthGeometry.EarthAverageRadius) * (1.0 - EarthGeometry.RefractionCoefficient);
+        Assertions.assertEquals(682.6, drop, 0.1);
+        Assertions.assertEquals(Math.toDegrees(Math.atan(-drop / 100000.0)), EarthGeometry.elevationAngle(viewer, target), 0.001);
+        Assertions.assertTrue(EarthGeometry.elevationAngle(viewer, target) < -0.38);
+
+        // same point
+        Assertions.assertEquals(0.0, EarthGeometry.elevationAngle(viewer, viewer), 0.0);
     }
 }

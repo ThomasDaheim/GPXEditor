@@ -198,11 +198,11 @@ public abstract class GPXMeasurable extends GPXLineItem {
     /**
      * @return the minimum height of the track
      */
-    public double getMinHeight() {
+    public double getMinElevationPosition() {
         double result = Double.MAX_VALUE;
 
         for (GPXMeasurable measurable : getGPXMeasurables()) {
-            double height = measurable.getMinHeight();
+            double height = measurable.getMinElevationPosition();
             if (height < result) {
                 result = height;
             }
@@ -214,11 +214,11 @@ public abstract class GPXMeasurable extends GPXLineItem {
     /**
      * @return the maximum height of the track
      */
-    public double getMaxHeight() {
+    public double getMaxElevation() {
         double result = Double.MIN_VALUE;
 
         for (GPXMeasurable measurable : getGPXMeasurables()) {
-            double height = measurable.getMaxHeight();
+            double height = measurable.getMaxElevation();
             if (height > result) {
                 result = height;
             }

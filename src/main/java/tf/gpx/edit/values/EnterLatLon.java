@@ -23,26 +23,29 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package tf.gpx.edit.viewer;
+package tf.gpx.edit.values;
 
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import jfxtras.styles.jmetro.JMetro;
 import jfxtras.styles.jmetro.Style;
+import tf.gpx.edit.helper.LatLonElev;
 import tf.gpx.edit.helper.LatLonHelper;
-import tf.gpx.edit.leafletmap.LatLonElev;
+import tf.gpx.edit.helper.LocationHelper;
 import tf.helper.javafx.AbstractStage;
 import tf.helper.javafx.RestrictiveTextField;
 import tf.helper.javafx.TooltipHelper;
 
 /**
- *
+ * Small dialog to enter lat / lon coordinates
+ * OR choose to use coordinates based on ip address
+ * 
  * @author thomas
  */
 public class EnterLatLon extends AbstractStage {
@@ -52,6 +55,8 @@ public class EnterLatLon extends AbstractStage {
     
     private final RestrictiveTextField waypointLatitudeTxt = new RestrictiveTextField();
     private final RestrictiveTextField waypointLongitudeTxt = new RestrictiveTextField();
+
+    private final CheckBox useIPLocation = new CheckBox();
     
     private LatLonElev latLon = null;
     
@@ -111,8 +116,37 @@ public class EnterLatLon extends AbstractStage {
         GridPane.setMargin(waypointLongitudeTxt, INSET_TOP);
 
         rowNum++;
-        // 7th row: store elevation
-        final Button findButton = new Button("Done");
+        // use ip location?
+        final Label ipLbl = new Label("Use IP Location:");
+        getGridPane().add(ipLbl, 0, rowNum);
+        GridPane.setMargin(ipLbl, INSET_TOP);
+        
+        final Tooltip ipTooltip = new Tooltip("Estimate current lat/lon based on the public IP address");
+        TooltipHelper.updateTooltipBehavior(ipTooltip, 0, 10000, 0, true);
+        useIPLocation.setTooltip(ipTooltip);
+
+        getGridPane().add(useIPLocation, 1, rowNum);
+        GridPane.setMargin(useIPLocation, INSET_TOP);
+        useIPLocation.selectedProperty().addListener((ov, t, t1) -> {
+            if (t1 != null && t1) {
+                // lets use the ip location
+                final LatLonElev ipLocation = LocationHelper.getInstance().getLocationFromPublicIP();
+                if (ipLocation != null) {
+                    waypointLatitudeTxt.setText(ipLocation.getLatitude().toString());
+                    waypointLongitudeTxt.setText(ipLocation.getLongitude().toString());
+                }
+
+                waypointLatitudeTxt.setDisable(true);
+                waypointLongitudeTxt.setDisable(true);
+            } else {
+                waypointLatitudeTxt.setDisable(false);
+                waypointLongitudeTxt.setDisable(false);
+            }
+        });
+
+        rowNum++;
+        // goto elevation
+        final Button findButton = new Button("Goto");
         findButton.setOnAction((ActionEvent event) -> {
             if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 
                     Double.isNaN(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()))) {
@@ -126,16 +160,47 @@ public class EnterLatLon extends AbstractStage {
         getGridPane().add(findButton, 0, rowNum, 1, 1);
         GridPane.setMargin(findButton, INSET_TOP_BOTTOM);
 
+        // TFE, 20260111: not working right away - not reacting to escape to close
+//        final PopOver popOver = new PopOver();
+//        popOver.setAutoHide(false);
+//        popOver.setAutoFix(true);
+//        popOver.setCloseButtonEnabled(true);
+//        popOver.setArrowLocation(PopOver.ArrowLocation.TOP_CENTER);
+//        popOver.setArrowSize(0);
+            
+        // what is there?
+        final Button infoBtn = new Button("Info");
+        infoBtn.setOnAction((ActionEvent arg0) -> {
+            if (Double.isNaN(LatLonHelper.latFromString(waypointLatitudeTxt.getText())) || 
+                    Double.isNaN(LatLonHelper.lonFromString(waypointLongitudeTxt.getText()))) {
+            } else {
+                latLon = new LatLonElev(LatLonHelper.latFromString(waypointLatitudeTxt.getText()), LatLonHelper.lonFromString(waypointLongitudeTxt.getText()));
+                LatLonInfoViewer.getInstance().show(myHostServices, latLon);
+
+//                LatLonInfoViewer.getInstance().setLatLon(myHostServices, latLon);
+//                popOver.setContentNode(LatLonInfoViewer.getInstance().getGridPane());
+//                popOver.addEventHandler(KeyEvent.KEY_PRESSED, (t) -> {
+//                    if (LatLonInfoViewer.isCompleteCode(t.getCode())) {
+//                        popOver.hide();
+//                    }
+//                });
+//                popOver.show(infoBtn);
+            }
+        });
+        getGridPane().add(infoBtn, 1, rowNum, 1, 1);
+        GridPane.setMargin(infoBtn, INSET_TOP_BOTTOM);
+
+        // goto cancel
         final Button cancelBtn = new Button("Cancel");
         cancelBtn.setOnAction((ActionEvent arg0) -> {
             close();
         });
-        getGridPane().add(cancelBtn, 1, rowNum, 1, 1);
+        getGridPane().add(cancelBtn, 2, rowNum, 1, 1);
         setCancelAccelerator(cancelBtn);
-        HBox.setMargin(cancelBtn, INSET_SMALL);
+        GridPane.setMargin(cancelBtn, INSET_TOP_BOTTOM);
    }
     
-    public void get(final HostServices hostServices) {
+    public void show(final HostServices hostServices) {
         myHostServices = hostServices;
         
         showAndWait();

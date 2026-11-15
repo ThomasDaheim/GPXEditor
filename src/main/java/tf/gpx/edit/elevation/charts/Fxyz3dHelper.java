@@ -74,7 +74,8 @@ public class Fxyz3dHelper {
         // org.fxyz3d.scene.Axes
         
         final double axesThickness = AXES_THICKNESS * lineScaling;
-        final double ticLength = TIC_LENGTH * lineScaling * lineScaling;
+        // TFE, 20261101: linear as well - lineScaling is now proportional to the size of the area
+        final double ticLength = TIC_LENGTH * lineScaling;
         
         final Group result = new Group();
 
